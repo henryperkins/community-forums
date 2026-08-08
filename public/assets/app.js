@@ -140,11 +140,22 @@
             return contrast(v, '#ffffff') >= contrast(v, '#0f1218') ? '#ffffff' : '#0f1218';
         };
         var updateBrandPreview = function () {
-            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value : '#2f6feb';
-            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value : primary;
-            brandPreview.style.setProperty('--preview-accent', primary);
-            brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
-            brandPreview.style.setProperty('--preview-accent-2', accent);
+            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value : '';
+            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value : '';
+            if (primary !== '') {
+                brandPreview.style.setProperty('--preview-accent', primary);
+                brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
+            } else {
+                brandPreview.style.removeProperty('--preview-accent');
+                brandPreview.style.removeProperty('--preview-accent-contrast');
+            }
+            if (accent !== '') {
+                brandPreview.style.setProperty('--preview-accent-2', accent);
+                brandPreview.style.setProperty('--preview-accent-2-contrast', contrastToken(accent));
+            } else {
+                brandPreview.style.removeProperty('--preview-accent-2');
+                brandPreview.style.removeProperty('--preview-accent-2-contrast');
+            }
             if (previewName && brandName) { previewName.textContent = brandName.value || 'Community'; }
             if (previewTheme && brandTheme) { previewTheme.textContent = brandTheme.value.charAt(0).toUpperCase() + brandTheme.value.slice(1); }
         };
@@ -173,6 +184,24 @@
                 });
             }
         }
+    }
+
+    // Announcement publishing remains a normal server-rendered POST. This small
+    // decoration mirrors the design's live counter; the server renders its
+    // initial value, so the count does not disappear when JavaScript is off.
+    var announcementForm = document.querySelector('[data-announcement-form]');
+    if (announcementForm) {
+        var announcementMessage = announcementForm.querySelector('[data-announcement-message]');
+        var announcementCount = announcementForm.querySelector('[data-announcement-count]');
+        var updateAnnouncementForm = function () {
+            if (announcementMessage && announcementCount) {
+                // Array.from counts Unicode code points, matching PHP mb_strlen()
+                // rather than JavaScript's UTF-16 code-unit String.length.
+                announcementCount.textContent = Array.from(announcementMessage.value).length + ' / 500';
+            }
+        };
+        if (announcementMessage) { announcementMessage.addEventListener('input', updateAnnouncementForm); }
+        updateAnnouncementForm();
     }
 
     // The Study thread view keeps every control usable as server-rendered HTML,
@@ -757,116 +786,11 @@
         }
     }
 
-    // Admin workspace navigation: a second, deliberately separate drawer from
-    // the member rail. Its server-rendered grouped links remain expanded when
-    // JS is unavailable; enhancement only applies at the 860px breakpoint.
-    var adminNavToggle = document.querySelector('[data-admin-nav-toggle]');
-    var adminNav = document.querySelector('[data-admin-nav]');
-    var adminNavClose = document.querySelector('[data-admin-nav-close]');
-    var adminNavScrim = document.querySelector('[data-admin-nav-scrim]');
-    if (adminNavToggle && adminNav && adminNavScrim) {
-        var adminNavMedia = window.matchMedia('(max-width: 860px)');
-        var adminNavLastFocus = null;
-        adminNavToggle.hidden = false;
-        if (adminNavClose) { adminNavClose.hidden = false; }
-
-        var setAdminNavInert = function (inert) {
-            if (inert) {
-                adminNav.setAttribute('inert', '');
-            } else {
-                adminNav.removeAttribute('inert');
-            }
-        };
-        var adminNavFocusable = function () {
-            return Array.prototype.slice.call(adminNav.querySelectorAll(
-                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-            )).filter(function (el) {
-                return !el.hidden && el.getAttribute('aria-hidden') !== 'true';
-            });
-        };
-        var setAdminNav = function (open, restoreFocus) {
-            open = !!open && adminNavMedia.matches;
-            document.body.classList.toggle('admin-nav-open', open);
-            adminNavToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            adminNavScrim.hidden = !open;
-
-            if (adminNavMedia.matches) {
-                adminNav.setAttribute('aria-hidden', open ? 'false' : 'true');
-                setAdminNavInert(!open);
-            } else {
-                adminNav.removeAttribute('aria-hidden');
-                setAdminNavInert(false);
-            }
-
-            if (open) {
-                adminNavLastFocus = document.activeElement;
-                if (typeof setNav === 'function') { setNav(false); }
-                window.requestAnimationFrame(function () {
-                    var focusable = adminNavFocusable();
-                    (adminNavClose || focusable[0] || adminNav).focus();
-                });
-            } else if (restoreFocus !== false && adminNavLastFocus && document.contains(adminNavLastFocus)) {
-                adminNavLastFocus.focus();
-                adminNavLastFocus = null;
-            }
-        };
-        var syncAdminNavBreakpoint = function () {
-            setAdminNav(false, false);
-        };
-
-        adminNavToggle.addEventListener('click', function () {
-            setAdminNav(!document.body.classList.contains('admin-nav-open'));
-        });
-        if (adminNavClose) {
-            adminNavClose.addEventListener('click', function () { setAdminNav(false); });
-        }
-        adminNavScrim.addEventListener('click', function () { setAdminNav(false); });
-        adminNav.addEventListener('click', function (e) {
-            if (e.target.closest && e.target.closest('a')) {
-                // Let the link's native navigation start before making its
-                // ancestor inert; otherwise keyboard activation can lose the
-                // default action in Chromium.
-                window.setTimeout(function () { setAdminNav(false, false); }, 0);
-            }
-        });
-        document.addEventListener('keydown', function (e) {
-            if (!document.body.classList.contains('admin-nav-open')) { return; }
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                setAdminNav(false);
-                return;
-            }
-            if (e.key !== 'Tab') { return; }
-            var focusable = adminNavFocusable();
-            if (!focusable.length) {
-                e.preventDefault();
-                return;
-            }
-            var first = focusable[0];
-            var last = focusable[focusable.length - 1];
-            if (!adminNav.contains(document.activeElement)) {
-                e.preventDefault();
-                (e.shiftKey ? last : first).focus();
-            } else if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault();
-                first.focus();
-            }
-        });
-        if (adminNavMedia.addEventListener) {
-            adminNavMedia.addEventListener('change', syncAdminNavBreakpoint);
-        } else {
-            adminNavMedia.addListener(syncAdminNavBreakpoint);
-        }
-        if (navToggle) {
-            navToggle.addEventListener('click', function () {
-                if (document.body.classList.contains('nav-open')) { setAdminNav(false, false); }
-            });
-        }
-        syncAdminNavBreakpoint();
-    }
+    // The admin console has no navigation JavaScript. Its area tier scrolls
+    // horizontally and its section tabs wrap, so the console nav behaves
+    // identically with scripting disabled (ADMIN.md §9.4, amended by ADR 0024).
+    // The former grouped-rail drawer, its scrim and its focus trap were removed
+    // with the rail itself rather than left as dead chrome.
 
     // The recent-activity table keeps its semantic scroll region. On narrow
     // screens this removes the directional cue and edge fade at the true end.
@@ -1165,19 +1089,67 @@
     }
 })();
 
-// --- Admin console remediation (2026-07-18): bulk-select toggle -------------
-// Users directory: the header checkbox toggles every row checkbox on the page
-// (ADMIN §5.1 bulk-select). Selection works without JS — this only saves
-// fifty clicks. Self-contained IIFE so it appends safely after the main one.
+// --- Admin member directory: bulk selection enhancement ---------------------
+// The form and its checked-count fallback are server-rendered. JavaScript only
+// mirrors the design's live count and makes the page-level checkbox convenient.
 (function () {
     'use strict';
-    document.addEventListener('change', function (e) {
-        var t = e.target;
-        if (!t || !t.matches || !t.matches('[data-bulk-toggle]')) { return; }
-        var form = t.closest('form');
-        if (!form) { return; }
-        Array.prototype.forEach.call(form.querySelectorAll('input[name="selected[]"]'), function (box) {
-            box.checked = t.checked;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-member-bulk-form]'), function (form) {
+        var toggle = form.querySelector('[data-bulk-toggle]');
+        var counter = form.querySelector('[data-bulk-selected-count]');
+        var boxes = form.querySelectorAll('input[name="selected[]"]');
+
+        var update = function () {
+            var selected = form.querySelectorAll('input[name="selected[]"]:checked').length;
+            if (counter) {
+                counter.textContent = selected === 0
+                    ? 'None selected'
+                    : selected + ' ' + (selected === 1 ? 'member' : 'members') + ' selected';
+            }
+            if (toggle) {
+                toggle.checked = boxes.length > 0 && selected === boxes.length;
+                toggle.indeterminate = selected > 0 && selected < boxes.length;
+            }
+        };
+
+        form.addEventListener('change', function (e) {
+            var target = e.target;
+            if (!target || !target.matches) { return; }
+            if (target.matches('[data-bulk-toggle]')) {
+                Array.prototype.forEach.call(boxes, function (box) {
+                    box.checked = target.checked;
+                });
+            }
+            if (target.matches('[data-bulk-toggle], input[name="selected[]"]')) {
+                update();
+            }
         });
+
+        update();
+    });
+})();
+
+// Admin roles: mirror the design's selected-capability count as progressive
+// enhancement on the create form only. JavaScript creates the counter, so it
+// is absent (not an empty styled placeholder) from the no-JS document;
+// capability submission remains a normal POST.
+(function () {
+    'use strict';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-role-capability-form]'), function (form) {
+        var footer = form.querySelector('.role-create-footer');
+        if (!footer) { return; }
+        var counter = document.createElement('span');
+        counter.className = 'role-capability-count';
+        counter.setAttribute('data-role-capability-count', '');
+        counter.setAttribute('aria-live', 'polite');
+        footer.appendChild(counter);
+        var update = function () {
+            var count = form.querySelectorAll('input[name="capabilities[]"]:checked:not(:disabled)').length;
+            counter.textContent = count + ' ' + (count === 1 ? 'capability' : 'capabilities') + ' selected';
+        };
+        form.addEventListener('change', function (e) {
+            if (e.target && e.target.matches && e.target.matches('input[name="capabilities[]"]')) { update(); }
+        });
+        update();
     });
 })();

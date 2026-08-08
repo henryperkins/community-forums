@@ -30,6 +30,8 @@ final class ImladrisAssetBuilder
         'public/assets/fonts/imladris',
     ];
 
+    private const DESIGN_BASELINE = 'config/imladris-design-baseline.json';
+
     private string $root;
 
     public function __construct(string $root)
@@ -60,8 +62,30 @@ final class ImladrisAssetBuilder
     /** @return list<string> */
     public function check(): array
     {
-        $expected = $this->expectedFiles();
         $errors = [];
+
+        // Run before the generated-asset comparison, and independently of it.
+        // expectedFiles() throws when the application surface has drifted, which
+        // is the normal state of every slice branch; if the design gate lived
+        // after that call it would be unreachable exactly when it matters.
+        $designScope = $this->designSurfaceScope();
+        $designDigest = $this->digestApplicationSurface($designScope);
+        if (!hash_equals((string) $designScope['sha256'], $designDigest)) {
+            $errors[] = 'The Imladris design screens changed after the last adoption. '
+                . 'Re-review the adopted surfaces against the new design before refreshing '
+                . self::DESIGN_BASELINE . '. Current digest: ' . $designDigest;
+        }
+
+        try {
+            $expected = $this->expectedFiles();
+        } catch (RuntimeException $exception) {
+            // Reported rather than thrown so a design change is never masked by a
+            // production-surface change. build() still throws.
+            $errors[] = $exception->getMessage();
+            sort($errors);
+
+            return $errors;
+        }
 
         foreach ($expected as $relative => $content) {
             $path = $this->path($relative);
@@ -98,6 +122,37 @@ final class ImladrisAssetBuilder
         }
 
         return $this->digestApplicationSurface($scope);
+    }
+
+    /**
+     * The design screens and primitives are NOT builder inputs — only five CSS
+     * files are (CSS_SOURCES). That left the largest drift path unguarded: the
+     * mirror could be re-synced with a reordered, renamed or deleted admin screen
+     * and every gate stayed green, because nothing downstream reads them.
+     *
+     * This digest closes that. It proves nothing about fidelity — it says only
+     * "the design you adopted against has changed, go and look". It lives in its
+     * own baseline file on purpose: config/imladris-runtime-baseline.json is
+     * refreshed once per merge on main by the merger (ADR 0024 obligation 4), and
+     * a slice branch containing a change to it is a merge blocker. The design
+     * surface moves on a different cadence — only when the mirror is synced — and
+     * whoever syncs it is the right person to re-baseline it, in the same commit.
+     */
+    public function designSurfaceDigest(): string
+    {
+        return $this->digestApplicationSurface($this->designSurfaceScope());
+    }
+
+    /** @return array<string,mixed> */
+    private function designSurfaceScope(): array
+    {
+        $baseline = $this->jsonFile($this->path(self::DESIGN_BASELINE));
+        $scope = $baseline['design_surface'] ?? null;
+        if (!is_array($scope) || !is_string($scope['sha256'] ?? null)) {
+            throw new RuntimeException('The Imladris design baseline is missing or incomplete: ' . self::DESIGN_BASELINE);
+        }
+
+        return $scope;
     }
 
     /** @return array<string,string> */
@@ -322,13 +377,26 @@ CSS);
             throw new RuntimeException('The Imladris application baseline scope is invalid.');
         }
 
+        // An empty extension list means "every file under these roots". The
+        // application surface names its three extensions because templates/ and
+        // public/assets/ hold unrelated binaries; the design surface cannot, or a
+        // new upstream file type would slip in unhashed.
         $allowedExtensions = array_fill_keys(array_map(
             static fn (mixed $value): string => strtolower((string) $value),
             $extensions,
         ), true);
+        $allExtensions = $extensions === [];
         $excludedFiles = array_fill_keys(array_map(
             static fn (mixed $value): string => ltrim(str_replace('\\', '/', (string) $value), '/'),
             $excluded,
+        ), true);
+        // Basenames skipped anywhere under a root. The design mirror ships a
+        // binary WebP `.thumbnail` beside every screen; those are rendered
+        // previews, not the design definition, and they must not travel through
+        // the line-ending normaliser that every hashed file goes through.
+        $excludedNames = array_fill_keys(array_map(
+            static fn (mixed $value): string => (string) $value,
+            is_array($scope['excluded_names'] ?? null) ? $scope['excluded_names'] : [],
         ), true);
         $files = [];
 
@@ -353,7 +421,10 @@ CSS);
                     continue;
                 }
                 $extension = strtolower($file->getExtension());
-                if (!isset($allowedExtensions[$extension])) {
+                if (!$allExtensions && !isset($allowedExtensions[$extension])) {
+                    continue;
+                }
+                if (isset($excludedNames[$file->getFilename()])) {
                     continue;
                 }
                 $absolute = str_replace('\\', '/', $file->getPathname());

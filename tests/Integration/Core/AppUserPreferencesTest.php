@@ -249,7 +249,9 @@ final class AppUserPreferencesTest extends TestCase
         $appearance = $this->get('/settings/appearance');
         $this->assertStatus(200, $appearance);
         $this->assertSeeText($appearance, 'choice-card-title">System</span>'); // default theme option rendered
-        $this->assertSeeText($appearance, 'choice-card-desc">Match your device.</span>');
+        // Slice 16 took the design's card descriptions verbatim, which carry no
+        // terminal period (AccountSettings.dc.html:287).
+        $this->assertSeeText($appearance, 'choice-card-desc">Match your device</span>');
         $reading = $this->get('/settings/preferences');
         $this->assertStatus(200, $reading);
         self::assertStringContainsString('<option value="20" selected>20</option>', $reading->body());

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — tokens, webhooks & sign-in" description="The integration surfaces: API tokens with scope fieldsets and the one-time secret flash, webhook endpoints with the delivery log, secret rotation and replay, and OIDC sign-in providers with the sole-method disable confirmation" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes aiRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — integrations" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="integrations" hint-size="100%,101px"></x-import>
+
+  <div style="max-width: 1160px; margin: 0 auto; padding: 22px 28px 110px;">
+
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Tokens, webhooks &amp; sign-in</h1>
+
+    <nav aria-label="Integration sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 16px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atTokens }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goTokens }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">API tokens</button></sc-if>
+      <sc-if value="{{ offTokens }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goTokens }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">API tokens</button></sc-if>
+      <sc-if value="{{ atHooks }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goHooks }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Webhooks</button></sc-if>
+      <sc-if value="{{ offHooks }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goHooks }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Webhooks</button></sc-if>
+      <sc-if value="{{ atProviders }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goProviders }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Sign-in providers</button></sc-if>
+      <sc-if value="{{ offProviders }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goProviders }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Sign-in providers</button></sc-if>
+    </nav>
+
+    <sc-if value="{{ flash }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; align-items: flex-start; gap: 11px; margin-top: 20px; padding: 12px 16px; background: var(--surface-done); border: 1px solid var(--green-200); border-left: 3px solid var(--success); border-radius: var(--radius-md); animation: aiRise 200ms ease-out;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-done)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.4l2.4 2.4 4.6-5"></path></svg>
+        <p style="margin: 0; font-size: .93rem; line-height: 1.5; color: var(--on-done);">{{ flashText }}</p>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ secret }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; padding: 13px 17px; background: var(--gold-050); border: 1px solid var(--gold-200); border-left: 3px solid var(--gold-500); border-radius: var(--radius-md); animation: aiRise 200ms ease-out;">
+        <strong style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--gold-700);">{{ secretLabel }}</strong>
+        <code style="padding: 3px 9px; border-radius: var(--radius-sm); background: var(--surface-raised); font-family: var(--font-mono); font-size: .84rem; color: var(--text-strong);">{{ secretText }}</code>
+      </div>
+    </sc-if>
+
+    <!-- ═══ API tokens ═══ -->
+    <sc-if value="{{ showTokens }}" hint-placeholder-val="{{ true }}">
+    <div style="padding-top: 24px;">
+      <div style="display: grid; grid-template-columns: minmax(320px, 400px) 1fr; gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Create a token</h2>
+          <p style="margin: 0 0 16px; font-size: .92rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">A token carries only the scopes you tick. The secret is shown once, on creation, and never again.</p>
+          <sc-if value="{{ tokenErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ tokenErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 13px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+              <input value="{{ tokenName }}" onInput="{{ onTokenName }}" maxlength="80" placeholder="Read-only mirror" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <fieldset style="margin: 0; padding: 12px 14px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-page);">
+              <legend style="padding: 0 6px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint);">Scopes</legend>
+              <sc-for list="{{ scopeRows }}" as="sc" hint-placeholder-count="4">
+                <label style="display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; cursor: pointer;">
+                  <input type="checkbox" checked="{{ sc.on }}" onChange="{{ sc.toggle }}" style="margin-top: 3px; width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer;">
+                  <span style="font-size: .89rem; line-height: 1.45; color: var(--text-body);"><code style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-strong);">{{ sc.key }}</code> — {{ sc.desc }}</span>
+                </label>
+              </sc-for>
+            </fieldset>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Expires in days (optional)</span>
+              <input type="number" min="1" value="{{ tokenDays }}" onInput="{{ onTokenDays }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <sc-if value="{{ reauthOn }}" hint-placeholder-val="{{ true }}">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Confirm your password</span>
+                <input type="password" value="{{ tokenPwd }}" onInput="{{ onTokenPwd }}" autoComplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </sc-if>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ createToken }}" hint-size="120px,32px">Create token</x-import></span>
+          </div>
+        </section>
+
+        <section style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+          <table style="width: 100%; min-width: 620px; border-collapse: collapse; font-size: .92rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 14px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Name</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Scopes</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Created</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Last used</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+              <th scope="col" style="padding: 14px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Actions</span></th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ tokenRows }}" as="t" hint-placeholder-count="3">
+                <tr>
+                  <td style="padding: 11px 10px 11px 0; color: var(--text-strong); border-bottom: 1px solid var(--border-hair);">{{ t.name }}</td>
+                  <td style="padding: 11px 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ t.scopes }}</td>
+                  <td style="padding: 11px 10px; font-size: .86rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ t.created }}</td>
+                  <td style="padding: 11px 10px; font-size: .86rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ t.last }}</td>
+                  <td style="padding: 11px 10px; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ t.active }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--success);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--leaf);"></span>active</span></sc-if>
+                    <sc-if value="{{ t.revoked }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--danger);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--rust);"></span>revoked</span></sc-if>
+                  </td>
+                  <td style="padding: 11px 0 11px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ t.active }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.revoke }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--danger); cursor: pointer;" style-hover="text-decoration: underline;">Revoke</button></sc-if>
+                    <sc-if value="{{ t.revoked }}" hint-placeholder-val="{{ false }}"><span style="color: var(--text-faint);">—</span></sc-if>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Webhooks — list ═══ -->
+    <sc-if value="{{ showHooks }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px;">
+      <div style="display: grid; grid-template-columns: minmax(320px, 400px) 1fr; gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Register an endpoint</h2>
+          <p style="margin: 0 0 16px; font-size: .92rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Deliveries are signed with a per-endpoint secret and retried three times before they go dead.</p>
+          <sc-if value="{{ hookErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ hookErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 13px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+              <input value="{{ hookName }}" onInput="{{ onHookName }}" maxlength="80" placeholder="Ops bridge" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">URL</span>
+              <input type="url" value="{{ hookUrl }}" onInput="{{ onHookUrl }}" placeholder="https://" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <fieldset style="margin: 0; padding: 12px 14px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-page);">
+              <legend style="padding: 0 6px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint);">Events</legend>
+              <sc-for list="{{ eventRows }}" as="ev" hint-placeholder-count="5">
+                <label style="display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; cursor: pointer;">
+                  <input type="checkbox" checked="{{ ev.on }}" onChange="{{ ev.toggle }}" style="margin-top: 3px; width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer;">
+                  <span style="font-size: .89rem; line-height: 1.45; color: var(--text-body);"><code style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-strong);">{{ ev.key }}</code> — {{ ev.desc }}</span>
+                </label>
+              </sc-for>
+            </fieldset>
+            <sc-if value="{{ reauthOn }}" hint-placeholder-val="{{ true }}">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Confirm your password</span>
+                <input type="password" value="{{ hookPwd }}" onInput="{{ onHookPwd }}" autoComplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </sc-if>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ createHook }}" hint-size="150px,32px">Register endpoint</x-import></span>
+          </div>
+        </section>
+
+        <sc-if value="{{ noHookDetail }}" hint-placeholder-val="{{ true }}">
+        <section style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+          <table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: .92rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 14px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Name</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">URL</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Last status</th>
+              <th scope="col" style="padding: 14px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Actions</span></th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ hookRows }}" as="w" hint-placeholder-count="3">
+                <tr>
+                  <td style="padding: 11px 10px 11px 0; color: var(--text-strong); border-bottom: 1px solid var(--border-hair);">{{ w.name }}</td>
+                  <td style="padding: 11px 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ w.url }}</td>
+                  <td style="padding: 11px 10px; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ w.active }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--success);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--leaf);"></span>active</span></sc-if>
+                    <sc-if value="{{ w.paused }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--on-review);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--amber);"></span>paused</span></sc-if>
+                  </td>
+                  <td style="padding: 11px 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ w.last }}</td>
+                  <td style="padding: 11px 0 11px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);"><button onClick="{{ w.open }}" style="padding: 4px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Manage</button></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+        </sc-if>
+
+        <!-- Webhook detail -->
+        <sc-if value="{{ hasHookDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: aiRise 200ms ease-out;">
+          <button onClick="{{ closeHook }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 12px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>All endpoints</button>
+          <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+            <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; color: var(--text-strong);">{{ hookTitle }}</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 18px;">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" onClick="{{ togglePause }}" hint-size="86px,32px">{{ pauseLabel }}</x-import>
+              <sc-if value="{{ testOn }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" onClick="{{ sendTest }}" hint-size="130px,32px">Send test event</x-import></sc-if>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="ghost" onClick="{{ rotateSecret }}" hint-size="130px,32px">Rotate signing secret</x-import>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 13px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+                <input value="{{ editName }}" onInput="{{ onEditName }}" maxlength="80" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">URL</span>
+                <input value="{{ editUrl }}" onInput="{{ onEditUrl }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </div>
+            <div style="display: flex; gap: 9px; margin-top: 14px;">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ saveHook }}" hint-size="70px,32px">Save</x-import>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="danger" onClick="{{ deleteHook }}" hint-size="130px,32px">Delete endpoint</x-import>
+            </div>
+          </section>
+
+          <section style="margin-top: 18px; padding: 6px 20px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+            <h3 style="margin: 15px 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">Recent deliveries</h3>
+            <table style="width: 100%; min-width: 520px; border-collapse: collapse; font-size: .9rem;">
+              <thead><tr>
+                <th scope="col" style="padding: 9px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Event</th>
+                <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+                <th scope="col" style="padding: 9px 10px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Attempts</th>
+                <th scope="col" style="padding: 9px 10px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Response</th>
+                <th scope="col" style="padding: 9px 0 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Error</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ deliveryRows }}" as="d" hint-placeholder-count="4">
+                  <tr>
+                    <td style="padding: 10px 10px 10px 0; font-family: var(--font-mono); font-size: .8rem; color: var(--text-strong); border-bottom: 1px solid var(--border-hair);">{{ d.event }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                      <sc-if value="{{ d.ok }}" hint-placeholder-val="{{ true }}"><span style="font-family: var(--font-label); font-size: .72rem; color: var(--success);">delivered</span></sc-if>
+                      <sc-if value="{{ d.dead }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .72rem; color: var(--danger);">dead</span></sc-if>
+                      <sc-if value="{{ d.pending }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .72rem; color: var(--on-review);">pending</span></sc-if>
+                    </td>
+                    <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ d.attempts }}</td>
+                    <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .8rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ d.response }}</td>
+                    <td style="padding: 10px 0 10px 10px; font-size: .86rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">
+                      {{ d.error }}
+                      <sc-if value="{{ d.dead }}" hint-placeholder-val="{{ false }}"><button onClick="{{ d.replay }}" style="margin-left: 8px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Replay</button></sc-if>
+                    </td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </section>
+        </div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Sign-in providers ═══ -->
+    <sc-if value="{{ showProviders }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px;">
+
+      <sc-if value="{{ noDisable }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <p style="margin: 0 0 18px; max-width: 92ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">Generic OIDC providers are configuration, not code: a pinned HTTPS issuer, a client id, and a client secret stored only in the encrypted vault. New providers land <strong style="color: var(--text-body);">disabled</strong> — run “Test connection”, then enable. Builtin providers are configured through environment variables and shown here for visibility. Disabling never deletes linked identities.</p>
+
+        <section style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+          <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: .92rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 14px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Provider</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Type</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Issuer</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Health</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Sole-method</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+              <th scope="col" style="padding: 14px 0 9px 10px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Actions</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ providerRows }}" as="p" hint-placeholder-count="4">
+                <tr>
+                  <td style="padding: 11px 10px 11px 0; border-bottom: 1px solid var(--border-hair);"><span style="color: var(--text-strong);">{{ p.displayName }}</span> <code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ p.key }}</code></td>
+                  <td style="padding: 11px 10px; font-size: .86rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ p.typeText }}</td>
+                  <td style="padding: 11px 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ p.issuer }}</td>
+                  <td style="padding: 11px 10px; font-size: .86rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ p.health }}</td>
+                  <td style="padding: 11px 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ p.sole }}</td>
+                  <td style="padding: 11px 10px; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ p.enabled }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ p.statusText }}</span></sc-if>
+                    <sc-if value="{{ p.disabled }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ p.statusText }}</span></sc-if>
+                  </td>
+                  <td style="padding: 11px 0 11px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ p.isBuiltin }}" hint-placeholder-val="{{ false }}"><span style="font-size: .82rem; color: var(--text-faint);">{{ p.envHint }}</span></sc-if>
+                    <sc-if value="{{ p.isGeneric }}" hint-placeholder-val="{{ true }}">
+                      <span style="display: inline-flex; align-items: center; gap: 12px;">
+                        <button onClick="{{ p.test }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Test connection</button>
+                        <sc-if value="{{ p.enabled }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.askDisable }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--danger); cursor: pointer;" style-hover="text-decoration: underline;">Disable…</button></sc-if>
+                        <sc-if value="{{ p.disabled }}" hint-placeholder-val="{{ false }}"><button onClick="{{ p.enable }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Enable</button></sc-if>
+                      </span>
+                    </sc-if>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+
+        <section style="max-width: 560px; margin-top: 18px; padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Add an OIDC provider</h2>
+          <sc-if value="{{ provErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ provErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 13px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Provider key</span>
+              <input value="{{ npKey }}" onInput="{{ onNpKey }}" maxlength="32" placeholder="gitlab" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              <span style="font-size: .82rem; color: var(--text-faint);">Stable slug used in <code style="font-family: var(--font-mono); font-size: .78rem;">/auth/{key}/…</code> URLs — it cannot be changed later.</span>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Display name</span>
+              <input value="{{ npName }}" onInput="{{ onNpName }}" maxlength="190" placeholder="GitLab" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Issuer (pinned)</span>
+              <input type="url" value="{{ npIssuer }}" onInput="{{ onNpIssuer }}" placeholder="https://gitlab.com" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              <span style="font-size: .82rem; color: var(--text-faint);">Discovery resolves from <code style="font-family: var(--font-mono); font-size: .78rem;">{issuer}/.well-known/openid-configuration</code>; a trailing slash is significant.</span>
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 13px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Client ID</span>
+                <input value="{{ npClient }}" onInput="{{ onNpClient }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Client secret</span>
+                <input type="password" value="{{ npSecret }}" onInput="{{ onNpSecret }}" autoComplete="off" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </div>
+            <span style="font-size: .82rem; color: var(--text-faint);">The secret is stored write-only in the encrypted vault (<code style="font-family: var(--font-mono); font-size: .78rem;">service_secrets</code> must be enabled first).</span>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ addProvider }}" hint-size="120px,32px">Add provider</x-import></span>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ hasDisable }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: aiRise 200ms ease-out;">
+        <button onClick="{{ cancelDisable }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Sign-in providers</button>
+        <section style="max-width: 720px; padding: 22px 24px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 8px; font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; color: var(--text-strong);">{{ disableTitle }}</h2>
+          <p style="margin: 0 0 16px; max-width: 70ch; font-size: .95rem; line-height: 1.6; color: var(--text-body); text-wrap: pretty;">{{ disableBlurb }}</p>
+          <sc-if value="{{ hasSole }}" hint-placeholder-val="{{ true }}">
+            <p role="alert" style="margin: 0 0 14px; padding: 12px 16px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .92rem; line-height: 1.55; color: var(--danger); text-wrap: pretty;">{{ soleWarning }}</p>
+            <ul style="margin: 0 0 18px; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+              <sc-for list="{{ soleAccounts }}" as="a" hint-placeholder-count="2">
+                <li style="display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+                  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ a.display }}" username="{{ a.username }}" size="sm" hint-size="28px,28px"></x-import>
+                  <span style="font-size: .95rem; color: var(--accent);">{{ a.username }}</span>
+                  <span style="margin-left: auto; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);">{{ a.email }}</span>
+                </li>
+              </sc-for>
+            </ul>
+          </sc-if>
+          <sc-if value="{{ noSole }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0 0 16px; font-size: .92rem; color: var(--text-muted);">No accounts rely on this provider as their only sign-in method.</p>
+          </sc-if>
+          <sc-if value="{{ disableErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ disableErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 13px;">
+            <sc-if value="{{ reauthOn }}" hint-placeholder-val="{{ true }}">
+              <label style="display: flex; flex-direction: column; gap: 5px; max-width: 320px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Your password (re-authentication)</span>
+                <input type="password" value="{{ disablePwd }}" onInput="{{ onDisablePwd }}" autoComplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </sc-if>
+            <div style="display: flex; align-items: center; gap: 11px;">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="danger" onClick="{{ confirmDisable }}" hint-size="150px,32px">{{ disableConfirmLabel }}</x-import>
+              <button onClick="{{ cancelDisable }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .8rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Cancel</button>
+            </div>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;requireReauth&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;allowTestEvents&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;showBuiltinProviders&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;}}">
+const SCOPES = [
+  { key: 'read:threads', desc: 'Read topics and boards' },
+  { key: 'read:posts', desc: 'Read posts and reactions' },
+  { key: 'write:posts', desc: 'Create posts on behalf of a member' },
+  { key: 'admin:users', desc: 'Read and modify user records' },
+];
+
+const EVENTS = [
+  { key: 'post.created', desc: 'A new post or reply is published' },
+  { key: 'thread.created', desc: 'A new topic is opened' },
+  { key: 'thread.solved', desc: 'A topic is marked solved' },
+  { key: 'user.registered', desc: 'A new member joins' },
+  { key: 'ping', desc: 'Test event (admin-only)' },
+];
+
+const TOKENS = [
+  { id: 1, name: 'Read-only mirror', scopes: 'read:threads, read:posts', created: '4 Mar 2024', last: '2 hours ago', revoked: false },
+  { id: 2, name: 'Digest worker', scopes: 'read:posts', created: '18 Jan 2026', last: 'yesterday', revoked: false },
+  { id: 3, name: 'Legacy importer', scopes: 'write:posts', created: '9 Aug 2023', last: '—', revoked: true },
+];
+
+const HOOKS = [
+  { id: 1, name: 'Ops bridge', url: 'https://ops.imladris.council/hooks/forum', active: true, last: '200', events: ['post.created', 'thread.solved'],
+    deliveries: [
+      { id: 1, event: 'thread.solved', status: 'ok', attempts: '1 / 3', response: '200', error: '' },
+      { id: 2, event: 'post.created', status: 'ok', attempts: '1 / 3', response: '200', error: '' },
+      { id: 3, event: 'post.created', status: 'dead', attempts: '3 / 3', response: '502', error: 'upstream refused after three attempts' },
+    ] },
+  { id: 2, name: 'Archive mirror', url: 'https://mirror.example/ingest', active: false, last: '—', events: ['thread.created'],
+    deliveries: [{ id: 4, event: 'thread.created', status: 'ok', attempts: '1 / 3', response: '201', error: '' }] },
+];
+
+const PROVIDERS = [
+  { id: 1, key: 'google', displayName: 'Google', builtin: true, issuer: '', health: 'n/a', sole: 4, envConfigured: true },
+  { id: 2, key: 'apple', displayName: 'Apple', builtin: true, issuer: '', health: 'n/a', sole: 0, envConfigured: false },
+  { id: 3, key: 'gitlab', displayName: 'GitLab', builtin: false, issuer: 'https://gitlab.com', health: 'reachable · 3h ago', sole: 2, enabled: true,
+    soleAccounts: [{ username: 'mellon', display: 'Mellon', email: 'mellon@imladris.council' }, { username: 'haldir', display: 'Haldir', email: 'haldir@lorien.test' }] },
+  { id: 4, key: 'keycloak', displayName: 'Council Keycloak', builtin: false, issuer: 'https://id.imladris.council/realms/council', health: 'never checked', sole: 0, enabled: false, soleAccounts: [] },
+];
+
+class Component extends DCLogic {
+  state = {
+    view: 'tokens', flash: '', secret: '', secretLabel: '',
+    tokens: TOKENS.map((t) => Object.assign({}, t)),
+    tokenName: '', tokenDays: '', tokenPwd: '', tokenScopes: [], tokenErr: '',
+    hooks: HOOKS.map((h) => Object.assign({}, h)),
+    hookName: '', hookUrl: '', hookPwd: '', hookEvents: [], hookErr: '',
+    hookId: null, editName: '', editUrl: '',
+    providers: PROVIDERS.map((p) => Object.assign({}, p)),
+    disableId: null, disablePwd: '', disableErr: '',
+    npKey: '', npName: '', npIssuer: '', npClient: '', npSecret: '', provErr: '',
+  };
+
+  field(key) { return (e) => this.setState({ [key]: e.target.value }); }
+  toggleIn(key, value) {
+    return () => this.setState((s) => ({ [key]: s[key].indexOf(value) !== -1 ? s[key].filter((x) => x !== value) : s[key].concat([value]) }));
+  }
+  token(prefix) { return prefix + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 8); }
+  go(view) { return () => this.setState({ view: view, flash: '', secret: '', hookId: null, disableId: null }); }
+
+  renderVals() {
+    const s = this.state;
+    const reauthOn = this.props.requireReauth !== false;
+    const testOn = this.props.allowTestEvents !== false;
+    const showBuiltins = this.props.showBuiltinProviders !== false;
+    const hook = s.hooks.find((h) => h.id === s.hookId) || null;
+    const disableTarget = s.providers.find((p) => p.id === s.disableId) || null;
+    const sole = disableTarget ? (disableTarget.soleAccounts || []) : [];
+
+    return {
+      atTokens: s.view === 'tokens', offTokens: s.view !== 'tokens', goTokens: this.go('tokens'),
+      atHooks: s.view === 'hooks', offHooks: s.view !== 'hooks', goHooks: this.go('hooks'),
+      atProviders: s.view === 'providers', offProviders: s.view !== 'providers', goProviders: this.go('providers'),
+      showTokens: s.view === 'tokens', showHooks: s.view === 'hooks', showProviders: s.view === 'providers',
+      flash: !!s.flash, flashText: s.flash,
+      secret: !!s.secret, secretText: s.secret, secretLabel: s.secretLabel,
+      reauthOn, testOn,
+
+      scopeRows: SCOPES.map((sc) => ({ key: sc.key, desc: sc.desc, on: s.tokenScopes.indexOf(sc.key) !== -1, toggle: this.toggleIn('tokenScopes', sc.key) })),
+      tokenName: s.tokenName, onTokenName: this.field('tokenName'),
+      tokenDays: s.tokenDays, onTokenDays: this.field('tokenDays'),
+      tokenPwd: s.tokenPwd, onTokenPwd: this.field('tokenPwd'),
+      tokenErr: !!s.tokenErr, tokenErrText: s.tokenErr,
+      createToken: () => {
+        if (!s.tokenName.trim()) return this.setState({ tokenErr: 'Give the token a name you will recognise in the audit log.' });
+        if (s.tokenScopes.length === 0) return this.setState({ tokenErr: 'Choose at least one scope — a token with no scopes can do nothing.' });
+        if (reauthOn && !s.tokenPwd) return this.setState({ tokenErr: 'Creating a token is a reauthenticated action — confirm your password.' });
+        this.setState((st) => ({
+          tokens: [{ id: Date.now(), name: st.tokenName.trim(), scopes: st.tokenScopes.join(', '), created: 'just now', last: '—', revoked: false }].concat(st.tokens),
+          secret: this.token('iml_pat_'), secretLabel: 'Copy this token now — it will not be shown again:',
+          tokenErr: '', tokenName: '', tokenDays: '', tokenPwd: '', tokenScopes: [], flash: '',
+        }));
+      },
+      tokenRows: s.tokens.map((t) => ({
+        name: t.name, scopes: t.scopes, created: t.created, last: t.last,
+        active: !t.revoked, revoked: t.revoked,
+        revoke: () => this.setState((st) => ({
+          tokens: st.tokens.map((x) => (x.id === t.id ? Object.assign({}, x, { revoked: true }) : x)),
+          flash: '“' + t.name + '” was revoked — calls with it now fail closed.', secret: '',
+        })),
+      })),
+
+      eventRows: EVENTS.map((ev) => ({ key: ev.key, desc: ev.desc, on: s.hookEvents.indexOf(ev.key) !== -1, toggle: this.toggleIn('hookEvents', ev.key) })),
+      hookName: s.hookName, onHookName: this.field('hookName'),
+      hookUrl: s.hookUrl, onHookUrl: this.field('hookUrl'),
+      hookPwd: s.hookPwd, onHookPwd: this.field('hookPwd'),
+      hookErr: !!s.hookErr, hookErrText: s.hookErr,
+      createHook: () => {
+        if (!s.hookName.trim()) return this.setState({ hookErr: 'Name the endpoint.' });
+        if (!/^https:\/\/.+/.test(s.hookUrl.trim())) return this.setState({ hookErr: 'The URL must be an absolute https:// address.' });
+        if (s.hookEvents.length === 0) return this.setState({ hookErr: 'Subscribe the endpoint to at least one event.' });
+        if (reauthOn && !s.hookPwd) return this.setState({ hookErr: 'Registering an endpoint is a reauthenticated action — confirm your password.' });
+        this.setState((st) => ({
+          hooks: st.hooks.concat([{ id: Date.now(), name: st.hookName.trim(), url: st.hookUrl.trim(), active: true, last: '—', events: st.hookEvents.slice(), deliveries: [] }]),
+          secret: this.token('whsec_iml_'), secretLabel: 'Copy this signing secret now — it will not be shown again:',
+          hookErr: '', hookName: '', hookUrl: '', hookPwd: '', hookEvents: [], flash: '',
+        }));
+      },
+      hookRows: s.hooks.map((w) => ({
+        name: w.name, url: w.url, last: w.last, active: w.active, paused: !w.active,
+        open: () => this.setState({ hookId: w.id, editName: w.name, editUrl: w.url, flash: '', secret: '' }),
+      })),
+      noHookDetail: !hook, hasHookDetail: !!hook,
+      closeHook: () => this.setState({ hookId: null, flash: '', secret: '' }),
+      hookTitle: hook ? hook.name : '',
+      pauseLabel: hook && hook.active ? 'Pause' : 'Resume',
+      togglePause: () => this.setState((st) => ({
+        hooks: st.hooks.map((x) => (x.id === st.hookId ? Object.assign({}, x, { active: !x.active }) : x)),
+        flash: hook.active ? 'Endpoint paused — queued deliveries are held, not dropped.' : 'Endpoint resumed.',
+      })),
+      sendTest: () => this.setState((st) => ({
+        hooks: st.hooks.map((x) => (x.id === st.hookId
+          ? Object.assign({}, x, { last: '200', deliveries: [{ id: Date.now(), event: 'ping', status: 'ok', attempts: '1 / 3', response: '200', error: '' }].concat(x.deliveries) })
+          : x)),
+        flash: 'Test event sent — the endpoint answered 200.',
+      })),
+      rotateSecret: () => this.setState({ secret: this.token('whsec_iml_'), secretLabel: 'Copy this signing secret now — it will not be shown again:', flash: '' }),
+      editName: s.editName, onEditName: this.field('editName'),
+      editUrl: s.editUrl, onEditUrl: this.field('editUrl'),
+      saveHook: () => this.setState((st) => ({
+        hooks: st.hooks.map((x) => (x.id === st.hookId ? Object.assign({}, x, { name: st.editName, url: st.editUrl }) : x)),
+        flash: 'Endpoint configuration saved.',
+      })),
+      deleteHook: () => this.setState((st) => ({
+        hooks: st.hooks.filter((x) => x.id !== st.hookId), hookId: null,
+        flash: 'Endpoint deleted — its delivery history and signing secret are gone with it.', secret: '',
+      })),
+      deliveryRows: (hook ? hook.deliveries : []).map((d) => ({
+        event: d.event, attempts: d.attempts, response: d.response, error: d.error || '—',
+        ok: d.status === 'ok', dead: d.status === 'dead', pending: d.status === 'pending',
+        replay: () => this.setState((st) => ({
+          hooks: st.hooks.map((x) => (x.id === st.hookId
+            ? Object.assign({}, x, { deliveries: x.deliveries.map((y) => (y.id === d.id ? Object.assign({}, y, { status: 'ok', attempts: '4 / 3', response: '200', error: '' }) : y)) })
+            : x)),
+          flash: 'Delivery replayed — the endpoint answered 200.',
+        })),
+      })),
+
+      providerRows: s.providers.filter((p) => showBuiltins || !p.builtin).map((p) => ({
+        displayName: p.displayName, key: p.key, issuer: p.issuer || '—', health: p.health, sole: p.sole,
+        typeText: p.builtin ? 'Builtin (env config)' : 'Generic OIDC',
+        isBuiltin: p.builtin, isGeneric: !p.builtin,
+        envHint: 'Set OAUTH_' + p.key.toUpperCase() + '_* env vars',
+        enabled: p.builtin ? p.envConfigured : p.enabled,
+        disabled: p.builtin ? !p.envConfigured : !p.enabled,
+        statusText: p.builtin ? (p.envConfigured ? 'Configured' : 'Not configured') : (p.enabled ? 'Enabled' : 'Disabled'),
+        test: () => this.setState((st) => ({
+          providers: st.providers.map((x) => (x.id === p.id ? Object.assign({}, x, { health: 'reachable · just now' }) : x)),
+          flash: 'Discovery succeeded for ' + p.displayName + ' — the issuer answered with a valid configuration.',
+        })),
+        enable: () => this.setState((st) => ({
+          providers: st.providers.map((x) => (x.id === p.id ? Object.assign({}, x, { enabled: true }) : x)),
+          flash: p.displayName + ' is enabled and now offered on the sign-in page.',
+        })),
+        askDisable: () => this.setState({ disableId: p.id, disablePwd: '', disableErr: '', flash: '' }),
+      })),
+
+      noDisable: !disableTarget, hasDisable: !!disableTarget,
+      disableTitle: disableTarget ? 'Before you disable ' + disableTarget.displayName : '',
+      disableBlurb: disableTarget
+        ? 'Disabling removes ' + disableTarget.displayName + ' from sign-in and blocks its /auth/' + disableTarget.key + '/… flow. Linked identities are retained — re-enabling restores sign-in unchanged.'
+        : '',
+      hasSole: sole.length > 0, noSole: sole.length === 0,
+      soleWarning: sole.length
+        ? sole.length + ' account' + (sole.length === 1 ? '' : 's') + ' can sign in only through this provider (no password, no passkey, no other provider). They will be locked out until they use password reset on their listed email, or you re-enable the provider. Contact them first.'
+        : '',
+      soleAccounts: sole,
+      disablePwd: s.disablePwd, onDisablePwd: this.field('disablePwd'),
+      disableErr: !!s.disableErr, disableErrText: s.disableErr,
+      disableConfirmLabel: disableTarget ? 'Disable ' + disableTarget.displayName : 'Disable',
+      cancelDisable: () => this.setState({ disableId: null, disableErr: '' }),
+      confirmDisable: () => {
+        if (reauthOn && !s.disablePwd) return this.setState({ disableErr: 'Confirm your password to disable a sign-in provider.' });
+        this.setState((st) => ({
+          providers: st.providers.map((x) => (x.id === st.disableId ? Object.assign({}, x, { enabled: false }) : x)),
+          disableId: null, disablePwd: '', disableErr: '',
+          flash: disableTarget.displayName + ' is disabled. Linked identities were retained.',
+        }));
+      },
+
+      npKey: s.npKey, onNpKey: this.field('npKey'),
+      npName: s.npName, onNpName: this.field('npName'),
+      npIssuer: s.npIssuer, onNpIssuer: this.field('npIssuer'),
+      npClient: s.npClient, onNpClient: this.field('npClient'),
+      npSecret: s.npSecret, onNpSecret: this.field('npSecret'),
+      provErr: !!s.provErr, provErrText: s.provErr,
+      addProvider: () => {
+        if (!/^[a-z0-9][a-z0-9_-]{1,31}$/.test(s.npKey.trim())) return this.setState({ provErr: 'The provider key must be 2–32 lowercase characters: letters, numbers, underscore or hyphen.' });
+        if (s.providers.some((p) => p.key === s.npKey.trim())) return this.setState({ provErr: 'That provider key is already in use.' });
+        if (!s.npName.trim()) return this.setState({ provErr: 'Give the provider a display name — members see it on the sign-in page.' });
+        if (!/^https:\/\/.+/.test(s.npIssuer.trim())) return this.setState({ provErr: 'The issuer must be an https:// URL.' });
+        if (!s.npClient.trim() || !s.npSecret) return this.setState({ provErr: 'A client id and secret are both required.' });
+        this.setState((st) => ({
+          providers: st.providers.concat([{ id: Date.now(), key: st.npKey.trim(), displayName: st.npName.trim(), builtin: false, issuer: st.npIssuer.trim(), health: 'never checked', sole: 0, enabled: false, soleAccounts: [] }]),
+          provErr: '', npKey: '', npName: '', npIssuer: '', npClient: '', npSecret: '',
+          flash: st.npName.trim() + ' was added, disabled. Run “Test connection”, then enable it.',
+        }));
+      },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

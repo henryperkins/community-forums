@@ -4,70 +4,88 @@ $this->layout('layout');
 $this->section('title', 'Account lifecycle');
 $status = (string) ($row['status'] ?? 'active');
 $pending = is_array($pending_deletion ?? null) ? $pending_deletion : null;
+$errors = $errors ?? [];
+// Both /deactivate and /delete/request post `current_password`, so an unscoped
+// bag lit the deactivate form's inline error for a refused *deletion*. The
+// controller knows which action failed and says so.
+$errorForm = (string) ($error_form ?? '');
+// Each scoped form only exists on one branch of its section, and lifecycleView()
+// re-reads status/pending on every render — so a state change between GET and
+// POST (a second tab, a concurrent request) can re-render the OTHER branch and
+// leave a scoped error with no element to attach to. Scope only where the form
+// is actually on the page; anything left over falls back to the alert card
+// rather than vanishing into a silent 422.
+$deactivateVisible = $status !== 'deactivated';
+$deleteVisible = $pending === null;
+$deactivateErrors = ($errorForm === 'deactivate' && $deactivateVisible) ? $errors : [];
+$deleteErrors = ($errorForm === 'delete' && $deleteVisible) ? $errors : [];
+$unscoped = ($deactivateErrors === [] && $deleteErrors === []) ? $errors : [];
 ?>
 <div class="settings-screen">
     <header class="settings-head">
         <span class="eyebrow">Account</span>
         <h1>Account settings</h1>
+        <p>Everything this community knows about you, and everything it does on your behalf.</p>
     </header>
     <div class="settings">
-        <?= $this->partial('partials/settings_nav') ?>
+        <?= $this->partial('partials/settings_nav', ['active' => 'account']) ?>
 
         <div class="settings-pane">
-    <?php if (!empty($errors)): ?>
-        <div class="card error-list" role="alert">
-            <?php foreach ($errors as $message): ?>
+    <?php if (!empty($unscoped)): ?>
+        <div class="scribe-panel error-list" role="alert">
+            <?php foreach ($unscoped as $message): ?>
                 <p><?= $e($message) ?></p>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
 
-    <section class="card stacked">
-        <h2>Export account data</h2>
-        <p class="muted">Download a JSON archive of your profile, preferences, sessions metadata, subscriptions, notifications, reports, posts, direct messages, and related audit rows.</p>
+    <section class="scribe-panel">
+        <h2 class="scribe-panel-head">Export account data</h2>
+        <p class="lifecycle-note">A JSON archive of your profile, preferences, sessions metadata, subscriptions, notifications, reports, posts, direct messages, and the audit rows attached to them.</p>
         <form method="post" action="/settings/account/export" class="inline-form">
             <?= $this->csrfField() ?>
             <button class="btn btn-secondary" type="submit">Download account export</button>
         </form>
     </section>
 
-    <section class="card stacked">
-        <h2>Deactivate account</h2>
+    <section class="scribe-panel">
+        <h2 class="scribe-panel-head">Deactivate account</h2>
         <?php if ($status === 'deactivated'): ?>
-            <p class="muted">Your account is deactivated. You can reactivate it to restore write access.</p>
+            <p class="lifecycle-note">Your account is deactivated. You can reactivate it to restore write access.</p>
             <form method="post" action="/settings/account/reactivate" class="inline-form">
                 <?= $this->csrfField() ?>
                 <button class="btn" type="submit">Reactivate account</button>
             </form>
         <?php else: ?>
-            <p class="muted">Deactivation is reversible. Your account stays sign-in capable, but write actions are blocked until you reactivate.</p>
+            <p class="lifecycle-note">Reversible. Your account stays sign-in capable, but posting and replying are blocked until you reactivate.</p>
             <form method="post" action="/settings/account/deactivate" class="stacked">
                 <?= $this->csrfField() ?>
-                <label class="field">
+                <label class="field field-narrow-320">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password" required>
-                    <?php if (!empty($errors['current_password'])): ?><span class="field-error"><?= $e($errors['current_password']) ?></span><?php endif; ?>
+                    <input type="password" name="current_password" class="input" autocomplete="current-password" required<?= field_attrs($deactivateErrors, 'current_password', 'err-deactivate-current_password') ?>>
+                    <?= field_error($deactivateErrors, 'current_password', 'err-deactivate-current_password', true) ?>
                 </label>
                 <button class="btn btn-secondary" type="submit">Deactivate account</button>
             </form>
         <?php endif; ?>
     </section>
 
-    <section class="card stacked danger-zone">
-        <h2>Delete account</h2>
+    <section class="scribe-panel danger-zone">
+        <h2 class="scribe-panel-head">Delete account</h2>
         <?php if ($pending !== null): ?>
-            <p class="muted">Deletion is scheduled after the grace period on <?= $e((string) $pending['purge_after']) ?> UTC. Public content will be preserved under a deleted-user identity while account PII is purged.</p>
+            <p class="lifecycle-note">Deletion is scheduled after the grace period on <?= $e(human_datetime((string) $pending['purge_after'])) ?>. Your posts stay readable under a deleted-member identity; everything that identifies you is purged.</p>
             <form method="post" action="/settings/account/delete/cancel" class="inline-form">
                 <?= $this->csrfField() ?>
                 <button class="btn btn-secondary" type="submit">Cancel deletion request</button>
             </form>
         <?php else: ?>
-            <p class="muted">Deletion starts a 30-day grace period. During the grace period your account is write-blocked and you can cancel here.</p>
+            <p class="lifecycle-note">Deletion opens a 30-day grace period. Your account is write-blocked and you can cancel at any point. Your posts stay readable under a deleted-member identity; everything that identifies you is purged.</p>
             <form method="post" action="/settings/account/delete/request" class="stacked">
                 <?= $this->csrfField() ?>
-                <label class="field">
+                <label class="field field-narrow-320">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password" required>
+                    <input type="password" name="current_password" class="input" autocomplete="current-password" required<?= field_attrs($deleteErrors, 'current_password', 'err-delete-current_password') ?>>
+                    <?= field_error($deleteErrors, 'current_password', 'err-delete-current_password', true) ?>
                 </label>
                 <button class="btn danger" type="submit">Request account deletion</button>
             </form>

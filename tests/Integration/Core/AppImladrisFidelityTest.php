@@ -52,7 +52,10 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'auth-brand');
         $this->assertSeeText($res, 'auth-eyebrow');
         $this->assertSeeText($res, 'auth-form');
-        $this->assertSeeText($res, 'auth-colophon');
+        // Slice 19 de-fiction: the auth colophon carried a decorative
+        // quotation with no truthful replacement, so the element is deleted
+        // (ledger §3.2). The rest of the auth-stage composition is unchanged.
+        self::assertStringNotContainsString('auth-colophon', $res->body());
     }
 
     public function test_settings_account_renders_the_lapidary_console(): void
@@ -70,6 +73,25 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'field-grid');
     }
 
+    public function test_account_panel_heads_are_real_headings(): void
+    {
+        // Security and Notifications already render their panel heads as <h2>, and
+        // AppImladrisFidelityTest pins those literals. Slice 15 converted
+        // /settings/account and recorded it as "the last page still emitting a
+        // <span class="scribe-panel-head">" -- which was wrong: privacy,
+        // appearance, preferences and composing all still did, and this test only
+        // ever fetched /settings/account so it never noticed. Slice 16 converted
+        // those four and pins them in
+        // test_settings_pages_keep_one_main_landmark_and_real_section_headings.
+        // C-17 forbids the reverse conversion; this pins the direction that is safe.
+        $this->actingAs($this->makeUser(['username' => 'heading-scribe']));
+
+        $body = $this->get('/settings/account')->body();
+
+        self::assertStringContainsString('<h2 class="scribe-panel-head">Identity</h2>', $body);
+        self::assertStringNotContainsString('<span class="scribe-panel-head">', $body);
+    }
+
     public function test_admin_dashboard_renders_the_operator_console_register(): void
     {
         $admin = $this->makeAdmin(['username' => 'operator']);
@@ -78,7 +100,7 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/admin');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'admin-subnav');
+        $this->assertSeeText($res, 'admin-tier');
         $this->assertSeeText($res, 'admin-pane');
         $this->assertSeeText($res, 'pane-intro');
         $this->assertSeeText($res, 'Recent activity');   // the audit register section renders (empty-state here)
@@ -92,7 +114,7 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/admin/branding');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'admin-head');
+        $this->assertSeeText($res, 'admin-tier');
         $this->assertSeeText($res, 'admin-pane');
         $this->assertSeeText($res, 'brand-cols');
         $this->assertSeeText($res, 'brand-preview');
@@ -138,8 +160,24 @@ final class AppImladrisFidelityTest extends TestCase
             $this->assertSeeText($res, 'scribe-panel');
         }
 
+        // Slice 16: the account panes carry the one boolean control the design
+        // models — the DS Switch, in all 13 of its positions on
+        // AccountSettings.dc.html. This assertion used to name `gem-check`,
+        // which production shipped on privacy and reading only; the design uses
+        // no gem checkbox anywhere on this screen, so the class it described is
+        // gone. The substrate claim it was making is what is re-pinned here
+        // (ledger FA-05, R-account-settings #112).
         $privacy = $this->get('/settings/privacy');
-        $this->assertSeeText($privacy, 'gem-check');
+        $this->assertSeeText($privacy, 'switchline');
+        $this->assertSeeText($privacy, 'switch-text');
+        self::assertStringNotContainsString('gem-check', $privacy->body(), 'Privacy must not mix a second boolean idiom.');
+
+        foreach (['/settings/privacy', '/settings/appearance', '/settings/preferences', '/settings/composing', '/settings/notifications'] as $path) {
+            $body = $this->get($path)->body();
+            self::assertStringContainsString('class="switch"', $body, $path . ' should use the design Switch.');
+            self::assertStringNotContainsString('gem-check', $body, $path . ' should carry no gem checkbox.');
+            self::assertStringNotContainsString('class="checkline"', $body, $path . ' should carry no third boolean idiom.');
+        }
     }
 
     public function test_settings_pages_keep_one_main_landmark_and_real_section_headings(): void
@@ -172,6 +210,30 @@ final class AppImladrisFidelityTest extends TestCase
 
         $notifications = $this->get('/settings/notifications')->body();
         self::assertStringContainsString('<h2 class="scribe-panel-head">Daily digest</h2>', $notifications);
+
+        // Slice 16 closes the gap between this test's name and its body. Four
+        // panes still emitted `<span class="scribe-panel-head">`, so their
+        // panels sat outside the heading outline — the same conversion Slice 15
+        // made on /settings/account, and the direction C-17 permits (never the
+        // reverse). Each pane's head is the design's own eyebrow string.
+        foreach ([
+            '/settings/privacy' => 'Who can see you',
+            '/settings/appearance' => 'Theme',
+            '/settings/preferences' => 'Pagination',
+            '/settings/composing' => 'Composing',
+            '/settings/connections' => 'Connected accounts',
+            '/settings/sessions' => 'Active sessions &amp; devices',
+            '/settings/blocks' => 'Blocked members',
+        ] as $path => $head) {
+            $body = $this->get($path)->body();
+            self::assertStringContainsString('<h2 class="scribe-panel-head">' . $head . '</h2>', $body, $path . ' should title its panel with a real heading.');
+            self::assertStringNotContainsString('<span class="scribe-panel-head">', $body, $path . ' should not demote a panel head to a span.');
+        }
+
+        // The second and third sections inside a single panel are h3, so the
+        // outline never skips a level (design :290, :343, :349).
+        self::assertStringContainsString('<h3 class="account-subhead">Density</h3>', $this->get('/settings/appearance')->body());
+        self::assertStringContainsString('<h3 class="account-subhead">What appears in a thread</h3>', $this->get('/settings/preferences')->body());
     }
 
     public function test_board_preference_toggles_keep_link_button_active_state(): void
@@ -248,6 +310,52 @@ final class AppImladrisFidelityTest extends TestCase
         self::assertStringContainsString('Public tagged topic', $adminDetail);
         self::assertStringContainsString('Private tagged topic', $adminDetail);
         self::assertStringContainsString('Hidden tagged topic', $adminDetail);
+    }
+
+    /**
+     * Slice 17 -- Boards, Drafts and Account lifecycle. The three panes join the
+     * register slices 4, 15 and 16 certified: one `.scribe-panel` per section,
+     * a real `<h2 class="scribe-panel-head">` per section, and -- on /drafts --
+     * the pane's own row vocabulary rather than the moderation queue's
+     * `.report-*`, which templates/mod/reports.php owns.
+     */
+    public function test_slice17_account_panes_carry_the_console_register(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['username' => 'slice17_scribe']);
+        $this->actingAs($user);
+
+        foreach ([
+            '/settings/boards' => 'Organize your boards',
+            '/drafts' => 'Drafts',
+            '/settings/account/lifecycle' => 'Export account data',
+        ] as $path => $head) {
+            $res = $this->get($path);
+            $this->assertStatus(200, $res);
+            $body = $res->body();
+            self::assertStringContainsString('scribe-panel', $body, $path . ' should sit on the console panel.');
+            self::assertStringContainsString('<h2 class="scribe-panel-head">' . $head . '</h2>', $body, $path . ' should title its panel with a real heading.');
+            self::assertStringNotContainsString('<span class="scribe-panel-head">', $body, $path . ' should not demote a panel head to a span.');
+            self::assertSame(1, substr_count($body, '<main '), $path . ' should render only the layout main landmark.');
+        }
+
+        // The drafts pane keeps the hooks composer.js reads for the
+        // browser-local list, and no longer borrows the reports vocabulary.
+        $drafts = $this->get('/drafts')->body();
+        self::assertStringContainsString('data-drafts-list', $drafts);
+        self::assertStringContainsString('data-local-drafts-list', $drafts);
+        self::assertStringNotContainsString('report-row', $drafts);
+        self::assertStringNotContainsString('report-excerpt', $drafts);
+
+        // Lifecycle marks its destructive section, and both re-auth fields carry
+        // their own scoped error ids.
+        $lifecycle = $this->get('/settings/account/lifecycle')->body();
+        self::assertStringContainsString('scribe-panel danger-zone', $lifecycle);
+        self::assertStringContainsString('Delete account', $lifecycle);
+
+        // The invented folder name the ledger flagged is gone (fiction table 3.2).
+        $boards = $this->get('/settings/boards')->body();
+        self::assertStringNotContainsString('Vilya', $boards);
     }
 
     public function test_lapidary_toggle_css_covers_gem_variants_and_captions(): void
@@ -376,11 +484,71 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/mod/reports');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'mod-head');
-        $this->assertSeeText($res, 'mod-subnav');
-        $this->assertSeeText($res, 'mod-pane');
+        // Slice 18: the moderation queues moved onto the shared operator console
+        // chrome, which ADR 0024 decision 2 makes the eleventh area. The three
+        // classes this used to name (`mod-head`, `mod-subnav`, `mod-pane`) were
+        // this surface's own chrome and are deliberately gone, together with the
+        // `Warden's table` eyebrow they carried.
+        $this->assertSeeText($res, 'admin-tier');
+        $this->assertSeeText($res, 'admin-tabs');
+        $this->assertSeeText($res, 'admin-pane');
+        self::assertStringNotContainsString("Warden's table", $res->body());
+        self::assertStringNotContainsString('mod-subnav', $res->body());
         $this->assertSeeText($res, 'report-row is-urgent');
         $this->assertSeeText($res, 'wardens-table-report-marker');
+    }
+
+    /**
+     * Slice 18 -- ADMIN.md §9.4 least privilege, ADR 0024 constraint 4. /mod/* is
+     * moderator-reachable while /admin/* needs requireAdmin(), so the console
+     * tier a moderator sees on a queue must be reduced to the one area they can
+     * actually open. Showing ten areas that all 403 would be show-and-deny.
+     */
+    public function test_moderator_sees_only_the_moderation_area_on_a_queue(): void
+    {
+        // Board authority comes from board_moderators, not users.role: a bare
+        // 'moderator' role reaches nothing, so assign the board explicitly.
+        $board = $this->makeBoard($this->makeCategory('Warden Scope'), ['name' => 'Warden Scope']);
+        $mod = $this->makeUser(['username' => 'queue_warden']);
+        (new \App\Repository\BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $mod['id']);
+        $this->actingAs($mod);
+
+        $res = $this->get('/mod/reports');
+        $this->assertStatus(200, $res);
+        $body = $res->body();
+        self::assertStringContainsString('admin-tier', $body);
+        // Pin the area label itself, not the substring: aria-label="Moderation
+        // sections" satisfied a bare 'Moderation' unconditionally, so this
+        // assertion used to hold even with the tier empty.
+        self::assertStringContainsString('>Moderation</span>', $body, 'the moderation area is the one area offered');
+        // No admin-only destination is offered -- neither as an AREA on the rail
+        // nor as a TAB inside the one area the moderator keeps. /admin/moderation
+        // is the tab case: it sits in the Moderation area but is behind
+        // requireAdmin(), so it must be filtered out rather than rendered and denied.
+        foreach (['/admin/structure', '/admin/users', '/admin/settings', '/admin/branding', '/admin/moderation'] as $adminOnly) {
+            self::assertStringNotContainsString('href="' . $adminOnly . '"', $body, $adminOnly . ' must not appear in a moderator tier.');
+        }
+        self::assertStringNotContainsString('Anti-abuse', $body, 'the admin-only tab is dropped, not rendered disabled');
+        // The mode chip names the mode they are actually in.
+        self::assertStringNotContainsString('Admin mode', $body, 'a board moderator is not in admin mode');
+        // The queue still titles itself from the area, and no leaf emits an h1.
+        self::assertSame(1, substr_count($body, '<h1'), 'the area owns the single h1');
+    }
+
+    /**
+     * The other side of the filter: an admin keeps every tab, so the fix above
+     * cannot have hidden the Anti-abuse console from the role that owns it.
+     */
+    public function test_admin_still_sees_the_anti_abuse_tab_on_a_moderation_queue(): void
+    {
+        $this->actingAs($this->makeAdmin());
+
+        $res = $this->get('/mod/reports');
+        $this->assertStatus(200, $res);
+        $body = $res->body();
+        self::assertStringContainsString('href="/admin/moderation"', $body, 'an admin keeps the anti-abuse tab');
+        self::assertStringContainsString('Anti-abuse', $body);
+        self::assertStringContainsString('Admin mode', $body);
     }
 
     public function test_topic_workflow_renders_topic_tools_controls(): void

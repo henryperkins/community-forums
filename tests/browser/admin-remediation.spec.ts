@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 import path from 'node:path';
 
 /**
@@ -16,7 +16,8 @@ import path from 'node:path';
  * deleted again (threads moved back), the banner is cleared, the webhook is
  * deleted, and no seeded account changes state beyond warnings.
  */
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({ path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`), fullPage: true });
@@ -127,15 +128,143 @@ test('bulk warn flows through an explicit confirmation step', async ({ page }, i
   await expect(page.getByRole('status')).toContainText('Warned');
 });
 
+test('member directory mirrors selection count while keeping the server form authoritative', async ({ page }, info) => {
+  desktopOnly(info);
+  await login(page, 'admin@retro.test');
+  await page.goto('/admin/users');
+
+  const count = page.locator('[data-bulk-selected-count]');
+  const alice = page.locator('tr', { hasText: 'alice' }).locator('input[name="selected[]"]');
+  const bob = page.locator('tr', { hasText: 'bob' }).locator('input[name="selected[]"]');
+  await expect(count).toHaveText('None selected');
+  await alice.check();
+  await expect(count).toHaveText('1 member selected');
+  await bob.check();
+  await expect(count).toHaveText('2 members selected');
+  await alice.uncheck();
+  await expect(count).toHaveText('1 member selected');
+
+  await page.locator('[data-bulk-toggle]').check();
+  const selected = await page.locator('input[name="selected[]"]:checked').count();
+  await expect(count).toHaveText(`${selected} members selected`);
+  await shot(page, info, 'remediation-member-directory');
+});
+
+test('no-JS bulk validation preserves checked members and renders their count', async ({ browser, baseURL }, info) => {
+  desktopOnly(info);
+  const context = await (browser as Browser).newContext({
+    baseURL: baseURL!,
+    javaScriptEnabled: false,
+    viewport: { width: 1280, height: 900 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+    await page.goto('/admin/users');
+    const alice = page.locator('tr', { hasText: 'alice' }).locator('input[name="selected[]"]');
+    const bob = page.locator('tr', { hasText: 'bob' }).locator('input[name="selected[]"]');
+    await alice.check();
+    await bob.check();
+    await page.getByRole('button', { name: 'Review and apply…' }).click();
+
+    await expect(page.getByRole('alert')).toContainText('Choose an action to apply to the selected members.');
+    await expect(page.locator('[data-bulk-selected-count]')).toHaveText('2 members selected');
+    await expect(alice).toBeChecked();
+    await expect(bob).toBeChecked();
+    await shot(page, info, 'remediation-member-directory-no-js-422');
+  } finally {
+    await context.close();
+  }
+});
+
 test('audit log lists actions and filters by action key', async ({ page }, info) => {
   desktopOnly(info);
   await login(page, 'admin@retro.test');
   await page.goto('/admin/audit');
+  await expect(page.locator('.audit-filter-card')).toBeVisible();
+  await expect(page.locator('.audit-table-card')).toBeVisible();
   await expect(page.locator('.table-scroll table tbody tr').first()).toBeVisible();
   await page.locator('input[name="action"]').fill('warn');
-  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page.locator('body')).toContainText('warn');
+  await expect(page.locator('.audit-result-count')).toContainText(/\d+ entr(?:y|ies)/);
   await shot(page, info, 'remediation-audit-log');
+});
+
+test('no-JS audit filters, reset, and one-based pager preserve their server-rendered contract', async ({ browser, baseURL }, info) => {
+  test.setTimeout(180_000);
+  test.skip(info.project.name !== 'desktop', 'one explicit no-JS 390px journey is sufficient');
+  const context = await (browser as Browser).newContext({
+    baseURL: baseURL!,
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+
+    // Use real authenticated POST forms to create a uniquely filterable set
+    // larger than the production page size; prepare.php remains untouched.
+    await page.goto('/admin/users');
+    const targetPath = await page.locator('a.user-link', { hasText: 'bob' }).first().getAttribute('href');
+    expect(targetPath).toMatch(/^\/admin\/users\/\d+$/);
+    await page.goto(targetPath ?? '/admin/users');
+    for (let i = 0; i < 51; i++) {
+      const warnForm = page.locator(`form[action="${targetPath}/warn"]`);
+      await warnForm.locator('input[name="reason"]').fill(`Slice 5 no-JS pager evidence ${i}`);
+      await warnForm.getByRole('button', { name: 'Record warning' }).click();
+      await expect(page.getByRole('status')).toContainText('Warning recorded');
+    }
+
+    await page.goto('/admin/audit');
+    await expect(page.locator('html')).not.toHaveClass(/has-js/);
+    await page.locator('input[name="actor"]').fill('admin');
+    await page.locator('input[name="action"]').fill('warn');
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page.locator('input[name="actor"]')).toHaveValue('admin');
+    await expect(page.locator('input[name="action"]')).toHaveValue('warn');
+    await expect(page.locator('.pager-label')).toHaveText(/Page 1 of [2-9]\d*/);
+
+    const next = page.getByRole('link', { name: 'Next', exact: true });
+    const nextHref = await next.getAttribute('href');
+    expect(nextHref).not.toBeNull();
+    const nextUrl = new URL(nextHref!, baseURL!);
+    expect(nextUrl.searchParams.get('actor')).toBe('admin');
+    expect(nextUrl.searchParams.get('action')).toBe('warn');
+    expect(nextUrl.searchParams.get('page')).toBe('2');
+    expect(nextHref).not.toContain('page=0');
+    await next.click();
+    await expect(page).toHaveURL(/\/admin\/audit\?.*page=2/);
+    await expect(page.locator('input[name="actor"]')).toHaveValue('admin');
+    await expect(page.locator('input[name="action"]')).toHaveValue('warn');
+
+    const pagerHrefs = await page.locator('.pager a').evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''));
+    expect(pagerHrefs.length).toBeGreaterThan(0);
+    for (const href of pagerHrefs) {
+      const url = new URL(href, baseURL!);
+      expect(url.searchParams.get('actor')).toBe('admin');
+      expect(url.searchParams.get('action')).toBe('warn');
+      expect(url.searchParams.get('page')).not.toBe('0');
+    }
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'mobile', '05-admin-audit-no-js-page-2.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+
+    await page.getByRole('link', { name: 'Reset', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/audit$/);
+    await expect(page.locator('input[name="actor"]')).toHaveValue('');
+    await expect(page.locator('input[name="action"]')).toHaveValue('');
+
+    await page.locator('input[name="action"]').fill('slice5_no_such_action');
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page.getByRole('heading', { name: 'Nothing matches these filters' })).toBeVisible();
+    await page.getByRole('link', { name: 'Reset filters', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/audit$/);
+  } finally {
+    await context.close();
+  }
 });
 
 test('member record reveals PII only on audited demand and ban needs the typed username', async ({ page }, info) => {
@@ -155,7 +284,7 @@ test('member record reveals PII only on audited demand and ban needs the typed u
   // The reveal itself is auditable evidence.
   await page.goto('/admin/audit');
   await page.locator('input[name="action"]').fill('view_pii');
-  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page.locator('body')).toContainText('view_pii');
 
   // A ban attempt without the exact username 422s and keeps the rationale.
@@ -164,7 +293,7 @@ test('member record reveals PII only on audited demand and ban needs the typed u
   await banForm.locator('input[name="reason"]').fill('Rationale that must survive the failed confirm.');
   await banForm.locator('input[name="confirm_username"]').fill('wrong-name');
   await banForm.getByRole('button', { name: /Ban/ }).click();
-  await expect(page.locator('body')).toContainText('Type the member');
+  await expect(page.locator('body')).toContainText('The username does not match');
   await expect(page.locator('input[name="reason"][value*="survive"]')).toHaveCount(1);
   await shot(page, info, 'remediation-ban-typed-confirmation');
 });
@@ -215,6 +344,18 @@ test('announcement flood is a 429 that keeps the banner text and shows history',
   desktopOnly(info);
   await login(page, 'admin@retro.test');
   await page.goto('/admin/announcements');
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Announcements');
+  await expect(page.locator('input[name="dismissible"]')).toBeChecked();
+  await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+  await page.locator('textarea[name="message"]').fill('Council 🌿');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('9 / 500');
+  const broadcastWarning = page.locator('[data-announcement-broadcast-warning]');
+  await expect(broadcastWarning).toBeHidden();
+  await page.locator('input[name="broadcast_email"]').check();
+  await expect(broadcastWarning).toBeVisible();
+  await expect(broadcastWarning).toHaveText(/This will reach [\d,]+ active members? by email\. Broadcasts cannot be recalled once the queue starts\./);
+  await page.locator('input[name="broadcast_email"]').uncheck();
   for (let i = 1; i <= 5; i++) {
     await page.locator('textarea[name="message"]').fill(`Maintenance window notice v${i} (evidence run).`);
     await page.getByRole('button', { name: 'Publish banner' }).click();
@@ -253,30 +394,84 @@ test('webhook pause/resume flashes say which happened and delete is reauthed', a
     .click();
 
   await page.getByRole('button', { name: 'Pause' }).click();
-  await expect(page.getByRole('status')).toContainText('Webhook paused');
+  await expect(page.getByRole('status')).toContainText('Endpoint paused');
   await page.getByRole('button', { name: 'Resume' }).click();
-  await expect(page.getByRole('status')).toContainText('Webhook resumed');
+  await expect(page.getByRole('status')).toContainText('Endpoint resumed');
   await shot(page, info, 'remediation-webhook-flashes');
 
-  const deleteForm = page.locator('form:has(button:text("Delete webhook"))');
+  const deleteForm = page.locator('form:has(button:text("Delete endpoint"))');
   await deleteForm.locator('input[name="current_password"]').fill('wrong-password');
-  await deleteForm.getByRole('button', { name: 'Delete webhook' }).click();
+  await deleteForm.getByRole('button', { name: 'Delete endpoint' }).click();
   await expect(page.locator('.field-error').first()).toBeVisible();
   await shot(page, info, 'remediation-webhook-delete-reauth');
-  const retryForm = page.locator('form:has(button:text("Delete webhook"))');
+  const retryForm = page.locator('form:has(button:text("Delete endpoint"))');
   await retryForm.locator('input[name="current_password"]').fill('password123');
-  await retryForm.getByRole('button', { name: 'Delete webhook' }).click();
+  await retryForm.getByRole('button', { name: 'Delete endpoint' }).click();
   await expect(page.getByRole('status')).toContainText('deleted');
 });
 
 test('general settings site-name 422 keeps the typed value on both viewports', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
   await page.goto('/admin/settings');
+  await expect(page.getByRole('heading', { level: 1, name: 'General & intelligence' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('General & registration');
+  await expect(page.locator('.settings-general-grid > .settings-general-card')).toHaveCount(2);
+  await expect(page.getByRole('heading', { level: 2, name: 'Identity' })).toBeVisible();
+  await expect(page.getByText('The name this community goes by — in the topbar, in every email, and on the sign-in page.')).toBeVisible();
+  await expect(page.locator('.admin-pane > .pane-intro')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Save name', exact: true })).toBeVisible();
+  await expect(page.locator('.settings-field-label')).toHaveCount(2);
+  await expect(page.locator('.settings-actions')).toHaveCount(2);
+  await expect(page.getByText('Invitations feature is enabled')).toHaveCount(0);
+
   // Model the stale-form threat the server contract exists for (PR #44 §5): a
   // cached page carries no maxlength guarantee, so lift the client cap and let
   // the SERVER refuse. PHPUnit pins the same 422 at the HTTP layer.
   const siteForm = page.locator('form[action="/admin/site"]');
+  const registrationMode = page.locator('form[action="/admin/settings/registration"] select[name="registration_mode"]');
+  const persistedMode = await registrationMode.inputValue();
+  const injectedMode = persistedMode === 'closed' ? 'open' : 'closed';
+  await siteForm.evaluate((form, mode) => {
+    const sibling = document.createElement('input');
+    sibling.type = 'hidden';
+    sibling.name = 'registration_mode';
+    sibling.value = mode;
+    form.appendChild(sibling);
+  }, injectedMode);
   const nameInput = siteForm.locator('input[name="site_name"]');
+  await expect(nameInput).toHaveAttribute('maxlength', '80');
+  await expect(nameInput).toHaveAttribute('required', '');
+  await expect(nameInput).toHaveAttribute('aria-describedby', 'site-name-help');
+  expect(await nameInput.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      padding: style.padding,
+      fontSize: style.fontSize,
+      rootFontSize: getComputedStyle(document.documentElement).fontSize,
+      borderRadius: style.borderRadius,
+      boxShadow: style.boxShadow,
+    };
+  })).toMatchObject({ padding: '8px 11px', borderRadius: '7px', boxShadow: 'none' });
+  const controlType = await nameInput.evaluate((element) => ({
+    fontSize: parseFloat(getComputedStyle(element).fontSize),
+    rootFontSize: parseFloat(getComputedStyle(document.documentElement).fontSize),
+  }));
+  expect(controlType.fontSize).toBeCloseTo(controlType.rootFontSize * .95, 1);
+  const buttonType = await siteForm.getByRole('button', { name: 'Save name', exact: true }).evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      padding: style.padding,
+      fontSize: parseFloat(style.fontSize),
+      rootFontSize: parseFloat(getComputedStyle(document.documentElement).fontSize),
+      boxShadow: style.boxShadow,
+    };
+  });
+  expect(buttonType).toMatchObject({ padding: '9px 18px', boxShadow: 'none' });
+  expect(buttonType.fontSize).toBeCloseTo(buttonType.rootFontSize * .8, 1);
+  expect(await registrationMode.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { appearance: style.appearance, paddingRight: style.paddingRight, backgroundImage: style.backgroundImage };
+  })).toEqual({ appearance: 'auto', paddingRight: '11px', backgroundImage: 'none' });
   await nameInput.evaluate((el) => el.removeAttribute('maxlength'));
   const typed = 'Overlong site name draft — '.repeat(4).trim();
   await nameInput.fill(typed);
@@ -287,7 +482,58 @@ test('general settings site-name 422 keeps the typed value on both viewports', a
   expect(response.status()).toBe(422);
   await expect(page.locator('body')).toContainText('Site name must be 1–80 characters.');
   await expect(page.locator('form[action="/admin/site"] input[name="site_name"]')).toHaveValue(typed);
+  await expect(page.locator('form[action="/admin/site"] input[name="site_name"]')).toBeFocused();
+  await expect(registrationMode).toHaveValue(persistedMode);
   await shot(page, info, 'remediation-settings-422-draft');
+});
+
+test('no-JS general settings forms remain native and isolated', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one explicit no-JS 390px journey is sufficient');
+  const context = await (browser as Browser).newContext({
+    baseURL: baseURL!,
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+    await page.goto('/admin/settings');
+    await expect(page.locator('html')).not.toHaveClass(/has-js/);
+
+    const siteForm = page.locator('form[action="/admin/site"]');
+    const registrationForm = page.locator('form[action="/admin/settings/registration"]');
+    await expect(siteForm).toHaveAttribute('method', 'post');
+    await expect(registrationForm).toHaveAttribute('method', 'post');
+    await expect(siteForm.locator('input[name="_token"]')).toHaveCount(1);
+    await expect(registrationForm.locator('input[name="_token"]')).toHaveCount(1);
+    await expect(siteForm.locator('[name="registration_mode"]')).toHaveCount(0);
+    await expect(registrationForm.locator('[name="site_name"]')).toHaveCount(0);
+
+    const siteName = await siteForm.locator('input[name="site_name"]').inputValue();
+    await siteForm.locator('input[name="site_name"]').fill(siteName);
+    const [siteResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/admin/site') && response.request().method() === 'POST'),
+      siteForm.getByRole('button', { name: 'Save name', exact: true }).click(),
+    ]);
+    expect(siteResponse.status()).toBe(303);
+    await expect(page.getByRole('status')).toContainText('Site name updated.');
+
+    const registrationMode = await registrationForm.locator('select[name="registration_mode"]').inputValue();
+    await registrationForm.locator('select[name="registration_mode"]').selectOption(registrationMode);
+    const [registrationResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/admin/settings/registration') && response.request().method() === 'POST'),
+      registrationForm.getByRole('button', { name: 'Save registration mode', exact: true }).click(),
+    ]);
+    expect(registrationResponse.status()).toBe(303);
+    await expect(page.getByRole('status')).toContainText('Registration settings updated.');
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'mobile', '12-admin-settings-no-js.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+  } finally {
+    await context.close();
+  }
 });
 
 test('scoped moderator panel: overlap select, no global history, out-of-scope 404', async ({ page }, info) => {

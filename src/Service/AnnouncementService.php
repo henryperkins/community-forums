@@ -14,14 +14,15 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
+use App\Repository\UserRepository;
 use App\Security\WriteGate;
 
 /**
  * Admin announcements (ADMIN §7.4, PHASE_2_PLAN §7; SCHEMA §7 #13). Owns the
  * site-wide banner stored in settings.site_announcement — a JSON key carrying an
  * active flag, message, dismissible flag and an incrementing version — plus an
- * opt-in in-app broadcast. NO email channel and NO `announcements` table: the
- * broadcast reuses notifications.type='announcement'. The version increments on
+ * optional in-app and email broadcasts. There is NO `announcements` table: the
+ * in-app broadcast reuses notifications.type='announcement'. The version increments on
  * every publish so a member's per-version dismissal never hides a newer banner.
  * Publish history is derived from the audit trail (set_announcement rows), not
  * a table of its own.
@@ -37,6 +38,7 @@ final class AnnouncementService
         private NotificationRepository $notifications,
         private EmailDeliveryRepository $deliveries,
         private WriteGate $writeGate,
+        private UserRepository $users,
         private ?RateLimitService $rateLimits = null,
     ) {
     }
@@ -107,14 +109,23 @@ final class AnnouncementService
     }
 
     /** @return array<string,mixed> */
-    public function consoleModel(array $errors = [], array $old = []): array
+    public function consoleModel(int $actorId, array $errors = [], ?array $old = null): array
     {
         $current = $this->settings->get('site_announcement', []);
+        if ($old === null) {
+            $old = [
+                'message' => '',
+                'dismissible' => true,
+                'broadcast' => false,
+                'broadcast_email' => false,
+            ];
+        }
         return [
             'announcement' => is_array($current) ? $current : [],
             'history' => $this->recentHistory(10),
             'errors' => $errors,
             'old' => $old,
+            'active_member_count' => $this->users->activeCountExcluding($actorId),
         ];
     }
 
@@ -144,7 +155,7 @@ final class AnnouncementService
                 throw $e;
             }
             return [
-                'model' => $this->consoleModel(['message' => $e->getMessage()], $old),
+                'model' => $this->consoleModel($admin->id(), ['message' => $e->getMessage()], $old),
                 'status' => 429,
                 'message' => null,
             ];
@@ -160,7 +171,7 @@ final class AnnouncementService
             );
         } catch (ValidationException $e) {
             return [
-                'model' => $this->consoleModel($e->errors, $e->old + $old),
+                'model' => $this->consoleModel($admin->id(), $e->errors, $e->old + $old),
                 'status' => 422,
                 'message' => null,
             ];

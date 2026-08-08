@@ -1,27 +1,13 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Appeals queue'); ?>
+<?php $this->layout('layout'); $this->section('title', 'Appeals queue');
+$this->section('variant', 'admin'); ?>
 <?php
 $appealCount = count($appeals ?? []);
 $errors = $errors ?? [];
 $old = $old ?? [];
 $failedAppealId = (int) ($old['appeal_id'] ?? 0);
 ?>
-<div class="mod reports-view">
-    <header class="mod-head">
-        <span>
-            <span class="eyebrow">Warden's table</span>
-            <h1>Appeals queue</h1>
-        </span>
-        <span class="pill mod-pill">Moderation</span>
-    </header>
-
-    <nav class="mod-subnav" aria-label="Moderation queues">
-        <a href="/mod/reports">Reports</a>
-        <a href="/mod/approvals">Approval hold</a>
-        <a class="active" href="/mod/appeals">Appeals <span class="mod-count"><?= $appealCount ?></span></a>
-    </nav>
-
-    <div class="mod-pane">
+<?= $this->partial('admin/_console', ['area' => 'moderation', 'tab' => 'appeals', 'counts' => ['appeals' => $appealCount]]) ?>
         <header class="board-header">
             <h2>Appeals</h2>
             <p class="muted">Open appeals in your moderation scope.</p>
@@ -77,5 +63,4 @@ $failedAppealId = (int) ($old['appeal_id'] ?? 0);
                 <?php endforeach; ?>
             </ul>
         <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

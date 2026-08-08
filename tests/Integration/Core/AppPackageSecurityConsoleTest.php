@@ -47,6 +47,53 @@ final class AppPackageSecurityConsoleTest extends TestCase
         self::assertSame('noindex', $response->getHeader('x-robots-tag'));
     }
 
+    public function test_the_emergency_brake_chip_is_not_the_admin_pill(): void
+    {
+        // .pill-admin is the accent-filled operator chip and carries three distinct
+        // meanings across 41 call sites; the ledger forbids recolouring it. Slice 14
+        // reclassified the armed brake to .pill-danger instead, and this is that
+        // decision's regression guard — in both brake states.
+        $this->actingAs($this->admin);
+
+        $live = $this->get('/admin/packages/security');
+        $this->assertStatus(200, $live);
+        self::assertStringNotContainsString('pill-admin', $live->body());
+
+        $this->assertRedirectContains($this->post('/admin/packages/security/execution', [
+            'disabled' => '1',
+            'current_password' => 'password123',
+        ]), '/admin/packages/security');
+
+        $armed = $this->get('/admin/packages/security');
+        $this->assertStatus(200, $armed);
+        self::assertStringContainsString('class="pill pill-danger"', $armed->body());
+        self::assertStringNotContainsString('pill-admin', $armed->body());
+    }
+
+    public function test_advisory_and_blocklist_counts_card_survives_the_restyle(): void
+    {
+        // Two live counts that exist nowhere else on this console, plus the only
+        // pointer to where an operator acts on them. The design drops the card.
+        $this->actingAs($this->admin);
+
+        $body = $this->get('/admin/packages/security')->body();
+
+        self::assertStringContainsString('advisory record(s)', $body);
+        self::assertStringContainsString('local block(s)', $body);
+        self::assertStringContainsString('href="/admin/registries"', $body);
+    }
+
+    public function test_transparency_log_renders_an_empty_state(): void
+    {
+        // Neither the design nor production had one: an unseeded console rendered a
+        // bare table head over an empty body, which reads as a broken table.
+        $this->actingAs($this->admin);
+
+        $body = $this->get('/admin/packages/security')->body();
+
+        self::assertStringContainsString('No transparency entries yet.', $body);
+    }
+
     public function test_emergency_disable_requires_reauth_then_pauses_execution(): void
     {
         $this->actingAs($this->admin);

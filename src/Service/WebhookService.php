@@ -76,7 +76,10 @@ final class WebhookService
     {
         $this->writeGate->assertCanWrite($admin);
         $this->assertEnabled();
-        $this->assertSecretStoreEnabled('current_password');
+        $this->assertSecretStoreEnabled(
+            'current_password',
+            'Enable the service-secret store before rotating a signing secret.',
+        );
         $this->assertPassword($admin, $currentPassword);
 
         $wh = $this->webhooks->findById($webhookId);
@@ -338,10 +341,17 @@ final class WebhookService
         }
     }
 
-    private function assertSecretStoreEnabled(string $field = 'name'): void
-    {
+    /**
+     * The gate copy has to be true of the surface it lands on: rotate attaches
+     * it to a password field on a page that creates nothing, so it cannot say
+     * "before creating webhooks" there.
+     */
+    private function assertSecretStoreEnabled(
+        string $field = 'name',
+        string $message = 'Enable the service-secret store before creating webhooks.',
+    ): void {
         if (!$this->flags->enabled('service_secrets')) {
-            throw new ValidationException([$field => 'Enable the service-secret store before creating webhooks.']);
+            throw new ValidationException([$field => $message]);
         }
     }
 
@@ -353,7 +363,7 @@ final class WebhookService
     private function assertValidName(string $name): void
     {
         if ($name === '' || mb_strlen($name) > 80) {
-            throw new ValidationException(['name' => 'Name must be 1-80 characters.']);
+            throw new ValidationException(['name' => 'Name the endpoint — 1–80 characters, recognisable in the delivery log.']);
         }
     }
 
@@ -397,7 +407,7 @@ final class WebhookService
             $clean[] = $e;
         }
         if ($clean === []) {
-            throw new ValidationException(['events' => 'Select at least one event.']);
+            throw new ValidationException(['events' => 'Subscribe the endpoint to at least one event.']);
         }
         return $clean;
     }

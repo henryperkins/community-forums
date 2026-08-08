@@ -1,0 +1,17 @@
+{
+  "_why": "The design screens and primitives are not builder inputs — only the five CSS files in ImladrisAssetBuilder::CSS_SOURCES are. Without this digest the mirror could be re-synced with a reordered, renamed or deleted admin screen and every gate stayed green. This proves nothing about fidelity; it says only 'the design you adopted against has changed, go and look'.",
+  "_owner": "Whoever syncs docs/design-system/imladris/ refreshes this in the same commit: php bin/build-imladris-assets.php --print-design-digest. This is deliberately NOT config/imladris-runtime-baseline.json, which is refreshed once per merge on main by the merger (ADR 0024 obligation 4) and which no slice branch may contain a change to.",
+  "design_surface": {
+    "roots": [
+      "docs/design-system/imladris/templates",
+      "docs/design-system/imladris/components"
+    ],
+    "files": [],
+    "extensions": [],
+    "excluded": [],
+    "excluded_names": [
+      ".thumbnail"
+    ],
+    "sha256": "d7f5e61638a0a2c7819f1cac648084880e29c232f09a2617217d7e02ec27aa91"
+  }
+}

@@ -1,0 +1,54 @@
+<!-- @dsCard group="Components" viewport="1160x520" name="Admin nav — the unifying bar" subtitle="Identity row plus the ten-area pill tier that every Admin template shares" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; background: var(--surface-page); }
+  .frame { border: 1px solid var(--border-hair); border-radius: var(--radius-lg); overflow: hidden; margin: 0 0 26px; background: var(--surface-page); }
+  .below { max-width: 1100px; margin: 0 auto; padding: 22px 28px 30px; }
+  .cap { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: 10px; color: var(--gold-ink); padding: 20px 26px 8px; }
+  h1 { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.1; color: var(--text-strong); }
+  .inner { display: flex; gap: 2px; margin: 16px 0 0; border-bottom: 1px solid var(--border-hair); }
+  .inner button { padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer; }
+  .inner button.on { border-bottom-color: var(--gold-500); color: var(--text-strong); }
+  .note { max-width: 68ch; margin: 18px 0 0; padding: 0 26px 24px; font-size: .95rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../_card-guard.js"></script>
+<script type="text/babel">
+const { AdminNav } = window.ImladrisDesignSystem_c3e027;
+function Demo() {
+  const [area, setArea] = React.useState('content');
+  return (
+    <div>
+      <div className="cap">In place — the bar above a page's own sub-tabs</div>
+      <div className="frame">
+        <AdminNav area={area} onNavigate={setArea} />
+        <div className="below">
+          <h1>Boards &amp; tags</h1>
+          <nav className="inner">
+            <button className="on">Boards &amp; categories</button>
+            <button>Tags</button>
+          </nav>
+        </div>
+      </div>
+      <p className="note">The tier is a pill row, the page's own sections are underline tabs, and the page heading sits between them — three signals keeping the two ranks apart. Measured against the pages it replaces, this chrome is 10px <em>shorter</em>: the redundant &ldquo;Operator desk&nbsp;·&nbsp;Area&rdquo; kicker is gone, the mode pill moved into the identity row, and the heading drops from 2.4rem to 2.1rem.</p>
+      <div className="cap">Without the mode pill, exit relabelled</div>
+      <div className="frame">
+        <AdminNav area="settings" modeLabel={null} backLabel="Leave admin" onNavigate={() => {}} />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

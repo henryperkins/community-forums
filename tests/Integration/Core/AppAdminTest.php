@@ -75,6 +75,86 @@ final class AppAdminTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'create_board'"));
     }
 
+    public function test_board_forms_submit_explicit_zero_values_for_unchecked_flags(): void
+    {
+        $board = $this->makeBoard($this->categoryId, ['slug' => 'explicit-flags', 'name' => 'Explicit Flags']);
+        $this->actingAs($this->admin);
+
+        foreach ([$this->get('/admin/structure'), $this->get('/admin/boards/' . (int) $board['id'] . '/edit')] as $page) {
+            $this->assertStatus(200, $page);
+            foreach (['allow_anonymous', 'require_approval', 'tags_enabled', 'wiki_enabled'] as $flag) {
+                self::assertStringContainsString(
+                    '<input type="hidden" name="' . $flag . '" value="0">',
+                    $page->body(),
+                );
+            }
+        }
+
+        $response = $this->post('/admin/boards', [
+            'category_id' => (string) $this->categoryId,
+            'name' => 'All Flags Off',
+            'slug' => 'all-flags-off',
+            'visibility' => 'public',
+            'post_min_role' => 'user',
+            'assignment_mode' => 'off',
+            'edit_window_minutes' => '0',
+            'allow_anonymous' => '0',
+            'require_approval' => '0',
+            'tags_enabled' => '0',
+            'wiki_enabled' => '0',
+        ]);
+
+        $this->assertRedirect($response, '/admin/structure');
+        $created = $this->boards()->findBySlug('all-flags-off');
+        self::assertNotNull($created);
+        foreach (['allow_anonymous', 'require_approval', 'tags_enabled', 'wiki_enabled'] as $flag) {
+            self::assertSame(0, (int) $created[$flag], $flag);
+        }
+    }
+
+    public function test_board_edit_422_preserves_submitted_unchecked_flags_without_mutating(): void
+    {
+        $board = $this->makeBoard($this->categoryId, ['slug' => 'stored-flags', 'name' => 'Stored Flags']);
+        $this->db->run(
+            'UPDATE boards SET allow_anonymous = 1, require_approval = 1, tags_enabled = 1, wiki_enabled = 1 WHERE id = ?',
+            [(int) $board['id']],
+        );
+        $this->actingAs($this->admin);
+        $this->get('/admin/boards/' . (int) $board['id'] . '/edit');
+
+        $response = $this->post('/admin/boards/' . (int) $board['id'], [
+            'category_id' => (string) $this->categoryId,
+            'name' => '',
+            'slug' => 'stored-flags',
+            'description' => 'Keep this draft',
+            'visibility' => 'public',
+            'post_min_role' => 'user',
+            'assignment_mode' => 'off',
+            'edit_window_minutes' => '0',
+            'allow_anonymous' => '0',
+            'require_approval' => '0',
+            'tags_enabled' => '0',
+            'wiki_enabled' => '0',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $this->assertSeeText($response, 'Board name must be');
+        $this->assertSeeText($response, 'Keep this draft');
+        foreach (['allow_anonymous', 'require_approval', 'tags_enabled', 'wiki_enabled'] as $flag) {
+            self::assertMatchesRegularExpression(
+                '/<input type="checkbox" name="' . $flag . '" value="1"(?![^>]*\bchecked\b)[^>]*>/',
+                $response->body(),
+                $flag,
+            );
+        }
+
+        $stored = $this->boards()->find((int) $board['id']);
+        self::assertNotNull($stored);
+        foreach (['allow_anonymous', 'require_approval', 'tags_enabled', 'wiki_enabled'] as $flag) {
+            self::assertSame(1, (int) $stored[$flag], $flag);
+        }
+    }
+
     public function test_dashboard_users_card_is_labelled_new_users_today(): void
     {
         // Round-2 audit finding 10: the headline number is today's signups but
@@ -267,6 +347,76 @@ final class AppAdminTest extends TestCase
         $this->assertDontSeeText($page, 'action="/admin/categories/' . $this->categoryId . '/delete"');
     }
 
+    public function test_content_structure_renders_the_design_body_without_losing_real_forms(): void
+    {
+        $board = $this->makeBoard($this->categoryId, [
+            'slug' => 'quiet-room',
+            'name' => 'Quiet Room',
+            'description' => '<em>Private planning</em>',
+            'visibility' => 'hidden',
+        ]);
+        $this->boards()->setArchived((int) $board['id'], true);
+        $this->actingAs($this->admin);
+
+        $page = $this->get('/admin/structure');
+
+        $this->assertStatus(200, $page);
+        $body = $page->body();
+        self::assertStringContainsString('class="admin-pane admin-content admin-content-structure"', $body);
+        self::assertStringContainsString('Categories group boards; boards are where topics live.', $body);
+        self::assertStringContainsString('Renaming a board is safe — its old link keeps working.', $body);
+        self::assertStringContainsString('Archiving makes a board read-only — its topics stay readable and searchable.', $body);
+        self::assertStringContainsString('href="/c/quiet-room"', $body);
+        self::assertStringContainsString('&lt;em&gt;Private planning&lt;/em&gt;', $body);
+        self::assertStringContainsString('class="content-board-chip content-board-chip-hidden">Hidden</span>', $body);
+        self::assertStringContainsString('class="content-board-chip content-board-chip-archived">Archived</span>', $body);
+        self::assertStringContainsString('class="content-icon-button content-icon-button-board"', $body);
+        self::assertStringNotContainsString('>↑</button>', $body);
+        self::assertStringNotContainsString('>↓</button>', $body);
+        self::assertStringContainsString('action="/admin/boards/' . (int) $board['id'] . '/move"', $body);
+        self::assertStringContainsString('href="/admin/boards/' . (int) $board['id'] . '/unarchive"', $body);
+        self::assertStringContainsString('class="stacked content-board-grid"', $body);
+        self::assertStringContainsString('placeholder="derived from the name"', $body);
+    }
+
+    public function test_content_structure_renders_the_factual_empty_state(): void
+    {
+        $this->db->run('DELETE FROM categories WHERE id = ?', [$this->categoryId]);
+        $this->actingAs($this->admin);
+
+        $page = $this->get('/admin/structure');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('class="content-empty-state"', $page->body());
+        $this->assertSeeText($page, 'No categories yet');
+        $this->assertSeeText($page, 'A forum needs at least one board. Add a category below, then put a board inside it.');
+    }
+
+    public function test_board_delete_typed_confirmation_422_preserves_the_selected_destination(): void
+    {
+        $source = $this->makeBoard($this->categoryId, ['slug' => 'source-room', 'name' => 'Source Room']);
+        $destination = $this->makeBoard($this->categoryId, ['slug' => 'destination-room', 'name' => 'Destination Room']);
+        $author = $this->makeUser(['username' => 'content-confirm-author']);
+        $this->makeThread($source, $author, 'Thread to preserve');
+        $this->actingAs($this->admin);
+        $this->get('/admin/boards/' . (int) $source['id'] . '/delete');
+
+        $response = $this->post('/admin/boards/' . (int) $source['id'] . '/delete', [
+            'confirm' => 'not-the-slug',
+            'move_to_board_id' => (string) $destination['id'],
+        ]);
+
+        $this->assertStatus(422, $response);
+        $body = $response->body();
+        self::assertStringContainsString('class="card confirm-card content-confirm-card"', $body);
+        self::assertMatchesRegularExpression(
+            '/<option value="' . (int) $destination['id'] . '" selected>[^<]*Destination Room/s',
+            $body,
+        );
+        self::assertStringContainsString('name="confirm"', $body);
+        self::assertNotNull($this->boards()->find((int) $source['id']));
+    }
+
     public function test_archive_requires_typed_slug_confirmation(): void
     {
         $board = $this->makeBoard($this->categoryId, ['slug' => 'archme', 'name' => 'ArchMe']);
@@ -348,5 +498,9 @@ final class AppAdminTest extends TestCase
         $this->assertSeeText($res, 'No member found');
         // The typed username survives the failed submit.
         $this->assertSeeText($res, 'ghostuser');
+        self::assertStringContainsString('class="admin-pane admin-content admin-content-board-edit"', $res->body());
+        self::assertStringContainsString('class="stacked card content-board-grid content-board-edit-form"', $res->body());
+        self::assertStringContainsString('class="card admin-cat content-roster-card"', $res->body());
+        self::assertStringContainsString('value="ghostuser"', $res->body());
     }
 }

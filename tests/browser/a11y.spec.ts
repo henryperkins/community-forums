@@ -31,6 +31,42 @@ $settings->set('features', $features);
 `);
 }
 
+function seedAdminAppearanceA11yStates(): void {
+  runPhp(`
+$settings->set('theme_safe_mode', '');
+$admin = (new \\App\\Repository\\UserRepository($db))->findByUsername('admin');
+$installs = array_values(array_filter(
+    (new \\App\\Repository\\PackageThemeRepository($db))->themeInstalls(),
+    static fn (array $install): bool => (string) $install['state'] === 'enabled',
+));
+if ($admin === null || count($installs) < 2) { throw new \\RuntimeException('Appearance axe fixtures are incomplete.'); }
+$themes = new \\App\\Repository\\PackageThemeRepository($db);
+$buildIds = [];
+foreach (array_slice($installs, 0, 2) as $install) {
+    $sourceDigest = hash('sha256', 'appearance-axe-source-' . $install['id']);
+    $build = $themes->findBuildFor((int) $install['id'], $sourceDigest);
+    if ($build === null) {
+        $buildId = $themes->createBuild([
+            'installed_package_id' => (int) $install['id'],
+            'package_id' => (int) $install['package_id'],
+            'release_id' => (int) $install['release_id'],
+            'source_digest' => $sourceDigest,
+            'token_schema_version' => 1,
+            'tokens_json' => '{}',
+            'validation_json' => '{"fixture":"appearance-axe"}',
+            'css' => '',
+            'css_digest' => hash('sha256', ''),
+            'built_by' => (int) $admin['id'],
+        ]);
+    } else {
+        $buildId = (int) $build['id'];
+    }
+    $buildIds[] = $buildId;
+}
+$themes->setState($buildIds[1], $buildIds[0], (int) $admin['id']);
+`);
+}
+
 test.beforeEach(() => {
   setWysiwygComposer(false);
 });
@@ -160,59 +196,129 @@ async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include
 }
 
 test('admin dark-surface pages have no serious axe violations', async ({ page }, info) => {
+  seedAdminAppearanceA11yStates();
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin');
-  await expect(page.getByRole('heading', { name: 'Admin console' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Admin console' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Dashboard');
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/settings');
+  await expect(page.getByRole('heading', { level: 1, name: 'General & intelligence' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('General & registration');
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/users');
+  await expect(page.getByRole('heading', { level: 1, name: 'Members & invitations' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Directory');
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/invitations');
+  await expect(page.getByRole('heading', { level: 1, name: 'Members & invitations' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Invitations');
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/email');
-  await expect(page.getByRole('heading', { name: 'Email delivery' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Email');
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/announcements');
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Announcements');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+  await page.locator('input[name="broadcast_email"]').check();
+  await expect(page.locator('[data-announcement-broadcast-warning]')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/extensions');
-  await expect(page.getByRole('heading', { name: 'Server extensions' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Extensions');
   await expect(page.getByText('browser-evidence')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/roles');
-  await expect(page.getByRole('heading', { name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Roles');
+  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/packages');
-  await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
   await expectNoSeriousA11yViolations(page, info);
 
+  // Appearance is the Slice 8 boundary. Resolve its `system` setting through
+  // the OS-dark media query explicitly; the remaining legacy admin scans keep
+  // their established light baseline so unrelated surfaces do not masquerade
+  // as Slice 8 acceptance failures.
+  await page.emulateMedia({ colorScheme: 'dark' });
   await visit(page, '/admin/themes');
-  await expect(page.getByRole('heading', { name: 'Themes' })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'system');
+  expect(await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches)).toBe(true);
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Themes');
+  await expect(page.locator('.admin-appearance-themes > .pane-intro')).toContainText('Safe mode returns the site to the built-in chrome');
+  await expect(page.locator('.theme-enable-link')).toBeVisible();
+  await expect(page.locator('.theme-rollback-button')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/themes/safe-mode');
-  await expect(page.getByRole('heading', { name: 'Theme safe mode' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Theme safe mode' })).toBeVisible();
+  await expect(page.locator('[data-admin-tier]')).toHaveCount(0);
+  await expect(page.locator('.pill.pill-admin')).toHaveText('Recovery');
   await expectNoSeriousA11yViolations(page, info);
 
+  await visit(page, '/admin/branding');
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Branding');
+  await expect(page.locator('.branding-marks input[type="file"]')).toHaveCount(4);
+  await page.locator('[data-brand-accent]').fill('#a33300');
+  await expect(page.locator('.brand-preview-accent')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expectNoSeriousA11yViolations(page, info);
+
+  await page.emulateMedia({ colorScheme: 'light' });
+
   await visit(page, '/admin/registries');
-  await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Registry trust');
   await expectNoSeriousA11yViolations(page, info);
 
   const packageDetailPath = await openPackageDetailByUid(page, 'acme/consent-demo');
-  await expect(page.getByRole('heading', { name: 'Consent Demo Theme' })).toBeVisible();
-  await expect(page.getByText('permissions await consent')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  await expect(page.getByRole('heading', { level: 2, name: 'Consent Demo Theme' })).toBeVisible();
+  // Slice 14 pluralises this notice; the consent-demo fixture seeds exactly one
+  // pending permission, so it now reads "1 permission awaits consent."
+  await expect(page.getByText(/permissions? awaits? consent/)).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, `${packageDetailPath}/consent`);
-  await expect(page.getByRole('heading', { name: 'Consent to permissions' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  await expect(page.getByRole('heading', { level: 2, name: 'Consent to permissions' })).toBeVisible();
   await expect(page.getByText('Store its own settings and data', { exact: false })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/roles/simulator');
-  await expect(page.getByRole('heading', { name: 'Permission simulator' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Permission simulator');
+  await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  // Direct query submission bypasses native required-field blocking and
+  // proves the server-owned empty-capability error has the design's card.
+  await visit(page, '/admin/roles/simulator?actor=guest&capability=');
+  await expect(page.locator('.role-simulator-error').getByRole('heading', { level: 2, name: 'The simulator could not answer' })).toBeVisible();
+  await expect(page.locator('.role-simulator-error')).toContainText('Pick a capability to test.');
   await expectNoSeriousA11yViolations(page, info);
 
   // badge_rules graduated to default-on (GA 2026-07-02): the admin create-rule
   // form + rule list is the operator surface.
   await visit(page, '/admin/badge-rules');
-  await expect(page.getByRole('heading', { name: 'Badge rules' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Features & badges' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Badge rules');
   await expectNoSeriousA11yViolations(page, info);
 });
 
@@ -254,7 +360,10 @@ test('staff appeals queue has no serious axe violations (resolve form)', async (
 
   await login(page, 'alice@retro.test');
   await visit(page, '/mod/appeals');
-  await expect(page.getByRole('heading', { name: 'Appeals queue' })).toBeVisible();
+  // Slice 18 moved the moderation queues onto the shared operator console, so
+  // the area owns the single h1 and the lit tab names the queue.
+  await expect(page.getByRole('heading', { level: 1, name: 'Queues & anti-abuse' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText(/Appeals/);
   const resolveForm = page.locator('form.appeal-resolve').first();
   await expect(resolveForm).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '.appeal-resolve');
@@ -453,8 +562,8 @@ test('phase 4 profile media panels have no serious axe violations', async ({ pag
   await visit(page, '/admin/users');
   await page.getByRole('link', { name: 'bob', exact: true }).click();
   await page.waitForURL(/\/admin\/users\/\d+$/);
-  await expect(page.locator('.profile-media-card')).toBeVisible();
-  await expectNoSeriousA11yViolations(page, info, '.profile-media-card');
+  await expect(page.locator('.member-record-profile-media')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.member-record-profile-media');
 });
 
 test('phase 4 custom emoji surfaces have no serious axe violations', async ({ page }, info) => {

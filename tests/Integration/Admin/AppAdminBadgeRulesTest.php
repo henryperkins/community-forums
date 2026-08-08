@@ -89,6 +89,63 @@ final class AppAdminBadgeRulesTest extends TestCase
         ));
     }
 
+    public function test_rule_row_actions_render_in_the_designed_order(): void
+    {
+        // The design fixes the action cluster at Preview · Backfill · {toggle} ·
+        // Revoke awards, with the enable/disable branch collapsed so both variants
+        // land in the same slot. Nothing else guards the order, and the previous
+        // markup emitted Enable before Backfill.
+        $this->setFlags(['badge_rules' => true]);
+        $admin = $this->makeAdmin(['username' => 'badge_rule_order_admin']);
+        $this->actingAs($admin);
+
+        $badges = new BadgeRepository($this->db);
+        $first = $badges->findBySlug('conversation-starter');
+        $second = $badges->findBySlug('first-post');
+        self::assertNotNull($first);
+        self::assertNotNull($second);
+
+        foreach ([$first, $second] as $badge) {
+            $this->assertRedirectContains($this->post('/admin/badge-rules', [
+                'badge_id' => (int) $badge['id'],
+                'rule_type' => 'post_count',
+                'threshold' => 2,
+            ]), '/admin/badge-rules');
+        }
+        // Rules are created inert; enable exactly one so both branches are covered.
+        $enabledId = (int) $this->db->fetchValue('SELECT id FROM badge_rules ORDER BY id ASC LIMIT 1');
+        $this->assertRedirectContains($this->post('/admin/badge-rules/' . $enabledId . '/enable', []), '/admin/badge-rules');
+
+        $body = $this->get('/admin/badge-rules')->body();
+        $listAt = strpos($body, '<ul class="link-list features-rule-list">');
+        self::assertNotFalse($listAt, 'the rules list should render');
+        $list = substr($body, $listAt, (int) strpos($body, '</ul>', $listAt) - $listAt);
+        $rows = array_slice(explode('<li>', $list), 1);
+        self::assertCount(2, $rows, 'both rules should be listed');
+
+        $sawEnabled = false;
+        $sawDisabled = false;
+        foreach ($rows as $row) {
+            $toggle = str_contains($row, '/disable"') ? 'Disable' : 'Enable';
+            $toggle === 'Disable' ? $sawEnabled = true : $sawDisabled = true;
+
+            $preview = strpos($row, '>Preview<');
+            $backfill = strpos($row, '>Backfill<');
+            $toggleAt = strpos($row, '>' . $toggle . '<');
+            $revoke = strpos($row, '>Revoke awards<');
+
+            self::assertNotFalse($preview);
+            self::assertNotFalse($backfill);
+            self::assertNotFalse($toggleAt);
+            self::assertNotFalse($revoke);
+            self::assertLessThan($backfill, $preview);
+            self::assertLessThan($toggleAt, $backfill);
+            self::assertLessThan($revoke, $toggleAt);
+        }
+        self::assertTrue($sawEnabled, 'one row should offer Disable');
+        self::assertTrue($sawDisabled, 'one row should offer Enable');
+    }
+
     public function test_admin_previews_backfills_disables_and_revokes_post_count_rule(): void
     {
         $this->setFlags(['badge_rules' => true]);

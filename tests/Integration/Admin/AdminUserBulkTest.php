@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Admin;
 
+use App\Repository\BoardModeratorRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -29,6 +30,9 @@ final class AdminUserBulkTest extends TestCase
         $this->assertSeeText($res, '@bulka');
         $this->assertSeeText($res, '@bulkb');
         $this->assertSeeText($res, 'Warn 2 members');
+        $this->assertDontSeeText($res, 'Review before applying');
+        self::assertMatchesRegularExpression('/<a[^>]+href="\/admin\/users"[^>]*>[\s\S]*?All members[\s\S]*?<\/a>/', $res->body());
+        self::assertSame(2, substr_count($res->body(), 'member-bulk-subject-monogram'));
     }
 
     public function test_bulk_422_preserves_the_row_selection(): void
@@ -43,6 +47,8 @@ final class AdminUserBulkTest extends TestCase
         $res = $this->post('/admin/users/bulk', ['selected' => [(string) $a, (string) $b], 'bulk_action' => '']);
 
         $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'Choose an action to apply to the selected members.');
+        $this->assertSeeText($res, '2 members selected');
         self::assertMatchesRegularExpression('/value="' . $a . '"[^>]*checked/', $res->body());
         self::assertMatchesRegularExpression('/value="' . $b . '"[^>]*checked/', $res->body());
     }
@@ -119,6 +125,85 @@ final class AdminUserBulkTest extends TestCase
         self::assertStringContainsString('Skipped', urldecode($flash));
     }
 
+    public function test_suspend_confirmation_marks_only_ungovernable_subjects_and_counts_actionable_members(): void
+    {
+        $admin = $this->makeAdmin(['username' => 's11actor']);
+        $peer = $this->makeAdmin(['username' => 's11peer']);
+        $regular = $this->makeUser(['username' => 's11regular']);
+        $this->actingAs($admin);
+
+        $res = $this->post('/admin/users/bulk', [
+            'bulk_action' => 'suspend',
+            'selected' => [(string) $admin['id'], (string) $peer['id'], (string) $regular['id']],
+        ]);
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'Suspend 3 members');
+        self::assertSame(2, substr_count($res->body(), 'skipped — administrator'));
+        self::assertMatchesRegularExpression('/<button[^>]*type="submit"[^>]*>Suspend 1 member<\/button>/', $res->body());
+        $this->assertSeeText(
+            $res,
+            'Every selected member becomes read-only until the expiry (blank is indefinite). Your own account and other administrators are skipped automatically. Each suspension is audited individually and reversible with Lift.',
+        );
+        $this->assertSeeText($res, 'Until (UTC, optional — blank is indefinite)');
+    }
+
+    public function test_warn_confirmation_does_not_claim_admin_targets_are_skipped(): void
+    {
+        $admin = $this->makeAdmin(['username' => 's11warnactor']);
+        $peer = $this->makeAdmin(['username' => 's11warnpeer']);
+        $regular = $this->makeUser(['username' => 's11warnregular']);
+        $this->actingAs($admin);
+
+        $confirm = $this->post('/admin/users/bulk', [
+            'bulk_action' => 'warn',
+            'selected' => [(string) $peer['id'], (string) $regular['id']],
+        ]);
+
+        $this->assertStatus(200, $confirm);
+        $this->assertDontSeeText($confirm, 'skipped — administrator');
+        self::assertMatchesRegularExpression('/<button[^>]*type="submit"[^>]*>Warn 2 members<\/button>/', $confirm->body());
+
+        $applied = $this->post('/admin/users/bulk/apply', [
+            'bulk_action' => 'warn',
+            'selected' => [(string) $peer['id'], (string) $regular['id']],
+            'reason' => 'Same formal warning',
+        ]);
+        $this->assertRedirectContains($applied, '/admin/users');
+        self::assertSame(2, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM warnings WHERE user_id IN (?, ?)',
+            [(int) $peer['id'], (int) $regular['id']],
+        ));
+        $flash = urldecode(implode(' ', $applied->cookieHeaders()));
+        self::assertStringContainsString('Warned 2 members — each action was audited individually.', $flash);
+        self::assertStringNotContainsString('Skipped', $flash);
+    }
+
+    public function test_bulk_empty_reason_uses_shared_copy_and_preserves_fields_and_selection(): void
+    {
+        $admin = $this->makeAdmin(['username' => 's11reasonactor']);
+        $a = $this->makeUser(['username' => 's11reasonone']);
+        $b = $this->makeUser(['username' => 's11reasontwo']);
+        $this->actingAs($admin);
+
+        $res = $this->post('/admin/users/bulk/apply', [
+            'bulk_action' => 'suspend',
+            'selected' => [(string) $a['id'], (string) $b['id']],
+            'reason' => '',
+            'until' => '2026-08-31 10:30:00',
+        ]);
+
+        $this->assertStatus(422, $res);
+        $this->assertSeeText(
+            $res,
+            'A shared reason is required — it is shown to every member and written to each audit entry.',
+        );
+        self::assertMatchesRegularExpression('/name="reason"[^>]*aria-invalid="true"[^>]*aria-describedby="err-reason"/', $res->body());
+        self::assertMatchesRegularExpression('/name="until"[^>]*value="2026-08-31 10:30:00"/', $res->body());
+        self::assertSame(2, substr_count($res->body(), 'name="selected[]"'));
+        self::assertStringContainsString('name="_token"', $res->body());
+    }
+
     public function test_bulk_suspend_with_malformed_until_aborts_before_any_write(): void
     {
         $admin = $this->makeAdmin(['password' => 'password123']);
@@ -140,9 +225,9 @@ final class AdminUserBulkTest extends TestCase
     public function test_bulk_with_empty_selection_is_422(): void
     {
         $this->actingAs($this->makeAdmin());
-        $res = $this->post('/admin/users/bulk', ['bulk_action' => 'warn']);
+        $res = $this->post('/admin/users/bulk', ['bulk_action' => '']);
         $this->assertStatus(422, $res);
-        $this->assertSeeText($res, 'Select at least one member');
+        $this->assertSeeText($res, 'Select at least one member before choosing a bulk action.');
     }
 
     public function test_bulk_routes_require_admin(): void
@@ -222,11 +307,89 @@ final class AdminUserBulkTest extends TestCase
         $first = $this->get('/admin/users', ['q' => 'pageruser']);
         $this->assertStatus(200, $first);
         $this->assertSeeText($first, 'pageruser00');
-        $this->assertDontSeeText($first, 'Next');
+        self::assertMatchesRegularExpression('/<span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Next<\/span>/', $first->body());
 
         // Past-the-end page renders empty without error.
         $second = $this->get('/admin/users', ['q' => 'pageruser', 'page' => '1']);
         $this->assertStatus(200, $second);
         $this->assertDontSeeText($second, 'pageruser00');
+    }
+
+    public function test_directory_copies_member_table_anatomy_and_keeps_production_extensions(): void
+    {
+        $admin = $this->makeAdmin(['username' => 's11actoroutside']);
+        $moderator = $this->makeUser([
+            'username' => 's11directorymod',
+            'display_name' => 'Directory Moderator',
+            'role' => 'moderator',
+        ]);
+        $suspended = $this->makeUser([
+            'username' => 's11directorymember',
+            'display_name' => 'Directory Member',
+            'status' => 'suspended',
+        ]);
+        $this->db->run('UPDATE users SET reputation = ?, post_count = ? WHERE id = ?', [8740, 1204, (int) $moderator['id']]);
+        $categoryId = $this->makeCategory('Slice 11 directory');
+        $board = $this->makeBoard($categoryId, ['name' => 'Slice 11 board']);
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $moderator['id']);
+        $this->actingAs($admin);
+
+        $res = $this->get('/admin/users', ['q' => 's11directory']);
+
+        $this->assertStatus(200, $res);
+        self::assertStringContainsString('Members &amp; invitations', $res->body());
+        self::assertSame(1, substr_count($res->body(), 'aria-label="Member sections"'));
+        self::assertMatchesRegularExpression('/class="admin-tab is-active" aria-current="page">Directory<\/span>/', $res->body());
+        $this->assertSeeText($res, 'Joined from');
+        $this->assertSeeText($res, 'Joined to');
+        $this->assertSeeText($res, '2 members of 2');
+        self::assertMatchesRegularExpression('/<th[^>]*aria-sort="[^"]+"[^>]*>[\s\S]*?>Member(?:<|\s)/', $res->body());
+        self::assertMatchesRegularExpression('/aria-sort="[^"]+"[\s\S]*?last_seen/', $res->body());
+        self::assertStringContainsString('aria-label="Select all members on this page"', $res->body());
+        self::assertStringContainsString('role="region" aria-label="User directory"', $res->body());
+        self::assertSame(2, substr_count($res->body(), 'member-directory-member-monogram'));
+        $this->assertSeeText($res, 'Directory Moderator');
+        self::assertStringNotContainsString('(Directory Moderator)', $res->body());
+        self::assertStringContainsString('member-directory-role is-moderator', $res->body());
+        self::assertStringContainsString('title="Moderates 1 board"', $res->body());
+        self::assertStringContainsString('member-directory-board-mod', $res->body());
+        self::assertMatchesRegularExpression('/s11directorymember[\s\S]*?member-directory-state is-suspended/', $res->body());
+        $this->assertSeeText($res, '8,740');
+        $this->assertSeeText($res, '1,204');
+        $this->assertSeeText($res, 'None selected');
+        self::assertMatchesRegularExpression('/<span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Previous<\/span>/', $res->body());
+        self::assertMatchesRegularExpression('/<span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Next<\/span>/', $res->body());
+        $this->assertSeeText($res, (string) $suspended['username']);
+    }
+
+    public function test_directory_empty_state_and_result_count_match_the_design(): void
+    {
+        $this->actingAs($this->makeAdmin());
+
+        $res = $this->get('/admin/users', ['q' => 's11-no-such-member']);
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, '0 members of 0');
+        $this->assertSeeText($res, 'No members match these filters');
+        $this->assertSeeText($res, 'Reset the filters to see the whole directory.');
+        $this->assertDontSeeText($res, 'No users match these filters.');
+    }
+
+    public function test_member_tabs_disable_the_invitations_destination_when_the_flag_is_dark(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->db->run(
+            "INSERT INTO settings (`key`, value, updated_at) VALUES ('features', ?, UTC_TIMESTAMP())
+             ON DUPLICATE KEY UPDATE value = VALUES(value), updated_at = VALUES(updated_at)",
+            [json_encode(['invitations' => false], JSON_THROW_ON_ERROR)],
+        );
+        $this->actingAs($admin);
+
+        $res = $this->get('/admin/users');
+
+        $this->assertStatus(200, $res);
+        self::assertMatchesRegularExpression('/<span class="admin-tab is-disabled" aria-disabled="true" data-destination="\/admin\/invitations">/', $res->body());
+        $this->assertSeeText($res, 'Disabled until the feature flag is enabled');
+        self::assertDoesNotMatchRegularExpression('/<a[^>]+href="\/admin\/invitations"/', $res->body());
     }
 }

@@ -94,11 +94,13 @@ async function loginWithoutJavaScript(page: Page, email: string): Promise<void> 
 
 async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await visit(page, '/admin/themes/safe-mode');
-  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+  // Structural state read: the enter and exit forms are mutually exclusive
+  // (theme_safe_mode.php:43-69), so the status prose can be reworded freely.
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  if (!await enter.isVisible({ timeout: 2000 }).catch(() => false)) {
     return false;
   }
 
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
   await enter.click();
   await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
   return true;
@@ -258,12 +260,64 @@ test('admin status and restorative retry, reconcile, latch, pause, thread, and b
   try {
     await visit(page, '/admin/thread-intelligence');
     const dashboard = page.locator('.thread-intelligence-admin');
-    await expect(dashboard.getByRole('heading', { name: 'Thread Intelligence' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'General & intelligence' })).toBeVisible();
+    await expect(page.locator('.admin-tab.is-active[aria-current="page"]')).toHaveText('Thread Intelligence');
+    await expect(dashboard.locator('.ti-intro')).toHaveText('Automated context for long topics. Staff set the terms; the model proposes and local validation decides. Everything it writes is evidenced below, and the egress brake is one button away.');
+    const statusCards = dashboard.locator('.ti-status-card');
+    await expect(statusCards).toHaveCount(4);
+    await expect(statusCards.locator('.ti-status-label')).toHaveText(['Product flags', 'Provider', 'Heartbeat', 'Generation']);
+    await expect(dashboard.getByRole('heading', { level: 2, name: 'Recovery controls' })).toBeVisible();
     await expect(dashboard).toContainText('community memory on');
     await expect(dashboard).toContainText('automated context on');
     await expect(dashboard).toContainText('Ready');
-    await expect(dashboard.locator('.ti-budget')).toContainText(/Calls \d+ of 100/);
+    await expect(dashboard.locator('.ti-controls-actions form')).toHaveCount(2);
+    await expect(dashboard.locator('.ti-budget-calls .ti-budget-label')).toHaveText('Calls');
+    await expect(dashboard.locator('.ti-budget-tokens .ti-budget-label')).toHaveText('Input tokens');
+    await expect(dashboard.locator('.ti-budget-calls .ti-budget-value')).toHaveText(/\d+ of 100/);
+    await expect(dashboard.getByRole('heading', { level: 2, name: 'Queue states' })).toBeVisible();
+    const queueCards = dashboard.locator('.ti-queue-card');
+    await expect(queueCards).toHaveCount(6);
+    await expect(queueCards).toHaveText([
+      /^\s*\d+\s*Idle\s*threads?\s*$/,
+      /^\s*\d+\s*Queued\s*threads?\s*$/,
+      /^\s*\d+\s*Running\s*threads?\s*$/,
+      /^\s*\d+\s*Retry\s*threads?\s*$/,
+      /^\s*\d+\s*Dead\s*threads?\s*$/,
+      /^\s*\d+\s*Review required\s*threads?\s*$/,
+    ]);
+    await expect(dashboard.locator('.ti-contract-grid')).toBeVisible();
+    await expect(dashboard.locator('.ti-contract-card')).toBeVisible();
+    await expect(dashboard.locator('.ti-evidence-card')).toBeVisible();
+    await expect(dashboard.locator('.ti-evidence-card thead th')).toHaveText([
+      'ID',
+      'When',
+      'Topic',
+      'Outcome',
+      'Input tokens',
+      'Contract',
+      'Evidence',
+      'Actions',
+    ]);
+    const outcomeRegisters = await dashboard.locator('[data-ti-outcome]').evaluateAll((nodes) => nodes.map((node) => ({
+      register: node.getAttribute('data-ti-outcome'),
+      status: node.getAttribute('data-ti-generation-status'),
+    })));
+    expect(outcomeRegisters.length).toBeGreaterThan(0);
+    expect(outcomeRegisters.every(({ register, status }) => ['done', 'neutral', 'attention'].includes(register ?? '') && Boolean(status))).toBe(true);
     await expect(dashboard.locator('.ti-evidence').first()).toBeVisible();
+    await expect(dashboard.getByText('Failed only', { exact: true })).toHaveCount(0);
+    await expect(dashboard.getByText('Digest', { exact: true })).toHaveCount(0);
+    const rhythm = await dashboard.evaluate((element) => {
+      const gap = (before: Element, after: Element): number => Math.round(after.getBoundingClientRect().top - before.getBoundingClientRect().bottom);
+      const intro = element.querySelector('.ti-intro')!;
+      const status = element.querySelector('.ti-status-grid')!;
+      const controls = element.querySelector('.ti-controls')!;
+      const budget = element.querySelector('.ti-budget')!;
+      const queue = element.querySelector('.ti-queue-section')!;
+      const contract = element.querySelector('.ti-contract-grid')!;
+      return [gap(intro, status), gap(status, controls), gap(controls, budget), gap(budget, queue), gap(queue, contract)];
+    });
+    expect(rhythm).toEqual([22, 16, 16, 16, 16]);
 
     let row = generationRow(page, state.admin.thread_title);
     await row.getByRole('button', { name: 'Retry', exact: true }).click();
@@ -279,14 +333,18 @@ test('admin status and restorative retry, reconcile, latch, pause, thread, and b
     await row.getByRole('button', { name: 'Resume', exact: true }).click();
 
     await page.getByRole('button', { name: 'Pause generation' }).click();
+    await expect(dashboard.locator('[data-ti-status="generation"]')).toHaveClass(/queue-status-unavailable/);
     await expect(page.getByRole('button', { name: 'Resume generation' })).toBeVisible();
     await page.getByRole('button', { name: 'Resume generation' }).click();
+    await expect(dashboard.locator('[data-ti-status="generation"]')).not.toHaveClass(/queue-status-unavailable/);
 
     fixture('latch-provider', info);
     await page.reload();
+    await expect(dashboard.locator('[data-ti-status="provider"]')).toHaveClass(/queue-status-attention/);
     await expect(dashboard).toContainText('latched');
     await expect(dashboard).toContainText('Provider configuration is latched');
     await page.getByRole('button', { name: 'Retry provider configuration' }).click();
+    await expect(dashboard.locator('[data-ti-status="provider"]')).not.toHaveClass(/queue-status-attention/);
     await expect(dashboard).toContainText('available');
 
     fixture('exhaust-budget', info);
@@ -299,6 +357,22 @@ test('admin status and restorative retry, reconcile, latch, pause, thread, and b
   } finally {
     fixture('reset-admin', info);
     await exitThemeSafeMode(page, themeSafeModeChanged);
+  }
+});
+
+test('flags-off admin route stays live while its Thread Intelligence tab is disabled', async ({ page }, info) => {
+  fixture('disable-features', info);
+  try {
+    await login(page, 'admin@retro.test');
+    await visit(page, '/admin/thread-intelligence');
+    await expect(page.getByRole('heading', { level: 1, name: 'General & intelligence' })).toBeVisible();
+    await expect(page.getByText('Both product flags are off; generation remains dark.')).toBeVisible();
+    const tab = page.locator('.admin-tab.is-disabled[data-destination="/admin/thread-intelligence"]');
+    await expect(tab).toBeVisible();
+    await expect(tab).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('.admin-tab.is-active[aria-current="page"]')).toHaveCount(0);
+  } finally {
+    fixture('enable-features', info);
   }
 });
 
@@ -334,6 +408,26 @@ test('no-JS: Living Brief, source and related navigation, details, and curator f
     await expect(details.locator('form[action$="/summary"]')).toBeVisible();
     await expect(details.locator('form[action$="/summary/restore"]')).toBeVisible();
     await expect(details.locator('form[action$="/related"]')).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test('no-JS: Thread Intelligence recovery controls remain native POST forms', async ({ browser, baseURL }) => {
+  const context: BrowserContext = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  try {
+    await loginWithoutJavaScript(page, 'admin@retro.test');
+    await visit(page, '/admin/thread-intelligence');
+
+    const generationForm = page.locator('form[action="/admin/thread-intelligence/generation/pause"], form[action="/admin/thread-intelligence/generation/resume"]');
+    const providerForm = page.locator('form[action="/admin/thread-intelligence/provider/retry"]');
+    await expect(generationForm).toHaveCount(1);
+    await expect(providerForm).toHaveCount(1);
+    await expect(generationForm).toHaveAttribute('method', 'post');
+    await expect(providerForm).toHaveAttribute('method', 'post');
+    await expect(generationForm.locator('input[name="_token"]')).toHaveCount(1);
+    await expect(providerForm.locator('input[name="_token"]')).toHaveCount(1);
   } finally {
     await context.close();
   }

@@ -51,23 +51,179 @@ final class AppAdminThreadIntelligenceTest extends TestCase
                      NULL, NULL, 50, 25, UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP())",
             [$seed['thread_id'], $summaryId, json_encode([$seed['post_ids'][0]], JSON_THROW_ON_ERROR), $requestFingerprint],
         );
+        $outcomeRegisters = [
+            'requested' => 'neutral',
+            'succeeded' => 'done',
+            'published' => 'done',
+            'retry' => 'neutral',
+            'failed' => 'attention',
+            'dead' => 'attention',
+            'review_required' => 'attention',
+            'rejected' => 'attention',
+            'stale' => 'neutral',
+        ];
+        foreach (array_keys($outcomeRegisters) as $status) {
+            if ($status === 'published') {
+                continue;
+            }
+            $this->db->insert(
+                "INSERT INTO thread_intelligence_generations
+                    (thread_id, trigger_code, status, source_post_ids, candidate_thread_ids,
+                     model, reasoning_effort, prompt_version, input_tokens, requested_at, completed_at)
+                 VALUES (?, 'post_created', ?, '[]', '[]', 'historical-model', 'low', 'historical-prompt',
+                         1200, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+                [$seed['thread_id'], $status],
+            );
+        }
 
         $this->actingAs($this->admin);
         $page = $this->get('/admin/thread-intelligence');
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('Thread Intelligence', $page->body());
-        self::assertStringContainsString('Both product flags are off', $page->body());
-        self::assertStringContainsString('admin-safe-model', $page->body());
-        self::assertStringContainsString('prompt-v1', $page->body());
-        self::assertStringContainsString('Post #' . $seed['post_ids'][0], $page->body());
-        self::assertStringNotContainsString($secret, $page->body());
-        self::assertStringNotContainsString($requestFingerprint, $page->body());
-        self::assertStringNotContainsString('generated summary text must stay out', $page->body());
-        self::assertStringNotContainsString('Authorization', $page->body());
-        self::assertStringNotContainsString('name="api_key"', $page->body());
+        $body = $page->body();
+        self::assertStringContainsString('Thread Intelligence', $body);
+        self::assertStringContainsString('Both product flags are off', $body);
+        self::assertStringContainsString(
+            '<span class="admin-tab is-disabled" aria-disabled="true" data-destination="/admin/thread-intelligence">',
+            $body,
+        );
+        self::assertStringNotContainsString(
+            '<span class="admin-tab is-active" aria-current="page">Thread Intelligence</span>',
+            $body,
+        );
+        self::assertStringContainsString(
+            'Automated context for long topics. Staff set the terms; the model proposes and local validation decides. Everything it writes is evidenced below, and the egress brake is one button away.',
+            $body,
+        );
+        $warningPosition = strpos($body, 'class="card ti-attention"');
+        $introPosition = strpos($body, 'class="ti-intro"');
+        self::assertNotFalse($warningPosition);
+        self::assertNotFalse($introPosition);
+        self::assertLessThan($introPosition, $warningPosition, 'Needs attention must remain first in the pane.');
+
+        foreach ([
+            'product-flags' => 'Product flags',
+            'provider' => 'Provider',
+            'heartbeat' => 'Heartbeat',
+            'generation' => 'Generation',
+        ] as $statusKey => $label) {
+            self::assertMatchesRegularExpression(
+                '~<div[^>]*class="[^"]*ti-status-card[^"]*"[^>]*data-ti-status="' . preg_quote($statusKey, '~') . '"[^>]*>.*?'
+                . preg_quote($label, '~') . '.*?</div>~s',
+                $body,
+            );
+        }
+        self::assertMatchesRegularExpression(
+            '~<form[^>]*method="post"[^>]*action="/admin/thread-intelligence/generation/(?:pause|resume)"[^>]*>.*?name="_token"~s',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '~<form[^>]*method="post"[^>]*action="/admin/thread-intelligence/provider/retry"[^>]*>.*?name="_token"~s',
+            $body,
+        );
+
+        self::assertMatchesRegularExpression('~<section[^>]*class="[^"]*ti-queue-section[^"]*"[^>]*>.*?<h2[^>]*>Queue states</h2>~s', $body);
+        self::assertSame(1, preg_match('~<div class="ti-queue-grid"[^>]*>(?<queue>.*?)</div>\s*</section>~s', $body, $queueMatch));
+        $queue = $queueMatch['queue'];
+        $cursor = -1;
+        foreach (['Idle', 'Queued', 'Running', 'Retry', 'Dead', 'Review required'] as $label) {
+            $next = strpos($queue, '>' . $label . '<');
+            self::assertNotFalse($next, 'Missing canonical queue state ' . $label);
+            self::assertGreaterThan($cursor, $next, 'Queue-state order drifted at ' . $label);
+            $cursor = $next;
+        }
+        self::assertMatchesRegularExpression(
+            '~<strong class="ti-queue-count">0</strong>\s*<span class="ti-queue-label">Idle</span>\s*<span class="ti-queue-unit">threads</span>~s',
+            $queue,
+        );
+
+        self::assertStringContainsString('class="ti-contract-grid"', $body);
+        self::assertStringContainsString('class="card ti-contract-card"', $body);
+        self::assertStringContainsString('class="card ti-evidence-card"', $body);
+        self::assertStringContainsString('class="ti-evidence-count">9 runs</span>', $body);
+        self::assertMatchesRegularExpression(
+            '~<thead>\s*<tr>\s*<th scope="col">ID</th>\s*<th scope="col">When</th>\s*<th scope="col">Topic</th>\s*<th scope="col">Outcome</th>\s*<th scope="col"[^>]*>Input tokens</th>\s*<th scope="col">Contract</th>\s*<th scope="col">Evidence</th>\s*<th scope="col">Actions</th>\s*</tr>\s*</thead>~s',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '~<td class="ti-evidence-time"><time datetime="\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z" title="[^"]+ UTC">\d{1,2} [A-Z][a-z]{2} \d{2}:\d{2}</time></td>~',
+            $body,
+        );
+        self::assertMatchesRegularExpression('~<p class="ti-budget-reset">Resets \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC</p>~', $body);
+        foreach ($outcomeRegisters as $status => $register) {
+            self::assertMatchesRegularExpression(
+                '~data-ti-outcome="' . preg_quote($register, '~') . '"\s+data-ti-generation-status="' . preg_quote($status, '~') . '"~',
+                $body,
+            );
+        }
+
+        self::assertStringContainsString('admin-safe-model', $body);
+        self::assertStringContainsString('prompt-v1', $body);
+        self::assertStringContainsString('Post #' . $seed['post_ids'][0], $body);
+        self::assertStringNotContainsString($secret, $body);
+        self::assertStringNotContainsString($requestFingerprint, $body);
+        self::assertStringNotContainsString('generated summary text must stay out', $body);
+        self::assertStringNotContainsString('Authorization', $body);
+        self::assertStringNotContainsString('name="api_key"', $body);
+        self::assertStringNotContainsString('Failed only', $body);
+        self::assertStringNotContainsString('>Digest<', $body);
+        self::assertStringNotContainsString('claude-sonnet-4-6', $body);
+        self::assertDoesNotMatchRegularExpression('~\bago\b~i', $body);
 
         $this->actingAs($this->makeUser(['username' => 'not-ti-admin']));
         $this->assertStatus(403, $this->get('/admin/thread-intelligence'));
+    }
+
+    public function test_dashboard_humanizes_all_heartbeat_classifications_and_uses_absolute_times(): void
+    {
+        $settings = new SettingRepository($this->db);
+        $settings->set('features', ['community_memory' => true, 'automated_context' => true]);
+        $this->rebuildApp('sk-heartbeat-present');
+        $this->actingAs($this->admin);
+        $now = time();
+        $healthyCompleted = $now - 60;
+
+        $cases = [
+            'never_run' => [null, 'Never run', 'No completed run'],
+            'invalid' => [['invalid' => true], 'Invalid', 'Heartbeat record is invalid'],
+            'running' => [$this->heartbeatRecord('running', $now - 30, null), 'Running', 'Started ' . gmdate('M j, Y \\a\\t H:i', $now - 30) . ' UTC'],
+            'interrupted' => [$this->heartbeatRecord('running', $now - 1200, null), 'Interrupted', 'Started ' . gmdate('M j, Y \\a\\t H:i', $now - 1200) . ' UTC'],
+            'attention' => [$this->heartbeatRecord('error', $now - 90, $now - 30), 'Needs attention', 'Last run ' . gmdate('M j, Y \\a\\t H:i', $now - 30) . ' UTC'],
+            'stale' => [$this->heartbeatRecord('ok', $now - 900, $now - 600), 'Stale', 'Last run ' . gmdate('M j, Y \\a\\t H:i', $now - 600) . ' UTC'],
+            'healthy' => [$this->heartbeatRecord('ok', $now - 90, $healthyCompleted), 'Healthy', 'Last run ' . gmdate('M j, Y \\a\\t H:i', $healthyCompleted) . ' UTC'],
+        ];
+
+        foreach ($cases as $classification => [$record, $label, $detail]) {
+            if ($record === null) {
+                $this->db->run('DELETE FROM settings WHERE `key` = ?', [ThreadIntelligenceSettings::HEARTBEAT_KEY]);
+            } else {
+                $settings->set(ThreadIntelligenceSettings::HEARTBEAT_KEY, $record);
+            }
+            $body = $this->get('/admin/thread-intelligence')->body();
+            self::assertSame(
+                1,
+                preg_match('~<div[^>]*data-ti-status="heartbeat"[^>]*>(?<card>.*?)</div>~s', $body, $match),
+                'Missing heartbeat card for ' . $classification,
+            );
+            self::assertStringContainsString('<strong class="ti-status-value">' . $label . '</strong>', $match['card']);
+            self::assertStringContainsString('<span class="ti-status-detail">' . $detail . '</span>', $match['card']);
+            self::assertDoesNotMatchRegularExpression('~\bago\b~i', $match['card']);
+        }
+    }
+
+    public function test_dashboard_empty_evidence_uses_the_truthful_unfiltered_empty_state(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['community_memory' => true, 'automated_context' => true]);
+        $this->actingAs($this->admin);
+
+        $body = $this->get('/admin/thread-intelligence')->body();
+
+        self::assertMatchesRegularExpression(
+            '~<div class="ti-evidence-empty state-empty">\s*<h3>No generation attempts</h3>\s*<p>No generation attempts have been recorded\.</p>\s*</div>~s',
+            $body,
+        );
+        self::assertStringContainsString('class="ti-evidence-count">0 runs</span>', $body);
+        self::assertStringNotContainsString('Nothing has failed', $body);
+        self::assertStringNotContainsString('Failed only', $body);
     }
 
     public function test_pause_provider_retry_and_thread_recovery_are_csrf_protected_persistent_and_audited(): void
@@ -148,10 +304,18 @@ final class AppAdminThreadIntelligenceTest extends TestCase
         (new SettingRepository($this->db))->set('features', ['community_memory' => false, 'automated_context' => true]);
         $this->actingAs($this->admin);
 
+        // The flag rows link out to the console they govern. Under ADR 0024 the
+        // nav no longer also links it from here — Thread Intelligence is a tab of
+        // the Settings area, and /admin/features sits in Features — so the row
+        // link is the only occurrence and is the one that matters.
         $features = $this->get('/admin/features');
         $this->assertStatus(200, $features);
         self::assertStringContainsString('href="/admin/thread-intelligence"', $features->body());
-        self::assertGreaterThanOrEqual(2, substr_count($features->body(), '/admin/thread-intelligence'));
+
+        // …and it is reachable in the Settings area's own tab strip.
+        $settings = $this->get('/admin/settings');
+        $this->assertStatus(200, $settings);
+        self::assertStringContainsString('href="/admin/thread-intelligence"', $settings->body());
 
         $dashboard = $this->get('/admin');
         $this->assertStatus(200, $dashboard);
@@ -180,6 +344,21 @@ final class AppAdminThreadIntelligenceTest extends TestCase
             $apiKey,
             $this->db,
         );
+    }
+
+    /** @return array{run_id:string,status:string,worker_label:string,started_at:string,completed_at:?string,processed:int,succeeded:int,failed:int} */
+    private function heartbeatRecord(string $status, int $startedAt, ?int $completedAt): array
+    {
+        return [
+            'run_id' => 'presentation-contract-run',
+            'status' => $status,
+            'worker_label' => 'presentation-contract-worker',
+            'started_at' => gmdate('Y-m-d\TH:i:s\Z', $startedAt),
+            'completed_at' => $completedAt === null ? null : gmdate('Y-m-d\TH:i:s\Z', $completedAt),
+            'processed' => 4,
+            'succeeded' => 3,
+            'failed' => 1,
+        ];
     }
 
     /** @return array{thread_id:int,slug:string,post_ids:list<int>} */

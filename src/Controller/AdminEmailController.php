@@ -17,7 +17,7 @@ use App\Service\RateLimitService;
 /** Admin email delivery operations dashboard (ADMIN §7.5/§7.6/§10.1), gated by the `email` flag. */
 final class AdminEmailController extends Controller
 {
-    private const STATUSES = ['queued', 'sent', 'bounced', 'complained', 'suppressed', 'failed'];
+    private const STATUSES = ['queued', 'sent', 'failed', 'suppressed', 'bounced', 'complained'];
     private const KINDS = ['instant', 'digest', 'test', 'system'];
 
     private function gate(): void
@@ -49,7 +49,10 @@ final class AdminEmailController extends Controller
      */
     private function emailView(?string $status, ?string $kind, string $emailFilter, int $page, array $extra = [], int $httpStatus = 200): Response
     {
-        $model = $this->container->get(EmailOpsService::class)->dashboardModel($status, $kind, $emailFilter, $page);
+        $model = [
+            'status_options' => self::STATUSES,
+            'kind_options' => self::KINDS,
+        ] + $this->container->get(EmailOpsService::class)->dashboardModel($status, $kind, $emailFilter, $page);
 
         return $this->view('admin/email', $extra + $model, $httpStatus);
     }
@@ -94,7 +97,7 @@ final class AdminEmailController extends Controller
         } catch (ValidationException $e) {
             return $this->emailView(null, null, '', 1, ['unsuppress_error' => $e->first()], 422);
         }
-        return $this->redirectWithFlash('/admin/email', 'Address removed from the suppression list.');
+        return $this->redirectWithFlash('/admin/email', 'Address released from the suppression list.');
     }
 
     /** @param array<string,string> $params */

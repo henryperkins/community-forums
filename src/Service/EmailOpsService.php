@@ -59,7 +59,6 @@ final class EmailOpsService
             'total' => $total,
             'status_counts' => $this->deliveries->statusCounts(),
             'suppressions' => $this->suppress->list(100, 0, null),
-            'suppression_count' => $this->suppress->count(null),
             'mailer_configured' => $this->mailer->isConfigured(),
             'mail_from' => (string) ($this->config?->get('mail.from', '') ?? ''),
             'domain_status' => $domain,
@@ -69,6 +68,7 @@ final class EmailOpsService
             'f_email' => $email ?? '',
             'page' => $page,
             'per_page' => $perPage,
+            'total_pages' => max(1, intdiv($total + $perPage - 1, $perPage)),
             'has_next' => $page * $perPage < $total,
         ];
     }

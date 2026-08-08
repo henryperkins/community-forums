@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Role: ' . ($row['role']['name'] ?? ''));
+$this->section('variant', 'admin');
 $role = $row['role'];
 $isSystem = ((string) $role['kind']) === 'system';
 $checked = (array) ($old['capabilities'] ?? $current_keys);
@@ -15,6 +16,10 @@ $renewErrorContext = isset($old['renew_assignment_id']);
 $assignErrorContext = isset($old['assignment']);
 $cloneErrorContext = isset($old['clone']);
 $defErrorContext = !$renewErrorContext && !$assignErrorContext && !$cloneErrorContext;
+$allErrors = is_array($errors ?? null) ? $errors : [];
+$defErrors = $defErrorContext ? $allErrors : [];
+$cloneErrors = $cloneErrorContext ? $allErrors : [];
+$assignErrors = $assignErrorContext ? $allErrors : [];
 // Group the flat capability catalogue by its middle namespace token
 // (core.board.* → Board, core.user.* → User, …) so the checkbox run scans as
 // tiers instead of one undifferentiated list.
@@ -25,81 +30,97 @@ foreach ($catalogue as $capKey => $capMeta) {
 }
 ksort($groupedCatalogue);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $e($role['name']) ?> <small>v<?= (int) $role['version'] ?></small></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'roles', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
-    <p class="muted">
-        <code><?= $e($role['role_key']) ?></code> -
-        <?= $isSystem ? 'Protected system anchor (decision #18), read-only.' : 'Custom role.' ?>
+<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles', 'pane_class' => 'admin-roles admin-role-record']) ?>
+    <a class="admin-back" href="/admin/roles">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        All roles
+    </a>
+    <div class="role-record-heading">
+        <h2 class="admin-record-title"><?= $e($role['name']) ?></h2>
+        <span>v<?= (int) $role['version'] ?></span>
+    </div>
+    <p class="role-record-note">
+        <code><?= $e($role['role_key']) ?></code> —
+        <?= $isSystem ? 'Protected system anchor, read-only.' : 'Custom role.' ?>
         Active assignments affected by changes: <strong><?= (int) $row['impact'] ?></strong>.
     </p>
 
     <?php if (!$isSystem): ?>
-    <section class="card">
-        <h2>Edit definition</h2>
-        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>" class="stacked">
+    <section class="card role-definition-card">
+        <h3>Edit definition</h3>
+        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>" class="role-definition-form">
             <?= $this->csrfField() ?>
-            <label>Name
-                <input type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? $role['name']) ?>" required>
-            </label>
-            <?php if ($defErrorContext && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <div class="role-definition-grid">
+                <div>
+                    <label class="role-form-label"><span>Name</span>
+                        <input class="input" type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? $role['name']) ?>"<?= field_attrs($defErrors, 'name', 'err-role-definition-name') ?> required>
+                    </label>
+                    <?= field_error($defErrors, 'name', 'err-role-definition-name') ?>
+                </div>
+                <div>
+                    <label class="role-form-label"><span>Description (optional)</span>
+                        <input class="input" type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? ($role['description'] ?? '')) ?>"<?= field_attrs($defErrors, 'description', 'err-role-definition-description') ?>>
+                    </label>
+                    <?= field_error($defErrors, 'description', 'err-role-definition-description') ?>
+                </div>
+            </div>
 
-            <label>Description (optional)
-                <input type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? ($role['description'] ?? '')) ?>">
-            </label>
-            <?php if ($defErrorContext && !empty($errors['description'])): ?><p class="field-error"><?= $e($errors['description']) ?></p><?php endif; ?>
+            <div class="role-capability-grid"<?php if (!empty($defErrors['capabilities'])): ?> role="group" aria-invalid="true" aria-describedby="err-role-definition-capabilities"<?php endif; ?>>
+                <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
+                    <fieldset>
+                        <legend><?= $e($groupLabel) ?></legend>
+                        <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
+                            <label class="role-capability-option">
+                                <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
+                                <span><code><?= $e($key) ?></code><span class="role-capability-description"> — <?= $e($meta['consent'] ?? $meta['description']) ?></span>
+                                <?php if ($meta['risk'] === 'high'): ?><span class="role-risk">High risk</span><?php endif; ?>
+                                <?php if (!$enforced): ?><span class="role-capability-locked">(not yet enforceable)</span><?php endif; ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </fieldset>
+                <?php endforeach; ?>
+            </div>
+            <?= field_error($defErrors, 'capabilities', 'err-role-definition-capabilities') ?>
 
-            <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
-                <fieldset>
-                    <legend><?= $e($groupLabel) ?> capabilities</legend>
-                    <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
-                        <label>
-                            <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
-                            <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
-                            <?php if ($meta['risk'] === 'high'): ?><span class="pill">high risk</span><?php endif; ?>
-                            <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
-                        </label>
-                    <?php endforeach; ?>
-                </fieldset>
-            <?php endforeach; ?>
-            <?php if ($defErrorContext && !empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
-
-            <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
-            </label>
-            <?php if ($defErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
-
-            <div class="form-actions"><button class="btn" type="submit">Save (bumps version)</button></div>
+            <div class="role-definition-footer">
+                <div class="role-reauth-field">
+                    <label class="role-form-label"><span>Confirm your password</span>
+                        <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($defErrors, 'current_password', 'err-role-definition-current_password') ?> required>
+                    </label>
+                    <?= field_error($defErrors, 'current_password', 'err-role-definition-current_password') ?>
+                </div>
+                <button class="btn" type="submit">Save (bumps version)</button>
+            </div>
         </form>
     </section>
     <?php else: ?>
-    <section class="card">
-        <h2>Capabilities held</h2>
-        <ul>
+    <section class="card role-held-card">
+        <h3>Capabilities held</h3>
+        <ul class="role-held-list">
             <?php foreach ($current_keys as $key): ?><li><code><?= $e($key) ?></code></li><?php endforeach; ?>
         </ul>
     </section>
     <?php endif; ?>
 
-    <section class="card">
-        <h2>Clone into a new custom role</h2>
-        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/clone" class="stacked">
+    <section class="card role-clone-card">
+        <h3>Clone into a new custom role</h3>
+        <p class="role-section-intro">Cloning copies only currently-enforceable capabilities, so the copy is never wider than the anchor.</p>
+        <?= field_error($cloneErrors, 'role', 'err-role-clone-role', alert: true) ?>
+        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/clone" class="role-clone-form">
             <?= $this->csrfField() ?>
-            <label>New role name
-                <input type="text" name="name" maxlength="190" value="<?= $e((string) ($old['clone']['name'] ?? '')) ?>" required>
-            </label>
-            <?php if ($cloneErrorContext && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
-            <?php if ($cloneErrorContext && !empty($errors['role'])): ?><p class="field-error"><?= $e($errors['role']) ?></p><?php endif; ?>
-            <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
-            </label>
-            <?php if ($cloneErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
-            <div class="form-actions"><button class="btn" type="submit">Clone</button></div>
+            <div>
+                <label class="role-form-label"><span>New role name</span>
+                    <input class="input" type="text" name="name" maxlength="190" value="<?= $e((string) ($old['clone']['name'] ?? '')) ?>"<?= field_attrs($cloneErrors, 'name', 'err-role-clone-name') ?> required>
+                </label>
+                <?= field_error($cloneErrors, 'name', 'err-role-clone-name') ?>
+            </div>
+            <div class="role-reauth-field">
+                <label class="role-form-label"><span>Confirm your password</span>
+                    <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($cloneErrors, 'current_password', 'err-role-clone-current_password') ?> required>
+                </label>
+                <?= field_error($cloneErrors, 'current_password', 'err-role-clone-current_password') ?>
+            </div>
+            <button class="btn btn-secondary" type="submit">Clone</button>
         </form>
     </section>
 
@@ -117,47 +138,56 @@ ksort($groupedCatalogue);
         $categoryNames[(int) $c['id']] = (string) $c['name'];
     }
     ?>
-    <section class="card">
-        <h2>Assignments</h2>
+    <section class="card role-assignments-card">
+        <h3>Assignments</h3>
         <?php if (empty($assignments)): ?>
-        <p class="muted">No one has been assigned this role yet.</p>
+        <p class="role-assignment-empty">No one has been assigned this role yet.</p>
         <?php else: ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Role assignments">
-        <table class="audit">
+        <table class="audit role-assignment-table">
             <thead><tr><th scope="col">Member</th><th scope="col">Scope</th><th scope="col">Window</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($assignments as $a): ?>
+                <?php
+                $assignmentId = (int) $a['id'];
+                $assignmentStatus = in_array((string) $a['status'], ['active', 'scheduled', 'expired', 'revoked'], true)
+                    ? (string) $a['status']
+                    : 'expired';
+                $rowRenewErrors = $renewAssignmentId === $assignmentId ? $allErrors : [];
+                ?>
                 <tr>
-                    <td><a href="/u/<?= $e($a['username']) ?>">@<?= $e($a['username']) ?></a></td>
+                    <td><a class="role-assignment-member" href="/u/<?= $e($a['username']) ?>">@<?= $e($a['username']) ?></a></td>
                     <td><?= $e((string) $a['scope_type']) ?><?php if ($a['scope_id'] !== null): ?> &mdash; <?php
                         $scopeId = (int) $a['scope_id'];
                         $scopeName = ((string) $a['scope_type'] === 'category')
                             ? ($categoryNames[$scopeId] ?? ('#' . $scopeId))
                             : ($boardNames[$scopeId] ?? ('#' . $scopeId));
                         ?><?= $e($scopeName) ?><?php endif; ?></td>
-                    <td><?= $e((string) ($a['starts_at'] ?? 'now')) ?> &rarr; <?= $e((string) ($a['ends_at'] ?? 'no expiry')) ?></td>
-                    <td><span class="state state-<?= $e((string) $a['status']) ?>"><?= $e((string) $a['status']) ?></span></td>
-                    <td>
+                    <td class="role-assignment-window"><?= $e((string) ($a['starts_at'] ?? 'now')) ?> &rarr; <?= $e((string) ($a['ends_at'] ?? 'no expiry')) ?></td>
+                    <td><span class="role-assignment-status role-assignment-status-<?= $e($assignmentStatus) ?>"><?= $e(ucfirst($assignmentStatus)) ?></span></td>
+                    <td class="role-assignment-action-cell">
                         <?php if ($a['status'] !== 'revoked'): ?>
-                        <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/revoke" class="inline">
-                            <?= $this->csrfField() ?>
-                            <button class="linkbtn danger" type="submit" aria-label="Revoke this role from @<?= $e($a['username']) ?>">Revoke</button>
-                        </form>
-                        <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/renew" class="inline-form">
-                            <?= $this->csrfField() ?>
-                            <input type="text" class="input" name="ends_at" placeholder="YYYY-MM-DD HH:MM" aria-label="New expiry (UTC) for @<?= $e($a['username']) ?>" value="<?= $renewAssignmentId === (int) $a['id'] ? $e((string) ($old['renew']['ends_at'] ?? '')) : '' ?>" required>
-                            <label class="sr-only" for="renew-password-<?= (int) $a['id'] ?>">Your password to renew @<?= $e($a['username']) ?>'s assignment</label>
-                            <input type="password" class="input" id="renew-password-<?= (int) $a['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
-                            <button class="btn btn-small" type="submit">Renew</button>
-                        </form>
+                        <div class="role-assignment-actions">
+                            <form method="post" action="/admin/role-assignments/<?= $assignmentId ?>/revoke" class="inline">
+                                <?= $this->csrfField() ?>
+                                <button class="linkbtn danger" type="submit" aria-label="Revoke this role from @<?= $e($a['username']) ?>">Revoke</button>
+                            </form>
+                            <form method="post" action="/admin/role-assignments/<?= $assignmentId ?>/renew" class="role-renew-form">
+                                <?= $this->csrfField() ?>
+                                <input type="text" class="input" name="ends_at" placeholder="YYYY-MM-DD HH:MM" aria-label="New expiry (UTC) for @<?= $e($a['username']) ?>" value="<?= $renewAssignmentId === $assignmentId ? $e((string) ($old['renew']['ends_at'] ?? '')) : '' ?>"<?= field_attrs($rowRenewErrors, 'ends_at', 'err-role-renew-' . $assignmentId . '-ends_at') ?> required>
+                                <label class="sr-only" for="renew-password-<?= $assignmentId ?>">Your password to renew @<?= $e($a['username']) ?>'s assignment</label>
+                                <input type="password" class="input" id="renew-password-<?= $assignmentId ?>" name="current_password" placeholder="Your password" autocomplete="current-password"<?= field_attrs($rowRenewErrors, 'current_password', 'err-role-renew-' . $assignmentId . '-current_password') ?> required>
+                                <button class="btn btn-small" type="submit">Renew</button>
+                            </form>
+                        </div>
                         <?php endif; ?>
-                        <?php if ($renewAssignmentId === (int) $a['id']): ?>
+                        <?php if ($renewAssignmentId === $assignmentId): ?>
                             <?php // Errors render OUTSIDE the status!=='revoked' guard: a renew that
                                   // fails BECAUSE the row was concurrently revoked must still show its
                                   // 'assignment' error, not vanish with the form (review V5). ?>
-                            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
-                            <?php if (!empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
-                            <?php if (!empty($errors['assignment'])): ?><p class="field-error"><?= $e($errors['assignment']) ?></p><?php endif; ?>
+                            <?= field_error($rowRenewErrors, 'current_password', 'err-role-renew-' . $assignmentId . '-current_password') ?>
+                            <?= field_error($rowRenewErrors, 'ends_at', 'err-role-renew-' . $assignmentId . '-ends_at') ?>
+                            <?= field_error($rowRenewErrors, 'assignment', 'err-role-renew-' . $assignmentId . '-assignment', alert: true) ?>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -166,58 +196,70 @@ ksort($groupedCatalogue);
         </table>
         </div>
         <?php endif; ?>
-    </section>
 
-    <section class="card">
-        <h2>Assign this role</h2>
-        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/assignments" class="stacked">
+        <h4>Assign this role</h4>
+        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/assignments" class="role-assign-form">
             <?= $this->csrfField() ?>
-            <?php if ($assignErrorContext && !empty($errors['role'])): ?><p class="field-error"><?= $e($errors['role']) ?></p><?php endif; ?>
-            <?php if ($assignErrorContext && !empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
-            <label>Member username
-                <input type="text" name="username" maxlength="32" value="<?= $e((string) ($old['assignment']['username'] ?? '')) ?>" required>
-            </label>
-            <?php if ($assignErrorContext && !empty($errors['username'])): ?><p class="field-error"><?= $e($errors['username']) ?></p><?php endif; ?>
+            <?= field_error($assignErrors, 'role', 'err-role-assign-role', alert: true) ?>
+            <?= field_error($assignErrors, 'capabilities', 'err-role-assign-capabilities', alert: true) ?>
+            <div>
+                <label class="role-form-label"><span>Member username</span>
+                    <input class="input role-mono-input" type="text" name="username" maxlength="32" value="<?= $e((string) ($old['assignment']['username'] ?? '')) ?>"<?= field_attrs($assignErrors, 'username', 'err-role-assign-username') ?> required>
+                </label>
+                <?= field_error($assignErrors, 'username', 'err-role-assign-username') ?>
+            </div>
 
-            <label>Scope
-                <select name="scope_type">
-                    <?php foreach (['site' => 'Site-wide', 'board' => 'A single board', 'category' => 'A single category'] as $value => $label): ?>
-                        <option value="<?= $e($value) ?>"<?= ($old['assignment']['scope_type'] ?? 'site') === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </label>
-            <?php if ($assignErrorContext && !empty($errors['scope_type'])): ?><p class="field-error"><?= $e($errors['scope_type']) ?></p><?php endif; ?>
+            <div>
+                <label class="role-form-label"><span>Scope</span>
+                    <select class="input" name="scope_type"<?= field_attrs($assignErrors, 'scope_type', 'err-role-assign-scope_type') ?>>
+                        <?php foreach (['site' => 'Site-wide', 'category' => 'Category', 'board' => 'Board'] as $value => $label): ?>
+                            <option value="<?= $e($value) ?>"<?= ($old['assignment']['scope_type'] ?? 'site') === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <?= field_error($assignErrors, 'scope_type', 'err-role-assign-scope_type') ?>
+            </div>
 
-            <label>Board/category id <span class="muted">(leave blank for site-wide)</span>
-                <input type="text" name="scope_id" list="assignment-board-options" value="<?= $e((string) ($old['assignment']['scope_id'] ?? '')) ?>">
-                <datalist id="assignment-board-options">
-                    <?php foreach (($boards ?? []) as $b): ?><option value="<?= (int) $b['id'] ?>" label="<?= $e((string) $b['name']) ?>"><?php endforeach; ?>
-                </datalist>
-            </label>
-            <?php if ($assignErrorContext && !empty($errors['scope_id'])): ?><p class="field-error"><?= $e($errors['scope_id']) ?></p><?php endif; ?>
+            <div>
+                <label class="role-form-label"><span>Board / category id <span class="role-label-note">(blank = site-wide)</span></span>
+                    <input class="input role-mono-input" type="text" name="scope_id" list="assignment-board-options" value="<?= $e((string) ($old['assignment']['scope_id'] ?? '')) ?>"<?= field_attrs($assignErrors, 'scope_id', 'err-role-assign-scope_id') ?>>
+                    <datalist id="assignment-board-options">
+                        <?php foreach (($boards ?? []) as $b): ?><option value="<?= (int) $b['id'] ?>" label="<?= $e((string) $b['name']) ?>"><?php endforeach; ?>
+                    </datalist>
+                </label>
+                <?= field_error($assignErrors, 'scope_id', 'err-role-assign-scope_id') ?>
+            </div>
 
-            <label>Starts (UTC) <span class="muted">(optional — blank starts now)</span>
-                <input type="text" name="starts_at" placeholder="YYYY-MM-DD HH:MM" value="<?= $e((string) ($old['assignment']['starts_at'] ?? '')) ?>">
-            </label>
-            <?php if ($assignErrorContext && !empty($errors['starts_at'])): ?><p class="field-error"><?= $e($errors['starts_at']) ?></p><?php endif; ?>
+            <div>
+                <label class="role-form-label"><span>Starts (UTC) <span class="role-label-note">(blank starts now)</span></span>
+                    <input class="input role-time-input" type="text" name="starts_at" placeholder="2026-08-10 09:00" value="<?= $e((string) ($old['assignment']['starts_at'] ?? '')) ?>"<?= field_attrs($assignErrors, 'starts_at', 'err-role-assign-starts_at', 'role-assign-time-format') ?>>
+                </label>
+                <?= field_error($assignErrors, 'starts_at', 'err-role-assign-starts_at') ?>
+            </div>
 
-            <label>Ends (UTC) <span class="muted">(optional — blank never expires)</span>
-                <input type="text" name="ends_at" placeholder="YYYY-MM-DD HH:MM" value="<?= $e((string) ($old['assignment']['ends_at'] ?? '')) ?>">
-            </label>
-            <?php if ($assignErrorContext && !empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
+            <div>
+                <label class="role-form-label"><span>Ends (UTC) <span class="role-label-note">(blank never expires)</span></span>
+                    <input class="input role-time-input" type="text" name="ends_at" placeholder="2026-11-01 00:00" value="<?= $e((string) ($old['assignment']['ends_at'] ?? '')) ?>"<?= field_attrs($assignErrors, 'ends_at', 'err-role-assign-ends_at', 'role-assign-time-format') ?>>
+                </label>
+                <?= field_error($assignErrors, 'ends_at', 'err-role-assign-ends_at') ?>
+            </div>
 
-            <label>Reason (optional)
-                <input type="text" name="reason" maxlength="255" value="<?= $e((string) ($old['assignment']['reason'] ?? '')) ?>">
-            </label>
+            <div>
+                <label class="role-form-label"><span>Confirm your password</span>
+                    <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($assignErrors, 'current_password', 'err-role-assign-current_password') ?> required>
+                </label>
+                <?= field_error($assignErrors, 'current_password', 'err-role-assign-current_password') ?>
+            </div>
 
-            <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
-            </label>
-            <?php if ($assignErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <div>
+                <label class="role-form-label"><span>Reason (optional)</span>
+                    <input class="input" type="text" name="reason" maxlength="255" value="<?= $e((string) ($old['assignment']['reason'] ?? '')) ?>">
+                </label>
+            </div>
 
-            <div class="form-actions"><button class="btn" type="submit">Assign role</button></div>
+            <p class="role-time-format" id="role-assign-time-format">Date-time format: <code>YYYY-MM-DD HH:MM</code> (UTC).</p>
+            <div class="role-assign-actions"><button class="btn" type="submit">Assign</button></div>
         </form>
     </section>
     <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

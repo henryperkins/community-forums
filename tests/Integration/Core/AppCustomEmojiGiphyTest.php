@@ -46,6 +46,31 @@ final class AppCustomEmojiGiphyTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
     }
 
+    public function test_catalogue_action_header_is_visually_hidden_inside_the_scroll_region(): void
+    {
+        // Slice 13 drops the visible "Action" column head to match the design, but
+        // the header cell must survive for AT — and it must stay inside
+        // .table-scroll, which is position: relative precisely so an absolutely
+        // positioned .sr-only cell cannot escape the clip and stretch the page
+        // (mobile Chrome then zooms the layout viewport out).
+        $this->actingAs($this->makeAdmin(['username' => 'emoji_sr_admin']));
+        $this->assertRedirect($this->post('/admin/custom-emoji', [
+            'shortcode' => 'party',
+            'name' => 'Party',
+            'image_path' => '/emoji/party.webp',
+            'mime' => 'image/webp',
+        ]), '/admin/custom-emoji');
+
+        $body = $this->get('/admin/custom-emoji')->body();
+
+        self::assertStringContainsString('<span class="sr-only">Action</span>', $body);
+        self::assertStringNotContainsString('<th scope="col">Action</th>', $body);
+
+        $region = strpos($body, '<div class="table-scroll" tabindex="0" role="region" aria-label="Custom emoji catalogue">');
+        self::assertNotFalse($region, 'the catalogue scroll region should render');
+        self::assertLessThan(strpos($body, '<span class="sr-only">Action</span>'), $region);
+    }
+
     public function test_invalid_emoji_input_rerenders_dashboard_422_with_typed_values(): void
     {
         // Anti-draft-loss (round-2 audit finding 8a): the failure used to

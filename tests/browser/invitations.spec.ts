@@ -49,11 +49,16 @@ async function login(page: Page, email: string): Promise<void> {
 
 async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+  // Read the state structurally, not from prose: the enter and exit forms are
+  // mutually exclusive (theme_safe_mode.php:43-69), so the enter button's absence
+  // is the state. Matching the status sentence broke silently when the Imladris
+  // appearance slice reworded it and left this helper clicking a button that the
+  // already-on page never renders.
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  if (!await enter.isVisible({ timeout: 2000 }).catch(() => false)) {
     return false;
   }
 
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
   await enter.click();
   await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
   return true;
@@ -102,6 +107,9 @@ test.afterAll(async ({ browser }) => {
 });
 
 test('invitations: show-once issue + revoke console, invite-only registration, uniform invalid banner (axe-clean)', async ({ page }, info) => {
+  // Six full-page captures (2x on mobile), two axe passes and a full registration
+  // round trip do not fit the 30s default at the phone viewport.
+  test.setTimeout(120_000);
   const who = `${info.project.name}${Date.now().toString(36)}`.replace(/[^a-zA-Z0-9]/g, '').slice(-12);
 
   await login(page, 'admin@retro.test');
@@ -110,10 +118,11 @@ test('invitations: show-once issue + revoke console, invite-only registration, u
   try {
     // ---- issue: the raw link is rendered exactly once --------------------
     await visit(page, '/admin/invitations');
-    await expect(page.getByRole('heading', { name: 'Invitations', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Members & invitations', level: 1 })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Member sections' }).getByText('Invitations', { exact: true })).toHaveAttribute('aria-current', 'page');
     await page.click('form[action="/admin/invitations"] button[type="submit"]'); // defaults: 1 use, 14 days
     await expect(page.getByText('Copy this invitation link now')).toBeVisible();
-    const inviteUrl = await page.locator('.flash code').innerText();
+    const inviteUrl = await page.locator('.member-invitations-once code').innerText();
     const token = inviteUrl.match(/\/invite\/([0-9a-f]{64})/)?.[1];
     expect(token, `show-once panel must contain the invite URL (got: ${inviteUrl})`).toBeTruthy();
     await expectNoSeriousA11yViolations(page, info);
@@ -123,8 +132,8 @@ test('invitations: show-once issue + revoke console, invite-only registration, u
     await page.click('form[action="/admin/invitations"] button[type="submit"]');
     await page.locator('table tbody tr').first().getByRole('button', { name: 'Revoke' }).click();
     await expect(page.getByRole('status').getByText('Invitation revoked.')).toBeVisible();
-    await expect(page.locator('table tbody tr', { hasText: 'Revoked' }).first()).toBeVisible();
-    await expect(page.locator('table tbody tr', { hasText: 'Active' }).first()).toBeVisible();
+    await expect(page.locator('table tbody tr', { hasText: 'revoked' }).first()).toBeVisible();
+    await expect(page.locator('table tbody tr', { hasText: 'active' }).first()).toBeVisible();
     // The raw token never reappears in the list (show-once, hash-only at rest).
     await expect(page.locator('body')).not.toContainText(token!);
     await shot(page, info, '70-admin-invitations-list');

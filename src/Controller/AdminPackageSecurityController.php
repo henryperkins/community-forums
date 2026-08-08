@@ -233,21 +233,32 @@ final class AdminPackageSecurityController extends Controller
 
             return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, 'Local review decision recorded.'));
         } catch (ValidationException $e) {
-            return $this->reviewErrorView($packageId, $e->errors);
+            return $this->reviewErrorView($packageId, $e->errors, $request->allInput());
         } catch (PackagePolicyException $e) {
-            return $this->reviewErrorView($packageId, ['review' => 'Refused (' . $e->code . '): ' . $e->getMessage()]);
+            return $this->reviewErrorView(
+                $packageId,
+                ['review' => 'Refused (' . $e->code . '): ' . $e->getMessage()],
+                $request->allInput(),
+            );
         }
     }
 
-    /** @param array<string,string> $errors */
-    private function reviewErrorView(int $packageId, array $errors): Response
+    /**
+     * Anti-draft-loss (C-13): a refused review used to discard both the typed note
+     * and the chosen decision for the row. The release id in $old is what lets the
+     * partial replay only the row that was actually submitted.
+     *
+     * @param array<string,string> $errors
+     * @param array<string,mixed> $old
+     */
+    private function reviewErrorView(int $packageId, array $errors, array $old = []): Response
     {
         $detail = $this->container->get(RegistryCatalogService::class)->detail($packageId);
         if ($detail === null) {
             throw new NotFoundException('Package not found.');
         }
 
-        return $this->noindex($this->view('admin/package_detail', $detail + ['errors' => $errors], 422));
+        return $this->noindex($this->view('admin/package_detail', $detail + ['errors' => $errors, 'review_old' => $old], 422));
     }
 
     private function gate(): void

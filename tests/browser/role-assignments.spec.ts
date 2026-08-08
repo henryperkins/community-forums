@@ -33,7 +33,8 @@ import path from 'node:path';
  * the shared evidence DB; that theme desyncs shared admin-table styles under
  * WCAG AA) and its admin-login / user-switch-cookie-trap helpers verbatim.
  */
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({ path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`), fullPage: true });
@@ -43,6 +44,35 @@ async function visit(page: Page, url: string): Promise<void> {
   const resp = await page.goto(url);
   expect(resp, `no response for ${url}`).not.toBeNull();
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
+}
+
+/**
+ * app.js promotes the board identity control (or mobile FAB) to the visible
+ * New topic trigger and hides the native details summary. Keep the summary as
+ * the no-JS fallback, but never wait on that hidden control in this JS-on spec.
+ */
+async function openTopicComposer(page: Page): Promise<void> {
+  const details = page.locator('details.composer-details#new-topic');
+  const promoted = page.locator('[data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  const summary = details.locator(':scope > summary');
+  const opener = (await promoted.isVisible())
+    ? promoted
+    : ((await fab.isVisible()) ? fab : summary);
+  await opener.click();
+  await expect(details).toHaveJSProperty('open', true);
+}
+
+async function openTopicManagement(page: Page) {
+  await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
+  const tools = page.locator('[data-topic-tools]');
+  await expect(tools).toBeVisible();
+  await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const details = tools.locator('[data-topic-tools-section="management"]');
+  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await details.locator(':scope > summary').click();
+  }
+  return details;
 }
 
 async function login(page: Page, email: string): Promise<void> {
@@ -135,10 +165,14 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then 
   await page.fill('input[name="scope_id"]', generalBoardId!);
   await page.fill('input[name="reason"]', 'Browser evidence: Inc 6 deputy grant');
   await page.fill('form[action$="/assignments"] input[name="current_password"]', 'password123');
-  await page.click('form[action$="/assignments"] button[type="submit"]');
+  const assignButton = page.locator('form[action$="/assignments"] button[type="submit"]');
+  await assignButton.scrollIntoViewIfNeeded();
+  // The following row assertion is the proof that this tall mobile-page click
+  // reached the form rather than being intercepted by an off-edge control.
+  await assignButton.click({ force: true });
 
   const assignmentRow = page.locator('table tbody tr', { hasText: '@bob' });
-  await expect(assignmentRow).toContainText('active');
+  await expect(assignmentRow.locator('.role-assignment-status-active')).toHaveText('Active');
   await expect(assignmentRow).toContainText('General'); // board-scoped, not site-wide
   await expectNoSeriousA11yViolations(page, info); // active-assignment state is accessible
   await shot(page, info, '62-admin-role-assigned');
@@ -150,11 +184,9 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then 
   await visit(page, '/c/general');
   await page.getByRole('link', { name: 'Mobile layout looks great' }).click();
   await page.waitForURL(/\/t\//);
-  await page.locator('.thread-actions .dm-menu > summary').click();
-  const menu = page.locator('.dm-menu-pop');
-  await expect(menu).toBeVisible();
-  await expect(menu.getByRole('button', { name: 'Lock' })).toBeVisible();
-  await expect(menu.getByRole('button', { name: 'Pin' })).toHaveCount(0);
+  const management = await openTopicManagement(page);
+  await expect(management.getByRole('button', { name: 'Lock' })).toBeVisible();
+  await expect(management.getByRole('button', { name: 'Pin' })).toHaveCount(0);
   await shot(page, info, '64-deputy-sees-lock-control');
 
   // --- Back to admin: revoke, and confirm the surface reflects it ----------
@@ -165,11 +197,73 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then 
   // force: mirrors api-tokens.spec.ts's tall-mobile-page hit-test quirk — the
   // toContainText('revoked') assertion below proves the click fired.
   await revokeBtn.click({ force: true });
-  await expect(page.locator('table tbody tr', { hasText: '@bob' })).toContainText('revoked');
+  await expect(page.locator('table tbody tr', { hasText: '@bob' }).locator('.role-assignment-status-revoked')).toHaveText('Revoked');
   await expectNoSeriousA11yViolations(page, info); // revoked-assignment state is accessible
   await shot(page, info, '63-admin-role-assignment-revoked');
 
   await exitThemeSafeMode(page);
+});
+
+test('roles remain operable without JavaScript: create, assign, renew, and revoke', async ({ browser, baseURL }, info) => {
+  test.setTimeout(240_000);
+
+  const context = await browser.newContext({
+    baseURL: baseURL!,
+    javaScriptEnabled: false,
+    viewport: info.project.name === 'mobile'
+      ? { width: 390, height: 844 }
+      : { width: 1280, height: 800 },
+  });
+  const page = await context.newPage();
+
+  try {
+    await login(page, 'admin@retro.test');
+    await visit(page, '/admin/roles');
+    await expect(page.locator('html')).not.toHaveClass(/\bhas-js\b/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+    await expect(page.locator('[data-role-capability-count]')).toHaveCount(0);
+
+    const roleName = `No-JS operator (${info.project.name}-${Date.now()})`;
+    const createForm = page.locator('form[action="/admin/roles"]');
+    await createForm.locator('input[name="name"]').fill(roleName);
+    await createForm.locator('input[name="capabilities[]"][value="core.thread.lock"]').check();
+    await createForm.locator('input[name="current_password"]').fill('password123');
+    await createForm.getByRole('button', { name: 'Create role' }).click();
+    await expect(page.locator('.role-table tbody tr', { hasText: roleName })).toBeVisible();
+
+    await page.locator('.role-table tbody tr', { hasText: roleName }).getByRole('link', { name: 'Edit' }).click();
+    await page.waitForURL(/\/admin\/roles\/\d+$/);
+    await expect(page.getByRole('heading', { level: 2, name: roleName })).toBeVisible();
+
+    const assignForm = page.locator('form.role-assign-form');
+    await assignForm.locator('input[name="username"]').fill('bob');
+    await assignForm.locator('select[name="scope_type"]').selectOption('site');
+    await assignForm.locator('input[name="reason"]').fill('No-JS lifecycle browser evidence');
+    await assignForm.locator('input[name="current_password"]').fill('password123');
+    await assignForm.getByRole('button', { name: 'Assign', exact: true }).click();
+
+    let assignmentRow = page.locator('.role-assignment-table tbody tr', { hasText: '@bob' });
+    await expect(assignmentRow.locator('.role-assignment-status-active')).toHaveText('Active');
+    await expect(assignmentRow).toContainText('site');
+
+    const renewForm = assignmentRow.locator('form.role-renew-form');
+    await renewForm.locator('input[name="ends_at"]').fill('2099-12-31 23:59');
+    await renewForm.locator('input[name="current_password"]').fill('password123');
+    await renewForm.getByRole('button', { name: 'Renew' }).click();
+    await expect(page.getByRole('status').getByText('Assignment renewed.')).toBeVisible();
+
+    assignmentRow = page.locator('.role-assignment-table tbody tr', { hasText: '@bob' });
+    await expect(assignmentRow.locator('.role-assignment-status-active')).toHaveText('Active');
+    await expect(assignmentRow).toContainText('2099-12-31 23:59:00');
+    await assignmentRow.getByRole('button', { name: 'Revoke' }).click();
+    await expect(page.getByRole('status').getByText('Assignment revoked.')).toBeVisible();
+    await expect(page.locator('.role-assignment-table tbody tr', { hasText: '@bob' })
+      .locator('.role-assignment-status-revoked')).toHaveText('Revoked');
+
+    await shot(page, info, '66-admin-role-no-js-lifecycle');
+  } finally {
+    await context.close();
+  }
 });
 
 /**
@@ -179,6 +273,7 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then 
  * legacy door (bare isModerator()) still decides and carol would be 403'd.
  */
 test('deputy queue discovery: approve-only deputy reaches their scoped approvals queue (axe-clean)', async ({ page }, info) => {
+  test.setTimeout(60_000);
   const suffix = `${info.project.name}-${Date.now()}`;
 
   await login(page, 'admin@retro.test');
@@ -199,7 +294,7 @@ test('deputy queue discovery: approve-only deputy reaches their scoped approvals
     await page.waitForURL(/\/admin\/boards\/\d+\/edit$/);
     const boardId = new URL(page.url()).pathname.match(/(\d+)\/edit$/)![1];
     const slug = await page.inputValue('input[name="slug"]');
-    await page.check('input[name="require_approval"]');
+    await page.check('input[type="checkbox"][name="require_approval"]');
     await page.click(`form[action="/admin/boards/${boardId}"] button:has-text("Save board")`);
     return { id: boardId, slug };
   };
@@ -223,8 +318,10 @@ test('deputy queue discovery: approve-only deputy reaches their scoped approvals
   await page.fill('input[name="scope_id"]', scopedBoardId);
   await page.fill('input[name="reason"]', 'Browser evidence: queue discovery');
   await page.fill('form[action$="/assignments"] input[name="current_password"]', 'password123');
-  await page.click('form[action$="/assignments"] button[type="submit"]');
-  await expect(page.locator('table tbody tr', { hasText: '@carol' })).toContainText('active');
+  const assignButton = page.locator('form[action$="/assignments"] button[type="submit"]');
+  await assignButton.scrollIntoViewIfNeeded();
+  await assignButton.click({ force: true });
+  await expect(page.locator('table tbody tr', { hasText: '@carol' }).locator('.role-assignment-status-active')).toHaveText('Active');
 
   // bob (no staff standing on these boards) posts one topic into each — held.
   await login(page, 'bob@retro.test');

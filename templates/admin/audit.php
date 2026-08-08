@@ -2,23 +2,17 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Audit log');
+$this->section('variant', 'admin');
 $filters = $filters ?? [];
 $base = $base_query ?? [];
-$page = (int) ($page ?? 0);
+$pageNumber = max(1, (int) ($page ?? 1));
+$perPage = max(1, (int) ($per_page ?? 50));
+$pageCount = max(1, (int) ($page_count ?? (int) ceil(((int) ($total ?? 0)) / $perPage)));
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Accountability</span>
-            <h1>Audit log</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'audit', 'features' => $features ?? []]) ?>
+<?= $this->partial('admin/_console', ['area' => 'overview', 'tab' => 'audit', 'pane_class' => 'admin-overview-audit']) ?>
+        <p class="pane-intro">Every moderation and admin action, append-only. Filter it, page through it, and follow a target's whole trail from its own record.</p>
 
-    <div class="admin-pane">
-    <section class="card">
-        <p class="pane-intro">Every moderation and admin action, append-only (ADMIN §3.6). Filter, page, and follow a target's trail from its own record screen.</p>
+    <section class="card audit-filter-card">
         <form method="get" action="/admin/audit" class="filter-form">
             <div class="filter-grid">
                 <label class="field">
@@ -56,12 +50,15 @@ $page = (int) ($page ?? 0);
                     <?= field_error($errors ?? [], 'to') ?>
                 </label>
             </div>
-            <div class="form-actions">
+            <div class="form-actions filter-actions">
                 <button class="btn btn-small" type="submit">Apply filters</button>
                 <a class="btn btn-small btn-ghost" href="/admin/audit">Reset</a>
+                <span class="filter-result-count audit-result-count"><?= (int) $total ?> entr<?= (int) $total === 1 ? 'y' : 'ies' ?></span>
             </div>
         </form>
+    </section>
 
+    <section class="card audit-table-card">
         <div class="table-scroll" tabindex="0" role="region" aria-label="Audit log entries">
             <table class="audit">
                 <thead>
@@ -76,19 +73,24 @@ $page = (int) ($page ?? 0);
                 </thead>
                 <tbody>
                 <?php foreach ($rows as $row): ?>
+                    <?php
+                    $createdAt = (string) $row['created_at'];
+                    $createdAtTs = strtotime($createdAt . ' UTC');
+                    $createdAtIso = $createdAtTs === false ? '' : gmdate('Y-m-d\TH:i:s\Z', $createdAtTs);
+                    ?>
                     <tr>
-                        <td class="nowrap"><?= $e(human_datetime((string) $row['created_at'])) ?></td>
+                        <td class="audit-time nowrap"><time datetime="<?= $e($createdAtIso) ?>"><?= $e(human_datetime($createdAt)) ?></time></td>
                         <td><?= $e($row['actor_username'] ?? 'system') ?></td>
                         <td class="action-cell"><code><?= $e((string) $row['action']) ?></code></td>
                         <td>
                             <?php $targetType = (string) $row['target_type']; $targetId = (int) $row['target_id']; ?>
                             <?php if ($targetType === 'user' && $targetId > 0): ?>
-                                <a href="/admin/users/<?= $targetId ?>">user #<?= $targetId ?></a>
+                                <a class="audit-target-link" href="/admin/users/<?= $targetId ?>">user #<?= $targetId ?></a>
                             <?php else: ?>
-                                <?= $e($targetType) ?> #<?= $targetId ?>
+                                <span class="audit-target"><?= $e($targetType) ?> #<?= $targetId ?></span>
                             <?php endif; ?>
                         </td>
-                        <td><?= $e((string) ($row['reason'] ?? '')) ?></td>
+                        <td class="audit-reason"><?= $e((string) ($row['reason'] ?? '')) ?></td>
                         <td>
                             <?php $before = (string) ($row['before_json'] ?? ''); $after = (string) ($row['after_json'] ?? ''); ?>
                             <?php if ($before !== '' || $after !== ''): ?>
@@ -103,22 +105,26 @@ $page = (int) ($page ?? 0);
                         </td>
                     </tr>
                 <?php endforeach; ?>
-                <?php if (empty($rows)): ?>
-                    <tr><td colspan="6" class="muted">No audit entries match these filters.</td></tr>
-                <?php endif; ?>
                 </tbody>
             </table>
         </div>
-
-        <p class="muted"><?= (int) $total ?> matching entr<?= (int) $total === 1 ? 'y' : 'ies' ?>.</p>
-        <nav class="pager" aria-label="Pagination">
-            <?php if ($page > 0): ?>
-                <a class="btn btn-small" href="/admin/audit?<?= $e(http_build_query($base + ['page' => $page - 1])) ?>">Previous</a>
-            <?php endif; ?>
-            <?php if (!empty($has_next)): ?>
-                <a class="btn btn-small" href="/admin/audit?<?= $e(http_build_query($base + ['page' => $page + 1])) ?>">Next</a>
-            <?php endif; ?>
-        </nav>
+        <?php if (empty($rows)): ?>
+            <?= $this->partial('partials/empty_state', [
+                'heading' => 'Nothing matches these filters',
+                'message' => 'The record is complete; this slice of it is simply empty.',
+                'action_href' => '/admin/audit',
+                'action_label' => 'Reset filters',
+            ]) ?>
+        <?php endif; ?>
     </section>
-    </div>
-</div>
+
+    <?php if ((int) $total > $perPage): ?>
+        <?= $this->partial('partials/pager', [
+            'path' => '/admin/audit',
+            'query' => $base,
+            'page' => $pageNumber,
+            'total_pages' => $pageCount,
+            'aria_label' => 'Audit log pagination',
+        ]) ?>
+    <?php endif; ?>
+<?= $this->partial('admin/_console_end') ?>

@@ -12,7 +12,7 @@ use App\Service\AnnouncementService;
 
 /**
  * Admin announcements console (ADMIN §7.4). Compose the site banner and opt into
- * an in-app broadcast, or clear the banner. Flag-gated behind `announcements`;
+ * in-app and email broadcasts, or clear the banner. Flag-gated behind `announcements`;
  * every action requires an admin.
  */
 final class AdminAnnouncementController extends Controller
@@ -32,9 +32,9 @@ final class AdminAnnouncementController extends Controller
     /** @param array<string,string> $params */
     public function form(Request $request, array $params): Response
     {
-        $this->requireAdmin();
+        $admin = $this->requireAdmin();
         $this->gate();
-        return $this->view('admin/announcements', $this->service()->consoleModel());
+        return $this->view('admin/announcements', $this->service()->consoleModel($admin->id()));
     }
 
     /** @param array<string,string> $params */

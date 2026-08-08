@@ -28,14 +28,6 @@ async function visit(page: Page, url: string): Promise<void> {
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
-async function openAdminSections(page: Page): Promise<void> {
-  const toggle = page.locator('[data-admin-nav-toggle]');
-  if (await toggle.isVisible()) {
-    await toggle.click();
-    await expect(page.locator('[data-admin-nav]')).toHaveAttribute('aria-hidden', 'false');
-  }
-}
-
 async function login(page: Page, email: string): Promise<void> {
   await page.context().clearCookies();
   await page.goto('/login');
@@ -51,14 +43,16 @@ async function login(page: Page, email: string): Promise<void> {
 
 // Neutralise any package theme gate-a left active site-wide on the shared evidence DB so
 // the api-tokens surface is certified under the standard appearance. The recovery page
-// always renders both forms, so ownership is determined from its status copy.
+// renders the enter and exit forms mutually exclusively (theme_safe_mode.php:43-69), so
+// ownership is determined structurally — never from the status prose, which a later
+// appearance slice can reword without anyone noticing this helper went blind.
 async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  if (!await enter.isVisible({ timeout: 2000 }).catch(() => false)) {
     return false;
   }
 
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
   await enter.click();
   await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
   return true;
@@ -91,10 +85,10 @@ test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke
 
   // Flag-gated discovery link off the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
-  await openAdminSections(page);
-  await page.getByRole('link', { name: 'API tokens' }).click();
+  await page.locator('[data-admin-tier]').getByRole('link', { name: 'Integrations', exact: true }).click();
   await page.waitForURL(/\/admin\/api-tokens$/);
-  await expect(page.getByRole('heading', { name: 'API tokens' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tokens, webhooks & sign-in' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('API tokens');
   await expectNoSeriousA11yViolations(page, info); // empty-form state is accessible
 
   // Desktop + mobile share one seeded DB — unique name so rows never collide.

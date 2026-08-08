@@ -1002,27 +1002,32 @@
         var list = host;
         if (embedded) {
             list = document.createElement('ul');
-            list.className = 'report-list';
+            // Slice 17: the /drafts pane's own vocabulary, so a browser-local
+            // draft is the same row shape as a server draft. It used to borrow
+            // `.report-*` from the moderation queue.
+            list.className = 'account-draft-list';
             host.appendChild(list);
         }
         drafts.forEach(function (d) {
             var card = document.createElement(embedded ? 'li' : 'article');
-            card.className = embedded ? 'report-row' : 'card';
+            card.className = embedded ? 'account-draft-row' : 'card';
             card.setAttribute('data-local-draft-row', '1');
+
+            var main = null;
             if (embedded) {
-                var head = document.createElement('div');
-                head.className = 'report-head';
-                var badge = document.createElement('span');
-                badge.className = 'badge';
-                badge.textContent = 'Local';
-                var context = document.createElement('span');
-                context.className = 'muted';
-                context.textContent = d.context;
-                head.appendChild(badge);
-                head.appendChild(context);
-                card.appendChild(head);
+                main = document.createElement('span');
+                main.className = 'account-draft-main';
+                var dest = document.createElement('span');
+                dest.className = 'account-draft-dest';
+                dest.textContent = d.context;
+                main.appendChild(dest);
             }
-            var h = document.createElement('h2');
+
+            // On /drafts the label is a row title, not a section heading: the
+            // server rows opposite it are not headings either, and emitting an
+            // <h2> per draft put every draft into the page's heading outline.
+            var h = document.createElement(embedded ? 'span' : 'h2');
+            if (embedded) { h.className = 'account-draft-title'; }
             h.textContent = draftLabel(d.context);
             var p = null;
             if (!embedded) {
@@ -1030,24 +1035,35 @@
                 p.className = 'muted';
                 p.textContent = d.context;
             }
-            var pre = document.createElement(embedded ? 'blockquote' : 'pre');
-            pre.className = embedded ? 'report-excerpt' : 'draft-preview';
+            var pre = document.createElement(embedded ? 'p' : 'pre');
+            pre.className = embedded ? 'account-draft-snippet' : 'draft-preview';
             pre.textContent = d.body.length > (embedded ? 240 : 500)
                 ? d.body.slice(0, embedded ? 240 : 500) + '...'
                 : d.body;
-            var actions = document.createElement('p');
-            actions.className = 'form-actions';
+
+            var meta = null;
+            if (embedded) {
+                meta = document.createElement('span');
+                meta.className = 'account-draft-meta';
+                var chip = document.createElement('span');
+                chip.className = 'account-draft-chip';
+                chip.textContent = 'Local';
+                meta.appendChild(chip);
+            }
+
+            var actions = document.createElement(embedded ? 'span' : 'p');
+            actions.className = embedded ? 'account-draft-actions' : 'form-actions';
             var href = draftResumeHref(d.context);
             if (href) {
                 var resume = document.createElement('a');
-                resume.className = 'btn btn-small';
+                resume.className = embedded ? 'btn btn-secondary btn-small' : 'btn btn-small';
                 resume.href = href;
                 resume.textContent = 'Resume';
                 actions.appendChild(resume);
             }
             var discard = document.createElement('button');
             discard.type = 'button';
-            discard.className = 'btn btn-secondary btn-small';
+            discard.className = embedded ? 'linkbtn danger' : 'btn btn-secondary btn-small';
             discard.textContent = embedded ? 'Remove local copy' : 'Discard';
             discard.addEventListener('click', function () {
                 try { localStorage.removeItem(d.key); } catch (e) {}
@@ -1055,10 +1071,19 @@
                 if (!host.querySelector('[data-local-draft-row]')) { renderDraftsPage(); }
             });
             actions.appendChild(discard);
-            card.appendChild(h);
-            if (p) { card.appendChild(p); }
-            card.appendChild(pre);
-            card.appendChild(actions);
+
+            if (embedded) {
+                main.appendChild(h);
+                main.appendChild(pre);
+                main.appendChild(meta);
+                card.appendChild(main);
+                card.appendChild(actions);
+            } else {
+                card.appendChild(h);
+                if (p) { card.appendChild(p); }
+                card.appendChild(pre);
+                card.appendChild(actions);
+            }
             list.appendChild(card);
         });
     }

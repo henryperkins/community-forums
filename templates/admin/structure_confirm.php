@@ -1,16 +1,15 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', $page_title); ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $e($page_title) ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'structure', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
-        <section class="card confirm-card">
+<?php $this->layout('layout'); $this->section('title', $page_title); $this->section('variant', 'admin'); ?>
+<?= $this->partial('admin/_console', [
+    'area' => 'content',
+    'tab' => 'structure',
+    'pane_class' => 'admin-content admin-content-confirm',
+]) ?>
+        <?= $this->partial('partials/back_link', ['href' => '/admin/structure', 'label' => 'All boards']) ?>
+        <h2 class="admin-record-title"><?= $e($page_title) ?></h2>
+        <section class="card confirm-card content-confirm-card">
             <h2><?= $e($heading) ?></h2>
-            <p><?= $e($intro) ?></p>
+            <p class="content-confirm-intro"><?= $e($intro) ?></p>
 
             <?php if (!empty($impact)): ?>
                 <dl class="impact-list">
@@ -22,15 +21,15 @@
             <?php endif; ?>
 
             <?php if (!empty($blocked)): ?>
-                <div class="flash flash-error"><?= $e($blocked_reason) ?></div>
+                <div class="content-alert content-alert-danger" role="alert"><?= $e($blocked_reason) ?></div>
                 <div class="form-actions">
-                    <a class="btn" href="/admin/structure">Back to structure</a>
+                    <a class="btn btn-secondary" href="/admin/structure">Back to structure</a>
                 </div>
             <?php else: ?>
                 <?php if (!empty($error)): ?>
-                    <div class="flash flash-error"><?= $e($error) ?></div>
+                    <div class="content-alert content-alert-danger" role="alert"><?= $e($error) ?></div>
                 <?php endif; ?>
-                <form method="post" action="<?= $e($action) ?>" class="stacked confirm-form">
+                <form method="post" action="<?= $e($action) ?>" class="stacked confirm-form content-confirm-form">
                     <?= $this->csrfField() ?>
                     <?php if (!empty($move_options ?? [])): ?>
                         <label class="field">
@@ -49,10 +48,9 @@
                     </label>
                     <div class="form-actions">
                         <button class="btn<?= !empty($danger) ? ' danger' : '' ?>" type="submit"><?= $e($submit_label) ?></button>
-                        <a class="linkbtn" href="/admin/structure">Cancel</a>
+                        <a class="btn btn-secondary" href="/admin/structure">Cancel</a>
                     </div>
                 </form>
             <?php endif; ?>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

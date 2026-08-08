@@ -39,7 +39,7 @@ final class AdminProviderController extends Controller
         $this->gate();
 
         try {
-            $this->container->get(IdentityProviderService::class)->create(
+            $id = $this->container->get(IdentityProviderService::class)->create(
                 $admin,
                 (string) $request->post('current_password', ''),
                 $request->allInput(),
@@ -50,7 +50,8 @@ final class AdminProviderController extends Controller
             unset($old['client_secret'], $old['current_password'], $old['_token']);
             return $this->providersView($e->errors, $old, 422);
         }
-        return $this->noindex($this->redirectWithFlash('/admin/providers', 'Provider added (disabled). Run "Test connection", then enable it.'));
+        $name = (string) ($this->container->get(IdentityProviderRepository::class)->find($id)['display_name'] ?? 'The provider');
+        return $this->noindex($this->redirectWithFlash('/admin/providers', $name . ' was added, disabled. Run "Test connection", then enable it.'));
     }
 
     /** @param array<string,string> $params */
@@ -64,9 +65,13 @@ final class AdminProviderController extends Controller
         } catch (ValidationException $e) {
             return $this->providersView($e->errors, [], 422);
         }
+        // The design only models the success sentence; a probe that fails is the
+        // reason this button exists, so the failure keeps its own reporting shape.
         return $this->noindex($this->redirectWithFlash(
             '/admin/providers',
-            'Provider health: ' . $result['status'] . ' — ' . $result['detail'],
+            $result['status'] === 'ok'
+                ? 'Discovery succeeded for ' . $result['name'] . ' — ' . $result['detail']
+                : 'Provider health: ' . $result['status'] . ' — ' . $result['detail'],
         ));
     }
 
@@ -93,7 +98,7 @@ final class AdminProviderController extends Controller
             }
             return $this->providersView($errors, [], 422, (int) ($params['id'] ?? 0));
         }
-        return $this->noindex($this->redirectWithFlash('/admin/providers', $row['display_name'] . ' is now offered at sign-in.'));
+        return $this->noindex($this->redirectWithFlash('/admin/providers', $row['display_name'] . ' is enabled and now offered on the sign-in page.'));
     }
 
     /** Confirm page: the sole-method listing BEFORE disable (TM-ID-09 §2). */

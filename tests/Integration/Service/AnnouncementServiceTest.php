@@ -9,6 +9,7 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
+use App\Repository\UserRepository;
 use App\Security\WriteGate;
 use App\Service\AnnouncementService;
 use Tests\Support\TestCase;
@@ -24,7 +25,48 @@ final class AnnouncementServiceTest extends TestCase
             new NotificationRepository($this->db),
             new EmailDeliveryRepository($this->db),
             new WriteGate(),
+            new UserRepository($this->db),
+            null,
         );
+    }
+
+    public function test_console_model_defaults_dismissible_only_for_a_fresh_form(): void
+    {
+        $actor = $this->makeAdmin(['username' => 'annfreshactor']);
+
+        $fresh = $this->service()->consoleModel((int) $actor['id']);
+        self::assertTrue((bool) ($fresh['old']['dismissible'] ?? false));
+
+        $submitted = $this->service()->consoleModel((int) $actor['id'], [], [
+            'message' => 'Keep these exact choices',
+            'dismissible' => false,
+            'broadcast' => true,
+            'broadcast_email' => true,
+        ]);
+        self::assertFalse((bool) ($submitted['old']['dismissible'] ?? true));
+        self::assertTrue((bool) ($submitted['old']['broadcast'] ?? false));
+        self::assertTrue((bool) ($submitted['old']['broadcast_email'] ?? false));
+
+        $submittedEmpty = $this->service()->consoleModel((int) $actor['id'], [], []);
+        self::assertSame([], $submittedEmpty['old']);
+    }
+
+    public function test_console_recipient_count_matches_the_system_email_enqueue_scope(): void
+    {
+        $actor = $this->makeAdmin(['username' => 'anncountactor']);
+        $this->makeUser(['username' => 'anncountmember']);
+        $this->makeUser(['username' => 'anncountmod', 'role' => 'moderator']);
+        $this->makeAdmin(['username' => 'anncountadmin']);
+        foreach (['suspended', 'banned', 'deactivated', 'pending_deletion', 'deleted'] as $status) {
+            $this->makeUser(['username' => 'anncount' . str_replace('_', '', $status), 'status' => $status]);
+        }
+
+        $service = $this->service();
+        $model = $service->consoleModel((int) $actor['id']);
+        self::assertSame(3, $model['active_member_count'] ?? null);
+
+        $service->setBanner($this->userEntity($actor), 'Recipient parity evidence', false, false, true);
+        self::assertSame(3, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'system'"));
     }
 
     public function test_set_banner_persists_active_announcement_and_audits(): void

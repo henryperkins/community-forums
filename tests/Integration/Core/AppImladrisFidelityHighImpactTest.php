@@ -159,7 +159,12 @@ final class AppImladrisFidelityHighImpactTest extends TestCase
         self::assertStringContainsString('class="state state-', $res->body());
     }
 
-    public function test_admin_user_record_uses_role_pill_and_state_chip(): void
+    /**
+     * The pill and chip belong to the directory row only. On the record card the
+     * design states Role and State as plain terms (`AdminMembers.dc.html:220-221`),
+     * which Slice 11 of ADR 0024 adopts — so the record must carry neither.
+     */
+    public function test_admin_user_record_states_role_and_state_as_plain_terms(): void
     {
         $admin = $this->makeAdmin(['username' => 'record_admin']);
         $subject = $this->makeUser(['username' => 'record_subject']);
@@ -167,8 +172,11 @@ final class AppImladrisFidelityHighImpactTest extends TestCase
 
         $res = $this->get('/admin/users/' . (int) $subject['id']);
         $this->assertStatus(200, $res);
-        self::assertStringContainsString('role-pill', $res->body());
-        self::assertStringContainsString('class="state state-', $res->body());
+        self::assertStringContainsString('member-record-status-list', $res->body());
+        self::assertMatchesRegularExpression('/<dt>Role<\/dt><dd>user<\/dd>/', $res->body());
+        self::assertMatchesRegularExpression('/<dt>State<\/dt><dd>active<\/dd>/', $res->body());
+        self::assertStringNotContainsString('role-pill', $res->body());
+        self::assertStringNotContainsString('class="state state-', $res->body());
     }
 
     // ── #16 DM gilt monograms ─────────────────────────────────────────────────

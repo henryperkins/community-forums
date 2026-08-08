@@ -182,13 +182,18 @@ function tiEnsureThread(
 
 function tiEnableFeatures(Database $db): void
 {
+    tiSetFeatures($db, true);
+}
+
+function tiSetFeatures(Database $db, bool $enabled): void
+{
     $settings = new SettingRepository($db);
     $features = $settings->get('features', []);
     if (!is_array($features)) {
         $features = [];
     }
-    $features['community_memory'] = true;
-    $features['automated_context'] = true;
+    $features['community_memory'] = $enabled;
+    $features['automated_context'] = $enabled;
     $settings->set('features', $features);
 }
 
@@ -217,9 +222,9 @@ function tiQueueNow(Database $db, int $threadId, bool $initial): void
         "INSERT INTO thread_intelligence_jobs
             (thread_id, state, trigger_code, due_at, attempt_count, last_processed_post_id,
              last_generated_at, automation_paused, activity_version, reconcile_required, created_at, updated_at)
-         VALUES (?, 'queued', ?, UTC_TIMESTAMP(), 0, NULL, NULL, 0, 1, 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+         VALUES (?, 'queued', ?, DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 SECOND), 0, NULL, NULL, 0, 1, 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())
          ON DUPLICATE KEY UPDATE
-            state = 'queued', trigger_code = VALUES(trigger_code), due_at = UTC_TIMESTAMP(),
+            state = 'queued', trigger_code = VALUES(trigger_code), due_at = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 SECOND),
             lease_token = NULL, lease_expires_at = NULL, attempt_count = 0, last_error_code = NULL,
             last_processed_post_id = CASE WHEN ? = 1 THEN NULL ELSE last_processed_post_id END,
             last_generated_at = CASE WHEN ? = 1 THEN NULL ELSE DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR) END,
@@ -274,7 +279,11 @@ function tiRunSuccess(
     $worker = tiContainer($config, $db, $provider)->get(ThreadIntelligenceWorker::class);
     $counts = $worker->run(1, 'browser-fixture-success');
     if ($counts !== ['processed' => 1, 'succeeded' => 1, 'failed' => 0] || $provider->callCount() !== 1) {
-        throw new RuntimeException('real worker did not publish the deterministic browser fixture');
+        throw new RuntimeException(sprintf(
+            'real worker did not publish the deterministic browser fixture: counts=%s provider_calls=%d',
+            json_encode($counts, JSON_THROW_ON_ERROR),
+            $provider->callCount(),
+        ));
     }
 }
 
@@ -538,6 +547,12 @@ switch ($action) {
         break;
     case 'reset-admin':
         tiResetAdmin($config, $db, $project);
+        break;
+    case 'disable-features':
+        tiSetFeatures($db, false);
+        break;
+    case 'enable-features':
+        tiEnableFeatures($db);
         break;
     case 'latch-provider':
         tiResetGlobalState($config, $db, true);

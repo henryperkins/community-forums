@@ -45,7 +45,7 @@ final class AdminDashboardService
             'open_appeals' => (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_appeals WHERE status = 'open'"),
         ];
 
-        $audit = $this->moderationLog->recent(10);
+        $audit = $this->moderationLog->recent(6);
         if ($this->auditQuery !== null) {
             $audit = $this->auditQuery->enrich($audit);
         }
@@ -59,7 +59,7 @@ final class AdminDashboardService
 
         $queueCards = [
             [
-                'title' => 'Reports',
+                'title' => 'Reports open',
                 'count' => $counts['reports'],
                 'detail' => $reportsEnabled ? 'Open or triaged moderation queue items' : 'Moderation queue disabled',
                 'href' => $reportsEnabled ? '/mod/reports' : null,

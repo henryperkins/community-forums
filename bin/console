@@ -9,9 +9,8 @@ use App\Core\Env;
 use App\Core\FeatureFlags;
 use App\Core\Migrator;
 use App\Core\Telemetry;
-use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
-use App\Mail\SendmailMailer;
+use App\Mail\MailerFactory;
 use App\Repository\AccountDeletionRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
@@ -76,6 +75,7 @@ use App\Service\Registry\CurlRegistryTransport;
 use App\Service\Registry\RegistryAdvisoryService;
 use App\Service\Registry\RegistrySnapshotService;
 use App\Service\Webhook\CurlWebhookTransport;
+use App\Service\AccountRecoveryService;
 use App\Service\BadgeService;
 use App\Service\RepairService;
 use App\Service\MarkdownCacheRepairService;
@@ -274,23 +274,18 @@ $threadIntelligenceGraph = static function (Database $db) use ($config): array {
     return ['worker' => $worker, 'operations' => $operations];
 };
 
-/** Build the configured mail transport (matches App::buildContainer). */
-$mailer = static function () use ($config): Mailer {
-    $mail = (array) $config->get('mail', []);
-    if (($mail['driver'] ?? 'sendmail') === 'array') {
-        return new ArrayMailer();
+/**
+ * Build the configured mail transport. Shares MailerFactory with the kernel so
+ * the cron workers can never end up on a different transport than the web app.
+ */
+$mailer = static fn (): Mailer => MailerFactory::fromConfig($config, static function () use ($config): string {
+    try {
+        return (new SettingRepository(new Database($config->get('db'))))
+            ->getString('site_name', (string) $config->get('app.name', 'RetroBoards'));
+    } catch (Throwable) {
+        return (string) $config->get('app.name', 'RetroBoards');
     }
-    $fromName = (string) ($mail['from_name'] ?? '');
-    if ($fromName === '') {
-        try {
-            $fromName = (new SettingRepository(new Database($config->get('db'))))
-                ->getString('site_name', (string) $config->get('app.name', 'RetroBoards'));
-        } catch (Throwable) {
-            $fromName = (string) $config->get('app.name', 'RetroBoards');
-        }
-    }
-    return new SendmailMailer((string) ($mail['from'] ?? ''), $fromName);
-};
+});
 
 try {
     switch ($command) {
@@ -667,6 +662,77 @@ try {
 
         case 'key:generate':
             $log('APP_KEY=' . bin2hex(random_bytes(32)));
+            break;
+
+        // ---- Out-of-band account recovery ---------------------------------
+        // Email fails closed when no From address is configured (DESIGN: in-app
+        // notifications still deliver, mail does not), so /forgot cannot rescue a
+        // locked-out operator on a fresh deployment. These two commands can.
+        // Both need only database credentials, so they run from a laptop against
+        // a managed database as readily as inside the container.
+
+        case 'user:list':
+            $rows = $database()->fetchAll(
+                'SELECT id, username, email, role, status FROM users ORDER BY id LIMIT 200',
+            );
+            if ($rows === []) {
+                $log('No accounts yet — this install has not been through /setup.');
+                break;
+            }
+            $log(sprintf('  %-5s %-24s %-34s %-10s %s', 'ID', 'USERNAME', 'EMAIL', 'ROLE', 'STATUS'));
+            foreach ($rows as $row) {
+                $log(sprintf(
+                    '  %-5d %-24s %-34s %-10s %s',
+                    (int) $row['id'],
+                    (string) $row['username'],
+                    (string) $row['email'],
+                    (string) $row['role'],
+                    (string) $row['status'],
+                ));
+            }
+            break;
+
+        case 'user:password':
+            $identifier = trim((string) ($argv[2] ?? ''));
+            if ($identifier === '') {
+                throw new InvalidArgumentException(
+                    'Usage: php bin/console user:password <email-or-username> [--password=SECRET]',
+                );
+            }
+
+            $password = null;
+            foreach (array_slice($argv, 3) as $argument) {
+                if (str_starts_with($argument, '--password=')) {
+                    $password = substr($argument, strlen('--password='));
+                    continue;
+                }
+                throw new InvalidArgumentException('Unknown user:password option: ' . $argument);
+            }
+
+            $db = $database();
+            $result = (new AccountRecoveryService(
+                new UserRepository($db),
+                new SessionRepository($db),
+                new PasswordHasher(),
+                $config,
+            ))->resetPassword($identifier, $password);
+            $account = $result['user'];
+
+            $log(sprintf(
+                'Password updated for #%d %s <%s> (role=%s, status=%s).',
+                (int) $account['id'],
+                (string) $account['username'],
+                (string) $account['email'],
+                (string) $account['role'],
+                (string) $account['status'],
+            ));
+            $log('Every existing session for that account was revoked.');
+            if ($result['generated']) {
+                $log('');
+                $log('  New password: ' . $result['password']);
+                $log('');
+                $log('Sign in with it, then change it — it is now in this terminal\'s scrollback.');
+            }
             break;
 
         case 'repair':
@@ -1284,6 +1350,8 @@ try {
             $log('  migrate:rollback     Roll back applied migrations');
             $log('  migrate:status       Show migration status');
             $log('  key:generate         Print a fresh APP_KEY');
+            $log('  user:list            List accounts (id, username, email, role, status)');
+            $log('  user:password <email-or-username> [--password=SECRET]  Reset a password out of band and revoke that account\'s sessions');
             $log('  repair               Reconcile all denormalised counters + reputation');
             $log('  repair:counters      Reconcile post/thread/board counters');
             $log('  repair:reputation    Rebuild reputation_events and reconcile users.reputation');

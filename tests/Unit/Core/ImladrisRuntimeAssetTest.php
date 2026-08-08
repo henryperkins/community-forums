@@ -112,6 +112,235 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertStringContainsString('background-image: var(--surface-texture, none)', $css);
     }
 
+    public function test_shared_console_component_css_is_scoped_and_keeps_existing_layout_guardrails(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $rule = static function (string $selector) use ($css): string {
+            self::assertSame(
+                1,
+                preg_match('/' . preg_quote($selector, '/') . '\s*\{(?<declarations>[^}]*)\}/s', $css, $match),
+                $selector . ' is missing from the application stylesheet.',
+            );
+
+            return $match['declarations'];
+        };
+
+        $globalCard = $rule('.card');
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface\)/', $globalCard);
+        self::assertMatchesRegularExpression('/overflow-x:\s*auto/', $globalCard);
+
+        $consoleCard = $rule('.admin-console .card');
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-raised\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/border:\s*1px solid var\(--border-hair\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-lg\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/padding:\s*18px 20px/', $consoleCard);
+        self::assertMatchesRegularExpression('/box-shadow:\s*var\(--shadow-xs\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/overflow-x:\s*auto/', $consoleCard);
+        self::assertDoesNotMatchRegularExpression('/overflow:\s*visible/', $consoleCard);
+
+        $auditHeading = $rule('.admin-console .audit th');
+        self::assertMatchesRegularExpression('/font-size:\s*\.66rem/', $auditHeading);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.12em/', $auditHeading);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-faint\)/', $auditHeading);
+        self::assertMatchesRegularExpression('/font-weight:\s*400/', $auditHeading);
+        self::assertMatchesRegularExpression('/border-bottom:\s*1px solid var\(--border-soft\)/', $auditHeading);
+        $auditMono = $rule('.admin-console .audit .mono');
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-mono\)/', $auditMono);
+        self::assertMatchesRegularExpression('/font-size:\s*\.78rem/', $auditMono);
+        $auditCode = $rule('.admin-console .audit code');
+        self::assertMatchesRegularExpression('/font-size:\s*\.76rem/', $auditCode);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-body\)/', $auditCode);
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-sm\)/', $auditCode);
+        self::assertMatchesRegularExpression('/font-variant-numeric:\s*tabular-nums/', $rule('.admin-console .audit .numeric'));
+        self::assertMatchesRegularExpression('/text-align:\s*right/', $rule('.admin-console .audit .numeric'));
+
+        $tableScroll = $rule('.admin-console .table-scroll');
+        self::assertMatchesRegularExpression('/position:\s*relative/', $tableScroll);
+        self::assertMatchesRegularExpression('/overflow-x:\s*auto/', $tableScroll);
+        self::assertMatchesRegularExpression('/outline:\s*2px solid var\(--accent\)/', $rule('.admin-console .table-scroll:focus-visible'));
+        self::assertMatchesRegularExpression('/min-width:\s*760px/', $rule('.admin-console .table-scroll > .audit'));
+        self::assertMatchesRegularExpression('/min-width:\s*940px/', $rule('.admin-console .table-scroll.table-scroll-wide > .audit'));
+
+        $state = $rule('.admin-console .state');
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-pill\)/', $state);
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-pending\)/', $state);
+        self::assertMatchesRegularExpression('/color:\s*var\(--on-pending\)/', $state);
+        self::assertMatchesRegularExpression('/display:\s*none/', $rule('.admin-console .state::before'));
+        self::assertMatchesRegularExpression(
+            '/\.admin-console \.state-active\s*,\s*\.admin-console \.state-sent\s*\{[^}]*background:\s*var\(--surface-done\)[^}]*color:\s*var\(--on-done\)/s',
+            $css,
+        );
+        self::assertMatchesRegularExpression(
+            '/\.admin-console \.state-queued[^}]*\.admin-console \.state-scheduled\s*\{[^}]*background:\s*var\(--surface-review\)[^}]*color:\s*var\(--on-review\)/s',
+            $css,
+        );
+        self::assertMatchesRegularExpression(
+            '/\.admin-console \.state-revoked[^}]*\.admin-console \.state-expired\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--rust\) 12%, var\(--surface-raised\)\)[^}]*color:\s*var\(--danger\)/s',
+            $css,
+        );
+
+        foreach (['.state-empty', '.admin-console .pager', '.admin-console .filter-actions',
+            '.admin-console .confirm-card', '.admin-console .impact-list', '.admin-console .callout',
+            '.admin-console .reauth-field', '.admin-console .check-grid', '.admin-console .spec-list',
+            '.admin-console .admin-split', '.admin-console .admin-split--fixed'] as $selector) {
+            $rule($selector);
+        }
+
+        $pager = $rule('.admin-console .pager');
+        self::assertMatchesRegularExpression('/justify-content:\s*space-between/', $pager);
+        self::assertMatchesRegularExpression('/gap:\s*14px/', $pager);
+        self::assertMatchesRegularExpression('/margin-top:\s*16px/', $pager);
+        $pagerLabel = $rule('.admin-console .pager-label');
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-label\)/', $pagerLabel);
+        self::assertMatchesRegularExpression('/font-size:\s*\.76rem/', $pagerLabel);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.06em/', $pagerLabel);
+        self::assertDoesNotMatchRegularExpression('/font-variant-numeric:\s*tabular-nums/', $pagerLabel);
+
+        $filterResultCount = $rule('.admin-console .filter-result-count');
+        self::assertMatchesRegularExpression('/font-size:\s*\.74rem/', $filterResultCount);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.04em/', $filterResultCount);
+        self::assertDoesNotMatchRegularExpression('/text-transform:\s*uppercase/', $filterResultCount);
+
+        $checkFieldset = $rule('.admin-console .check-grid fieldset');
+        self::assertMatchesRegularExpression('/padding:\s*12px 14px 13px/', $checkFieldset);
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-md\)/', $checkFieldset);
+        $checkLabel = $rule('.admin-console .check-grid label');
+        self::assertMatchesRegularExpression('/padding:\s*4px 0/', $checkLabel);
+        self::assertMatchesRegularExpression('/font-size:\s*\.88rem/', $checkLabel);
+        self::assertMatchesRegularExpression('/line-height:\s*1\.4/', $checkLabel);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-body\)/', $checkLabel);
+        self::assertMatchesRegularExpression('/cursor:\s*pointer/', $checkLabel);
+
+        self::assertMatchesRegularExpression('/grid-template-columns:\s*repeat\(auto-fit, minmax\(330px,\s*1fr\)\)/', $rule('.admin-console .admin-split'));
+        self::assertMatchesRegularExpression('/grid-template-columns:\s*330px 1fr/', $rule('.admin-console .admin-split--fixed'));
+
+        foreach (['.scribe-panel', '.scribe-panel-head', '.brand-cols', '.brand-preview', '.field-grid'] as $preserved) {
+            self::assertStringContainsString($preserved, $css, $preserved . ' must remain available.');
+        }
+        self::assertStringNotContainsString('--gold-050', $css);
+    }
+
+    public function test_account_console_shell_pins_the_adjudicated_desktop_geometry_and_heading(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $rule = static function (string $selector) use ($css): string {
+            self::assertSame(
+                1,
+                preg_match('/' . preg_quote($selector, '/') . '\s*\{(?<declarations>[^}]*)\}/s', $css, $match),
+                $selector . ' is missing from the application stylesheet.',
+            );
+
+            return $match['declarations'];
+        };
+
+        $screen = $rule('.settings-screen');
+        self::assertMatchesRegularExpression('/max-width:\s*1064px/', $screen);
+        self::assertMatchesRegularExpression('/padding:\s*30px 28px 132px/', $screen);
+
+        self::assertMatchesRegularExpression('/margin-bottom:\s*24px/', $rule('.settings-head'));
+        $eyebrow = $rule('.settings-head .eyebrow');
+        self::assertMatchesRegularExpression('/font-size:\s*\.68rem/', $eyebrow);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.18em/', $eyebrow);
+        self::assertMatchesRegularExpression('/text-transform:\s*uppercase/', $eyebrow);
+        self::assertMatchesRegularExpression('/color:\s*var\(--gold-ink\)/', $eyebrow);
+
+        $heading = $rule('.settings-head h1');
+        self::assertMatchesRegularExpression('/margin:\s*7px 0 0/', $heading);
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-display\)/', $heading);
+        self::assertMatchesRegularExpression('/font-size:\s*2\.4rem/', $heading);
+        self::assertMatchesRegularExpression('/font-weight:\s*500/', $heading);
+        self::assertMatchesRegularExpression('/line-height:\s*1\.1/', $heading);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*-\.01em/', $heading);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-strong\)/', $heading);
+
+        $intro = $rule('.settings-head p');
+        self::assertMatchesRegularExpression('/margin:\s*8px 0 0/', $intro);
+        self::assertMatchesRegularExpression('/max-width:\s*62ch/', $intro);
+        self::assertMatchesRegularExpression('/font-size:\s*1rem/', $intro);
+        self::assertMatchesRegularExpression('/line-height:\s*1\.55/', $intro);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-muted\)/', $intro);
+        self::assertMatchesRegularExpression('/text-wrap:\s*pretty/', $intro);
+
+        $layout = $rule('.settings');
+        self::assertMatchesRegularExpression('/grid-template-columns:\s*232px minmax\(0,\s*1fr\)/', $layout);
+        self::assertMatchesRegularExpression('/gap:\s*30px/', $layout);
+    }
+
+    public function test_account_console_rail_pins_group_icon_inactive_hover_and_active_treatments(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $rule = static function (string $selector) use ($css): string {
+            self::assertSame(
+                1,
+                preg_match('/' . preg_quote($selector, '/') . '\s*\{(?<declarations>[^}]*)\}/s', $css, $match),
+                $selector . ' is missing from the application stylesheet.',
+            );
+
+            return $match['declarations'];
+        };
+
+        $rail = $rule('.settings > .settings-rail');
+        self::assertMatchesRegularExpression('/position:\s*sticky/', $rail);
+        self::assertMatchesRegularExpression('/top:\s*calc\(var\(--topbar-h\) \+ 22px\)/', $rail);
+        self::assertMatchesRegularExpression('/width:\s*232px/', $rail);
+
+        $firstTitle = $rule('.settings-rail-title');
+        self::assertMatchesRegularExpression('/padding:\s*0 0 6px 12px/', $firstTitle);
+        self::assertMatchesRegularExpression('/font-size:\s*\.62rem/', $firstTitle);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.18em/', $firstTitle);
+        self::assertMatchesRegularExpression('/text-transform:\s*uppercase/', $firstTitle);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-faint\)/', $firstTitle);
+        self::assertMatchesRegularExpression(
+            '/padding:\s*14px 0 6px 12px/',
+            $rule('.settings-rail-group + .settings-rail-group .settings-rail-title'),
+        );
+
+        $link = $rule('.settings-rail-link');
+        self::assertMatchesRegularExpression('/display:\s*flex/', $link);
+        self::assertMatchesRegularExpression('/align-items:\s*center/', $link);
+        self::assertMatchesRegularExpression('/gap:\s*10px/', $link);
+        self::assertMatchesRegularExpression('/width:\s*100%/', $link);
+        self::assertMatchesRegularExpression('/padding:\s*8px 12px/', $link);
+        self::assertMatchesRegularExpression('/border-left:\s*2px solid transparent/', $link);
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-label\)/', $link);
+        self::assertMatchesRegularExpression('/font-size:\s*\.86rem/', $link);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.02em/', $link);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-muted\)/', $link);
+        self::assertMatchesRegularExpression('/text-decoration:\s*none/', $link);
+
+        $hover = $rule('.settings-rail-link:not(.is-active):hover, .settings-rail-link:not(.is-active):focus-visible');
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-sunken\)/', $hover);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-body\)/', $hover);
+        self::assertMatchesRegularExpression('/text-decoration:\s*none/', $hover);
+
+        $active = $rule('.settings-rail-link.is-active');
+        self::assertMatchesRegularExpression('/border-left-color:\s*var\(--gold-500\)/', $active);
+        self::assertMatchesRegularExpression('/background:\s*var\(--brand-subtle\)/', $active);
+        self::assertMatchesRegularExpression('/color:\s*var\(--on-brand-subtle\)/', $active);
+        self::assertMatchesRegularExpression('/border-radius:\s*0 var\(--radius-md\) var\(--radius-md\) 0/', $active);
+
+        $icon = $rule('.settings-rail .icon');
+        self::assertMatchesRegularExpression('/width:\s*15px/', $icon);
+        self::assertMatchesRegularExpression('/height:\s*15px/', $icon);
+        self::assertMatchesRegularExpression('/stroke-width:\s*1\.7/', $icon);
+    }
+
+    public function test_account_console_mobile_rail_is_static_wrapped_and_touch_safe(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $marker = '@media (max-width: 719px) {';
+        $start = strpos($css, $marker);
+        self::assertNotFalse($start, 'The account-console mobile media block is missing.');
+        $nextMedia = strpos($css, "\n@media", $start + strlen($marker));
+        $mobile = substr($css, $start, $nextMedia === false ? null : $nextMedia - $start);
+
+        self::assertMatchesRegularExpression('/\.settings\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings > \.settings-rail\s*\{[^}]*position:\s*static/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings-rail-group\s*\{[^}]*display:\s*flex[^}]*flex-wrap:\s*wrap/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings-rail-link\s*\{[^}]*min-height:\s*44px/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings-rail \.subnav-action\s*\{[^}]*min-height:\s*44px/s', $mobile);
+    }
+
     public function test_application_quiet_thread_rows_reset_design_system_hover_motion(): void
     {
         $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
@@ -171,6 +400,52 @@ final class ImladrisRuntimeAssetTest extends TestCase
                 );
             }
         }
+    }
+
+    /**
+     * The application owns two dark registers, not one: an explicit `[data-theme="dark"]`
+     * block and a `prefers-color-scheme` block for `[data-theme="system"]` — and
+     * `layout.php` defaults every account to `system`. `imladris.css` carries no
+     * `prefers-color-scheme` block at all, so a semantic token the application overrides
+     * for twilight has to be overridden in *both* application blocks or it silently keeps
+     * resolving to the light register for the default theme. That is how the staff badge
+     * came to render an unflipped light chip on a twilight page for most users after the
+     * fix that was supposed to flip it. Asserting the two blocks declare the same token
+     * set catches the next one at authoring time.
+     */
+    public function test_both_application_dark_registers_declare_the_same_tokens(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+
+        self::assertSame(
+            1,
+            preg_match('/\[data-theme="dark"\]\s*\{(?<block>[^}]*)\}/s', $css, $explicit),
+            'The explicit twilight token block is missing.',
+        );
+        self::assertSame(
+            1,
+            preg_match(
+                '/@media\s*\(prefers-color-scheme:\s*dark\)\s*\{\s*\[data-theme="system"\]\s*\{(?<block>[^}]*)\}/s',
+                $css,
+                $system,
+            ),
+            'The system-theme twilight token block is missing.',
+        );
+
+        $tokens = static function (string $block): array {
+            preg_match_all('/(--[a-z0-9-]+)\s*:/i', $block, $found);
+            $names = array_unique($found[1]);
+            sort($names);
+
+            return $names;
+        };
+
+        self::assertSame(
+            $tokens($explicit['block']),
+            $tokens($system['block']),
+            'The [data-theme="dark"] and [data-theme="system"] dark registers declare different tokens; '
+            . 'a token missing from either one resolves to the light register for that audience.',
+        );
     }
 
     public function test_staff_badge_uses_the_flipping_semantic_pair_exactly_once(): void
@@ -293,6 +568,196 @@ final class ImladrisRuntimeAssetTest extends TestCase
         );
     }
 
+    public function test_design_surface_digest_matches_the_recorded_baseline(): void
+    {
+        // The five CSS files in CSS_SOURCES are the only design inputs the builder
+        // reads, so nothing downstream noticed if the mirror was re-synced with a
+        // reordered, renamed or deleted admin screen. This digest is the tripwire.
+        // It proves nothing about fidelity — only that the design moved.
+        $baseline = json_decode(
+            (string) file_get_contents(self::ROOT . '/config/imladris-design-baseline.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+        $recorded = $baseline['design_surface']['sha256'] ?? null;
+        self::assertIsString($recorded);
+
+        $builder = new ImladrisAssetBuilder(self::ROOT);
+
+        self::assertSame(
+            $recorded,
+            $builder->designSurfaceDigest(),
+            'The Imladris design screens changed after the last adoption. Re-review the adopted '
+            . 'surfaces against the new design, then refresh config/imladris-design-baseline.json '
+            . 'with: php bin/build-imladris-assets.php --print-design-digest',
+        );
+    }
+
+    public function test_app_css_never_overrides_a_design_owned_console_class(): void
+    {
+        // ADR 0024 obligation 3: the console bar and area tier ship from
+        // composer build:imladris. app.css is unlayered, so a bare re-declaration
+        // there silently beats the @layer rule at any specificity — the exact
+        // failure the obligation exists to prevent, and until now unguarded.
+        //
+        // The gate is property-level, not name-level, because the application
+        // legitimately *complements* these classes: .admin-bar-brand adds a
+        // text-decoration reset the design never declares (its prototype has no
+        // global anchor style). Qualified selectors (:hover, .is-disabled,
+        // descendant) and responsive @media rules are the sanctioned complement
+        // and are out of scope here; a bare top-level redeclaration of a property
+        // the design already sets is not.
+        $design = self::bareClassProperties(
+            (string) file_get_contents(self::ROOT . '/public/assets/imladris.css'),
+        );
+        $application = self::bareClassProperties(
+            (string) file_get_contents(self::ROOT . '/public/assets/app.css'),
+        );
+
+        $owned = array_filter(
+            array_keys($design),
+            static fn (string $selector): bool => preg_match('/^\.admin-(bar|tier)/', $selector) === 1,
+        );
+        self::assertNotEmpty($owned, 'imladris.css should own the console bar and tier classes.');
+
+        $collisions = [];
+        foreach ($owned as $selector) {
+            foreach (array_keys(array_intersect_key($application[$selector] ?? [], $design[$selector])) as $property) {
+                $collisions[] = $selector . ' { ' . $property . ' }';
+            }
+        }
+
+        self::assertSame(
+            [],
+            $collisions,
+            'app.css re-declares a property the Imladris layer already sets on a design-owned '
+            . 'console class. Because app.css is unlayered it wins silently. Either drop the '
+            . 'declaration or qualify the selector (:hover, a state class, a descendant, or a '
+            . 'responsive @media rule).',
+        );
+    }
+
+    public function test_design_mirror_provenance_is_self_consistent(): void
+    {
+        // README.md cites the inspected commit in prose and defers to manifest.json
+        // for it ("see manifest.json"). They had drifted apart — the README named
+        // 3fa5704e, an unrelated fly-DB merge five days after the manifest's own
+        // 2026-07-14 inspection of 4efe4e33 — so the mirror disagreed with itself
+        // about which product commit it was built from.
+        $mirror = self::ROOT . '/docs/design-system/imladris';
+        $manifest = json_decode(
+            (string) file_get_contents($mirror . '/manifest.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+        $commit = $manifest['inspected_commit'] ?? null;
+        self::assertIsString($commit);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{40}$/', $commit);
+
+        $readme = (string) file_get_contents($mirror . '/README.md');
+
+        self::assertStringContainsString(
+            substr($commit, 0, 8),
+            $readme,
+            'docs/design-system/imladris/README.md names a different inspected commit than '
+            . 'manifest.json, which it cites as the source of that fact.',
+        );
+    }
+
+    /**
+     * Every top-level rule whose selector is a bare class, as class => property set.
+     * At-rule blocks (@media, @supports, @keyframes) are removed first: rules inside
+     * them are deliberate responsive/state complements, not silent overrides.
+     *
+     * @return array<string,array<string,true>>
+     */
+    private static function bareClassProperties(string $css): array
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+        $css = self::stripAtRuleBlocks($css);
+
+        $map = [];
+        if (preg_match_all('/([^{}]+)\{([^{}]*)\}/s', $css, $matches, PREG_SET_ORDER) === false) {
+            return $map;
+        }
+
+        foreach ($matches as $rule) {
+            $properties = [];
+            foreach (explode(';', $rule[2]) as $declaration) {
+                $name = strtolower(trim(explode(':', $declaration, 2)[0]));
+                if ($name !== '') {
+                    $properties[$name] = true;
+                }
+            }
+            if ($properties === []) {
+                continue;
+            }
+            foreach (explode(',', $rule[1]) as $selector) {
+                $selector = trim($selector);
+                if (preg_match('/^\.[A-Za-z0-9_-]+$/', $selector) === 1) {
+                    $map[$selector] = ($map[$selector] ?? []) + $properties;
+                }
+            }
+        }
+
+        return $map;
+    }
+
+    private static function stripAtRuleBlocks(string $css): string
+    {
+        $out = '';
+        $length = strlen($css);
+        $i = 0;
+
+        while ($i < $length) {
+            if ($css[$i] !== '@') {
+                $out .= $css[$i];
+                $i++;
+                continue;
+            }
+
+            $cursor = $i;
+            while ($cursor < $length && $css[$cursor] !== '{' && $css[$cursor] !== ';') {
+                $cursor++;
+            }
+            if ($cursor >= $length) {
+                break;
+            }
+            if ($css[$cursor] === ';') {
+                $i = $cursor + 1;   // a statement at-rule: @import, @charset
+                continue;
+            }
+
+            $depth = 0;
+            $end = null;
+            for ($k = $cursor; $k < $length; $k++) {
+                if ($css[$k] === '{') {
+                    $depth++;
+                } elseif ($css[$k] === '}') {
+                    $depth--;
+                    if ($depth === 0) {
+                        $end = $k;
+                        break;
+                    }
+                }
+            }
+            if ($end === null) {
+                break;      // unbalanced; stop rather than mis-parse
+            }
+
+            // @layer is a grouping at-rule, not a conditional one: imladris.css
+            // wraps every rule it owns in `@layer imladris.components { … }`, so
+            // dropping the block would hide the very selectors under audit.
+            // Descend into it; drop @media/@supports/@keyframes wholesale.
+            if (strtolower(substr(trim(substr($css, $i + 1, $cursor - $i - 1)), 0, 5)) === 'layer') {
+                $out .= self::stripAtRuleBlocks(substr($css, $cursor + 1, $end - $cursor - 1));
+            }
+            $i = $end + 1;
+        }
+
+        return $out;
+    }
+
     private function makeAssetBuilderFixture(bool $useCrlfTextSources = false): string
     {
         $root = sys_get_temp_dir() . '/rb-imladris-eol-' . bin2hex(random_bytes(6));
@@ -315,6 +780,16 @@ final class ImladrisRuntimeAssetTest extends TestCase
                     'files' => [],
                     'extensions' => [],
                     'excluded' => [],
+                    'sha256' => hash('sha256', "\n"),
+                ],
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",
+            'config/imladris-design-baseline.json' => json_encode([
+                'design_surface' => [
+                    'roots' => [],
+                    'files' => [],
+                    'extensions' => [],
+                    'excluded' => [],
+                    'excluded_names' => [],
                     'sha256' => hash('sha256', "\n"),
                 ],
             ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",

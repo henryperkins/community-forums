@@ -36,7 +36,7 @@ final class AdminController extends Controller
 
     /**
      * The searchable, paginated audit-log screen (ADMIN §3.6 / §9.2
-     * "Moderation → Audit log"). Site-wide and admin-only for now; a
+     * "Overview → Audit log"). Site-wide and admin-only for now; a
      * board-scoped moderator view needs per-row board resolution and is
      * recorded in ADR 0021 rather than shipped half-scoped.
      *
@@ -54,10 +54,13 @@ final class AdminController extends Controller
             'from' => $request->str('from'),
             'to' => $request->str('to'),
         ];
-        $page = max(0, $request->int('page', 0));
+        // The route is one-based for stable, legible URLs. AuditQueryService
+        // remains zero-based because its page value is an SQL offset index.
+        $requestedPage = max(1, $request->int('page', 1));
 
         try {
-            $model = $this->container->get(AuditQueryService::class)->page($raw, $page, self::AUDIT_PER_PAGE);
+            $auditQuery = $this->container->get(AuditQueryService::class);
+            $model = $auditQuery->page($raw, $requestedPage - 1, self::AUDIT_PER_PAGE);
         } catch (ValidationException $e) {
             // Bad dates: refuse with the typed values preserved and NO rows —
             // never a silently-unfiltered (or junk-filtered) 200 (spec §4).
@@ -65,15 +68,28 @@ final class AdminController extends Controller
                 'rows' => [],
                 'filters' => $e->old + $raw,
                 'total' => 0,
-                'page' => $page,
+                'page' => 1,
                 'per_page' => self::AUDIT_PER_PAGE,
+                'page_count' => 1,
                 'has_next' => false,
                 'base_query' => array_filter($raw, static fn ($v): bool => $v !== ''),
                 'errors' => $e->errors,
             ], 422);
         }
 
-        return $this->view('admin/audit', $model + ['errors' => []]);
+        $pageCount = max(1, (int) ceil((int) $model['total'] / self::AUDIT_PER_PAGE));
+        $page = min($requestedPage, $pageCount);
+        if ($page !== $requestedPage) {
+            // A stale bookmark cannot produce a misleading empty trail. Clamp
+            // it to the final real page and rerun the unchanged query service.
+            $model = $auditQuery->page($raw, $page - 1, self::AUDIT_PER_PAGE);
+        }
+
+        return $this->view('admin/audit', array_replace($model, [
+            'page' => $page,
+            'page_count' => $pageCount,
+            'errors' => [],
+        ]));
     }
 
     /** @param array<string,string> $params */
@@ -338,10 +354,16 @@ final class AdminController extends Controller
     {
         $admin = $this->requireAdmin();
         $board = $this->boardOrFail((int) ($params['id'] ?? 0));
-        if (trim((string) $request->post('confirm', '')) !== (string) $board['slug']) {
-            return $this->confirmBoardView($board, 'delete', 'Enter the board slug exactly to confirm deletion.', 422);
-        }
         $moveTo = $request->int('move_to_board_id', 0);
+        if (trim((string) $request->post('confirm', '')) !== (string) $board['slug']) {
+            return $this->confirmBoardView(
+                $board,
+                'delete',
+                'Enter the board slug exactly to confirm deletion.',
+                422,
+                $moveTo,
+            );
+        }
         try {
             $moved = $this->container->get(AdminService::class)->deleteBoard($admin, (int) $board['id'], $moveTo > 0 ? $moveTo : null);
         } catch (ValidationException $e) {

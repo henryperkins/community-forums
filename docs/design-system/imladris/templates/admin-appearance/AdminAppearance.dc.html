@@ -19,25 +19,13 @@
 
 <div data-screen-label="Admin — appearance" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
 
-  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
-    <span style="display: inline-flex; align-items: center; gap: 10px;">
-      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
-      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
-    </span>
-    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
-  </div>
+  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="appearance" hint-size="100%,101px"></x-import>
 
-  <div style="max-width: 1100px; margin: 0 auto; padding: 26px 28px 110px;">
+  <div style="max-width: 1100px; margin: 0 auto; padding: 22px 28px 110px;">
 
-    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
-      <div>
-        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Operator desk · Appearance</span>
-        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Branding &amp; themes</h1>
-      </div>
-      <span style="flex: 0 0 auto; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;">Admin mode</span>
-    </div>
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Branding &amp; themes</h1>
 
-    <nav aria-label="Appearance sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 22px 0 0; border-bottom: 1px solid var(--border-hair);">
+    <nav aria-label="Appearance sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 16px 0 0; border-bottom: 1px solid var(--border-hair);">
       <sc-if value="{{ atBranding }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goBranding }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Branding</button></sc-if>
       <sc-if value="{{ offBranding }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goBranding }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Branding</button></sc-if>
       <sc-if value="{{ atThemes }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goThemes }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Themes</button></sc-if>

@@ -22,7 +22,7 @@
         "tokens/colors.css": "ab5cccce021fa46473f8f127eafc47d113476e957f123a86a53f047b613c1519",
         "tokens/typography.css": "68ab2f7135f5f980e0ca5201147524eb98a52281e8ab5ee0c21405e533bbd4ac",
         "tokens/spacing.css": "f54a93af0359eb1d0561740a98cfb40eade5ebd1bdd558be6bfc5fbc0cf630bd",
-        "components.css": "0b6722727a622584731b2752a174aa04a17a5663932aef86753a07331d1ca140"
+        "components.css": "d43a323de15142d1d4196a97364d1ce7161fa3fdc3f998ad8b124961ccb2ca21"
     },
     "font_files": [
         "LICENSES/OFL-cormorant-garamond.txt",

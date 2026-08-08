@@ -26,6 +26,7 @@ final class AdminApiTokenTest extends TestCase
         // the token must never travel through the cookie-backed Flash).
         $this->assertStatus(200, $res);
         self::assertStringContainsString('rbt_', $res->body());
+        self::assertStringContainsString('Copy this token now — it will not be shown again:', $res->body());
 
         // A later GET does not show it again (nothing persisted it — no cookie, no DB plaintext).
         self::assertStringNotContainsString('rbt_', $this->get('/admin/api-tokens')->body());
@@ -51,7 +52,9 @@ final class AdminApiTokenTest extends TestCase
         $this->assertStatus(409, $second);
         self::assertStringNotContainsString('rbt_', $second->body());
         $this->assertSeeText($second, 'already processed');
-        $this->assertSeeText($second, 'Tokens');
+        // The list still renders behind the conflict banner. Anchored on the row's own
+        // action rather than a card heading the design's unheaded table card drops.
+        $this->assertSeeText($second, 'aria-label="Revoke the CI token"');
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM api_tokens'));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'api_token_minted'"));
     }
@@ -101,6 +104,29 @@ final class AdminApiTokenTest extends TestCase
         self::assertStringContainsString('value="read:boards" checked', $res->body(), 'the selected scope is preserved');
         self::assertStringContainsString('value="30"', $res->body(), 'the typed expiry is preserved');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM api_tokens'), 'no token on bad reauth');
+    }
+
+    public function test_revoke_flash_names_the_token_it_closed(): void
+    {
+        $this->enable();
+        $this->actingAs($this->makeAdmin(['username' => 'tokadmin4', 'password' => 'password123']));
+        $this->post('/admin/api-tokens', [
+            'name' => 'Read-only mirror', 'scopes' => ['read:boards'], 'current_password' => 'password123', 'expires_in_days' => '',
+        ]);
+        $id = (int) $this->db->fetchValue('SELECT id FROM api_tokens ORDER BY id DESC LIMIT 1');
+
+        $first = $this->post('/admin/api-tokens/' . $id . '/revoke', []);
+        self::assertStringContainsString(
+            '“Read-only mirror” was revoked — calls with it now fail closed.',
+            urldecode(implode(' ', $first->cookieHeaders())),
+        );
+
+        // A second revoke changes nothing, so it must not claim it closed anything.
+        $second = $this->post('/admin/api-tokens/' . $id . '/revoke', []);
+        self::assertStringContainsString(
+            'That token is already revoked',
+            urldecode(implode(' ', $second->cookieHeaders())),
+        );
     }
 
     public function test_routes_are_404_when_flag_dark(): void

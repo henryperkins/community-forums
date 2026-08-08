@@ -38,7 +38,16 @@ final class SetupController extends Controller
                 ],
             ], 422);
         } catch (ForbiddenException) {
-            return $this->redirect('/');
+            // An admin appeared between rendering this form and submitting it —
+            // in practice a resubmit after a slow first-run request (the very
+            // first boot pays image pull + migrations). Redirecting home in
+            // silence is indistinguishable from "the account was created but I
+            // wasn't signed in", so say what happened and land the operator on
+            // the page that can actually get them in.
+            return $this->redirectWithFlash(
+                '/login',
+                'Setup has already been completed. Sign in with the administrator account created during setup.',
+            );
         }
 
         return $this->redirectWithFlash('/admin', 'Welcome! Your community is ready.');

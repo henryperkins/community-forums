@@ -78,7 +78,17 @@ final class AdminRoleController extends Controller
 
         $capability = (string) $request->query('capability', '');
         $result = null;
-        if ($capability !== '') {
+        if (array_key_exists('capability', $request->allInput()) && $capability === '') {
+            // `required` is a browser convenience, not a server boundary. Keep
+            // the initial GET idle, but answer an explicitly submitted empty
+            // select just like the design's simulator state machine does.
+            $result = [
+                'decision' => null,
+                'actor_label' => '',
+                'target_label' => null,
+                'error' => 'Pick a capability to test.',
+            ];
+        } elseif ($capability !== '') {
             $boardId = (int) $request->query('board_id', 0);
             $at = (string) $request->query('at', '');
             $result = $this->container->get(PermissionSimulatorService::class)->simulate(

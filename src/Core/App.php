@@ -73,10 +73,8 @@ use App\Controller\ThreadWorkflowController;
 use App\Controller\UnsubscribeController;
 use App\Hook\FirstPartyHookRegistry;
 use App\Hook\HookEvent;
-use App\Mail\ArrayMailer;
-use App\Mail\CloudflareSmtpMailer;
 use App\Mail\Mailer;
-use App\Mail\SendmailMailer;
+use App\Mail\MailerFactory;
 use App\Search\MysqlSearchService;
 use App\Search\SearchService;
 use App\Repository\BadgeRepository;
@@ -413,6 +411,19 @@ final class App
                 return $this->redirect('/setup');
             }
             if ($initialized && $path === '/setup') {
+                // A POST here means someone just typed an administrator username,
+                // email and password into the wizard — most often a resubmit after
+                // a slow first-run request already completed. Bouncing them to the
+                // home page in silence reads as "the account was created but I
+                // wasn't signed in", so name what happened and send them to the
+                // page that can get them in. A GET is nobody's submitted work
+                // (crawlers hit /setup routinely), so it stays a quiet redirect.
+                if ($request->isPost()) {
+                    $container->get(Flash::class)->add(
+                        'Setup has already been completed. Sign in with the administrator account created during setup.',
+                    );
+                    return $this->redirect('/login');
+                }
                 return $this->redirect('/');
             }
 
@@ -1251,29 +1262,13 @@ final class App
             $c->get(FeatureFlags::class),
             $c->get(CustomEmojiService::class),
         ));
-        $c->bind(Mailer::class, function (Container $c) use ($config): Mailer {
-            $mail = (array) $config->get('mail', []);
-            if (($mail['driver'] ?? 'sendmail') === 'array') {
-                return new ArrayMailer();
+        $c->bind(Mailer::class, fn (Container $c): Mailer => MailerFactory::fromConfig($config, function () use ($c, $config): string {
+            try {
+                return $c->get(SettingRepository::class)->getString('site_name', (string) $config->get('app.name', ''));
+            } catch (Throwable) {
+                return (string) $config->get('app.name', '');
             }
-            $fromName = (string) ($mail['from_name'] ?? '');
-            if ($fromName === '') {
-                try {
-                    $fromName = $c->get(SettingRepository::class)->getString('site_name', (string) $config->get('app.name', ''));
-                } catch (Throwable) {
-                    $fromName = (string) $config->get('app.name', '');
-                }
-            }
-            if (($mail['driver'] ?? 'sendmail') === 'cloudflare_smtp') {
-                return new CloudflareSmtpMailer(
-                    (string) ($mail['cloudflare_api_token'] ?? ''),
-                    (string) ($mail['from'] ?? ''),
-                    $fromName,
-                    timeoutSeconds: (int) ($mail['timeout_seconds'] ?? 30),
-                );
-            }
-            return new SendmailMailer((string) ($mail['from'] ?? ''), $fromName);
-        });
+        }));
         $c->bind(NotificationService::class, fn (Container $c) => new NotificationService(
             $c->get(Database::class),
             $c->get(NotificationRepository::class),
@@ -1310,6 +1305,7 @@ final class App
             $c->get(NotificationRepository::class),
             $c->get(EmailDeliveryRepository::class),
             $c->get(WriteGate::class),
+            $c->get(UserRepository::class),
             $c->get(RateLimitService::class),
         ));
         $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(

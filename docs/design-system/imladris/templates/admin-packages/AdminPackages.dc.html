@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — packages & registries" description="The supply-chain surfaces: the signed package catalogue with the install-plan → consent → enable lifecycle, the emergency execution brake and publisher trust, registry key pinning with the local blocklist and advisories, and the reserved server-extensions probe" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes apkRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — packages" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="packages" hint-size="100%,101px"></x-import>
+
+  <div style="max-width: 1160px; margin: 0 auto; padding: 22px 28px 110px;">
+
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Packages &amp; registries</h1>
+
+    <nav aria-label="Supply chain sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 16px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atCatalogue }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goCatalogue }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Packages</button></sc-if>
+      <sc-if value="{{ offCatalogue }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goCatalogue }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Packages</button></sc-if>
+      <sc-if value="{{ atRegistry }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goRegistry }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Registry trust</button></sc-if>
+      <sc-if value="{{ offRegistry }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goRegistry }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Registry trust</button></sc-if>
+      <sc-if value="{{ atExtensions }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goExtensions }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Extensions</button></sc-if>
+      <sc-if value="{{ offExtensions }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goExtensions }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Extensions</button></sc-if>
+    </nav>
+
+    <sc-if value="{{ flash }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; align-items: flex-start; gap: 11px; margin-top: 20px; padding: 12px 16px; background: var(--surface-done); border: 1px solid var(--green-200); border-left: 3px solid var(--success); border-radius: var(--radius-md); animation: apkRise 200ms ease-out;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-done)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.4l2.4 2.4 4.6-5"></path></svg>
+        <p style="margin: 0; font-size: .93rem; line-height: 1.5; color: var(--on-done);">{{ flashText }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Catalogue ═══ -->
+    <sc-if value="{{ showCatalogue }}" hint-placeholder-val="{{ true }}">
+    <div style="padding-top: 24px;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <p style="flex: 1 1 420px; margin: 0; max-width: 78ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">A staff browse of signed registry metadata. A signature proves byte provenance under a pinned key; install and enable still require review, consent, and local policy checks.</p>
+        <button onClick="{{ goSecurity }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .8rem; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Package security response →</button>
+      </div>
+
+      <sc-if value="{{ staleSnapshot }}" hint-placeholder-val="{{ true }}">
+        <p role="alert" style="margin: 0 0 16px; padding: 12px 16px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .92rem; line-height: 1.55; color: var(--danger); text-wrap: pretty;">Stale snapshot: <strong>community.imladris</strong> has no verified snapshot inside its freshness window (expired 2026-07-29 04:00 UTC). Cached metadata below remains viewable. Run <code style="font-family: var(--font-mono); font-size: .84rem;">php bin/console worker:registry-refresh</code>.</p>
+      </sc-if>
+
+      <section style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+        <table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: .92rem;">
+          <thead><tr>
+            <th scope="col" style="padding: 14px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Package</th>
+            <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Type</th>
+            <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Install</th>
+            <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Trust class</th>
+            <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Latest</th>
+            <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Compatibility</th>
+            <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Advisory</th>
+            <th scope="col" style="padding: 14px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Actions</span></th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ catalogueRows }}" as="p" hint-placeholder-count="4">
+              <tr>
+                <td style="padding: 12px 10px 12px 0; vertical-align: top; border-bottom: 1px solid var(--border-hair);">
+                  <strong style="display: block; font-size: .98rem; color: var(--text-strong);">{{ p.name }}</strong>
+                  <code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted);">{{ p.uid }}</code>
+                  <span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-faint);">{{ p.via }}</span>
+                </td>
+                <td style="padding: 12px 10px; vertical-align: top; font-size: .86rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ p.type }}</td>
+                <td style="padding: 12px 10px; vertical-align: top; border-bottom: 1px solid var(--border-hair);">
+                  <sc-if value="{{ p.installed }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ p.installState }}</span></sc-if>
+                  <sc-if value="{{ p.notInstalled }}" hint-placeholder-val="{{ false }}"><span style="color: var(--text-faint);">—</span></sc-if>
+                </td>
+                <td style="padding: 12px 10px; vertical-align: top; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-body);">{{ p.trustClass }}</code></td>
+                <td style="padding: 12px 10px; vertical-align: top; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ p.latest }}</td>
+                <td style="padding: 12px 10px; vertical-align: top; border-bottom: 1px solid var(--border-hair);">
+                  <sc-if value="{{ p.compatible }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">compatible</span></sc-if>
+                  <sc-if value="{{ p.incompatible }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">incompatible</span></sc-if>
+                </td>
+                <td style="padding: 12px 10px; vertical-align: top; border-bottom: 1px solid var(--border-hair);">
+                  <sc-if value="{{ p.hasAdvisory }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised)); color: var(--danger); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ p.advisoryText }}</span></sc-if>
+                  <sc-if value="{{ p.noAdvisory }}" hint-placeholder-val="{{ true }}"><span style="color: var(--text-faint); font-size: .86rem;">none</span></sc-if>
+                </td>
+                <td style="padding: 12px 0 12px 10px; text-align: right; vertical-align: top; border-bottom: 1px solid var(--border-hair);"><button onClick="{{ p.open }}" style="padding: 4px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Details</button></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Package detail ═══ -->
+    <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px; animation: apkRise 200ms ease-out;">
+      <button onClick="{{ goCatalogue }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Package catalogue</button>
+      <h2 style="margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 2rem; line-height: 1.1; color: var(--text-strong);">{{ det.name }}</h2>
+      <p style="margin: 0 0 20px; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);">{{ det.uid }}</p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 14px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Provenance</h3>
+          <dl style="display: flex; flex-direction: column; gap: 11px; margin: 0;">
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Pinned source</dt><dd style="margin: 4px 0 0; font-size: .93rem; color: var(--text-body);">{{ det.source }}</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Type</dt><dd style="margin: 4px 0 0; font-size: .93rem; color: var(--text-body);">{{ det.type }}</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Trust class</dt><dd style="margin: 4px 0 0; font-size: .93rem; color: var(--text-body);"><code style="font-family: var(--font-mono); font-size: .82rem;">{{ det.trustClass }}</code> — trust is never implied by being listed</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Advisory status</dt><dd style="margin: 4px 0 0; font-size: .93rem; color: var(--text-body);">{{ det.advisoryStatus }}</dd></div>
+          </dl>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 8px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Installation</h3>
+          <sc-if value="{{ det.notInstalled }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0 0 14px; font-size: .92rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Create an install plan before any local state is written. Enabling happens only after install and permission consent.</p>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ goPlan }}" hint-size="110px,32px">Install plan</x-import>
+          </sc-if>
+          <sc-if value="{{ det.isInstalled }}" hint-placeholder-val="{{ true }}">
+            <dl style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px 16px; margin: 12px 0 16px;">
+              <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">State</dt><dd style="margin: 4px 0 0; font-size: .95rem; color: var(--text-strong);">{{ det.state }}</dd></div>
+              <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Health</dt><dd style="margin: 4px 0 0; font-size: .95rem; color: var(--text-body);">{{ det.health }}</dd></div>
+              <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Version</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .9rem; color: var(--text-body);">{{ det.version }}</dd></div>
+              <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Update policy</dt><dd style="margin: 4px 0 0; font-size: .95rem; color: var(--text-body);">{{ det.updatePolicy }}</dd></div>
+            </dl>
+            <sc-if value="{{ det.pendingConsent }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0 0 14px; padding: 10px 14px; background: var(--surface-review); border-radius: var(--radius-md); font-size: .9rem; color: var(--on-review);">{{ det.pendingText }} <button onClick="{{ goConsent }}" style="border: 0; padding: 0; background: transparent; font: inherit; color: inherit; text-decoration: underline; cursor: pointer;">Review consent</button>.</p>
+            </sc-if>
+            <div style="display: flex; flex-wrap: wrap; gap: 9px;">
+              <sc-if value="{{ det.canEnable }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ enablePkg }}" hint-size="76px,32px">Enable</x-import></sc-if>
+              <sc-if value="{{ det.canDisable }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" onClick="{{ disablePkg }}" hint-size="80px,32px">Disable</x-import></sc-if>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" onClick="{{ togglePin }}" hint-size="70px,32px">{{ det.pinLabel }}</x-import>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="ghost" onClick="{{ cyclePolicy }}" hint-size="140px,32px">{{ det.policyLabel }}</x-import>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="ghost" onClick="{{ uninstallPkg }}" hint-size="90px,32px">Uninstall</x-import>
+            </div>
+          </sc-if>
+        </section>
+      </div>
+
+      <section style="margin-top: 18px; padding: 6px 20px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+        <h3 style="margin: 15px 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Releases</h3>
+        <p style="margin: 0 0 10px; font-size: .88rem; color: var(--text-muted);">Immutable: any changed byte is a new release.</p>
+        <table style="width: 100%; min-width: 720px; border-collapse: collapse; font-size: .9rem;">
+          <thead><tr>
+            <th scope="col" style="padding: 9px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Version</th>
+            <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Channel</th>
+            <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Digest</th>
+            <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Signed by</th>
+            <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Core range</th>
+            <th scope="col" style="padding: 9px 0 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Local review</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ releaseRows }}" as="r" hint-placeholder-count="3">
+              <tr>
+                <td style="padding: 10px 10px 10px 0; font-family: var(--font-mono); font-size: .84rem; color: var(--text-strong); border-bottom: 1px solid var(--border-hair);">{{ r.version }}</td>
+                <td style="padding: 10px; font-size: .86rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ r.channel }}</td>
+                <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted);">{{ r.digest }}</code></td>
+                <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted);">{{ r.signedKey }}</code></td>
+                <td style="padding: 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ r.coreRange }}</td>
+                <td style="padding: 10px 0 10px 10px; border-bottom: 1px solid var(--border-hair);">
+                  <select value="{{ r.review }}" onChange="{{ r.setReview }}" aria-label="Local review decision" style="padding: 5px 9px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                    <option value="approved">approved</option><option value="rejected">rejected</option><option value="revoked">revoked</option>
+                  </select>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; margin-top: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Permissions</h3>
+          <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+            <sc-for list="{{ permissionRows }}" as="pm" hint-placeholder-count="3">
+              <li style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="flex: 1; min-width: 0;">
+                  <span style="display: block; font-size: .94rem; color: var(--text-body);">{{ pm.label }}</span>
+                  <code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ pm.id }}</code>
+                </span>
+                <span style="font-family: var(--font-label); font-size: .72rem; color: var(--text-muted);">{{ pm.risk }}</span>
+                <sc-if value="{{ pm.granted }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem;">granted</span></sc-if>
+                <sc-if value="{{ pm.pending }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .66rem;">pending</span></sc-if>
+              </li>
+            </sc-for>
+          </ul>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">History</h3>
+          <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+            <sc-for list="{{ historyRows }}" as="h" hint-placeholder-count="3">
+              <li style="padding: 10px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="display: flex; align-items: baseline; gap: 9px;">
+                  <span style="font-size: .93rem; color: var(--text-strong);">{{ h.event }}</span>
+                  <code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ h.digest }}</code>
+                  <span style="margin-left: auto; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ h.when }}</span>
+                </span>
+                <span style="display: block; margin-top: 3px; font-size: .86rem; color: var(--text-muted);">{{ h.detail }}</span>
+              </li>
+            </sc-for>
+          </ul>
+          <sc-if value="{{ noHistory }}" hint-placeholder-val="{{ false }}"><p style="margin: 4px 0 0; font-size: .9rem; font-style: italic; color: var(--text-muted);">No lifecycle history recorded for this package.</p></sc-if>
+        </section>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Install plan ═══ -->
+    <sc-if value="{{ showPlan }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px; animation: apkRise 200ms ease-out;">
+      <button onClick="{{ backToDetail }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>{{ det.name }}</button>
+      <section style="max-width: 720px; padding: 22px 24px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h2 style="margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.6rem; color: var(--text-strong);">{{ planTitle }}</h2>
+        <p style="margin: 0 0 18px; font-size: .93rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Installing records provenance and permissions; nothing executes until you consent and enable.</p>
+        <dl style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px 18px; margin: 0 0 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border-hair);">
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Version</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .9rem; color: var(--text-strong);">{{ planVersion }}</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Digest</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body);">{{ planDigest }}</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Registry</dt><dd style="margin: 4px 0 0; font-size: .9rem; color: var(--text-body);">{{ planRegistry }}</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Review</dt><dd style="margin: 4px 0 0; font-size: .9rem; color: var(--text-body);">{{ planReview }}</dd></div>
+        </dl>
+        <h3 style="margin: 0 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">Permission preview</h3>
+        <ul style="margin: 0 0 18px; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+          <sc-for list="{{ permissionRows }}" as="pm" hint-placeholder-count="3">
+            <li style="display: flex; align-items: flex-start; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border-hair);">
+              <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: .93rem; color: var(--text-body);">{{ pm.label }}</span><code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ pm.id }}</code></span>
+              <span style="font-family: var(--font-label); font-size: .72rem; color: var(--text-muted);">{{ pm.risk }}</span>
+            </li>
+          </sc-for>
+        </ul>
+        <sc-if value="{{ planErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ planErrText }}</p></sc-if>
+        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 320px;">
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Current password</span>
+            <input type="password" value="{{ planPwd }}" onInput="{{ onPlanPwd }}" autoComplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+          <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ doInstall }}" hint-size="90px,32px">Install</x-import></span>
+        </div>
+      </section>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Consent ═══ -->
+    <sc-if value="{{ showConsent }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px; animation: apkRise 200ms ease-out;">
+      <button onClick="{{ backToDetail }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>{{ det.name }}</button>
+      <section style="max-width: 660px; padding: 22px 24px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h2 style="margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.6rem; color: var(--text-strong);">Consent to permissions</h2>
+        <p style="margin: 0 0 18px; font-size: .93rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Granting is per-permission and audited. A package cannot be enabled while any grant is pending.</p>
+        <ul style="margin: 0 0 18px; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+          <sc-for list="{{ pendingRows }}" as="pm" hint-placeholder-count="2">
+            <li style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+              <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: .94rem; color: var(--text-body);">{{ pm.label }}</span><code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ pm.id }}</code></span>
+              <span style="font-family: var(--font-label); font-size: .72rem; color: var(--text-muted);">{{ pm.risk }}</span>
+            </li>
+          </sc-for>
+        </ul>
+        <sc-if value="{{ noPending }}" hint-placeholder-val="{{ false }}"><p style="margin: 0 0 18px; font-size: .92rem; font-style: italic; color: var(--text-muted);">No pending grants.</p></sc-if>
+        <sc-if value="{{ consentErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ consentErrText }}</p></sc-if>
+        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 320px;">
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Current password</span>
+            <input type="password" value="{{ consentPwd }}" onInput="{{ onConsentPwd }}" autoComplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+          <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ doGrant }}" hint-size="150px,32px">Grant and continue</x-import></span>
+        </div>
+      </section>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Security response ═══ -->
+    <sc-if value="{{ showSecurity }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px; animation: apkRise 200ms ease-out;">
+      <button onClick="{{ goCatalogue }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Package catalogue</button>
+
+      <sc-if value="{{ brakeOn }}" hint-placeholder-val="{{ true }}">
+      <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: var(--text-strong);">Emergency execution brake</h2>
+        <p style="margin: 0 0 14px; max-width: 76ch; font-size: .93rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">{{ brakeBlurb }}</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+          <input value="{{ brakeReason }}" onInput="{{ onBrakeReason }}" placeholder="Reason (optional)" style="flex: 1 1 220px; max-width: 300px; padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          <sc-if value="{{ brakeEngaged }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ toggleBrake }}" hint-size="200px,32px">Resume package execution</x-import></sc-if>
+          <sc-if value="{{ brakeReleased }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="danger" onClick="{{ toggleBrake }}" hint-size="230px,32px">Emergency-disable all packages</x-import></sc-if>
+        </div>
+      </section>
+      </sc-if>
+
+      <section style="margin-top: 18px; padding: 6px 20px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h2 style="margin: 15px 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Publishers</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: .92rem;">
+          <thead><tr>
+            <th scope="col" style="padding: 9px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Publisher</th>
+            <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+            <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Verified</th>
+            <th scope="col" style="padding: 9px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Actions</span></th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ publisherRows }}" as="pb" hint-placeholder-count="2">
+              <tr>
+                <td style="padding: 11px 10px 11px 0; border-bottom: 1px solid var(--border-hair);"><span style="color: var(--text-strong);">{{ pb.displayName }}</span> <code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ pb.uid }}</code></td>
+                <td style="padding: 11px 10px; font-size: .88rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ pb.status }}</td>
+                <td style="padding: 11px 10px; font-size: .86rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ pb.verified }}</td>
+                <td style="padding: 11px 0 11px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);"><button onClick="{{ pb.suspend }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--danger); cursor: pointer;" style-hover="text-decoration: underline;">{{ pb.actionLabel }}</button></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+
+      <sc-if value="{{ transparencyOn }}" hint-placeholder-val="{{ true }}">
+      <section style="margin-top: 18px; padding: 6px 20px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h2 style="margin: 15px 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Transparency log</h2>
+        <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+          <sc-for list="{{ transparencyRows }}" as="t" hint-placeholder-count="3">
+            <li style="display: flex; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-hair);">
+              <span style="font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint); white-space: nowrap;">{{ t.when }}</span>
+              <code style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-strong);">{{ t.event }}</code>
+              <span style="font-size: .88rem; color: var(--text-muted);">{{ t.detail }}</span>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Registry trust ═══ -->
+    <sc-if value="{{ showRegistry }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px;">
+      <p style="margin: 0 0 18px; max-width: 92ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">The private signing root lives offline with the operator; this console pins, rotates, and revokes public keys only. Trust changes require your password. The local blocklist works regardless of registry state.</p>
+
+      <sc-for list="{{ registryRows }}" as="reg" hint-placeholder-count="2">
+        <section style="margin-bottom: 18px; padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">{{ reg.displayName }}</h2>
+            <code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted);">{{ reg.sourceId }}</code>
+            <sc-if value="{{ reg.enabled }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">enabled</span></sc-if>
+            <sc-if value="{{ reg.disabled }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">disabled</span></sc-if>
+            <span style="margin-left: auto;"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" onClick="{{ reg.toggle }}" hint-size="140px,32px">{{ reg.toggleLabel }}</x-import></span>
+          </div>
+          <p style="margin: 0 0 14px; font-size: .9rem; color: var(--text-muted);">{{ reg.snapshotText }}</p>
+          <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 9px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Key id</th>
+              <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+              <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Window</th>
+              <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Fingerprint</th>
+              <th scope="col" style="padding: 9px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Actions</span></th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ reg.keys }}" as="k" hint-placeholder-count="2">
+                <tr>
+                  <td style="padding: 10px 10px 10px 0; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong);">{{ k.keyId }}</code></td>
+                  <td style="padding: 10px; font-size: .88rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ k.statusText }}</td>
+                  <td style="padding: 10px; font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); white-space: nowrap; border-bottom: 1px solid var(--border-hair);">{{ k.window }}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted);">{{ k.fingerprint }}</code></td>
+                  <td style="padding: 10px 0 10px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ k.revocable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ k.revoke }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--danger); cursor: pointer;" style-hover="text-decoration: underline;">Revoke</button></sc-if>
+                    <sc-if value="{{ k.revoked }}" hint-placeholder-val="{{ false }}"><span style="color: var(--text-faint);">—</span></sc-if>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </sc-for>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Local blocklist (registry-independent)</h3>
+          <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+            <sc-for list="{{ blockRows }}" as="b" hint-placeholder-count="2">
+              <li style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="flex: 1; min-width: 0;">
+                  <code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong);">{{ b.uid }}</code>
+                  <span style="display: block; margin-top: 3px; font-size: .88rem; color: var(--text-muted);">{{ b.reason }}</span>
+                </span>
+                <button onClick="{{ b.remove }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--accent); white-space: nowrap; cursor: pointer;" style-hover="text-decoration: underline;">Remove</button>
+              </li>
+            </sc-for>
+          </ul>
+          <sc-if value="{{ noBlocks }}" hint-placeholder-val="{{ false }}"><p style="margin: 8px 0 0; font-size: .9rem; font-style: italic; color: var(--text-muted);">Nothing is locally blocked.</p></sc-if>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Advisories</h3>
+          <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+            <sc-for list="{{ advisoryRows }}" as="a" hint-placeholder-count="2">
+              <li style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="flex: 1; min-width: 0;">
+                  <code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong);">{{ a.uid }}</code>
+                  <span style="display: block; margin-top: 3px; font-size: .88rem; color: var(--text-muted);">{{ a.detail }}</span>
+                </span>
+                <sc-if value="{{ a.pending }}" hint-placeholder-val="{{ true }}"><button onClick="{{ a.ack }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--accent); white-space: nowrap; cursor: pointer;" style-hover="text-decoration: underline;">Acknowledge</button></sc-if>
+                <sc-if value="{{ a.acked }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .72rem; color: var(--text-faint); white-space: nowrap;">{{ a.ackText }}</span></sc-if>
+              </li>
+            </sc-for>
+          </ul>
+        </section>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Extensions ═══ -->
+    <sc-if value="{{ showExtensions }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; padding: 13px 16px; background: var(--surface-info); border: 1px solid var(--river-200); border-left: 3px solid var(--info); border-radius: var(--radius-md);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-info)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M12 16v-5M12 8h.01"></path></svg>
+        <p style="margin: 0; max-width: 84ch; font-size: .93rem; line-height: 1.55; color: var(--on-info); text-wrap: pretty;">Server extension execution is controlled by the <code style="font-family: var(--font-mono); font-size: .84rem;">server_extensions</code> flag, which is reserved and dark under Gate B (ADR 0018). This page is a read-only probe: handlers are listed, nothing runs.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Sandbox probe</h3>
+          <p style="margin: 0; font-size: 1rem; color: var(--text-strong);"><strong>available</strong> <code style="font-family: var(--font-mono); font-size: .84rem; color: var(--text-muted);">wasm-runtime</code></p>
+          <p style="margin: 8px 0 0; font-size: .89rem; color: var(--text-muted);">The runtime answers, but the flag is dark — no handler is dispatched.</p>
+        </section>
+
+        <section style="padding: 6px 20px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 15px 0 10px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Handlers</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 9px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Package</th>
+              <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Handler</th>
+              <th scope="col" style="padding: 9px 0 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Entrypoint</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ handlerRows }}" as="h" hint-placeholder-count="2">
+                <tr>
+                  <td style="padding: 10px 10px 10px 0; font-family: var(--font-mono); font-size: .78rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ h.pkg }}</td>
+                  <td style="padding: 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong); border-bottom: 1px solid var(--border-hair);">{{ h.handler }}</td>
+                  <td style="padding: 10px 0 10px 10px; font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ h.entrypoint }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <section style="margin-top: 18px; padding: 6px 20px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+        <h3 style="margin: 15px 0 10px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Run history</h3>
+        <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+          <sc-for list="{{ runRows }}" as="r" hint-placeholder-count="3">
+            <li style="display: flex; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-hair);">
+              <span style="font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint); white-space: nowrap;">{{ r.when }}</span>
+              <code style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-strong);">{{ r.handler }}</code>
+              <sc-if value="{{ r.ok }}" hint-placeholder-val="{{ true }}"><span style="font-family: var(--font-label); font-size: .72rem; color: var(--success);">ok</span></sc-if>
+              <sc-if value="{{ r.failed }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .72rem; color: var(--danger);">error</span></sc-if>
+              <span style="font-size: .86rem; color: var(--text-muted);">{{ r.detail }}</span>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;emergencyBrake&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;strictConsent&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;showTransparency&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;}}">
+const PERMS = {
+  1: [
+    { id: 'webhook:post.created', label: 'Receive every published post', risk: 'high', granted: true },
+    { id: 'storage:scan_cache', label: 'Write to its own scan cache', risk: 'low', granted: true },
+    { id: 'moderation:flag', label: 'Raise moderation flags on posts', risk: 'medium', granted: false },
+  ],
+  2: [
+    { id: 'cron:daily', label: 'Run once a day on the scheduler', risk: 'low', granted: true },
+    { id: 'email:send_digest', label: 'Send digest mail through the queue', risk: 'medium', granted: true },
+  ],
+  3: [
+    { id: 'theme:assets', label: 'Serve theme assets from the media root', risk: 'low', granted: false },
+  ],
+  4: [
+    { id: 'storage:export', label: 'Read the archive for export', risk: 'medium', granted: false },
+    { id: 'net:egress', label: 'Send archives to an external endpoint', risk: 'high', granted: false },
+  ],
+};
+
+const PACKAGES = [
+  { id: 1, name: 'Anti-abuse scanner', uid: 'imladris/anti-abuse', type: 'integration', registry: 'community.imladris', publisher: 'Imladris Council', trustClass: 'community-reviewed', latest: '2.4.1', compatible: true, advisory: '',
+    installed: { state: 'enabled', health: 'healthy', version: '2.4.1', digest: 'b41f9c72a0e8d3', pinned: false, updatePolicy: 'notify' },
+    releases: [
+      { id: 1, version: '2.4.1', channel: 'stable', digest: 'b41f9c72a0e8d3…', signedKey: 'imladris-2026-a', coreRange: '4.0 – 4.9', review: 'approved' },
+      { id: 2, version: '2.3.0', channel: 'stable', digest: '9ac0e1b7d4f620…', signedKey: 'imladris-2025-b', coreRange: '3.8 – 4.4', review: 'approved' },
+    ],
+    history: [
+      { event: 'enabled', digest: 'b41f9c72…', detail: 'After consent to 2 of 3 permissions', when: '2026-07-14 09:12' },
+      { event: 'installed', digest: 'b41f9c72…', detail: 'Plan approved by @elrond', when: '2026-07-14 09:04' },
+    ] },
+  { id: 2, name: 'Daily digest', uid: 'imladris/digest', type: 'integration', registry: 'community.imladris', publisher: 'Imladris Council', trustClass: 'community-reviewed', latest: '1.9.0', compatible: true, advisory: '',
+    installed: { state: 'installed', health: 'idle', version: '1.9.0', digest: '3ce8117da95b40', pinned: true, updatePolicy: 'manual' },
+    releases: [{ id: 3, version: '1.9.0', channel: 'stable', digest: '3ce8117da95b40…', signedKey: 'imladris-2026-a', coreRange: '4.0 – 4.9', review: 'approved' }],
+    history: [{ event: 'installed', digest: '3ce8117d…', detail: 'Awaiting enable', when: '2026-07-20 16:40' }] },
+  { id: 3, name: 'Twilight theme', uid: 'lorien/twilight-theme', type: 'theme', registry: 'lorien.registry', publisher: 'Lórien Works', trustClass: 'unreviewed', latest: '0.8.2', compatible: false, advisory: '',
+    installed: null,
+    releases: [{ id: 4, version: '0.8.2', channel: 'beta', digest: '77b2ee01c9a4f5…', signedKey: 'lorien-2026-a', coreRange: '3.2 – 3.9', review: 'none' }],
+    history: [] },
+  { id: 4, name: 'Archive exporter', uid: 'orthanc/exporter', type: 'integration', registry: 'lorien.registry', publisher: 'Orthanc Labs', trustClass: 'unreviewed', latest: '3.0.0', compatible: true, advisory: 'locally blocked',
+    installed: null,
+    releases: [{ id: 5, version: '3.0.0', channel: 'stable', digest: 'ffa30d8b6c1e29…', signedKey: 'orthanc-2026-a', coreRange: '4.0 – 4.9', review: 'rejected' }],
+    history: [] },
+];
+
+const PUBLISHERS = [
+  { id: 1, uid: 'imladris-council', displayName: 'Imladris Council', status: 'trusted', verified: '2026-03-02 UTC' },
+  { id: 2, uid: 'lorien-works', displayName: 'Lórien Works', status: 'listed', verified: 'unverified' },
+  { id: 3, uid: 'orthanc-labs', displayName: 'Orthanc Labs', status: 'suspended', verified: 'unverified' },
+];
+
+const TRANSPARENCY = [
+  { when: '2026-07-29 04:00', event: 'snapshot.stale', detail: 'community.imladris passed its freshness window' },
+  { when: '2026-07-24 11:18', event: 'publisher.suspend', detail: 'Orthanc Labs suspended after advisory IML-2026-0031' },
+  { when: '2026-07-14 09:12', event: 'package.enable', detail: 'imladris/anti-abuse 2.4.1 enabled by @elrond' },
+];
+
+const REGISTRIES = [
+  { id: 1, sourceId: 'community.imladris', displayName: 'Council registry', baseUrl: 'https://packages.imladris.council', enabled: true,
+    snapshot: 'Last verified snapshot 2026-07-28 04:00 UTC; expired 2026-07-29 04:00 UTC.',
+    keys: [
+      { id: 1, keyId: 'imladris-2026-a', status: 'active', window: '2026-01-01 → 2026-12-31', fingerprint: 'SHA256:4f2b…9c7d' },
+      { id: 2, keyId: 'imladris-2025-b', status: 'revoked', reason: 'rotated on schedule', window: '2025-01-01 → 2025-12-31', fingerprint: 'SHA256:81ae…22f0' },
+    ] },
+  { id: 2, sourceId: 'lorien.registry', displayName: 'Lórien mirror', baseUrl: 'https://registry.lorien.example', enabled: false,
+    snapshot: 'No verified snapshot yet.',
+    keys: [{ id: 3, keyId: 'lorien-2026-a', status: 'active', window: '2026-02-01 → 2027-01-31', fingerprint: 'SHA256:c04d…7b19' }] },
+];
+
+const BLOCKS = [
+  { id: 1, uid: 'orthanc/exporter', reason: 'Egress to an unpinned endpoint (IML-2026-0031)' },
+];
+
+const ADVISORIES = [
+  { id: 1, uid: 'IML-2026-0031', detail: 'orthanc/exporter · critical · action: block', ack: '' },
+  { id: 2, uid: 'IML-2026-0018', detail: 'lorien/twilight-theme · low · action: notify', ack: '2026-06-11 UTC' },
+];
+
+const HANDLERS = [
+  { pkg: 'imladris/anti-abuse', handler: 'post.scan', entrypoint: 'handlers/scan.php' },
+  { pkg: 'imladris/digest', handler: 'cron.digest', entrypoint: 'handlers/digest.php' },
+];
+
+const RUNS = [
+  { when: '1h ago', handler: 'post.scan', status: 'ok', detail: '' },
+  { when: '8h ago', handler: 'cron.digest', status: 'ok', detail: '' },
+  { when: 'yesterday', handler: 'post.scan', status: 'error', detail: 'sandbox timeout (5s)' },
+];
+
+class Component extends DCLogic {
+  state = {
+    view: 'catalogue', flash: '',
+    packages: PACKAGES.map((p) => Object.assign({}, p, { installed: p.installed ? Object.assign({}, p.installed) : null })),
+    perms: JSON.parse(JSON.stringify(PERMS)),
+    pkgId: null, planPwd: '', planErr: '', consentPwd: '', consentErr: '',
+    brake: false, brakeReason: '',
+    publishers: PUBLISHERS.map((p) => Object.assign({}, p)),
+    registries: JSON.parse(JSON.stringify(REGISTRIES)),
+    blocks: BLOCKS.map((b) => Object.assign({}, b)),
+    advisories: ADVISORIES.map((a) => Object.assign({}, a)),
+  };
+
+  field(key) { return (e) => this.setState({ [key]: e.target.value }); }
+  patchPkg(id, fn) { this.setState((s) => ({ packages: s.packages.map((p) => (p.id === id ? fn(Object.assign({}, p)) : p)) })); }
+
+  renderVals() {
+    const s = this.state;
+    const brakeOn = this.props.emergencyBrake !== false;
+    const transparencyOn = this.props.showTransparency !== false;
+    const strictConsent = this.props.strictConsent !== false;
+    const pkg = s.packages.find((p) => p.id === s.pkgId) || s.packages[0];
+    const perms = s.perms[pkg.id] || [];
+    const pending = perms.filter((p) => !p.granted);
+    const inst = pkg.installed;
+
+    return {
+      atCatalogue: s.view === 'catalogue' || s.view === 'detail' || s.view === 'plan' || s.view === 'consent' || s.view === 'security',
+      offCatalogue: !(s.view === 'catalogue' || s.view === 'detail' || s.view === 'plan' || s.view === 'consent' || s.view === 'security'),
+      atRegistry: s.view === 'registry', offRegistry: s.view !== 'registry',
+      atExtensions: s.view === 'extensions', offExtensions: s.view !== 'extensions',
+      goCatalogue: () => this.setState({ view: 'catalogue', flash: '' }),
+      goRegistry: () => this.setState({ view: 'registry', flash: '' }),
+      goExtensions: () => this.setState({ view: 'extensions', flash: '' }),
+      goSecurity: () => this.setState({ view: 'security', flash: '' }),
+      showCatalogue: s.view === 'catalogue', showDetail: s.view === 'detail', showPlan: s.view === 'plan',
+      showConsent: s.view === 'consent', showSecurity: s.view === 'security', showRegistry: s.view === 'registry', showExtensions: s.view === 'extensions',
+      flash: !!s.flash, flashText: s.flash,
+      staleSnapshot: s.registries.some((r) => r.sourceId === 'community.imladris' && r.enabled),
+
+      catalogueRows: s.packages.map((p) => ({
+        name: p.name, uid: p.uid, via: 'via ' + p.registry + ' · ' + p.publisher, type: p.type, trustClass: p.trustClass,
+        latest: p.latest, compatible: p.compatible, incompatible: !p.compatible,
+        installed: !!p.installed, notInstalled: !p.installed,
+        installState: p.installed ? p.installed.state.charAt(0).toUpperCase() + p.installed.state.slice(1) : '',
+        hasAdvisory: !!p.advisory, noAdvisory: !p.advisory, advisoryText: p.advisory,
+        open: () => this.setState({ view: 'detail', pkgId: p.id, flash: '' }),
+      })),
+
+      det: {
+        name: pkg.name, uid: pkg.uid, type: pkg.type, trustClass: pkg.trustClass,
+        source: pkg.registry + ' (pinned)',
+        advisoryStatus: pkg.advisory || 'none recorded',
+        isInstalled: !!inst, notInstalled: !inst,
+        state: inst ? inst.state : '', health: inst ? inst.health : '', version: inst ? inst.version : '',
+        updatePolicy: inst ? inst.updatePolicy : '',
+        pinLabel: inst && inst.pinned ? 'Unpin' : 'Pin',
+        policyLabel: inst ? 'Policy: ' + inst.updatePolicy : 'Policy',
+        canEnable: !!inst && inst.state !== 'enabled',
+        canDisable: !!inst && inst.state === 'enabled',
+        pendingConsent: pending.length > 0 && !!inst,
+        pendingText: pending.length + ' permission' + (pending.length === 1 ? '' : 's') + ' await consent.',
+      },
+      backToDetail: () => this.setState({ view: 'detail', planErr: '', consentErr: '' }),
+      goPlan: () => this.setState({ view: 'plan', planPwd: '', planErr: '', flash: '' }),
+      goConsent: () => this.setState({ view: 'consent', consentPwd: '', consentErr: '', flash: '' }),
+
+      releaseRows: pkg.releases.map((r) => ({
+        version: r.version, channel: r.channel, digest: r.digest, signedKey: r.signedKey, coreRange: r.coreRange, review: r.review,
+        setReview: (e) => {
+          const v = e.target.value;
+          this.patchPkg(pkg.id, (p) => { p.releases = p.releases.map((x) => (x.id === r.id ? Object.assign({}, x, { review: v }) : x)); return p; });
+          this.setState({ flash: 'Local review for ' + pkg.name + ' ' + r.version + ' recorded as ' + v + '.' });
+        },
+      })),
+
+      permissionRows: perms.map((p) => ({ id: p.id, label: p.label, risk: p.risk, granted: p.granted, pending: !p.granted })),
+      historyRows: pkg.history, noHistory: pkg.history.length === 0,
+
+      planTitle: 'Install plan — ' + pkg.name + ' ' + pkg.latest,
+      planVersion: pkg.latest,
+      planDigest: pkg.releases[0].digest,
+      planRegistry: pkg.registry,
+      planReview: pkg.releases[0].review,
+      planPwd: s.planPwd, onPlanPwd: this.field('planPwd'),
+      planErr: !!s.planErr, planErrText: s.planErr,
+      doInstall: () => {
+        if (!s.planPwd) return this.setState({ planErr: 'Installing is a reauthenticated action — confirm your password.' });
+        if (!pkg.compatible) return this.setState({ planErr: 'This release declares a core range that excludes the running core. Installing it would fail closed.' });
+        this.patchPkg(pkg.id, (p) => {
+          p.installed = { state: 'installed', health: 'idle', version: p.latest, digest: p.releases[0].digest, pinned: false, updatePolicy: 'manual' };
+          p.history = [{ event: 'installed', digest: p.releases[0].digest.slice(0, 8) + '…', detail: 'Plan approved by @elrond', when: 'just now' }].concat(p.history);
+          return p;
+        });
+        this.setState({ view: 'detail', planPwd: '', planErr: '', flash: pkg.name + ' is installed. Nothing runs until consent is granted and it is enabled.' });
+      },
+
+      pendingRows: pending.map((p) => ({ id: p.id, label: p.label, risk: p.risk })),
+      noPending: pending.length === 0,
+      consentPwd: s.consentPwd, onConsentPwd: this.field('consentPwd'),
+      consentErr: !!s.consentErr, consentErrText: s.consentErr,
+      doGrant: () => {
+        if (!s.consentPwd) return this.setState({ consentErr: 'Granting permissions is a reauthenticated action — confirm your password.' });
+        this.setState((st) => {
+          const next = JSON.parse(JSON.stringify(st.perms));
+          next[pkg.id] = next[pkg.id].map((p) => Object.assign({}, p, { granted: true }));
+          return { perms: next, view: 'detail', consentPwd: '', consentErr: '', flash: 'All permissions granted for ' + pkg.name + '. Each grant is audited.' };
+        });
+      },
+
+      enablePkg: () => {
+        if (strictConsent && pending.length > 0) return this.setState({ view: 'consent', flash: '', consentErr: 'Grant the pending permissions before enabling ' + pkg.name + '.' });
+        this.patchPkg(pkg.id, (p) => {
+          p.installed = Object.assign({}, p.installed, { state: 'enabled', health: 'healthy' });
+          p.history = [{ event: 'enabled', digest: p.installed.digest.slice(0, 8) + '…', detail: 'Enabled by @elrond', when: 'just now' }].concat(p.history);
+          return p;
+        });
+        this.setState({ flash: pkg.name + ' is enabled.' });
+      },
+      disablePkg: () => {
+        this.patchPkg(pkg.id, (p) => {
+          p.installed = Object.assign({}, p.installed, { state: 'disabled', health: 'idle' });
+          p.history = [{ event: 'disabled', digest: p.installed.digest.slice(0, 8) + '…', detail: 'Disabled by @elrond', when: 'just now' }].concat(p.history);
+          return p;
+        });
+        this.setState({ flash: pkg.name + ' is disabled. Its install and grants are retained.' });
+      },
+      togglePin: () => {
+        this.patchPkg(pkg.id, (p) => { p.installed = Object.assign({}, p.installed, { pinned: !p.installed.pinned }); return p; });
+        this.setState({ flash: inst && inst.pinned ? pkg.name + ' unpinned — updates may be offered again.' : pkg.name + ' pinned to ' + inst.version + '.' });
+      },
+      cyclePolicy: () => {
+        const next = inst && inst.updatePolicy === 'manual' ? 'notify' : 'manual';
+        this.patchPkg(pkg.id, (p) => { p.installed = Object.assign({}, p.installed, { updatePolicy: next }); return p; });
+        this.setState({ flash: 'Update policy for ' + pkg.name + ' set to ' + next + '.' });
+      },
+      uninstallPkg: () => {
+        this.patchPkg(pkg.id, (p) => {
+          p.installed = null;
+          p.history = [{ event: 'uninstalled', digest: '—', detail: 'Uninstalled by @elrond', when: 'just now' }].concat(p.history);
+          return p;
+        });
+        this.setState({ flash: pkg.name + ' was uninstalled. Its provenance record is kept.' });
+      },
+
+      brakeOn, transparencyOn,
+      brakeEngaged: s.brake, brakeReleased: !s.brake,
+      brakeBlurb: s.brake
+        ? 'Package execution is halted: 2 integration installs are paused. Operators can still view, revoke, export, and uninstall.'
+        : 'Package-owned webhooks and credentials are live for 2 integration installs. The brake applies regardless of the package flag.',
+      brakeReason: s.brakeReason, onBrakeReason: this.field('brakeReason'),
+      toggleBrake: () => this.setState((st) => ({ brake: !st.brake, brakeReason: '', flash: st.brake ? 'Package execution resumed.' : 'Emergency brake engaged — every package install is paused.' })),
+
+      publisherRows: s.publishers.map((p) => ({
+        displayName: p.displayName, uid: p.uid, status: p.status, verified: p.verified,
+        actionLabel: p.status === 'suspended' ? 'Reinstate' : 'Suspend',
+        suspend: () => this.setState((st) => ({
+          publishers: st.publishers.map((x) => (x.id === p.id ? Object.assign({}, x, { status: x.status === 'suspended' ? 'listed' : 'suspended' }) : x)),
+          flash: p.status === 'suspended'
+            ? p.displayName + ' reinstated — its packages stay disabled until you enable them individually.'
+            : p.displayName + ' suspended — every install of its packages was force-disabled.',
+        })),
+      })),
+      transparencyRows: TRANSPARENCY,
+
+      registryRows: s.registries.map((reg) => ({
+        displayName: reg.displayName, sourceId: reg.sourceId, snapshotText: reg.baseUrl + '. ' + reg.snapshot,
+        enabled: reg.enabled, disabled: !reg.enabled,
+        toggleLabel: reg.enabled ? 'Disable registry' : 'Enable registry',
+        toggle: () => this.setState((st) => ({
+          registries: st.registries.map((x) => (x.id === reg.id ? Object.assign({}, x, { enabled: !x.enabled }) : x)),
+          flash: reg.enabled ? reg.displayName + ' disabled — catalogue reads are frozen; installs are untouched.' : reg.displayName + ' enabled.',
+        })),
+        keys: reg.keys.map((k) => ({
+          keyId: k.keyId, window: k.window, fingerprint: k.fingerprint,
+          statusText: k.status === 'revoked' ? 'revoked — ' + (k.reason || 'no reason recorded') : k.status,
+          revocable: k.status !== 'revoked', revoked: k.status === 'revoked',
+          revoke: () => this.setState((st) => ({
+            registries: st.registries.map((x) => (x.id === reg.id
+              ? Object.assign({}, x, { keys: x.keys.map((y) => (y.id === k.id ? Object.assign({}, y, { status: 'revoked', reason: 'revoked by @elrond' }) : y)) })
+              : x)),
+            flash: 'Key ' + k.keyId + ' revoked. Releases signed under it no longer verify.',
+          })),
+        })),
+      })),
+
+      blockRows: s.blocks.map((b) => ({
+        uid: b.uid, reason: b.reason,
+        remove: () => this.setState((st) => ({ blocks: st.blocks.filter((x) => x.id !== b.id), flash: b.uid + ' removed from the blocklist — it can be installed again.' })),
+      })),
+      noBlocks: s.blocks.length === 0,
+
+      advisoryRows: s.advisories.map((a) => ({
+        uid: a.uid, detail: a.detail,
+        pending: !a.ack, acked: !!a.ack, ackText: a.ack ? 'acknowledged ' + a.ack : '',
+        ack: () => this.setState((st) => ({
+          advisories: st.advisories.map((x) => (x.id === a.id ? Object.assign({}, x, { ack: 'just now' }) : x)),
+          flash: a.uid + ' acknowledged — the acknowledgement is recorded against your account.',
+        })),
+      })),
+
+      handlerRows: HANDLERS,
+      runRows: RUNS.map((r) => ({ when: r.when, handler: r.handler, ok: r.status === 'ok', failed: r.status !== 'ok', detail: r.detail || '—' })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

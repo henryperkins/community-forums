@@ -1,7 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Log in'); $this->section('variant', 'auth'); ?>
 <div class="auth-card">
-    <span class="auth-eyebrow">Welcome back to the council</span>
+    <span class="auth-eyebrow">Welcome back</span>
     <h1>Log in</h1>
     <?php if (!empty($errors['email'])): ?><p class="field-error auth-error" role="alert"><?= $e($errors['email']) ?></p><?php endif; ?>
     <form method="post" action="/login" class="auth-form">

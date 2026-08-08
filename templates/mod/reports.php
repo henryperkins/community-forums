@@ -1,5 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Reports'); ?>
+<?php $this->layout('layout'); $this->section('title', 'Reports');
+$this->section('variant', 'admin'); ?>
 <?php
 $filters = $filters ?? ['status' => '', 'reason_code' => '', 'board_id' => 0];
 $total = (int) ($total ?? count($reports ?? []));
@@ -12,22 +13,7 @@ $pagerBase = array_filter([
 ], static fn (string $v): bool => $v !== '');
 $staleBefore = time() - 86400;
 ?>
-<div class="mod reports-view">
-    <header class="mod-head">
-        <span>
-            <span class="eyebrow">Warden's table</span>
-            <h1>Reports queue</h1>
-        </span>
-        <span class="pill mod-pill">Moderation</span>
-    </header>
-
-    <nav class="mod-subnav" aria-label="Moderation queues">
-        <a class="active" href="/mod/reports">Reports <span class="mod-count<?= $urgentCount > 0 ? ' is-urgent' : '' ?>"><?= $total ?></span></a>
-        <a href="/mod/approvals">Approval hold</a>
-        <a href="/mod/appeals">Appeals</a>
-    </nav>
-
-    <div class="mod-pane">
+<?= $this->partial('admin/_console', ['area' => 'moderation', 'tab' => 'reports', 'counts' => ['reports' => $total], 'urgent_tabs' => ['reports' => $urgentCount > 0]]) ?>
         <header class="board-header">
             <h2>Reports</h2>
             <p class="muted">Open and claimed reports in your scope, oldest first. Reports older than a day are flagged.</p>
@@ -129,5 +115,4 @@ $staleBefore = time() - 86400;
                 <?php endif; ?>
             </nav>
         <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -62,6 +62,23 @@ final class AppPackageReviewTest extends TestCase
         self::assertSame('approved', $this->reviewStatus(), 'seed status is untouched on a refused write');
     }
 
+    public function test_review_422_replays_the_typed_decision_and_note(): void
+    {
+        // Anti-draft-loss (C-13): a refused review used to discard both the typed note
+        // and the chosen decision, so the row silently reverted to "approved" — the
+        // most dangerous possible default on a supply-chain review form.
+        $resp = $this->post('/admin/packages/' . $this->ids['package_id'] . '/review', [
+            'release_id' => (string) $this->ids['release_id'],
+            'decision' => 'revoked',
+            'note' => 'Typed note that must survive',
+            'current_password' => 'wrong',
+        ]);
+
+        $this->assertStatus(422, $resp);
+        self::assertStringContainsString('<option value="revoked" selected>', $resp->body());
+        self::assertStringContainsString('Typed note that must survive', $resp->body());
+    }
+
     public function test_local_approval_over_a_signed_reject_is_refused_422(): void
     {
         $release = (new PackageReleaseRepository($this->db))->find($this->ids['release_id']);

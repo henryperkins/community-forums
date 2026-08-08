@@ -119,6 +119,64 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertSame('canceled', (string) $this->db->fetchValue('SELECT status FROM account_deletion_requests WHERE id = ?', [(int) $row['id']]));
     }
 
+    /**
+     * Slice 17. /deactivate and /delete/request both post `current_password`
+     * and both re-render through lifecycleView, so an unscoped error bag lit
+     * the *deactivate* form's inline error when a *deletion* was refused --
+     * pointing the member at the wrong control on the page's destructive
+     * section. The controller now says which action failed and the pane scopes
+     * the replay to that form.
+     */
+    public function test_a_refused_lifecycle_action_scopes_its_error_to_its_own_form(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['username' => 'scoped_lifecycle', 'password' => 'password123']);
+        $this->actingAs($user);
+        $this->get('/settings/account/lifecycle');
+
+        $delete = $this->post('/settings/account/delete/request', ['current_password' => 'wrong-password']);
+        $this->assertStatus(422, $delete);
+        $body = $delete->body();
+        self::assertStringContainsString('id="err-delete-current_password"', $body);
+        self::assertStringNotContainsString('id="err-deactivate-current_password"', $body);
+
+        $deactivate = $this->post('/settings/account/deactivate', ['current_password' => 'wrong-password']);
+        $this->assertStatus(422, $deactivate);
+        $other = $deactivate->body();
+        self::assertStringContainsString('id="err-deactivate-current_password"', $other);
+        self::assertStringNotContainsString('id="err-delete-current_password"', $other);
+
+        // Neither refusal changed the account.
+        self::assertSame('active', (string) $this->users()->find((int) $user['id'])['status']);
+    }
+
+    /**
+     * The other half of that scoping. Each scoped form lives on one branch of
+     * its section and lifecycleView() re-reads status/pending on every render,
+     * so a state change between GET and POST re-renders the OTHER branch --
+     * leaving the scoped error with no element to attach to. It must fall back
+     * to the alert card, never a 422 page that says nothing failed.
+     */
+    public function test_a_scoped_lifecycle_error_falls_back_when_its_form_is_not_rendered(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['username' => 'stale_lifecycle', 'password' => 'password123']);
+        $this->actingAs($user);
+
+        // Deletion is requested (as a second tab would have done), so the
+        // delete-request form is replaced by the cancel form.
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        self::assertSame('pending_deletion', (string) $this->users()->find((int) $user['id'])['status']);
+
+        // The stale tab now submits the delete form that no longer renders.
+        $stale = $this->post('/settings/account/delete/request', ['current_password' => 'wrong-password']);
+        $this->assertStatus(422, $stale);
+        $body = $stale->body();
+        self::assertStringNotContainsString('id="err-delete-current_password"', $body, 'the scoped slot is not on this branch');
+        $this->assertSeeText($stale, 'Your current password is incorrect.');
+        self::assertStringContainsString('error-list', $body, 'the message falls back to the alert card');
+    }
+
     public function test_final_active_admin_cannot_deactivate_or_request_deletion(): void
     {
         $admin = $this->makeAdmin(['username' => 'owner', 'password' => 'password123']);

@@ -350,6 +350,42 @@ final class AppOAuthTest extends TestCase
         self::assertTrue((new PasswordHasher())->verify('brandnewpass', $hash));
     }
 
+    /**
+     * Slice 16. setPassword() used to catch ValidationException and redirect
+     * with the first message as a flash, so `connections.php`'s error slot could
+     * never render and the confirm-field message had nowhere to go at all. Both
+     * failure modes now re-render at 422 with the message against its own field.
+     * No ->old is asserted: these are password inputs and are never replayed.
+     */
+    public function test_refused_set_password_re_renders_inline_against_the_failing_field(): void
+    {
+        $id = $this->users()->create([
+            'username' => 'refusedpw', 'email' => 'refusedpw@example.test',
+            'password_hash' => null, 'display_name' => null, 'role' => 'user', 'status' => 'active',
+        ]);
+        $this->actingAs($this->users()->find($id));
+
+        $short = $this->post('/settings/connections/set-password', [
+            'new_password' => 'abc', 'new_password_confirm' => 'abc',
+        ]);
+        $this->assertStatus(422, $short);
+        self::assertStringContainsString('id="err-new_password"', $short->body());
+        self::assertStringContainsString('Password must be at least 8 characters.', $short->body());
+        self::assertStringContainsString('aria-describedby="err-new_password"', $short->body());
+        // The pane is rebuilt, not a bare form: the provider rows come back too.
+        self::assertStringContainsString('scribe-panel-head">Connected accounts</h2>', $short->body());
+
+        $mismatch = $this->post('/settings/connections/set-password', [
+            'new_password' => 'brandnewpass', 'new_password_confirm' => 'branddifferent',
+        ]);
+        $this->assertStatus(422, $mismatch);
+        self::assertStringContainsString('id="err-new_password_confirm"', $mismatch->body());
+        self::assertStringContainsString('The passwords do not match.', $mismatch->body());
+
+        // Neither refusal set a password.
+        self::assertNull($this->users()->find($id)['password_hash']);
+    }
+
     public function test_unverified_provider_email_does_not_occupy_the_unique_email_slot(): void
     {
         // A provider can surface an UNVERIFIED primary email; it must not squat a

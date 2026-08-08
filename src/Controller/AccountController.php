@@ -127,7 +127,7 @@ final class AccountController extends Controller
                 $this->session()->currentSessionId(),
             );
         } catch (ValidationException $e) {
-            return $this->lifecycleView($user, ['errors' => $e->errors], 422);
+            return $this->lifecycleView($user, ['errors' => $e->errors, 'error_form' => 'deactivate'], 422);
         }
         return $this->redirectWithFlash('/settings/account/lifecycle', 'Your account has been deactivated. You can reactivate it from this page.');
     }
@@ -157,7 +157,7 @@ final class AccountController extends Controller
                 $this->session()->currentSessionId(),
             );
         } catch (ValidationException $e) {
-            return $this->lifecycleView($user, ['errors' => $e->errors], 422);
+            return $this->lifecycleView($user, ['errors' => $e->errors, 'error_form' => 'delete'], 422);
         }
         return $this->redirectWithFlash('/settings/account/lifecycle', 'Account deletion requested. You can cancel during the 30-day grace period.');
     }

@@ -17,7 +17,12 @@ import path from 'node:path';
  * CLEARS once the operational step is done (the unset-key badge itself is
  * pinned by AppAdminFeaturesTest).
  */
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const EVIDENCE_DIR = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
+);
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({ path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`), fullPage: true });
@@ -49,7 +54,7 @@ async function expectAxeClean(page: Page, info: TestInfo, include?: string): Pro
 // certifies /admin/features under the app's own appearance.
 async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+  if (await page.getByText('Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.', { exact: true }).isVisible()) {
     return false;
   }
 
@@ -81,7 +86,8 @@ test('admin feature inventory classifies readiness and links actionable surfaces
   const themeSafeModeChanged = await enterThemeSafeMode(page);
 
   await page.goto('/admin/features');
-  await expect(page.getByRole('heading', { name: 'Feature flags' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Features & badges' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Feature flags');
   expect(await page.locator('th', { hasText: 'Readiness / next step' }).count()).toBeGreaterThan(0);
 
   // The three dark carryovers carry their categories, with links to surfaces
@@ -101,17 +107,26 @@ test('admin feature inventory classifies readiness and links actionable surfaces
   // stores a GIPHY key, so slash_giphy's badge has cleared.
   const capabilities = flagRow(page, 'capabilities');
   await expect(capabilities.getByText('Operational configuration required')).toBeVisible();
-  await expect(capabilities.getByRole('link', { name: 'Roles & resolver posture' })).toHaveAttribute('href', '/admin/roles');
+  const rolesLink = capabilities.getByRole('link', { name: 'Roles & resolver posture' });
+  await expect(rolesLink).toHaveAttribute('href', '/admin/roles');
   await expect(flagRow(page, 'slash_giphy').getByText('Operational configuration required')).toHaveCount(0);
 
-  // The Gate B reservation renders on all four rows (the fifth match is the
-  // legend copy in the pane intro), and the dark extensions console is never
+  // The Gate B reservation renders on all four rows. The readiness legend that
+  // also names it sits below the tables (Slice 13 moved it out of the intro), so
+  // the table-scoped count stays at four. The dark extensions console is never
   // linked (the nav shows it disabled instead).
   await expect(page.locator('table .state').filter({ hasText: 'Reserved (ADR 0018)' })).toHaveCount(4);
   await expect(page.locator('a[href="/admin/extensions"]')).toHaveCount(0);
 
   await shot(page, info, 'admin-feature-readiness');
   await expectAxeClean(page, info, '.admin-pane');
+
+  // ADR 0023's inbound link survives the simulator's promotion to a tab and
+  // lands on the area-owned heading, not the retired table heading.
+  await rolesLink.click();
+  await expect(page).toHaveURL(/\/admin\/roles$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
 
   await exitThemeSafeMode(page, themeSafeModeChanged);
 });

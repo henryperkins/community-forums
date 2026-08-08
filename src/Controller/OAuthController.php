@@ -9,6 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Domain\User;
 use App\Repository\IdentityProviderRepository;
 use App\Repository\OAuthIdentityRepository;
 use App\Service\AccountService;
@@ -97,6 +98,18 @@ final class OAuthController extends Controller
         }
         $user = $this->requireUser();
 
+        return $this->connectionsView($user, [], 200);
+    }
+
+    /**
+     * The connections pane, rebuilt from scratch so a 422 re-render shows the
+     * same provider rows as the GET. Extracted for setPassword(), which used to
+     * discard its field errors into a flash redirect.
+     *
+     * @param array<string,string> $errors
+     */
+    private function connectionsView(User $user, array $errors, int $status): Response
+    {
         $registry = $this->container->get(ProviderRegistry::class);
         $linked = [];
         foreach ($this->container->get(OAuthIdentityRepository::class)->forUser($user->id()) as $row) {
@@ -119,8 +132,8 @@ final class OAuthController extends Controller
             'providers' => $providers,
             'linked' => $linked,
             'has_password' => $user->passwordHash() !== null,
-            'errors' => [],
-        ]);
+            'errors' => $errors,
+        ], $status);
     }
 
     public function unlink(Request $request, array $params): Response
@@ -148,7 +161,11 @@ final class OAuthController extends Controller
         try {
             $this->container->get(AccountService::class)->setInitialPassword($user, $request->allInput());
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/settings/connections', $e->first());
+            // Re-render at 422 rather than redirecting: setInitialPassword can
+            // fail on new_password_confirm ("The passwords do not match."), and
+            // a flash could name only one field with no linkage to it. No ->old
+            // is replayed — these are password fields.
+            return $this->connectionsView($user, $e->errors, 422);
         }
         // Setting the first password logs out every other session (SESS-1).
         $this->revokeOtherSessionsFor($user);

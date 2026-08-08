@@ -56,7 +56,7 @@ final class ApiTokenService
 
         $name = trim($name);
         if ($name === '' || mb_strlen($name) > 80) {
-            throw new ValidationException(['name' => 'Name must be 1–80 characters.']);
+            throw new ValidationException(['name' => 'Give the token a name you will recognise in the audit log — 1–80 characters.']);
         }
         $clean = [];
         foreach ($scopes as $scope) {
@@ -70,7 +70,7 @@ final class ApiTokenService
             $clean[] = $scope;
         }
         if ($clean === []) {
-            throw new ValidationException(['scopes' => 'Select at least one scope.']);
+            throw new ValidationException(['scopes' => 'Choose at least one scope — a token with no scopes can do nothing.']);
         }
         $expiresAt = null;
         if ($expiresInDays !== null) {
@@ -167,14 +167,18 @@ final class ApiTokenService
         );
     }
 
-    public function revoke(User $admin, int $tokenId): void
+    /** @return string|null the revoked token's name, or null when nothing changed */
+    public function revoke(User $admin, int $tokenId): ?string
     {
         $this->writeGate->assertCanWrite($admin);
-        $this->db->transaction(function () use ($admin, $tokenId): void {
+        $name = $this->db->transaction(function () use ($admin, $tokenId): ?string {
+            // Read the name before the write so the console can say which token it
+            // closed; the row survives the update either way (revoke is a flag set).
+            $name = $this->tokens->findById($tokenId)['name'] ?? null;
             // Audit only a real state change: a no-op revoke (unknown id, or one already
             // revoked) must NOT forge an `api_token_revoked` row. Idempotent either way.
             if ($this->tokens->revoke($tokenId) !== 1) {
-                return;
+                return null;
             }
             $this->log->log([
                 'actor_id' => $admin->id(),
@@ -182,7 +186,10 @@ final class ApiTokenService
                 'target_type' => 'api_token',
                 'target_id' => $tokenId,
             ]);
+            return $name !== null ? (string) $name : null;
         });
+
+        return is_string($name) ? $name : null;
     }
 
     /** @return array<string,mixed> */

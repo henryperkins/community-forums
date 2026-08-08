@@ -49,7 +49,7 @@ final class IdentityProviderService
         $errors = [];
         $key = strtolower(trim((string) ($input['provider_key'] ?? '')));
         if (!preg_match('/^[a-z0-9][a-z0-9_-]{1,31}$/', $key)) {
-            $errors['provider_key'] = 'Use 2–32 lowercase letters, digits, hyphens, or underscores.';
+            $errors['provider_key'] = 'The provider key must be 2–32 lowercase characters: letters, digits, hyphens, or underscores.';
         } elseif (in_array($key, self::RESERVED_KEYS, true)) {
             $errors['provider_key'] = 'That key is reserved for a builtin provider.';
         } elseif ($this->providers->keyExists($key)) {
@@ -58,7 +58,7 @@ final class IdentityProviderService
 
         $name = trim((string) ($input['display_name'] ?? ''));
         if ($name === '' || mb_strlen($name) > 190) {
-            $errors['display_name'] = 'Display name is required (up to 190 characters).';
+            $errors['display_name'] = 'Give the provider a display name — members see it on the sign-in page (up to 190 characters).';
         }
 
         // Stored VERBATIM (trimmed only): discovery and the id_token `iss`
@@ -155,7 +155,7 @@ final class IdentityProviderService
      * env-configured reference data, and probing one would fire live fetches
      * and overwrite its health/caches.
      *
-     * @return array{status:string, detail:string}
+     * @return array{status:string, name:string, detail:string}
      */
     public function healthProbe(int $id): array
     {
@@ -166,6 +166,7 @@ final class IdentityProviderService
         if ((string) $row['type'] !== 'generic_oidc') {
             throw new ValidationException(['provider' => 'Builtin providers are configured through environment variables, not the console.']);
         }
+        $name = (string) $row['display_name'];
 
         try {
             $discoveryUrl = (string) ($row['discovery_url'] ?? '');
@@ -173,13 +174,13 @@ final class IdentityProviderService
             $this->providers->cacheDiscovery($id, (string) json_encode($doc));
             $this->jwks->refresh($row, (string) $doc['jwks_uri']);
             $this->providers->updateHealth($id, 'ok');
-            return ['status' => 'ok', 'detail' => 'Discovery and JWKS verified; caches primed.'];
+            return ['status' => 'ok', 'name' => $name, 'detail' => 'Discovery and JWKS verified; caches primed.'];
         } catch (OidcVerificationException $e) {
             $this->providers->updateHealth($id, 'down');
-            return ['status' => 'down', 'detail' => 'Refused: ' . $e->reason];
+            return ['status' => 'down', 'name' => $name, 'detail' => 'Refused: ' . $e->reason];
         } catch (\Throwable) {
             $this->providers->updateHealth($id, 'down');
-            return ['status' => 'down', 'detail' => 'Provider unreachable.'];
+            return ['status' => 'down', 'name' => $name, 'detail' => 'Provider unreachable.'];
         }
     }
 

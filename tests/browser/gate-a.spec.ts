@@ -1,4 +1,5 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { execFile } from 'node:child_process';
 import http from 'node:http';
 import path from 'node:path';
@@ -16,7 +17,13 @@ import { promisify } from 'node:util';
  * server-rendered POST→redirect auth path works in a real browser.
  */
 
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const EVIDENCE_DIR = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
+);
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const execFileAsync = promisify(execFile);
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
@@ -67,14 +74,6 @@ async function visit(page: Page, url: string): Promise<void> {
     const resp = await page.goto(url);
     expect(resp, `no response for ${url}`).not.toBeNull();
     expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
-}
-
-async function openAdminSections(page: Page): Promise<void> {
-  const toggle = page.locator('[data-admin-nav-toggle]');
-  if (await toggle.isVisible()) {
-    await toggle.click();
-    await expect(page.locator('[data-admin-nav]')).toHaveAttribute('aria-hidden', 'false');
-  }
 }
 
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
@@ -133,6 +132,22 @@ async function clickThemePreview(page: Page, uid: string): Promise<void> {
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Preview' }).click();
   await expect(page.getByRole('status').getByText('Previewing this theme in your session only.')).toBeVisible();
+  await expect(page.locator('.admin-console > .flash')).toContainText('Previewing this theme in your session only.');
+}
+
+async function resetThemeEvidenceState(): Promise<void> {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+(new \\App\\Repository\\PackageThemeRepository($db))->setState(null, null, null);
+(new \\App\\Repository\\SettingRepository($db))->set('theme_safe_mode', '');
+`;
+  await execFileAsync('php', ['-r', php], {
+    cwd: REPO_ROOT,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  });
 }
 
 async function activateTheme(page: Page, uid: string): Promise<void> {
@@ -283,10 +298,14 @@ test('admin + member pages render and capture', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin');
+  await expect(page.getByRole('heading', { level: 1, name: 'Admin console' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Dashboard');
   await shot(page, info, '07-admin-dashboard');
 
   await visit(page, '/admin/structure');
-  await expect(page.locator('a[href^="/c/"]').first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Boards & tags' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Boards & categories');
+  await expect(page.locator('li.admin-board-row').first()).toBeVisible();
   await shot(page, info, '08-admin-structure');
 
   // The board-roster UI (board moderators + members) — open #General's edit page.
@@ -295,7 +314,9 @@ test('admin + member pages render and capture', async ({ page }, info) => {
     .getByRole('link', { name: 'Edit' })
     .click();
   await page.waitForURL(/\/admin\/boards\/\d+\/edit/);
-  await expect(page.getByRole('heading', { name: 'Moderators' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Boards & tags' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Boards & categories');
+  await expect(page.getByRole('heading', { level: 2, name: 'Moderators' })).toBeVisible();
   await expect(page.getByText('@alice')).toBeVisible(); // seeded board moderator
   await shot(page, info, '09-admin-board-roster');
 
@@ -387,20 +408,29 @@ test('role editor: create a custom role and simulate a decision (no-JS forms)', 
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin/roles');
-  await expect(page.getByRole('heading', { name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Roles');
+  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
+  await expect(page.locator('[data-role-count]')).toHaveText(/\d+ roles?/);
+  await expect(page.locator('.role-kind-system').first()).toHaveText('Protected anchor');
   await expect(page.getByText('system.admin')).toBeVisible();
 
   const roleName = `Board Helper ${info.project.name}`;
   await page.fill('input[name="name"]', roleName);
   await page.check('input[name="capabilities[]"][value="core.thread.lock"]');
   await page.check('input[name="capabilities[]"][value="core.thread.pin"]');
+  await expect(page.locator('[data-role-capability-count]')).toHaveText('2 capabilities selected');
   await page.fill('input[name="current_password"]', 'password123');
   await page.click('form[action="/admin/roles"] button[type="submit"]');
   await expect(page.getByText(roleName)).toBeVisible();
   await shot(page, info, '30-admin-role-created');
 
   await visit(page, '/admin/roles/simulator?actor=guest&capability=core.thread.lock&board_id=1');
-  await expect(page.getByText('Denied')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Permission simulator');
+  await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
+  await expect(page.locator('.role-simulator-verdict-denied')).toHaveText('Denied');
+  await expect(page.locator('.role-simulator-result')).toBeVisible();
   await shot(page, info, '31-admin-role-simulator');
 });
 
@@ -408,19 +438,31 @@ test('package registry: staff-only read-only catalogue browse (Inc 2)', async ({
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin/packages');
-  await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  // Slice 14: the design's catalogue card carries no heading — the area h1 and the
+  // lit tab already name the surface, so the labelled scroll region is the
+  // accessible name now. Mirrors a11y.spec.ts's treatment of the removed <h2>Roles</h2>.
+  await expect(page.getByRole('heading', { level: 2, name: 'Packages', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Package catalogue' })).toBeVisible();
   await expect(page.locator('code', { hasText: lifecyclePackageUid(info) }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Details' }).first()).toBeVisible();
   await shot(page, info, '32-admin-package-catalogue');
 
   await openLifecyclePackageDetail(page, info);
-  await expect(page.getByRole('heading', { name: /Releases \(immutable/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  // Slice 14: the design splits this into an h3 section title plus a caption, so the
+  // immutability sentence is no longer part of the heading's accessible name.
+  await expect(page.getByRole('heading', { level: 3, name: 'Releases' })).toBeVisible();
+  await expect(page.getByText('Immutable: any changed byte is a new release.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Install plan' })).toBeVisible();
   await shot(page, info, '33-admin-package-detail');
 
   await visit(page, '/admin/registries');
-  await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
-  await expect(page.getByText('Local blocklist', { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Registry trust');
+  await expect(page.getByRole('heading', { level: 2, name: /Local blocklist/ })).toBeVisible();
   await shot(page, info, '34-admin-registry-trust');
 });
 
@@ -430,14 +472,18 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
   await openLifecyclePackageDetail(page, info);
 
   await page.getByRole('button', { name: 'Install plan' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: /^Install plan - / })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  await expect(page.getByRole('heading', { level: 2, name: /^Install plan — / })).toBeVisible();
   await expect(page.getByText('Store its own settings and data', { exact: false })).toBeVisible();
   await shot(page, info, '35-admin-package-install-plan');
 
   await page.fill('input[name="current_password"]', 'password123');
   // Remediated label: the plan page's submit reads "Record install".
   await page.getByRole('button', { name: 'Record install' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: 'Consent to permissions' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  await expect(page.getByRole('heading', { level: 2, name: 'Consent to permissions' })).toBeVisible();
   await shot(page, info, '36-admin-package-consent');
 
   await page.fill('input[name="current_password"]', 'password123');
@@ -450,19 +496,34 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
 
   await page.fill('form[action$="/update"] input[name="current_password"]', 'password123');
   await page.locator('form[action$="/update"] button[type="submit"]').click();
-  await expect(page.getByRole('heading', { level: 1, name: /^Approve update to / })).toBeVisible();
-  await expect(page.getByText('api.example.com')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  await expect(page.getByRole('heading', { level: 2, name: /^Approve update to / })).toBeVisible();
+  // Slice 14: the design's permission row renders the human label and the machine
+  // key as separate elements, so the host string now appears in both. Assert the
+  // key, which is the fact this step is really about.
+  await expect(page.locator('code.packages-rule-id', { hasText: 'api.example.com' })).toBeVisible();
   await shot(page, info, '38-admin-package-update-diff');
 
   await page.fill('input[name="current_password"]', 'password123');
   await page.getByRole('button', { name: 'Grant and continue' }).click();
-  await expect(page.getByRole('row', { name: /^Version 1\.1\.0$/ })).toBeVisible();
+  // Slice 14: the installed facts are the design's <dl> fact grid, not a table, so
+  // there is no row role to address any more.
+  await expect(page.locator('.packages-install-facts')).toContainText('1.1.0');
 });
 
 test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(60_000);
+  await resetThemeEvidenceState();
   await login(page, 'admin@retro.test');
   await setThemeSafeMode(page, false);
   const [firstThemeUid, secondThemeUid] = themeEvidenceJourneyUids(info);
+
+  await visit(page, '/admin/themes');
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('link[href*="/theme/"]')).toHaveCount(0);
+  await expect(page.getByText('No package theme is active. The site uses the built-in chrome.', { exact: true })).toBeVisible();
+  await shot(page, info, '39-admin-themes-built-in');
 
   await clickThemePreview(page, firstThemeUid);
   await expect(page.locator('link[href^="/theme/preview.css"]')).toHaveCount(1);
@@ -478,14 +539,26 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
   }
 
   await activateTheme(page, firstThemeUid);
+  await visit(page, '/admin/themes');
+  await expect(page.locator('.theme-active-card')).toContainText('Serving');
+  await shot(page, info, '40-admin-themes-active-summary');
   await visit(page, '/');
   const firstDigest = await activeThemeDigest(page);
   await shot(page, info, '40-admin-theme-active');
 
   await visit(page, '/admin/themes/safe-mode');
+  await expect(page.locator('[data-admin-tier]')).toHaveCount(0);
+  await expect(page.locator('.pill.pill-admin')).toHaveText('Recovery');
   await page.getByRole('button', { name: 'Enter safe mode' }).click();
   await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
   await shot(page, info, '41-admin-theme-safe-mode');
+
+  await visit(page, '/admin/themes');
+  await expect(page.getByText('Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.', { exact: true })).toBeVisible();
+  await expect(page.getByText('No package theme is active. The site uses the built-in chrome.', { exact: true })).toBeVisible();
+  await expect(page.getByText('No session preview is active.', { exact: true })).toBeVisible();
+  await expect(page.locator('.theme-active-card').getByText('Serving', { exact: false })).toHaveCount(0);
+  await shot(page, info, '41-admin-themes-safe-mode-summary');
   await visit(page, '/');
   await expect(page.locator('link[href*="/theme/"]')).toHaveCount(0);
 
@@ -501,18 +574,41 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
 
   await visit(page, '/admin/themes');
   await page.fill('form[action="/admin/themes/rollback"] input[name="current_password"]', 'password123');
-  await page.getByRole('button', { name: 'Roll back' }).click();
+  await page.getByRole('button', { name: 'Roll back to last-known-good' }).click();
   await expect(page.getByRole('status').getByText('Rolled back to the last-known-good theme.')).toBeVisible();
   await visit(page, '/');
   await expect(page.locator(`link[href="/theme/${firstDigest}.css"]`)).toHaveCount(1);
   await shot(page, info, '42-admin-theme-rollback');
+
+  const noJs = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    viewport: info.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+  });
+  try {
+    const noJsPage = await noJs.newPage();
+    await login(noJsPage, 'admin@retro.test');
+
+    await clickThemePreview(noJsPage, secondThemeUid);
+    await noJsPage.getByRole('button', { name: 'End preview' }).click();
+    await expect(noJsPage.getByRole('status').getByText('Theme preview ended.')).toBeVisible();
+
+    await activateTheme(noJsPage, secondThemeUid);
+    await visit(noJsPage, '/admin/themes');
+    await noJsPage.getByRole('button', { name: 'Enter safe mode' }).click();
+    await expect(noJsPage.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+    await expect(noJsPage.locator('[data-admin-tier]')).toHaveCount(0);
+    await expect(noJsPage.locator('.pill.pill-admin')).toHaveText('Recovery');
+  } finally {
+    await noJs.close();
+  }
 
   // Safe mode is global, so leave the built-in theme active for later
   // evidence journeys and for the next Playwright project in this run.
   await setThemeSafeMode(page, true);
 });
 
-test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
+test('mobile no-JS keeps navigation reachable and role decoration optional', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
 
   const context = await browser.newContext({
@@ -527,6 +623,14 @@ test('mobile no-JS keeps navigation reachable without an inert drawer button', a
     await visit(page, '/');
     await expect(page.locator('.nav-toggle')).toBeHidden();
     await expect(page.locator('#sidebar-nav')).toBeVisible();
+
+    await login(page, 'admin@retro.test');
+    await visit(page, '/admin/roles');
+    await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+    await expect(page.locator('[data-role-capability-count]')).toHaveCount(0);
+    await page.getByRole('link', { name: 'Permission simulator', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/roles\/simulator$/);
+    await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
   } finally {
     await context.close();
   }
@@ -566,7 +670,10 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   // persisted above is titled from the composer label and shows its body excerpt.
   await visit(page, '/drafts');
   const draftsList = page.locator('[data-drafts-list][data-server-drafts]');
-  const serverDraftRows = draftsList.locator('.report-row:not([data-local-draft-row])');
+  // Slice 17: the /drafts pane has its own row vocabulary. It used to borrow
+  // `.report-row` from the moderation queue (templates/mod/reports.php), which
+  // is a different surface with a different owner.
+  const serverDraftRows = draftsList.locator('.account-draft-row:not([data-local-draft-row])');
   await expect(serverDraftRows).toContainText('New topic');
   await expect(serverDraftRows).toContainText('Browser evidence');
   await expect(page.getByRole('heading', { name: 'Saved in this browser' })).toBeVisible();
@@ -575,7 +682,8 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   const discard = page.getByRole('button', { name: 'Discard' });
   await discard.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'nearest' }));
   await discard.click();
-  await expect(page.locator('[data-drafts-list]')).toContainText('No server drafts yet.');
+  // Slice 17 took the design's empty-state copy (AccountSettings.dc.html:243).
+  await expect(page.locator('[data-drafts-list]')).toContainText('No drafts. Anything you start writing is kept here automatically.');
   // Clear the browser-local mirror so the upload sub-journey opens an empty composer.
   await page.evaluate(() => { try { localStorage.removeItem('rb-draft:bob:/threads'); } catch (e) {} });
 
@@ -597,7 +705,7 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await page.waitForURL(/\/t\/\d+-/);
   // A successful submit clears the synced server draft on the next navigation.
   await visit(page, '/drafts');
-  await expect(page.locator('[data-drafts-list]')).toContainText('No server drafts yet.');
+  await expect(page.locator('[data-drafts-list]')).toContainText('No drafts. Anything you start writing is kept here automatically.');
 });
 
 test('phase 4 content references render read-gated cards for public targets and redact private targets', async ({ page }, info) => {
@@ -691,7 +799,7 @@ test('phase 4 profile media: avatar upload, signature, and admin moderation', as
   await page.getByRole('link', { name: 'bob', exact: true }).click();
   await page.waitForURL(/\/admin\/users\/\d+$/);
 
-  const profileMedia = page.locator('.profile-media-card');
+  const profileMedia = page.locator('.member-record-profile-media');
   await expect(profileMedia).toBeVisible();
   await expect(profileMedia.getByRole('button', { name: 'Remove avatar' })).toBeVisible();
   await expect(profileMedia.getByRole('button', { name: 'Remove signature' })).toBeVisible();
@@ -886,16 +994,83 @@ test('phase 4 slash status rows consume Enter when enter-to-send is enabled', as
   await expect(page).toHaveURL(/\/c\/general$/);
 });
 
-test('phase 3 branding preview and product-tour replay', async ({ page }, info) => {
+test('phase 3 branding preview and product-tour replay', async ({ page, browser, baseURL }, info) => {
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin/branding');
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Branding');
+  await expect(page.locator('.branding-marks input[type="file"]')).toHaveCount(4);
+  await expect(page.locator('.branding-mark-action')).toHaveText(['Upload', 'Upload', 'Upload', 'Upload']);
+  await page.locator('[data-brand-primary]').fill('not-hex');
+  await page.getByRole('button', { name: 'Save branding' }).click();
+  await expect(page.locator('.branding-save-row').getByRole('alert')).toHaveText('Primary colour must be a hex value, e.g. #2e4a3a.');
   await page.locator('[data-brand-name]').fill('Lakeside Forum');
   await page.locator('[data-brand-primary]').fill('#005fcc');
   await page.locator('[data-brand-accent]').fill('#a33300');
   await expect(page.locator('[data-brand-preview-name]')).toHaveText('Lakeside Forum');
   await expect(page.locator('[data-brand-preview]')).toHaveCSS('--preview-accent', '#005fcc');
+  await expect(page.locator('.brand-preview-bar')).toHaveCSS('background-color', 'rgb(0, 95, 204)');
+  await expect(page.locator('.brand-preview-accent')).toHaveCSS('background-color', 'rgb(163, 51, 0)');
+  await expect(page.locator('.brand-preview-accent')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  const accentA11y = await new AxeBuilder({ page })
+    .include('.brand-preview-accent')
+    .withRules(['color-contrast'])
+    .analyze();
+  expect(accentA11y.violations).toEqual([]);
+  await expect(page.locator('input[name="reset_confirm"]')).toHaveValue('');
+  await page.getByRole('button', { name: 'Save branding' }).click();
+  await expect(page.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
   await shot(page, info, '18-branding-preview');
+
+  await page.locator('input[name="favicon"]').setInputFiles({
+    name: 'invalid-favicon.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('not an image'),
+  });
+  await page.getByRole('button', { name: 'Save branding' }).click();
+  const uploadRejection = page.locator('.branding-save-row .callout-review[role="status"]');
+  await expect(uploadRejection).toContainText('Branding updated, but Favicon upload was rejected:');
+  await expect(uploadRejection).toContainText('The previous asset was kept.');
+  await shot(page, info, '18-branding-upload-rejection');
+
+  const noJs = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    viewport: info.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+  });
+  try {
+    const noJsPage = await noJs.newPage();
+    await login(noJsPage, 'admin@retro.test');
+    await visit(noJsPage, '/admin/branding');
+    await expect(noJsPage.locator('.brand-preview-accent')).toHaveCSS('background-color', 'rgb(163, 51, 0)');
+    await expect(noJsPage.locator('.brand-preview-accent')).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await expect(noJsPage.locator('input[name="reset_confirm"]')).toHaveValue('');
+    await noJsPage.locator('input[name="logo"]').setInputFiles({
+      name: 'brand-logo.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(PNG_1X1, 'base64'),
+    });
+    await noJsPage.getByRole('button', { name: 'Save branding' }).click();
+    await expect(noJsPage.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
+    await expect(noJsPage.locator('.branding-marks input[type="file"]')).toHaveCount(4);
+    await expect(noJsPage.locator('.branding-mark-action')).toHaveText(['Replace', 'Upload', 'Upload', 'Upload']);
+    await expect(noJsPage.locator('input[name="logo"]')).toHaveAccessibleName('Replace logo');
+
+    await noJsPage.locator('[data-brand-name]').fill('');
+    await noJsPage.locator('input[name="reset_confirm"]').fill('RESE');
+    await noJsPage.getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(noJsPage.getByText('Type RESET to confirm restoring the default branding.', { exact: true })).toBeVisible();
+    await expect(noJsPage.locator('[data-brand-name]')).toHaveValue('');
+    await expect(noJsPage.locator('input[name="reset_confirm"]')).toHaveValue('RESE');
+
+    await noJsPage.locator('input[name="reset_confirm"]').fill('RESET');
+    await noJsPage.getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(noJsPage.locator('.branding-reset-card').getByRole('status')).toHaveText('Reset. The built-in chrome is back.');
+    await expect(noJsPage.locator('.branding-mark-action')).toHaveText(['Upload', 'Upload', 'Upload', 'Upload']);
+  } finally {
+    await noJs.close();
+  }
 
   await visit(page, '/settings/account');
   const replay = page.locator('[data-tour-replay]');
@@ -915,10 +1090,10 @@ test('admin API tokens: mint shows the secret once, then revoke', async ({ page 
 
   // The flag-gated discovery link appears on the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
-  await openAdminSections(page);
-  await page.getByRole('link', { name: 'API tokens' }).click();
+  await page.locator('[data-admin-tier]').getByRole('link', { name: 'Integrations', exact: true }).click();
   await page.waitForURL(/\/admin\/api-tokens$/);
-  await expect(page.getByRole('heading', { name: 'API tokens' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Tokens, webhooks & sign-in' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('API tokens');
 
   // Unique per viewport project: desktop + mobile share one seeded DB, so a fixed
   // name would collide once the first project leaves its row behind.
@@ -992,10 +1167,14 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
   try {
     await login(page, 'admin@retro.test');
     await visit(page, '/admin');
-    await openAdminSections(page);
-    await expect(page.getByRole('link', { name: 'Webhooks' })).toHaveAttribute('href', '/admin/webhooks');
-    await visit(page, '/admin/webhooks');
-    await expect(page.getByRole('heading', { name: 'Webhooks' })).toBeVisible();
+    await page.locator('[data-admin-tier]').getByRole('link', { name: 'Integrations', exact: true }).click();
+    await page.waitForURL(/\/admin\/api-tokens$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Tokens, webhooks & sign-in' })).toBeVisible();
+    await page.locator('.admin-tabs').getByRole('link', { name: 'Webhooks', exact: true }).click();
+    await page.waitForURL(/\/admin\/webhooks$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Tokens, webhooks & sign-in' })).toBeVisible();
+    await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Webhooks');
+    await expect(page.getByRole('heading', { level: 2, name: 'Register an endpoint' })).toBeVisible();
 
     const webhookName = `Evidence webhook (${info.project.name}-${Date.now()})`;
     await page.fill('input[name="name"]', webhookName);
@@ -1047,9 +1226,9 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
     // events cannot queue ahead of the next project's live receiver and spend
     // that test's delivery deadline retrying a closed port.
     await page.fill('form[action$="/delete"] input[name="current_password"]', 'password123');
-    await page.getByRole('button', { name: 'Delete webhook' }).click();
+    await page.getByRole('button', { name: 'Delete endpoint' }).click();
     await page.waitForURL(/\/admin\/webhooks$/);
-    await expect(page.getByText('Webhook deleted.')).toBeVisible();
+    await expect(page.getByText('Endpoint deleted — its delivery history and signing secret are gone with it.')).toBeVisible();
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
@@ -1066,7 +1245,12 @@ test('admin per-user record: badges + title', async ({ page }, info) => {
 
   await page.getByRole('link', { name: 'bob', exact: true }).click();
   await page.waitForURL(/\/admin\/users\/\d+$/);
-  await expect(page.getByRole('heading', { name: /bob/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Members & invitations' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Directory');
+  // The record leads with the design's identity row: the display name is the h2 and
+  // the @handle sits beneath it (AdminMembers.dc.html:210-211), not inside the heading.
+  await expect(page.getByRole('heading', { level: 2, name: /bob/i })).toBeVisible();
+  await expect(page.locator('.member-record-handle')).toHaveText('@bob');
 
   // Grant a manual badge (no-JS form post).
   await page.locator('form[action$="/badges/grant"] select[name="slug"]').selectOption('staff');
@@ -1074,7 +1258,7 @@ test('admin per-user record: badges + title', async ({ page }, info) => {
   await page.waitForURL(/\/admin\/users\/\d+$/);
   // Scope to the held-badges list: a bare getByText('Staff') would also match the
   // (non-visible) <option> in the grant <select>, which precedes it in the DOM.
-  await expect(page.locator('ul.link-list').getByText('Staff')).toBeVisible();
+  await expect(page.locator('ul.member-record-badge-list').getByText('Staff')).toBeVisible();
   await shot(page, info, '15-admin-user-record');
 
   // Revoke it.
@@ -1099,7 +1283,9 @@ test('phase 4 badge rules: create, preview, enable, backfill, disable, revoke', 
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin/badge-rules');
-  await expect(page.getByRole('heading', { name: 'Badge rules' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Features & badges' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Badge rules');
+  await expect(page.getByRole('heading', { level: 2, name: 'Create rule' })).toBeVisible();
   // The run is serial against a shared DB, so a prior (desktop) pass may have left
   // a rule behind; assert the create form is present rather than an empty list.
   await expect(page.getByRole('button', { name: 'Create rule' })).toBeVisible();
@@ -1125,7 +1311,9 @@ test('phase 4 badge rules: create, preview, enable, backfill, disable, revoke', 
   // Preview eligible users — works even while the rule is disabled.
   await ruleRow.getByRole('link', { name: 'Preview' }).click();
   await page.waitForURL(/\/admin\/badge-rules\/\d+\/preview$/);
-  await expect(page.getByRole('heading', { name: 'Badge rule preview' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Features & badges' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Badge rules');
+  await expect(page.getByRole('heading', { level: 2, name: 'Badge rule preview' })).toBeVisible();
   await expect(page.getByText(/Metric:/).first()).toBeVisible();
   await shot(page, info, '33-badge-rule-preview');
 
@@ -1215,7 +1403,9 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
   // Archive #feedback, then confirm the board page is read-only.
   await page.locator('li.admin-board-row', { hasText: 'Feedback' })
     .getByRole('link', { name: 'Archive' }).click();
-  await expect(page.getByRole('heading', { name: 'Archive board' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Boards & tags' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Boards & categories');
+  await expect(page.getByRole('heading', { level: 2, name: 'Archive board' })).toBeVisible();
   await page.fill('form[action$="/archive"] input[name="confirm"]', 'feedback');
   await page.getByRole('button', { name: 'Archive board' }).click();
   await expect(page).toHaveURL(/\/admin\/structure/);
@@ -1223,29 +1413,46 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
   await visit(page, '/c/feedback');
   await expect(page.locator('[data-archived-banner]')).toBeVisible();
   await expect(page.locator('details.composer-details')).toHaveCount(0);
+  await expect(page.locator('[data-open-topic-composer], a.fab[href="#new-topic"]')).toHaveCount(0);
   await shot(page, info, '22-board-archived-readonly');
 
   // Unarchive restores the composer affordance.
   await visit(page, '/admin/structure');
   await page.locator('li.admin-board-row', { hasText: 'Feedback' })
     .getByRole('link', { name: 'Unarchive' }).click();
-  await expect(page.getByRole('heading', { name: 'Unarchive board' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Boards & tags' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Boards & categories');
+  await expect(page.getByRole('heading', { level: 2, name: 'Unarchive board' })).toBeVisible();
   await page.fill('form[action$="/unarchive"] input[name="confirm"]', 'feedback');
   await page.getByRole('button', { name: 'Unarchive board' }).click();
   await expect(page).toHaveURL(/\/admin\/structure/);
   await visit(page, '/c/feedback');
   await expect(page.locator('details.composer-details#new-topic')).toHaveCount(1);
-  await expect(page.locator('[data-open-topic-composer]')).toBeVisible();
+  // The promoted button ships `hidden` and is unhidden by JS, so at mobile widths
+  // (and before enhancement) the FAB is the opener — assert whichever is present.
+  const promotedTopic = page.locator('[data-open-topic-composer]');
+  const mobileTopic = page.locator('a.fab[href="#new-topic"]');
+  await expect(await promotedTopic.isVisible() ? promotedTopic : mobileTopic).toBeVisible();
   await shot(page, info, '23-board-unarchived');
 });
 
 test('site announcement banner: publish, render, dismiss, and persist', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 
-  // Publish a dismissible banner through the real admin form (a no-JS POST).
+  // Publish a dismissible banner through the real server-rendered form.
   await visit(page, '/admin/announcements');
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Announcements');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+  await expect(page.locator('input[name="dismissible"]')).toBeChecked();
+  const broadcastWarning = page.locator('[data-announcement-broadcast-warning]');
+  await expect(broadcastWarning).toBeHidden();
+  await page.check('input[name="broadcast_email"]');
+  await expect(broadcastWarning).toBeVisible();
+  await expect(broadcastWarning).toHaveText(/This will reach [\d,]+ active members? by email\. Broadcasts cannot be recalled once the queue starts\./);
+  await page.uncheck('input[name="broadcast_email"]');
   await page.fill('textarea[name="message"]', 'Scheduled maintenance at 02:00 UTC.');
-  await page.check('input[name="dismissible"]');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('35 / 500');
   await page.getByRole('button', { name: 'Publish banner' }).click();
   await page.waitForURL((u) => u.pathname === '/admin/announcements');
 
@@ -1270,39 +1477,84 @@ test('site announcement banner: publish, render, dismiss, and persist', async ({
   await page.getByRole('button', { name: 'Clear banner' }).click();
 });
 
-test('admin email delivery: dashboard, suppress/remove, and a test-send', async ({ page }, info) => {
+test('admin email delivery: dashboard, suppress/release, and a test-send', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 
-  // The email link appears on the admin dashboard subnav (email flag defaults on).
+  // Notifications lands on the email tab (email flag defaults on).
   await visit(page, '/admin');
-  await openAdminSections(page);
-  await page.getByRole('navigation', { name: 'Admin navigation' })
-    .getByRole('link', { name: 'Email', exact: true }).click();
+  await page.locator('[data-admin-tier]').getByRole('link', { name: 'Notifications', exact: true }).click();
   await page.waitForURL(/\/admin\/email$/);
-  await expect(page.getByRole('heading', { name: 'Email delivery' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Queue status' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Delivery log' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Suppressed addresses' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Email');
+  await expect(page.getByRole('heading', { level: 2, name: 'Queue status' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Delivery log' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Suppressed addresses' })).toBeVisible();
+  const readiness = page.getByRole('list', { name: 'Email readiness' });
+  await expect(readiness).toContainText('Transport:');
+  await expect(readiness).toContainText('From address:');
+  await expect(readiness).toContainText('Sending domain:');
+  await expect(page.getByRole('button', { name: 'Filter', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Reset', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Download CSV', exact: true })).toBeVisible();
   await shot(page, info, '22-admin-email-dashboard');
 
-  // Suppress a unique address (desktop + mobile share one DB), confirm it lists, then remove it.
+  // Suppress a unique address (desktop + mobile share one DB), confirm it lists, then release it.
   const target = `evidence-${info.project.name}-${Date.now()}@example.test`;
   await page.fill('form[action="/admin/email/suppressions"] input[name="email"]', target);
   await page.locator('form[action="/admin/email/suppressions"] button[type="submit"]').click();
   await page.waitForURL(/\/admin\/email$/);
   const row = page.locator('table tbody tr', { hasText: target });
   await expect(row).toBeVisible();
+  await expect(row).toContainText('Added by an operator');
   await shot(page, info, '23-admin-email-suppressed');
 
-  await row.getByRole('button', { name: 'Remove' }).click({ force: true });
+  await row.getByRole('button', { name: 'Release' }).click({ force: true });
   await page.waitForURL(/\/admin\/email$/);
   await expect(page.locator('table tbody tr', { hasText: target })).toHaveCount(0);
 
-  // Test-send (transport is the configured ArrayMailer in evidence runs) → flash confirmation.
+  // Test-send (transport is the configured ArrayMailer in evidence runs) → inline PRG confirmation.
   await page.locator('form[action="/admin/email/test"] button[type="submit"]').click();
   await page.waitForURL(/\/admin\/email$/);
-  await expect(page.locator('.flash')).toContainText(/Test email sent/);
+  await expect(page.locator('.notification-inline-status[role="status"]')).toContainText(/Test email sent/);
+  await expect(page.locator('.flash', { hasText: 'Test email sent' })).toHaveCount(0);
   await shot(page, info, '24-admin-email-test-sent');
+});
+
+test('admin notifications keep filters, tabs, counter, and email warning useful without JavaScript', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one explicit no-JS notification journey is sufficient');
+  const context = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+    await visit(page, '/admin/email');
+    await expect(page.locator('html')).not.toHaveClass(/has-js/);
+    const deliveryEmailFilter = page.locator('form[method="get"][action="/admin/email"] input[name="email"]');
+    await deliveryEmailFilter.fill('slice-9-no-match@example.test');
+    await page.getByRole('button', { name: 'Filter', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/email\?.*email=slice-9-no-match%40example\.test/);
+    await expect(deliveryEmailFilter).toHaveValue('slice-9-no-match@example.test');
+    await expect(page.getByRole('heading', { name: 'Nothing matches these filters' })).toBeVisible();
+    await expect(page.getByText(/thirty days/i)).toHaveCount(0);
+    await page.getByRole('link', { name: 'Reset', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/email$/);
+    await expect(deliveryEmailFilter).toHaveValue('');
+
+    await page.getByRole('link', { name: 'Announcements', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/announcements$/);
+    await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+    const warning = page.locator('[data-announcement-broadcast-warning]');
+    await expect(warning).toBeHidden();
+    await page.check('input[name="broadcast_email"]');
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText('Broadcasts cannot be recalled once the queue starts.');
+    await shot(page, info, '24-admin-notifications-no-js');
+  } finally {
+    await context.close();
+  }
 });
 
 test('phase 4 split/merge: moderator splits a reply out then merges it back', async ({ page }, info) => {

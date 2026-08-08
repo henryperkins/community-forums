@@ -12,35 +12,40 @@ foreach (($groups ?? []) as $group) {
     <header class="settings-head">
         <span class="eyebrow">Account</span>
         <h1>Account settings</h1>
+        <p>Everything this community knows about you, and everything it does on your behalf.</p>
     </header>
     <div class="settings">
-        <?= $this->partial('partials/settings_nav') ?>
+        <?= $this->partial('partials/settings_nav', ['active' => 'boards']) ?>
 
         <div class="settings-pane">
-    <section class="card">
-        <h2>Organize your boards</h2>
-        <p class="muted">Favorite boards rise to the top; muted boards are hidden from your sidebar and unread counts.</p>
+    <section class="scribe-panel">
+        <h2 class="scribe-panel-head">Organize your boards</h2>
+        <p class="muted">Favorited boards rise to the top of your rail. Muted boards are hidden from it, and their threads stop counting towards your unread.</p>
         <?php if (empty($groups)): ?>
-            <p class="muted">No boards available.</p>
+            <p class="account-note">No boards available.</p>
         <?php else: ?>
             <?php foreach ($groups as $g): ?>
                 <h3 class="board-cat"><?= $e($g['category']['name']) ?></h3>
                 <ul class="board-pref-list">
                     <?php foreach ($g['boards'] as $b): ?>
-                        <?php $p = ($prefs[(int) $b['id']] ?? ['is_favorite' => 0, 'is_muted' => 0]); ?>
+                        <?php
+                        $p = ($prefs[(int) $b['id']] ?? ['is_favorite' => 0, 'is_muted' => 0]);
+                        $isFav = (int) $p['is_favorite'] === 1;
+                        $isMuted = (int) $p['is_muted'] === 1;
+                        ?>
                         <li class="board-pref-row">
-                            <span class="board-pref-name">#<?= $e($b['name']) ?></span>
+                            <span class="board-pref-name"><span class="board-hash" aria-hidden="true">#</span><?= $e($b['name']) ?></span>
                             <form class="inline" method="post" action="/settings/boards/toggle">
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="board_id" value="<?= (int) $b['id'] ?>">
                                 <input type="hidden" name="pref" value="favorite">
-                                <button class="linkbtn<?= (int) $p['is_favorite'] === 1 ? ' btn-on' : '' ?>" type="submit"><?= (int) $p['is_favorite'] === 1 ? '★ Favorited' : '☆ Favorite' ?></button>
+                                <button class="linkbtn<?= $isFav ? ' btn-on' : '' ?>" type="submit"><span class="board-pref-star" aria-hidden="true"><?= $isFav ? '★' : '☆' ?></span> <?= $isFav ? 'Favorited' : 'Favorite' ?></button>
                             </form>
                             <form class="inline" method="post" action="/settings/boards/toggle">
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="board_id" value="<?= (int) $b['id'] ?>">
                                 <input type="hidden" name="pref" value="mute">
-                                <button class="linkbtn<?= (int) $p['is_muted'] === 1 ? ' btn-on' : '' ?>" type="submit"><?= (int) $p['is_muted'] === 1 ? 'Muted' : 'Mute' ?></button>
+                                <button class="board-mute-toggle<?= $isMuted ? ' is-on' : '' ?>" type="submit"><?= $isMuted ? 'Muted' : 'Mute' ?></button>
                             </form>
                         </li>
                     <?php endforeach; ?>
@@ -81,7 +86,7 @@ foreach (($groups ?? []) as $group) {
                     <?php endif; ?>
                     <form method="post" action="/settings/board-folders" class="inline-form org-form">
                         <?= $this->csrfField() ?>
-                        <input type="text" name="name" class="input input-small" maxlength="80" placeholder="Vilya · Expose" required>
+                        <input type="text" name="name" class="input input-small" maxlength="80" placeholder="Morning read" required>
                         <button class="btn btn-small" type="submit">New folder</button>
                     </form>
                     <?php if (!empty($board_folders) && !empty($boardChoices)): ?>

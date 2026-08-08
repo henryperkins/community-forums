@@ -23,6 +23,17 @@ final class AdminAnnouncementTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
+    private function inputTag(string $body, string $name): string
+    {
+        self::assertMatchesRegularExpression(
+            '/<input\b[^>]*\bname="' . preg_quote($name, '/') . '"[^>]*>/i',
+            $body,
+        );
+        preg_match('/<input\b[^>]*\bname="' . preg_quote($name, '/') . '"[^>]*>/i', $body, $matches);
+
+        return (string) ($matches[0] ?? '');
+    }
+
     public function test_admin_can_load_the_compose_form(): void
     {
         $this->actingAs($this->makeAdmin(['username' => 'annform']));
@@ -30,6 +41,7 @@ final class AdminAnnouncementTest extends TestCase
         $this->assertStatus(200, $resp);
         $this->assertSeeText($resp, 'name="message"');
         $this->assertSeeText($resp, 'name="broadcast"');
+        self::assertStringContainsString('checked', $this->inputTag($resp->body(), 'dismissible'));
     }
 
     public function test_admin_publish_shows_banner_to_guest_and_returns_200(): void
@@ -78,6 +90,26 @@ final class AdminAnnouncementTest extends TestCase
         $this->assertSeeText($resp, 'Announcement message must be');
     }
 
+    public function test_validation_rerender_preserves_every_submitted_banner_field(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'annpreserve422']));
+        $message = str_repeat('x', 501);
+
+        $resp = $this->post('/admin/announcements', [
+            'message' => $message,
+            'broadcast' => '1',
+            'broadcast_email' => '1',
+        ]);
+
+        $this->assertStatus(422, $resp);
+        self::assertStringContainsString($message, $resp->body());
+        self::assertStringContainsString('501 / 500', $resp->body());
+        self::assertStringNotContainsString('checked', $this->inputTag($resp->body(), 'dismissible'));
+        self::assertStringContainsString('checked', $this->inputTag($resp->body(), 'broadcast'));
+        self::assertStringContainsString('checked', $this->inputTag($resp->body(), 'broadcast_email'));
+        self::assertStringContainsString('This will reach 1 active member by email.', $resp->body());
+    }
+
     public function test_non_admin_post_is_forbidden(): void
     {
         $this->actingAs($this->makeUser(['username' => 'annnonadmin']));
@@ -99,7 +131,17 @@ final class AdminAnnouncementTest extends TestCase
                 [302, 303],
             );
         }
-        $this->assertStatus(429, $this->post('/admin/announcements', ['message' => 'Too many']));
+        $limited = $this->post('/admin/announcements', [
+            'message' => 'Too many, but keep these choices',
+            'broadcast' => '1',
+            'broadcast_email' => '1',
+        ]);
+        $this->assertStatus(429, $limited);
+        self::assertStringContainsString('Too many, but keep these choices', $limited->body());
+        self::assertStringNotContainsString('checked', $this->inputTag($limited->body(), 'dismissible'));
+        self::assertStringContainsString('checked', $this->inputTag($limited->body(), 'broadcast'));
+        self::assertStringContainsString('checked', $this->inputTag($limited->body(), 'broadcast_email'));
+        self::assertStringContainsString('This will reach 1 active member by email.', $limited->body());
     }
 
     public function test_flag_off_takes_routes_dark(): void

@@ -3,29 +3,50 @@ import { expect, test, type Browser, type Page, type TestInfo } from '@playwrigh
 import path from 'node:path';
 
 /**
- * Focused evidence for the operational admin landing page and grouped admin
- * workspace. The same spec certifies the persistent desktop rail, enhanced
- * mobile drawer, server-rendered no-JS directory, overflow cue, and WCAG AA
- * serious/critical baseline at the approved 1280x800 and 390x844 viewports.
+ * Focused evidence for the operational admin landing page and shared console
+ * chrome. The same spec certifies the horizontal area tier, area tabs,
+ * server-rendered no-JS navigation, overflow cues, theme registers, and WCAG
+ * AA serious/critical baseline at the approved 1280x800 and 390x844 viewports.
  */
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
-const GROUPS = [
-  'Dashboard',
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
+const TIERS = [
+  'Overview',
   'Moderation',
   'Content',
   'People',
+  'Members',
   'Appearance',
   'Notifications',
   'Integrations',
+  'Packages',
+  'Features',
   'Settings',
 ];
 
-async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
-  await page.screenshot({
-    path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
-    fullPage: true,
-    animations: 'disabled',
-  });
+async function shot(page: Page, info: TestInfo, name: string, neutralizeStickyChrome = false): Promise<void> {
+  const adminBar = page.locator('.admin-bar');
+  const previousPosition = neutralizeStickyChrome && await adminBar.count() > 0
+    ? await adminBar.evaluate((element) => {
+      const prior = (element as HTMLElement).style.position;
+      (element as HTMLElement).style.position = 'static';
+      return prior;
+    })
+    : null;
+  try {
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
+      fullPage: true,
+      animations: 'disabled',
+    });
+  } finally {
+    if (previousPosition !== null) {
+      await adminBar.evaluate((element, prior) => {
+        if (prior) (element as HTMLElement).style.position = prior;
+        else (element as HTMLElement).style.removeProperty('position');
+      }, previousPosition);
+    }
+  }
 }
 
 async function login(page: Page): Promise<void> {
@@ -39,9 +60,19 @@ async function login(page: Page): Promise<void> {
   if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) await skip.click();
 }
 
+async function createUserTargetAuditRow(page: Page): Promise<void> {
+  await page.goto('/admin/users');
+  const row = page.locator('tr', { hasText: 'alice' });
+  await row.locator('input[name="selected[]"]').check();
+  await page.locator('select[name="bulk_action"]').selectOption('warn');
+  await page.getByRole('button', { name: 'Review and apply…' }).click();
+  await page.locator('input[name="reason"]').fill('Admin overview target-link evidence.');
+  await page.getByRole('button', { name: /Warn 1 member/ }).click();
+  await expect(page.getByRole('status')).toContainText('Warned');
+}
+
 async function expectAxeClean(page: Page, info: TestInfo): Promise<void> {
   const results = await new AxeBuilder({ page })
-    .include('.admin')
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();
   const violations = results.violations.filter((item) => item.impact === 'serious' || item.impact === 'critical');
@@ -57,36 +88,133 @@ function observeBrowserProblems(page: Page): string[] {
   return problems;
 }
 
-async function expectGroupedDirectory(page: Page): Promise<void> {
-  await expect(page.locator('.admin-nav-group-title')).toHaveText(GROUPS);
-  for (const href of [
-    '/admin', '/mod/reports', '/mod/approvals', '/mod/appeals', '/admin/audit', '/admin/moderation',
-    '/admin/structure', '/admin/tags', '/admin/users', '/admin/roles', '/admin/invitations',
-    '/admin/badge-rules', '/admin/branding', '/admin/themes', '/admin/custom-emoji',
-    '/admin/email', '/admin/announcements', '/admin/packages', '/admin/registries',
-    '/admin/webhooks', '/admin/api-tokens', '/admin/providers', '/admin/extensions',
-    '/admin/settings', '/admin/features', '/admin/thread-intelligence',
+async function expectAdminTier(page: Page): Promise<void> {
+  const tier = page.locator('[data-admin-tier]');
+  await expect(tier).toBeVisible();
+  await expect(tier.locator('.admin-tier-item')).toHaveCount(11);
+  await expect(tier.locator('.admin-tier-item')).toHaveText(TIERS);
+}
+
+async function captureThemeRegisters(page: Page, info: TestInfo, evidenceName = '07-admin-dashboard'): Promise<void> {
+  for (const { register, label } of [
+    { register: 'light', label: 'light' },
+    { register: 'dark', label: 'twilight' },
   ]) {
-    await expect(page.locator(`[data-admin-nav] :is(a[href="${href}"], [data-destination="${href}"])`)).toHaveCount(1);
+    await page.locator('html').evaluate((element, theme) => element.setAttribute('data-theme', theme), register);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', register);
+    await shot(page, info, `${evidenceName}-${label}`, evidenceName === '05-admin-audit' && info.project.name === 'mobile');
   }
 }
 
-test('desktop admin rail and operational hierarchy are complete, quiet, and axe-clean', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop', 'desktop rail evidence uses the 1280x800 project');
+async function expectCurrentPageSystemDarkAxeClean(page: Page, info: TestInfo): Promise<void> {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.locator('html').evaluate((element) => element.setAttribute('data-theme', 'system'));
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'system');
+  const targetLink = page.locator('.audit-target-link').first();
+  await expect(targetLink).toBeVisible();
+  const targetColors = await targetLink.evaluate((element) => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--on-info)';
+    document.body.append(probe);
+    const colors = {
+      actual: getComputedStyle(element).color,
+      expected: getComputedStyle(probe).color,
+    };
+    probe.remove();
+    return colors;
+  });
+  expect(targetColors.actual).toBe(targetColors.expected);
+  await expectAxeClean(page, info);
+}
+
+async function expectSystemDarkAxeClean(page: Page, info: TestInfo): Promise<void> {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.locator('html').evaluate((element) => element.setAttribute('data-theme', 'system'));
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'system');
+
+  const runtimeColors = await page.evaluate(() => {
+    const grid = document.querySelector('.admin-dashboard-grid');
+    if (!(grid instanceof HTMLElement)) throw new Error('Queue health grid is missing');
+
+    const clear = grid.querySelector('.queue-card.queue-status-clear .queue-card-state');
+    if (!(clear instanceof HTMLElement)) throw new Error('Seeded Clear queue state is missing');
+
+    for (const status of ['attention', 'unavailable']) {
+      if (grid.querySelector(`.queue-card.queue-status-${status} .queue-card-state`)) continue;
+
+      const card = document.createElement('div');
+      card.className = `card queue-card queue-status-${status} is-static`;
+      card.dataset.queueStatus = status;
+      card.dataset.runtimeQueueState = status;
+
+      const heading = document.createElement('span');
+      heading.className = 'queue-card-head';
+      heading.textContent = `Runtime ${status} status`;
+
+      const count = document.createElement('strong');
+      count.className = 'queue-card-count';
+      count.textContent = '0';
+
+      const detail = document.createElement('span');
+      detail.className = 'queue-card-detail';
+      detail.textContent = `Representative ${status} state for accessibility verification`;
+
+      const state = document.createElement('span');
+      state.className = 'queue-card-state';
+      state.textContent = status[0].toUpperCase() + status.slice(1);
+
+      card.append(heading, count, detail, state);
+      grid.append(card);
+    }
+
+    return Object.fromEntries([
+      ['clear', '--on-done'],
+      ['attention', '--danger'],
+      ['unavailable', '--text-faint'],
+    ].map(([status, token]) => {
+      const state = grid.querySelector(`.queue-card.queue-status-${status} .queue-card-state`);
+      if (!(state instanceof HTMLElement)) throw new Error(`${status} queue state is missing`);
+
+      const probe = document.createElement('span');
+      probe.dataset.runtimeSemanticProbe = status;
+      probe.hidden = true;
+      probe.style.color = `var(${token})`;
+      document.body.append(probe);
+
+      return [status, {
+        foreground: getComputedStyle(state).color,
+        semantic: getComputedStyle(probe).color,
+      }];
+    }));
+  });
+
+  try {
+    expect(runtimeColors.clear.foreground).toBe(runtimeColors.clear.semantic);
+    expect(runtimeColors.attention.foreground).toBe(runtimeColors.attention.semantic);
+    expect(runtimeColors.unavailable.foreground).toBe(runtimeColors.unavailable.semantic);
+    await page.locator('[data-runtime-queue-state], [data-runtime-semantic-probe]').evaluateAll(
+      (nodes) => nodes.forEach((node) => node.remove()),
+    );
+    await expectAxeClean(page, info);
+  } finally {
+    await page.locator('[data-runtime-queue-state], [data-runtime-semantic-probe]').evaluateAll(
+      (nodes) => nodes.forEach((node) => node.remove()),
+    );
+  }
+}
+
+test('desktop admin tier and operational hierarchy are complete, quiet, and axe-clean', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop tier evidence uses the 1280x800 project');
   const browserProblems = observeBrowserProblems(page);
 
   await login(page);
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: 'Admin console' })).toBeVisible();
 
-  const rail = page.locator('[data-admin-nav]');
-  const railBox = await rail.boundingBox();
-  expect(railBox).not.toBeNull();
-  expect(railBox!.width).toBeGreaterThanOrEqual(220);
-  expect(railBox!.width).toBeLessThanOrEqual(226);
-  expect(await rail.evaluate((element) => getComputedStyle(element).position)).toBe('sticky');
-  await expectGroupedDirectory(page);
-  await expect(rail.locator('a.active[aria-current="page"]')).toHaveAttribute('href', '/admin');
+  await expectAdminTier(page);
+  await expect(
+    page.locator('span.admin-tier-item.is-active[aria-current="page"]'),
+  ).toHaveText('Overview');
 
   const headings = page.locator('.admin-pane h2');
   await expect(headings).toContainText(['Queue health', 'Needs attention', 'Community today', 'Recent activity']);
@@ -97,8 +225,54 @@ test('desktop admin rail and operational hierarchy are complete, quiet, and axe-
   expect(hierarchy).toEqual([0, 1, 2, 3]);
 
   await expect(page.locator('[data-queue-status] .queue-card-head')).toHaveText([
-    'Reports', 'Approval hold', 'Appeals', 'Email failures', 'Thread Intelligence',
+    'Reports open', 'Approval hold', 'Appeals', 'Email failures', 'Thread Intelligence',
   ]);
+  const dashboardCardStyles = await page.evaluate(() => {
+    const styleOf = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) throw new Error(`${selector} is missing`);
+      const style = getComputedStyle(element);
+      return { padding: style.padding, boxShadow: style.boxShadow, overflowX: style.overflowX };
+    };
+    const probe = document.createElement('div');
+    probe.style.boxShadow = 'var(--shadow-sm)';
+    document.body.append(probe);
+    const shadowSm = getComputedStyle(probe).boxShadow;
+    probe.remove();
+
+    return {
+      queue: styleOf('.queue-card'),
+      attention: styleOf('.attention-panel'),
+      activity: styleOf('.activity-card'),
+      recent: styleOf('.recent-activity-card'),
+      attentionHeadingMarginBottom: getComputedStyle(document.querySelector('.attention-panel .section-heading-row')!).marginBottom,
+      communityGap: getComputedStyle(document.querySelector('.community-section')!).gap,
+      communityHeadingMargin: getComputedStyle(document.querySelector('.community-section > h2')!).margin,
+      activityCopyMinWidth: getComputedStyle(document.querySelector('.activity-card-copy')!).minWidth,
+      shadowSm,
+    };
+  });
+  expect(dashboardCardStyles.queue).toMatchObject({ padding: '16px 17px 14px', boxShadow: dashboardCardStyles.shadowSm, overflowX: 'hidden' });
+  expect(dashboardCardStyles.attention).toMatchObject({ padding: '18px 20px', boxShadow: dashboardCardStyles.shadowSm });
+  expect(dashboardCardStyles.activity).toMatchObject({ padding: '15px 17px', boxShadow: 'none' });
+  expect(dashboardCardStyles.recent).toMatchObject({ padding: '18px 20px 8px', boxShadow: dashboardCardStyles.shadowSm });
+  expect(dashboardCardStyles.attentionHeadingMarginBottom).toBe('10px');
+  expect(dashboardCardStyles.communityGap).toBe('0px');
+  expect(dashboardCardStyles.communityHeadingMargin).toBe('4px 0px 12px');
+  expect(dashboardCardStyles.activityCopyMinWidth).toBe('0px');
+
+  await page.evaluate(() => {
+    const probe = document.createElement('div');
+    probe.id = 'static-queue-hover-probe';
+    probe.className = 'card queue-card is-static';
+    probe.textContent = 'Static queue state';
+    document.querySelector('.admin-dashboard-grid')?.append(probe);
+  });
+  const staticQueueProbe = page.locator('#static-queue-hover-probe');
+  await staticQueueProbe.hover();
+  await expect.poll(() => staticQueueProbe.evaluate((element) => getComputedStyle(element).boxShadow)).toBe(dashboardCardStyles.shadowSm);
+  await staticQueueProbe.evaluate((element) => element.remove());
+
   const statuses = await page.locator('[data-queue-status]').evaluateAll((cards) => cards.map((card) => card.getAttribute('data-queue-status')));
   expect(statuses.every((status) => ['attention', 'clear', 'unavailable'].includes(status ?? ''))).toBe(true);
   await expect(page.locator('.activity-card-title')).toHaveText(['New users today', 'Active now']);
@@ -107,74 +281,49 @@ test('desktop admin rail and operational hierarchy are complete, quiet, and axe-
   await expect(page.locator('[data-overflow-region]')).toHaveAttribute('tabindex', '0');
   await expect(page.locator('[data-overflow-cue-label]')).toBeHidden();
 
-  await expectAxeClean(page, info);
-  await shot(page, info, '07-admin-dashboard');
+  await captureThemeRegisters(page, info);
+  await expectSystemDarkAxeClean(page, info);
   expect(browserProblems).toEqual([]);
 });
 
-test('mobile drawer closes every way, contains focus, restores focus, and cleans up on resize', async ({ page }, info) => {
-  test.skip(info.project.name !== 'mobile', 'mobile drawer evidence uses the 390x844 project');
+test('mobile admin tier scrolls horizontally while page and tables keep their own overflow cues', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile tier evidence uses the 390x844 project');
   const browserProblems = observeBrowserProblems(page);
 
   await login(page);
   await page.goto('/admin');
-  const toggle = page.locator('[data-admin-nav-toggle]');
-  const nav = page.locator('[data-admin-nav]');
-  const close = page.locator('[data-admin-nav-close]');
-  const scrim = page.locator('[data-admin-nav-scrim]');
+  await expectAdminTier(page);
+  const tier = page.locator('[data-admin-tier]');
+  const tierMetrics = await tier.evaluate((element) => ({
+    overflowX: getComputedStyle(element).overflowX,
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(['auto', 'scroll']).toContain(tierMetrics.overflowX);
+  expect(tierMetrics.scrollWidth).toBeGreaterThan(tierMetrics.clientWidth);
+  const tierItemHeights = await tier.locator('.admin-tier-item').evaluateAll((items) => items.map(
+    (item) => item.getBoundingClientRect().height,
+  ));
+  expect(tierItemHeights.every((height) => height >= 44)).toBe(true);
 
-  await expect(toggle).toBeVisible();
-  const toggleBox = await toggle.boundingBox();
-  expect(toggleBox!.height).toBeGreaterThanOrEqual(44);
-  await expect(nav).toHaveAttribute('aria-hidden', 'true');
-  await expect(nav).toHaveAttribute('inert', '');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await expect.poll(() => nav.evaluate((element) => parseFloat(getComputedStyle(element).transitionDuration)))
-    .toBeLessThanOrEqual(0.000001);
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await shot(page, info, '07-admin-dashboard');
+  const queueGridMetrics = await page.locator('.admin-overview-dashboard .admin-dashboard-grid').evaluate((grid) => {
+    const firstCard = grid.querySelector('.queue-card');
+    if (!(firstCard instanceof HTMLElement)) throw new Error('Queue health card is missing');
 
-  await toggle.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.locator('body')).toHaveClass(/admin-nav-open/);
-  await expect(nav).toHaveAttribute('aria-hidden', 'false');
-  await expect(close).toBeFocused();
-  const closeBox = await close.boundingBox();
-  expect(closeBox!.height).toBeGreaterThanOrEqual(44);
-  await expectGroupedDirectory(page);
+    return {
+      columns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
+      gridWidth: grid.getBoundingClientRect().width,
+      cardWidth: firstCard.getBoundingClientRect().width,
+    };
+  });
+  expect(queueGridMetrics.columns).toBe(1);
+  expect(queueGridMetrics.cardWidth).toBeGreaterThanOrEqual(queueGridMetrics.gridWidth - 2);
 
-  const lastLink = nav.locator('a[href]').last();
-  await lastLink.focus();
-  await page.keyboard.press('Tab');
-  await expect(close).toBeFocused();
-  await expectAxeClean(page, info);
-  await shot(page, info, '07-admin-dashboard-drawer');
-
-  await close.click();
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(toggle).toBeFocused();
-
-  await toggle.click();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(toggle).toBeFocused();
-
-  await toggle.click();
-  await scrim.click({ position: { x: 370, y: 20 } });
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(toggle).toBeFocused();
-
-  await toggle.click();
-  await nav.getByRole('link', { name: 'Reports', exact: true }).click();
-  await page.waitForURL(/\/mod\/reports$/);
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-
-  await page.goto('/admin');
   const region = page.locator('[data-overflow-region]');
   const shell = page.locator('[data-overflow-cue]');
   const cue = page.locator('[data-overflow-cue-label]');
   const mobileWidths = await page.evaluate(() => Object.fromEntries(
-    ['html', 'body', '.main', '.admin', '.admin-pane', '.recent-activity-card', '.activity-table-shell', '[data-overflow-region]', '.audit-recent']
+    ['html', 'body', '.admin-bar', '.admin-console', '.admin-pane', '.recent-activity-card', '.activity-table-shell', '[data-overflow-region]', '.audit-recent']
       .map((selector) => {
         const element = selector === 'html' ? document.documentElement : selector === 'body' ? document.body : document.querySelector(selector);
         return [selector, element ? { client: element.clientWidth, scroll: element.scrollWidth } : null];
@@ -192,20 +341,165 @@ test('mobile drawer closes every way, contains focus, restores focus, and cleans
   await expect(cue).toBeHidden();
   await expect.poll(() => shell.evaluate((element) => getComputedStyle(element, '::after').opacity)).toBe('0');
 
-  await toggle.click();
-  await page.setViewportSize({ width: 900, height: 844 });
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(nav).not.toHaveAttribute('aria-hidden', /.+/);
-  await expect(nav).not.toHaveAttribute('inert', '');
-  await expect(toggle).toBeHidden();
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(toggle).toBeVisible();
-  await expect(nav).toHaveAttribute('aria-hidden', 'true');
+  await region.evaluate((element) => {
+    element.scrollLeft = 0;
+    if (element instanceof HTMLElement) element.blur();
+    window.scrollTo(0, 0);
+  });
+  await expect.poll(() => region.evaluate((element) => element.scrollLeft)).toBe(0);
+  await expect(region).not.toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(shell).not.toHaveClass(/is-at-end/);
+  await expect(cue).toBeVisible();
+  await expect.poll(() => shell.evaluate((element) => getComputedStyle(element, '::after').opacity)).toBe('1');
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
 
+  await captureThemeRegisters(page, info);
+  await expectSystemDarkAxeClean(page, info);
   expect(browserProblems).toEqual([]);
 });
 
-test('no-JS mobile admin directory remains expanded and reaches domain settings', async ({ browser, baseURL }, info) => {
+test('audit log is contained, focusable, theme-complete, and axe-clean on both viewports', async ({ page }, info) => {
+  const browserProblems = observeBrowserProblems(page);
+
+  await login(page);
+  await createUserTargetAuditRow(page);
+  await page.goto('/admin/audit');
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Audit log');
+  await expect(page.locator('.audit-filter-card')).toBeVisible();
+  await expect(page.locator('.audit-table-card')).toBeVisible();
+
+  const region = page.locator('.audit-table-card .table-scroll');
+  await expect(region).toHaveAttribute('role', 'region');
+  await expect(region).toHaveAttribute('tabindex', '0');
+  await region.focus();
+  await expect(region).toBeFocused();
+
+  const widths = await page.evaluate(() => ({
+    documentClient: document.documentElement.clientWidth,
+    documentScroll: document.documentElement.scrollWidth,
+    bodyClient: document.body.clientWidth,
+    bodyScroll: document.body.scrollWidth,
+  }));
+  expect(widths.documentScroll, JSON.stringify(widths, null, 2)).toBeLessThanOrEqual(widths.documentClient);
+  expect(widths.bodyScroll, JSON.stringify(widths, null, 2)).toBeLessThanOrEqual(widths.bodyClient);
+
+  if (info.project.name === 'mobile') {
+    const controls = page.locator('.audit-filter-card .btn, .admin-overview-audit .pager-control, .audit-table-card .state-empty a');
+    const heights = await controls.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().height));
+    expect(heights.length).toBeGreaterThan(0);
+    expect(heights.every((height) => height >= 44)).toBe(true);
+    const tableWidths = await region.evaluate((element) => ({ client: element.clientWidth, scroll: element.scrollWidth }));
+    expect(tableWidths.scroll).toBeGreaterThan(tableWidths.client);
+    const filterColumns = await page.locator('.admin-overview-audit .filter-grid').evaluate(
+      (element) => getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean).length,
+    );
+    expect(filterColumns).toBe(1);
+  }
+
+  const auditStyles = await page.evaluate(() => {
+    const tokenColor = (token: string) => {
+      const probe = document.createElement('span');
+      probe.style.color = `var(${token})`;
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    };
+    const colorOf = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) throw new Error(`${selector} is missing`);
+      return getComputedStyle(element).color;
+    };
+    const filterActions = document.querySelector('.admin-overview-audit .filter-actions');
+    const filterGrid = document.querySelector('.admin-overview-audit .filter-grid');
+    if (!(filterActions instanceof HTMLElement)) throw new Error('Audit filter actions are missing');
+    const apply = filterActions.querySelector('button');
+    const reset = filterActions.querySelector('a');
+    const targetInput = document.querySelector('input[name="target_id"]');
+    const dateInput = document.querySelector('input[name="from"]');
+    const pager = document.querySelector('.admin-overview-audit .pager');
+    if (!(apply instanceof HTMLElement) || !(reset instanceof HTMLElement)
+      || !(targetInput instanceof HTMLElement) || !(dateInput instanceof HTMLElement)
+      || !(pager instanceof HTMLElement) || !(filterGrid instanceof HTMLElement)) {
+      throw new Error('Audit presentation controls are missing');
+    }
+    const controlStyle = (element: HTMLElement) => {
+      const style = getComputedStyle(element);
+      return {
+        padding: style.padding,
+        fontSize: style.fontSize,
+        letterSpacing: style.letterSpacing,
+        boxShadow: style.boxShadow,
+        borderTopWidth: style.borderTopWidth,
+        color: style.color,
+      };
+    };
+    const monoProbe = document.createElement('span');
+    monoProbe.style.fontFamily = 'var(--font-mono)';
+    document.body.append(monoProbe);
+    const monoFamily = getComputedStyle(monoProbe).fontFamily;
+    monoProbe.remove();
+
+    return {
+      filterMarginTop: getComputedStyle(filterActions).marginTop,
+      filterGap: getComputedStyle(filterActions).gap,
+      filterAlignItems: getComputedStyle(filterGrid).alignItems,
+      apply: controlStyle(apply),
+      reset: controlStyle(reset),
+      targetInput: { fontFamily: getComputedStyle(targetInput).fontFamily, fontSize: getComputedStyle(targetInput).fontSize },
+      dateInput: { fontFamily: getComputedStyle(dateInput).fontFamily, fontSize: getComputedStyle(dateInput).fontSize },
+      pagerMarginTop: getComputedStyle(pager).marginTop,
+      monoFamily,
+      time: colorOf('.audit-time'),
+      reason: colorOf('.audit-reason'),
+      textFaint: tokenColor('--text-faint'),
+      textMuted: tokenColor('--text-muted'),
+    };
+  });
+  expect(auditStyles.filterMarginTop).toBe('16px');
+  expect(auditStyles.filterGap).toBe('10px');
+  expect(auditStyles.filterAlignItems).toBe('start');
+  expect(auditStyles.apply).toMatchObject({ padding: '8px 17px', fontSize: '12.8px', letterSpacing: '0.512px', boxShadow: 'none', borderTopWidth: '0px' });
+  // Chromium quantizes the declared 1.5px border to a 1px computed width.
+  expect(auditStyles.reset).toMatchObject({ padding: '8px 17px', fontSize: '12.8px', letterSpacing: '0.512px', boxShadow: 'none', borderTopWidth: '1px', color: auditStyles.textMuted });
+  expect(auditStyles.targetInput).toEqual({ fontFamily: auditStyles.monoFamily, fontSize: '14.08px' });
+  expect(auditStyles.dateInput).toEqual({ fontFamily: auditStyles.monoFamily, fontSize: '13.76px' });
+  expect(auditStyles.pagerMarginTop).toBe('18px');
+  expect(auditStyles.time).toBe(auditStyles.textFaint);
+  expect(auditStyles.reason).toBe(auditStyles.textMuted);
+
+  await region.evaluate((element) => {
+    if (element instanceof HTMLElement) element.blur();
+    element.scrollLeft = 0;
+    window.scrollTo(0, 0);
+  });
+  await expect(region).not.toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+
+  await captureThemeRegisters(page, info, '05-admin-audit');
+  await expectCurrentPageSystemDarkAxeClean(page, info);
+
+  await page.goto('/admin/audit?actor=__no_matching_operator__');
+  const emptyState = page.locator('.audit-table-card .state-empty');
+  await expect(emptyState).toBeVisible();
+  const emptyStyles = await emptyState.evaluate((element) => {
+    const paragraph = element.querySelector('p');
+    const reset = element.querySelector('a');
+    if (!(paragraph instanceof HTMLElement) || !(reset instanceof HTMLElement)) {
+      throw new Error('Filtered audit empty state is incomplete');
+    }
+    return {
+      paragraphMargin: getComputedStyle(paragraph).margin,
+      paragraphFontSize: getComputedStyle(paragraph).fontSize,
+      resetMarginTop: getComputedStyle(reset).marginTop,
+    };
+  });
+  expect(emptyStyles).toEqual({ paragraphMargin: '6px 0px 0px', paragraphFontSize: '14.88px', resetMarginTop: '15px' });
+  expect(browserProblems).toEqual([]);
+});
+
+test('no-JS mobile tier and tabs remain usable and reach domain settings', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'desktop', 'one explicit no-JS mobile context is sufficient');
   const context = await (browser as Browser).newContext({
     baseURL: baseURL!,
@@ -217,12 +511,14 @@ test('no-JS mobile admin directory remains expanded and reaches domain settings'
     await login(page);
     await page.goto('/admin');
     await expect(page.locator('html')).not.toHaveClass(/has-js/);
-    await expect(page.locator('[data-admin-nav-toggle]')).toBeHidden();
-    await expect(page.locator('[data-admin-nav]')).toBeVisible();
-    await expectGroupedDirectory(page);
-    await page.getByRole('link', { name: 'General & registration' }).click();
+    await expectAdminTier(page);
+    await expect(page.locator('.admin-tabs')).toBeVisible();
+    await page.locator('[data-admin-tier]').getByRole('link', { name: 'Settings', exact: true }).click();
     await page.waitForURL(/\/admin\/settings$/);
-    await expect(page.getByRole('heading', { name: 'General & registration' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'General & intelligence' })).toBeVisible();
+    await expect(page.locator('span.admin-tier-item.is-active[aria-current="page"]')).toHaveText('Settings');
+    await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('General & registration');
+    await page.mouse.move(0, 0);
     await page.screenshot({
       path: path.join(EVIDENCE_DIR, 'mobile', '07-admin-dashboard-no-js.png'),
       fullPage: true,
