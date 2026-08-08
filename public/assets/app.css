@@ -747,12 +747,18 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .lb-name, .person-name { font-weight: 600; }
 .lb-rep, .person-rep { margin-left: auto; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-/* Settings: connections, sessions, boards, subscriptions */
-.connections-list, .session-list, .board-pref-list, .sub-list { list-style: none; padding: 0; margin: 12px 0 0; }
-.connection-row, .session-row, .board-pref-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
-.connection-name, .board-pref-name { font-weight: 600; min-width: 8em; }
-.sessions-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.session-meta { display: flex; flex-direction: column; gap: 2px; }
+/* Settings: board preferences.
+   Slice 16 moved connections, sessions and subscriptions onto the design's
+   shared `.account-ruled-*` row, so only the board-preference names are left
+   here. `boards.php` is Slice 17's file and migrates with it; until then this
+   rule is what keeps that one list styled. */
+.board-pref-list { list-style: none; padding: 0; margin: 12px 0 0; }
+.board-pref-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.board-pref-name { font-weight: 600; min-width: 8em; }
+/* The design keeps the sign-out-everywhere control on the panel head line, to
+   the right of the eyebrow's hairline (:411-415). */
+.sessions-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.sessions-head .scribe-panel-head { flex: 1; margin-bottom: 0; }
 .checkline { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
 .checkline input { width: 18px; height: 18px; }
 
@@ -12728,4 +12734,188 @@ body.thread-restructure-open { overflow: hidden; }
 
 @media (max-width: 760px) {
     .code-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ── Slice 16: the eight account panes ──────────────────────────────────────
+   AccountSettings.dc.html gives every account pane one card shell and, for the
+   list panes, one ruled row. The row is the slice's load-bearing primitive —
+   four consumers: subscriptions (:377), connections (:395), sessions (:418)
+   and blocked members (:435). All four are identical apart from the leading
+   element, so they share these rules rather than four near-copies.
+   `.board-pref-*` deliberately stays on the older rule at :751 — boards.php is
+   Slice 17's file and migrates with it. */
+/* The design drops a list panel's bottom padding to 8px (:373, :390, :410) or
+   16px (:430), because the last row's own rule already closes the card and a
+   full 22px reads as a gap. A state class, not a redeclaration of
+   `.scribe-panel` — ledger §6 rule 3 exempts qualified selectors, and the
+   certified default padding is untouched for every other panel. */
+.scribe-panel.is-list {
+    padding-bottom: 10px;
+}
+.account-ruled-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.account-ruled-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+/* The design stacks a label over a mono meta line inside one flexed column, so
+   a long user-agent or provider email truncates instead of shouldering the
+   trailing control off the row (:397, :419). */
+.account-row-main {
+    flex: 1;
+    min-width: 0;
+}
+.account-row-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--font-label);
+    font-size: .96rem;
+    color: var(--text-strong);
+}
+a.account-row-name {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+}
+a.account-row-name:hover {
+    text-decoration: underline;
+}
+.account-row-meta {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: .74rem;
+    color: var(--text-faint);
+}
+/* Provider mark (:396) — a 34px sunken square holding the provider's initial. */
+.account-row-mark {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .95rem;
+}
+.account-ruled-row .monogram {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    font-size: .74rem;
+}
+/* `Connected` (:398) and `This device` (:419) carry the design's done pair, not
+   a bare `.pill`. Measured 10.08:1 light / 7.71:1 twilight — the same pair
+   Slice 14 adopted for C-49, and the reason those two chips stop being an AA
+   risk in the twilight register. */
+.account-state-chip {
+    display: inline-flex;
+    flex: 0 0 auto;
+    padding: 2px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--green-200);
+    background: var(--surface-done);
+    color: var(--on-done);
+    font-family: var(--font-label);
+    font-size: .6rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+/* A second and third section inside one panel, hairline-ruled above its own
+   eyebrow (:343, :349). Reuses the `.scribe-panel-head` register at h3 level so
+   the heading outline stays continuous. */
+.account-subhead {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 0 0 13px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-hair);
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: .72rem;
+    color: var(--gold-ink);
+}
+.account-subhead::after {
+    content: "";
+    height: 1px;
+    background: var(--gold-200);
+    flex: 1;
+}
+/* The switch stack, and the caption the design hangs under a switch clear of
+   its track (:268 — `margin: 4px 0 0 53px`). */
+.switch-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.switch-stack-tight {
+    gap: 13px;
+}
+/* A switch block that opens a new section without its own eyebrow (:367). */
+.switch-stack-divided {
+    padding-top: 18px;
+    border-top: 1px solid var(--border-hair);
+}
+/* The design holds the font-size select to 200px rather than the full pane, so
+   a three-option control does not read as a full-width text field (:298). */
+.field-narrow {
+    max-width: 200px;
+}
+.switch-sub {
+    margin: 4px 0 0 53px;
+    font-size: .86rem;
+    color: var(--text-faint);
+}
+/* A pane's closing sentence (:404, :424). */
+.account-note {
+    margin: 14px 0 4px;
+    font-size: .86rem;
+    color: var(--text-faint);
+}
+/* The design pairs the export and reset controls in one card with the prose on
+   the left (:301-307); production shipped them as two separate cards. */
+.account-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+}
+.account-actions p {
+    margin: 0;
+    max-width: 44ch;
+    font-size: .92rem;
+    color: var(--text-muted);
+}
+.account-actions-group {
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 760px) {
+    /* One column, and the trailing control drops under the label rather than
+       squeezing it (the rows are 44px-safe either way). */
+    .account-ruled-row {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .switch-sub {
+        margin-left: 0;
+    }
+    .account-actions {
+        justify-content: flex-start;
+    }
 }

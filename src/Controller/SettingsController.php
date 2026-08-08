@@ -163,6 +163,12 @@ final class SettingsController extends Controller
         return $this->view('account/sessions', [
             'sessions' => $this->container->get(SessionRepository::class)->listActiveForUser($user->id()),
             'current_id' => $this->session()->currentSessionId(),
+            // The design's closing note quotes a fixed "30 days of inactivity"
+            // (AccountSettings.dc.html:424). Both halves are wrong here:
+            // Session::login() stamps expires_at once and nothing ever extends
+            // it, so the window runs from sign-in, and its length is the
+            // operator's SESSION_LIFETIME_DAYS. Pass the real number.
+            'session_lifetime_days' => max(1, (int) $this->config()->get('session.lifetime_days', 30)),
         ]);
     }
 

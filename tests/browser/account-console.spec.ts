@@ -95,7 +95,32 @@ async function login(page: Page): Promise<void> {
   if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) await skip.click();
 }
 
+/**
+ * Wait for every running transition/animation to finish.
+ *
+ * Flipping `data-theme` from JS does not repaint instantly: `.btn` (and several
+ * other components) transition `background`, so for `--dur-fast` the element
+ * still holds the *previous* register's colour. Sampling in that window reports
+ * the light parchment fill under the dark register's cream text — measured at
+ * 3.18:1 by axe, while the settled pair is correct. Verified: the export button
+ * reads rgb(250,246,236) immediately after the flip and rgb(30,39,48) 600ms
+ * later.
+ *
+ * The strict CSP rules out the usual fix of injecting a transition-killing
+ * <style> tag (`style-src 'self'`, no unsafe-inline), so settle rather than
+ * disable. Called from shot() and expectAxeClean() so every existing call site
+ * gets it without changing what they assert — only when they measure.
+ */
+async function settle(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => document.getAnimations().every((animation) => animation.playState !== 'running'),
+    undefined,
+    { timeout: 5000 },
+  ).catch(() => { /* a perpetual animation must not fail the gate */ });
+}
+
 async function shot(page: Page, folder: 'desktop' | 'mobile' | 'comparisons', name: string): Promise<void> {
+  await settle(page);
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, folder, `${name}.png`),
     fullPage: true,
@@ -104,6 +129,7 @@ async function shot(page: Page, folder: 'desktop' | 'mobile' | 'comparisons', na
 }
 
 async function expectAxeClean(page: Page, label: string): Promise<void> {
+  await settle(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();
@@ -354,4 +380,129 @@ test('full account shell is axe-clean in light twilight and system-dark register
   } finally {
     writeFeatureMap(original);
   }
+});
+
+// ─── Slice 16: the eight account panes ──────────────────────────────────────
+// Slice 4 certified the rail and shell; slice 15 the Profile and Security
+// bodies. These own the remaining eight pane bodies. They are additive on
+// purpose: the three tests above keep writing slice 4/15's captures unchanged.
+const SLICE16_PANES = [
+  ['/settings/privacy', 'privacy', 'Who can see you'],
+  ['/settings/appearance', 'appearance', 'Theme'],
+  ['/settings/preferences', 'reading', 'Pagination'],
+  ['/settings/composing', 'composing', 'Composing'],
+  ['/settings/notifications', 'notifications', 'Daily digest'],
+  ['/settings/connections', 'connections', 'Connected accounts'],
+  ['/settings/sessions', 'sessions', 'Active sessions & devices'],
+  ['/settings/blocks', 'blocks', 'Blocked members'],
+] as const;
+
+/**
+ * Document overflow, naming the offending elements. Slice 13 found two real
+ * layout defects this way and slice 14 a third; a bare scrollWidth comparison
+ * only says "something is too wide".
+ */
+async function expectNoOverflow(page: Page, label: string): Promise<void> {
+  const report = await page.evaluate(() => {
+    const docWidth = document.documentElement.clientWidth;
+    const offenders: string[] = [];
+    for (const node of Array.from(document.querySelectorAll('body *'))) {
+      const box = node.getBoundingClientRect();
+      if (box.width === 0 && box.height === 0) continue;
+      if (box.right > docWidth + 1 || box.left < -1) {
+        const el = node as HTMLElement;
+        offenders.push(`${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).trim().split(/\s+/).join('.') : ''} [${Math.round(box.left)}…${Math.round(box.right)}]`);
+      }
+    }
+    return {
+      overflow: document.documentElement.scrollWidth - docWidth,
+      offenders: offenders.slice(0, 8),
+    };
+  });
+  expect(report.overflow, `${label} horizontal overflow; offenders: ${report.offenders.join(' | ')}`).toBeLessThanOrEqual(0);
+}
+
+test('slice 16 panes are axe-clean in light twilight and system-dark registers', async ({ page }, info: TestInfo) => {
+  test.skip(info.project.name !== 'desktop', 'axe and register parity are captured once on desktop');
+  const original = readFeatureMap();
+  try {
+    writeFeatureMap(featureState(original, true));
+    await login(page);
+    for (const [href, name, head] of SLICE16_PANES) {
+      await page.goto(href);
+      // Every pane titles itself with a real heading now — four of these were
+      // `<span class="scribe-panel-head">` before this slice and sat outside
+      // the heading outline entirely.
+      await expect(page.getByRole('heading', { level: 2, name: head })).toHaveCount(1);
+
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'light'));
+      await expectAxeClean(page, `${name} light`);
+      await shot(page, 'comparisons', `s16-${name}-light`);
+
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'dark'));
+      await expectAxeClean(page, `${name} twilight`);
+      await shot(page, 'comparisons', `s16-${name}-twilight`);
+
+      await page.emulateMedia({ colorScheme: 'dark' });
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'system'));
+      await expectAxeClean(page, `${name} system-dark`);
+      await shot(page, 'comparisons', `s16-${name}-system-dark`);
+      await page.emulateMedia({ colorScheme: 'light' });
+    }
+  } finally {
+    writeFeatureMap(original);
+  }
+});
+
+test('slice 16 panes keep one boolean idiom and fit their width', async ({ page }, info: TestInfo) => {
+  const original = readFeatureMap();
+  const folder = info.project.name === 'mobile' ? 'mobile' : 'desktop';
+  try {
+    writeFeatureMap(featureState(original, true));
+    await login(page);
+    for (const [href, name] of SLICE16_PANES) {
+      await page.goto(href);
+      await expectOneCurrent(page, name);
+      await expectNoOverflow(page, `${name} @ ${info.project.name}`);
+
+      // The design models exactly one boolean control, the DS Switch, and it
+      // renders role="switch" (components/forms/Switch.jsx). No pane may mix a
+      // gem checkbox or a bare checkline alongside it.
+      const switches = page.locator('input.switch[role="switch"]');
+      const legacy = page.locator('input.gem-check, .toggle-stack, .checkline');
+      await expect(legacy).toHaveCount(0);
+      if (['privacy', 'appearance', 'reading', 'composing', 'notifications'].includes(name)) {
+        expect(await switches.count(), `${name} should render switches`).toBeGreaterThan(0);
+      }
+
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'light'));
+      await shot(page, folder, `s16-${name}-light`);
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'dark'));
+      await shot(page, folder, `s16-${name}-twilight`);
+    }
+  } finally {
+    writeFeatureMap(original);
+  }
+});
+
+test('refused set-password re-renders inline on the connections pane', async ({ page }, info: TestInfo) => {
+  test.skip(info.project.name !== 'desktop', 'the 422 round-trip is captured once on desktop');
+  // Before slice 16 this path caught ValidationException and redirected with a
+  // flash, so the pane's own error slot could never render and the
+  // confirm-field message had nowhere to go. Only an account with no password
+  // sees the form, so this walks the seeded OAuth-only member if one exists.
+  await login(page);
+  await page.goto('/settings/connections');
+  const form = page.locator('form[action="/settings/connections/set-password"]');
+  if (await form.count() === 0) {
+    test.skip(true, 'seed has no password-less account; covered by AppOAuthTest');
+  }
+  await form.locator('input[name="new_password"]').fill('brandnewpass');
+  await form.locator('input[name="new_password_confirm"]').fill('branddifferent');
+  await form.locator('button[type="submit"]').click();
+  await page.waitForLoadState('load');
+  await expect(page.getByText('The passwords do not match.', { exact: true })).toBeVisible();
+  // The whole pane comes back, not a bare form.
+  await expect(page.getByRole('heading', { level: 2, name: 'Connected accounts' })).toHaveCount(1);
+  await shot(page, 'desktop', 's16-connections-422');
 });

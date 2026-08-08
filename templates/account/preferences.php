@@ -21,29 +21,32 @@ $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
 
         <div class="settings-pane">
     <form method="post" action="/settings/preferences" class="stacked scribe-panel">
-        <span class="scribe-panel-head">Reading</span>
+        <h2 class="scribe-panel-head">Pagination</h2>
         <?= $this->csrfField() ?>
-        <label class="field">
-            <span>Threads per page</span>
-            <select name="threads_per_page" class="input">
-                <option value="20"<?= $opt(20, $tpp) ?>>20</option>
-                <option value="25"<?= $opt(25, $tpp) ?>>25</option>
-                <option value="50"<?= $opt(50, $tpp) ?>>50</option>
-                <option value="100"<?= $opt(100, $tpp) ?>>100</option>
-            </select>
-        </label>
-        <label class="field">
-            <span>Posts per page</span>
-            <select name="posts_per_page" class="input">
-                <option value="10"<?= $opt(10, $ppp) ?>>10</option>
-                <option value="20"<?= $opt(20, $ppp) ?>>20</option>
-                <option value="40"<?= $opt(40, $ppp) ?>>40</option>
-            </select>
-        </label>
-        <div class="toggle-stack">
-            <label class="gem-field"><input class="gem-check gem-leaf" type="checkbox" name="show_signatures" value="1"<?= $sig ? ' checked' : '' ?>><span>Show signatures</span></label>
-            <label class="gem-field"><input class="gem-check gem-leaf" type="checkbox" name="show_avatars" value="1"<?= $av ? ' checked' : '' ?>><span>Show avatars</span></label>
-            <label class="gem-field"><input class="gem-check gem-leaf" type="checkbox" name="show_reactions" value="1"<?= $rx ? ' checked' : '' ?>><span>Show reactions</span></label>
+        <div class="field-grid">
+            <label class="field">
+                <span>Threads per page</span>
+                <select name="threads_per_page" class="input">
+                    <option value="20"<?= $opt(20, $tpp) ?>>20</option>
+                    <option value="25"<?= $opt(25, $tpp) ?>>25</option>
+                    <option value="50"<?= $opt(50, $tpp) ?>>50</option>
+                    <option value="100"<?= $opt(100, $tpp) ?>>100</option>
+                </select>
+            </label>
+            <label class="field">
+                <span>Posts per page</span>
+                <select name="posts_per_page" class="input">
+                    <option value="10"<?= $opt(10, $ppp) ?>>10</option>
+                    <option value="20"<?= $opt(20, $ppp) ?>>20</option>
+                    <option value="40"<?= $opt(40, $ppp) ?>>40</option>
+                </select>
+            </label>
+        </div>
+        <h3 class="account-subhead">What appears in a thread</h3>
+        <div class="switch-stack switch-stack-tight">
+            <label class="switchline"><input class="switch" type="checkbox" role="switch" name="show_signatures" value="1"<?= $sig ? ' checked' : '' ?>><span class="switch-text">Show signatures</span></label>
+            <label class="switchline"><input class="switch" type="checkbox" role="switch" name="show_avatars" value="1"<?= $av ? ' checked' : '' ?>><span class="switch-text">Show avatars</span></label>
+            <label class="switchline"><input class="switch" type="checkbox" role="switch" name="show_reactions" value="1"<?= $rx ? ' checked' : '' ?>><span class="switch-text">Show reactions</span></label>
         </div>
         <button class="btn" type="submit">Save reading preferences</button>
     </form>

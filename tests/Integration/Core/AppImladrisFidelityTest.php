@@ -153,8 +153,24 @@ final class AppImladrisFidelityTest extends TestCase
             $this->assertSeeText($res, 'scribe-panel');
         }
 
+        // Slice 16: the account panes carry the one boolean control the design
+        // models — the DS Switch, in all 13 of its positions on
+        // AccountSettings.dc.html. This assertion used to name `gem-check`,
+        // which production shipped on privacy and reading only; the design uses
+        // no gem checkbox anywhere on this screen, so the class it described is
+        // gone. The substrate claim it was making is what is re-pinned here
+        // (ledger FA-05, R-account-settings #112).
         $privacy = $this->get('/settings/privacy');
-        $this->assertSeeText($privacy, 'gem-check');
+        $this->assertSeeText($privacy, 'switchline');
+        $this->assertSeeText($privacy, 'switch-text');
+        self::assertStringNotContainsString('gem-check', $privacy->body(), 'Privacy must not mix a second boolean idiom.');
+
+        foreach (['/settings/privacy', '/settings/appearance', '/settings/preferences', '/settings/composing', '/settings/notifications'] as $path) {
+            $body = $this->get($path)->body();
+            self::assertStringContainsString('class="switch"', $body, $path . ' should use the design Switch.');
+            self::assertStringNotContainsString('gem-check', $body, $path . ' should carry no gem checkbox.');
+            self::assertStringNotContainsString('class="checkline"', $body, $path . ' should carry no third boolean idiom.');
+        }
     }
 
     public function test_settings_pages_keep_one_main_landmark_and_real_section_headings(): void
@@ -187,6 +203,30 @@ final class AppImladrisFidelityTest extends TestCase
 
         $notifications = $this->get('/settings/notifications')->body();
         self::assertStringContainsString('<h2 class="scribe-panel-head">Daily digest</h2>', $notifications);
+
+        // Slice 16 closes the gap between this test's name and its body. Four
+        // panes still emitted `<span class="scribe-panel-head">`, so their
+        // panels sat outside the heading outline — the same conversion Slice 15
+        // made on /settings/account, and the direction C-17 permits (never the
+        // reverse). Each pane's head is the design's own eyebrow string.
+        foreach ([
+            '/settings/privacy' => 'Who can see you',
+            '/settings/appearance' => 'Theme',
+            '/settings/preferences' => 'Pagination',
+            '/settings/composing' => 'Composing',
+            '/settings/connections' => 'Connected accounts',
+            '/settings/sessions' => 'Active sessions &amp; devices',
+            '/settings/blocks' => 'Blocked members',
+        ] as $path => $head) {
+            $body = $this->get($path)->body();
+            self::assertStringContainsString('<h2 class="scribe-panel-head">' . $head . '</h2>', $body, $path . ' should title its panel with a real heading.');
+            self::assertStringNotContainsString('<span class="scribe-panel-head">', $body, $path . ' should not demote a panel head to a span.');
+        }
+
+        // The second and third sections inside a single panel are h3, so the
+        // outline never skips a level (design :290, :343, :349).
+        self::assertStringContainsString('<h3 class="account-subhead">Density</h3>', $this->get('/settings/appearance')->body());
+        self::assertStringContainsString('<h3 class="account-subhead">What appears in a thread</h3>', $this->get('/settings/preferences')->body());
     }
 
     public function test_board_preference_toggles_keep_link_button_active_state(): void
