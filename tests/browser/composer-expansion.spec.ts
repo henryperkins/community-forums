@@ -190,15 +190,34 @@ for (const mode of [
     // 1. Collapsed on arrival.
     await expect(form).not.toHaveClass(/\bis-expanded\b/);
     await expect(form.locator('.composer-format-slot')).toBeHidden();
+    if (mode.rich) {
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, info.project.name, '92-composer-reply-collapsed.png'),
+        fullPage: false,
+      });
+    }
 
     // 2. Tapping the dock expands it and puts the caret in the active editor.
     await form.locator('.composer-box').click({ position: { x: 40, y: 20 } });
     await expect(form).toHaveClass(/\bis-expanded\b/);
     await expect(bodyOf(form, mode.rich)).toBeFocused();
+    if (mode.rich) {
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, info.project.name, '90-composer-reply-expanded-after.png'),
+        fullPage: false,
+      });
+    }
 
     // 3. Tapping outside an empty dock folds it back up.
     await tapOutside(page);
     await expect(form).not.toHaveClass(/\bis-expanded\b/);
+    if (mode.rich) {
+      await form.scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, info.project.name, '93-composer-reply-folded-after-outside-tap.png'),
+        fullPage: false,
+      });
+    }
   });
 
   test(`empty reply dock folds when focus tabs away, and keeps a draft open (${mode.name})`, async ({ page }, info) => {
@@ -315,6 +334,31 @@ for (const mode of [
   });
 }
 
+test('a restored browser-local reply draft opens instead of hiding in the collapsed dock', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'the compact dock is a mobile contract');
+  setWysiwygComposer(false);
+  await login(page);
+  const form = await openReply(page);
+  const draft = 'A browser-local draft must stay visible after reload.';
+
+  await typeBody(form, false, draft);
+  await expect.poll(async () => canonicalMarkdown(form)).toBe(draft);
+  await expect.poll(async () => page.evaluate((expected) => {
+    for (let index = 0; index < window.localStorage.length; index++) {
+      const key = window.localStorage.key(index);
+      if (key && window.localStorage.getItem(key) === expected) { return true; }
+    }
+    return false;
+  }, draft)).toBe(true);
+
+  await page.reload();
+  await dismissTour(page);
+  const restored = page.locator('form.reply-composer.composer-shell');
+  await expect(restored).toHaveAttribute('data-composer-dock', '1');
+  await expect.poll(async () => canonicalMarkdown(restored)).toBe(draft);
+  await expect(restored).toHaveClass(/\bis-expanded\b/);
+});
+
 test('the reply composer is one framed surface with no nested editor card', async ({ page }, info) => {
   setWysiwygComposer(true);
   await login(page);
@@ -374,6 +418,13 @@ test('the reply composer is one framed surface with no nested editor card', asyn
   await expect(source).toBeVisible();
   expect(await source.evaluate((node) => !!node.closest('.composer-format-slot'))).toBe(true);
   expect(await source.evaluate((node) => node.className)).not.toContain('btn-secondary');
+
+  const minimize = form.getByRole('button', { name: 'Minimize reply' });
+  if (info.project.name === 'mobile') {
+    await expect(minimize).toBeVisible();
+  } else {
+    await expect(minimize).toBeHidden();
+  }
 });
 
 test('an expanded empty reply leaves most of the mobile viewport to the conversation', async ({ page }, info) => {
@@ -422,6 +473,12 @@ test('new topic renders as one composer surface with the title as its header fie
     path: path.join(EVIDENCE_DIR, info.project.name, 'composer-new-topic-surface.png'),
     fullPage: false,
   });
+  if (info.project.name === 'mobile') {
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, info.project.name, '91-composer-new-topic-after.png'),
+      fullPage: false,
+    });
+  }
 
   // 11. Title and body remain editable and submittable.
   const unique = `Composer surface ${Date.now()}`;

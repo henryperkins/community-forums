@@ -2575,12 +2575,19 @@
     function wireExpansion(form) {
         if (!form.matches || !form.matches(DOCK_SELECTOR)) { return; }
         var minimize = shellPart(form, '[data-composer-minimize]');
+        var dockMedia = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(max-width: 860px)')
+            : null;
         // Stamping the dock here (rather than relying on the global .has-js) is
         // what lets the compact CSS apply: if this script never runs, the shell
         // stays fully expanded instead of collapsing into a dock nothing can
         // reopen.
         form.setAttribute('data-composer-dock', '1');
-        if (minimize) { minimize.hidden = false; }
+        if (minimize) {
+            var syncMinimize = function () { minimize.hidden = !dockMedia || !dockMedia.matches; };
+            syncMinimize();
+            if (dockMedia) { listenWithCleanup(form, dockMedia, 'change', syncMinimize); }
+        }
         watchDockPointer();
 
         function isExpanded() { return form.classList.contains('is-expanded'); }
@@ -2650,6 +2657,11 @@
             minimize: minimizeDock,
             collapseIfEmpty: collapseIfEmpty
         };
+        // Local draft restoration happens synchronously before this controller
+        // is installed, so its input event cannot expand the dock. Derive the
+        // initial presentation from the canonical adapter state instead of
+        // hiding a restored draft in the compact shell.
+        if (!composerIsEmpty(form)) { expand(false); }
         addCleanup(form, function () {
             form._rbExpansion = null;
             form.removeAttribute('data-composer-dock');

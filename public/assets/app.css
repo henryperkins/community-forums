@@ -1187,6 +1187,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     letter-spacing: .02em;
     cursor: pointer;
 }
+.composer-minimize[hidden] { display: none; }
 .composer-mode-toggle:hover,
 .composer-minimize:hover { border-color: var(--border-hair); background: var(--surface-sunken); color: var(--text-strong); }
 .composer-minimize { width: 26px; min-width: 26px; padding: 0; }
