@@ -347,13 +347,61 @@ final class AppLinkPreviewTest extends TestCase
         (new LinkPreviewRepository($this->db))->markRemoved($id, (int) $author['id']);
 
         $this->actingAs($this->makeAdmin(['username' => 'overreachadmin']));
-        $response = $this->post('/admin/link-previews/' . $id . '/refresh', ['return' => '/admin/link-previews']);
-
-        $this->assertRedirect($response);
+        $this->assertRedirect($this->post('/admin/link-previews/' . $id . '/refresh', ['return' => '/admin/link-previews']));
         self::assertSame('removed', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
+
+        // Purge is refused for the sharper reason: `purged` is revived by the
+        // queue upsert, so purging a removed row would re-arm the card on the
+        // author's next edit — the exact override refresh already refuses.
+        $this->assertRedirect($this->post('/admin/link-previews/' . $id . '/purge', ['return' => '/admin/link-previews']));
+        self::assertSame('removed', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
+
+        // Neither action is even offered on the console for that row.
+        $console = $this->get('/admin/link-previews');
+        $this->assertStatus(200, $console);
+        self::assertStringNotContainsString('/admin/link-previews/' . $id . '/refresh', $console->body());
+        self::assertStringNotContainsString('/admin/link-previews/' . $id . '/purge', $console->body());
+
+        // …and neither refusal is audited as if it had happened.
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action LIKE 'link_preview_refresh' OR action LIKE 'link_preview_purge'"),
+        );
 
         $this->expectException(ValidationException::class);
         $this->previewService()->refresh($id);
+    }
+
+    public function test_a_deleted_thread_stops_its_queued_previews_reaching_the_network(): void
+    {
+        // ThreadRepository::softDelete() only sets threads.is_deleted; the posts
+        // under it keep is_deleted = 0. Gating on the post's own flag alone would
+        // let a queued URL from a deleted topic still be fetched.
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewdelthread', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'delthreadauthor']);
+        $this->actingAs($author);
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Deleted thread topic',
+            'body' => 'See http://preview.example.test/deleted-thread',
+        ]));
+        $id = (int) $this->db->fetchValue('SELECT id FROM link_previews LIMIT 1');
+        $threadId = (int) $this->db->fetchValue('SELECT id FROM threads WHERE title = ?', ['Deleted thread topic']);
+
+        $this->db->run('UPDATE threads SET is_deleted = 1 WHERE id = ?', [$threadId]);
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue('SELECT is_deleted FROM posts WHERE thread_id = ? ORDER BY id ASC LIMIT 1', [$threadId]),
+            'soft-deleting a thread must not be assumed to flag its posts',
+        );
+
+        $stats = $this->previewService()->fetchQueued(5);
+
+        self::assertSame(['fetched' => 0, 'blocked' => 1, 'failed' => 0, 'skipped' => 0], $stats);
+        self::assertSame('blocked', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
     }
 
     public function test_preview_validation_requires_allowlist_and_blocks_private_resolutions(): void
@@ -448,6 +496,39 @@ final class AppLinkPreviewTest extends TestCase
             "SELECT action FROM moderation_log WHERE action LIKE 'link_preview_%' ORDER BY id ASC",
         );
         self::assertSame([['action' => 'link_preview_purge'], ['action' => 'link_preview_refresh']], $actions);
+    }
+
+    public function test_a_non_post_source_is_never_audited_against_a_post_id(): void
+    {
+        // link_previews.source_type also allows `summary`. Nothing queues summary
+        // bodies yet (ADR 0025 leaves that out of scope), but the console can
+        // still act on such a row, and a summary id is not a post id — anchoring
+        // the audit entry to `post` would attach it to an unrelated post.
+        $admin = $this->makeAdmin(['username' => 'summaryauditadmin']);
+        $this->actingAs($admin);
+        $url = 'http://preview.example.test/summary';
+        $id = $this->db->insert(
+            "INSERT INTO link_previews (source_type, source_id, url, url_hash, status, title, created_at)
+             VALUES ('summary', 4242, ?, ?, 'fetched', 'Summary card', UTC_TIMESTAMP())",
+            [$url, hash('sha256', $url)],
+        );
+
+        $this->assertRedirect($this->post('/admin/link-previews/' . $id . '/purge', ['return' => '/admin/link-previews']));
+
+        $log = $this->db->fetch(
+            "SELECT target_type, target_id, after_json FROM moderation_log WHERE action = 'link_preview_purge' ORDER BY id DESC LIMIT 1",
+        );
+        self::assertNotNull($log);
+        self::assertSame('setting', $log['target_type'], 'a summary id must not be logged as a post id');
+        self::assertSame(0, (int) $log['target_id']);
+        $after = json_decode((string) $log['after_json'], true);
+        self::assertSame('summary', $after['source_type']);
+        self::assertSame(4242, (int) $after['source_id']);
+
+        // …and the console never offers it a post anchor.
+        $console = $this->get('/admin/link-previews');
+        $this->assertStatus(200, $console);
+        self::assertStringNotContainsString('#p4242', $console->body());
     }
 
     public function test_admin_console_reports_the_gates_and_drives_the_allowlist_and_board_opt_in(): void

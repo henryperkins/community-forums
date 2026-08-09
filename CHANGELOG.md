@@ -27,6 +27,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   refresh refuses to override it — the console is not a way around a member's
   decision about their own post. Removed rows are returned only to viewers who
   could act on them.
+- Source eligibility is re-checked in the worker against the *thread* as well as
+  the post: `ThreadRepository::softDelete()` only sets `threads.is_deleted`, so
+  posts under a deleted topic keep `is_deleted = 0` and the post flag alone
+  would not have stopped their queued URLs being fetched.
 - The per-board opt-in is re-checked in the worker, not just at queue time, so
   a backlog queued while a board was on cannot still reach the network after an
   operator switches it off. Those rows are *held* (`queued`, reported as

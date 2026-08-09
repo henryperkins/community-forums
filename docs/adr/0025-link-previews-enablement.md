@@ -83,12 +83,15 @@ operator purge, which the queue upsert deliberately revives on the next edit.
    a suspended author is refused. Removed rows are returned only to viewers who
    could act on them, so nobody else can tell a card was ever there.
 
-5. **Operator refresh will not override an author removal.** `refresh()` throws
-   on a `removed` row and the console renders no refresh button for it. An
-   operator who needs the URL gone still has purge; an operator who disagrees
-   with a removal has the moderation surfaces, which are audited as moderation.
-   The console must not be a quiet way around a member's decision about their
-   own post.
+5. **No operator action overrides an author removal.** `refresh()` and
+   `purge()` both refuse a `removed` row, and the console renders neither button
+   for it. Refresh is the obvious case; purge is the sharper one, because
+   `purged` is deliberately revived by the queue upsert — purging a removed row
+   would silently re-arm the card on the author's next edit, which is exactly
+   the override refresh already refuses. A removed row has no stored metadata
+   left to wipe in any case. An operator who disagrees with a removal has the
+   moderation surfaces, which are audited as moderation; the console must not be
+   a quiet way around a member's decision about their own post.
 
 6. **DMs are never unfurled.** `queueFromBody` refuses `dm_message` outright.
    A server-side fetch would disclose to the URL's operator that a private
@@ -98,8 +101,11 @@ operator purge, which the queue upsert deliberately revives on the next edit.
 
 7. **Every operator write is audited.** Allowlist and kill-switch saves log
    against `setting`; board opt-in changes log against `board` with before/after;
-   per-row refresh/purge log against the **post** the row belongs to, so
-   `idx_modlog_target` surfaces them beside every other action on that post.
+   per-row refresh/purge on a **post** source log against that post, so
+   `idx_modlog_target` surfaces them beside every other action on it. A
+   non-post source (the schema also allows `summary`) must not borrow that
+   anchor — a summary id is not a post id — so it logs against `setting` with
+   the real source type and id in the payload.
 
 ## Consequences
 
@@ -119,12 +125,16 @@ operator purge, which the queue upsert deliberately revives on the next edit.
 
 ## Evidence
 
-- **PHPUnit** — `AppLinkPreviewTest` (18 tests): board opt-in required before
+- **PHPUnit** — `AppLinkPreviewTest` (20 tests): board opt-in required before
   anything queues; a queued row *held* (not retired) when its board opts out and
   drained when it returns, while a deleted source is retired as `blocked`; the
   worker fetching nothing once the flag is rolled back, without touching the
-  queue; a re-saved post not recounting its standing card as newly queued; kill
-  switch skips without consuming; author remove survives an
+  queue; a soft-deleted *thread* retiring its queued rows (its posts keep
+  `is_deleted = 0`, so the post flag alone would not have stopped the fetch); a
+  re-saved post not recounting its standing card as newly queued; refresh and
+  purge both refused on an author-removed row, unaudited, with neither button
+  rendered; a non-post source never audited against a post id; kill switch skips
+  without consuming; author remove survives an
   edit and restores; a non-author can neither see nor remove someone else's
   card; operator refresh refuses an author removal; the console's gate report,
   allowlist parsing (422 keeps the typed value), board toggle and audit rows;

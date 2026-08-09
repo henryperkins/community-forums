@@ -179,7 +179,7 @@ $statusClass = [
                             </td>
                             <td class="link-preview-source">
                                 <?php if (!empty($row['thread_href'])): ?>
-                                    <a href="<?= $e((string) $row['thread_href']) ?>#p<?= (int) $row['source_id'] ?>"><?= $e((string) $row['thread_title']) ?></a>
+                                    <a href="<?= $e((string) $row['thread_href'] . (string) $row['source_anchor']) ?>"><?= $e((string) $row['thread_title']) ?></a>
                                 <?php elseif ((string) $row['thread_title'] !== ''): ?>
                                     <?= $e((string) $row['thread_title']) ?>
                                 <?php else: ?>
@@ -198,11 +198,13 @@ $statusClass = [
                                         <button class="btn btn-small" type="submit" aria-label="Re-queue the preview for <?= $e((string) $row['url']) ?>">Refresh</button>
                                     </form>
                                 <?php endif; ?>
-                                <form method="post" action="/admin/link-previews/<?= (int) $row['id'] ?>/purge" class="inline-form">
-                                    <?= $this->csrfField() ?>
-                                    <input type="hidden" name="return" value="/admin/link-previews">
-                                    <button class="btn btn-small danger" type="submit" aria-label="Purge the stored metadata for <?= $e((string) $row['url']) ?>">Purge</button>
-                                </form>
+                                <?php if (!empty($row['can_purge'])): ?>
+                                    <form method="post" action="/admin/link-previews/<?= (int) $row['id'] ?>/purge" class="inline-form">
+                                        <?= $this->csrfField() ?>
+                                        <input type="hidden" name="return" value="/admin/link-previews">
+                                        <button class="btn btn-small danger" type="submit" aria-label="Purge the stored metadata for <?= $e((string) $row['url']) ?>">Purge</button>
+                                    </form>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -210,6 +212,6 @@ $statusClass = [
                 </table>
             </div>
         <?php endif; ?>
-        <p class="features-note">Purging clears the stored metadata; the URL is re-queued the next time its post is saved. An author-removed row stays removed &mdash; the console deliberately offers no refresh for it. Operator actions here are written to the audit log against the post they belong to.</p>
+        <p class="features-note">Purging clears the stored metadata; the URL is re-queued the next time its post is saved. An author-removed row stays removed &mdash; the console deliberately offers neither refresh nor purge for it, because purging would re-queue the card on the author&rsquo;s next edit. Operator actions here are written to the audit log against the post they belong to.</p>
     </section>
 <?= $this->partial('admin/_console_end') ?>

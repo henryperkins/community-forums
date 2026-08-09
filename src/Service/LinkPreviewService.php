@@ -167,9 +167,19 @@ final class LinkPreviewService
         $this->previews->markQueued($id);
     }
 
+    /**
+     * Operator purge. Refuses an author-removed row for the same reason refresh
+     * does, and for a sharper one: `purged` is deliberately revived by the queue
+     * upsert, so purging a `removed` row would quietly re-arm it and the card
+     * would come back the next time its author saved the post. A removed row has
+     * no stored metadata left to wipe anyway.
+     */
     public function purge(int $id): void
     {
-        $this->requireRow($id);
+        $row = $this->requireRow($id);
+        if ((string) $row['status'] === 'removed') {
+            throw new ValidationException(['preview' => 'That preview was removed by its author; purging would re-queue it on the next edit.']);
+        }
         $this->previews->markPurged($id);
     }
 
@@ -348,8 +358,14 @@ final class LinkPreviewService
         }
         if ($sourceType === 'post') {
             $post = $this->posts->findWithContext($sourceId);
+            // `thread_deleted` matters as much as the post's own flag:
+            // ThreadRepository::softDelete() only sets threads.is_deleted, so
+            // every post under a deleted thread still reads is_deleted = 0.
+            // Without this a queued URL from a deleted topic would still reach
+            // its external host on the next worker pass.
             if ($post === null
                 || (int) ($post['is_deleted'] ?? 0) === 1
+                || (int) ($post['thread_deleted'] ?? 0) === 1
                 || (int) ($post['is_pending'] ?? 0) === 1
                 || (string) ($post['board_visibility'] ?? '') !== 'public') {
                 return self::GATE_INELIGIBLE;

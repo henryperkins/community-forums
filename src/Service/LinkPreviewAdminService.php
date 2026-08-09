@@ -140,9 +140,16 @@ final class LinkPreviewAdminService
                 'fetched_at' => (string) ($row['fetched_at'] ?? ''),
                 'removed_at' => (string) ($row['removed_at'] ?? ''),
                 // An author-removed row is the member's decision; the console
-                // shows it but offers no refresh (LinkPreviewService::refresh
-                // refuses it too — the button would be a lie).
+                // shows it but offers neither action (the service refuses both —
+                // the buttons would be lies). Purge matters most: `purged` is
+                // revived by the queue upsert, so purging a removed row would
+                // re-arm the card on the author's next edit.
                 'can_refresh' => (string) $row['status'] !== 'removed',
+                'can_purge' => (string) $row['status'] !== 'removed',
+                // Only a post source has a #p anchor; a summary id is not a post id.
+                'source_anchor' => (string) $row['source_type'] === 'post'
+                    ? '#p' . (int) $row['source_id']
+                    : '',
             ];
         }
         return $rows;
@@ -213,23 +220,42 @@ final class LinkPreviewAdminService
      * change behind. The row is resolved first, so a missing preview 404s
      * before anything is written — the audit can never name `target_id = 0`.
      */
-    public function refreshPreview(User $admin, int $previewId): void
+    public function refreshPreview(User $admin, int $previewId): string
     {
-        $this->db->transaction(function () use ($admin, $previewId): void {
-            $row = $this->requirePreview($previewId);
-            $this->service->refresh($previewId);
-            $this->auditPreviewAction($admin, 'link_preview_refresh', $row);
-        });
+        return $this->act($admin, $previewId, 'link_preview_refresh', 'Preview queued for refresh.');
     }
 
     /** Wipe one preview's stored metadata and record it, atomically. */
-    public function purgePreview(User $admin, int $previewId): void
+    public function purgePreview(User $admin, int $previewId): string
     {
-        $this->db->transaction(function () use ($admin, $previewId): void {
-            // Read before the wipe so the audit row still carries the URL.
+        return $this->act($admin, $previewId, 'link_preview_purge', 'Preview metadata purged.');
+    }
+
+    /**
+     * One row action: resolve, mutate and audit inside a single transaction, and
+     * return the flash the console should show.
+     *
+     * A refusal (the author-removed guard) is a *policy* answer to a button
+     * press, not a rejected form — there is no typed input to preserve — so it
+     * comes back as a message rather than propagating a ValidationException the
+     * controller would have to translate into a 422 render of a page with no
+     * form state to restore.
+     */
+    private function act(User $admin, int $previewId, string $action, string $success): string
+    {
+        return $this->db->transaction(function () use ($admin, $previewId, $action, $success): string {
+            // Read before the mutation so the audit row still carries the URL.
             $row = $this->requirePreview($previewId);
-            $this->service->purge($previewId);
-            $this->auditPreviewAction($admin, 'link_preview_purge', $row);
+            try {
+                $action === 'link_preview_refresh'
+                    ? $this->service->refresh($previewId)
+                    : $this->service->purge($previewId);
+            } catch (ValidationException $e) {
+                return $e->first();
+            }
+            $this->auditPreviewAction($admin, $action, $row);
+
+            return $success;
         });
     }
 
@@ -262,17 +288,32 @@ final class LinkPreviewAdminService
         return $row;
     }
 
-    /** @param array<string,mixed> $row */
+    /**
+     * A post-sourced row is anchored to the post, not the preview id, so
+     * `idx_modlog_target` surfaces it alongside every other action taken on that
+     * post. Any other source type must NOT borrow that anchor — a summary id is
+     * not a post id, and logging it as one would attach the entry to an
+     * unrelated post. `moderation_log.target_type` has no `summary` member, so
+     * those land on `setting` with the real identity in the payload.
+     *
+     * @param array<string,mixed> $row
+     */
     private function auditPreviewAction(User $admin, string $action, array $row): void
     {
+        $sourceType = (string) ($row['source_type'] ?? '');
+        $isPost = $sourceType === 'post';
+
         $this->log->log([
             'actor_id' => $admin->id(),
             'action' => $action,
-            // Anchored to the post, not the preview id, so `idx_modlog_target`
-            // surfaces it alongside every other action taken on that post.
-            'target_type' => 'post',
-            'target_id' => (int) ($row['source_id'] ?? 0),
-            'after' => ['preview_id' => (int) $row['id'], 'url' => (string) ($row['url'] ?? '')],
+            'target_type' => $isPost ? 'post' : 'setting',
+            'target_id' => $isPost ? (int) ($row['source_id'] ?? 0) : 0,
+            'after' => [
+                'preview_id' => (int) $row['id'],
+                'url' => (string) ($row['url'] ?? ''),
+                'source_type' => $sourceType,
+                'source_id' => (int) ($row['source_id'] ?? 0),
+            ],
         ]);
     }
 

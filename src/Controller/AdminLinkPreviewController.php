@@ -58,26 +58,29 @@ final class AdminLinkPreviewController extends Controller
         return $this->redirectWithFlash($this->back($request), $message);
     }
 
-    /** @param array<string,string> $params */
+    /**
+     * Row actions are single button presses with no typed input, so the service
+     * answers with the flash to show — including when it refuses. There is no
+     * form state to preserve, which is what the 422 re-render contract exists
+     * for (the allowlist form above does use it).
+     *
+     * @param array<string,string> $params
+     */
     public function refresh(Request $request, array $params): Response
     {
         $admin = $this->requirePreviewOps();
-        try {
-            $this->admin()->refreshPreview($admin, (int) ($params['id'] ?? 0));
-        } catch (ValidationException $e) {
-            return $this->redirectWithFlash($this->back($request), $e->first());
-        }
+        $message = $this->admin()->refreshPreview($admin, (int) ($params['id'] ?? 0));
 
-        return $this->redirectWithFlash($this->back($request), 'Preview queued for refresh.');
+        return $this->redirectWithFlash($this->back($request), $message);
     }
 
     /** @param array<string,string> $params */
     public function purge(Request $request, array $params): Response
     {
         $admin = $this->requirePreviewOps();
-        $this->admin()->purgePreview($admin, (int) ($params['id'] ?? 0));
+        $message = $this->admin()->purgePreview($admin, (int) ($params['id'] ?? 0));
 
-        return $this->redirectWithFlash($this->back($request), 'Preview metadata purged.');
+        return $this->redirectWithFlash($this->back($request), $message);
     }
 
     private function admin(): LinkPreviewAdminService

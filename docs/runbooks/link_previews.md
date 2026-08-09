@@ -67,7 +67,7 @@ egress guard), Boards opted in.
 |---|---|---|
 | `queued` | discovered in a body, not fetched yet — also where a row waits while its board is opted out, the kill switch is on, or the flag is rolled back | run/inspect `worker:previews` |
 | `fetched` | metadata stored; renders a card | — |
-| `blocked` | refused before or during egress, **or** its source is permanently ineligible (post deleted, held, moved off a public board); the reason is on the row | allowlist the host, or leave it blocked |
+| `blocked` | refused before or during egress, **or** its source is permanently ineligible (post **or its thread** deleted, approval-held, moved off a public board); the reason is on the row | allowlist the host, or leave it blocked |
 | `failed` | transport, size or parse error | Refresh to retry once the cause is fixed |
 | `purged` | an operator wiped the metadata | re-queued automatically the next time its post is saved |
 | `removed` | **the author took it off their own post** | leave it alone — see below |
@@ -82,12 +82,13 @@ action on that post.
 A post's author — and anyone with board-scoped `core.post.delete_any` — can
 remove a card from that post with a single button under it. The row goes to
 `removed`, its metadata is wiped, and it stays removed through edits and
-re-saves. **Operator refresh deliberately refuses a `removed` row** and the
-console renders no refresh button for it: the console must not be a quiet way
-around a member's decision about their own post. If a preview genuinely must be
-gone, purge it; if you disagree with a removal, use the moderation surfaces,
-which are audited as moderation. The author can restore it themselves, which
-puts the row back in the fetch queue.
+re-saves. **Both operator row actions refuse a `removed` row** and the console
+renders neither button for it. Refresh is the obvious one. Purge matters more:
+`purged` is re-queued by design on the next save, so purging a removed row would
+quietly bring the card back the next time its author edited the post. A removed
+row has no stored metadata left to wipe anyway. If you disagree with a removal,
+use the moderation surfaces, which are audited as moderation. The author can
+restore it themselves, which puts the row back in the fetch queue.
 
 ## Incident response
 
@@ -102,7 +103,7 @@ Switch its opt-in off. Rows already queued for that board are **held, not
 retired** — the worker reports them as `skipped` and leaves them `queued`, so
 switching the board back on drains the backlog by itself with no per-row
 console work. Only a permanently ineligible source (deleted post, approval
-hold, a move off a public board) is retired as `blocked`.
+hold, a deleted thread, a move off a public board) is retired as `blocked`.
 
 **A specific host is misbehaving (slow, huge, or hostile).**
 Remove it from the allowlist and save. In-flight rows for that host fail their
