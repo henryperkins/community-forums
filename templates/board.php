@@ -42,7 +42,7 @@ $visibilityLabel = match ((string) ($board['visibility'] ?? 'public')) {
                 <?php if (!empty($can_follow_board)): ?>
                     <form method="post" action="/b/<?= (int) $board['id'] ?>/follow">
                         <?= $this->csrfField() ?>
-                        <button class="btn btn-secondary" type="submit" aria-pressed="<?= !empty($is_following_board) ? 'true' : 'false' ?>"><?= !empty($is_following_board) ? 'Following' : 'Follow board' ?></button>
+                        <button class="btn btn-secondary<?= !empty($is_following_board) ? ' btn-on' : '' ?>" type="submit" data-follow-board aria-pressed="<?= !empty($is_following_board) ? 'true' : 'false' ?>"><?= !empty($is_following_board) ? 'Following' : 'Follow board' ?></button>
                     </form>
                 <?php endif; ?>
                 <?php if (!empty($can_post)): ?>
@@ -54,6 +54,20 @@ $visibilityLabel = match ((string) ($board['visibility'] ?? 'public')) {
             </div>
         <?php endif; ?>
     </header>
+
+    <?php /* A pointer-only echo of the slab for the scrolled state. aria-hidden
+             because the slab's own controls are still in the DOM below; the FAB
+             and the #new-topic <details> keep the keyboard path intact. The
+             wrapper is zero-height, so it costs no flow height either way. */ ?>
+    <div class="board-identity-sticky" aria-hidden="true">
+        <div class="board-identity-condensed">
+            <h2><span class="hash">#</span><?= $e($board['name']) ?></h2>
+            <span class="board-identity-condensed-facts"><?= $topicCount ?> <?= $topicCount === 1 ? 'topic' : 'topics' ?></span>
+            <?php if (!empty($can_post)): ?>
+                <button class="btn btn-accent" type="button" tabindex="-1" hidden data-open-topic-composer aria-controls="new-topic"><span>New topic</span></button>
+            <?php endif; ?>
+        </div>
+    </div>
 
     <?php if (!empty($can_follow_board)): ?>
         <p class="board-identity-follow-note">Following affects your discovery feed; it does not change this board's order.</p>

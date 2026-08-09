@@ -159,7 +159,10 @@ async function settle(target: Locator): Promise<void> {
 async function openNewTopic(page: Page): Promise<Locator> {
   await page.goto('/c/general');
   await dismissTour(page);
-  await page.locator('[data-open-topic-composer]').click();
+  // The slab's trigger is display:none below 680px, where the FAB is the opener.
+  const promoted = page.locator('.board-identity-actions [data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  await ((await promoted.isVisible()) ? promoted : fab).click();
   const form = page.locator('form.composer-shell[data-composer-instance^="new-thread-board-"]').first();
   await expect(form).toBeVisible();
   await settle(form);

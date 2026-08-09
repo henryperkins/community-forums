@@ -98,7 +98,7 @@ async function openNewTopicComposer(page: Page) {
   // identity button (desktop) / FAB (mobile) to the real opener; the summary is
   // only the no-JS path. Pick whichever opener this viewport actually shows.
   const details = page.locator('details.composer-details#new-topic');
-  const promoted = page.locator('[data-open-topic-composer]');
+  const promoted = page.locator('.board-identity-actions [data-open-topic-composer]');
   const fab = page.locator('a.fab[href="#new-topic"]');
   const summary = details.locator(':scope > summary');
   const opener = await promoted.isVisible()

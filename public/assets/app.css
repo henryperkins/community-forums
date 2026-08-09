@@ -8426,6 +8426,96 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .board-view [data-open-topic-composer][hidden] { display: none; }
 .has-js .board-view .js-native-topic-trigger { display: none; }
 
+/* Follow board, on-state + pending. .btn-on is the shared on-state; the button
+   simply never asked for it. aria-busy is set by app.js on submit so the slow
+   POST has a visible acknowledgement. */
+.board-view .board-identity-actions .btn-on { border-color: var(--gold-500); }
+.board-view .board-identity-actions .btn[aria-busy="true"] {
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    cursor: progress;
+    opacity: .8;
+}
+.board-view .board-identity-actions .btn[aria-busy="true"]::before {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--gold-200);
+    border-top-color: var(--gold-600);
+    border-radius: 50%;
+    animation: rb-spin 620ms linear infinite;
+    content: "";
+}
+@keyframes rb-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .board-view .board-identity-actions .btn[aria-busy="true"]::before { animation: none; }
+}
+
+/* Condensed board identity: a zero-height sticky wrapper, so the bar floats over
+   the list and never adds flow height whether it is revealed or not — no height
+   constant to keep in sync anywhere. app.js toggles .is-condensed from one
+   IntersectionObserver on the slab. Slab colours stay hex literals here, matching
+   the .board-identity block above. */
+.board-view .board-identity-sticky {
+    position: sticky;
+    top: var(--topbar-h);
+    z-index: 6;
+    height: 0;
+    overflow: visible;
+}
+.board-view .board-identity-condensed {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 0 16px;
+    border-bottom: 2px solid #C29A44;
+    background: #2E4A3A;
+    color: #FAF6EC;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity var(--dur-base) var(--ease-calm), transform var(--dur-base) var(--ease-calm);
+    pointer-events: none;
+}
+.board-view.is-condensed .board-identity-condensed {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+}
+.board-view .board-identity-condensed h2 {
+    margin: 0;
+    /* A nowrap flex item's automatic minimum size is its full unwrapped width, so
+       without min-width: 0 a long board name pushes New topic out of the pane —
+       and the sticky wrapper is overflow: visible, so it escapes the viewport. */
+    min-width: 0;
+    overflow: hidden;
+    color: #FAF6EC;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.board-view .board-identity-condensed h2 .hash { color: #C29A44; }
+.board-view .board-identity-condensed-facts {
+    color: #DCE8DD;
+    font-family: var(--font-mono);
+    font-size: .6rem;
+    white-space: nowrap;
+}
+.board-view .board-identity-condensed .btn {
+    min-height: 28px;
+    margin-left: auto;
+    padding: 0 12px;
+    font-size: .72rem;
+}
+@media (prefers-reduced-motion: reduce) {
+    .board-view .board-identity-condensed { transition: none; }
+}
+/* No JS: nothing toggles .is-condensed, so the slab stays the only masthead. */
+html:not(.has-js) .board-view .board-identity-sticky { display: none; }
+
 .board-view .board-topics { margin-top: 22px; }
 .board-view .board-topics-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 9px; }
 .board-view .board-topics-heading .eyebrow { margin: 0; }
@@ -8433,7 +8523,13 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .board-view .board-topics-heading > p { margin: 0 0 4px; color: var(--text-faint); font-family: var(--font-mono); font-size: .63rem; }
 .board-view .board-topics-list { margin-top: 0; border-top: 1px solid var(--border-hair); }
 .board-view .board-topics-list > .thread-row-board + .thread-row-board { border-top: 0; }
+/* The row is a grid: unread gutter · monogram · copy · activity. The gutter is
+   always present, so read and unread rows share one left edge — as an extra flex
+   child the dot used to shift the whole unread row right by its own width. */
 .board-view .thread-row-board {
+    display: grid;
+    grid-template-columns: 10px 32px minmax(0, 1fr) 78px;
+    column-gap: 12px;
     align-items: center;
     min-height: 64px;
     padding: 8px 8px 8px 6px;
@@ -8444,24 +8540,100 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     overflow: hidden;
 }
 .board-view .thread-row-board > .monogram { width: 32px; height: 32px; font-size: .6rem; }
-.board-view .thread-row-board:hover,
-.board-view .thread-row-board:focus-within { background: var(--surface-raised); }
 .board-view .thread-row-board .thread-row-main { min-width: 0; }
+.board-view .thread-row-board > .unread-slot { display: flex; justify-content: center; }
+.board-view .thread-row-board > .unread-slot .unread-dot { margin-right: 0; }
+
+/* Title line — the title leads, and takes the star with it. */
+.board-view .thread-row-board .thread-title-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+.board-view .thread-row-board .thread-title {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.board-view .thread-row-board .thread-title-line .thread-star {
+    margin-left: 0;
+    align-self: baseline;
+    padding-left: 0;
+    font-size: .9rem;
+}
+
+/* Status as a fact on the meta line, not a label stacked above the title. */
+.board-view .thread-row-board .thread-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 8px;
+    margin-top: 4px;
+    font-size: .72rem;
+}
+.board-view .thread-row-board .thread-meta .sep { color: var(--border-strong); }
+.thread-flag { display: inline-flex; align-items: center; gap: 5px; }
+.thread-flag::before {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+}
+.thread-flag.is-solved { color: var(--on-done); }
+.thread-flag.is-needs  { color: var(--on-review); }
+.thread-flag.is-pinned { color: var(--gold-ink); }
+.thread-flag.is-locked { color: var(--text-faint); }
+.thread-flag.is-locked::before { display: none; }
+
+/* Activity column — the number is what you compare down the column. */
 .board-view .thread-row-activity {
     display: flex;
-    width: 80px;
-    flex: 0 0 80px;
     flex-direction: column;
     align-items: flex-end;
-    gap: 3px;
+    gap: 2px;
+    width: auto;
     color: var(--text-faint);
     font-family: var(--font-mono);
     font-size: .63rem;
+    font-variant-numeric: tabular-nums;
     line-height: 1.35;
     text-align: right;
 }
-.board-view .thread-row-activity span { color: var(--text-muted); }
+.board-view .thread-row-activity .thread-row-replies { color: var(--text-body); font-size: .82rem; }
 .board-view .thread-row-activity time { white-space: nowrap; }
+
+/* show_avatars = false: thread_row.php already omits the monogram, so the
+   selector reads the preference straight off the DOM — no template branch — and
+   the row tightens to the honest height for two text lines. */
+.board-view .thread-row-board:not(:has(> .monogram)) {
+    grid-template-columns: 10px minmax(0, 1fr) 78px;
+    min-height: 56px;
+}
+
+/* Hover previews the target by tinting the title, so pointing at the row says
+   "this row" and not "somewhere in here". The mock's green rule on the left is
+   the same 3px .thread-row::before uses for Solved / Needs answer / Pinned, so
+   hovering would have overwritten status.
+   Focus is drawn INSET: the row clips its own ring (overflow: hidden, which the
+   status rule needs), so the global :focus-visible outline on .thread-title is
+   suppressed and re-expressed here. :has(…:focus-visible) rather than
+   :focus-within so a mouse click doesn't trigger it, and the left 3px stays the
+   status colour — status survives focus. */
+.board-view .thread-row-board:hover { background: var(--surface-raised); }
+.board-view .thread-row-board:hover .thread-title { color: var(--brand); }
+.board-view .thread-row-board:has(.thread-title:focus-visible) {
+    background: var(--brand-subtle);
+    box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 5px var(--focus-ring);
+}
+/* The suppression carries the same :has() gate as its replacement on purpose: an
+   engine without :has() drops both together and the global outline survives,
+   rather than dropping only the ring and leaving focus with no indicator. */
+.board-view .thread-row-board:has(.thread-title:focus-visible) .thread-title:focus-visible { outline: 0; }
 
 .board-index .forum-directory__hero { max-width: 680px; padding: 4px 0 30px; }
 .board-index .forum-directory__hero h1 {
@@ -9163,26 +9335,86 @@ span.wf-btn {
     .board-index .forum-directory__counts { display: flex; gap: 13px; justify-self: start; text-align: left; }
     .board-index .forum-directory__counts > span { display: inline; }
     .board-index .forum-directory__counts strong { margin-right: 3px; }
-    .board-view .board-identity { align-items: flex-start; flex-direction: column; padding: 20px 18px 18px; }
-    .board-view .board-identity h1 { font-size: 2.35rem; }
-    .board-view .board-identity-actions { width: 100%; }
+    .board-view .board-identity { align-items: flex-start; flex-direction: column; padding: 18px 18px 16px; }
+    .board-view .board-identity h1 { font-size: 2rem; }
+    /* Follow shrinks to an outline chip on the slab; the FAB already carries New
+       topic at this width, which puts the first topic back above the fold. */
+    .board-view .board-identity-actions { width: auto; }
     .board-view .board-identity-actions form,
     .board-view .board-identity-actions .btn { flex: 1; }
+    /* The shell's touch-target floor, not the desktop 38px — both follow states. */
+    .board-view .board-identity-actions .btn { min-height: 44px; }
+    /* :not(.btn-on) so Following keeps the shared on-state at this width: this
+       rule ties .board-identity-actions .btn-on on specificity and would win on
+       source order, silently making Followed look identical to not-followed. */
+    .board-view .board-identity-actions .btn-secondary:not(.btn-on) {
+        border-color: #DCE8DD;
+        background: transparent;
+        color: #FAF6EC;
+    }
+    .board-view .board-identity-actions [data-open-topic-composer] { display: none; }
+    /* The condensed bar survives at this width, so its duplicate takes the touch
+       floor too; 46px cannot hold a 44px chip, so the bar grows to suit. */
+    .board-view .board-identity-condensed { min-height: 52px; }
+    .board-view .board-identity-condensed .btn { min-height: 44px; }
     .board-view .board-identity-follow-note { text-align: left; }
     .board-view .board-topics-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
     .board-view .board-topics-heading > p { margin: 0; }
-    .board-view .thread-row-board { flex-wrap: wrap; min-height: 72px; gap: 8px; padding: 9px 4px; }
+    /* Rows run edge to edge with their padding inside, so the whole band is the
+       tap target and the divider reads as a list rather than a stack of cards. */
+    .board-view .board-topics-list {
+        margin-inline: -18px;   /* cancels .read-pad's 18px gutter at this width */
+        border-top: 1px solid var(--border-hair);
+    }
+    /* Two rows, four columns. The gutter and the monogram span both rows; the
+       title takes the full width of row 1; the meta and the activity values share
+       row 2 — so no indent is hardcoded to clear an avatar.
+       The ACTIVITY track is the content-sized one and the meta absorbs the
+       leftover, not the other way round: human_datetime() always emits the full
+       "Aug 8, 2026 at 14:32 UTC" with white-space: nowrap, so an auto meta track
+       would take its max-content first and starve a minmax(0, 1fr) activity
+       column to nothing — and the row's own overflow: hidden would delete the
+       reply count and the stamp rather than overflow the page. A long meta line
+       wraps inside its own track instead. */
+    .board-view .thread-row-board {
+        grid-template-columns: 10px 32px minmax(0, 1fr) auto;
+        column-gap: 11px;
+        row-gap: 2px;
+        min-height: 68px;
+        padding: 11px 18px;
+    }
+    .board-view .thread-row-board > .unread-slot,
+    .board-view .thread-row-board > .monogram { grid-row: 1 / span 2; }
     .board-view .thread-row-board > .monogram { width: 32px; height: 32px; font-size: .6rem; }
+    .board-view .thread-row-board .thread-row-main { display: contents; }
+    .board-view .thread-row-board .thread-title-line { grid-area: 1 / 3 / 2 / 5; }
+    .board-view .thread-row-board .thread-meta { grid-area: 2 / 3; margin-top: 0; gap: 0 7px; font-size: .71rem; }
+    .board-view .thread-row-board:not(:has(> .monogram)) {
+        grid-template-columns: 10px minmax(0, 1fr) auto;
+        min-height: 60px;
+    }
+    .board-view .thread-row-board:not(:has(> .monogram)) .thread-title-line { grid-area: 1 / 2 / 2 / 4; }
+    .board-view .thread-row-board:not(:has(> .monogram)) .thread-meta { grid-area: 2 / 2; }
+    .board-view .thread-row-board:not(:has(> .monogram)) .thread-row-activity { grid-area: 2 / 3; }
+    .board-view .thread-row-board:active { background: var(--surface-raised); }
+    /* The title is allowed two lines here — there is no column beside it to clear. */
+    .board-view .thread-row-board .thread-title {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        text-wrap: pretty;
+    }
+    /* Replies and time sit beside the meta rather than wrapping below it. */
     .board-view .thread-row-activity {
-        width: auto;
-        flex: 1 0 calc(100% - 40px);
+        grid-area: 2 / 4;
         flex-direction: row;
         align-items: baseline;
-        gap: 6px;
-        margin-left: 40px;
+        justify-content: flex-start;
+        gap: 7px;
+        margin-left: 8px;
         text-align: left;
     }
-    .board-view .thread-row-activity span::after { margin-left: 7px; color: var(--border-strong); content: "·"; }
+    .board-view .thread-row-activity .thread-row-replies { font-size: .66rem; }
 }
 
 @media (max-width: 430px) {

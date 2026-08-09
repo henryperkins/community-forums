@@ -159,9 +159,12 @@ async function visit(page: Page, url: string): Promise<void> {
 }
 
 async function openEnhancedBoardComposer(page: Page): Promise<void> {
-  const promotedTrigger = page.locator('[data-open-topic-composer]');
-  await expect(promotedTrigger).toBeVisible();
-  await promotedTrigger.click();
+  // The slab's trigger is display:none below 680px, where the FAB is the opener.
+  const promotedTrigger = page.locator('.board-identity-actions [data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  const opener = (await promotedTrigger.isVisible()) ? promotedTrigger : fab;
+  await expect(opener).toBeVisible();
+  await opener.click();
 }
 
 async function openBoardComposer(page: Page): Promise<Locator> {
