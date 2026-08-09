@@ -207,7 +207,7 @@ async function dismissTour(page: Page): Promise<void> {
 async function openNewTopicComposer(page: Page): Promise<void> {
   await visit(page, '/c/general');
   const details = page.locator('details.composer-details#new-topic');
-  const promoted = page.locator('[data-open-topic-composer]');
+  const promoted = page.locator('.board-identity-actions [data-open-topic-composer]');
   const fab = page.locator('a.fab[href="#new-topic"]');
   const summary = details.locator(':scope > summary');
   const opener = await promoted.isVisible()
@@ -1430,7 +1430,7 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
   await expect(page.locator('details.composer-details#new-topic')).toHaveCount(1);
   // The promoted button ships `hidden` and is unhidden by JS, so at mobile widths
   // (and before enhancement) the FAB is the opener — assert whichever is present.
-  const promotedTopic = page.locator('[data-open-topic-composer]');
+  const promotedTopic = page.locator('.board-identity-actions [data-open-topic-composer]');
   const mobileTopic = page.locator('a.fab[href="#new-topic"]');
   await expect(await promotedTopic.isVisible() ? promotedTopic : mobileTopic).toBeVisible();
   await shot(page, info, '23-board-unarchived');

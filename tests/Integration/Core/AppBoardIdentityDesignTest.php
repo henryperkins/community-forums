@@ -50,6 +50,84 @@ final class AppBoardIdentityDesignTest extends TestCase
         $this->assertOrder($body, ['Follow board', 'New topic']);
     }
 
+    public function test_board_rows_keep_one_left_edge_and_lead_with_the_title(): void
+    {
+        $member = $this->makeUser(['username' => 'board_row_grid_member']);
+        $board = $this->makeBoard($this->makeCategory('Row grid'), ['slug' => 'row-grid']);
+        $this->makeThread($board, $member, 'A read topic');
+        $this->actingAs($member);
+
+        $body = $this->get('/c/row-grid')->body();
+
+        // The unread gutter is emitted read or unread, so the monogram column
+        // starts at the same x on every row.
+        self::assertSame(1, substr_count($body, 'class="unread-slot"'));
+        self::assertStringNotContainsString('<span class="unread-dot"', $body);
+        // The star travels with the title instead of floating to the row's end.
+        self::assertStringContainsString('<span class="thread-title-line">', $body);
+        // Board rows carry no chip stack: status is a word on the meta line.
+        self::assertStringNotContainsString('thread-row-chips', $body);
+        // The glyph is decorative; the count keeps its noun for screen readers.
+        self::assertStringContainsString('<span class="sr-only">0 replies</span>', $body);
+    }
+
+    public function test_board_rows_state_status_as_meta_flags_while_shared_rows_keep_chips(): void
+    {
+        $member = $this->makeUser(['username' => 'board_flag_member']);
+        $board = $this->makeBoard($this->makeCategory('Row flags'), ['slug' => 'row-flags']);
+        $thread = $this->makeThread($board, $member, 'A solved and pinned topic');
+        $threads = $this->threads();
+        $threads->setStatus((int) $thread['thread_id'], 'solved', (int) $member['id']);
+        $threads->setPinned((int) $thread['thread_id'], true);
+        $this->actingAs($member);
+
+        $body = $this->get('/c/row-flags')->body();
+
+        self::assertStringContainsString('<span class="thread-flag is-solved">Solved</span>', $body);
+        self::assertStringContainsString('<span class="thread-flag is-pinned">Pinned</span>', $body);
+        self::assertStringNotContainsString('chip chip-solved', $body);
+        self::assertStringNotContainsString('chip chip-pinned', $body);
+        // The 3px status rule still keys off the row class, not the flag.
+        self::assertStringContainsString('thread-status-solved', $body);
+        self::assertStringContainsString('thread-pinned', $body);
+    }
+
+    public function test_condensed_identity_duplicates_the_slab_without_a_second_keyboard_stop(): void
+    {
+        $member = $this->makeUser(['username' => 'board_condensed_member']);
+        $this->makeBoard($this->makeCategory('Condensed identity'), [
+            'slug' => 'condensed-identity',
+            'name' => 'Condensed Identity',
+        ]);
+        $this->actingAs($member);
+
+        $body = $this->get('/c/condensed-identity')->body();
+
+        self::assertStringContainsString('<div class="board-identity-sticky" aria-hidden="true">', $body);
+        self::assertStringContainsString('class="board-identity-condensed-facts"', $body);
+        // Two composer triggers now; only the slab's is reachable by keyboard,
+        // and only the slab's is server-rendered with aria-expanded.
+        self::assertSame(2, substr_count($body, 'data-open-topic-composer'));
+        self::assertSame(1, substr_count($body, 'tabindex="-1" hidden data-open-topic-composer'));
+        self::assertSame(1, substr_count($body, 'data-open-topic-composer aria-controls="new-topic" aria-expanded="false"'));
+    }
+
+    public function test_following_a_board_asks_for_the_shared_on_state(): void
+    {
+        $member = $this->makeUser(['username' => 'board_follow_on_state']);
+        $board = $this->makeBoard($this->makeCategory('Follow on state'), ['slug' => 'follow-on-state']);
+        $this->actingAs($member);
+
+        $before = $this->get('/c/follow-on-state')->body();
+        self::assertStringContainsString('class="btn btn-secondary" type="submit" data-follow-board', $before);
+        self::assertStringNotContainsString('btn-secondary btn-on', $before);
+
+        $this->assertRedirect($this->post('/b/' . (int) $board['id'] . '/follow'));
+
+        $after = $this->get('/c/follow-on-state')->body();
+        self::assertStringContainsString('class="btn btn-secondary btn-on" type="submit" data-follow-board', $after);
+    }
+
     public function test_guest_keeps_login_joinbar_without_follow_or_new_topic_controls(): void
     {
         $board = $this->makeBoard($this->makeCategory('Guest board'), ['slug' => 'guest-board']);

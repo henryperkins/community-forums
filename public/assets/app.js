@@ -814,17 +814,33 @@
     var newTopic = document.querySelector('details.composer-details');
     if (newTopic) {
         var trigger = newTopic.querySelector('summary');
-        var promotedTrigger = document.querySelector('[data-open-topic-composer]');
+        // A board page carries two promoted triggers now — the slab's and the
+        // condensed bar's duplicate — so this is a list. The slab's is the one
+        // that owns aria-expanded and the focus-restore fallback.
+        var promotedTriggers = document.querySelectorAll('[data-open-topic-composer]');
+        var promotedTrigger = document.querySelector('.board-identity-actions [data-open-topic-composer]')
+            || promotedTriggers[0]
+            || null;
         var fabTrigger = document.querySelector('a.fab[href="#new-topic"]');
         var topicReturnFocus = trigger;
         var openTopic = function (opener) {
-            topicReturnFocus = opener || trigger;
+            // The condensed bar is aria-hidden, so its button is not a legal
+            // place to send focus back to — fall back to the control it echoes.
+            topicReturnFocus = (opener && !opener.closest('[aria-hidden="true"]'))
+                ? opener
+                : (promotedTrigger || trigger);
             newTopic.open = true;
         };
-        if (promotedTrigger && trigger) {
-            promotedTrigger.hidden = false;
+        if (promotedTriggers.length && trigger) {
             trigger.classList.add('js-native-topic-trigger');
-            promotedTrigger.addEventListener('click', function () { openTopic(promotedTrigger); });
+            for (var promotedIndex = 0; promotedIndex < promotedTriggers.length; promotedIndex++) {
+                (function (promoted) {
+                    // The condensed duplicate is revealed by the scroll observer
+                    // below instead, so it stays hidden until the slab leaves.
+                    if (!promoted.closest('.board-identity-condensed')) { promoted.hidden = false; }
+                    promoted.addEventListener('click', function () { openTopic(promoted); });
+                }(promotedTriggers[promotedIndex]));
+            }
         }
         if (fabTrigger) {
             fabTrigger.addEventListener('click', function (event) {
@@ -832,14 +848,27 @@
                 openTopic(fabTrigger);
             });
         }
+        // focus() on a hidden element is a silent no-op that drops focus to the
+        // body, so the restore target is chosen from what is actually on screen —
+        // the slab button is display:none below 680px, where the FAB is the opener.
+        var canTakeFocus = function (el) {
+            return !!el && el.isConnected && !el.hidden
+                && !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+        };
         var closeTopic = function () {
             if (!newTopic.open) { return; }
             newTopic.open = false;
-            if (topicReturnFocus) { topicReturnFocus.focus(); }
+            var candidates = [topicReturnFocus, promotedTrigger, fabTrigger, trigger];
+            for (var restoreIndex = 0; restoreIndex < candidates.length; restoreIndex++) {
+                if (canTakeFocus(candidates[restoreIndex])) {
+                    candidates[restoreIndex].focus();
+                    return;
+                }
+            }
         };
         newTopic.addEventListener('toggle', function () {
-            if (promotedTrigger) {
-                promotedTrigger.setAttribute('aria-expanded', newTopic.open ? 'true' : 'false');
+            for (var expandedIndex = 0; expandedIndex < promotedTriggers.length; expandedIndex++) {
+                promotedTriggers[expandedIndex].setAttribute('aria-expanded', newTopic.open ? 'true' : 'false');
             }
             if (newTopic.open) {
                 var title = newTopic.querySelector('input[name="title"]');
@@ -864,6 +893,33 @@
         });
         var cancel = newTopic.querySelector('[data-close-composer]');
         if (cancel) { cancel.addEventListener('click', closeTopic); }
+    }
+
+    // Board identity condenses into a sticky bar once the slab scrolls under the
+    // topbar. One observer on the slab toggles one class; the bar is pure CSS and
+    // its wrapper is zero-height, so nothing here needs to know a bar height.
+    var boardView = document.querySelector('.board-view');
+    var boardSlab = document.querySelector('[data-board-identity]');
+    if (boardView && boardSlab && typeof window.IntersectionObserver === 'function') {
+        var condensedTrigger = boardView.querySelector('.board-identity-condensed [data-open-topic-composer]');
+        var topbarHeight = (window.getComputedStyle(document.documentElement)
+            .getPropertyValue('--topbar-h') || '').trim() || '62px';
+        new window.IntersectionObserver(function (entries) {
+            var condensed = !entries[entries.length - 1].isIntersecting;
+            boardView.classList.toggle('is-condensed', condensed);
+            // Keyboard order stays the slab's; the duplicate is pointer-only, and
+            // staying [hidden] while the slab is on screen keeps it out of the
+            // accessibility tree entirely.
+            if (condensedTrigger) { condensedTrigger.hidden = !condensed; }
+        }, { rootMargin: '-' + topbarHeight + ' 0px 0px 0px' }).observe(boardSlab);
+    }
+
+    // Following a board is a full round-trip; acknowledge the click while it runs.
+    var followBoard = document.querySelector('[data-follow-board]');
+    if (followBoard && followBoard.form) {
+        followBoard.form.addEventListener('submit', function () {
+            followBoard.setAttribute('aria-busy', 'true');
+        });
     }
 
     // Messages details rail (Phase 2 reimagine): a real column at wide widths, a

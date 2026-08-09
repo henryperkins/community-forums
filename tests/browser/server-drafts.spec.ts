@@ -36,7 +36,7 @@ async function dismissTour(page: Page): Promise<void> {
 
 async function openNewTopicComposer(page: Page): Promise<void> {
   const details = page.locator('details.composer-details#new-topic');
-  const promoted = page.locator('[data-open-topic-composer]');
+  const promoted = page.locator('.board-identity-actions [data-open-topic-composer]');
   const fab = page.locator('a.fab[href="#new-topic"]');
   const summary = details.locator(':scope > summary');
   const opener = await promoted.isVisible()
