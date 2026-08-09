@@ -9,6 +9,9 @@
 html {
     -webkit-text-size-adjust: 100%;
     scrollbar-gutter: stable;
+    /* .topbar is position:sticky, so an unpadded #post-N permalink scrolls the
+       post to y=0 — underneath the bar. Pad the scroll port by the bar itself. */
+    scroll-padding-block-start: calc(var(--topbar-h) + 12px);
 }
 
 body {
@@ -116,6 +119,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     grid-template-columns: var(--sidebar-w) 1fr;
     gap: 0;
     min-height: calc(100vh - var(--topbar-h));
+    min-height: calc(100dvh - var(--topbar-h));
 }
 .sidebar {
     border-right: 1px solid var(--border);
@@ -302,6 +306,18 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     max-width: 100%;
     margin-top: 4px;
 }
+/* field_error() emits a <p>, which cannot legally nest inside <label>, so the
+   member/auth/composer forms render the error as the label's NEXT SIBLING.
+   These two rules keep that reading as one field rather than two.
+   Specificity note: .field:has(+ .field-error) ties with .stacked .field above
+   at (0,2,0), so it has to stay below that block to win on source order. */
+.field:has(+ .field-error) { margin-bottom: 4px; }
+/* A .field-grid cell binding a label to its error: .field-grid is a two-column
+   grid, where a bare error sibling would claim its own cell and break the
+   pairing. Same shape as .features-field-cell on the admin features page. */
+.field-cell { display: flex; flex-direction: column; min-width: 0; }
+.field-cell > .field { margin-bottom: 0; }
+.field-cell > .field-error { margin: 4px 0 0; }
 .field-group { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 16px; }
 .field-group legend { font-weight: 600; padding: 0 6px; }
 .inline-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -1709,7 +1725,11 @@ body[data-route="inbox"] .main { padding: 0; }
 .inbox-shell {
     display: grid;
     grid-template-columns: minmax(320px, var(--list-w)) 1fr;
+    /* dvh tracks the mobile URL bar collapsing; vh is locked to the LARGE
+       viewport, so the shell overshoots by the bar's height while it shows.
+       Paired the same way as .thread-conversation below. */
     height: calc(100vh - var(--topbar-h));
+    height: calc(100dvh - var(--topbar-h));
     min-height: 520px;
 }
 .inbox-list {
@@ -1717,6 +1737,9 @@ body[data-route="inbox"] .main { padding: 0; }
     background: var(--surface-page);
     padding: 18px 18px 28px;
     overflow-y: auto;
+    /* Independently scrolling pane: reserve the gutter so the list does not
+       shift sideways the moment it grows past the fold. */
+    scrollbar-gutter: stable;
 }
 .inbox-list-head { border-bottom: none; padding-bottom: 0; margin-bottom: 6px; }
 .inbox-list-head .eyebrow { margin: 0 0 4px; }
@@ -1734,7 +1757,7 @@ body[data-route="inbox"] .main { padding: 0; }
 .inbox-tab:hover { background: var(--surface-sunken); text-decoration: none; }
 .inbox-tab.is-active { background: var(--brand); color: var(--parchment-50); font-weight: var(--weight-medium); border-color: var(--brand); }
 
-.inbox-reading { background: var(--surface-raised); padding: 24px 30px 44px; overflow-y: auto; min-width: 0; }
+.inbox-reading { background: var(--surface-raised); padding: 24px 30px 44px; overflow-y: auto; min-width: 0; scrollbar-gutter: stable; }
 .inbox-reading[aria-busy="true"] { opacity: .55; }
 .inbox-mobile-back { display: none; }
 .mobile-only { display: none; }
@@ -2425,6 +2448,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 }
 .auth-stage {
     min-height: 100vh;
+    min-height: 100dvh;
     position: relative;
     overflow: hidden;
     background: var(--twilight-900);
@@ -2546,6 +2570,43 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     outline: 0;
     border-color: transparent;
     box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500), 0 0 0 3px var(--focus-ring);
+}
+
+/* ── Client-side validity ─────────────────────────────────────────────────
+   :user-invalid styles a control only AFTER the member has interacted with it
+   — that is the whole difference from :invalid, which would paint every empty
+   required field on first paint. The server's ValidationException -> 422
+   re-render stays authoritative; this only stops the round-trip from being the
+   FIRST feedback. Pure CSS, so the strict CSP is untouched and the no-JS path
+   is unchanged. Deliberately no :user-valid success colour: green borders on
+   every satisfied field would compete with the error signal.
+
+   These live below .input-engraved:focus because that rule matches at the same
+   (0,2,0) specificity — source order is what settles a focused invalid field. */
+.input:user-invalid,
+.composer-input:user-invalid,
+.row-input:user-invalid {
+    border-color: var(--danger);
+}
+/* .input-engraved has border:0 and draws its edge with an inset box-shadow
+   under a clip-path, so border-color alone would be invisible on every auth
+   and account field. Restate the shadow instead. */
+.input-engraved:user-invalid,
+.textarea-engraved:user-invalid {
+    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--danger);
+}
+.input-engraved:user-invalid:focus,
+.textarea-engraved:user-invalid:focus {
+    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--danger), 0 0 0 3px var(--focus-ring);
+}
+/* Never colour alone. .field is <label class="field"><span>Label</span><input>,
+   so :has() reaches the label text to carry a non-colour second indicator —
+   which is also the only signal a screen reader gets for this client-side
+   state, since there is no JS to mirror it into aria-invalid. */
+.field:has(:user-invalid) > span:first-of-type::after {
+    content: " — check this field";
+    color: var(--danger);
+    font-weight: 400;
 }
 .auth-links {
     margin: 16px 0 0;
@@ -7204,6 +7265,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     display: grid;
     grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
     min-height: calc(100vh - var(--topbar-h));
+    min-height: calc(100dvh - var(--topbar-h));
     background: var(--dm-raised);
     transition: grid-template-columns 240ms var(--ease-calm);
 }

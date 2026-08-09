@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Admin;
 
 use App\Repository\SettingRepository;
+use Tests\Support\AssertsFieldWiring;
 use Tests\Support\TestCase;
 
 /**
@@ -15,6 +16,8 @@ use Tests\Support\TestCase;
  */
 final class AppFieldErrorA11yTest extends TestCase
 {
+    use AssertsFieldWiring;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -319,50 +322,4 @@ final class AppFieldErrorA11yTest extends TestCase
         return [$admin, $roleId];
     }
 
-    private function assertFieldWiredInForm(
-        string $body,
-        string $action,
-        string $tag,
-        string $field,
-        string $errorId,
-    ): void {
-        $matched = preg_match(
-            '/<form\b(?=[^>]*\baction="' . preg_quote($action, '/') . '")[^>]*>(?<form>.*?)<\/form>/s',
-            $body,
-            $matches,
-        );
-        self::assertSame(1, $matched, 'Expected to find form action ' . $action . '.');
-        $this->assertFieldWired((string) $matches['form'], $tag, $field, $errorId);
-        self::assertStringContainsString('id="' . $errorId . '"', $body);
-    }
-
-    private function assertFieldWired(
-        string $body,
-        string $tag,
-        string $field,
-        ?string $errorId = null,
-        ?string $elementId = null,
-    ): string {
-        $idAssertion = $elementId === null
-            ? ''
-            : '(?=[^>]*\\bid="' . preg_quote($elementId, '/') . '")';
-        $matched = preg_match(
-            '/<' . preg_quote($tag, '/') . '\\b'
-                . '(?=[^>]*\\bname="' . preg_quote($field, '/') . '")'
-                . $idAssertion
-                . '[^>]*>/s',
-            $body,
-            $matches,
-        );
-        self::assertSame(1, $matched, 'Expected to find the ' . $field . ' field.');
-        $element = $matches[0];
-        $errorId ??= 'err-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $field);
-        self::assertStringContainsString('aria-invalid="true"', $element);
-        self::assertMatchesRegularExpression(
-            '/aria-describedby="[^"]*' . preg_quote($errorId, '/') . '[^"]*"/',
-            $element,
-        );
-
-        return $element;
-    }
 }

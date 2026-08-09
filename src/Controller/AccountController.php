@@ -209,7 +209,7 @@ final class AccountController extends Controller
         try {
             $this->container->get(AccountService::class)->changePassword($user, $request->allInput());
         } catch (ValidationException $e) {
-            return $this->securityView($user, ['errors' => $e->errors], 422);
+            return $this->securityView($user, ['errors' => $e->errors, 'error_context' => 'password'], 422);
         }
         // A password change logs out every other session (SESS-1).
         $this->revokeOtherSessionsFor($user);
@@ -225,7 +225,7 @@ final class AccountController extends Controller
             $setup = $this->container->get(MfaService::class)
                 ->startEnrollment($user, (string) $request->post('current_password', ''));
         } catch (ValidationException $e) {
-            return $this->securityView($user, ['errors' => $e->errors], 422);
+            return $this->securityView($user, ['errors' => $e->errors, 'error_context' => 'totp_enroll'], 422);
         }
 
         return $this->securityView($user, ['totp_setup' => $setup]);
@@ -243,7 +243,7 @@ final class AccountController extends Controller
                 (string) $request->post('totp_code', ''),
             );
         } catch (ValidationException $e) {
-            return $this->securityView($user, ['errors' => $e->errors], 422);
+            return $this->securityView($user, ['errors' => $e->errors, 'error_context' => 'totp_confirm'], 422);
         }
 
         // Enabling a second factor evicts sessions that never satisfied it.
@@ -260,7 +260,7 @@ final class AccountController extends Controller
             $codes = $this->container->get(MfaService::class)
                 ->rotateRecoveryCodes($user, (string) $request->post('current_password', ''));
         } catch (ValidationException $e) {
-            return $this->securityView($user, ['errors' => $e->errors], 422);
+            return $this->securityView($user, ['errors' => $e->errors, 'error_context' => 'totp_rotate'], 422);
         }
 
         return $this->securityView($user, ['new_recovery_codes' => $codes]);
@@ -278,7 +278,7 @@ final class AccountController extends Controller
                 (string) $request->post('disable_code', ''),
             );
         } catch (ValidationException $e) {
-            return $this->securityView($user, ['errors' => $e->errors], 422);
+            return $this->securityView($user, ['errors' => $e->errors, 'error_context' => 'totp_disable'], 422);
         }
 
         // Disabling a second factor evicts other sessions (SESS-1 parity with enable).
@@ -291,6 +291,10 @@ final class AccountController extends Controller
     {
         return $this->view('account/security', array_replace([
             'errors' => [],
+            // Five forms on this page share one $errors array and each carries a
+            // current_password field. Without a context the template would light
+            // up all five and emit five copies of the same error id.
+            'error_context' => '',
             'totp' => $this->container->get(MfaService::class)->status($user->id()),
             'passkeys' => $this->container->get(FeatureFlags::class)->enabled('passkeys')
                 ? $this->container->get(PasskeyService::class)->status($user)

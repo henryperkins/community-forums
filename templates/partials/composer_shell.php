@@ -6,10 +6,17 @@
  * Required: action, context, target_id, instance_id, placeholder, maxlength,
  * body_value, submit_label.
  *
- * Optional: body_name, form_id, form_class, expanded, body_error, identity,
- * allow_anonymous, anonymous_checked, anonymous_disclosure, no_draft,
- * no_wysiwyg, thread_composer, wrapper_slot, header_slot, below_input_slot,
- * before_submit_slot.
+ * Optional: body_name, form_id, form_class, expanded, body_error,
+ * body_error_focus, identity, allow_anonymous, anonymous_checked,
+ * anonymous_disclosure, no_draft, no_wysiwyg, thread_composer, wrapper_slot,
+ * header_slot, below_input_slot, before_submit_slot.
+ *
+ * body_error_focus (default true) decides whether an errored body claims the
+ * 422 re-render's autofocus. A mount whose wrapper/header carries its own
+ * fields — /compose's board and title, the board New Topic title — passes
+ * false when one of those errored first, so focus lands on the FIRST problem
+ * and the document never carries two autofocus attributes. Same rule as
+ * {@see field_attrs()}, which owns the focus for those sibling fields.
  *
  * wrapper_slot vs header_slot: both carry a mount's extra fields, but
  * wrapper_slot renders OUTSIDE .composer-box (its fields read as their own
@@ -41,6 +48,7 @@ $shellFormId = isset($form_id) && $form_id !== null ? trim((string) $form_id) : 
 $shellFormClass = trim((string) ($form_class ?? ''));
 $shellExpanded = !empty($expanded);
 $shellBodyError = trim((string) ($body_error ?? ''));
+$shellBodyErrorFocus = (bool) ($body_error_focus ?? true);
 $shellIdentity = is_array($identity ?? null) ? $identity : null;
 $shellAllowAnonymous = !empty($allow_anonymous);
 $shellAnonymousChecked = !empty($anonymous_checked);
@@ -85,7 +93,7 @@ $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
             </span>
         </div>
         <?php if ($shellBodyError !== ''): ?><p class="field-error" id="<?= $e($shellBodyErrorId) ?>"><?= $e($shellBodyError) ?></p><?php endif; ?>
-        <textarea class="composer-input" id="<?= $e($shellBodyId) ?>" name="<?= $e($shellBodyName) ?>" rows="4" maxlength="<?= $shellMaxlength ?>" placeholder="<?= $e($shellPlaceholder) ?>"<?= $shellBodyError !== '' ? ' aria-describedby="' . $e($shellBodyErrorId) . '"' : '' ?> required><?= $e($shellBodyValue) ?></textarea>
+        <textarea class="composer-input" id="<?= $e($shellBodyId) ?>" name="<?= $e($shellBodyName) ?>" rows="4" maxlength="<?= $shellMaxlength ?>" placeholder="<?= $e($shellPlaceholder) ?>"<?= $shellBodyError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($shellBodyErrorId) . '"' . ($shellBodyErrorFocus ? ' autofocus' : '') : '' ?> required><?= $e($shellBodyValue) ?></textarea>
         <?php if ($shellBelowInputSlot !== null): ?><?php $shellBelowInputSlot(); ?><?php endif; ?>
         <div class="composer-upload-tray" data-composer-upload-tray aria-live="polite"></div>
         <div class="composer-actions-bar">

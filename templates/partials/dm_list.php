@@ -74,7 +74,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
         </div>
         <form class="dm-search" method="get" action="/messages" role="search">
             <?= $this->partial('partials/icon', ['name' => 'search']) ?>
-            <input type="search" name="q" value="<?= $e($dmQ) ?>" placeholder="Search messages…" aria-label="Search messages" maxlength="120">
+            <input type="search" enterkeyhint="search" name="q" value="<?= $e($dmQ) ?>" placeholder="Search messages…" aria-label="Search messages" maxlength="120">
             <?php if ($dmFilter === 'unread'): ?><input type="hidden" name="filter" value="unread"><?php endif; ?>
         </form>
         <nav class="dm-listpane-filters" aria-label="Message filters">

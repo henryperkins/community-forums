@@ -50,8 +50,10 @@ $failedAppealId = (int) ($old['appeal_id'] ?? 0);
                                 <span>Resolution note</span>
                                 <textarea name="note" class="input" rows="2"><?= $isFailedRow ? $e((string) ($old['note'] ?? '')) : '' ?></textarea>
                             </label>
+                            <?php // Exactly one row can be the failed one, so the summary takes
+                                  // focus: a role="alert" parsed with the document is silent. ?>
                             <?php if ($isFailedRow && !empty($errors)): ?>
-                                <div class="error-list" role="alert">
+                                <div class="error-list" role="alert" tabindex="-1" autofocus>
                                     <?php foreach ($errors as $message): ?>
                                         <p class="field-error"><?= $e($message) ?></p>
                                     <?php endforeach; ?>

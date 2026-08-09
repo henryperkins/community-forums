@@ -5,6 +5,8 @@ $newThreadInstance = 'new-thread-board-' . $newThreadBoardId;
 $newThreadTitleId = 'composer-title-' . $newThreadInstance;
 $newThreadTitleErrorId = 'composer-title-error-' . $newThreadInstance;
 $newThreadTitleError = trim((string) ($errors['title'] ?? ''));
+// Whichever of title/body errored FIRST owns the 422 re-render's focus.
+$newThreadTitleFocus = $newThreadTitleError !== '' && array_key_first($errors ?? []) === 'title';
 // board_id is a hidden field, so it can sit outside the box; the title is the
 // composer's own header field and belongs inside it.
 $newThreadWrapper = function () use ($board): void {
@@ -12,10 +14,10 @@ $newThreadWrapper = function () use ($board): void {
     <input type="hidden" name="board_id" value="<?= (int) $board['id'] ?>">
     <?php
 };
-$newThreadHeader = function () use ($old, $e, $newThreadTitleId, $newThreadTitleErrorId, $newThreadTitleError): void {
+$newThreadHeader = function () use ($old, $e, $newThreadTitleId, $newThreadTitleErrorId, $newThreadTitleError, $newThreadTitleFocus): void {
     ?>
     <?php if ($newThreadTitleError !== ''): ?><p class="field-error" id="<?= $e($newThreadTitleErrorId) ?>"><?= $e($newThreadTitleError) ?></p><?php endif; ?>
-    <input type="text" id="<?= $e($newThreadTitleId) ?>" name="title" class="input" placeholder="Title" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= $newThreadTitleError !== '' ? ' aria-describedby="' . $e($newThreadTitleErrorId) . '"' : '' ?> aria-label="Topic title" required>
+    <input type="text" id="<?= $e($newThreadTitleId) ?>" name="title" class="input" placeholder="Title" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= $newThreadTitleError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($newThreadTitleErrorId) . '"' . ($newThreadTitleFocus ? ' autofocus' : '') : '' ?> aria-label="Topic title" required>
     <?php
 };
 $newThreadBeforeSubmit = function (): void {
@@ -33,6 +35,7 @@ $newThreadBeforeSubmit = function (): void {
     'submit_label' => 'Create topic',
     'form_class' => 'stacked',
     'body_error' => (string) ($errors['body'] ?? ''),
+    'body_error_focus' => !$newThreadTitleFocus,
     'identity' => [
         'display_name' => $current_user->displayName(),
         'username' => $current_user->username(),

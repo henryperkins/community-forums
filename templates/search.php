@@ -4,7 +4,7 @@
     <header class="board-header">
         <h1>Search</h1>
         <form class="search-form" method="get" action="/search" role="search">
-            <input class="input" type="search" name="q" value="<?= $e($query) ?>"
+            <input class="input" type="search" enterkeyhint="search" name="q" value="<?= $e($query) ?>"
                    placeholder="Search threads and posts…" autofocus>
             <button class="btn" type="submit">Search</button>
         </form>

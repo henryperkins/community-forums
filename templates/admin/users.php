@@ -49,7 +49,7 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
             <div class="filter-grid member-directory-filter-grid member-directory-common-filter-grid">
                 <label class="field">
                     <span>Search</span>
-                    <input type="search" name="q" class="input" maxlength="80" value="<?= $e($filters['q'] ?? '') ?>" placeholder="Username, name, or email">
+                    <input type="search" enterkeyhint="search" name="q" class="input" maxlength="80" value="<?= $e($filters['q'] ?? '') ?>" placeholder="Username, name, or email">
                 </label>
                 <label class="field">
                     <span>Role</span>

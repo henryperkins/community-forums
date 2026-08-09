@@ -1,5 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Reset your password'); $this->section('variant', 'auth'); ?>
+<?php $forgotErrors = $errors ?? []; ?>
 <div class="auth-card">
     <h1>Reset your password</h1>
     <?php if (!empty($sent)): ?>
@@ -10,13 +11,13 @@
         </div>
     <?php else: ?>
         <p class="auth-lede">Enter your account's email address and we'll send you a link to choose a new password.</p>
-        <?php if (!empty($errors['email'])): ?><p class="field-error" role="alert"><?= $e($errors['email']) ?></p><?php endif; ?>
         <form method="post" action="/forgot" class="auth-form">
             <?= $this->csrfField() ?>
             <label class="field">
                 <span>Email</span>
-                <input type="email" name="email" class="input input-engraved" autocomplete="username" value="<?= $e($old['email'] ?? '') ?>" required autofocus>
+                <input type="email" name="email" class="input input-engraved" autocomplete="username" value="<?= $e($old['email'] ?? '') ?>"<?= field_attrs($forgotErrors, 'email') ?> required<?= $forgotErrors === [] ? ' autofocus' : '' ?>>
             </label>
+            <?= field_error($forgotErrors, 'email') ?>
             <button class="btn" type="submit">Send reset link</button>
         </form>
         <div class="auth-links"><p><a href="/login">Back to log in</a></p></div>

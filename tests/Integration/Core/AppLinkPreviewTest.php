@@ -18,10 +18,13 @@ use App\Security\BoardAuthority;
 use App\Security\EgressGuard;
 use App\Security\WriteGate;
 use App\Service\LinkPreviewService;
+use Tests\Support\AssertsFieldWiring;
 use Tests\Support\TestCase;
 
 final class AppLinkPreviewTest extends TestCase
 {
+    use AssertsFieldWiring;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -498,6 +501,12 @@ final class AppLinkPreviewTest extends TestCase
         $this->assertSeeText($response, 'Not a hostname or *.wildcard pattern');
         self::assertStringContainsString('good.example.test', $response->body());
         self::assertFalse((new SettingRepository($this->db))->has('link_preview_allowed_hosts'));
+
+        // The console honours the shared field-error contract: the textarea is
+        // marked invalid and points at the error line that is actually rendered
+        // (there is no JS on this path, so the markup IS the behaviour).
+        $textarea = $this->assertFieldWired($response->body(), 'textarea', 'allowed_hosts', 'err-preview-hosts');
+        self::assertStringContainsString('autofocus', $textarea);
     }
 
     public function test_console_and_member_routes_disappear_when_an_operator_rolls_the_flag_back(): void

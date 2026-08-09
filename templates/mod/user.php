@@ -11,11 +11,12 @@ $ctx = $error_context ?? null;
 $errs = $errors ?? [];
 $old = $old ?? [];
 /** Field error scoped to the originating form (so a warn error is not echoed under note). */
-$ferr = function (string $context, string $field) use ($ctx, $errs, $e): string {
-    if ($ctx !== $context || empty($errs[$field])) {
-        return '';
-    }
-    return '<p class="field-error">' . $e($errs[$field]) . '</p>';
+$ferr = function (string $context, string $field) use ($ctx, $errs): string {
+    return $ctx === $context ? field_error($errs, $field, 'err-' . $context . '-' . $field) : '';
+};
+/** Input attributes (aria-invalid / aria-describedby / autofocus) scoped the same way. */
+$fattr = function (string $context, string $field) use ($ctx, $errs): string {
+    return $ctx === $context ? field_attrs($errs, $field, 'err-' . $context . '-' . $field) : '';
 };
 /** Old value scoped to the originating form. */
 $oldv = function (string $context, string $field) use ($ctx, $old): string {
@@ -33,20 +34,22 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             ?>
             <section class="card mod-action-retry">
                 <h2>Moderation action failed</h2>
-                <?php foreach ($errs as $message): ?>
-                    <p class="field-error"><?= $e($message) ?></p>
+                <?php // This list IS the error display for the retry form below (the fields
+                      // do not repeat it), so each item carries the id its input points at. ?>
+                <?php foreach ($errs as $errField => $message): ?>
+                    <p class="field-error" id="err-<?= $e($ctx . '-' . $errField) ?>"><?= $e($message) ?></p>
                 <?php endforeach; ?>
                 <?php if (empty($is_self) && in_array($ctx, ['suspend', 'ban'], true)): ?>
                     <form method="post" action="/mod/u/<?= $uid ?>/<?= $e($ctx) ?>" class="stacked">
                         <?= $this->csrfField() ?>
                         <label class="field">
                             <span>Reason</span>
-                            <input type="text" name="reason" class="input" maxlength="255" value="<?= $e((string) ($old['reason'] ?? '')) ?>" required>
+                            <input type="text" name="reason" class="input" maxlength="255" value="<?= $e((string) ($old['reason'] ?? '')) ?>"<?= $fattr((string) $ctx, 'reason') ?> required>
                         </label>
                         <?php if ($ctx === 'suspend'): ?>
                             <label class="field">
                                 <span>Until (UTC, optional — leave blank for indefinite)</span>
-                                <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e((string) ($old['until'] ?? '')) ?>">
+                                <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e((string) ($old['until'] ?? '')) ?>"<?= $fattr((string) $ctx, 'until') ?>>
                             </label>
                         <?php endif; ?>
                         <div class="form-actions"><button class="btn danger" type="submit">Try again</button></div>
@@ -87,7 +90,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <input type="hidden" name="idempotency_key" value="<?= $e($warnKey) ?>">
                     <label class="field">
                         <span>Board<?= empty($is_admin) ? ' (where this member participated)' : '' ?></span>
-                        <select name="board_id" class="input"<?= empty($is_admin) ? ' required' : '' ?>>
+                        <select name="board_id" class="input"<?= $fattr('warn', 'board_id') ?><?= empty($is_admin) ? ' required' : '' ?>>
                             <?php if (!empty($is_admin)): ?>
                                 <option value="">Site-wide (no board)</option>
                             <?php endif; ?>
@@ -99,7 +102,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <?= $ferr('warn', 'board_id') ?>
                     <label class="field">
                         <span>Reason (shown to the member)</span>
-                        <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('warn', 'reason')) ?>" required>
+                        <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('warn', 'reason')) ?>"<?= $fattr('warn', 'reason') ?> required>
                     </label>
                     <?= $ferr('warn', 'reason') ?>
                     <div class="form-actions"><button class="btn" type="submit">Record warning</button></div>
@@ -113,7 +116,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <?= $this->csrfField() ?>
                     <label class="field">
                         <span>Note (visible to admins only)</span>
-                        <textarea name="body" class="input" rows="3" maxlength="65535"><?= $e($oldv('note', 'body')) ?></textarea>
+                        <textarea name="body" class="input" rows="3" maxlength="65535"<?= $fattr('note', 'body') ?>><?= $e($oldv('note', 'body')) ?></textarea>
                     </label>
                     <?= $ferr('note', 'body') ?>
                     <div class="form-actions"><button class="btn" type="submit">Add note</button></div>
