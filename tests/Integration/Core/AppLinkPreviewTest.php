@@ -6,9 +6,16 @@ namespace Tests\Integration\Core;
 
 use App\Core\Config;
 use App\Core\EgressBlockedException;
+use App\Core\ForbiddenException;
+use App\Core\ValidationException;
+use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
+use App\Repository\LinkPreviewRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
+use App\Security\BoardAuthority;
 use App\Security\EgressGuard;
+use App\Security\WriteGate;
 use App\Service\LinkPreviewService;
 use Tests\Support\TestCase;
 
@@ -23,11 +30,10 @@ final class AppLinkPreviewTest extends TestCase
     public function test_public_post_queues_and_renders_sanitized_preview_metadata(): void
     {
         $settings = new SettingRepository($this->db);
-        $settings->set('features', ['link_previews' => true]);
         $settings->set('link_preview_allowed_hosts', ['preview.example.test']);
 
         $cat = $this->makeCategory();
-        $board = $this->makeBoard($cat, ['slug' => 'previewpub']);
+        $board = $this->makeBoard($cat, ['slug' => 'previewpub', 'link_previews_enabled' => 1]);
         $author = $this->makeUser(['username' => 'previewer']);
         $this->actingAs($author);
 
@@ -59,11 +65,10 @@ final class AppLinkPreviewTest extends TestCase
     public function test_public_post_queues_every_distinct_preview_url(): void
     {
         $settings = new SettingRepository($this->db);
-        $settings->set('features', ['link_previews' => true]);
         $settings->set('link_preview_allowed_hosts', ['preview.example.test']);
 
         $cat = $this->makeCategory();
-        $board = $this->makeBoard($cat, ['slug' => 'previewmulti']);
+        $board = $this->makeBoard($cat, ['slug' => 'previewmulti', 'link_previews_enabled' => 1]);
         $author = $this->makeUser(['username' => 'previewmulti']);
         $this->actingAs($author);
 
@@ -82,9 +87,12 @@ final class AppLinkPreviewTest extends TestCase
 
     public function test_private_board_posts_do_not_queue_outbound_previews(): void
     {
-        (new SettingRepository($this->db))->set('features', ['link_previews' => true]);
         $cat = $this->makeCategory();
-        $board = $this->makeBoard($cat, ['slug' => 'previewpriv', 'visibility' => 'private']);
+        $board = $this->makeBoard($cat, [
+            'slug' => 'previewpriv',
+            'visibility' => 'private',
+            'link_previews_enabled' => 1,
+        ]);
         $author = $this->makeUser(['username' => 'privatepreview']);
         $this->db->run(
             'INSERT INTO board_members (board_id, user_id, added_by, created_at) VALUES (?, ?, NULL, UTC_TIMESTAMP())',
@@ -101,6 +109,173 @@ final class AppLinkPreviewTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM link_previews'));
     }
 
+    public function test_board_opt_in_is_required_before_anything_is_queued(): void
+    {
+        // DECISIONS §6 #5: previews are opt-in per board. A public board that
+        // never opted in must queue nothing even with the flag on by default and
+        // the host allowlisted — the flag makes the subsystem available, the
+        // board makes it active.
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewoptout']);
+        $author = $this->makeUser(['username' => 'optoutposter']);
+        $this->actingAs($author);
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Opted-out topic',
+            'body' => 'See http://preview.example.test/story',
+        ]));
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM link_previews'));
+
+        // Opting the board in makes the very next post queue.
+        $this->db->run('UPDATE boards SET link_previews_enabled = 1 WHERE id = ?', [(int) $board['id']]);
+        $thread = $this->db->fetch('SELECT id, slug FROM threads WHERE title = ?', ['Opted-out topic']);
+        $this->assertRedirect($this->post('/t/' . (int) $thread['id'] . '/reply', [
+            'body' => 'And also http://preview.example.test/second',
+        ]));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM link_previews'));
+    }
+
+    public function test_queued_row_is_blocked_when_its_board_opts_out_before_the_worker_runs(): void
+    {
+        // The fetch path re-checks eligibility: a backlog queued while the board
+        // was on must not still reach the network after the operator switched
+        // it off.
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewrevoke', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'revokeposter']);
+        $this->actingAs($author);
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Revoked topic',
+            'body' => 'See http://preview.example.test/story',
+        ]));
+        $id = (int) $this->db->fetchValue('SELECT id FROM link_previews LIMIT 1');
+
+        $this->db->run('UPDATE boards SET link_previews_enabled = 0 WHERE id = ?', [(int) $board['id']]);
+
+        $stats = $this->previewService()->fetchQueued(5);
+
+        self::assertSame(['fetched' => 0, 'blocked' => 1, 'failed' => 0, 'skipped' => 0], $stats);
+        $row = $this->db->fetch('SELECT status, error FROM link_previews WHERE id = ?', [$id]);
+        self::assertSame('blocked', $row['status']);
+        self::assertStringContainsString('no longer opted in', (string) $row['error']);
+    }
+
+    public function test_kill_switch_leaves_the_queue_untouched(): void
+    {
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        (new SettingRepository($this->db))->set('link_preview_kill_switch', true);
+        $id = $this->seedPreview('http://preview.example.test/killed');
+
+        $stats = $this->previewService()->fetchQueued(5);
+
+        self::assertSame(['fetched' => 0, 'blocked' => 0, 'failed' => 0, 'skipped' => 1], $stats);
+        self::assertSame('queued', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
+    }
+
+    public function test_author_can_remove_a_preview_and_the_removal_survives_an_edit(): void
+    {
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewauthor', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'removingauthor']);
+        $this->actingAs($author);
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Author removal topic',
+            'body' => 'See http://preview.example.test/story',
+        ]));
+        $thread = $this->db->fetch('SELECT id, slug FROM threads WHERE title = ?', ['Author removal topic']);
+        $preview = $this->db->fetch('SELECT * FROM link_previews LIMIT 1');
+        $postId = (int) $preview['source_id'];
+        $this->previewService()->storeFetchedMetadata(
+            (int) $preview['id'],
+            'http://preview.example.test/story',
+            200,
+            '<html><head><title>Unfurled title</title></head></html>',
+        );
+
+        $url = '/t/' . (int) $thread['id'] . '-' . $thread['slug'];
+        $this->assertSeeText($this->get($url), 'Unfurled title');
+
+        $this->assertRedirect($this->post('/posts/' . $postId . '/previews/' . (int) $preview['id'] . '/remove'));
+
+        $row = $this->db->fetch('SELECT status, title, removed_by FROM link_previews WHERE id = ?', [(int) $preview['id']]);
+        self::assertSame('removed', $row['status']);
+        self::assertNull($row['title']);
+        self::assertSame((int) $author['id'], (int) $row['removed_by']);
+
+        $page = $this->get($url);
+        self::assertStringNotContainsString('Unfurled title', $page->body());
+        $this->assertSeeText($page, 'Link preview removed from this post.');
+
+        // Editing the post re-runs the queue upsert; a removed card must not
+        // come back through it.
+        $this->assertRedirect($this->post('/posts/' . $postId . '/edit', [
+            'body' => 'Still see http://preview.example.test/story',
+        ]));
+        self::assertSame('removed', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [(int) $preview['id']]));
+
+        // …and the author can put it back.
+        $this->assertRedirect($this->post('/posts/' . $postId . '/previews/' . (int) $preview['id'] . '/restore'));
+        self::assertSame('queued', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [(int) $preview['id']]));
+    }
+
+    public function test_another_member_can_neither_see_nor_remove_someone_elses_preview(): void
+    {
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewstranger', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'previewowner']);
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Stranger topic',
+            'body' => 'See http://preview.example.test/story',
+        ]));
+        $thread = $this->db->fetch('SELECT id, slug FROM threads WHERE title = ?', ['Stranger topic']);
+        $preview = $this->db->fetch('SELECT * FROM link_previews LIMIT 1');
+        $this->previewService()->storeFetchedMetadata(
+            (int) $preview['id'],
+            'http://preview.example.test/story',
+            200,
+            '<html><head><title>Someone elses card</title></head></html>',
+        );
+
+        $this->actingAs($this->makeUser(['username' => 'previewstranger']));
+
+        $page = $this->get('/t/' . (int) $thread['id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'Someone elses card');
+        self::assertStringNotContainsString('Remove preview', $page->body());
+
+        $this->assertStatus(403, $this->post(
+            '/posts/' . (int) $preview['source_id'] . '/previews/' . (int) $preview['id'] . '/remove',
+        ));
+        self::assertSame('fetched', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [(int) $preview['id']]));
+    }
+
+    public function test_operator_refresh_refuses_to_override_an_author_removal(): void
+    {
+        $author = $this->makeUser(['username' => 'stickyremover']);
+        $id = $this->seedPreview('http://preview.example.test/sticky');
+        (new LinkPreviewRepository($this->db))->markRemoved($id, (int) $author['id']);
+
+        $this->actingAs($this->makeAdmin(['username' => 'overreachadmin']));
+        $response = $this->post('/admin/link-previews/' . $id . '/refresh', ['return' => '/admin/link-previews']);
+
+        $this->assertRedirect($response);
+        self::assertSame('removed', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
+
+        $this->expectException(ValidationException::class);
+        $this->previewService()->refresh($id);
+    }
+
     public function test_preview_validation_requires_allowlist_and_blocks_private_resolutions(): void
     {
         $settings = new SettingRepository($this->db);
@@ -108,6 +283,7 @@ final class AppLinkPreviewTest extends TestCase
 
         $blocked = new LinkPreviewService(
             $this->db,
+            new LinkPreviewRepository($this->db),
             new PostRepository($this->db),
             $settings,
             $this->config,
@@ -125,14 +301,22 @@ final class AppLinkPreviewTest extends TestCase
             $settings = new SettingRepository($this->db);
             $settings->set('link_preview_allowed_hosts', ['preview-pin.test']);
 
+            $cat = $this->makeCategory();
+            $board = $this->makeBoard($cat, ['slug' => 'previewpin', 'link_previews_enabled' => 1]);
+            $author = $this->makeUser(['username' => 'previewpinner']);
+            $thread = $this->makeThread($board, $author, 'Pin topic', 'Body without links.');
+            $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? ORDER BY id ASC LIMIT 1', [$thread['thread_id']]);
+
+            $url = 'http://preview-pin.test:' . $port . '/story';
             $id = $this->db->insert(
                 "INSERT INTO link_previews (source_type, source_id, url, url_hash, status, created_at)
-                 VALUES ('post', 1, ?, ?, 'queued', UTC_TIMESTAMP())",
-                ['http://preview-pin.test:' . $port . '/story', hash('sha256', 'http://preview-pin.test:' . $port . '/story')],
+                 VALUES ('post', ?, ?, ?, 'queued', UTC_TIMESTAMP())",
+                [$postId, $url, hash('sha256', $url)],
             );
 
             $service = new LinkPreviewService(
                 $this->db,
+                new LinkPreviewRepository($this->db),
                 new PostRepository($this->db),
                 $settings,
                 new Config(array_replace_recursive($this->config->all(), [
@@ -157,8 +341,6 @@ final class AppLinkPreviewTest extends TestCase
 
     public function test_admin_can_purge_and_refresh_preview_rows(): void
     {
-        $settings = new SettingRepository($this->db);
-        $settings->set('features', ['link_previews' => true]);
         $admin = $this->makeAdmin(['username' => 'previewadmin']);
         $this->actingAs($admin);
 
@@ -174,18 +356,125 @@ final class AppLinkPreviewTest extends TestCase
 
         $this->assertRedirect($this->post('/admin/link-previews/' . $id . '/refresh'));
         self::assertSame('queued', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
+
+        // Both operator actions are on the record, anchored to the post they
+        // belong to rather than the preview row.
+        $actions = $this->db->fetchAll(
+            "SELECT action FROM moderation_log WHERE action LIKE 'link_preview_%' ORDER BY id ASC",
+        );
+        self::assertSame([['action' => 'link_preview_purge'], ['action' => 'link_preview_refresh']], $actions);
+    }
+
+    public function test_admin_console_reports_the_gates_and_drives_the_allowlist_and_board_opt_in(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'consoleboard', 'name' => 'Console Board']);
+        $this->actingAs($this->makeAdmin(['username' => 'consoleadmin']));
+
+        // Nothing configured: the console names both remaining steps.
+        $page = $this->get('/admin/link-previews');
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'No hosts are allowlisted');
+        $this->assertSeeText($page, 'No public board has opted in');
+
+        $this->assertRedirect($this->post('/admin/link-previews/settings', [
+            'allowed_hosts' => "Preview.Example.test\n*.docs.example.test",
+            'kill_switch' => '0',
+        ]));
+        self::assertSame(
+            ['preview.example.test', '*.docs.example.test'],
+            (new SettingRepository($this->db))->get('link_preview_allowed_hosts'),
+        );
+
+        $this->assertRedirect($this->post('/admin/link-previews/boards/' . (int) $board['id'], [
+            'enabled' => '1',
+            'return' => '/admin/link-previews',
+        ]));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT link_previews_enabled FROM boards WHERE id = ?', [(int) $board['id']]));
+
+        $page = $this->get('/admin/link-previews');
+        $this->assertStatus(200, $page);
+        self::assertStringNotContainsString('Nothing is being fetched right now', $page->body());
+
+        // The board opt-in is audited so a later "who turned this on" is answerable.
+        self::assertSame(
+            'link_preview_board_enable',
+            (string) $this->db->fetchValue("SELECT action FROM moderation_log WHERE target_type = 'board' AND action LIKE 'link_preview_%' ORDER BY id DESC LIMIT 1"),
+        );
+    }
+
+    public function test_console_rejects_a_malformed_allowlist_without_losing_the_typed_value(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'badhostadmin']));
+
+        $response = $this->post('/admin/link-previews/settings', [
+            'allowed_hosts' => "good.example.test\nhttps://not-a-host/path",
+            'kill_switch' => '0',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $this->assertSeeText($response, 'Not a hostname or *.wildcard pattern');
+        self::assertStringContainsString('good.example.test', $response->body());
+        self::assertFalse((new SettingRepository($this->db))->has('link_preview_allowed_hosts'));
+    }
+
+    public function test_console_and_member_routes_disappear_when_an_operator_rolls_the_flag_back(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['link_previews' => false]);
+        $author = $this->makeUser(['username' => 'rolledbackauthor']);
+        $id = $this->seedPreview('http://preview.example.test/rolled');
+
+        $this->actingAs($this->makeAdmin(['username' => 'rolledbackadmin']));
+        $this->assertStatus(404, $this->get('/admin/link-previews'));
+        $this->assertStatus(404, $this->post('/admin/link-previews/' . $id . '/purge'));
+
+        $this->actingAs($author);
+        $this->assertStatus(404, $this->post('/posts/1/previews/' . $id . '/remove'));
+    }
+
+    public function test_a_suspended_author_cannot_remove_a_preview(): void
+    {
+        // State beats role: suspension closes every write path, including this one.
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewsuspend', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'suspendedauthor']);
+        $thread = $this->makeThread($board, $author, 'Suspended topic', 'Body without links.');
+        $postId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? ORDER BY id ASC LIMIT 1',
+            [$thread['thread_id']],
+        );
+        $id = $this->seedPreview('http://preview.example.test/suspended', $postId);
+        $this->db->run(
+            "UPDATE users SET status = 'suspended', suspended_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 DAY) WHERE id = ?",
+            [(int) $author['id']],
+        );
+
+        $this->expectException(ForbiddenException::class);
+        $this->previewService()->remove($this->userEntity($this->db->fetch('SELECT * FROM users WHERE id = ?', [(int) $author['id']])), $id);
+    }
+
+    private function seedPreview(string $url, int $sourceId = 1): int
+    {
+        return $this->db->insert(
+            "INSERT INTO link_previews (source_type, source_id, url, url_hash, status, created_at)
+             VALUES ('post', ?, ?, ?, 'queued', UTC_TIMESTAMP())",
+            [$sourceId, $url, hash('sha256', $url)],
+        );
     }
 
     private function previewService(): LinkPreviewService
     {
         return new LinkPreviewService(
             $this->db,
+            new LinkPreviewRepository($this->db),
             new PostRepository($this->db),
             new SettingRepository($this->db),
             new Config(array_replace_recursive($this->config->all(), [
                 'link_previews' => ['allow_http' => true],
             ])),
             new EgressGuard(true, [], static fn (string $host): array => ['93.184.216.34']),
+            new WriteGate(),
+            new BoardAuthority(new WriteGate(), new BoardModeratorRepository($this->db), new BoardRepository($this->db)),
         );
     }
 

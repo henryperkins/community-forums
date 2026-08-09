@@ -46,6 +46,7 @@ use App\Controller\HealthController;
 use App\Controller\HomeController;
 use App\Controller\InboxController;
 use App\Controller\LeaderboardController;
+use App\Controller\LinkPreviewController;
 use App\Controller\MediaController;
 use App\Controller\ModerationController;
 use App\Controller\OAuthController;
@@ -88,6 +89,7 @@ use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\IdentityProviderRepository;
 use App\Repository\InvitationRepository;
+use App\Repository\LinkPreviewRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ModerationAppealRepository;
 use App\Repository\ConversationRepository;
@@ -204,6 +206,7 @@ use App\Service\DirectMessageService;
 use App\Service\FeedService;
 use App\Service\FollowService;
 use App\Service\LegacyAuthorityProjection;
+use App\Service\LinkPreviewAdminService;
 use App\Service\LinkPreviewService;
 use App\Service\IdentityProviderService;
 use App\Service\InvitationService;
@@ -1039,8 +1042,10 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(FeatureFlags::class)->enabled('tags'),
         ));
+        $c->bind(LinkPreviewRepository::class, fn (Container $c) => new LinkPreviewRepository($c->get(Database::class)));
         $c->bind(LinkPreviewService::class, fn (Container $c) => new LinkPreviewService(
             $c->get(Database::class),
+            $c->get(LinkPreviewRepository::class),
             $c->get(PostRepository::class),
             $c->get(SettingRepository::class),
             $config,
@@ -1048,6 +1053,17 @@ final class App
                 (bool) $config->get('link_previews.allow_http', false),
                 (array) $config->get('link_previews.allowed_private_cidrs', []),
             ),
+            $c->get(WriteGate::class),
+            $c->get(BoardAuthority::class),
+        ));
+        $c->bind(LinkPreviewAdminService::class, fn (Container $c) => new LinkPreviewAdminService(
+            $c->get(Database::class),
+            $c->get(LinkPreviewRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(LinkPreviewService::class),
+            $config,
         ));
         $c->bind(PollService::class, fn (Container $c) => new PollService(
             $c->get(Database::class),
@@ -2230,6 +2246,8 @@ final class App
 
         // Engagement (P2-01/P2-02): reactions + stars.
         $r->post('/posts/{id}/react', [EngagementController::class, 'react']);
+        $r->post('/posts/{id}/previews/{preview}/remove', [LinkPreviewController::class, 'remove']);
+        $r->post('/posts/{id}/previews/{preview}/restore', [LinkPreviewController::class, 'restore']);
         $r->post('/t/{id}/star', [EngagementController::class, 'star']);
 
         // Subscriptions + notifications (P2-03).
@@ -2382,6 +2400,12 @@ final class App
         $r->post('/admin/badge-rules/{id}/disable', [AdminBadgeRuleController::class, 'disable']);
         $r->post('/admin/badge-rules/{id}/backfill', [AdminBadgeRuleController::class, 'backfill']);
         $r->post('/admin/badge-rules/{id}/revoke', [AdminBadgeRuleController::class, 'revoke']);
+        // Specific segments first: {id} compiles to \d+, so /settings and
+        // /boards/{id} could not collide, but the console is the surface the
+        // rest of these actions redirect back to — keep it registered first.
+        $r->get('/admin/link-previews', [AdminLinkPreviewController::class, 'index']);
+        $r->post('/admin/link-previews/settings', [AdminLinkPreviewController::class, 'saveSettings']);
+        $r->post('/admin/link-previews/boards/{id}', [AdminLinkPreviewController::class, 'setBoard']);
         $r->post('/admin/link-previews/{id}/refresh', [AdminLinkPreviewController::class, 'refresh']);
         $r->post('/admin/link-previews/{id}/purge', [AdminLinkPreviewController::class, 'purge']);
         $r->get('/admin/custom-emoji', [AdminCustomEmojiController::class, 'index']);

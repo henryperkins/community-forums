@@ -7,20 +7,44 @@ namespace App\Service;
 use App\Core\Config;
 use App\Core\Database;
 use App\Core\EgressBlockedException;
+use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
+use App\Domain\User;
+use App\Repository\LinkPreviewRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
+use App\Security\BoardAuthority;
+use App\Security\Cap;
 use App\Security\EgressGuard;
+use App\Security\WriteGate;
 
+/**
+ * Server-side link unfurling (DECISIONS §6 #5, ADR 0025).
+ *
+ * Three independent gates decide whether a URL is ever fetched, and all three
+ * must open:
+ *
+ *   1. the `link_previews` feature flag — makes the subsystem available;
+ *   2. `boards.link_previews_enabled` — the locked per-board opt-in, default 0,
+ *      re-checked at fetch time so switching a board off stops its backlog;
+ *   3. `link_preview_allowed_hosts` + EgressGuard — the SSRF allowlist, which
+ *      is empty by default, so a fresh install fetches nothing.
+ *
+ * Members hold the last word on their own posts: `remove()` parks a card in the
+ * sticky `removed` state that survives edits, re-queues, and operator refresh.
+ */
 final class LinkPreviewService
 {
     public function __construct(
         private Database $db,
+        private LinkPreviewRepository $previews,
         private PostRepository $posts,
         private SettingRepository $settings,
         private Config $config,
         private EgressGuard $egress,
+        private ?WriteGate $writeGate = null,
+        private ?BoardAuthority $boardAuthority = null,
     ) {
     }
 
@@ -35,66 +59,97 @@ final class LinkPreviewService
             if ($this->isNeverFetchedLocalUrl($url)) {
                 continue;
             }
-            $queued += $this->db->run(
-                "INSERT INTO link_previews (source_type, source_id, url, url_hash, status, created_at)
-                 VALUES (?, ?, ?, ?, 'queued', UTC_TIMESTAMP())
-                 ON DUPLICATE KEY UPDATE status = IF(status = 'purged', 'queued', status), updated_at = UTC_TIMESTAMP()",
-                [$sourceType, $sourceId, $url, hash('sha256', $url)],
-            )->rowCount() > 0 ? 1 : 0;
+            $queued += $this->previews->queue($sourceType, $sourceId, $url, hash('sha256', $url)) ? 1 : 0;
         }
         return $queued;
     }
 
-    /** @return array<int,array<string,mixed>> */
-    public function cardsForSources(string $sourceType, array $sourceIds): array
+    /**
+     * Renderable cards keyed by source id. Rows the viewer may act on are
+     * flagged `can_manage`; for those sources the author-removed rows are
+     * returned too (status `removed`, no metadata) so the thread can offer a
+     * restore. Everyone else sees only fetched cards.
+     *
+     * @param list<int>|array<int,mixed> $sourceIds
+     * @param list<int>|array<int,mixed> $manageableIds sources whose removed rows the viewer may see
+     * @return array<int,array<int,array<string,mixed>>>
+     */
+    public function cardsForSources(string $sourceType, array $sourceIds, array $manageableIds = []): array
     {
-        $sourceIds = array_values(array_unique(array_filter(array_map('intval', $sourceIds), fn (int $id): bool => $id > 0)));
+        $sourceIds = $this->normalizeIds($sourceIds);
         if ($sourceIds === []) {
             return [];
         }
-        $placeholders = implode(',', array_fill(0, count($sourceIds), '?'));
-        $rows = $this->db->fetchAll(
-            "SELECT * FROM link_previews
-             WHERE source_type = ? AND source_id IN ($placeholders) AND status = 'fetched'
-             ORDER BY id ASC",
-            array_merge([$sourceType], $sourceIds),
-        );
+        $manageable = array_flip(array_intersect($this->normalizeIds($manageableIds), $sourceIds));
+
+        $rows = $manageable === []
+            ? $this->previews->fetchedForSources($sourceType, $sourceIds)
+            : $this->previews->authorVisibleForSources($sourceType, $sourceIds);
+
         $out = [];
         foreach ($rows as $row) {
-            $out[(int) $row['source_id']][] = [
+            $sourceId = (int) $row['source_id'];
+            $canManage = isset($manageable[$sourceId]);
+            $removed = (string) $row['status'] === 'removed';
+            if ($removed && !$canManage) {
+                continue;
+            }
+            $out[$sourceId][] = [
+                'id' => (int) $row['id'],
                 'url' => (string) ($row['final_url'] ?: $row['url']),
                 'title' => (string) ($row['title'] ?: $row['url']),
                 'description' => (string) ($row['description'] ?? ''),
                 'site_name' => (string) ($row['site_name'] ?? ''),
+                'removed' => $removed,
+                'can_manage' => $canManage,
             ];
         }
         return $out;
     }
 
+    /**
+     * Member-facing suppression. Authorised for the post's author and for
+     * anyone who can moderate its board; account state still beats role, so a
+     * suspended author cannot reach it.
+     */
+    public function remove(User $actor, int $previewId): void
+    {
+        $row = $this->requireManageableRow($actor, $previewId);
+        if ((string) $row['status'] === 'removed') {
+            return;
+        }
+        $this->previews->markRemoved($previewId, $actor->id());
+    }
+
+    /** Undo a removal: the card goes back through the normal fetch queue. */
+    public function restore(User $actor, int $previewId): void
+    {
+        $row = $this->requireManageableRow($actor, $previewId);
+        if ((string) $row['status'] !== 'removed') {
+            return;
+        }
+        $this->previews->markQueued($previewId);
+    }
+
+    /**
+     * Operator refresh. Deliberately refuses an author-removed row: the console
+     * must not be a way around a member's decision about their own post — an
+     * operator who needs the URL gone has purge, and one who disagrees with the
+     * removal has the moderation surfaces.
+     */
     public function refresh(int $id): void
     {
-        $this->requireRow($id);
-        $this->db->run(
-            "UPDATE link_previews
-             SET status = 'queued', final_url = NULL, http_status = NULL, error = NULL,
-                 title = NULL, description = NULL, image_url = NULL, site_name = NULL,
-                 fetched_at = NULL, purged_at = NULL, updated_at = UTC_TIMESTAMP()
-             WHERE id = ?",
-            [$id],
-        );
+        $row = $this->requireRow($id);
+        if ((string) $row['status'] === 'removed') {
+            throw new ValidationException(['preview' => 'That preview was removed by its author; refresh will not override it.']);
+        }
+        $this->previews->markQueued($id);
     }
 
     public function purge(int $id): void
     {
         $this->requireRow($id);
-        $this->db->run(
-            "UPDATE link_previews
-             SET status = 'purged', final_url = NULL, http_status = NULL, error = NULL,
-                 title = NULL, description = NULL, image_url = NULL, site_name = NULL,
-                 metadata = NULL, purged_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP()
-             WHERE id = ?",
-            [$id],
-        );
+        $this->previews->markPurged($id);
     }
 
     public function storeFetchedMetadata(int $id, string $finalUrl, int $httpStatus, string $html): void
@@ -102,22 +157,12 @@ final class LinkPreviewService
         $row = $this->requireRow($id);
         $this->validateFetchUrl($finalUrl);
         $meta = $this->extractMetadata($html);
-        $this->db->run(
-            "UPDATE link_previews
-             SET status = 'fetched', final_url = ?, http_status = ?, title = ?, description = ?,
-                 image_url = ?, site_name = ?, metadata = ?, error = NULL,
-                 fetched_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP()
-             WHERE id = ?",
-            [
-                $finalUrl,
-                $httpStatus,
-                $meta['title'],
-                $meta['description'],
-                $meta['image_url'],
-                $meta['site_name'],
-                json_encode(['source_url' => $row['url']], JSON_UNESCAPED_SLASHES),
-                $id,
-            ],
+        $this->previews->markFetched(
+            $id,
+            $finalUrl,
+            $httpStatus,
+            $meta,
+            json_encode(['source_url' => $row['url']], JSON_UNESCAPED_SLASHES) ?: null,
         );
     }
 
@@ -125,27 +170,63 @@ final class LinkPreviewService
     public function fetchQueued(int $limit = 25): array
     {
         $stats = ['fetched' => 0, 'blocked' => 0, 'failed' => 0, 'skipped' => 0];
-        if ((bool) $this->settings->get('link_preview_kill_switch', false)) {
-            $stats['skipped'] = count($this->queued($limit));
+        if ($this->killSwitchEngaged()) {
+            $stats['skipped'] = count($this->previews->queued($limit));
             return $stats;
         }
 
-        foreach ($this->queued($limit) as $row) {
+        foreach ($this->previews->queued($limit) as $row) {
             $id = (int) $row['id'];
             try {
+                // Re-checked here, not just at queue time: a board switched off
+                // (or a post deleted / moved private) after the row was queued
+                // must not still reach the network.
+                if (!$this->publicFetchableSource((string) $row['source_type'], (int) $row['source_id'])) {
+                    throw new EgressBlockedException('Source is no longer opted in to link previews.');
+                }
                 $this->validateFetchUrl((string) $row['url']);
                 [$finalUrl, $status, $html] = $this->fetchHtml((string) $row['url']);
                 $this->storeFetchedMetadata($id, $finalUrl, $status, $html);
                 $stats['fetched']++;
             } catch (EgressBlockedException|ValidationException $e) {
-                $this->markBlocked($id, $e->getMessage());
+                $this->previews->markBlocked($id, $e->getMessage());
                 $stats['blocked']++;
             } catch (\Throwable $e) {
-                $this->markFailed($id, $e->getMessage());
+                $this->previews->markFailed($id, $e->getMessage());
                 $stats['failed']++;
             }
         }
         return $stats;
+    }
+
+    public function killSwitchEngaged(): bool
+    {
+        return (bool) $this->settings->get('link_preview_kill_switch', false);
+    }
+
+    /**
+     * The effective host allowlist: the stored operator list when present,
+     * otherwise the LINK_PREVIEW_ALLOWED_HOSTS config default.
+     *
+     * @return list<string>
+     */
+    public function allowedHosts(): array
+    {
+        $allowed = $this->settings->get('link_preview_allowed_hosts', $this->config->get('link_previews.allowed_hosts', []));
+        if (is_string($allowed)) {
+            $allowed = explode(',', $allowed);
+        }
+        if (!is_array($allowed)) {
+            return [];
+        }
+        $out = [];
+        foreach ($allowed as $pattern) {
+            $pattern = strtolower(trim((string) $pattern));
+            if ($pattern !== '' && !in_array($pattern, $out, true)) {
+                $out[] = $pattern;
+            }
+        }
+        return $out;
     }
 
     public function validateFetchUrl(string $url): string
@@ -171,41 +252,50 @@ final class LinkPreviewService
         return $this->egress->validate($url);
     }
 
-    /** @return array<int,array<string,mixed>> */
-    private function queued(int $limit): array
+    /**
+     * A row the actor may suppress or restore: the source post's author, or
+     * anyone with board-scoped delete authority over it. Missing collaborators
+     * (the service is constructible without them in unit contexts) fail closed.
+     *
+     * @return array<string,mixed>
+     */
+    private function requireManageableRow(User $actor, int $previewId): array
     {
-        $limit = max(1, min(100, $limit));
-        return $this->db->fetchAll(
-            "SELECT * FROM link_previews WHERE status = 'queued' ORDER BY created_at ASC, id ASC LIMIT " . $limit,
-        );
-    }
+        $row = $this->requireRow($previewId);
+        if ((string) $row['source_type'] !== 'post') {
+            throw new NotFoundException('Preview not found.');
+        }
+        $post = $this->posts->findWithContext((int) $row['source_id']);
+        if ($post === null || (int) ($post['is_deleted'] ?? 0) === 1) {
+            throw new NotFoundException('Preview not found.');
+        }
 
-    private function markBlocked(int $id, string $error): void
-    {
-        $this->db->run(
-            "UPDATE link_previews SET status = 'blocked', error = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?",
-            [mb_substr($error, 0, 255), $id],
-        );
-    }
+        $this->writeGate?->assertCanWrite($actor);
 
-    private function markFailed(int $id, string $error): void
-    {
-        $this->db->run(
-            "UPDATE link_previews SET status = 'failed', error = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?",
-            [mb_substr($error, 0, 255), $id],
-        );
+        $isAuthor = (int) ($post['user_id'] ?? 0) === $actor->id();
+        $canModerate = $this->boardAuthority?->canModerate($actor, (int) $post['board_id'], Cap::POST_DELETE_ANY) ?? false;
+        if (!$isAuthor && !$canModerate) {
+            throw new ForbiddenException('You cannot change previews on that post.');
+        }
+
+        return $row;
     }
 
     /** @return array<string,mixed> */
     private function requireRow(int $id): array
     {
-        $row = $this->db->fetch('SELECT * FROM link_previews WHERE id = ?', [$id]);
+        $row = $this->previews->find($id);
         if ($row === null) {
             throw new NotFoundException('Preview not found.');
         }
         return $row;
     }
 
+    /**
+     * Eligibility of the *source*: public board, live content, and the board's
+     * own opt-in. DMs are never unfurled server-side — a fetch would leak the
+     * fact that a private message contains a given URL to that URL's operator.
+     */
     private function publicFetchableSource(string $sourceType, int $sourceId): bool
     {
         if ($sourceType === 'dm_message') {
@@ -216,20 +306,32 @@ final class LinkPreviewService
             return $post !== null
                 && (int) ($post['is_deleted'] ?? 0) === 0
                 && (int) ($post['is_pending'] ?? 0) === 0
-                && (string) ($post['board_visibility'] ?? '') === 'public';
+                && (string) ($post['board_visibility'] ?? '') === 'public'
+                && (int) ($post['board_link_previews_enabled'] ?? 0) === 1;
         }
         if ($sourceType === 'summary') {
             $row = $this->db->fetch(
-                "SELECT b.visibility
+                "SELECT b.visibility, b.link_previews_enabled
                  FROM thread_summaries s
                  JOIN threads t ON t.id = s.thread_id
                  JOIN boards b ON b.id = t.board_id
                  WHERE s.id = ?",
                 [$sourceId],
             );
-            return $row !== null && (string) ($row['visibility'] ?? '') === 'public';
+            return $row !== null
+                && (string) ($row['visibility'] ?? '') === 'public'
+                && (int) ($row['link_previews_enabled'] ?? 0) === 1;
         }
         return false;
+    }
+
+    /**
+     * @param list<int>|array<int,mixed> $ids
+     * @return list<int>
+     */
+    private function normalizeIds(array $ids): array
+    {
+        return array_values(array_unique(array_filter(array_map('intval', $ids), static fn (int $id): bool => $id > 0)));
     }
 
     /** @return list<string> */
@@ -247,15 +349,7 @@ final class LinkPreviewService
 
     private function hostAllowed(string $host): bool
     {
-        $allowed = $this->settings->get('link_preview_allowed_hosts', $this->config->get('link_previews.allowed_hosts', []));
-        if (is_string($allowed)) {
-            $allowed = array_filter(array_map('trim', explode(',', $allowed)));
-        }
-        if (!is_array($allowed) || $allowed === []) {
-            return false;
-        }
-        foreach ($allowed as $pattern) {
-            $pattern = strtolower(trim((string) $pattern));
+        foreach ($this->allowedHosts() as $pattern) {
             if ($pattern === $host) {
                 return true;
             }

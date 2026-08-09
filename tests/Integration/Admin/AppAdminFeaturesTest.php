@@ -29,8 +29,8 @@ final class AppAdminFeaturesTest extends TestCase
         $this->assertStatus(200, $page);
         self::assertStringContainsString('Feature flags', $page->body());
         self::assertStringContainsString('57 declared', $page->body());
-        self::assertStringContainsString('50 default-on', $page->body());
-        self::assertStringContainsString('7 default-dark', $page->body());
+        self::assertStringContainsString('51 default-on', $page->body());
+        self::assertStringContainsString('6 default-dark', $page->body());
         self::assertStringContainsString('<code>server_extensions</code>', $page->body());
         self::assertStringContainsString('Phase 5 Gate B', $page->body());
         self::assertStringContainsString('Effective on', $page->body());
@@ -83,20 +83,25 @@ final class AppAdminFeaturesTest extends TestCase
         $body = $page->body();
         self::assertStringContainsString('Readiness / next step', $body);
 
-        // The five categories, each anchored by its row-specific finding.
-        // (group_dms graduated 2026-07-18 — ADR 0022 — so the "Ready for
-        // acceptance" category left the map with its last row.)
+        // The four remaining categories, each anchored by its row-specific
+        // finding. (group_dms graduated 2026-07-18 — ADR 0022 — so the "Ready for
+        // acceptance" category left the map with its last row; link_previews
+        // graduated 2026-08-09 — ADR 0025 — and took "Missing admin operations"
+        // with it, moving to the live-computed dormancy badge.)
         self::assertStringNotContainsString('Ready for acceptance', $body);
         self::assertStringNotContainsString('Member journey verified end-to-end', $body); // group_dms row is plain now
+        self::assertStringNotContainsString('Missing admin operations', $body);
+        self::assertStringNotContainsString('GET /admin/link-previews does not exist', $body);
         self::assertStringContainsString('Missing user UI', $body);
         self::assertStringContainsString('no member file chooser', $body); // expanded_files
-        self::assertStringContainsString('Missing admin operations', $body);
-        self::assertStringContainsString('GET /admin/link-previews does not exist', $body); // link_previews
         self::assertStringContainsString('Safety-blocked', $body);
         self::assertStringContainsString('Theme safe mode does not suppress', $body); // custom_css
         self::assertStringContainsString('Operational configuration required', $body);
         self::assertStringContainsString('Resolver posture is', $body); // capabilities still in shadow
         self::assertStringContainsString('giphy_public_key is unset', $body); // slash_giphy without a key
+        // link_previews is default-on but inert on a pristine install: no
+        // allowlist and no opted-in board.
+        self::assertStringContainsString('no host is allowlisted and no board has opted in', $body);
         self::assertStringContainsString('Reserved (ADR 0018)', $body);
         self::assertStringContainsString('stays dark until its workstream lands its own release evidence', $body);
 
@@ -106,6 +111,7 @@ final class AppAdminFeaturesTest extends TestCase
         // …shipped default-on flags carry an Operations link to their console…
         self::assertStringContainsString('<a href="/admin/webhooks">Operations</a>', $body);
         self::assertStringContainsString('<a href="/admin/thread-intelligence">Operations</a>', $body);
+        self::assertStringContainsString('<a href="/admin/link-previews">Operations</a>', $body);
         // …but a console that 404s while its flag is dark is never linked.
         self::assertStringNotContainsString('href="/admin/extensions"', $body);
     }
@@ -117,6 +123,8 @@ final class AppAdminFeaturesTest extends TestCase
         // and readiness links must never point at a surface that would 404
         // (branding rolled back drops the custom_css link, not the badge).
         (new SettingRepository($this->db))->set('giphy_public_key', 'pk-public-test');
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['docs.example.test']);
+        $this->makeBoard($this->makeCategory(), ['slug' => 'previews-on', 'link_previews_enabled' => 1]);
         $this->withCapabilitiesEnforced(['branding' => false]);
         $this->actingAs($this->makeAdmin(['username' => 'dormant-clear-admin']));
 
@@ -126,6 +134,11 @@ final class AppAdminFeaturesTest extends TestCase
         $body = $page->body();
         self::assertStringNotContainsString('Resolver posture is', $body);
         self::assertStringNotContainsString('giphy_public_key is unset', $body);
+        // Both link-preview steps done: the dormancy badge clears, but the
+        // Operations link to its console stays.
+        self::assertStringNotContainsString('no host is allowlisted', $body);
+        self::assertStringNotContainsString('no board has opted in', $body);
+        self::assertStringContainsString('<a href="/admin/link-previews">Operations</a>', $body);
         self::assertStringContainsString('Safety-blocked', $body);
         self::assertStringNotContainsString('href="/admin/branding"', $body);
     }

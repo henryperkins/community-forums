@@ -160,7 +160,7 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue($flags->enabled('rich_composer'));
 
         // Isolation: graduating wysiwyg_composer must not enable a dark neighbour.
-        self::assertFalse($flags->enabled('link_previews'));
+        self::assertFalse($flags->enabled('expanded_files'));
 
         // Available by default on a real page for a signed-in member.
         $this->makeBoard($this->makeCategory(), ['slug' => 'wysiwyg-default']);
@@ -204,9 +204,9 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('topic_workflow'));
 
         // Isolation: graduating topic_workflow must not enable a dark carryover
-        // neighbour (group_dms graduated 2026-07-18, so it is no longer a valid
-        // dark cross-check; link_previews is).
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'));
+        // neighbour (group_dms graduated 2026-07-18 and link_previews 2026-08-09,
+        // so neither is a valid dark cross-check any more; expanded_files is).
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('expanded_files'));
 
         // Operator rollback: disabling the flag takes the route offline (404).
         $this->setFlags(['topic_workflow' => false]);
@@ -249,17 +249,16 @@ final class AppFeatureFlagTest extends TestCase
 
         $defaults = $flags->all();
         self::assertCount(57, $defaults, 'the declared flag inventory must remain stable during graduation');
-        self::assertSame(50, count(array_filter($defaults)), 'fresh and upgraded installs should have 50 default-on flags');
-        self::assertSame(7, count($defaults) - count(array_filter($defaults)), 'fresh and upgraded installs should keep 7 default-dark flags');
+        self::assertSame(51, count(array_filter($defaults)), 'fresh and upgraded installs should have 51 default-on flags');
+        self::assertSame(6, count($defaults) - count(array_filter($defaults)), 'fresh and upgraded installs should keep 6 default-dark flags');
         self::assertSame([
             'custom_css',
-            'link_previews',
             'expanded_files',
             'server_extensions',
             'governance',
             'service_principals',
             'verified_links',
-        ], array_keys(array_filter($defaults, static fn (bool $enabled): bool => !$enabled)), 'only the approved seven flags stay default-dark');
+        ], array_keys(array_filter($defaults, static fn (bool $enabled): bool => !$enabled)), 'only the approved six flags stay default-dark');
 
         $this->setFlags(['capabilities' => false, 'passkeys' => false]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));
@@ -618,7 +617,7 @@ final class AppFeatureFlagTest extends TestCase
         // …but the core forum stays up, and rolling appeals back must not enable a
         // still-dark neighbour.
         $this->assertStatus(200, $this->get('/'));
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'));
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('expanded_files'));
     }
 
     public function test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible(): void
@@ -648,10 +647,11 @@ final class AppFeatureFlagTest extends TestCase
 
         // …but core profile editing is NOT part of the lifecycle slice and stays
         // up, and rolling account_lifecycle back must not enable a still-dark
-        // neighbour (appeals graduated 2026-07-02 and group_dms 2026-07-18, so
-        // neither is a valid dark cross-check any more; link_previews is).
+        // neighbour (appeals graduated 2026-07-02, group_dms 2026-07-18 and
+        // link_previews 2026-08-09, so none is a valid dark cross-check any more;
+        // expanded_files is).
         self::assertNotSame(404, $this->get('/settings/account')->status(), 'core profile editing must stay available');
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'), 'disabling account_lifecycle must not surface a still-dark flag');
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('expanded_files'), 'disabling account_lifecycle must not surface a still-dark flag');
     }
 
     public function test_profile_media_carryover_defaults_on_and_is_operator_reversible(): void
@@ -692,7 +692,7 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/users/' . (int) $member['id'] . '/signature/remove'));
         $this->assertStatus(404, $this->post('/admin/users/' . (int) $member['id'] . '/avatar/remove'));
 
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'), 'disabling profile_media must not surface a still-dark flag');
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('expanded_files'), 'disabling profile_media must not surface a still-dark flag');
     }
 
     public function test_group_dms_defaults_on_and_is_operator_reversible(): void
@@ -731,7 +731,7 @@ final class AppFeatureFlagTest extends TestCase
         );
 
         // Isolation: graduating group_dms must not enable a dark neighbour.
-        self::assertFalse($flags->enabled('link_previews'));
+        self::assertFalse($flags->enabled('expanded_files'));
 
         // Operator rollback: group creation is refused server-side again (422,
         // draft preserved, no new group row) and every management route re-gates
@@ -760,6 +760,70 @@ final class AppFeatureFlagTest extends TestCase
         );
         $direct = $this->post('/messages', ['to' => 'gdmbob', 'body' => 'hello there']);
         self::assertLessThan(400, $direct->status(), '1:1 DM must stay available while group_dms is rolled back');
+    }
+
+    public function test_link_previews_defaults_on_and_is_operator_reversible(): void
+    {
+        // link_previews graduated to default-on (GA 2026-08-09; ADR 0025). "On"
+        // means the subsystem is AVAILABLE — the operator console answers, the
+        // board opt-in renders — not that anything is fetched: a fresh install has
+        // no allowlisted host and no opted-in board, which is the whole safety
+        // posture of DECISIONS §6 #5. An operator rollback takes the console, the
+        // board control and the member removal route back to 404 while the stored
+        // rows survive (data-preserving, mirroring the badge-rules precedent).
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($flags->enabled('link_previews'), 'link_previews graduated to default-on');
+        self::assertArrayHasKey('link_previews', $flags->all(), 'link_previews must be a declared flag');
+
+        $board = $this->makeBoard($this->makeCategory('Preview Default'), ['slug' => 'preview-default']);
+        $admin = $this->makeAdmin(['username' => 'preview_flag_admin']);
+        $this->actingAs($admin);
+
+        // Available by default with NO features override.
+        $console = $this->get('/admin/link-previews');
+        $this->assertStatus(200, $console);
+        $this->assertSeeText($console, 'Allowlist');
+
+        // Inert by default: nothing has been fetched and no board has opted in.
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM link_previews'));
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue('SELECT COUNT(*) FROM boards WHERE link_previews_enabled = 1'),
+            'the per-board opt-in must default off however the flag defaults',
+        );
+
+        // The board edit form carries the opt-in while the flag is on.
+        $edit = $this->get('/admin/boards/' . (int) $board['id'] . '/edit');
+        $this->assertStatus(200, $edit);
+        self::assertStringContainsString('name="link_previews_enabled"', $edit->body());
+
+        // Isolation: graduating link_previews must not enable a dark neighbour.
+        self::assertFalse($flags->enabled('expanded_files'));
+
+        // Operator rollback: the console and the per-board control go away…
+        $this->setFlags(['link_previews' => false]);
+        $this->assertStatus(404, $this->get('/admin/link-previews'));
+        $this->assertStatus(404, $this->post('/admin/link-previews/boards/' . (int) $board['id'], ['enabled' => '1']));
+        $rolledBackEdit = $this->get('/admin/boards/' . (int) $board['id'] . '/edit');
+        $this->assertStatus(200, $rolledBackEdit);
+        self::assertStringNotContainsString('name="link_previews_enabled"', $rolledBackEdit->body());
+
+        // …and a board edit through the flag-off form must not silently revoke a
+        // stored opt-in, because the field is simply absent from the submission.
+        $this->db->run('UPDATE boards SET link_previews_enabled = 1 WHERE id = ?', [(int) $board['id']]);
+        $this->assertRedirect($this->post('/admin/boards/' . (int) $board['id'], [
+            'category_id' => (int) $board['category_id'],
+            'name' => (string) $board['name'],
+            'slug' => (string) $board['slug'],
+            'description' => '',
+            'visibility' => 'public',
+            'post_min_role' => 'user',
+        ]));
+        self::assertSame(
+            1,
+            (int) $this->db->fetchValue('SELECT link_previews_enabled FROM boards WHERE id = ?', [(int) $board['id']]),
+            'a rollback-era board edit must preserve the stored opt-in',
+        );
     }
 
     public function test_content_references_are_available_by_default_and_can_be_disabled(): void
@@ -1132,7 +1196,7 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue($flags->enabled('custom_profile_fields'), 'custom_profile_fields graduated to default-on');
 
         // Isolation: graduating this flag must not enable a dark neighbour.
-        self::assertFalse($flags->enabled('link_previews'));
+        self::assertFalse($flags->enabled('expanded_files'));
 
         $member = $this->makeUser(['username' => 'cpf_default_member']);
         $this->actingAs($member);
@@ -1170,7 +1234,7 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('split_merge'));
 
         // Isolation: graduating split_merge must not enable a dark neighbour.
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'));
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('expanded_files'));
 
         // Operator rollback: disabling the flag takes both routes offline (404).
         $this->setFlags(['split_merge' => false]);

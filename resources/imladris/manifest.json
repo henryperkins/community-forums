@@ -4,11 +4,11 @@
     "application_baseline": {
         "reconciled_through_commit": "6d81da590a12bd09bb8d0e282c042aa03d755a94",
         "composer_contract": "COMPOSER.md v0.8",
-        "surface_sha256": "9ee01c6f0ed0fa4c72883c88e80ab3239d699473c844b83d13b4ea5a0a45d3b1"
+        "surface_sha256": "9304c5ea37d3a5cf1251c98605af10c734af09180a31531db8f3131c0c947242"
     },
     "design_contract": {
         "source": "docs/design-system/imladris/production-contract.json",
-        "sha256": "9e2f2423bb89f7a6d9fd9d8bafbe74e30c07fe19be95447c8eab4f6110615eb9"
+        "sha256": "ea6686b91b411763d79f9de8001582a9f52fbcfb43ffb0b1c2a2c19372af9a01"
     },
     "css_sources": [
         "tokens/fonts.css",

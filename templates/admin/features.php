@@ -89,7 +89,7 @@
           // Production keeps them; they move below the tables so the intro reads as the
           // design's three sentences. Must stay outside any <table> (the Reserved-chip
           // count is table-scoped) and inside .admin-pane (the axe scope). ?>
-    <p class="features-legend">Flags are declared in <code>src/Core/FeatureFlags.php</code>. The readiness column distinguishes the rows that are not simply shipped &mdash; <strong>Missing user UI</strong>, <strong>Missing admin operations</strong>, <strong>Safety-blocked</strong>, <strong>Operational configuration required</strong> (computed live from posture/config, so it clears once the step is done), and <strong>Reserved (ADR 0018)</strong> &mdash; and links each actionable row to its operations surface. Enablement stays a deliberate <code>settings.features</code> write (<code>docs/runbooks/operations.md</code> §2).</p>
+    <p class="features-legend">Flags are declared in <code>src/Core/FeatureFlags.php</code>. The readiness column distinguishes the rows that are not simply shipped &mdash; <strong>Missing user UI</strong>, <strong>Safety-blocked</strong>, <strong>Operational configuration required</strong> (computed live from posture/config, so it clears once the step is done), and <strong>Reserved (ADR 0018)</strong> &mdash; and links each actionable row to its operations surface. Enablement stays a deliberate <code>settings.features</code> write (<code>docs/runbooks/operations.md</code> §2).</p>
 
     <section class="card features-unknown-card">
         <h2 class="features-group-title">Unknown overrides</h2>

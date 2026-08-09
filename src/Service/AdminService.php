@@ -139,9 +139,9 @@ final class AdminService
     public function createBoard(User $admin, array $input): int
     {
         $this->assertAdmin($admin);
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds] = $this->validateBoard($input, null);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $linkPreviewsEnabled, $editWindowSeconds] = $this->validateBoard($input, null);
 
-        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds): int {
+        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $linkPreviewsEnabled, $editWindowSeconds): int {
             $id = $this->boards->create([
                 'category_id' => $categoryId,
                 'slug' => $slug,
@@ -154,6 +154,7 @@ final class AdminService
                 'assignment_mode' => $assignmentMode,
                 'tags_enabled' => $tagsEnabled,
                 'wiki_enabled' => $wikiEnabled,
+                'link_previews_enabled' => $linkPreviewsEnabled,
                 'edit_window_seconds' => $editWindowSeconds,
             ]);
             $this->log->log([
@@ -161,7 +162,7 @@ final class AdminService
                 'action' => 'create_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'post_min_role' => $role, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled, 'edit_window_seconds' => $editWindowSeconds],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'post_min_role' => $role, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled, 'link_previews_enabled' => $linkPreviewsEnabled, 'edit_window_seconds' => $editWindowSeconds],
             ]);
             return $id;
         });
@@ -175,7 +176,7 @@ final class AdminService
         if ($board === null) {
             throw new NotFoundException('Board not found.');
         }
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds] = $this->validateBoard($input, $board);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $linkPreviewsEnabled, $editWindowSeconds] = $this->validateBoard($input, $board);
 
         $oldSlug = (string) $board['slug'];
         $slugChanged = $slug !== $oldSlug;
@@ -187,7 +188,7 @@ final class AdminService
             $position = $this->boards->nextPosition($categoryId);
         }
 
-        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds, $oldSlug, $slugChanged, $position, $board): void {
+        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $linkPreviewsEnabled, $editWindowSeconds, $oldSlug, $slugChanged, $position, $board): void {
             if ($slugChanged) {
                 $this->boards->recordSlugChange($id, $oldSlug);
             }
@@ -203,6 +204,7 @@ final class AdminService
                 'assignment_mode' => $assignmentMode,
                 'tags_enabled' => $tagsEnabled,
                 'wiki_enabled' => $wikiEnabled,
+                'link_previews_enabled' => $linkPreviewsEnabled,
                 'edit_window_seconds' => $editWindowSeconds,
                 'position' => $position,
             ]);
@@ -214,8 +216,8 @@ final class AdminService
                 'action' => 'update_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'post_min_role' => (string) ($board['post_min_role'] ?? 'user'), 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0), 'require_approval' => (int) ($board['require_approval'] ?? 0), 'assignment_mode' => $board['assignment_mode'] ?? 'off', 'tags_enabled' => (int) ($board['tags_enabled'] ?? 1), 'wiki_enabled' => (int) ($board['wiki_enabled'] ?? 0), 'edit_window_seconds' => (int) ($board['edit_window_seconds'] ?? 0)],
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'post_min_role' => $role, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled, 'edit_window_seconds' => $editWindowSeconds],
+                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'post_min_role' => (string) ($board['post_min_role'] ?? 'user'), 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0), 'require_approval' => (int) ($board['require_approval'] ?? 0), 'assignment_mode' => $board['assignment_mode'] ?? 'off', 'tags_enabled' => (int) ($board['tags_enabled'] ?? 1), 'wiki_enabled' => (int) ($board['wiki_enabled'] ?? 0), 'link_previews_enabled' => (int) ($board['link_previews_enabled'] ?? 0), 'edit_window_seconds' => (int) ($board['edit_window_seconds'] ?? 0)],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'post_min_role' => $role, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled, 'link_previews_enabled' => $linkPreviewsEnabled, 'edit_window_seconds' => $editWindowSeconds],
             ]);
         });
     }
@@ -743,6 +745,13 @@ final class AdminService
         }
         $tagsEnabled = array_key_exists('tags_enabled', $input) ? (!empty($input['tags_enabled']) ? 1 : 0) : (int) ($existing['tags_enabled'] ?? 1);
         $wikiEnabled = !empty($input['wiki_enabled']) ? 1 : 0;
+        // Per-board link-preview opt-in (DECISIONS §6 #5). Absent field keeps the
+        // stored value: the checkbox is only rendered while the `link_previews`
+        // flag is on, and editing a board with the flag off must not silently
+        // revoke an opt-in the operator made earlier.
+        $linkPreviewsEnabled = array_key_exists('link_previews_enabled', $input)
+            ? (!empty($input['link_previews_enabled']) ? 1 : 0)
+            : (int) ($existing['link_previews_enabled'] ?? 0);
 
         // Edit window (ADMIN §4.2): submitted in whole minutes, stored in
         // seconds, 0 = no limit. Absent field keeps the stored value.
@@ -764,7 +773,7 @@ final class AdminService
         // unless it already belongs to the board being edited.
         $slug = $this->uniqueSlug($slug, $existing !== null ? (int) $existing['id'] : null);
 
-        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds];
+        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $linkPreviewsEnabled, $editWindowSeconds];
     }
 
     private function uniqueSlug(string $slug, ?int $boardId): string

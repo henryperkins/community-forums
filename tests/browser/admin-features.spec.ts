@@ -90,14 +90,20 @@ test('admin feature inventory classifies readiness and links actionable surfaces
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Feature flags');
   expect(await page.locator('th', { hasText: 'Readiness / next step' }).count()).toBeGreaterThan(0);
 
-  // The three dark carryovers carry their categories, with links to surfaces
-  // that answer today. group_dms graduated 2026-07-18 (ADR 0022): its row
-  // carries no readiness badge any more, and the "Ready for acceptance"
-  // category left the pane with its last row.
+  // The remaining dark carryovers carry their categories, with links to surfaces
+  // that answer today. group_dms graduated 2026-07-18 (ADR 0022) and
+  // link_previews 2026-08-09 (ADR 0025): neither row carries a "not shipped"
+  // readiness badge any more, and both categories left the pane with their last
+  // row. link_previews now carries the live-computed dormancy badge instead —
+  // the seed allowlists a host and opts #general in, so it has cleared, and the
+  // row keeps only its Operations link.
   await expect(flagRow(page, 'group_dms').locator('.state', { hasText: 'Ready for acceptance' })).toHaveCount(0);
   await expect(page.getByText('Ready for acceptance')).toHaveCount(0);
+  await expect(page.getByText('Missing admin operations')).toHaveCount(0);
   await expect(flagRow(page, 'expanded_files').getByText('Missing user UI')).toBeVisible();
-  await expect(flagRow(page, 'link_previews').getByText('Missing admin operations')).toBeVisible();
+  const linkPreviews = flagRow(page, 'link_previews');
+  await expect(linkPreviews.getByText('Operational configuration required')).toHaveCount(0);
+  await expect(linkPreviews.getByRole('link', { name: 'Operations' })).toHaveAttribute('href', '/admin/link-previews');
   const customCss = flagRow(page, 'custom_css');
   await expect(customCss.getByText('Safety-blocked')).toBeVisible();
   await expect(customCss.getByRole('link', { name: 'Custom CSS editor' })).toHaveAttribute('href', '/admin/branding');

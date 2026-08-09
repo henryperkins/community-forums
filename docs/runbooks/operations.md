@@ -66,6 +66,14 @@ $s->set("features", $f);'
 Rolling a feature back is the **first response** to a logic defect; it is
 covered by `AppFeatureFlagTest`.
 
+**A default-ON flag is not always a live subsystem.** Some graduated flags make
+a surface *available* while a second operator step decides whether it does
+anything: `slash_giphy` is inert without a stored `giphy_public_key`, and
+`link_previews` fetches nothing until a board opts in **and** a host is
+allowlisted (`docs/runbooks/link_previews.md`). `/admin/features` reports both
+as **Operational configuration required** and clears the badge once the step is
+done — so an upgrade never silently starts new outbound traffic.
+
 ## 3. Email operations
 
 - **Pause all email:** disable the `email` flag (in-app notifications continue),

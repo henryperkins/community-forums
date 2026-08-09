@@ -166,7 +166,21 @@ final class ThreadController extends Controller
             $referenceCards = $this->container->get(ContentReferenceService::class)->cardsForSources('post', $postIds, $user);
         }
         if ($featureFlags->enabled('link_previews')) {
-            $linkPreviewCards = $this->container->get(LinkPreviewService::class)->cardsForSources('post', $postIds);
+            // Posts whose previews this viewer may take down or restore: their
+            // own, plus every post on the board for someone who can moderate it.
+            // Removed rows are only returned for these, so nobody else can tell
+            // a card was ever there.
+            $manageablePostIds = [];
+            if ($user !== null && $this->container->get(WriteGate::class)->canWrite($user)) {
+                $manageablePostIds = $canDeletePosts
+                    ? $postIds
+                    : array_values(array_map(
+                        static fn (array $p): int => (int) $p['id'],
+                        array_filter($posts, static fn (array $p): bool => (int) ($p['user_id'] ?? 0) === $user->id()),
+                    ));
+            }
+            $linkPreviewCards = $this->container->get(LinkPreviewService::class)
+                ->cardsForSources('post', $postIds, $manageablePostIds);
         }
         if ($user !== null && $automatedContext) {
             $sinceLastReadContext = $this->container->get(SinceLastReadContextService::class)

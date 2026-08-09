@@ -60,7 +60,7 @@ final class FeatureFlags
         'content_references' => true,  // persisted board/thread/post references + read-gated cards — GA default-on (2026-07-02; reversible via features override)
 
         // ── Phase 4 carryover completion (mixed: graduated default-on, rest dark)
-        'link_previews' => false,      // allowlisted server-fetched URL metadata + purge/refresh
+        'link_previews' => true,       // allowlisted server-fetched URL metadata, per-board opt-in, author removal, operator console — GA default-on (2026-08-09; ADR 0025; inert until a board opts in AND a host is allowlisted; reversible via features override)
         'expanded_files' => false,     // PDF/text-family uploads behind scanner/quarantine gates
         'polls' => true,               // one poll per thread, no-JS vote/result flows — GA default-on (2026-06-30; reversible via features override)
         'custom_emoji' => true,        // operator-managed static PNG/WebP shortcode assets — GA default-on (2026-07-03; reversible via features override)

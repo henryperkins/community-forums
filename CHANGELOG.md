@@ -2,6 +2,51 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Link previews completed and default-on
+
+- Completed the `link_previews` carryover and graduated it to default-on
+  (ADR 0025). The fetch/render pipeline already existed; the three things the
+  2026-07-13 readiness audit said had to be **built** now exist: an operator
+  console at `GET /admin/link-previews`, the DECISIONS §6 #5 per-board opt-in,
+  and author removal of a card from one's own post.
+- **Default-on means available, not fetching.** Three gates must all be open
+  before a URL is requested, and a fresh or upgraded install opens only the
+  flag: the per-board opt-in (`boards.link_previews_enabled`) defaults off and
+  the SSRF host allowlist ships empty. The flip is a no-op until an operator
+  makes both choices; `/admin/features` reports that dormancy live and clears
+  the badge once they are done.
+- Added the link-previews console: queue-health tiles, the host allowlist
+  editor (rejects non-hostname entries rather than silently normalising them),
+  the kill switch, a per-board opt-in roll-up, and a filterable recent-previews
+  table with per-row refresh/purge. Every operator write is audited — the
+  allowlist and kill switch against `setting`, board opt-in against `board`,
+  and per-row actions against the **post** the row belongs to.
+- Added author removal: a member (or a board moderator) can take a preview off
+  a post with one no-JS POST. The new sticky `removed` status survives the
+  queue upsert that deliberately revives `purged` rows on edit, and operator
+  refresh refuses to override it — the console is not a way around a member's
+  decision about their own post. Removed rows are returned only to viewers who
+  could act on them.
+- The per-board opt-in is re-checked in the worker, not just at queue time, so
+  a backlog queued while a board was on cannot still reach the network after an
+  operator switches it off; such rows are marked `blocked` with a reason.
+- Migration `0081_link_preview_enablement` adds `boards.link_previews_enabled`
+  and the `removed` status plus `removed_by`/`removed_at` (SCHEMA.md v1.42).
+  Extracted `LinkPreviewRepository` from the service's inline SQL.
+- Default-dark flags drop from seven to six. The `link_previews` row also
+  emptied and retired the "Missing admin operations" readiness category on
+  `/admin/features`, the way `group_dms` retired "Ready for acceptance".
+- Added `docs/runbooks/link_previews.md` (enable, allowlist, kill switch,
+  incident response, data-preserving rollback) and reconciled ADMIN.md,
+  COMPOSER.md, SCHEMA.md, CLAUDE.md/AGENTS.md, PHASE_5_STATUS.md and the
+  deploy-dark inventory.
+- Evidence: `AppLinkPreviewTest` (16 tests),
+  `AppFeatureFlagTest::test_link_previews_defaults_on_and_is_operator_reversible`,
+  `AppPhase4CarryoverFoundationTest`, `AppAdminFeaturesTest`, and
+  `tests/browser/link-previews.spec.ts` desktop + mobile (**8 passed**),
+  including the author remove/restore journey with JavaScript disabled and
+  `.admin-pane` / `.link-preview-cards` axe passes.
+
 ## [Unreleased] - Thread Intelligence default-on graduation
 
 - Graduated the public-only, evidence-bound Living Brief pipeline by changing
