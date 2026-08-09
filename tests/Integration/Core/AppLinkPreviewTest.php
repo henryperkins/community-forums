@@ -6,6 +6,7 @@ namespace Tests\Integration\Core;
 
 use App\Core\Config;
 use App\Core\EgressBlockedException;
+use App\Core\FeatureFlags;
 use App\Core\ForbiddenException;
 use App\Core\ValidationException;
 use App\Repository\BoardModeratorRepository;
@@ -131,17 +132,20 @@ final class AppLinkPreviewTest extends TestCase
         // Opting the board in makes the very next post queue.
         $this->db->run('UPDATE boards SET link_previews_enabled = 1 WHERE id = ?', [(int) $board['id']]);
         $thread = $this->db->fetch('SELECT id, slug FROM threads WHERE title = ?', ['Opted-out topic']);
+        self::assertNotNull($thread);
         $this->assertRedirect($this->post('/t/' . (int) $thread['id'] . '/reply', [
             'body' => 'And also http://preview.example.test/second',
         ]));
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM link_previews'));
     }
 
-    public function test_queued_row_is_blocked_when_its_board_opts_out_before_the_worker_runs(): void
+    public function test_queued_row_is_held_when_its_board_opts_out_and_drains_when_it_returns(): void
     {
         // The fetch path re-checks eligibility: a backlog queued while the board
-        // was on must not still reach the network after the operator switched
-        // it off.
+        // was on must not still reach the network after the operator switched it
+        // off. A board opt-out is reversible, so the row must stay `queued` and
+        // drain by itself when the board comes back — marking it `blocked` would
+        // strand the backlog behind a per-row console refresh.
         (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
         $cat = $this->makeCategory();
         $board = $this->makeBoard($cat, ['slug' => 'previewrevoke', 'link_previews_enabled' => 1]);
@@ -159,10 +163,79 @@ final class AppLinkPreviewTest extends TestCase
 
         $stats = $this->previewService()->fetchQueued(5);
 
-        self::assertSame(['fetched' => 0, 'blocked' => 1, 'failed' => 0, 'skipped' => 0], $stats);
+        self::assertSame(['fetched' => 0, 'blocked' => 0, 'failed' => 0, 'skipped' => 1], $stats);
         $row = $this->db->fetch('SELECT status, error FROM link_previews WHERE id = ?', [$id]);
-        self::assertSame('blocked', $row['status']);
-        self::assertStringContainsString('no longer opted in', (string) $row['error']);
+        self::assertNotNull($row);
+        self::assertSame('queued', $row['status'], 'a reversible opt-out must not retire the row');
+        self::assertNull($row['error']);
+
+        // Deleting the post, by contrast, is permanent — that row is retired.
+        $this->db->run('UPDATE posts SET is_deleted = 1 WHERE id = ?', [(int) $this->db->fetchValue('SELECT source_id FROM link_previews WHERE id = ?', [$id])]);
+        $stats = $this->previewService()->fetchQueued(5);
+        self::assertSame(['fetched' => 0, 'blocked' => 1, 'failed' => 0, 'skipped' => 0], $stats);
+        self::assertSame('blocked', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
+    }
+
+    public function test_rolling_the_flag_back_stops_the_worker_without_touching_the_queue(): void
+    {
+        // The cron worker builds LinkPreviewService directly, so it is not covered
+        // by the route gates. Rollback has to stop it there too, or a rolled-back
+        // install keeps fetching from allowlisted hosts on every worker pass —
+        // exactly what the operator was trying to stop. Nothing is retired: the
+        // rows are still queued and drain when the flag comes back.
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        (new SettingRepository($this->db))->set('features', ['link_previews' => false]);
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewrollback', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'rollbackworker']);
+        $thread = $this->makeThread($board, $author, 'Rollback worker topic', 'Body without links.');
+        $postId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? ORDER BY id ASC LIMIT 1',
+            [$thread['thread_id']],
+        );
+        $id = $this->seedPreview('http://preview.example.test/rollback', $postId);
+
+        $stats = $this->previewService()->fetchQueued(5);
+
+        self::assertSame(['fetched' => 0, 'blocked' => 0, 'failed' => 0, 'skipped' => 1], $stats);
+        self::assertSame('queued', (string) $this->db->fetchValue('SELECT status FROM link_previews WHERE id = ?', [$id]));
+
+        // …and a write while rolled back queues nothing new.
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/reply', [
+            'body' => 'Another http://preview.example.test/second',
+        ]));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM link_previews'));
+    }
+
+    public function test_re_saving_a_post_does_not_recount_an_existing_card_as_newly_queued(): void
+    {
+        // queueFromBody() reports how many rows it actually created or revived.
+        // An already-fetched row is neither, so a plain re-save must report zero
+        // rather than counting the standing card again.
+        (new SettingRepository($this->db))->set('link_preview_allowed_hosts', ['preview.example.test']);
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewrecount', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'recountauthor']);
+        $thread = $this->makeThread($board, $author, 'Recount topic', 'Body without links.');
+        $postId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? ORDER BY id ASC LIMIT 1',
+            [$thread['thread_id']],
+        );
+
+        $body = 'See http://preview.example.test/recount';
+        $service = $this->previewService();
+        self::assertSame(1, $service->queueFromBody('post', $postId, $body), 'first save creates the row');
+        self::assertSame(0, $service->queueFromBody('post', $postId, $body), 'a re-save creates nothing');
+
+        $service->storeFetchedMetadata(
+            (int) $this->db->fetchValue('SELECT id FROM link_previews LIMIT 1'),
+            'http://preview.example.test/recount',
+            200,
+            '<html><head><title>Recount</title></head></html>',
+        );
+        self::assertSame(0, $service->queueFromBody('post', $postId, $body), 'a fetched card is not newly queued');
+        self::assertSame('fetched', (string) $this->db->fetchValue('SELECT status FROM link_previews LIMIT 1'));
     }
 
     public function test_kill_switch_leaves_the_queue_untouched(): void
@@ -191,7 +264,9 @@ final class AppLinkPreviewTest extends TestCase
             'body' => 'See http://preview.example.test/story',
         ]));
         $thread = $this->db->fetch('SELECT id, slug FROM threads WHERE title = ?', ['Author removal topic']);
+        self::assertNotNull($thread);
         $preview = $this->db->fetch('SELECT * FROM link_previews LIMIT 1');
+        self::assertNotNull($preview);
         $postId = (int) $preview['source_id'];
         $this->previewService()->storeFetchedMetadata(
             (int) $preview['id'],
@@ -239,7 +314,9 @@ final class AppLinkPreviewTest extends TestCase
             'body' => 'See http://preview.example.test/story',
         ]));
         $thread = $this->db->fetch('SELECT id, slug FROM threads WHERE title = ?', ['Stranger topic']);
+        self::assertNotNull($thread);
         $preview = $this->db->fetch('SELECT * FROM link_previews LIMIT 1');
+        self::assertNotNull($preview);
         $this->previewService()->storeFetchedMetadata(
             (int) $preview['id'],
             'http://preview.example.test/story',
@@ -288,6 +365,8 @@ final class AppLinkPreviewTest extends TestCase
             $settings,
             $this->config,
             new EgressGuard(true, [], static fn (string $host): array => ['127.0.0.1']),
+            new WriteGate(),
+            new FeatureFlags(new SettingRepository($this->db)),
         );
 
         $this->expectException(EgressBlockedException::class);
@@ -323,12 +402,15 @@ final class AppLinkPreviewTest extends TestCase
                     'link_previews' => ['allow_http' => true, 'timeout_seconds' => 1, 'max_bytes' => 4096],
                 ])),
                 new EgressGuard(true, ['127.0.0.1/32'], static fn (string $host): array => ['127.0.0.1']),
+                new WriteGate(),
+                new FeatureFlags(new SettingRepository($this->db)),
             );
 
             $stats = $service->fetchQueued(1);
 
             self::assertSame(['fetched' => 1, 'blocked' => 0, 'failed' => 0, 'skipped' => 0], $stats);
             $row = $this->db->fetch('SELECT status, title FROM link_previews WHERE id = ?', [$id]);
+            self::assertNotNull($row);
             self::assertSame('fetched', $row['status']);
             self::assertSame('Pinned Preview OK', $row['title']);
         } finally {
@@ -449,8 +531,11 @@ final class AppLinkPreviewTest extends TestCase
             [(int) $author['id']],
         );
 
+        $suspended = $this->db->fetch('SELECT * FROM users WHERE id = ?', [(int) $author['id']]);
+        self::assertNotNull($suspended);
+
         $this->expectException(ForbiddenException::class);
-        $this->previewService()->remove($this->userEntity($this->db->fetch('SELECT * FROM users WHERE id = ?', [(int) $author['id']])), $id);
+        $this->previewService()->remove($this->userEntity($suspended), $id);
     }
 
     private function seedPreview(string $url, int $sourceId = 1): int
@@ -474,6 +559,7 @@ final class AppLinkPreviewTest extends TestCase
             ])),
             new EgressGuard(true, [], static fn (string $host): array => ['93.184.216.34']),
             new WriteGate(),
+            new FeatureFlags(new SettingRepository($this->db)),
             new BoardAuthority(new WriteGate(), new BoardModeratorRepository($this->db), new BoardRepository($this->db)),
         );
     }

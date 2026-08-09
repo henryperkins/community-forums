@@ -549,7 +549,12 @@ if ($users->adminCount() > 0) {
     $pollReady = $ensureShortcutPoll();
     $registryReady = $ensureRegistryFixtures();
     $ensureAppealFixture();
-    $ensureLinkPreviewFixture();
+    // A false return means alice, #general or her first post is missing, which
+    // would let the seed report success and then fail link-previews.spec.ts with
+    // "no preview card" three steps later. Fail here instead.
+    if (!$ensureLinkPreviewFixture()) {
+        throw new RuntimeException('Link preview fixture could not be seeded (missing alice, #general, or a source post).');
+    }
     $newSurfaceFixturesReady = $includeDarkSurfaceFixtures ? $ensureNewSurfaceFixtures() : false;
     $seedThreadIntelligence();
     fwrite(STDOUT, $pollReady
@@ -687,7 +692,9 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
 
 $ensureRegistryFixtures();
 $ensureAppealFixture();
-$ensureLinkPreviewFixture();
+if (!$ensureLinkPreviewFixture()) {
+    throw new RuntimeException('Link preview fixture could not be seeded (missing alice, #general, or a source post).');
+}
 
 if ($includeDarkSurfaceFixtures) {
     $ensureNewSurfaceFixtures();

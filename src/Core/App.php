@@ -1054,6 +1054,7 @@ final class App
                 (array) $config->get('link_previews.allowed_private_cidrs', []),
             ),
             $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
             $c->get(BoardAuthority::class),
         ));
         $c->bind(LinkPreviewAdminService::class, fn (Container $c) => new LinkPreviewAdminService(

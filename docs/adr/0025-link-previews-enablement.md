@@ -57,11 +57,22 @@ operator purge, which the queue upsert deliberately revives on the next edit.
    the strength of an upgrade. `/admin/features` reports the dormancy live and
    the badge clears once both steps are done.
 
-3. **The per-board opt-in is honoured at queue time *and* at fetch time.**
-   Re-checking in the worker is not redundant: rows queued while a board was on
-   must not still reach the network after an operator switched it off (or after
-   the post was deleted, held, or moved to a non-public board). A row that fails
-   the re-check is marked `blocked` with a reason rather than left to retry.
+3. **The per-board opt-in is honoured at queue time *and* at fetch time**, and
+   the two failure modes are deliberately different. Re-checking in the worker is
+   not redundant: rows queued while a board was on must not still reach the
+   network after an operator switched it off. But a board opt-out is one
+   checkbox away from being undone, so those rows stay `queued` and are counted
+   as `skipped` — switching the board back on drains the backlog by itself.
+   Only a permanently ineligible source (post deleted, approval-held, or moved
+   off a public board) is retired as `blocked`, because `blocked` is terminal
+   and would otherwise strand a reversible state behind a per-row console
+   refresh.
+
+   The `link_previews` flag is likewise enforced **inside the service**, not only
+   on the routes: `bin/console worker:previews` constructs `LinkPreviewService`
+   directly, so a route-only gate would have left a rolled-back install still
+   draining its queue to the network on every cron run. Rollback now stops the
+   worker as well, without retiring a single row.
 
 4. **The author has the last word on their own post.** `link_previews.status`
    gains a `removed` member (migration `0081`) plus `removed_by`/`removed_at`.
@@ -108,9 +119,12 @@ operator purge, which the queue upsert deliberately revives on the next edit.
 
 ## Evidence
 
-- **PHPUnit** — `AppLinkPreviewTest` (16 tests): board opt-in required before
-  anything queues; a queued row blocked when its board opts out before the
-  worker runs; kill switch skips without consuming; author remove survives an
+- **PHPUnit** — `AppLinkPreviewTest` (18 tests): board opt-in required before
+  anything queues; a queued row *held* (not retired) when its board opts out and
+  drained when it returns, while a deleted source is retired as `blocked`; the
+  worker fetching nothing once the flag is rolled back, without touching the
+  queue; a re-saved post not recounting its standing card as newly queued; kill
+  switch skips without consuming; author remove survives an
   edit and restores; a non-author can neither see nor remove someone else's
   card; operator refresh refuses an author removal; the console's gate report,
   allowlist parsing (422 keeps the typed value), board toggle and audit rows;

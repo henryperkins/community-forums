@@ -1454,7 +1454,7 @@ graduated. Four readiness categories remain.
 
 ADR 0025 owns the decision; `docs/runbooks/link_previews.md` owns enablement,
 allowlist management, kill-switch and incident response, and data-preserving
-rollback. Evidence: `AppLinkPreviewTest` (16 tests),
+rollback. Evidence: `AppLinkPreviewTest` (18 tests),
 `AppFeatureFlagTest::test_link_previews_defaults_on_and_is_operator_reversible`,
 `AppPhase4CarryoverFoundationTest`, `AppAdminFeaturesTest` (51/6 canary +
 readiness declassification), and `tests/browser/link-previews.spec.ts`

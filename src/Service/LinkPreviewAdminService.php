@@ -205,9 +205,66 @@ final class LinkPreviewAdminService
         );
     }
 
-    public function auditPreviewAction(User $admin, string $action, int $previewId): void
+    /**
+     * Re-queue one preview and record it, atomically.
+     *
+     * The status change and its audit row are a two-table mutation, so they
+     * share one transaction: a failed audit must not leave an unaudited queue
+     * change behind. The row is resolved first, so a missing preview 404s
+     * before anything is written — the audit can never name `target_id = 0`.
+     */
+    public function refreshPreview(User $admin, int $previewId): void
+    {
+        $this->db->transaction(function () use ($admin, $previewId): void {
+            $row = $this->requirePreview($previewId);
+            $this->service->refresh($previewId);
+            $this->auditPreviewAction($admin, 'link_preview_refresh', $row);
+        });
+    }
+
+    /** Wipe one preview's stored metadata and record it, atomically. */
+    public function purgePreview(User $admin, int $previewId): void
+    {
+        $this->db->transaction(function () use ($admin, $previewId): void {
+            // Read before the wipe so the audit row still carries the URL.
+            $row = $this->requirePreview($previewId);
+            $this->service->purge($previewId);
+            $this->auditPreviewAction($admin, 'link_preview_purge', $row);
+        });
+    }
+
+    /**
+     * The operator steps still standing between "available" and "unfurling".
+     * Lives here rather than in the controller so the readiness console reads
+     * link-preview policy from the service that owns it.
+     *
+     * @return list<string> empty when the subsystem is fully configured
+     */
+    public function missingActivationSteps(): array
+    {
+        $missing = [];
+        if ($this->service->allowedHosts() === []) {
+            $missing[] = 'no host is allowlisted';
+        }
+        if ($this->boards->countWithLinkPreviews() === 0) {
+            $missing[] = 'no board has opted in';
+        }
+        return $missing;
+    }
+
+    /** @return array<string,mixed> */
+    private function requirePreview(int $previewId): array
     {
         $row = $this->previews->find($previewId);
+        if ($row === null) {
+            throw new NotFoundException('Preview not found.');
+        }
+        return $row;
+    }
+
+    /** @param array<string,mixed> $row */
+    private function auditPreviewAction(User $admin, string $action, array $row): void
+    {
         $this->log->log([
             'actor_id' => $admin->id(),
             'action' => $action,
@@ -215,7 +272,7 @@ final class LinkPreviewAdminService
             // surfaces it alongside every other action taken on that post.
             'target_type' => 'post',
             'target_id' => (int) ($row['source_id'] ?? 0),
-            'after' => ['preview_id' => $previewId, 'url' => (string) ($row['url'] ?? '')],
+            'after' => ['preview_id' => (int) $row['id'], 'url' => (string) ($row['url'] ?? '')],
         ]);
     }
 

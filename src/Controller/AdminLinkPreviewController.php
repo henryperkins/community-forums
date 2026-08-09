@@ -10,7 +10,6 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Service\LinkPreviewAdminService;
-use App\Service\LinkPreviewService;
 
 final class AdminLinkPreviewController extends Controller
 {
@@ -63,13 +62,11 @@ final class AdminLinkPreviewController extends Controller
     public function refresh(Request $request, array $params): Response
     {
         $admin = $this->requirePreviewOps();
-        $id = (int) ($params['id'] ?? 0);
         try {
-            $this->container->get(LinkPreviewService::class)->refresh($id);
+            $this->admin()->refreshPreview($admin, (int) ($params['id'] ?? 0));
         } catch (ValidationException $e) {
             return $this->redirectWithFlash($this->back($request), $e->first());
         }
-        $this->admin()->auditPreviewAction($admin, 'link_preview_refresh', $id);
 
         return $this->redirectWithFlash($this->back($request), 'Preview queued for refresh.');
     }
@@ -78,10 +75,7 @@ final class AdminLinkPreviewController extends Controller
     public function purge(Request $request, array $params): Response
     {
         $admin = $this->requirePreviewOps();
-        $id = (int) ($params['id'] ?? 0);
-        // Audited before the wipe so the row still carries the URL being purged.
-        $this->admin()->auditPreviewAction($admin, 'link_preview_purge', $id);
-        $this->container->get(LinkPreviewService::class)->purge($id);
+        $this->admin()->purgePreview($admin, (int) ($params['id'] ?? 0));
 
         return $this->redirectWithFlash($this->back($request), 'Preview metadata purged.');
     }

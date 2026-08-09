@@ -7919,9 +7919,11 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .link-preview-action {
     align-self: flex-start;
 }
+/* Size de-emphasises this control; colour must not. --text-muted is the same
+   #AEB8B4 in both themes and drops under 4.5:1 on the light post surface at this
+   size, so the button keeps the standard .linkbtn accent (WCAG 1.4.1). */
 .link-preview-action .linkbtn {
     font-size: .72rem;
-    color: var(--text-muted);
 }
 /* Per-message report — opened from the hover ···, floats as a small card. */
 .dm-report {
@@ -12361,16 +12363,11 @@ body.thread-restructure-open { overflow: hidden; }
     font-size: .82rem;
     resize: vertical;
 }
-.features-link-previews .link-preview-url,
-.features-link-previews .link-preview-table td:nth-child(2),
-.features-link-previews .link-preview-table td:nth-child(3) {
-    display: table-cell;
-}
 .features-link-previews .link-preview-url code,
 .features-link-previews .link-preview-url span,
-.features-link-previews .link-preview-table td:nth-child(2) > span,
-.features-link-previews .link-preview-table td:nth-child(3) > a,
-.features-link-previews .link-preview-table td:nth-child(3) > span {
+.features-link-previews .link-preview-state > span,
+.features-link-previews .link-preview-source > a,
+.features-link-previews .link-preview-source > span {
     display: block;
 }
 .features-link-previews .link-preview-url code {

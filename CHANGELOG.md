@@ -29,7 +29,12 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   could act on them.
 - The per-board opt-in is re-checked in the worker, not just at queue time, so
   a backlog queued while a board was on cannot still reach the network after an
-  operator switches it off; such rows are marked `blocked` with a reason.
+  operator switches it off. Those rows are *held* (`queued`, reported as
+  `skipped`) rather than retired, so re-enabling the board drains the backlog by
+  itself; only a permanently ineligible source is marked `blocked`.
+- The flag is enforced inside the service, so `worker:previews` also stops
+  fetching when an operator rolls `link_previews` back — the cron worker builds
+  the service directly and was not covered by the route gates.
 - Migration `0081_link_preview_enablement` adds `boards.link_previews_enabled`
   and the `removed` status plus `removed_by`/`removed_at` (SCHEMA.md v1.42).
   Extracted `LinkPreviewRepository` from the service's inline SQL.

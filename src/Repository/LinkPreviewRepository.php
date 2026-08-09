@@ -27,16 +27,24 @@ final class LinkPreviewRepository
     }
 
     /**
-     * Idempotent queue insert. Returns true when the row was created or a
+     * Idempotent queue insert. Returns true ONLY when the row was created or a
      * previously purged row was revived — `removed` is deliberately sticky so
-     * editing a post cannot resurrect a card its author took down.
+     * editing a post cannot resurrect a card its author took down, and an
+     * already-`fetched` row is not newly queued work either.
+     *
+     * `updated_at` is bumped only alongside a real status change. Touching it
+     * unconditionally would make MySQL report every re-save of an unchanged row
+     * as an affected row, so re-editing a post would count its existing cards as
+     * freshly queued.
      */
     public function queue(string $sourceType, int $sourceId, string $url, string $urlHash): bool
     {
         return $this->db->run(
             "INSERT INTO link_previews (source_type, source_id, url, url_hash, status, created_at)
              VALUES (?, ?, ?, ?, 'queued', UTC_TIMESTAMP())
-             ON DUPLICATE KEY UPDATE status = IF(status = 'purged', 'queued', status), updated_at = UTC_TIMESTAMP()",
+             ON DUPLICATE KEY UPDATE
+                 updated_at = IF(status = 'purged', UTC_TIMESTAMP(), updated_at),
+                 status = IF(status = 'purged', 'queued', status)",
             [$sourceType, $sourceId, $url, $urlHash],
         )->rowCount() > 0;
     }

@@ -81,13 +81,19 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
             <div class="reference-cards link-preview-cards" aria-label="Link previews">
                 <?php foreach ($link_preview_cards as $card): ?>
                     <?php if (!empty($card['removed'])): ?>
-                        <div class="link-preview-item is-removed">
-                            <span class="muted">Link preview removed from this post.</span>
-                            <form class="inline link-preview-action" method="post" action="/posts/<?= (int) $p['id'] ?>/previews/<?= (int) $card['id'] ?>/restore">
-                                <?= $this->csrfField() ?>
-                                <button class="linkbtn" type="submit">Restore preview</button>
-                            </form>
-                        </div>
+                        <?php // Both branches state the same authorization condition. The
+                              // service already withholds removed rows from viewers without
+                              // manage rights, but a control that grants an action should not
+                              // depend on a cross-file invariant to stay hidden. ?>
+                        <?php if (!empty($card['can_manage'])): ?>
+                            <div class="link-preview-item is-removed">
+                                <span class="muted">Link preview removed from this post.</span>
+                                <form class="inline link-preview-action" method="post" action="/posts/<?= (int) $p['id'] ?>/previews/<?= (int) $card['id'] ?>/restore">
+                                    <?= $this->csrfField() ?>
+                                    <button class="linkbtn" type="submit">Restore preview</button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
                     <?php else: ?>
                         <div class="link-preview-item">
                             <a class="reference-card" href="<?= $e($card['url']) ?>" rel="nofollow ugc noopener">

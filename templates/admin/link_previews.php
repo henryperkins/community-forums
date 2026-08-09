@@ -173,11 +173,11 @@ $statusClass = [
                                 <?php if ((string) $row['title'] !== ''): ?><span class="muted"><?= $e((string) $row['title']) ?></span><?php endif; ?>
                                 <?php if ((string) $row['error'] !== ''): ?><span class="field-error"><?= $e((string) $row['error']) ?></span><?php endif; ?>
                             </td>
-                            <td>
+                            <td class="link-preview-state">
                                 <span class="state <?= $e($statusClass[$status] ?? '') ?>"><?= $e($statusLabels[$status] ?? $status) ?></span>
                                 <?php if ($row['http_status'] !== null): ?><span class="muted">HTTP <?= (int) $row['http_status'] ?></span><?php endif; ?>
                             </td>
-                            <td>
+                            <td class="link-preview-source">
                                 <?php if (!empty($row['thread_href'])): ?>
                                     <a href="<?= $e((string) $row['thread_href']) ?>#p<?= (int) $row['source_id'] ?>"><?= $e((string) $row['thread_title']) ?></a>
                                 <?php elseif ((string) $row['thread_title'] !== ''): ?>

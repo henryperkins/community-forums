@@ -7,10 +7,9 @@ namespace App\Controller;
 use App\Core\FeatureFlags;
 use App\Core\Request;
 use App\Core\Response;
-use App\Repository\BoardRepository;
 use App\Repository\SettingRepository;
 use App\Security\AuthorityGate;
-use App\Service\LinkPreviewService;
+use App\Service\LinkPreviewAdminService;
 
 final class AdminFeatureController extends Controller
 {
@@ -213,13 +212,8 @@ final class AdminFeatureController extends Controller
         if ($effective['link_previews'] ?? false) {
             // Two operator steps stand between "available" and "unfurling", and
             // both are live state, so the badge clears itself once they are done.
-            $missing = [];
-            if ($this->container->get(LinkPreviewService::class)->allowedHosts() === []) {
-                $missing[] = 'no host is allowlisted';
-            }
-            if ($this->container->get(BoardRepository::class)->countWithLinkPreviews() === 0) {
-                $missing[] = 'no board has opted in';
-            }
+            // The policy itself lives in the service that owns link previews.
+            $missing = $this->container->get(LinkPreviewAdminService::class)->missingActivationSteps();
             if ($missing !== []) {
                 $readiness['link_previews'] = [
                     'status' => 'Operational configuration required',

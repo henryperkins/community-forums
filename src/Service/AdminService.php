@@ -690,7 +690,7 @@ final class AdminService
     /**
      * @param array<string,mixed> $input
      * @param array<string,mixed>|null $existing
-     * @return array{0:int,1:string,2:string,3:?string,4:string,5:string,6:int,7:int,8:string,9:int,10:int,11:int}
+     * @return array{0:int,1:string,2:string,3:?string,4:string,5:string,6:int,7:int,8:string,9:int,10:int,11:int,12:int}
      */
     private function validateBoard(array $input, ?array $existing): array
     {

@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Config;
 use App\Core\Database;
 use App\Core\EgressBlockedException;
+use App\Core\FeatureFlags;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
@@ -36,6 +37,13 @@ use App\Security\WriteGate;
  */
 final class LinkPreviewService
 {
+    /** Source gate outcomes — see sourceGate(). */
+    private const GATE_OK = 'ok';
+    /** Permanently not previewable (deleted, held, non-public board, DM, gone). */
+    private const GATE_INELIGIBLE = 'ineligible';
+    /** The board simply has not opted in — reversible, so never terminal. */
+    private const GATE_OPTED_OUT = 'opted_out';
+
     public function __construct(
         private Database $db,
         private LinkPreviewRepository $previews,
@@ -43,14 +51,27 @@ final class LinkPreviewService
         private SettingRepository $settings,
         private Config $config,
         private EgressGuard $egress,
-        private ?WriteGate $writeGate = null,
+        private WriteGate $writeGate,
+        private FeatureFlags $flags,
         private ?BoardAuthority $boardAuthority = null,
     ) {
     }
 
+    /**
+     * The flag gates the *subsystem*, including the cron worker — which builds
+     * this service directly and so is not covered by the route gates. Without
+     * this check a rolled-back install would keep draining its queue to the
+     * network on every `worker:previews` run, which is exactly what an operator
+     * setting `features.link_previews=false` is trying to stop.
+     */
+    private function enabled(): bool
+    {
+        return $this->flags->enabled('link_previews');
+    }
+
     public function queueFromBody(string $sourceType, int $sourceId, string $body): int
     {
-        if (!$this->publicFetchableSource($sourceType, $sourceId)) {
+        if (!$this->enabled() || $this->sourceGate($sourceType, $sourceId) !== self::GATE_OK) {
             return 0;
         }
 
@@ -170,19 +191,31 @@ final class LinkPreviewService
     public function fetchQueued(int $limit = 25): array
     {
         $stats = ['fetched' => 0, 'blocked' => 0, 'failed' => 0, 'skipped' => 0];
-        if ($this->killSwitchEngaged()) {
+        // Both global pauses leave every row queued and untouched: the operator
+        // is stopping traffic, not retiring work.
+        if (!$this->enabled() || $this->killSwitchEngaged()) {
             $stats['skipped'] = count($this->previews->queued($limit));
             return $stats;
         }
 
         foreach ($this->previews->queued($limit) as $row) {
             $id = (int) $row['id'];
+
+            // Re-checked here, not just at queue time: a board switched off (or a
+            // post deleted / moved private) after the row was queued must not
+            // still reach the network. The two outcomes are deliberately
+            // different — a board opt-out is a reversible operator choice, so the
+            // row stays queued and drains when the board comes back; anything
+            // else means the source will never be previewable again.
+            $gate = $this->sourceGate((string) $row['source_type'], (int) $row['source_id']);
+            if ($gate === self::GATE_OPTED_OUT) {
+                $stats['skipped']++;
+                continue;
+            }
+
             try {
-                // Re-checked here, not just at queue time: a board switched off
-                // (or a post deleted / moved private) after the row was queued
-                // must not still reach the network.
-                if (!$this->publicFetchableSource((string) $row['source_type'], (int) $row['source_id'])) {
-                    throw new EgressBlockedException('Source is no longer opted in to link previews.');
+                if ($gate !== self::GATE_OK) {
+                    throw new EgressBlockedException('Source is no longer eligible for link previews.');
                 }
                 $this->validateFetchUrl((string) $row['url']);
                 [$finalUrl, $status, $html] = $this->fetchHtml((string) $row['url']);
@@ -254,8 +287,13 @@ final class LinkPreviewService
 
     /**
      * A row the actor may suppress or restore: the source post's author, or
-     * anyone with board-scoped delete authority over it. Missing collaborators
-     * (the service is constructible without them in unit contexts) fail closed.
+     * anyone with board-scoped delete authority over it.
+     *
+     * `WriteGate` is a required constructor dependency precisely because this
+     * check must not be skippable — "state beats role" has to hold on this write
+     * path too, so a banned or suspended author is refused before authorship is
+     * even considered. `BoardAuthority` stays optional but fails closed (`?? false`):
+     * without it nobody gains moderator reach they would not otherwise have.
      *
      * @return array<string,mixed>
      */
@@ -270,7 +308,7 @@ final class LinkPreviewService
             throw new NotFoundException('Preview not found.');
         }
 
-        $this->writeGate?->assertCanWrite($actor);
+        $this->writeGate->assertCanWrite($actor);
 
         $isAuthor = (int) ($post['user_id'] ?? 0) === $actor->id();
         $canModerate = $this->boardAuthority?->canModerate($actor, (int) $post['board_id'], Cap::POST_DELETE_ANY) ?? false;
@@ -292,22 +330,33 @@ final class LinkPreviewService
     }
 
     /**
-     * Eligibility of the *source*: public board, live content, and the board's
-     * own opt-in. DMs are never unfurled server-side — a fetch would leak the
-     * fact that a private message contains a given URL to that URL's operator.
+     * Eligibility of the *source*, split into a permanent verdict and a
+     * reversible one so the worker can treat them differently:
+     *
+     *  - GATE_INELIGIBLE — deleted, approval-held, not on a public board, a DM,
+     *    or simply gone. Nothing an operator does brings this row back, so the
+     *    worker retires it as `blocked`. DMs are never unfurled server-side: the
+     *    fetch would tell the URL's operator that a private message contains it.
+     *  - GATE_OPTED_OUT — the board has not opted in. That is one checkbox away
+     *    from changing, so the row stays `queued` and drains by itself when the
+     *    operator switches the board back on.
      */
-    private function publicFetchableSource(string $sourceType, int $sourceId): bool
+    private function sourceGate(string $sourceType, int $sourceId): string
     {
         if ($sourceType === 'dm_message') {
-            return false;
+            return self::GATE_INELIGIBLE;
         }
         if ($sourceType === 'post') {
             $post = $this->posts->findWithContext($sourceId);
-            return $post !== null
-                && (int) ($post['is_deleted'] ?? 0) === 0
-                && (int) ($post['is_pending'] ?? 0) === 0
-                && (string) ($post['board_visibility'] ?? '') === 'public'
-                && (int) ($post['board_link_previews_enabled'] ?? 0) === 1;
+            if ($post === null
+                || (int) ($post['is_deleted'] ?? 0) === 1
+                || (int) ($post['is_pending'] ?? 0) === 1
+                || (string) ($post['board_visibility'] ?? '') !== 'public') {
+                return self::GATE_INELIGIBLE;
+            }
+            return (int) ($post['board_link_previews_enabled'] ?? 0) === 1
+                ? self::GATE_OK
+                : self::GATE_OPTED_OUT;
         }
         if ($sourceType === 'summary') {
             $row = $this->db->fetch(
@@ -318,11 +367,14 @@ final class LinkPreviewService
                  WHERE s.id = ?",
                 [$sourceId],
             );
-            return $row !== null
-                && (string) ($row['visibility'] ?? '') === 'public'
-                && (int) ($row['link_previews_enabled'] ?? 0) === 1;
+            if ($row === null || (string) ($row['visibility'] ?? '') !== 'public') {
+                return self::GATE_INELIGIBLE;
+            }
+            return (int) ($row['link_previews_enabled'] ?? 0) === 1
+                ? self::GATE_OK
+                : self::GATE_OPTED_OUT;
         }
-        return false;
+        return self::GATE_INELIGIBLE;
     }
 
     /**

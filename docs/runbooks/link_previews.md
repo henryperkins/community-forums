@@ -15,8 +15,8 @@ graduated out of deploy-dark); fully reversible via the `features` override.
 
 | Gate | Where it lives | Default | Effect when closed |
 |---|---|---|---|
-| `link_previews` feature flag | `settings.features` | **on** | routes 404, nothing renders, nothing queues |
-| Per-board opt-in | `boards.link_previews_enabled` | **off** | that board's posts never queue, and queued rows are blocked at fetch time |
+| `link_previews` feature flag | `settings.features` | **on** | routes 404, nothing renders, nothing queues, and `worker:previews` fetches nothing |
+| Per-board opt-in | `boards.link_previews_enabled` | **off** | that board's posts never queue, and any row already queued is held (`queued`, reported `skipped`) instead of being fetched |
 | Host allowlist | `settings.link_preview_allowed_hosts` (falls back to `LINK_PREVIEW_ALLOWED_HOSTS`) | **empty** | every fetch is refused as `blocked` |
 
 Two further constraints are not operator-tunable:
@@ -65,9 +65,9 @@ egress guard), Boards opted in.
 
 | Status | Meaning | Next step |
 |---|---|---|
-| `queued` | discovered in a body, not fetched yet | run/inspect `worker:previews` |
+| `queued` | discovered in a body, not fetched yet — also where a row waits while its board is opted out, the kill switch is on, or the flag is rolled back | run/inspect `worker:previews` |
 | `fetched` | metadata stored; renders a card | — |
-| `blocked` | refused before or during egress; the reason is on the row | allowlist the host, or leave it blocked |
+| `blocked` | refused before or during egress, **or** its source is permanently ineligible (post deleted, held, moved off a public board); the reason is on the row | allowlist the host, or leave it blocked |
 | `failed` | transport, size or parse error | Refresh to retry once the cause is fixed |
 | `purged` | an operator wiped the metadata | re-queued automatically the next time its post is saved |
 | `removed` | **the author took it off their own post** | leave it alone — see below |
@@ -96,6 +96,13 @@ Engage the **kill switch** on the console (`link_preview_kill_switch`). The
 worker then skips every queued row on each run and reports them as `skipped`;
 nothing is lost and nothing is fetched. Then fix the allowlist or the board
 opt-in and release the switch.
+
+**A board should stop unfurling.**
+Switch its opt-in off. Rows already queued for that board are **held, not
+retired** — the worker reports them as `skipped` and leaves them `queued`, so
+switching the board back on drains the backlog by itself with no per-row
+console work. Only a permanently ineligible source (deleted post, approval
+hold, a move off a public board) is retired as `blocked`.
 
 **A specific host is misbehaving (slow, huge, or hostile).**
 Remove it from the allowlist and save. In-flight rows for that host fail their
@@ -130,7 +137,10 @@ echo json_encode($f), PHP_EOL;'
 
 **What rollback does:** `/admin/link-previews` and its POST routes 404, the
 member remove/restore routes 404, the board edit form drops the opt-in
-checkbox, no card renders, and nothing new is queued or fetched.
+checkbox, no card renders, and nothing new is queued. **`worker:previews` stops
+fetching too** — the service reads the flag itself, so the cron job reports
+every queued row as `skipped` and makes no outbound request. (Cron does not need
+to be unscheduled, though pausing it is harmless.)
 
 **What rollback preserves:** every `link_previews` row, every board opt-in, the
 allowlist, and the kill-switch state. Re-enabling restores exactly the posture
