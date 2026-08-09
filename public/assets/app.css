@@ -2497,16 +2497,59 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     line-height: 1;
     letter-spacing: .005em;
 }
+/* Same chamfered-frame construction as .input-engraved below — see the long
+   note there. This one had the defect at its most visible: the doubled rule's
+   inner ring ran along each straight edge and stopped dead at the tangent, so
+   every auth screen showed a card whose second line never turned the corner. */
 .variant-auth .auth-card {
+    position: relative;
     width: 100%;
     max-width: 432px;
     margin: 0;
-    background: var(--surface-raised);
     border: 0;
     border-radius: 0;
     padding: 30px 30px 26px;
+    background-color: var(--surface-raised);
+    background-image:
+        linear-gradient(135deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
+        linear-gradient(225deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
+        linear-gradient(45deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
+        linear-gradient(315deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 16px 0, 16px 100%, 0 16px, 100% 16px;
+    background-size:
+        16px 16px, 16px 16px, 16px 16px, 16px 16px,
+        calc(100% - 32px) 1.5px, calc(100% - 32px) 1.5px,
+        1.5px calc(100% - 32px), 1.5px calc(100% - 32px);
+    background-repeat: no-repeat;
     clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
-    box-shadow: var(--shadow-xl), inset 0 0 0 1.5px var(--gold-400), inset 0 0 0 5px var(--surface-raised), inset 0 0 0 6px var(--gold-200);
+    box-shadow: var(--shadow-xl);
+}
+/* The inner ring, 1px at 5px inset: 16 − 5(√2−1) ≈ 13.93px of chamfer keeps it
+   parallel to the outer octagon through the diagonals. */
+.variant-auth .auth-card::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    pointer-events: none;
+    background-image:
+        linear-gradient(135deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
+        linear-gradient(225deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
+        linear-gradient(45deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
+        linear-gradient(315deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 13.93px 0, 13.93px 100%, 0 13.93px, 100% 13.93px;
+    background-size:
+        13.93px 13.93px, 13.93px 13.93px, 13.93px 13.93px, 13.93px 13.93px,
+        calc(100% - 27.86px) 1px, calc(100% - 27.86px) 1px,
+        1px calc(100% - 27.86px), 1px calc(100% - 27.86px);
+    background-repeat: no-repeat;
 }
 .variant-auth .auth-card.wide {
     max-width: 520px;
@@ -2558,18 +2601,68 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     text-align: center;
     margin: 0 0 14px;
 }
+/* ── Chamfered frames ─────────────────────────────────────────────────────
+   ONE closed outline per frame, drawn as eight background layers: four corner
+   tiles carry the diagonal run of the rule, four stretched layers carry the
+   straight runs and stop exactly at the chamfer tangents.
+
+   An inset box-shadow cannot do this. It follows the border BOX, so its straight
+   runs shot past the tangents and into the corner, where the clip-path sliced
+   them off — four strokes with stubbed ends instead of one closed octagon. That
+   is the "disconnected corners" report.
+
+   The diagonal band starts at chamfer × √½ (less 0.3px of bleed against
+   antialiasing seams) so band and straight run meet edge-to-edge; states restate
+   the same eight layers in their own colour. Geometry is kept identical to
+   docs/design-system/imladris/components.css — the design system carries the
+   same five frames, and these are the production copies that actually paint. */
 .input-engraved,
-.textarea-engraved {
+.textarea-engraved,
+.dm-form:not(.composer-shell) .composer-input {
     border: 0;
-    background: var(--surface-page);
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);
+    background-color: var(--surface-page);
+    background-image:
+        linear-gradient(135deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(225deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(45deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(315deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 9px 0, 9px 100%, 0 9px, 100% 9px;
+    background-size:
+        9px 9px, 9px 9px, 9px 9px, 9px 9px,
+        calc(100% - 18px) 1.5px, calc(100% - 18px) 1.5px,
+        1.5px calc(100% - 18px), 1.5px calc(100% - 18px);
+    background-repeat: no-repeat;
     clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+    box-shadow: var(--shadow-inset);
 }
+/* No outer focus ring here: clip-path cuts everything outside the octagon, so
+   the 0 0 0 3px var(--focus-ring) this rule used to carry had never rendered.
+   Focus is carried by the rule itself going to --gold-500, which is visible.
+
+   box-shadow still has to be restated. The generic .input:focus above matches at
+   the same (0,2,0) and sets the outer ring alone, so leaving it out here would
+   let it win and cost the well its inset depth for exactly as long as it is
+   focused. Same reason the :user-invalid rule below restates it. */
 .input-engraved:focus,
-.textarea-engraved:focus {
+.textarea-engraved:focus,
+.dm-form:not(.composer-shell) .composer-input:focus {
     outline: 0;
     border-color: transparent;
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500), 0 0 0 3px var(--focus-ring);
+    box-shadow: var(--shadow-inset);
+    background-image:
+        linear-gradient(135deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(225deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(45deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(315deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500));
+    background-repeat: no-repeat;
 }
 
 /* ── Client-side validity ─────────────────────────────────────────────────
@@ -2588,16 +2681,28 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .row-input:user-invalid {
     border-color: var(--danger);
 }
-/* .input-engraved has border:0 and draws its edge with an inset box-shadow
+/* .input-engraved has border:0 and draws its edge as eight background layers
    under a clip-path, so border-color alone would be invisible on every auth
-   and account field. Restate the shadow instead. */
+   and account field. Restate the eight layers in --danger instead.
+
+   One rule covers the focused invalid field too. The separate :user-invalid:focus
+   rule that used to follow differed only by an outer 0 0 0 3px var(--focus-ring),
+   which the clip-path had always cut away; with that gone the two were identical.
+   This still wins over :focus on a focused invalid field — both match at (0,2,0)
+   and, as the note above says, source order settles it. */
 .input-engraved:user-invalid,
 .textarea-engraved:user-invalid {
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--danger);
-}
-.input-engraved:user-invalid:focus,
-.textarea-engraved:user-invalid:focus {
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--danger), 0 0 0 3px var(--focus-ring);
+    box-shadow: var(--shadow-inset);
+    background-image:
+        linear-gradient(135deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(225deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(45deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(315deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(var(--danger), var(--danger)),
+        linear-gradient(var(--danger), var(--danger)),
+        linear-gradient(var(--danger), var(--danger)),
+        linear-gradient(var(--danger), var(--danger));
+    background-repeat: no-repeat;
 }
 /* Never colour alone. .field is <label class="field"><span>Label</span><input>,
    so :has() reaches the label text to carry a non-colour second indicator —
@@ -2859,10 +2964,50 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 }
 .scribe-panel {
     position: relative;
-    background: var(--surface-raised);
     padding: 22px 24px;
+    border: 0;
+    background-color: var(--surface-raised);
+    background-image:
+        linear-gradient(135deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(225deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(45deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(315deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 14px 0, 14px 100%, 0 14px, 100% 14px;
+    background-size:
+        14px 14px, 14px 14px, 14px 14px, 14px 14px,
+        calc(100% - 28px) 1.5px, calc(100% - 28px) 1.5px,
+        1.5px calc(100% - 28px), 1.5px calc(100% - 28px);
+    background-repeat: no-repeat;
     clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
-    box-shadow: inset 0 0 0 1.5px var(--gold-400), inset 0 0 0 4.5px var(--surface-raised), inset 0 0 0 5.5px var(--gold-200);
+}
+/* The doubled rule: a second, parallel octagon inset 4.5px. Offsetting an
+   octagon inward by d shortens its chamfer by d(√2−1) — 14 − 1.86 ≈ 12.1px — so
+   the inner rule stays truly parallel to the outer one through the diagonals,
+   which the old triple inset box-shadow did not. */
+.scribe-panel::before {
+    content: "";
+    position: absolute;
+    inset: 4.5px;
+    pointer-events: none;
+    background-image:
+        linear-gradient(135deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(225deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(45deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(315deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 12.1px 0, 12.1px 100%, 0 12.1px, 100% 12.1px;
+    background-size:
+        12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px,
+        calc(100% - 24.2px) 1px, calc(100% - 24.2px) 1px,
+        1px calc(100% - 24.2px), 1px calc(100% - 24.2px);
+    background-repeat: no-repeat;
 }
 .scribe-panel-head {
     display: flex;
@@ -2892,21 +3037,52 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     gap: 7px;
     align-items: flex-start;
 }
+/* The rule is background layers now, and background-image does not animate, so
+   the box-shadow transition this rule carried no longer has anything to ease. */
 .field-row {
     display: flex;
     align-items: center;
     gap: 11px;
     padding: 10px 14px;
-    background: var(--surface-page);
-    box-shadow: var(--shadow-inset), inset 0 0 0 1px var(--gold-200);
+    border: 0;
+    background-color: var(--surface-page);
+    background-image:
+        linear-gradient(135deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(225deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(45deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(315deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
+    background-size:
+        8px 8px, 8px 8px, 8px 8px, 8px 8px,
+        calc(100% - 16px) 1px, calc(100% - 16px) 1px,
+        1px calc(100% - 16px), 1px calc(100% - 16px);
+    background-repeat: no-repeat;
     clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-    transition: box-shadow var(--dur-fast) var(--ease-calm);
+    box-shadow: var(--shadow-inset);
 }
 .field-row + .field-row {
     margin-top: 9px;
 }
 .field-row:focus-within {
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500);
+    background-image:
+        linear-gradient(135deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(225deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(45deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(315deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
+    background-size:
+        8px 8px, 8px 8px, 8px 8px, 8px 8px,
+        calc(100% - 16px) 1.5px, calc(100% - 16px) 1.5px,
+        1.5px calc(100% - 16px), 1.5px calc(100% - 16px);
+    background-repeat: no-repeat;
 }
 .field-row .row-bullet {
     flex: 0 0 auto;
@@ -8048,17 +8224,12 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 @media (prefers-reduced-motion: reduce) {
     .main > .flash:has(+ .dm-shell) { animation: none; }
 }
-.dm-form:not(.composer-shell) .composer-input {
-    border: 0;
-    background: var(--surface-page);
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);
-    clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
-}
-.dm-form:not(.composer-shell) .composer-input:focus {
-    outline: 0;
-    border-color: transparent;
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500), 0 0 0 3px var(--focus-ring);
-}
+/* The standalone DM composer is the same 9px engraved well as an auth or
+   account field, so `.dm-form:not(.composer-shell) .composer-input` is carried
+   in the .input-engraved rules instead of restating the eight rule layers a
+   third time. It reaches here at (0,3,0), which clears both `.composer-input,
+   textarea.input` and `.composer-box .composer-input` wherever they are
+   declared. Search "Chamfered frames" to edit it. */
 .dm-empty {
     flex: 1;
     display: flex;
@@ -8812,15 +8983,42 @@ html:not(.has-js) .board-view .board-identity-sticky { display: none; }
 .compose-page .md-hint { font-family: var(--font-body); font-size: .9rem; color: var(--text-faint); line-height: 1.5; margin: 0; }
 .compose-page .md-hint code { font-family: var(--font-mono); font-size: .85em; background: var(--surface-sunken); padding: 1px 5px; border-radius: 4px; }
 
+/* Every state below must use background-color, never the background shorthand:
+   the shorthand resets background-image and would wipe the eight rule layers. */
 .choice-card {
     border: 0;
     border-radius: 0;
-    background: var(--surface-raised);
-    box-shadow: inset 0 0 0 1.5px var(--border-soft);
+    background-color: var(--surface-raised);
+    background-image:
+        linear-gradient(135deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(225deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(45deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(315deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(var(--border-soft), var(--border-soft)),
+        linear-gradient(var(--border-soft), var(--border-soft)),
+        linear-gradient(var(--border-soft), var(--border-soft)),
+        linear-gradient(var(--border-soft), var(--border-soft));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
+    background-size:
+        11px 11px, 11px 11px, 11px 11px, 11px 11px,
+        calc(100% - 22px) 1.5px, calc(100% - 22px) 1.5px,
+        1.5px calc(100% - 22px), 1.5px calc(100% - 22px);
+    background-repeat: no-repeat;
     clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px), calc(100% - 11px) 100%, 11px 100%, 0 calc(100% - 11px), 0 11px);
-    transition: box-shadow var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+    transition: background-color var(--dur-fast) var(--ease-calm);
 }
-.choice-card:hover { box-shadow: inset 0 0 0 1.5px var(--border-strong); }
+.choice-card:hover {
+    background-image:
+        linear-gradient(135deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(225deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(45deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(315deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(var(--border-strong), var(--border-strong)),
+        linear-gradient(var(--border-strong), var(--border-strong)),
+        linear-gradient(var(--border-strong), var(--border-strong)),
+        linear-gradient(var(--border-strong), var(--border-strong));
+    background-repeat: no-repeat;
+}
 .choice-card::after {
     content: "";
     position: absolute;
@@ -8833,9 +9031,36 @@ html:not(.has-js) .board-view .board-identity-sticky { display: none; }
     opacity: .3;
     transition: opacity var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
 }
-.choice-card:has(input:checked) { background: var(--brand-subtle); box-shadow: inset 0 0 0 2px var(--accent); }
+/* Checked and focus thicken and gild the same closed outline. An outer focus
+   ring is impossible here — clip-path cuts everything outside the octagon, so
+   the 0 0 0 3px var(--focus-ring) :focus-within used to carry had never
+   rendered — so focus is carried by the 2px accent rule, which is visible. */
+.choice-card:has(input:checked),
+.choice-card:focus-within {
+    /* The superseded .choice-card block near the top of this file still sets
+       box-shadow: inset 0 0 0 1px var(--accent) on the checked state. It matches
+       at the same (0,2,1) and only loses the properties restated here, so
+       without this it would keep drawing a border-box inset ring under the
+       clip-path — the stubbed corners, back again on every checked card. */
+    box-shadow: none;
+    background-image:
+        linear-gradient(135deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(225deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(45deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(315deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
+    background-size:
+        11px 11px, 11px 11px, 11px 11px, 11px 11px,
+        calc(100% - 22px) 2px, calc(100% - 22px) 2px,
+        2px calc(100% - 22px), 2px calc(100% - 22px);
+    background-repeat: no-repeat;
+}
+.choice-card:has(input:checked) { background-color: var(--brand-subtle); }
 .choice-card:has(input:checked)::after { opacity: 1; background: var(--gold-500); }
-.choice-card:focus-within { box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 3px var(--focus-ring); }
 .switch {
     width: 42px;
     height: 24px;

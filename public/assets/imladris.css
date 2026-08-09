@@ -529,16 +529,50 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 .input-pill { border-radius: var(--radius-pill); background: var(--surface-page); padding: 8px 15px; }
 
-/* Engraved field — a chamfered parchment well with a doubled gold rule; the
+/* ── Chamfered frames ─────────────────────────────────────────────────────
+   ONE closed outline per frame, drawn as eight background layers: four corner
+   tiles carry the diagonal run of the rule, four stretched layers carry the
+   straight runs and stop exactly at the chamfer tangents. (An inset box-shadow
+   cannot do this — it follows the border BOX, so its runs shot past the tangents
+   and the clip cut them into stubs, which is what read as "disconnected
+   corners".) The diagonal band starts at chamfer × √½ so it meets the straight
+   runs edge-to-edge; states restate the layers in their own colour. */
+
+/* Engraved field — a chamfered parchment well with a gold rule; the
    lapidary register of .input / .textarea (see "Lapidary register" below). */
 .input-engraved, .textarea-engraved {
-    border: 0; background: var(--surface-page);
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);
+    border: 0;
+    background-color: var(--surface-page);
+    background-image:
+        linear-gradient(135deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(225deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(45deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(315deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 9px 0, 9px 100%, 0 9px, 100% 9px;
+    background-size:
+        9px 9px, 9px 9px, 9px 9px, 9px 9px,
+        calc(100% - 18px) 1.5px, calc(100% - 18px) 1.5px,
+        1.5px calc(100% - 18px), 1.5px calc(100% - 18px);
+    background-repeat: no-repeat;
     clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+    box-shadow: var(--shadow-inset);
 }
 .input-engraved:focus, .textarea-engraved:focus {
-    outline: 0; border-color: transparent;
-    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500);
+    outline: 0;
+    background-image:
+        linear-gradient(135deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(225deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(45deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(315deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500));
+    background-repeat: no-repeat;
 }
 .field { display: block; margin-bottom: 14px; }
 .field > .field-label { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .82rem; color: var(--text-muted); margin-bottom: 5px; }
@@ -565,22 +599,87 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* ── Choice card (theme / density radio) ─────────────────────────────────── */
 .choice-card {
-    position: relative; display: block; border: 0;
-    background: var(--surface-raised); padding: 13px 15px; cursor: pointer;
-    box-shadow: inset 0 0 0 1.5px var(--border-soft);
+    position: relative; display: block; padding: 13px 15px; cursor: pointer;
+    border: 0;
+    background-color: var(--surface-raised);
+    background-image:
+        linear-gradient(135deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(225deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(45deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(315deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(var(--border-soft), var(--border-soft)),
+        linear-gradient(var(--border-soft), var(--border-soft)),
+        linear-gradient(var(--border-soft), var(--border-soft)),
+        linear-gradient(var(--border-soft), var(--border-soft));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
+    background-size:
+        11px 11px, 11px 11px, 11px 11px, 11px 11px,
+        calc(100% - 22px) 1.5px, calc(100% - 22px) 1.5px,
+        1.5px calc(100% - 22px), 1.5px calc(100% - 22px);
+    background-repeat: no-repeat;
     clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px), calc(100% - 11px) 100%, 11px 100%, 0 calc(100% - 11px), 0 11px);
-    transition: box-shadow var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+    transition: background-color var(--dur-fast) var(--ease-calm);
 }
-.choice-card:hover { box-shadow: inset 0 0 0 1.5px var(--border-strong); }
+.choice-card:hover {
+    background-image:
+        linear-gradient(135deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(225deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(45deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(315deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
+        linear-gradient(var(--border-strong), var(--border-strong)),
+        linear-gradient(var(--border-strong), var(--border-strong)),
+        linear-gradient(var(--border-strong), var(--border-strong)),
+        linear-gradient(var(--border-strong), var(--border-strong));
+    background-repeat: no-repeat;
+}
 .choice-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .choice-card::after {
     content: ""; position: absolute; top: 11px; right: 12px; width: 7px; height: 7px;
     background: var(--gold-400); transform: rotate(45deg); opacity: .3;
     transition: opacity var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
 }
-.choice-card:has(input:checked) { background: var(--brand-subtle); box-shadow: inset 0 0 0 2px var(--accent); }
+/* Checked & focus thicken and gild the same closed outline. An outer focus ring
+   is impossible here — clip-path cuts everything outside the octagon — so focus
+   is carried by the 2px accent rule itself. */
+/* Checked and focus thicken and gild the same closed outline. An outer focus
+   ring is impossible here — clip-path cuts everything outside the octagon — so
+   focus is carried by the 2px accent rule itself. */
+.choice-card:has(input:checked) {
+    background-color: var(--brand-subtle);
+    background-image:
+        linear-gradient(135deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(225deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(45deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(315deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
+    background-size:
+        11px 11px, 11px 11px, 11px 11px, 11px 11px,
+        calc(100% - 22px) 2px, calc(100% - 22px) 2px,
+        2px calc(100% - 22px), 2px calc(100% - 22px);
+    background-repeat: no-repeat;
+}
 .choice-card:has(input:checked)::after { opacity: 1; background: var(--gold-500); }
-.choice-card:focus-within { box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 3px var(--focus-ring); }
+.choice-card:focus-within {
+    background-image:
+        linear-gradient(135deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(225deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(45deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(315deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
+    background-size:
+        11px 11px, 11px 11px, 11px 11px, 11px 11px,
+        calc(100% - 22px) 2px, calc(100% - 22px) 2px,
+        2px calc(100% - 22px), 2px calc(100% - 22px);
+    background-repeat: no-repeat;
+}
 .choice-card-title { display: block; font-family: var(--font-label); letter-spacing: .04em; font-size: .82rem; color: var(--text-strong); }
 .choice-card-desc { display: block; font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
 .theme-swatch { display: flex; height: 30px; border-radius: var(--radius-sm); overflow: hidden; box-shadow: inset 0 0 0 1px var(--border-hair); margin-bottom: 9px; }
@@ -598,10 +697,46 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* Engraved panel — a chamfered parchment frame with a doubled gold rule. */
 .scribe-panel {
-    position: relative;
-    background: var(--surface-raised); padding: 22px 24px;
+    position: relative; padding: 22px 24px;
+    border: 0;
+    background-color: var(--surface-raised);
+    background-image:
+        linear-gradient(135deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(225deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(45deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(315deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400)),
+        linear-gradient(var(--gold-400), var(--gold-400));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 14px 0, 14px 100%, 0 14px, 100% 14px;
+    background-size:
+        14px 14px, 14px 14px, 14px 14px, 14px 14px,
+        calc(100% - 28px) 1.5px, calc(100% - 28px) 1.5px,
+        1.5px calc(100% - 28px), 1.5px calc(100% - 28px);
+    background-repeat: no-repeat;
     clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
-    box-shadow: inset 0 0 0 1.5px var(--gold-400), inset 0 0 0 4.5px var(--surface-raised), inset 0 0 0 5.5px var(--gold-200);
+}
+/* The doubled rule: a second, parallel octagon inset 4.5px. Offsetting an
+   octagon inward by d shortens its chamfer by d(√2−1) — 14 − 1.86 ≈ 12.1px —
+   so the inner rule stays truly parallel to the outer one at the diagonals. */
+.scribe-panel::before {
+    content: ""; position: absolute; inset: 4.5px; pointer-events: none;
+    background-image:
+        linear-gradient(135deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(225deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(45deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(315deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 12.1px 0, 12.1px 100%, 0 12.1px, 100% 12.1px;
+    background-size:
+        12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px,
+        calc(100% - 24.2px) 1px, calc(100% - 24.2px) 1px,
+        1px calc(100% - 24.2px), 1px calc(100% - 24.2px);
+    background-repeat: no-repeat;
 }
 .scribe-panel-head {
     display: flex; align-items: center; gap: 11px; margin: 0 0 15px;
@@ -612,14 +747,45 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* Engraved field row — a chamfered inset well with a diamond bullet. */
 .field-row {
-    display: flex; align-items: center; gap: 11px;
-    padding: 10px 14px; background: var(--surface-page);
-    box-shadow: var(--shadow-inset), inset 0 0 0 1px var(--gold-200);
+    display: flex; align-items: center; gap: 11px; padding: 10px 14px;
+    border: 0;
+    background-color: var(--surface-page);
+    background-image:
+        linear-gradient(135deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(225deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(45deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(315deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200)),
+        linear-gradient(var(--gold-200), var(--gold-200));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
+    background-size:
+        8px 8px, 8px 8px, 8px 8px, 8px 8px,
+        calc(100% - 16px) 1px, calc(100% - 16px) 1px,
+        1px calc(100% - 16px), 1px calc(100% - 16px);
+    background-repeat: no-repeat;
     clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-    transition: box-shadow var(--dur-fast) var(--ease-calm);
+    box-shadow: var(--shadow-inset);
 }
 .field-row + .field-row { margin-top: 9px; }
-.field-row:focus-within { box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500); }
+.field-row:focus-within {
+    background-image:
+        linear-gradient(135deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(225deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(45deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(315deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500)),
+        linear-gradient(var(--gold-500), var(--gold-500));
+    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
+    background-size:
+        8px 8px, 8px 8px, 8px 8px, 8px 8px,
+        calc(100% - 16px) 1.5px, calc(100% - 16px) 1.5px,
+        1.5px calc(100% - 16px), 1.5px calc(100% - 16px);
+    background-repeat: no-repeat;
+}
 .field-row .row-bullet { flex: 0 0 auto; width: 8px; height: 8px; background: var(--gold-500); transform: rotate(45deg); }
 .field-row .row-input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-family: var(--font-body); color: var(--text); outline: none; }
 .field-row .row-input::placeholder { color: var(--text-faint); }
