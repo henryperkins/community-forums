@@ -1,5 +1,12 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Sign up'); $this->section('variant', 'auth'); ?>
+<?php
+$errors = $errors ?? [];
+// field_attrs() puts autofocus on the FIRST errored field, so the static
+// first-field autofocus only applies when the form is clean. Two autofocus
+// attributes would leave focus on Username while the error sat on Email.
+$registerFirstFocus = $errors === [] ? ' autofocus' : '';
+?>
 <div class="auth-card wide">
     <span class="auth-eyebrow">Take a seat at the table</span>
     <h1>Create your account</h1>
@@ -17,31 +24,34 @@
         <?= $this->csrfField() ?>
         <?php $inviteFieldValue = (string) (($invite_token ?? '') !== '' ? $invite_token : ($old['invite'] ?? '')); ?>
         <?php if ($inviteFieldValue !== ''): ?><input type="hidden" name="invite" value="<?= $e($inviteFieldValue) ?>"><?php endif; ?>
+        <?php // field_error() emits a <p>, which cannot legally nest inside <label>,
+              // so the error line sits after its label. .field:has(+ .field-error)
+              // closes the gap the label's own margin would otherwise leave. ?>
         <label class="field">
             <span>Username</span>
-            <input type="text" name="username" class="input input-engraved" maxlength="32" value="<?= $e($old['username'] ?? '') ?>" required autofocus>
-            <?php if (!empty($errors['username'])): ?><span class="field-error"><?= $e($errors['username']) ?></span><?php endif; ?>
+            <input type="text" name="username" class="input input-engraved" maxlength="32" value="<?= $e($old['username'] ?? '') ?>"<?= field_attrs($errors, 'username') ?> required<?= $registerFirstFocus ?>>
         </label>
+        <?= field_error($errors, 'username') ?>
         <label class="field">
             <span>Display name <span class="muted">(optional)</span></span>
-            <input type="text" name="display_name" class="input input-engraved" maxlength="64" value="<?= $e($old['display_name'] ?? '') ?>">
-            <?php if (!empty($errors['display_name'])): ?><span class="field-error"><?= $e($errors['display_name']) ?></span><?php endif; ?>
+            <input type="text" name="display_name" class="input input-engraved" maxlength="64" value="<?= $e($old['display_name'] ?? '') ?>"<?= field_attrs($errors, 'display_name') ?>>
         </label>
+        <?= field_error($errors, 'display_name') ?>
         <label class="field">
             <span>Email</span>
-            <input type="email" name="email" class="input input-engraved" maxlength="255" autocomplete="username" value="<?= $e($old['email'] ?? '') ?>" required>
-            <?php if (!empty($errors['email'])): ?><span class="field-error"><?= $e($errors['email']) ?></span><?php endif; ?>
+            <input type="email" name="email" class="input input-engraved" maxlength="255" autocomplete="username" value="<?= $e($old['email'] ?? '') ?>"<?= field_attrs($errors, 'email') ?> required>
         </label>
+        <?= field_error($errors, 'email') ?>
         <label class="field">
             <span>Password</span>
-            <input type="password" name="password" class="input input-engraved" autocomplete="new-password" required>
-            <?php if (!empty($errors['password'])): ?><span class="field-error"><?= $e($errors['password']) ?></span><?php endif; ?>
+            <input type="password" name="password" class="input input-engraved" autocomplete="new-password"<?= field_attrs($errors, 'password') ?> required>
         </label>
+        <?= field_error($errors, 'password') ?>
         <label class="field">
             <span>Confirm password</span>
-            <input type="password" name="password_confirm" class="input input-engraved" autocomplete="new-password" required>
-            <?php if (!empty($errors['password_confirm'])): ?><span class="field-error"><?= $e($errors['password_confirm']) ?></span><?php endif; ?>
+            <input type="password" name="password_confirm" class="input input-engraved" autocomplete="new-password"<?= field_attrs($errors, 'password_confirm') ?> required>
         </label>
+        <?= field_error($errors, 'password_confirm') ?>
         <button class="btn" type="submit"><?= !empty($invite_valid) ? 'Accept invitation' : 'Sign up' ?></button>
     </form>
     <?php endif; ?>

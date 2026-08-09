@@ -212,7 +212,7 @@ $profileUrl = '/u/' . $profile['username'];
                 <?php if ($activeSort !== 'newest'): ?><input type="hidden" name="sort" value="<?= $e($activeSort) ?>"><?php endif; ?>
                 <label class="profile-search">
                     <?= $this->partial('partials/icon', ['name' => 'search']) ?>
-                    <input type="search" name="q" value="<?= $e($q) ?>" placeholder="Search this member's activity" aria-label="Search this member's activity">
+                    <input type="search" enterkeyhint="search" name="q" value="<?= $e($q) ?>" placeholder="Search this member's activity" aria-label="Search this member's activity">
                 </label>
                 <button class="btn btn-small" type="submit">Search</button>
                 <span class="profile-list-count"><?= $listTotal === 1 ? '1 entry' : number_format($listTotal) . ' entries' ?></span>
@@ -298,7 +298,7 @@ $profileUrl = '/u/' . $profile['username'];
                     <input type="hidden" name="c" value="<?= $e($connMode) ?>">
                     <label class="profile-search">
                         <?= $this->partial('partials/icon', ['name' => 'search']) ?>
-                        <input type="search" name="cq" value="<?= $e($connQ) ?>" placeholder="Find a member" aria-label="Find a member">
+                        <input type="search" enterkeyhint="search" name="cq" value="<?= $e($connQ) ?>" placeholder="Find a member" aria-label="Find a member">
                     </label>
                     <button class="btn btn-small" type="submit">Search</button>
                 </form>

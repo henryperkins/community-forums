@@ -55,7 +55,7 @@ $pageQuery = static fn (int $value): array => array_replace($baseQuery, ['page' 
             <h2>Catalogue</h2>
             <form class="content-tag-search" method="get" action="/admin/tags">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
-                <input class="input" type="search" name="q" value="<?= $e($q) ?>" placeholder="Search the catalogue" aria-label="Search the catalogue">
+                <input class="input" type="search" enterkeyhint="search" name="q" value="<?= $e($q) ?>" placeholder="Search the catalogue" aria-label="Search the catalogue">
                 <input type="hidden" name="sort" value="<?= $e($sort) ?>">
             </form>
             <nav class="content-tag-sort" aria-label="Sort tags">

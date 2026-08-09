@@ -5,6 +5,43 @@ $this->section('title', 'Security');
 $totp = $totp ?? ['enabled' => false, 'pending' => false, 'unused_recovery_codes' => 0];
 $setup = $totp_setup ?? null;
 $recoveryCodes = $new_recovery_codes ?? [];
+$secErrs = $errors ?? [];
+$secCtx = (string) ($error_context ?? '');
+/**
+ * Five forms on this page carry a current_password field and share one $errors
+ * array, so that one key is scoped to the form it came from — otherwise every
+ * form would light up and the page would repeat one error id five times. Keys
+ * that can only come from a single form (new_password, totp_code, disable_code)
+ * need no scoping; totp/recovery are panel-level and have no input to attach to.
+ */
+$sfattr = function (string $context, string $field) use ($secCtx, $secErrs): string {
+    return $secCtx === $context ? field_attrs($secErrs, $field, 'err-' . $context . '-' . $field) : '';
+};
+$sferr = function (string $context, string $field) use ($secCtx, $secErrs): string {
+    return $secCtx === $context ? field_error($secErrs, $field, 'err-' . $context . '-' . $field) : '';
+};
+/*
+ * Not every form that can 422 is still on the page when it does: a wrong
+ * password sent to "disable two-factor" is rejected before the not-enabled
+ * check, and the panel only renders the disable form WHILE 2FA is enabled — so
+ * the scoped error would have nowhere to land. Surface those centrally instead
+ * of dropping them, the same orphaned-action problem mod/user.php solves.
+ * (Before the errors were scoped this leaked into the password-change form,
+ * which showed the message under a field that had nothing to do with it.)
+ */
+$secFormRendered = match ($secCtx) {
+    'password' => true,
+    'totp_enroll' => empty($totp['enabled']),
+    'totp_confirm' => is_array($setup),
+    'totp_rotate', 'totp_disable' => !empty($totp['enabled']),
+    default => false,
+};
+// totp/recovery are excluded: the panel below already owns those two.
+$secOrphaned = $secCtx !== '' && !$secFormRendered
+    ? array_diff_key($secErrs, array_flip(['totp', 'recovery']))
+    : [];
+// One autofocus per document — the orphan summary outranks the panel message.
+$secPanelFocus = $secOrphaned === [];
 ?>
 <div class="settings-screen">
     <header class="settings-head">
@@ -16,28 +53,42 @@ $recoveryCodes = $new_recovery_codes ?? [];
         <?= $this->partial('partials/settings_nav', ['active' => 'security']) ?>
 
         <div class="settings-pane">
+    <?php if ($secOrphaned !== []): ?>
+        <div class="card notice" role="alert" tabindex="-1" autofocus>
+            <?php foreach ($secOrphaned as $secMessage): ?>
+                <p class="field-error"><?= $e($secMessage) ?></p>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
     <form method="post" action="/settings/security" class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Password</h2>
         <?= $this->csrfField() ?>
+        <?php // field_error() emits a <p>, which cannot legally nest inside <label>,
+              // so each error follows its label — and inside .field-grid a bare
+              // sibling would claim its own grid cell, hence the .field-cell wrap. ?>
         <label class="field">
             <span>Current password</span>
-            <input type="password" name="current_password" class="input" autocomplete="current-password" required>
-            <?php if (!empty($errors['current_password'])): ?><span class="field-error"><?= $e($errors['current_password']) ?></span><?php endif; ?>
+            <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('password', 'current_password') ?> required>
         </label>
+        <?= $sferr('password', 'current_password') ?>
         <?php // copy: the design pairs the new and confirm fields on one row. The
               // strength meter beside them is FR-02 — five tiers ending in a fiction
               // string, over a scorer production does not have. Build nothing. ?>
         <div class="field-grid">
-            <label class="field">
-                <span>New password</span>
-                <input type="password" name="new_password" class="input" autocomplete="new-password" required>
-                <?php if (!empty($errors['new_password'])): ?><span class="field-error"><?= $e($errors['new_password']) ?></span><?php endif; ?>
-            </label>
-            <label class="field">
-                <span>Confirm new password</span>
-                <input type="password" name="new_password_confirm" class="input" autocomplete="new-password" required>
-                <?php if (!empty($errors['new_password_confirm'])): ?><span class="field-error"><?= $e($errors['new_password_confirm']) ?></span><?php endif; ?>
-            </label>
+            <div class="field-cell">
+                <label class="field">
+                    <span>New password</span>
+                    <input type="password" name="new_password" class="input" autocomplete="new-password"<?= field_attrs($secErrs, 'new_password') ?> required>
+                </label>
+                <?= field_error($secErrs, 'new_password') ?>
+            </div>
+            <div class="field-cell">
+                <label class="field">
+                    <span>Confirm new password</span>
+                    <input type="password" name="new_password_confirm" class="input" autocomplete="new-password"<?= field_attrs($secErrs, 'new_password_confirm') ?> required>
+                </label>
+                <?= field_error($secErrs, 'new_password_confirm') ?>
+            </div>
         </div>
         <button class="btn" type="submit">Change password</button>
     </form>
@@ -51,16 +102,23 @@ $recoveryCodes = $new_recovery_codes ?? [];
         <?php else: ?>
             <p class="muted">Not enabled.</p>
         <?php endif; ?>
-        <?php if (!empty($errors['totp'])): ?><p class="field-error"><?= $e($errors['totp']) ?></p><?php endif; ?>
-        <?php if (!empty($errors['recovery'])): ?><p class="field-error"><?= $e($errors['recovery']) ?></p><?php endif; ?>
+        <?php // Panel-level state ("already enabled", "not enabled"), not a field:
+              // there is no input to attach, so the message takes focus itself —
+              // a role="alert" already in the parsed document announces nothing. ?>
+        <?php foreach (['totp', 'recovery'] as $secPanelKey): ?>
+            <?php if (!empty($secErrs[$secPanelKey])): ?>
+                <p class="field-error" id="err-<?= $e($secPanelKey) ?>" tabindex="-1"<?= $secPanelFocus && array_key_first($secErrs) === $secPanelKey ? ' autofocus' : '' ?>><?= $e($secErrs[$secPanelKey]) ?></p>
+            <?php endif; ?>
+        <?php endforeach; ?>
 
         <?php if (!$totp['enabled']): ?>
             <form method="post" action="/settings/security/totp/enroll" class="stacked">
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password" required>
+                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_enroll', 'current_password') ?> required>
                 </label>
+                <?= $sferr('totp_enroll', 'current_password') ?>
                 <button class="btn" type="submit">Start setup</button>
             </form>
         <?php endif; ?>
@@ -79,13 +137,14 @@ $recoveryCodes = $new_recovery_codes ?? [];
                     <?= $this->csrfField() ?>
                     <label class="field">
                         <span>Current password</span>
-                        <input type="password" name="current_password" class="input" autocomplete="current-password" required>
+                        <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_confirm', 'current_password') ?> required>
                     </label>
+                    <?= $sferr('totp_confirm', 'current_password') ?>
                     <label class="field">
                         <span>6-digit code</span>
-                        <input name="totp_code" class="input" inputmode="numeric" autocomplete="one-time-code" required>
-                        <?php if (!empty($errors['totp_code'])): ?><span class="field-error"><?= $e($errors['totp_code']) ?></span><?php endif; ?>
+                        <input name="totp_code" class="input" inputmode="numeric" autocomplete="one-time-code"<?= field_attrs($secErrs, 'totp_code') ?> required>
                     </label>
+                    <?= field_error($secErrs, 'totp_code') ?>
                     <button class="btn" type="submit">Verify and enable</button>
                 </form>
             </div>
@@ -111,8 +170,9 @@ $recoveryCodes = $new_recovery_codes ?? [];
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password" required>
+                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_rotate', 'current_password') ?> required>
                 </label>
+                <?= $sferr('totp_rotate', 'current_password') ?>
                 <button class="btn btn-secondary" type="submit">Rotate recovery codes</button>
             </form>
 
@@ -120,13 +180,14 @@ $recoveryCodes = $new_recovery_codes ?? [];
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password" required>
+                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_disable', 'current_password') ?> required>
                 </label>
+                <?= $sferr('totp_disable', 'current_password') ?>
                 <label class="field">
                     <span>Authenticator or recovery code</span>
-                    <input name="disable_code" class="input" autocomplete="one-time-code" required>
-                    <?php if (!empty($errors['disable_code'])): ?><span class="field-error"><?= $e($errors['disable_code']) ?></span><?php endif; ?>
+                    <input name="disable_code" class="input" autocomplete="one-time-code"<?= field_attrs($secErrs, 'disable_code') ?> required>
                 </label>
+                <?= field_error($secErrs, 'disable_code') ?>
                 <button class="btn danger" type="submit">Disable two-factor authentication</button>
             </form>
         <?php endif; ?>

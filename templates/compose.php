@@ -14,20 +14,22 @@ $composeAllowsAnonymous = array_filter($boards, static fn (array $b): bool => !e
 $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e): void {
     ?>
     <p class="muted">Markdown supported — <strong>**bold**</strong>, <em>*italic*</em>, <code>`code`</code>, <code>||spoiler||</code>, and <code>![alt](image)</code> after uploading.</p>
+    <?php // field_error() emits a <p>, which cannot legally nest inside <label>,
+          // so each error stays a sibling after its label — as it already was. ?>
     <label class="field">
         <span>Board</span>
-        <select name="board_id" class="input">
+        <select name="board_id" class="input"<?= field_attrs($errors, 'board_id') ?>>
             <?php foreach ($boards as $b): ?>
                 <option value="<?= (int) $b['id'] ?>" <?= (int) $b['id'] === (int) $selected_board ? 'selected' : '' ?>>#<?= $e($b['name']) ?></option>
             <?php endforeach; ?>
         </select>
     </label>
-    <?php if (!empty($errors['board_id'])): ?><p class="field-error"><?= $e($errors['board_id']) ?></p><?php endif; ?>
+    <?= field_error($errors, 'board_id') ?>
     <label class="field">
         <span>Title</span>
-        <input type="text" name="title" class="input" maxlength="160" value="<?= $e($old['title'] ?? '') ?>" required>
+        <input type="text" name="title" class="input" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= field_attrs($errors, 'title') ?> required>
     </label>
-    <?php if (!empty($errors['title'])): ?><p class="field-error"><?= $e($errors['title']) ?></p><?php endif; ?>
+    <?= field_error($errors, 'title') ?>
     <?php
 };
 ?>
@@ -44,6 +46,8 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
         'submit_label' => 'Create topic',
         'form_class' => 'stacked',
         'body_error' => (string) ($errors['body'] ?? ''),
+        // board_id/title own the focus when either errored first (field_attrs()' rule).
+        'body_error_focus' => array_key_first($errors) === 'body',
         'identity' => [
             'display_name' => $current_user->displayName(),
             'username' => $current_user->username(),

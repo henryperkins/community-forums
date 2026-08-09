@@ -18,8 +18,11 @@ $oldPostIds = array_map('intval', (array) ($restructureOld['post_ids'] ?? []));
         <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/split">
             <?= $this->csrfField() ?>
             <h3>Split replies out</h3>
+            <?php // Form-level, with no single field to blame: the message takes focus
+                  // itself (the <details> is forced open above), because a role="alert"
+                  // already present when the document parsed announces nothing. ?>
             <?php if ($restructureContext === 'split' && $restructureError !== ''): ?>
-                <p class="field-error" role="alert"><?= $e($restructureError) ?></p>
+                <p class="field-error" role="alert" tabindex="-1" autofocus><?= $e($restructureError) ?></p>
             <?php endif; ?>
             <?php foreach ($movablePosts as $post): ?>
                 <?php $author = mask_author($post['author_display_name'] ?? null, $post['author_username'] ?? null, $post['author_role'] ?? 'user', (int) ($post['is_anonymous'] ?? 0) === 1); ?>
@@ -32,7 +35,7 @@ $oldPostIds = array_map('intval', (array) ($restructureOld['post_ids'] ?? []));
             <?= $this->csrfField() ?>
             <h3>Merge into another topic</h3>
             <?php if ($restructureContext === 'merge' && $restructureError !== ''): ?>
-                <p class="field-error" role="alert"><?= $e($restructureError) ?></p>
+                <p class="field-error" role="alert" tabindex="-1" autofocus><?= $e($restructureError) ?></p>
             <?php endif; ?>
             <label>Target topic ID<input class="input" type="number" name="target_thread_id" min="1" value="<?= $e((string) ($restructureContext === 'merge' ? ($restructureOld['target_thread_id'] ?? '') : '')) ?>" required></label>
             <p>All posts move into the chosen topic. The move is logged and reversible through repair tooling.</p>

@@ -50,6 +50,8 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
                     'submit_label' => 'Send',
                     'form_class' => 'dm-form',
                     'body_error' => (string) ($errors['body'] ?? ''),
+                    // The wrapper's To/Group title own the focus when either errored first.
+                    'body_error_focus' => array_key_first($errors ?? []) === 'body',
                     'identity' => [
                         'display_name' => $current_user->displayName(),
                         'username' => $current_user->username(),

@@ -1,0 +1,239 @@
+{
+  "avatarProfile": {
+    "imageCount": 1,
+    "topbarImageCount": 0
+  },
+  "avatarThread": {
+    "postImageCount": 0,
+    "participantImageCount": 0,
+    "topbarImageCount": 0,
+    "alicePostMonogramText": "AA"
+  },
+  "desktopComposition": {
+    "viewportHeight": 854,
+    "threadScroll": {
+      "clientHeight": 477,
+      "top": 87,
+      "right": 1199,
+      "bottom": 564,
+      "left": 339,
+      "width": 860,
+      "height": 477
+    },
+    "composerDock": {
+      "top": 576,
+      "right": 1199,
+      "bottom": 831,
+      "left": 339,
+      "width": 860,
+      "height": 255
+    },
+    "composerViewportShare": 0.298
+  },
+  "topicToolsKeyboard": {
+    "initialFocus": {
+      "tag": "BUTTON",
+      "label": "Close Topic tools",
+      "text": "",
+      "inPanel": true
+    },
+    "focusSequence": [
+      {
+        "tag": "BUTTON",
+        "label": "Close Topic tools",
+        "text": "",
+        "inPanel": true
+      },
+      {
+        "tag": "SUMMARY",
+        "label": null,
+        "text": "Your watchoff",
+        "inPanel": true
+      },
+      {
+        "tag": "SELECT",
+        "label": null,
+        "text": "Instant Daily Off",
+        "inPanel": true
+      },
+      {
+        "tag": "BUTTON",
+        "label": null,
+        "text": "Save watch",
+        "inPanel": true
+      },
+      {
+        "tag": "SELECT",
+        "label": null,
+        "text": "Clear snoozeLater todayTomorrowNext week",
+        "inPanel": true
+      },
+      {
+        "tag": "BUTTON",
+        "label": null,
+        "text": "Save snooze",
+        "inPanel": true
+      },
+      {
+        "tag": "SUMMARY",
+        "label": null,
+        "text": "StandingSolved",
+        "inPanel": true
+      },
+      {
+        "tag": "SUMMARY",
+        "label": null,
+        "text": "Tags",
+        "inPanel": true
+      },
+      {
+        "tag": "SUMMARY",
+        "label": null,
+        "text": "Living Brief",
+        "inPanel": true
+      },
+      {
+        "tag": "SUMMARY",
+        "label": null,
+        "text": "Topic managementunassigned",
+        "inPanel": true
+      },
+      {
+        "tag": "BODY",
+        "label": null,
+        "text": "Skip to content RetroBoards 0 Notifications AA Alice Avery M",
+        "inPanel": false
+      }
+    ],
+    "escapedPanel": true,
+    "returnedToTrigger": true,
+    "hiddenAfterEscape": true
+  },
+  "boardMobile": {
+    "documentWidth": {
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    "actions": [
+      {
+        "text": "Follow board",
+        "top": 299,
+        "right": 354,
+        "bottom": 337,
+        "left": 36,
+        "width": 318,
+        "height": 38
+      },
+      {
+        "text": "New topic",
+        "top": 346,
+        "right": 354,
+        "bottom": 384,
+        "left": 36,
+        "width": 318,
+        "height": 38
+      }
+    ],
+    "activeBoardAriaCurrent": null,
+    "floatingAction": {
+      "rect": {
+        "top": 766,
+        "right": 372,
+        "bottom": 822,
+        "left": 316,
+        "width": 56,
+        "height": 56
+      },
+      "overlapsLastRow": true,
+      "overlapsLastTitle": true
+    }
+  },
+  "threadMobile": {
+    "documentWidth": {
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    "postActionTargets": [
+      {
+        "ariaLabel": "Add a reaction",
+        "top": 1735,
+        "right": 124,
+        "bottom": 1779,
+        "left": 80,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "ariaLabel": "Quote in your reply",
+        "top": 1735,
+        "right": 169,
+        "bottom": 1779,
+        "left": 125,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "ariaLabel": "More post actions",
+        "top": 1735,
+        "right": 214,
+        "bottom": 1779,
+        "left": 170,
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "codeBlock": {
+      "scrollWidth": 358,
+      "clientWidth": 274,
+      "tabIndex": -1
+    }
+  },
+  "mobilePostMenu": {
+    "beforeExtraScroll": {
+      "scrollTop": 3011,
+      "maxScrollTop": 3088,
+      "threadBottom": 753,
+      "menuBottom": 830,
+      "fullyVisible": false
+    },
+    "afterExtraScroll": {
+      "scrollTop": 3088,
+      "maxScrollTop": 3088,
+      "threadBottom": 753,
+      "menuBottom": 753,
+      "fullyVisible": true
+    }
+  },
+  "noJavaScriptThread": {
+    "viewportHeight": 854,
+    "documentHeight": 946,
+    "threadEnhanced": null,
+    "threadScroll": {
+      "clientHeight": 12,
+      "scrollHeight": 2897,
+      "top": 87,
+      "right": 1199,
+      "bottom": 99,
+      "left": 339,
+      "width": 860,
+      "height": 12
+    },
+    "composerDock": {
+      "top": 111,
+      "right": 1199,
+      "bottom": 331,
+      "left": 339,
+      "width": 860,
+      "height": 220
+    },
+    "topicTools": {
+      "top": 372,
+      "right": 1199,
+      "bottom": 946,
+      "left": 339,
+      "width": 860,
+      "height": 574
+    },
+    "visibleReadingShare": 0.014
+  }
+}

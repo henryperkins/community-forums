@@ -1,0 +1,2075 @@
+diff --git a/docs/adr/0023-admin-console-audit-round-2.md b/docs/adr/0023-admin-console-audit-round-2.md
+index 899a395..2904d1b 100644
+--- a/docs/adr/0023-admin-console-audit-round-2.md
++++ b/docs/adr/0023-admin-console-audit-round-2.md
+@@ -27,7 +27,7 @@ The 2026-07-18 round-2 audit adversarially re-verified the PR #44 remediation (4
+ 1. **Reports-queue bulk actions** (ADMIN §3.2, fourth bullet: "select many → dismiss / delete / lock in one step (each still audited individually)"). Needs row selection UI, a per-item-audited bulk transaction, and partial-failure semantics. The round-2 audit correctly flagged this as the one spec promise owned by no ADR — it is owned here now.
+ 2. **Thread-level (OP) restore surface.** Deleting an OP runs `purgeThread` (whole-thread soft delete); no route or UI reverses it. The new per-reply stub work intentionally excludes it — a thread-level restore needs its own counters/redirect design.
+ 3. **Deputy-facing roster surface.** The non-admin deputy branch of the roster commands has no UI form anywhere (roster forms render only on the admin-only board-edit console; the deliberate isolation comment in `AdminController::rosterDeputyExit` stands). The audit's "deputy draft-loss redirect" is reclassified accordingly — there is no draft to lose until a deputy surface exists, and building one is this deferral.
+-4. **Deep-admin field-error wiring residue.** `registries.php` and `role_edit.php` render field errors legibly but are not yet wired to their inputs via the new helpers (their duplicated error keys need per-form scoping first to avoid duplicate element ids). Mechanical follow-up; the helpers and the pattern exist.
++4. **Deep-admin field-error wiring residue (partially closed 2026-08-04).** The Imladris People slice closed the `role_edit.php` half: definition, clone, assignment and per-row renewal errors now use context-unique ids with `field_attrs()` / `field_error()`, while retaining the existing scoped 422 anti-draft-loss state. The `registries.php` half remains deferred; its duplicated row/form keys still need the same scoping before wiring.
+ 
+ ## Reclassified
+ 
+diff --git a/docs/adr/0024-imladris-admin-account-adoption.md b/docs/adr/0024-imladris-admin-account-adoption.md
+index a89018f..fd5c24e 100644
+--- a/docs/adr/0024-imladris-admin-account-adoption.md
++++ b/docs/adr/0024-imladris-admin-account-adoption.md
+@@ -166,8 +166,10 @@ raised upstream in the design project** rather than invented here.
+ 
+ ADR 0021 deferral #7 (`link_previews` admin operations) — still deferred; no console is invented.
+ ADR 0023 deferrals #1 (reports-queue bulk actions), #2 (thread-level restore), #3 (deputy-facing
+-roster) — still deferred. ADR 0023 deferral #4 (`role_edit.php` field errors deliberately unwired
+-pending per-form id scoping) is **closed or restated** in the People slice, not silently changed.
++roster) — still deferred. The People slice **closes the `role_edit.php` half of ADR 0023 deferral
++#4**: definition, clone, assignment and per-row renewal errors receive context-unique ids and
++programmatic input linkage without weakening their existing scoped 422 round-trips. The
++`registries.php` half remains explicitly deferred.
+ 
+ ---
+ 
+diff --git a/docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md b/docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md
+index 5e3b410..a2a551a 100644
+--- a/docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md
++++ b/docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md
+@@ -96,7 +96,7 @@ Every row names its constraint. Any row that could not name one was dropped as a
+ | C-10 · all screens | `<script type="text/x-dc">` behaviour blocks + the `ds-base.js`/`support.js` runtime | constraint | A client state machine drives every view switch, filter, count, pager and empty state on every screen. | **Progressive enhancement** + `DESIGN.md` §6.14 (prototype runtime code never ships). Every view is a real server-rendered route; every filter is a GET form; every count is computed server-side. |
+ | C-11 · all screens | `<button onClick={…}>` for navigation and mutation | constraint | Tabs, sort headers, back links and row actions are bare buttons throughout — including nine controls on `admin-members` (member name, both `All members` back links, `Cancel`, **Reveal email & IPs (audited)**, **Lift restriction**, badge **Revoke**, invitation **Revoke**, sort headers). | **PE + CSRF.** Navigation must be `<a href>`; mutation must be `<form method="post">` carrying `$this->csrfField()`. A GET may never mutate state. "Adopt the bare danger link-button" read literally is a CSRF-less GET mutation. Also `providers.spec.ts:132` and `webhooks.spec.ts:88,142` pin `getByRole('link', …)` — turning either into a `<button>` breaks PE *and* the shipped evidence. |
+ | C-12 · all screens | Every `href` is `"#"`; the active item has `href={undefined}` | constraint | The design models no routes at all, and `AdminNav.jsx:70` renders the active pill as an anchor with no `href`. | Routes derive from `App::buildRouter()`. An `<a>` without `href` is not focusable and reads as a generic element to AT — production renders the active item as `<span … aria-current="page">`, which `components.css:342` (`cursor: default`) already anticipates. |
+-| C-13 · all screens | 422 re-render paths | constraint | Any form restructure must carry `->errors` **and** `->old` back into the re-rendered page. 32 distinct 422 paths exist across the inventory. | **Anti-draft-loss.** `ValidationException`/`DuplicateSubmissionException` extend `RuntimeException`, not `HttpException`, so the kernel does not handle them — the controller re-renders 422 with the typed values. Highest density: `user_record.php` (six form contexts sharing `$error_context`), `role_edit.php` (four scoped contexts; **ADR 0023 deferral #4** deliberately leaves its errors unwired pending per-form id scoping — close or restate it), `structure.php` (`array_replace` so 422 context wins), the eight account panes, and `_package_review_form.php`, which has **no `old` round-trip at all** (a pre-existing gap). Also the `bulk_selected` re-tick (ADR 0023 item 4) and the `<option value="banana" selected>` fallback. |
++| C-13 · all screens | 422 re-render paths | constraint | Any form restructure must carry `->errors` **and** `->old` back into the re-rendered page. 32 distinct 422 paths exist across the inventory. | **Anti-draft-loss.** `ValidationException`/`DuplicateSubmissionException` extend `RuntimeException`, not `HttpException`, so the kernel does not handle them — the controller re-renders 422 with the typed values. Highest density: `user_record.php` (six form contexts sharing `$error_context`), `role_edit.php` (four scoped contexts; the People slice closes its half of **ADR 0023 deferral #4** with context-unique input/error ids), `structure.php` (`array_replace` so 422 context wins), the eight account panes, and `_package_review_form.php`, which has **no `old` round-trip at all** (a pre-existing gap). The `registries.php` half of ADR 0023 deferral #4 remains open. Also the `bulk_selected` re-tick (ADR 0023 item 4) and the `<option value="banana" selected>` fallback. |
+ | C-14 · all screens | Re-auth confirms shown by a JS "reveal" | constraint | ~30 `current_password` sites (roles ×4, themes ×3, tokens, webhooks ×3, providers ×3, packages ×12, user record, account security ×4, lifecycle ×2). Several report actions describe a control that *reveals* a hidden password field. | **PE + CSP.** With JS off there is no reveal, and CSP forbids inline handlers, so the confirm must render inline, always, and be submittable in plain HTML. Compounding trap: a `required` control inside a **closed** `<details>` is not focusable — Chromium aborts the submit with a console-only error and the operator sees nothing happen (`_package_review_form.php:8,18` are both `required`). Provider enable additionally carries the `enable_error_id` row-scoped routing (`AdminProviderController:86-95`), an ADR 0023 round-2 remediation. |
+ | C-15 · all screens | Imladris lexicon in every string | constraint | `council`, `wardens`, `counsel`, `regard`, `commend`, `Imladris` and the Tolkien register throughout. | **Governing rule 3:** design fiction never reaches production strings. Full design→production mapping in §3.1. Four production strings are **already fiction and test-pinned** — they need their own owner decision, not a unilateral fix (§3.2). |
+ | C-16 · all screens | New tokens and the generated runtime asset | constraint | Reports prescribe `--gold-050` (four screens) and, in one case, hand-authored CSS in `public/assets/imladris.css`. | `--gold-050` **exists nowhere** (`tokens/colors.css` stops at `--gold-100`); transcribing it fails `ImladrisRuntimeAssetTest::test_every_required_runtime_variable_has_a_definition` — use `--gold-soft`. `public/assets/imladris.css` is **generated** by `ImladrisAssetBuilder` from `docs/design-system/imladris/` and fingerprinted by `config/imladris-runtime-baseline.json`; hand-editing it fails `composer check:imladris`/`verify:imladris` and is overwritten by the next build. Never `!important` (the builder hard-refuses it); never re-declare a design token in `app.css :root`; **any new semantic colour token must land in three places** — `tokens/colors.css :root`, `tokens/colors.css [data-theme="dark"]`, and `app.css`'s `@media (prefers-color-scheme: dark) { [data-theme="system"] }` block, because `layout.php` defaults to `system` and `imladris.css` has no `prefers-color-scheme` block at all. Layering: `app.css` is unlayered and beats every `@layer imladris.*` rule regardless of specificity, so "the design system already styles this" is wrong for 181 of 211 contested class names. |
+@@ -258,9 +258,9 @@ an *existing* deferral name it.
+   matches, so use the house `<span aria-hidden="true">→</span>` pattern and relax the
+   byte-identical PHPUnit pin at `AppAdminDashboardRemediationTest:280` in the same commit.
+ - **`docs/adr/0021` and `docs/adr/0023` are never silently reverted.** ADR 0023's IA clause is
+-  superseded **in part and explicitly** by ADR 0024 (C-01/FC-01); every other 0023 finding and all
+-  four of its deferrals survive, and deferral #4 (`role_edit.php` field-error wiring) must be
+-  **closed or restated**, not dropped.
++  superseded **in part and explicitly** by ADR 0024 (C-01/FC-01); every other 0023 finding and
++  deferrals #1–#3 survive. The People slice closes the `role_edit.php` half of deferral #4 with
++  context-unique field-error wiring; its `registries.php` half remains owned and deferred.
+ 
+ ---
+ 
+diff --git a/public/assets/app.css b/public/assets/app.css
+index c95cc6d..d23660c 100644
+--- a/public/assets/app.css
++++ b/public/assets/app.css
+@@ -4783,6 +4783,653 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
+ .admin-console .admin-content .content-tag-pager {
+     margin-top: 16px;
+ }
++
++/* — Admin people: AdminPeople.dc.html body adoption (Slice 7). —
++   The shared console owns the area heading and tabs. These rules copy the
++   roles list, record, assignments and simulator into external, namespaced CSS
++   so strict CSP, real routes and the server-rendered no-JS forms all survive. */
++.admin-console .admin-roles {
++    gap: 0;
++}
++.admin-console .admin-roles .role-callout {
++    display: flex;
++    align-items: flex-start;
++    gap: 14px;
++    margin: 0 0 20px;
++    padding: 13px 16px;
++    border: 1px solid var(--river-200);
++    border-left: 3px solid var(--info);
++    border-radius: var(--radius-md);
++    background: var(--surface-info);
++    color: var(--on-info);
++}
++.admin-console .admin-roles .role-callout > svg {
++    flex: 0 0 auto;
++    margin-top: 2px;
++}
++.admin-console .admin-roles .role-callout p {
++    max-width: 82ch;
++    margin: 0;
++    color: var(--on-info);
++    font-size: .93rem;
++    line-height: 1.55;
++    text-wrap: pretty;
++}
++.admin-console .admin-roles .role-callout code {
++    font-family: var(--font-mono);
++    font-size: .84rem;
++}
++.admin-console .admin-roles .role-callout a {
++    color: inherit;
++    text-decoration: underline;
++}
++.admin-console .admin-roles .role-list-meta {
++    display: flex;
++    justify-content: flex-end;
++    margin: 0 0 12px;
++    color: var(--text-faint);
++    font-family: var(--font-label);
++    font-size: .74rem;
++    letter-spacing: .04em;
++}
++.admin-console .admin-roles .role-table-card {
++    padding: 6px 20px 10px;
++    overflow: visible;
++    box-shadow: var(--shadow-sm);
++}
++.admin-console .admin-roles .role-table {
++    width: 100%;
++    border-collapse: collapse;
++    font-size: .92rem;
++}
++.admin-console .admin-roles .role-table th {
++    padding: 11px 10px 9px;
++}
++.admin-console .admin-roles .role-table td {
++    padding: 10px;
++}
++.admin-console .admin-roles .role-table th:first-child,
++.admin-console .admin-roles .role-table td:first-child {
++    padding-left: 0;
++}
++.admin-console .admin-roles .role-table th:last-child,
++.admin-console .admin-roles .role-table td:last-child {
++    padding-right: 0;
++    text-align: right;
++}
++.admin-console .admin-roles .role-table td:first-child {
++    color: var(--text-strong);
++}
++.admin-console .admin-roles .role-key {
++    padding: 1px 6px;
++    border-radius: var(--radius-sm);
++    background: var(--surface-sunken);
++    color: var(--text-body);
++    font-family: var(--font-mono);
++    font-size: .76rem;
++}
++.admin-console .admin-roles .role-kind,
++.admin-console .admin-roles .role-assignment-status {
++    display: inline-flex;
++    padding: 1px 9px;
++    border-radius: var(--radius-pill);
++    font-family: var(--font-label);
++    font-size: .66rem;
++    letter-spacing: .06em;
++    white-space: nowrap;
++}
++.admin-console .admin-roles .role-kind-system {
++    background: var(--surface-review);
++    color: var(--on-review);
++}
++.admin-console .admin-roles .role-kind-custom {
++    background: var(--surface-sunken);
++    color: var(--text-muted);
++}
++.admin-console .admin-roles .role-number {
++    text-align: right;
++}
++.admin-console .admin-roles td.role-number {
++    color: var(--text-body);
++    font-family: var(--font-mono);
++    font-size: .82rem;
++}
++.admin-console .admin-roles .role-row-action {
++    display: inline-flex;
++    padding: 4px 12px;
++    border: 1.5px solid var(--border-soft);
++    border-radius: var(--radius-md);
++    color: var(--text-body);
++    font-family: var(--font-label);
++    font-size: .72rem;
++    letter-spacing: .04em;
++    text-decoration: none;
++}
++.admin-console .admin-roles .role-row-action:hover,
++.admin-console .admin-roles .role-row-action:focus-visible {
++    background: var(--surface-sunken);
++    text-decoration: none;
++}
++.admin-console .admin-roles .role-create-card {
++    margin-top: 22px;
++    padding: 20px 22px;
++    box-shadow: none;
++}
++.admin-console .admin-roles .role-create-card > h2,
++.admin-console .admin-roles .role-simulator-form-card > h2,
++.admin-console .admin-roles .role-simulator-result > h2 {
++    margin: 0 0 6px;
++    color: var(--text-strong);
++    font-family: var(--font-display);
++    font-size: 1.35rem;
++    font-weight: 500;
++}
++.admin-console .admin-roles .role-section-intro {
++    max-width: 66ch;
++    margin: 0 0 16px;
++    color: var(--text-muted);
++    font-size: .93rem;
++    line-height: 1.5;
++    text-wrap: pretty;
++}
++.admin-console .admin-roles .role-definition-grid {
++    display: grid;
++    grid-template-columns: 1fr 1.6fr;
++    gap: 14px 18px;
++}
++.admin-console .admin-roles .role-form-label {
++    display: flex;
++    flex-direction: column;
++    gap: 5px;
++    min-width: 0;
++}
++.admin-console .admin-roles .role-form-label > span:first-child {
++    color: var(--text-faint);
++    font-family: var(--font-label);
++    font-size: .68rem;
++    letter-spacing: .1em;
++    text-transform: uppercase;
++}
++.admin-console .admin-roles .role-form-label .input {
++    width: 100%;
++    min-width: 0;
++    box-sizing: border-box;
++    padding: 8px 11px;
++    border-color: var(--border-soft);
++    border-radius: var(--radius-md);
++    background: var(--surface-page);
++    color: var(--text-body);
++    font-family: var(--font-body);
++    font-size: .92rem;
++}
++.admin-console .admin-roles .role-form-label .input:focus {
++    border-color: var(--gold-500);
++    outline: none;
++    box-shadow: 0 0 0 3px var(--focus-ring);
++}
++.admin-console .admin-roles .role-capability-grid {
++    display: grid;
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++    gap: 14px;
++    margin-top: 18px;
++}
++.admin-console .admin-roles .role-capability-grid fieldset {
++    min-width: 0;
++    margin: 0;
++    padding: 12px 14px 13px;
++    border: 1px solid var(--border-hair);
++    border-radius: var(--radius-md);
++}
++.admin-console .admin-roles .role-capability-grid legend {
++    padding: 0 6px;
++    color: var(--gold-ink);
++    font-family: var(--font-label);
++    font-size: .68rem;
++    letter-spacing: .1em;
++    text-transform: uppercase;
++}
++.admin-console .admin-roles .role-capability-option {
++    display: flex;
++    align-items: flex-start;
++    gap: 9px;
++    padding: 4px 0;
++    color: var(--text-body);
++    font-size: .88rem;
++    line-height: 1.4;
++    cursor: pointer;
++}
++.admin-console .admin-roles .role-capability-option > input {
++    flex: 0 0 auto;
++    width: 14px;
++    height: 14px;
++    margin-top: 3px;
++    accent-color: var(--accent);
++}
++.admin-console .admin-roles .role-capability-option > span {
++    min-width: 0;
++}
++.admin-console .admin-roles .role-capability-option code {
++    color: var(--text-strong);
++    font-family: var(--font-mono);
++    font-size: .78rem;
++}
++.admin-console .admin-roles .role-capability-description {
++    color: var(--text-muted);
++}
++.admin-console .admin-roles .role-risk {
++    margin-left: 6px;
++    padding: 0 7px;
++    border-radius: var(--radius-pill);
++    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
++    color: var(--danger);
++    font-family: var(--font-label);
++    font-size: .62rem;
++    letter-spacing: .06em;
++    text-transform: uppercase;
++    white-space: nowrap;
++}
++.admin-console .admin-roles .role-capability-locked {
++    margin-left: 6px;
++    color: var(--text-faint);
++    font-family: var(--font-label);
++    font-size: .68rem;
++    letter-spacing: .03em;
++}
++.admin-console .admin-roles .role-create-footer,
++.admin-console .admin-roles .role-definition-footer {
++    display: flex;
++    align-items: flex-end;
++    gap: 14px;
++    margin-top: 18px;
++}
++.admin-console .admin-roles .role-reauth-field {
++    flex: 0 1 280px;
++    min-width: 0;
++}
++.admin-console .admin-roles .role-create-footer > .btn,
++.admin-console .admin-roles .role-definition-footer > .btn,
++.admin-console .admin-roles .role-assign-actions > .btn,
++.admin-console .admin-roles .role-simulator-actions > .btn {
++    padding: 9px 20px;
++    border: 0;
++    border-radius: var(--radius-md);
++    background: var(--accent);
++    color: var(--accent-contrast);
++    font-family: var(--font-label);
++    font-size: .8rem;
++    letter-spacing: .04em;
++}
++.admin-console .admin-roles .role-capability-count {
++    margin-left: auto;
++    color: var(--text-faint);
++    font-family: var(--font-label);
++    font-size: .74rem;
++    letter-spacing: .04em;
++}
++.admin-console .admin-roles .field-error {
++    margin: 6px 0 0;
++}
++
++/* Role record. Its area-owned H1 stays in the shared console; the record is
++   the design's second-level heading and keeps the Roles tab active. */
++.admin-console .admin-role-record .admin-back {
++    margin-bottom: 14px;
++}
++.admin-console .admin-role-record .role-record-heading {
++    display: flex;
++    align-items: baseline;
++    gap: 12px;
++}
++.admin-console .admin-role-record .admin-record-title {
++    margin: 0;
++}
++.admin-console .admin-role-record .role-record-heading > span {
++    color: var(--text-faint);
++    font-family: var(--font-mono);
++    font-size: .9rem;
++}
++.admin-console .admin-role-record .role-record-note {
++    max-width: 74ch;
++    margin: 8px 0 20px;
++    color: var(--text-muted);
++    font-size: .95rem;
++    line-height: 1.55;
++    text-wrap: pretty;
++}
++.admin-console .admin-role-record .role-record-note code {
++    color: var(--text-body);
++    font-family: var(--font-mono);
++    font-size: .85rem;
++}
++.admin-console .admin-role-record .role-definition-card,
++.admin-console .admin-role-record .role-held-card,
++.admin-console .admin-role-record .role-clone-card {
++    margin-bottom: 16px;
++    padding: 18px 20px;
++    box-shadow: none;
++}
++.admin-console .admin-role-record .role-definition-card > h3,
++.admin-console .admin-role-record .role-held-card > h3,
++.admin-console .admin-role-record .role-clone-card > h3,
++.admin-console .admin-role-record .role-assignments-card > h3 {
++    margin: 0 0 12px;
++    color: var(--text-strong);
++    font-family: var(--font-display);
++    font-size: 1.25rem;
++    font-weight: 500;
++}
++.admin-console .admin-role-record .role-definition-card > h3 {
++    margin-bottom: 14px;
++}
++.admin-console .admin-role-record .role-definition-footer .role-reauth-field {
++    flex-basis: 240px;
++}
++.admin-console .admin-role-record .role-held-list {
++    display: grid;
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++    gap: 5px 18px;
++    margin: 0;
++    padding: 0;
++    list-style: none;
++}
++.admin-console .admin-role-record .role-held-list li {
++    color: var(--text-muted);
++    font-size: .88rem;
++}
++.admin-console .admin-role-record .role-held-list code {
++    color: var(--text-strong);
++    font-family: var(--font-mono);
++    font-size: .78rem;
++}
++.admin-console .admin-role-record .role-clone-card > h3 {
++    margin-bottom: 6px;
++}
++.admin-console .admin-role-record .role-clone-card .role-section-intro {
++    max-width: 64ch;
++    margin-bottom: 14px;
++    font-size: .92rem;
++}
++.admin-console .admin-role-record .role-clone-form {
++    display: flex;
++    align-items: flex-end;
++    gap: 14px;
++}
++.admin-console .admin-role-record .role-clone-form > div:first-of-type {
++    flex: 1;
++    min-width: 0;
++}
++.admin-console .admin-role-record .role-clone-form .role-reauth-field {
++    flex-basis: 240px;
++}
++.admin-console .admin-role-record .role-clone-form > .btn {
++    padding: 9px 18px;
++    border: 1.5px solid var(--border-soft);
++    border-radius: var(--radius-md);
++    background: transparent;
++    color: var(--text-body);
++    font-family: var(--font-label);
++    font-size: .8rem;
++    letter-spacing: .04em;
++}
++.admin-console .admin-role-record .role-clone-form > .btn:hover {
++    background: var(--surface-sunken);
++}
++.admin-console .admin-role-record .role-assignments-card {
++    padding: 18px 20px;
++    box-shadow: none;
++}
++.admin-console .admin-role-record .role-assignment-empty {
++    margin: 0 0 4px;
++    color: var(--text-faint);
++    font-size: .95rem;
++}
++.admin-console .admin-role-record .role-assignment-table {
++    width: 100%;
++    border-collapse: collapse;
++    font-size: .9rem;
++}
++.admin-console .admin-role-record .role-assignment-table th {
++    padding: 9px 10px 8px;
++}
++.admin-console .admin-role-record .role-assignment-table td {
++    padding: 10px;
++}
++.admin-console .admin-role-record .role-assignment-table th:first-child,
++.admin-console .admin-role-record .role-assignment-table td:first-child {
++    padding-left: 0;
++}
++.admin-console .admin-role-record .role-assignment-table th:last-child,
++.admin-console .admin-role-record .role-assignment-table td:last-child {
++    padding-right: 0;
++}
++.admin-console .admin-role-record .role-assignment-member {
++    color: var(--artifact-link);
++    font-family: var(--font-mono);
++    font-size: .82rem;
++}
++.admin-console .admin-role-record .role-assignment-window {
++    color: var(--text-muted);
++    font-family: var(--font-mono);
++    font-size: .78rem;
++    white-space: nowrap;
++}
++.admin-console .admin-role-record .role-assignment-status-active {
++    background: var(--surface-done);
++    color: var(--on-done);
++}
++.admin-console .admin-role-record .role-assignment-status-scheduled,
++.admin-console .admin-role-record .role-assignment-status-revoked {
++    background: var(--surface-pending);
++    color: var(--on-pending);
++}
++.admin-console .admin-role-record .role-assignment-status-expired {
++    background: var(--surface-sunken);
++    color: var(--text-muted);
++}
++.admin-console .admin-role-record .role-assignment-action-cell {
++    text-align: right;
++}
++.admin-console .admin-role-record .role-assignment-actions {
++    display: flex;
++    flex-wrap: wrap;
++    align-items: center;
++    justify-content: flex-end;
++    gap: 7px;
++}
++.admin-console .admin-role-record .role-assignment-actions .linkbtn {
++    padding: 4px 11px;
++    border: 0;
++    border-radius: var(--radius-md);
++    color: var(--rust);
++    font-family: var(--font-label);
++    font-size: .72rem;
++    letter-spacing: .04em;
++}
++.admin-console .admin-role-record .role-assignment-actions .linkbtn:hover {
++    background: var(--surface-sunken);
++}
++.admin-console .admin-role-record .role-renew-form {
++    display: inline-flex;
++    align-items: center;
++    gap: 7px;
++}
++.admin-console .admin-role-record .role-renew-form .input {
++    width: 148px;
++    min-width: 0;
++    padding: 6px 8px;
++    border-color: var(--border-soft);
++    border-radius: var(--radius-md);
++    background: var(--surface-page);
++    font-family: var(--font-mono);
++    font-size: .78rem;
++}
++.admin-console .admin-role-record .role-renew-form input[type="password"] {
++    width: 112px;
++}
++.admin-console .admin-role-record .role-renew-form .btn {
++    padding: 6px 11px;
++    border: 1.5px solid var(--border-soft);
++    border-radius: var(--radius-md);
++    background: transparent;
++    color: var(--text-body);
++    font-family: var(--font-label);
++    font-size: .72rem;
++}
++.admin-console .admin-role-record .role-assignments-card > h4 {
++    margin: 22px 0 12px;
++    color: var(--text-faint);
++    font-family: var(--font-label);
++    font-size: .68rem;
++    font-weight: 400;
++    letter-spacing: .16em;
++    text-transform: uppercase;
++}
++.admin-console .admin-role-record .role-assign-form {
++    display: grid;
++    grid-template-columns: repeat(3, minmax(0, 1fr));
++    gap: 14px 16px;
++    align-items: end;
++}
++.admin-console .admin-role-record .role-assign-form > .field-error,
++.admin-console .admin-role-record .role-time-format,
++.admin-console .admin-role-record .role-assign-actions {
++    grid-column: 1 / -1;
++}
++.admin-console .admin-role-record .role-mono-input,
++.admin-console .admin-role-record .role-time-input {
++    font-family: var(--font-mono);
++    font-size: .88rem;
++}
++.admin-console .admin-role-record .role-time-input {
++    font-size: .86rem;
++}
++.admin-console .admin-role-record .role-label-note {
++    letter-spacing: .02em;
++    text-transform: none;
++}
++.admin-console .admin-role-record .role-time-format {
++    margin: -4px 0 0;
++    color: var(--text-faint);
++    font-size: .78rem;
++}
++.admin-console .admin-role-record .role-assign-actions {
++    display: flex;
++    align-items: center;
++    gap: 14px;
++}
++
++/* Permission simulator. */
++.admin-console .admin-role-simulator .role-simulator-intro {
++    max-width: 74ch;
++    margin: 0 0 20px;
++    color: var(--text-muted);
++    font-size: 1rem;
++    line-height: 1.55;
++    text-wrap: pretty;
++}
++.admin-console .admin-role-simulator .role-simulator-intro code {
++    color: var(--text-body);
++    font-family: var(--font-mono);
++    font-size: .88rem;
++}
++.admin-console .admin-role-simulator .role-simulator-form-card,
++.admin-console .admin-role-simulator .role-simulator-result {
++    padding: 20px 22px;
++    box-shadow: var(--shadow-sm);
++}
++.admin-console .admin-role-simulator .role-simulator-form-card > h2 {
++    margin-bottom: 16px;
++}
++.admin-console .admin-role-simulator .role-simulator-form {
++    display: grid;
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++    gap: 14px 18px;
++    align-items: end;
++}
++.admin-console .admin-role-simulator .role-simulator-actions {
++    grid-column: 1 / -1;
++}
++.admin-console .admin-role-simulator .role-simulator-error {
++    margin-top: 16px;
++    padding: 18px 20px;
++    border-left: 3px solid var(--rust);
++    box-shadow: none;
++}
++.admin-console .admin-role-simulator .role-simulator-error > h2 {
++    margin: 0 0 6px;
++    color: var(--text-strong);
++    font-family: var(--font-display);
++    font-size: 1.2rem;
++    font-weight: 500;
++}
++.admin-console .admin-role-simulator .role-simulator-error > p {
++    margin: 0;
++    color: var(--danger);
++    font-size: .93rem;
++}
++.admin-console .admin-role-simulator .role-simulator-result {
++    margin-top: 16px;
++}
++.admin-console .admin-role-simulator .role-simulator-result > h2 {
++    margin-bottom: 10px;
++}
++.admin-console .admin-role-simulator .role-simulator-verdict-row {
++    display: flex;
++    flex-wrap: wrap;
++    align-items: baseline;
++    gap: 8px;
++    margin: 0;
++    color: var(--text-body);
++    font-size: 1rem;
++    line-height: 1.5;
++    text-wrap: pretty;
++}
++.admin-console .admin-role-simulator .role-simulator-verdict {
++    padding: 2px 11px;
++    border-radius: var(--radius-pill);
++    font-family: var(--font-label);
++    font-size: .74rem;
++    letter-spacing: .1em;
++    text-transform: uppercase;
++}
++.admin-console .admin-role-simulator .role-simulator-verdict-allowed {
++    background: var(--surface-done);
++    color: var(--on-done);
++}
++.admin-console .admin-role-simulator .role-simulator-verdict-denied {
++    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
++    color: var(--danger);
++}
++.admin-console .admin-role-simulator .role-simulator-verdict-row code {
++    font-family: var(--font-mono);
++    font-size: .86rem;
++}
++.admin-console .admin-role-simulator .role-simulator-facts {
++    display: flex;
++    flex-direction: column;
++    gap: 6px;
++    margin: 14px 0 0;
++    padding: 0;
++    list-style: none;
++}
++.admin-console .admin-role-simulator .role-simulator-facts li {
++    color: var(--text-muted);
++    font-size: .93rem;
++}
++.admin-console .admin-role-simulator .role-simulator-facts code {
++    color: var(--text-body);
++    font-family: var(--font-mono);
++    font-size: .82rem;
++}
++@keyframes role-simulator-rise {
++    from { opacity: 0; transform: translateY(6px); }
++    to { opacity: 1; transform: none; }
++}
++@media (prefers-reduced-motion: no-preference) {
++    .admin-console .admin-role-simulator .role-simulator-result {
++        animation: role-simulator-rise 180ms var(--ease-calm) both;
++    }
++}
+ @media (max-width: 860px) {
+     /* The console collapses to one column; the area tier scrolls horizontally
+        (its own thin scrollbar is the honest signal that areas sit off-edge) and
+@@ -4800,6 +5447,53 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
+     .admin-console { max-width: none; padding: 18px 16px 56px; }
+     .admin-console[data-area] { max-width: none; }
+     .admin-title { font-size: 1.65rem; }
++    .admin-console .admin-roles .role-table,
++    .admin-console .admin-role-record .role-assignment-table {
++        min-width: 760px;
++    }
++    .admin-console .admin-roles .role-definition-grid,
++    .admin-console .admin-roles .role-capability-grid,
++    .admin-console .admin-role-record .role-held-list,
++    .admin-console .admin-role-record .role-assign-form,
++    .admin-console .admin-role-simulator .role-simulator-form {
++        grid-template-columns: minmax(0, 1fr);
++    }
++    .admin-console .admin-roles .role-create-footer,
++    .admin-console .admin-roles .role-definition-footer,
++    .admin-console .admin-role-record .role-clone-form {
++        align-items: stretch;
++        flex-direction: column;
++    }
++    .admin-console .admin-roles .role-reauth-field,
++    .admin-console .admin-role-record .role-clone-form .role-reauth-field {
++        flex-basis: auto;
++        width: 100%;
++    }
++    .admin-console .admin-roles .role-create-footer > .btn,
++    .admin-console .admin-roles .role-definition-footer > .btn,
++    .admin-console .admin-role-record .role-clone-form > .btn,
++    .admin-console .admin-role-record .role-assign-actions > .btn,
++    .admin-console .admin-role-simulator .role-simulator-actions > .btn,
++    .admin-console .admin-roles .role-row-action {
++        align-items: center;
++        justify-content: center;
++        min-height: 44px;
++    }
++    .admin-console .admin-roles .role-capability-count {
++        margin-left: 0;
++    }
++    .admin-console .admin-role-record .role-assignment-table {
++        min-width: 940px;
++    }
++    .admin-console .admin-role-record .role-assignment-actions {
++        flex-wrap: nowrap;
++    }
++    .admin-console .admin-role-record .role-assign-form > .field-error,
++    .admin-console .admin-role-record .role-time-format,
++    .admin-console .admin-role-record .role-assign-actions,
++    .admin-console .admin-role-simulator .role-simulator-actions {
++        grid-column: 1;
++    }
+     .admin-dashboard-grid,
+     .admin-overview-dashboard .admin-dashboard-grid,
+     .activity-card-grid {
+diff --git a/public/assets/app.js b/public/assets/app.js
+index b8385c1..64a62c9 100644
+--- a/public/assets/app.js
++++ b/public/assets/app.js
+@@ -1082,3 +1082,28 @@
+         });
+     });
+ })();
++
++// Admin roles: mirror the design's selected-capability count as progressive
++// enhancement on the create form only. JavaScript creates the counter, so it
++// is absent (not an empty styled placeholder) from the no-JS document;
++// capability submission remains a normal POST.
++(function () {
++    'use strict';
++    Array.prototype.forEach.call(document.querySelectorAll('[data-role-capability-form]'), function (form) {
++        var footer = form.querySelector('.role-create-footer');
++        if (!footer) { return; }
++        var counter = document.createElement('span');
++        counter.className = 'role-capability-count';
++        counter.setAttribute('data-role-capability-count', '');
++        counter.setAttribute('aria-live', 'polite');
++        footer.appendChild(counter);
++        var update = function () {
++            var count = form.querySelectorAll('input[name="capabilities[]"]:checked:not(:disabled)').length;
++            counter.textContent = count + ' ' + (count === 1 ? 'capability' : 'capabilities') + ' selected';
++        };
++        form.addEventListener('change', function (e) {
++            if (e.target && e.target.matches && e.target.matches('input[name="capabilities[]"]')) { update(); }
++        });
++        update();
++    });
++})();
+diff --git a/src/Controller/AdminRoleController.php b/src/Controller/AdminRoleController.php
+index 914dda9..2e089dd 100644
+--- a/src/Controller/AdminRoleController.php
++++ b/src/Controller/AdminRoleController.php
+@@ -78,7 +78,17 @@ final class AdminRoleController extends Controller
+ 
+         $capability = (string) $request->query('capability', '');
+         $result = null;
+-        if ($capability !== '') {
++        if (array_key_exists('capability', $request->allInput()) && $capability === '') {
++            // `required` is a browser convenience, not a server boundary. Keep
++            // the initial GET idle, but answer an explicitly submitted empty
++            // select just like the design's simulator state machine does.
++            $result = [
++                'decision' => null,
++                'actor_label' => '',
++                'target_label' => null,
++                'error' => 'Pick a capability to test.',
++            ];
++        } elseif ($capability !== '') {
+             $boardId = (int) $request->query('board_id', 0);
+             $at = (string) $request->query('at', '');
+             $result = $this->container->get(PermissionSimulatorService::class)->simulate(
+diff --git a/templates/admin/role_edit.php b/templates/admin/role_edit.php
+index db6a7ec..a1131bd 100644
+--- a/templates/admin/role_edit.php
++++ b/templates/admin/role_edit.php
+@@ -16,6 +16,10 @@ $renewErrorContext = isset($old['renew_assignment_id']);
+ $assignErrorContext = isset($old['assignment']);
+ $cloneErrorContext = isset($old['clone']);
+ $defErrorContext = !$renewErrorContext && !$assignErrorContext && !$cloneErrorContext;
++$allErrors = is_array($errors ?? null) ? $errors : [];
++$defErrors = $defErrorContext ? $allErrors : [];
++$cloneErrors = $cloneErrorContext ? $allErrors : [];
++$assignErrors = $assignErrorContext ? $allErrors : [];
+ // Group the flat capability catalogue by its middle namespace token
+ // (core.board.* → Board, core.user.* → User, …) so the checkbox run scans as
+ // tiers instead of one undifferentiated list.
+@@ -26,79 +30,97 @@ foreach ($catalogue as $capKey => $capMeta) {
+ }
+ ksort($groupedCatalogue);
+ ?>
+-<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles']) ?>
++<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles', 'pane_class' => 'admin-roles admin-role-record']) ?>
+     <a class="admin-back" href="/admin/roles">
+         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+         All roles
+     </a>
+-    <h2 class="admin-record-title"><?= $e($role['name']) ?> <small>v<?= (int) $role['version'] ?></small></h2>
+-    <p class="muted">
+-        <code><?= $e($role['role_key']) ?></code> -
+-        <?= $isSystem ? 'Protected system anchor (decision #18), read-only.' : 'Custom role.' ?>
++    <div class="role-record-heading">
++        <h2 class="admin-record-title"><?= $e($role['name']) ?></h2>
++        <span>v<?= (int) $role['version'] ?></span>
++    </div>
++    <p class="role-record-note">
++        <code><?= $e($role['role_key']) ?></code> —
++        <?= $isSystem ? 'Protected system anchor, read-only.' : 'Custom role.' ?>
+         Active assignments affected by changes: <strong><?= (int) $row['impact'] ?></strong>.
+     </p>
+ 
+     <?php if (!$isSystem): ?>
+-    <section class="card">
+-        <h2>Edit definition</h2>
+-        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>" class="stacked">
++    <section class="card role-definition-card">
++        <h3>Edit definition</h3>
++        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>" class="role-definition-form">
+             <?= $this->csrfField() ?>
+-            <label>Name
+-                <input type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? $role['name']) ?>" required>
+-            </label>
+-            <?php if ($defErrorContext && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
++            <div class="role-definition-grid">
++                <div>
++                    <label class="role-form-label"><span>Name</span>
++                        <input class="input" type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? $role['name']) ?>"<?= field_attrs($defErrors, 'name', 'err-role-definition-name') ?> required>
++                    </label>
++                    <?= field_error($defErrors, 'name', 'err-role-definition-name') ?>
++                </div>
++                <div>
++                    <label class="role-form-label"><span>Description (optional)</span>
++                        <input class="input" type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? ($role['description'] ?? '')) ?>"<?= field_attrs($defErrors, 'description', 'err-role-definition-description') ?>>
++                    </label>
++                    <?= field_error($defErrors, 'description', 'err-role-definition-description') ?>
++                </div>
++            </div>
+ 
+-            <label>Description (optional)
+-                <input type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? ($role['description'] ?? '')) ?>">
+-            </label>
+-            <?php if ($defErrorContext && !empty($errors['description'])): ?><p class="field-error"><?= $e($errors['description']) ?></p><?php endif; ?>
++            <div class="role-capability-grid"<?php if (!empty($defErrors['capabilities'])): ?> role="group" aria-invalid="true" aria-describedby="err-role-definition-capabilities"<?php endif; ?>>
++                <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
++                    <fieldset>
++                        <legend><?= $e($groupLabel) ?></legend>
++                        <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
++                            <label class="role-capability-option">
++                                <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
++                                <span><code><?= $e($key) ?></code><span class="role-capability-description"> — <?= $e($meta['consent'] ?? $meta['description']) ?></span>
++                                <?php if ($meta['risk'] === 'high'): ?><span class="role-risk">High risk</span><?php endif; ?>
++                                <?php if (!$enforced): ?><span class="role-capability-locked">(not yet enforceable)</span><?php endif; ?></span>
++                            </label>
++                        <?php endforeach; ?>
++                    </fieldset>
++                <?php endforeach; ?>
++            </div>
++            <?= field_error($defErrors, 'capabilities', 'err-role-definition-capabilities') ?>
+ 
+-            <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
+-                <fieldset>
+-                    <legend><?= $e($groupLabel) ?> capabilities</legend>
+-                    <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
+-                        <label>
+-                            <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
+-                            <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
+-                            <?php if ($meta['risk'] === 'high'): ?><span class="pill">high risk</span><?php endif; ?>
+-                            <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
+-                        </label>
+-                    <?php endforeach; ?>
+-                </fieldset>
+-            <?php endforeach; ?>
+-            <?php if ($defErrorContext && !empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
+-
+-            <label>Confirm your password
+-                <input type="password" name="current_password" autocomplete="current-password" required>
+-            </label>
+-            <?php if ($defErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+-
+-            <div class="form-actions"><button class="btn" type="submit">Save (bumps version)</button></div>
++            <div class="role-definition-footer">
++                <div class="role-reauth-field">
++                    <label class="role-form-label"><span>Confirm your password</span>
++                        <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($defErrors, 'current_password', 'err-role-definition-current_password') ?> required>
++                    </label>
++                    <?= field_error($defErrors, 'current_password', 'err-role-definition-current_password') ?>
++                </div>
++                <button class="btn" type="submit">Save (bumps version)</button>
++            </div>
+         </form>
+     </section>
+     <?php else: ?>
+-    <section class="card">
+-        <h2>Capabilities held</h2>
+-        <ul>
++    <section class="card role-held-card">
++        <h3>Capabilities held</h3>
++        <ul class="role-held-list">
+             <?php foreach ($current_keys as $key): ?><li><code><?= $e($key) ?></code></li><?php endforeach; ?>
+         </ul>
+     </section>
+     <?php endif; ?>
+ 
+-    <section class="card">
+-        <h2>Clone into a new custom role</h2>
+-        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/clone" class="stacked">
++    <section class="card role-clone-card">
++        <h3>Clone into a new custom role</h3>
++        <p class="role-section-intro">Cloning copies only currently-enforceable capabilities, so the copy is never wider than the anchor.</p>
++        <?= field_error($cloneErrors, 'role', 'err-role-clone-role', alert: true) ?>
++        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/clone" class="role-clone-form">
+             <?= $this->csrfField() ?>
+-            <label>New role name
+-                <input type="text" name="name" maxlength="190" value="<?= $e((string) ($old['clone']['name'] ?? '')) ?>" required>
+-            </label>
+-            <?php if ($cloneErrorContext && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+-            <?php if ($cloneErrorContext && !empty($errors['role'])): ?><p class="field-error"><?= $e($errors['role']) ?></p><?php endif; ?>
+-            <label>Confirm your password
+-                <input type="password" name="current_password" autocomplete="current-password" required>
+-            </label>
+-            <?php if ($cloneErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+-            <div class="form-actions"><button class="btn" type="submit">Clone</button></div>
++            <div>
++                <label class="role-form-label"><span>New role name</span>
++                    <input class="input" type="text" name="name" maxlength="190" value="<?= $e((string) ($old['clone']['name'] ?? '')) ?>"<?= field_attrs($cloneErrors, 'name', 'err-role-clone-name') ?> required>
++                </label>
++                <?= field_error($cloneErrors, 'name', 'err-role-clone-name') ?>
++            </div>
++            <div class="role-reauth-field">
++                <label class="role-form-label"><span>Confirm your password</span>
++                    <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($cloneErrors, 'current_password', 'err-role-clone-current_password') ?> required>
++                </label>
++                <?= field_error($cloneErrors, 'current_password', 'err-role-clone-current_password') ?>
++            </div>
++            <button class="btn btn-secondary" type="submit">Clone</button>
+         </form>
+     </section>
+ 
+@@ -116,47 +138,56 @@ ksort($groupedCatalogue);
+         $categoryNames[(int) $c['id']] = (string) $c['name'];
+     }
+     ?>
+-    <section class="card">
+-        <h2>Assignments</h2>
++    <section class="card role-assignments-card">
++        <h3>Assignments</h3>
+         <?php if (empty($assignments)): ?>
+-        <p class="muted">No one has been assigned this role yet.</p>
++        <p class="role-assignment-empty">No one has been assigned this role yet.</p>
+         <?php else: ?>
+         <div class="table-scroll" tabindex="0" role="region" aria-label="Role assignments">
+-        <table class="audit">
++        <table class="audit role-assignment-table">
+             <thead><tr><th scope="col">Member</th><th scope="col">Scope</th><th scope="col">Window</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+             <tbody>
+             <?php foreach ($assignments as $a): ?>
++                <?php
++                $assignmentId = (int) $a['id'];
++                $assignmentStatus = in_array((string) $a['status'], ['active', 'scheduled', 'expired', 'revoked'], true)
++                    ? (string) $a['status']
++                    : 'expired';
++                $rowRenewErrors = $renewAssignmentId === $assignmentId ? $allErrors : [];
++                ?>
+                 <tr>
+-                    <td><a href="/u/<?= $e($a['username']) ?>">@<?= $e($a['username']) ?></a></td>
++                    <td><a class="role-assignment-member" href="/u/<?= $e($a['username']) ?>">@<?= $e($a['username']) ?></a></td>
+                     <td><?= $e((string) $a['scope_type']) ?><?php if ($a['scope_id'] !== null): ?> &mdash; <?php
+                         $scopeId = (int) $a['scope_id'];
+                         $scopeName = ((string) $a['scope_type'] === 'category')
+                             ? ($categoryNames[$scopeId] ?? ('#' . $scopeId))
+                             : ($boardNames[$scopeId] ?? ('#' . $scopeId));
+                         ?><?= $e($scopeName) ?><?php endif; ?></td>
+-                    <td><?= $e((string) ($a['starts_at'] ?? 'now')) ?> &rarr; <?= $e((string) ($a['ends_at'] ?? 'no expiry')) ?></td>
+-                    <td><span class="state state-<?= $e((string) $a['status']) ?>"><?= $e((string) $a['status']) ?></span></td>
+-                    <td>
++                    <td class="role-assignment-window"><?= $e((string) ($a['starts_at'] ?? 'now')) ?> &rarr; <?= $e((string) ($a['ends_at'] ?? 'no expiry')) ?></td>
++                    <td><span class="role-assignment-status role-assignment-status-<?= $e($assignmentStatus) ?>"><?= $e(ucfirst($assignmentStatus)) ?></span></td>
++                    <td class="role-assignment-action-cell">
+                         <?php if ($a['status'] !== 'revoked'): ?>
+-                        <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/revoke" class="inline">
+-                            <?= $this->csrfField() ?>
+-                            <button class="linkbtn danger" type="submit" aria-label="Revoke this role from @<?= $e($a['username']) ?>">Revoke</button>
+-                        </form>
+-                        <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/renew" class="inline-form">
+-                            <?= $this->csrfField() ?>
+-                            <input type="text" class="input" name="ends_at" placeholder="YYYY-MM-DD HH:MM" aria-label="New expiry (UTC) for @<?= $e($a['username']) ?>" value="<?= $renewAssignmentId === (int) $a['id'] ? $e((string) ($old['renew']['ends_at'] ?? '')) : '' ?>" required>
+-                            <label class="sr-only" for="renew-password-<?= (int) $a['id'] ?>">Your password to renew @<?= $e($a['username']) ?>'s assignment</label>
+-                            <input type="password" class="input" id="renew-password-<?= (int) $a['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
+-                            <button class="btn btn-small" type="submit">Renew</button>
+-                        </form>
++                        <div class="role-assignment-actions">
++                            <form method="post" action="/admin/role-assignments/<?= $assignmentId ?>/revoke" class="inline">
++                                <?= $this->csrfField() ?>
++                                <button class="linkbtn danger" type="submit" aria-label="Revoke this role from @<?= $e($a['username']) ?>">Revoke</button>
++                            </form>
++                            <form method="post" action="/admin/role-assignments/<?= $assignmentId ?>/renew" class="role-renew-form">
++                                <?= $this->csrfField() ?>
++                                <input type="text" class="input" name="ends_at" placeholder="YYYY-MM-DD HH:MM" aria-label="New expiry (UTC) for @<?= $e($a['username']) ?>" value="<?= $renewAssignmentId === $assignmentId ? $e((string) ($old['renew']['ends_at'] ?? '')) : '' ?>"<?= field_attrs($rowRenewErrors, 'ends_at', 'err-role-renew-' . $assignmentId . '-ends_at') ?> required>
++                                <label class="sr-only" for="renew-password-<?= $assignmentId ?>">Your password to renew @<?= $e($a['username']) ?>'s assignment</label>
++                                <input type="password" class="input" id="renew-password-<?= $assignmentId ?>" name="current_password" placeholder="Your password" autocomplete="current-password"<?= field_attrs($rowRenewErrors, 'current_password', 'err-role-renew-' . $assignmentId . '-current_password') ?> required>
++                                <button class="btn btn-small" type="submit">Renew</button>
++                            </form>
++                        </div>
+                         <?php endif; ?>
+-                        <?php if ($renewAssignmentId === (int) $a['id']): ?>
++                        <?php if ($renewAssignmentId === $assignmentId): ?>
+                             <?php // Errors render OUTSIDE the status!=='revoked' guard: a renew that
+                                   // fails BECAUSE the row was concurrently revoked must still show its
+                                   // 'assignment' error, not vanish with the form (review V5). ?>
+-                            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+-                            <?php if (!empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
+-                            <?php if (!empty($errors['assignment'])): ?><p class="field-error"><?= $e($errors['assignment']) ?></p><?php endif; ?>
++                            <?= field_error($rowRenewErrors, 'current_password', 'err-role-renew-' . $assignmentId . '-current_password') ?>
++                            <?= field_error($rowRenewErrors, 'ends_at', 'err-role-renew-' . $assignmentId . '-ends_at') ?>
++                            <?= field_error($rowRenewErrors, 'assignment', 'err-role-renew-' . $assignmentId . '-assignment', alert: true) ?>
+                         <?php endif; ?>
+                     </td>
+                 </tr>
+@@ -165,56 +196,69 @@ ksort($groupedCatalogue);
+         </table>
+         </div>
+         <?php endif; ?>
+-    </section>
+ 
+-    <section class="card">
+-        <h2>Assign this role</h2>
+-        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/assignments" class="stacked">
++        <h4>Assign this role</h4>
++        <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/assignments" class="role-assign-form">
+             <?= $this->csrfField() ?>
+-            <?php if ($assignErrorContext && !empty($errors['role'])): ?><p class="field-error"><?= $e($errors['role']) ?></p><?php endif; ?>
+-            <?php if ($assignErrorContext && !empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
+-            <label>Member username
+-                <input type="text" name="username" maxlength="32" value="<?= $e((string) ($old['assignment']['username'] ?? '')) ?>" required>
+-            </label>
+-            <?php if ($assignErrorContext && !empty($errors['username'])): ?><p class="field-error"><?= $e($errors['username']) ?></p><?php endif; ?>
++            <?= field_error($assignErrors, 'role', 'err-role-assign-role', alert: true) ?>
++            <?= field_error($assignErrors, 'capabilities', 'err-role-assign-capabilities', alert: true) ?>
++            <div>
++                <label class="role-form-label"><span>Member username</span>
++                    <input class="input role-mono-input" type="text" name="username" maxlength="32" value="<?= $e((string) ($old['assignment']['username'] ?? '')) ?>"<?= field_attrs($assignErrors, 'username', 'err-role-assign-username') ?> required>
++                </label>
++                <?= field_error($assignErrors, 'username', 'err-role-assign-username') ?>
++            </div>
+ 
+-            <label>Scope
+-                <select name="scope_type">
+-                    <?php foreach (['site' => 'Site-wide', 'board' => 'A single board', 'category' => 'A single category'] as $value => $label): ?>
+-                        <option value="<?= $e($value) ?>"<?= ($old['assignment']['scope_type'] ?? 'site') === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
+-                    <?php endforeach; ?>
+-                </select>
+-            </label>
+-            <?php if ($assignErrorContext && !empty($errors['scope_type'])): ?><p class="field-error"><?= $e($errors['scope_type']) ?></p><?php endif; ?>
++            <div>
++                <label class="role-form-label"><span>Scope</span>
++                    <select class="input" name="scope_type"<?= field_attrs($assignErrors, 'scope_type', 'err-role-assign-scope_type') ?>>
++                        <?php foreach (['site' => 'Site-wide', 'category' => 'Category', 'board' => 'Board'] as $value => $label): ?>
++                            <option value="<?= $e($value) ?>"<?= ($old['assignment']['scope_type'] ?? 'site') === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
++                        <?php endforeach; ?>
++                    </select>
++                </label>
++                <?= field_error($assignErrors, 'scope_type', 'err-role-assign-scope_type') ?>
++            </div>
+ 
+-            <label>Board/category id <span class="muted">(leave blank for site-wide)</span>
+-                <input type="text" name="scope_id" list="assignment-board-options" value="<?= $e((string) ($old['assignment']['scope_id'] ?? '')) ?>">
+-                <datalist id="assignment-board-options">
+-                    <?php foreach (($boards ?? []) as $b): ?><option value="<?= (int) $b['id'] ?>" label="<?= $e((string) $b['name']) ?>"><?php endforeach; ?>
+-                </datalist>
+-            </label>
+-            <?php if ($assignErrorContext && !empty($errors['scope_id'])): ?><p class="field-error"><?= $e($errors['scope_id']) ?></p><?php endif; ?>
++            <div>
++                <label class="role-form-label"><span>Board / category id <span class="role-label-note">(blank = site-wide)</span></span>
++                    <input class="input role-mono-input" type="text" name="scope_id" list="assignment-board-options" value="<?= $e((string) ($old['assignment']['scope_id'] ?? '')) ?>"<?= field_attrs($assignErrors, 'scope_id', 'err-role-assign-scope_id') ?>>
++                    <datalist id="assignment-board-options">
++                        <?php foreach (($boards ?? []) as $b): ?><option value="<?= (int) $b['id'] ?>" label="<?= $e((string) $b['name']) ?>"><?php endforeach; ?>
++                    </datalist>
++                </label>
++                <?= field_error($assignErrors, 'scope_id', 'err-role-assign-scope_id') ?>
++            </div>
+ 
+-            <label>Starts (UTC) <span class="muted">(optional — blank starts now)</span>
+-                <input type="text" name="starts_at" placeholder="YYYY-MM-DD HH:MM" value="<?= $e((string) ($old['assignment']['starts_at'] ?? '')) ?>">
+-            </label>
+-            <?php if ($assignErrorContext && !empty($errors['starts_at'])): ?><p class="field-error"><?= $e($errors['starts_at']) ?></p><?php endif; ?>
++            <div>
++                <label class="role-form-label"><span>Starts (UTC) <span class="role-label-note">(blank starts now)</span></span>
++                    <input class="input role-time-input" type="text" name="starts_at" placeholder="2026-08-10 09:00" value="<?= $e((string) ($old['assignment']['starts_at'] ?? '')) ?>"<?= field_attrs($assignErrors, 'starts_at', 'err-role-assign-starts_at', 'role-assign-time-format') ?>>
++                </label>
++                <?= field_error($assignErrors, 'starts_at', 'err-role-assign-starts_at') ?>
++            </div>
+ 
+-            <label>Ends (UTC) <span class="muted">(optional — blank never expires)</span>
+-                <input type="text" name="ends_at" placeholder="YYYY-MM-DD HH:MM" value="<?= $e((string) ($old['assignment']['ends_at'] ?? '')) ?>">
+-            </label>
+-            <?php if ($assignErrorContext && !empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
++            <div>
++                <label class="role-form-label"><span>Ends (UTC) <span class="role-label-note">(blank never expires)</span></span>
++                    <input class="input role-time-input" type="text" name="ends_at" placeholder="2026-11-01 00:00" value="<?= $e((string) ($old['assignment']['ends_at'] ?? '')) ?>"<?= field_attrs($assignErrors, 'ends_at', 'err-role-assign-ends_at', 'role-assign-time-format') ?>>
++                </label>
++                <?= field_error($assignErrors, 'ends_at', 'err-role-assign-ends_at') ?>
++            </div>
+ 
+-            <label>Reason (optional)
+-                <input type="text" name="reason" maxlength="255" value="<?= $e((string) ($old['assignment']['reason'] ?? '')) ?>">
+-            </label>
++            <div>
++                <label class="role-form-label"><span>Reason (optional)</span>
++                    <input class="input" type="text" name="reason" maxlength="255" value="<?= $e((string) ($old['assignment']['reason'] ?? '')) ?>">
++                </label>
++            </div>
+ 
+-            <label>Confirm your password
+-                <input type="password" name="current_password" autocomplete="current-password" required>
+-            </label>
+-            <?php if ($assignErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
++            <div>
++                <label class="role-form-label"><span>Confirm your password</span>
++                    <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($assignErrors, 'current_password', 'err-role-assign-current_password') ?> required>
++                </label>
++                <?= field_error($assignErrors, 'current_password', 'err-role-assign-current_password') ?>
++            </div>
+ 
+-            <div class="form-actions"><button class="btn" type="submit">Assign role</button></div>
++            <p class="role-time-format" id="role-assign-time-format">Date-time format: <code>YYYY-MM-DD HH:MM</code> (UTC).</p>
++            <div class="role-assign-actions"><button class="btn" type="submit">Assign</button></div>
+         </form>
+     </section>
+     <?php endif; ?>
+diff --git a/templates/admin/role_simulator.php b/templates/admin/role_simulator.php
+index ea5c3ce..70a8055 100644
+--- a/templates/admin/role_simulator.php
++++ b/templates/admin/role_simulator.php
+@@ -4,53 +4,55 @@ $this->layout('layout');
+ $this->section('title', 'Permission simulator');
+ $this->section('variant', 'admin');
+ ?>
+-<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'simulator']) ?>
+-    <p class="muted">Runs <code>can(actor, capability, target, time)</code> on the <strong>real resolver</strong>.
+-    While <code>capabilities</code> is in shadow, answers predict the post-cutover decision; live requests still use legacy authority.</p>
++<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'simulator', 'pane_class' => 'admin-roles admin-role-simulator']) ?>
++    <p class="role-simulator-intro">Runs <code>can(actor, capability, target, time)</code> on the real resolver.
++    While capabilities are in shadow, answers predict the post-cutover decision; live requests still use legacy authority.</p>
+ 
+-    <section class="card">
++    <section class="card role-simulator-form-card">
+         <h2>Simulate</h2>
+-        <form method="get" action="/admin/roles/simulator" class="stacked">
+-            <label>Actor (username, id, or <code>guest</code>)
+-                <input type="text" name="actor" value="<?= $e($q['actor']) ?>" required>
++        <form method="get" action="/admin/roles/simulator" class="role-simulator-form">
++            <label class="role-form-label"><span>Actor (username, id, or guest)</span>
++                <input class="input role-mono-input" type="text" name="actor" value="<?= $e($q['actor']) ?>" required>
+             </label>
+-            <label>Capability
+-                <select name="capability" required>
+-                    <option value="">- pick -</option>
++            <label class="role-form-label"><span>Capability</span>
++                <select class="input role-time-input" name="capability" required>
++                    <option value="">— pick —</option>
+                     <?php foreach ($catalogue as $key => $meta): ?>
+                         <option value="<?= $e($key) ?>" <?= $q['capability'] === $key ? 'selected' : '' ?>><?= $e($key) ?></option>
+                     <?php endforeach; ?>
+                 </select>
+             </label>
+-            <label>Board id (optional target)
+-                <input type="number" name="board_id" min="1" value="<?= $e($q['board_id']) ?>">
++            <label class="role-form-label"><span>Board id (optional target)</span>
++                <input class="input role-mono-input" type="number" name="board_id" min="1" value="<?= $e($q['board_id']) ?>">
+             </label>
+-            <label>At (optional, UTC <code>YYYY-MM-DD HH:MM</code>)
+-                <input type="text" name="at" value="<?= $e($q['at']) ?>" placeholder="2026-07-15 12:00">
++            <label class="role-form-label"><span>At (optional, UTC)</span>
++                <input class="input role-time-input" type="text" name="at" value="<?= $e($q['at']) ?>" placeholder="2026-08-15 12:00">
+             </label>
+-            <div class="form-actions"><button class="btn" type="submit">Simulate</button></div>
++            <div class="role-simulator-actions"><button class="btn" type="submit">Simulate</button></div>
+         </form>
+     </section>
+ 
+-    <?php if ($result !== null): ?>
+-    <section class="card">
++    <?php if ($result !== null && $result['error'] !== null): ?>
++    <section class="card role-simulator-error" role="alert">
++        <h2>The simulator could not answer</h2>
++        <p><?= $e($result['error']) ?></p>
++    </section>
++    <?php elseif ($result !== null): $d = $result['decision']; ?>
++    <section class="card role-simulator-result">
+         <h2>Result</h2>
+-        <?php if ($result['error'] !== null): ?>
+-            <p class="field-error"><?= $e($result['error']) ?></p>
+-        <?php else: $d = $result['decision']; ?>
+-            <p>
+-                <strong><?= $d->allowed ? 'Allowed' : 'Denied' ?></strong>
+-                - <code><?= $e($d->capability) ?></code> for <?= $e($result['actor_label']) ?>
++            <p class="role-simulator-verdict-row">
++                <span class="role-simulator-verdict role-simulator-verdict-<?= $d->allowed ? 'allowed' : 'denied' ?>"><?= $d->allowed ? 'Allowed' : 'Denied' ?></span>
++                <span><code><?= $e($d->capability) ?></code> for <?= $e($result['actor_label']) ?>
+                 <?php if ($result['target_label'] !== null): ?> on <?= $e($result['target_label']) ?><?php endif; ?>
++                </span>
+             </p>
+-            <ul>
++            <ul class="role-simulator-facts">
+                 <li>Decisive rule: <code><?= $e($d->source) ?></code></li>
+                 <li>Reason: <?= $e($d->reason) ?></li>
+                 <?php if ($d->roleKey !== null): ?>
+                     <li>Via role: <code><?= $e($d->roleKey) ?></code><?php if ($d->scopeType !== null): ?> at <?= $e($d->scopeType) ?><?= $d->scopeId !== null ? ' #' . (int) $d->scopeId : '' ?><?php endif; ?></li>
+                 <?php endif; ?>
+             </ul>
+-        <?php endif; ?>
+     </section>
+     <?php endif; ?>
+ <?= $this->partial('admin/_console_end') ?>
+diff --git a/templates/admin/roles.php b/templates/admin/roles.php
+index 2ee227f..4af4e4f 100644
+--- a/templates/admin/roles.php
++++ b/templates/admin/roles.php
+@@ -13,31 +13,34 @@ foreach ($catalogue as $capKey => $capMeta) {
+ }
+ ksort($groupedCatalogue);
+ ?>
+-<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles']) ?>
+-    <p class="muted">Resolver posture: <strong><?= $e($mode ?? 'shadow') ?></strong>
+-    (<code>CAPABILITIES_MODE</code>). Under <code>shadow</code> the legacy rules decide and the
+-    resolver only shadow-compares; under <code>enforce</code> the resolver decides and fails
+-    closed. Unknown mode values run <code>shadow</code> and emit
+-    <code>capabilities.mode_invalid</code> telemetry. System roles are protected
+-    compatibility anchors and cannot be edited; clone one to adapt it
+-    (cloning copies only currently-enforceable capabilities). Try changes safely in the
+-    <a href="/admin/roles/simulator">permission simulator</a>.</p>
++<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles', 'pane_class' => 'admin-roles admin-roles-list']) ?>
++    <div class="role-callout">
++        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
++        <p>Resolver posture: <strong><?= $e($mode ?? 'shadow') ?></strong>
++        (<code>CAPABILITIES_MODE</code>). Under <code>shadow</code> the legacy rules decide and the
++        resolver only shadow-compares; under <code>enforce</code> the resolver decides and fails
++        closed. Unknown mode values run <code>shadow</code> and emit
++        <code>capabilities.mode_invalid</code> telemetry. System roles are protected
++        compatibility anchors and cannot be edited — clone one to adapt it. Try changes safely in
++        the <a href="/admin/roles/simulator">permission simulator</a>.</p>
++    </div>
+ 
+-    <section class="card">
+-        <h2>Roles</h2>
++    <?php $roleCount = count($rows); ?>
++    <div class="role-list-meta"><span data-role-count><?= $roleCount ?> <?= $roleCount === 1 ? 'role' : 'roles' ?></span></div>
++    <section class="card role-table-card">
+         <div class="table-scroll" tabindex="0" role="region" aria-label="Role definitions">
+-        <table class="audit">
+-            <thead><tr><th scope="col">Name</th><th scope="col">Key</th><th scope="col">Kind</th><th scope="col">Version</th><th scope="col">Capabilities</th><th scope="col">Active assignments</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
++        <table class="audit role-table">
++            <thead><tr><th scope="col">Name</th><th scope="col">Key</th><th scope="col">Kind</th><th scope="col" class="role-number">Version</th><th scope="col" class="role-number">Capabilities</th><th scope="col" class="role-number">Active assignments</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+             <tbody>
+             <?php foreach ($rows as $r): $role = $r['role']; ?>
+                 <tr>
+                     <td><?= $e($role['name']) ?></td>
+-                    <td><code><?= $e($role['role_key']) ?></code></td>
+-                    <td><?= ((string) $role['kind']) === 'system' ? 'Protected anchor' : 'Custom' ?></td>
+-                    <td>v<?= (int) $role['version'] ?></td>
+-                    <td><?= (int) $r['capability_count'] ?></td>
+-                    <td><?= (int) $r['impact'] ?></td>
+-                    <td><a href="/admin/roles/<?= (int) $role['id'] ?>"><?= ((string) $role['kind']) === 'system' ? 'View / clone' : 'Edit' ?></a></td>
++                    <td><code class="role-key"><?= $e($role['role_key']) ?></code></td>
++                    <td><?php if (((string) $role['kind']) === 'system'): ?><span class="role-kind role-kind-system">Protected anchor</span><?php else: ?><span class="role-kind role-kind-custom">Custom</span><?php endif; ?></td>
++                    <td class="role-number">v<?= (int) $role['version'] ?></td>
++                    <td class="role-number"><?= (int) $r['capability_count'] ?></td>
++                    <td class="role-number"><?= (int) $r['impact'] ?></td>
++                    <td><a class="role-row-action" href="/admin/roles/<?= (int) $role['id'] ?>"><?= ((string) $role['kind']) === 'system' ? 'View / clone' : 'Edit' ?></a></td>
+                 </tr>
+             <?php endforeach; ?>
+             </tbody>
+@@ -45,42 +48,53 @@ ksort($groupedCatalogue);
+         </div>
+     </section>
+ 
+-    <section class="card">
++    <section class="card role-create-card">
+         <h2>Create a custom role</h2>
+-        <form method="post" action="/admin/roles" class="stacked">
++        <p class="role-section-intro">Only delegable capabilities are offered — protected authority is never on this list. Creating a role is a reauthenticated action.</p>
++        <form method="post" action="/admin/roles" class="role-create-form" data-role-capability-form>
+             <?= $this->csrfField() ?>
+-            <label>Name
+-                <input type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? '') ?>"<?= field_attrs($errors ?? [], 'name') ?> required>
+-            </label>
+-            <?= field_error($errors ?? [], 'name') ?>
+-
+-            <label>Description (optional)
+-                <input type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? '') ?>"<?= field_attrs($errors ?? [], 'description') ?>>
+-            </label>
+-            <?= field_error($errors ?? [], 'description') ?>
++            <div class="role-definition-grid">
++                <div>
++                    <label class="role-form-label"><span>Name</span>
++                        <input class="input" type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? '') ?>"<?= field_attrs($errors ?? [], 'name') ?> required>
++                    </label>
++                    <?= field_error($errors ?? [], 'name') ?>
++                </div>
++                <div>
++                    <label class="role-form-label"><span>Description (optional)</span>
++                        <input class="input" type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? '') ?>"<?= field_attrs($errors ?? [], 'description') ?>>
++                    </label>
++                    <?= field_error($errors ?? [], 'description') ?>
++                </div>
++            </div>
+ 
+             <?php $checked = (array) ($old['capabilities'] ?? []); ?>
+-            <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
+-                <fieldset>
+-                    <legend><?= $e($groupLabel) ?> capabilities (delegable only; protected authority is never offered)</legend>
+-                    <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
+-                        <label>
+-                            <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
+-                            <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
+-                            <?php if ($meta['risk'] === 'high'): ?><span class="pill">high risk</span><?php endif; ?>
+-                            <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
+-                        </label>
+-                    <?php endforeach; ?>
+-                </fieldset>
+-            <?php endforeach; ?>
++            <div class="role-capability-grid">
++                <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
++                    <fieldset>
++                        <legend><?= $e($groupLabel) ?></legend>
++                        <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
++                            <label class="role-capability-option">
++                                <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
++                                <span><code><?= $e($key) ?></code><span class="role-capability-description"> — <?= $e($meta['consent'] ?? $meta['description']) ?></span>
++                                <?php if ($meta['risk'] === 'high'): ?><span class="role-risk">High risk</span><?php endif; ?>
++                                <?php if (!$enforced): ?><span class="role-capability-locked">(not yet enforceable)</span><?php endif; ?></span>
++                            </label>
++                        <?php endforeach; ?>
++                    </fieldset>
++                <?php endforeach; ?>
++            </div>
+             <?= field_error($errors ?? [], 'capabilities') ?>
+ 
+-            <label>Confirm your password
+-                <input type="password" name="current_password" autocomplete="current-password"<?= field_attrs($errors ?? [], 'current_password') ?> required>
+-            </label>
+-            <?= field_error($errors ?? [], 'current_password') ?>
+-
+-            <div class="form-actions"><button class="btn" type="submit">Create role</button></div>
++            <div class="role-create-footer">
++                <div class="role-reauth-field">
++                    <label class="role-form-label"><span>Confirm your password</span>
++                        <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($errors ?? [], 'current_password') ?> required>
++                    </label>
++                    <?= field_error($errors ?? [], 'current_password') ?>
++                </div>
++                <button class="btn" type="submit">Create role</button>
++            </div>
+         </form>
+     </section>
+ <?= $this->partial('admin/_console_end') ?>
+diff --git a/tests/Integration/Admin/AppFieldErrorA11yTest.php b/tests/Integration/Admin/AppFieldErrorA11yTest.php
+index 93b8bdd..db3955f 100644
+--- a/tests/Integration/Admin/AppFieldErrorA11yTest.php
++++ b/tests/Integration/Admin/AppFieldErrorA11yTest.php
+@@ -208,6 +208,134 @@ final class AppFieldErrorA11yTest extends TestCase
+         $this->assertFieldWired($response->body(), 'select', 'mime', 'err-emoji-mime');
+     }
+ 
++    public function test_role_definition_error_is_scoped_and_programmatically_linked(): void
++    {
++        [, $roleId] = $this->makeRoleErrorSurface('definition');
++        $response = $this->post('/admin/roles/' . $roleId, [
++            'name' => '',
++            'description' => 'Typed definition description',
++            'capabilities' => ['core.thread.lock'],
++            'current_password' => 'password123',
++        ]);
++
++        $this->assertStatus(422, $response);
++        $this->assertFieldWiredInForm(
++            $response->body(),
++            '/admin/roles/' . $roleId,
++            'input',
++            'name',
++            'err-role-definition-name',
++        );
++    }
++
++    public function test_role_clone_error_is_scoped_and_programmatically_linked(): void
++    {
++        [, $roleId] = $this->makeRoleErrorSurface('clone');
++        $response = $this->post('/admin/roles/' . $roleId . '/clone', [
++            'name' => 'Typed clone name',
++            'current_password' => 'wrong-password',
++        ]);
++
++        $this->assertStatus(422, $response);
++        $this->assertFieldWiredInForm(
++            $response->body(),
++            '/admin/roles/' . $roleId . '/clone',
++            'input',
++            'current_password',
++            'err-role-clone-current_password',
++        );
++        self::assertStringContainsString('value="Typed clone name"', $response->body());
++    }
++
++    public function test_role_assignment_error_is_scoped_and_programmatically_linked(): void
++    {
++        [, $roleId] = $this->makeRoleErrorSurface('assignment');
++        $response = $this->post('/admin/roles/' . $roleId . '/assignments', [
++            'username' => 'missing-role-subject',
++            'scope_type' => 'site',
++            'scope_id' => '',
++            'starts_at' => '',
++            'ends_at' => '',
++            'reason' => 'Typed assignment reason',
++            'current_password' => 'password123',
++        ]);
++
++        $this->assertStatus(422, $response);
++        $this->assertFieldWiredInForm(
++            $response->body(),
++            '/admin/roles/' . $roleId . '/assignments',
++            'input',
++            'username',
++            'err-role-assign-username',
++        );
++    }
++
++    public function test_role_renew_error_is_scoped_to_its_row_and_programmatically_linked(): void
++    {
++        [, $roleId] = $this->makeRoleErrorSurface('renew');
++        $subject = $this->makeUser(['username' => 'a11y_role_renew_subject']);
++        $this->assertRedirect($this->post('/admin/roles/' . $roleId . '/assignments', [
++            'username' => $subject['username'],
++            'scope_type' => 'site',
++            'scope_id' => '',
++            'starts_at' => '',
++            'ends_at' => gmdate('Y-m-d H:i', time() + 3600),
++            'reason' => 'A11y renew setup',
++            'current_password' => 'password123',
++        ]));
++        $assignmentId = (int) $this->db->fetchValue('SELECT id FROM role_assignments ORDER BY id DESC LIMIT 1');
++
++        $response = $this->post('/admin/role-assignments/' . $assignmentId . '/renew', [
++            'ends_at' => gmdate('Y-m-d H:i', time() + 7200),
++            'current_password' => 'wrong-password',
++        ]);
++
++        $this->assertStatus(422, $response);
++        $this->assertFieldWiredInForm(
++            $response->body(),
++            '/admin/role-assignments/' . $assignmentId . '/renew',
++            'input',
++            'current_password',
++            'err-role-renew-' . $assignmentId . '-current_password',
++        );
++        self::assertSame(1, substr_count($response->body(), 'Your current password is incorrect.'));
++    }
++
++    /** @return array{0:array<string,mixed>,1:int} */
++    private function makeRoleErrorSurface(string $suffix): array
++    {
++        (new SettingRepository($this->db))->set('features', ['capabilities' => true]);
++        $admin = $this->makeAdmin(['username' => 'a11y_role_' . $suffix]);
++        $this->actingAs($admin);
++        $this->assertRedirect($this->post('/admin/roles', [
++            'name' => 'A11y Role ' . ucfirst($suffix),
++            'description' => '',
++            'capabilities' => ['core.thread.lock'],
++            'current_password' => 'password123',
++        ]));
++        $roleId = (int) $this->db->fetchValue('SELECT id FROM roles WHERE role_key LIKE \'custom.%\' ORDER BY id DESC LIMIT 1');
++        self::assertGreaterThan(0, $roleId);
++
++        return [$admin, $roleId];
++    }
++
++    private function assertFieldWiredInForm(
++        string $body,
++        string $action,
++        string $tag,
++        string $field,
++        string $errorId,
++    ): void {
++        $matched = preg_match(
++            '/<form\b(?=[^>]*\baction="' . preg_quote($action, '/') . '")[^>]*>(?<form>.*?)<\/form>/s',
++            $body,
++            $matches,
++        );
++        self::assertSame(1, $matched, 'Expected to find form action ' . $action . '.');
++        $this->assertFieldWired((string) $matches['form'], $tag, $field, $errorId);
++        self::assertStringContainsString('id="' . $errorId . '"', $body);
++    }
++
+     private function assertFieldWired(
+         string $body,
+         string $tag,
+diff --git a/tests/Integration/Core/AppRoleAdminTest.php b/tests/Integration/Core/AppRoleAdminTest.php
+index 03826b2..e2a9067 100644
+--- a/tests/Integration/Core/AppRoleAdminTest.php
++++ b/tests/Integration/Core/AppRoleAdminTest.php
+@@ -46,6 +46,14 @@ final class AppRoleAdminTest extends TestCase
+         $this->assertStatus(200, $resp);
+         $this->assertSeeText($resp, 'system.admin');
+         $this->assertSeeText($resp, 'Protected anchor');
++        $body = $resp->body();
++        self::assertStringContainsString('<h1 class="admin-title">Roles &amp; capabilities</h1>', $body);
++        self::assertStringContainsString('aria-label="Role definitions"', $body);
++        self::assertStringContainsString('class="role-kind role-kind-system"', $body);
++        self::assertStringContainsString('4 roles', $body);
++        self::assertStringNotContainsString('<h2>Roles</h2>', $body);
++        self::assertStringNotContainsString('placeholder="Search roles"', $body);
++        self::assertStringNotContainsString('No roles match this filter', $body);
+         self::assertSame('noindex', $resp->getHeader('x-robots-tag'));
+     }
+ 
+@@ -83,6 +91,11 @@ final class AppRoleAdminTest extends TestCase
+         $this->assertStatus(422, $resp);
+         $this->assertSeeText($resp, 'Draft Role Name');
+         $this->assertSeeText($resp, 'current password is incorrect');
++        self::assertMatchesRegularExpression(
++            '/<input\b(?=[^>]*\bname="capabilities\[\]")(?=[^>]*\bvalue="core\.thread\.lock")(?=[^>]*\bchecked\b)[^>]*>/',
++            $resp->body(),
++            'A create-role 422 must keep every selected capability checked.',
++        );
+     }
+ 
+     public function test_protected_capabilities_are_not_offered_and_are_rejected(): void
+@@ -165,6 +178,7 @@ final class AppRoleAdminTest extends TestCase
+         $this->assertStatus(200, $resp);
+         $this->assertSeeText($resp, 'Allowed');
+         $this->assertSeeText($resp, 'core.thread.lock');
++        self::assertStringContainsString('role-simulator-verdict-allowed', $resp->body());
+         self::assertSame('noindex', $resp->getHeader('x-robots-tag'));
+ 
+         $resp = $this->get('/admin/roles/simulator', [
+@@ -173,6 +187,60 @@ final class AppRoleAdminTest extends TestCase
+             'board_id' => (string) $board['id'],
+         ]);
+         $this->assertSeeText($resp, 'Denied');
++        self::assertStringContainsString('role-simulator-verdict-denied', $resp->body());
++        $this->assertDontSeeText($resp, 'Via role:');
++    }
++
++    public function test_submitted_simulator_requires_a_capability_server_side(): void
++    {
++        $this->enable();
++        $this->actingAs($this->makeAdmin());
++
++        $idle = $this->get('/admin/roles/simulator');
++        $this->assertStatus(200, $idle);
++        $this->assertDontSeeText($idle, 'The simulator could not answer');
++
++        // The browser's required attribute is only a convenience. A direct GET
++        // with an empty select value must still receive the server-owned error.
++        $submitted = $this->get('/admin/roles/simulator', [
++            'actor' => 'guest',
++            'capability' => '',
++            'board_id' => '',
++            'at' => '',
++        ]);
++        $this->assertStatus(200, $submitted);
++        $this->assertSeeText($submitted, 'The simulator could not answer');
++        $this->assertSeeText($submitted, 'Pick a capability to test.');
++        self::assertStringContainsString('role-simulator-error', $submitted->body());
++    }
++
++    public function test_system_record_keeps_assignments_dark_and_custom_record_keeps_its_added_capability_editor(): void
++    {
++        $this->enable();
++        $this->actingAs($this->makeAdmin());
++        $roles = new RoleRepository($this->db);
++
++        $systemId = (int) $roles->findByKey('system.moderator')['id'];
++        $system = $this->get('/admin/roles/' . $systemId);
++        $this->assertStatus(200, $system);
++        $this->assertSeeText($system, 'Capabilities held');
++        self::assertStringContainsString('href="/admin/roles"', $system->body());
++        self::assertStringNotContainsString('name="capabilities[]"', $system->body());
++        $this->assertDontSeeText($system, 'Assign this role');
++
++        $this->assertRedirect($this->post('/admin/roles', [
++            'name' => 'Record capability editor',
++            'description' => 'Ledgered FA-23 surface',
++            'capabilities' => ['core.thread.lock'],
++            'current_password' => 'password123',
++        ]));
++        $customId = (int) $roles->findByKey('custom.record_capability_editor')['id'];
++        $custom = $this->get('/admin/roles/' . $customId);
++        $this->assertStatus(200, $custom);
++        $this->assertSeeText($custom, 'Edit definition');
++        self::assertStringContainsString('name="capabilities[]"', $custom->body());
++        self::assertStringContainsString('value="core.thread.lock"', $custom->body());
++        $this->assertSeeText($custom, 'Assign this role');
+     }
+ 
+     public function test_roles_page_surfaces_the_effective_resolver_posture(): void
+diff --git a/tests/Integration/Core/AppRoleAssignmentTest.php b/tests/Integration/Core/AppRoleAssignmentTest.php
+index 537aced..f4f1f10 100644
+--- a/tests/Integration/Core/AppRoleAssignmentTest.php
++++ b/tests/Integration/Core/AppRoleAssignmentTest.php
+@@ -4,6 +4,7 @@ declare(strict_types=1);
+ 
+ namespace Tests\Integration\Core;
+ 
++use App\Repository\RoleAssignmentRepository;
+ use App\Repository\SettingRepository;
+ use Tests\Support\TestCase;
+ 
+@@ -65,12 +66,64 @@ final class AppRoleAssignmentTest extends TestCase
+     {
+         ['roleId' => $roleId] = $this->seedRole();
+         $r = $this->post('/admin/roles/' . $roleId . '/assignments', [
+-            'username' => 'nobody-here', 'scope_type' => 'site', 'scope_id' => '',
+-            'starts_at' => '', 'ends_at' => '', 'reason' => 'keep me',
++            'username' => 'nobody-here', 'scope_type' => 'category', 'scope_id' => '424242',
++            'starts_at' => '2030-01-02 03:04', 'ends_at' => '2031-02-03 04:05',
++            'reason' => 'keep every assignment field',
+             'current_password' => 'password123',
+         ]);
+         $this->assertStatus(422, $r);
+-        $this->assertSeeText($r, 'keep me'); // anti-draft-loss: typed input survives
++        $body = $r->body();
++        self::assertStringContainsString('value="nobody-here"', $body);
++        self::assertMatchesRegularExpression('/<option value="category"\s+selected>Category<\/option>/', $body);
++        self::assertStringContainsString('value="424242"', $body);
++        self::assertStringContainsString('value="2030-01-02 03:04"', $body);
++        self::assertStringContainsString('value="2031-02-03 04:05"', $body);
++        self::assertStringContainsString('value="keep every assignment field"', $body);
++    }
++
++    public function test_all_four_assignment_statuses_render_as_distinct_title_case_chips(): void
++    {
++        ['admin' => $admin, 'roleId' => $roleId] = $this->seedRole();
++        $assignments = new RoleAssignmentRepository($this->db);
++        $now = time();
++
++        $active = $this->makeUser(['username' => 'status_active']);
++        $scheduled = $this->makeUser(['username' => 'status_scheduled']);
++        $expired = $this->makeUser(['username' => 'status_expired']);
++        $revoked = $this->makeUser(['username' => 'status_revoked']);
++
++        $assignments->create([
++            'subject_id' => (int) $active['id'], 'role_id' => $roleId,
++            'grantor_id' => (int) $admin['id'],
++            'starts_at' => gmdate('Y-m-d H:i:s', $now - 3600),
++            'ends_at' => gmdate('Y-m-d H:i:s', $now + 3600),
++        ]);
++        $assignments->create([
++            'subject_id' => (int) $scheduled['id'], 'role_id' => $roleId,
++            'grantor_id' => (int) $admin['id'],
++            'starts_at' => gmdate('Y-m-d H:i:s', $now + 3600),
++            'ends_at' => gmdate('Y-m-d H:i:s', $now + 7200),
++        ]);
++        $assignments->create([
++            'subject_id' => (int) $expired['id'], 'role_id' => $roleId,
++            'grantor_id' => (int) $admin['id'],
++            'starts_at' => gmdate('Y-m-d H:i:s', $now - 7200),
++            'ends_at' => gmdate('Y-m-d H:i:s', $now - 3600),
++        ]);
++        $revokedId = $assignments->create([
++            'subject_id' => (int) $revoked['id'], 'role_id' => $roleId,
++            'grantor_id' => (int) $admin['id'],
++        ]);
++        $assignments->revoke($revokedId, (int) $admin['id']);
++
++        $body = $this->get('/admin/roles/' . $roleId)->body();
++        foreach (['active' => 'Active', 'scheduled' => 'Scheduled', 'expired' => 'Expired', 'revoked' => 'Revoked'] as $class => $label) {
++            self::assertMatchesRegularExpression(
++                '/<span class="(?=[^"]*\brole-assignment-status\b)(?=[^"]*\brole-assignment-status-' . $class . '\b)[^"]*">' . $label . '<\/span>/',
++                $body,
++                $label . ' must have its own semantic status class.',
++            );
++        }
+     }
+ 
+     public function test_renew_validation_error_rerenders_422_preserving_input(): void
+diff --git a/tests/browser/a11y.spec.ts b/tests/browser/a11y.spec.ts
+index c8984a1..0ac31c9 100644
+--- a/tests/browser/a11y.spec.ts
++++ b/tests/browser/a11y.spec.ts
+@@ -181,6 +181,7 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
+   await visit(page, '/admin/roles');
+   await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Roles');
++  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
+   await expectNoSeriousA11yViolations(page, info);
+ 
+   await visit(page, '/admin/packages');
+@@ -222,6 +223,13 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
+   await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
+   await expectNoSeriousA11yViolations(page, info);
+ 
++  // Direct query submission bypasses native required-field blocking and
++  // proves the server-owned empty-capability error has the design's card.
++  await visit(page, '/admin/roles/simulator?actor=guest&capability=');
++  await expect(page.locator('.role-simulator-error').getByRole('heading', { level: 2, name: 'The simulator could not answer' })).toBeVisible();
++  await expect(page.locator('.role-simulator-error')).toContainText('Pick a capability to test.');
++  await expectNoSeriousA11yViolations(page, info);
++
+   // badge_rules graduated to default-on (GA 2026-07-02): the admin create-rule
+   // form + rule list is the operator surface.
+   await visit(page, '/admin/badge-rules');
+diff --git a/tests/browser/admin-features.spec.ts b/tests/browser/admin-features.spec.ts
+index a0c46cb..80a41ae 100644
+--- a/tests/browser/admin-features.spec.ts
++++ b/tests/browser/admin-features.spec.ts
+@@ -17,7 +17,12 @@ import path from 'node:path';
+  * CLEARS once the operational step is done (the unset-key badge itself is
+  * pinned by AppAdminFeaturesTest).
+  */
+-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
++const EVIDENCE_DIR = path.resolve(
++  __dirname,
++  '..',
++  '..',
++  process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
++);
+ 
+ async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
+   await page.screenshot({ path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`), fullPage: true });
+@@ -102,7 +107,8 @@ test('admin feature inventory classifies readiness and links actionable surfaces
+   // stores a GIPHY key, so slash_giphy's badge has cleared.
+   const capabilities = flagRow(page, 'capabilities');
+   await expect(capabilities.getByText('Operational configuration required')).toBeVisible();
+-  await expect(capabilities.getByRole('link', { name: 'Roles & resolver posture' })).toHaveAttribute('href', '/admin/roles');
++  const rolesLink = capabilities.getByRole('link', { name: 'Roles & resolver posture' });
++  await expect(rolesLink).toHaveAttribute('href', '/admin/roles');
+   await expect(flagRow(page, 'slash_giphy').getByText('Operational configuration required')).toHaveCount(0);
+ 
+   // The Gate B reservation renders on all four rows (the fifth match is the
+@@ -114,5 +120,12 @@ test('admin feature inventory classifies readiness and links actionable surfaces
+   await shot(page, info, 'admin-feature-readiness');
+   await expectAxeClean(page, info, '.admin-pane');
+ 
++  // ADR 0023's inbound link survives the simulator's promotion to a tab and
++  // lands on the area-owned heading, not the retired table heading.
++  await rolesLink.click();
++  await expect(page).toHaveURL(/\/admin\/roles$/);
++  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
++  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
++
+   await exitThemeSafeMode(page, themeSafeModeChanged);
+ });
+diff --git a/tests/browser/gate-a.spec.ts b/tests/browser/gate-a.spec.ts
+index bbec980..5a3a5af 100644
+--- a/tests/browser/gate-a.spec.ts
++++ b/tests/browser/gate-a.spec.ts
+@@ -16,7 +16,12 @@ import { promisify } from 'node:util';
+  * server-rendered POST→redirect auth path works in a real browser.
+  */
+ 
+-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
++const EVIDENCE_DIR = path.resolve(
++  __dirname,
++  '..',
++  '..',
++  process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
++);
+ const execFileAsync = promisify(execFile);
+ const PNG_1X1 =
+   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
+@@ -386,13 +391,16 @@ test('role editor: create a custom role and simulate a decision (no-JS forms)',
+   await visit(page, '/admin/roles');
+   await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Roles');
+-  await expect(page.getByRole('heading', { level: 2, name: 'Roles' })).toBeVisible();
++  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
++  await expect(page.locator('[data-role-count]')).toHaveText(/\d+ roles?/);
++  await expect(page.locator('.role-kind-system').first()).toHaveText('Protected anchor');
+   await expect(page.getByText('system.admin')).toBeVisible();
+ 
+   const roleName = `Board Helper ${info.project.name}`;
+   await page.fill('input[name="name"]', roleName);
+   await page.check('input[name="capabilities[]"][value="core.thread.lock"]');
+   await page.check('input[name="capabilities[]"][value="core.thread.pin"]');
++  await expect(page.locator('[data-role-capability-count]')).toHaveText('2 capabilities selected');
+   await page.fill('input[name="current_password"]', 'password123');
+   await page.click('form[action="/admin/roles"] button[type="submit"]');
+   await expect(page.getByText(roleName)).toBeVisible();
+@@ -402,7 +410,8 @@ test('role editor: create a custom role and simulate a decision (no-JS forms)',
+   await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Permission simulator');
+   await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
+-  await expect(page.getByText('Denied')).toBeVisible();
++  await expect(page.locator('.role-simulator-verdict-denied')).toHaveText('Denied');
++  await expect(page.locator('.role-simulator-result')).toBeVisible();
+   await shot(page, info, '31-admin-role-simulator');
+ });
+ 
+@@ -525,7 +534,7 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
+   await setThemeSafeMode(page, true);
+ });
+ 
+-test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
++test('mobile no-JS keeps navigation reachable and role decoration optional', async ({ browser, baseURL }, info) => {
+   test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
+ 
+   const context = await browser.newContext({
+@@ -540,6 +549,14 @@ test('mobile no-JS keeps navigation reachable without an inert drawer button', a
+     await visit(page, '/');
+     await expect(page.locator('.nav-toggle')).toBeHidden();
+     await expect(page.locator('#sidebar-nav')).toBeVisible();
++
++    await login(page, 'admin@retro.test');
++    await visit(page, '/admin/roles');
++    await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
++    await expect(page.locator('[data-role-capability-count]')).toHaveCount(0);
++    await page.getByRole('link', { name: 'Permission simulator', exact: true }).click();
++    await expect(page).toHaveURL(/\/admin\/roles\/simulator$/);
++    await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
+   } finally {
+     await context.close();
+   }
+diff --git a/tests/browser/package.json b/tests/browser/package.json
+index e097f44..d88a405 100644
+--- a/tests/browser/package.json
++++ b/tests/browser/package.json
+@@ -4,7 +4,7 @@
+   "description": "Playwright browser-evidence run for RetroBoards Gate A (desktop + mobile capture).",
+   "scripts": {
+     "prepare-db": "bash prepare.sh",
+-    "evidence": "bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts thread-content-presentation.spec.ts && bash prepare.sh && playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts group-dms.spec.ts api-tokens.spec.ts providers.spec.ts invitations.spec.ts thread-intelligence.spec.ts composer-shell.spec.ts admin-features.spec.ts && bash prepare.sh && playwright test admin-remediation.spec.ts admin-dashboard.spec.ts",
++    "evidence": "bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts thread-content-presentation.spec.ts && bash prepare.sh && playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts group-dms.spec.ts api-tokens.spec.ts providers.spec.ts invitations.spec.ts thread-intelligence.spec.ts composer-shell.spec.ts admin-features.spec.ts && bash prepare.sh && bash -c \"CAPABILITIES_MODE=enforce playwright test role-assignments.spec.ts\" && bash prepare.sh && playwright test admin-remediation.spec.ts admin-dashboard.spec.ts",
+     "evidence:passkeys": "bash prepare.sh && playwright test passkeys.spec.ts totp.spec.ts",
+     "evidence:dark": "RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && playwright test server-drafts.spec.ts",
+     "a11y": "bash -c \"RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && RB_BROWSER_DARK_SURFACES=1 playwright test a11y.spec.ts package-review.spec.ts admin-dashboard.spec.ts && RB_BROWSER_DARK_SURFACES=1 playwright test thread-intelligence.spec.ts --grep 'no-JS|axe'\"",
+diff --git a/tests/browser/role-assignments.spec.ts b/tests/browser/role-assignments.spec.ts
+index ac65667..1487890 100644
+--- a/tests/browser/role-assignments.spec.ts
++++ b/tests/browser/role-assignments.spec.ts
+@@ -33,7 +33,8 @@ import path from 'node:path';
+  * the shared evidence DB; that theme desyncs shared admin-table styles under
+  * WCAG AA) and its admin-login / user-switch-cookie-trap helpers verbatim.
+  */
+-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
++const REPO_ROOT = path.resolve(__dirname, '..', '..');
++const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
+ 
+ async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
+   await page.screenshot({ path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`), fullPage: true });
+@@ -45,6 +46,35 @@ async function visit(page: Page, url: string): Promise<void> {
+   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
+ }
+ 
++/**
++ * app.js promotes the board identity control (or mobile FAB) to the visible
++ * New topic trigger and hides the native details summary. Keep the summary as
++ * the no-JS fallback, but never wait on that hidden control in this JS-on spec.
++ */
++async function openTopicComposer(page: Page): Promise<void> {
++  const details = page.locator('details.composer-details#new-topic');
++  const promoted = page.locator('[data-open-topic-composer]');
++  const fab = page.locator('a.fab[href="#new-topic"]');
++  const summary = details.locator(':scope > summary');
++  const opener = (await promoted.isVisible())
++    ? promoted
++    : ((await fab.isVisible()) ? fab : summary);
++  await opener.click();
++  await expect(details).toHaveJSProperty('open', true);
++}
++
++async function openTopicManagement(page: Page) {
++  await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
++  const tools = page.locator('[data-topic-tools]');
++  await expect(tools).toBeVisible();
++  await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
++  const details = tools.locator('[data-topic-tools-section="management"]');
++  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) {
++    await details.locator(':scope > summary').click();
++  }
++  return details;
++}
++
+ async function login(page: Page, email: string): Promise<void> {
+   await page.context().clearCookies();
+   await page.goto('/login');
+@@ -121,10 +151,14 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then
+   await page.fill('input[name="scope_id"]', generalBoardId!);
+   await page.fill('input[name="reason"]', 'Browser evidence: Inc 6 deputy grant');
+   await page.fill('form[action$="/assignments"] input[name="current_password"]', 'password123');
+-  await page.click('form[action$="/assignments"] button[type="submit"]');
++  const assignButton = page.locator('form[action$="/assignments"] button[type="submit"]');
++  await assignButton.scrollIntoViewIfNeeded();
++  // The following row assertion is the proof that this tall mobile-page click
++  // reached the form rather than being intercepted by an off-edge control.
++  await assignButton.click({ force: true });
+ 
+   const assignmentRow = page.locator('table tbody tr', { hasText: '@bob' });
+-  await expect(assignmentRow).toContainText('active');
++  await expect(assignmentRow.locator('.role-assignment-status-active')).toHaveText('Active');
+   await expect(assignmentRow).toContainText('General'); // board-scoped, not site-wide
+   await expectNoSeriousA11yViolations(page, info); // active-assignment state is accessible
+   await shot(page, info, '62-admin-role-assigned');
+@@ -136,11 +170,9 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then
+   await visit(page, '/c/general');
+   await page.getByRole('link', { name: 'Mobile layout looks great' }).click();
+   await page.waitForURL(/\/t\//);
+-  await page.locator('.thread-actions .dm-menu > summary').click();
+-  const menu = page.locator('.dm-menu-pop');
+-  await expect(menu).toBeVisible();
+-  await expect(menu.getByRole('button', { name: 'Lock' })).toBeVisible();
+-  await expect(menu.getByRole('button', { name: 'Pin' })).toHaveCount(0);
++  const management = await openTopicManagement(page);
++  await expect(management.getByRole('button', { name: 'Lock' })).toBeVisible();
++  await expect(management.getByRole('button', { name: 'Pin' })).toHaveCount(0);
+   await shot(page, info, '64-deputy-sees-lock-control');
+ 
+   // --- Back to admin: revoke, and confirm the surface reflects it ----------
+@@ -151,13 +183,75 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then
+   // force: mirrors api-tokens.spec.ts's tall-mobile-page hit-test quirk — the
+   // toContainText('revoked') assertion below proves the click fired.
+   await revokeBtn.click({ force: true });
+-  await expect(page.locator('table tbody tr', { hasText: '@bob' })).toContainText('revoked');
++  await expect(page.locator('table tbody tr', { hasText: '@bob' }).locator('.role-assignment-status-revoked')).toHaveText('Revoked');
+   await expectNoSeriousA11yViolations(page, info); // revoked-assignment state is accessible
+   await shot(page, info, '63-admin-role-assignment-revoked');
+ 
+   await exitThemeSafeMode(page);
+ });
+ 
++test('roles remain operable without JavaScript: create, assign, renew, and revoke', async ({ browser, baseURL }, info) => {
++  test.setTimeout(240_000);
++
++  const context = await browser.newContext({
++    baseURL: baseURL!,
++    javaScriptEnabled: false,
++    viewport: info.project.name === 'mobile'
++      ? { width: 390, height: 844 }
++      : { width: 1280, height: 800 },
++  });
++  const page = await context.newPage();
++
++  try {
++    await login(page, 'admin@retro.test');
++    await visit(page, '/admin/roles');
++    await expect(page.locator('html')).not.toHaveClass(/\bhas-js\b/);
++    await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
++    await expect(page.locator('[data-role-capability-count]')).toHaveCount(0);
++
++    const roleName = `No-JS operator (${info.project.name}-${Date.now()})`;
++    const createForm = page.locator('form[action="/admin/roles"]');
++    await createForm.locator('input[name="name"]').fill(roleName);
++    await createForm.locator('input[name="capabilities[]"][value="core.thread.lock"]').check();
++    await createForm.locator('input[name="current_password"]').fill('password123');
++    await createForm.getByRole('button', { name: 'Create role' }).click();
++    await expect(page.locator('.role-table tbody tr', { hasText: roleName })).toBeVisible();
++
++    await page.locator('.role-table tbody tr', { hasText: roleName }).getByRole('link', { name: 'Edit' }).click();
++    await page.waitForURL(/\/admin\/roles\/\d+$/);
++    await expect(page.getByRole('heading', { level: 2, name: roleName })).toBeVisible();
++
++    const assignForm = page.locator('form.role-assign-form');
++    await assignForm.locator('input[name="username"]').fill('bob');
++    await assignForm.locator('select[name="scope_type"]').selectOption('site');
++    await assignForm.locator('input[name="reason"]').fill('No-JS lifecycle browser evidence');
++    await assignForm.locator('input[name="current_password"]').fill('password123');
++    await assignForm.getByRole('button', { name: 'Assign', exact: true }).click();
++
++    let assignmentRow = page.locator('.role-assignment-table tbody tr', { hasText: '@bob' });
++    await expect(assignmentRow.locator('.role-assignment-status-active')).toHaveText('Active');
++    await expect(assignmentRow).toContainText('site');
++
++    const renewForm = assignmentRow.locator('form.role-renew-form');
++    await renewForm.locator('input[name="ends_at"]').fill('2099-12-31 23:59');
++    await renewForm.locator('input[name="current_password"]').fill('password123');
++    await renewForm.getByRole('button', { name: 'Renew' }).click();
++    await expect(page.getByRole('status').getByText('Assignment renewed.')).toBeVisible();
++
++    assignmentRow = page.locator('.role-assignment-table tbody tr', { hasText: '@bob' });
++    await expect(assignmentRow.locator('.role-assignment-status-active')).toHaveText('Active');
++    await expect(assignmentRow).toContainText('2099-12-31 23:59:00');
++    await assignmentRow.getByRole('button', { name: 'Revoke' }).click();
++    await expect(page.getByRole('status').getByText('Assignment revoked.')).toBeVisible();
++    await expect(page.locator('.role-assignment-table tbody tr', { hasText: '@bob' })
++      .locator('.role-assignment-status-revoked')).toHaveText('Revoked');
++
++    await shot(page, info, '66-admin-role-no-js-lifecycle');
++  } finally {
++    await context.close();
++  }
++});
++
+ /**
+  * Inc 6 follow-up (queue discovery): an approve-only deputy reaches the
+  * approvals queue scoped to exactly their granted board. Requires
+@@ -165,6 +259,7 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then
+  * legacy door (bare isModerator()) still decides and carol would be 403'd.
+  */
+ test('deputy queue discovery: approve-only deputy reaches their scoped approvals queue (axe-clean)', async ({ page }, info) => {
++  test.setTimeout(60_000);
+   const suffix = `${info.project.name}-${Date.now()}`;
+ 
+   await login(page, 'admin@retro.test');
+@@ -185,7 +280,7 @@ test('deputy queue discovery: approve-only deputy reaches their scoped approvals
+     await page.waitForURL(/\/admin\/boards\/\d+\/edit$/);
+     const boardId = new URL(page.url()).pathname.match(/(\d+)\/edit$/)![1];
+     const slug = await page.inputValue('input[name="slug"]');
+-    await page.check('input[name="require_approval"]');
++    await page.check('input[type="checkbox"][name="require_approval"]');
+     await page.click(`form[action="/admin/boards/${boardId}"] button:has-text("Save board")`);
+     return { id: boardId, slug };
+   };
+@@ -209,8 +304,10 @@ test('deputy queue discovery: approve-only deputy reaches their scoped approvals
+   await page.fill('input[name="scope_id"]', scopedBoardId);
+   await page.fill('input[name="reason"]', 'Browser evidence: queue discovery');
+   await page.fill('form[action$="/assignments"] input[name="current_password"]', 'password123');
+-  await page.click('form[action$="/assignments"] button[type="submit"]');
+-  await expect(page.locator('table tbody tr', { hasText: '@carol' })).toContainText('active');
++  const assignButton = page.locator('form[action$="/assignments"] button[type="submit"]');
++  await assignButton.scrollIntoViewIfNeeded();
++  await assignButton.click({ force: true });
++  await expect(page.locator('table tbody tr', { hasText: '@carol' }).locator('.role-assignment-status-active')).toHaveText('Active');
+ 
+   // bob (no staff standing on these boards) posts one topic into each — held.
+   await login(page, 'bob@retro.test');
+@@ -218,7 +315,7 @@ test('deputy queue discovery: approve-only deputy reaches their scoped approvals
+   const foreignTitle = `Foreign approval probe ${suffix}`;
+   const postHeld = async (slug: string, title: string): Promise<void> => {
+     await visit(page, `/c/${slug}`);
+-    await page.locator('details.composer-details > summary').click();
++    await openTopicComposer(page);
+     await page.fill('input[name="title"]', title);
+     await page.fill('textarea[name="body"]', 'Queue-discovery browser evidence body.');
+     await page.getByRole('button', { name: 'Create topic' }).click();

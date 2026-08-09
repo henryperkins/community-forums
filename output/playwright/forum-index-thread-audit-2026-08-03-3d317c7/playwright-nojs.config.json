@@ -1,0 +1,14 @@
+{
+  "browser": {
+    "launchOptions": {
+      "headless": false
+    },
+    "contextOptions": {
+      "javaScriptEnabled": false,
+      "viewport": {
+        "width": 1266,
+        "height": 854
+      }
+    }
+  }
+}

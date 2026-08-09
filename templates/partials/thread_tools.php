@@ -123,13 +123,15 @@ $moveSelected = (int) ($move_selected ?? 0);
                     <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/move">
                         <?= $this->csrfField() ?>
                         <label for="thread-move-board-<?= (int) $thread['id'] ?>">Move to board</label>
-                        <select id="thread-move-board-<?= (int) $thread['id'] ?>" class="input" name="board_id" required>
+                        <?php // The enclosing <details> is forced open on error above, so
+                              // autofocus lands on a select the member can actually see. ?>
+                        <select id="thread-move-board-<?= (int) $thread['id'] ?>" class="input" name="board_id"<?= $moveError !== '' ? ' aria-invalid="true" aria-describedby="thread-move-error-' . (int) $thread['id'] . '" autofocus' : '' ?> required>
                             <option value="">Choose a board…</option>
                             <?php foreach ($moveBoards as $candidate): ?>
                                 <option value="<?= (int) $candidate['id'] ?>"<?= $moveSelected === (int) $candidate['id'] ? ' selected' : '' ?>><?= $e($candidate['label']) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <?php if ($moveError !== ''): ?><p class="field-error" role="alert"><?= $e($moveError) ?></p><?php endif; ?>
+                        <?php if ($moveError !== ''): ?><p class="field-error" id="thread-move-error-<?= (int) $thread['id'] ?>"><?= $e($moveError) ?></p><?php endif; ?>
                         <button class="btn btn-small" type="submit">Move topic</button>
                     </form>
                 <?php endif; ?>

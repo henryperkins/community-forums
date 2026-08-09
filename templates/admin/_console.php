@@ -166,7 +166,7 @@ $disabledNote = 'Disabled until the feature flag is enabled';
         <div class="admin-bar-right">
             <?php if (!empty($features['search'])): ?>
                 <form class="admin-bar-search" method="get" action="/search" role="search">
-                    <input class="input input-small" type="search" name="q" placeholder="Search…" aria-label="Search">
+                    <input class="input input-small" type="search" enterkeyhint="search" name="q" placeholder="Search…" aria-label="Search">
                 </form>
             <?php endif; ?>
             <?php if ($viewer !== null): ?>

@@ -1,0 +1,193 @@
+[
+  {
+    "name": "forum-index-guest-desktop-light",
+    "url": "http://localhost:8027/",
+    "viewport": {
+      "width": 1266,
+      "height": 854
+    },
+    "violations": []
+  },
+  {
+    "name": "forum-index-guest-mobile-light",
+    "url": "http://localhost:8027/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "violations": []
+  },
+  {
+    "name": "board-general-guest-desktop-light",
+    "url": "http://localhost:8027/c/general",
+    "viewport": {
+      "width": 1266,
+      "height": 854
+    },
+    "violations": []
+  },
+  {
+    "name": "thread-guest-desktop-light",
+    "url": "http://localhost:8027/t/30-how-should-a-durable-forum-thread-read",
+    "viewport": {
+      "width": 1266,
+      "height": 854
+    },
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".badge-staff"
+            ],
+            "html": "<span class=\"badge badge-staff\">Staff</span>",
+            "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 7.4pt (9.92px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "thread-guest-mobile-light",
+    "url": "http://localhost:8027/t/30-how-should-a-durable-forum-thread-read",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".badge-staff"
+            ],
+            "html": "<span class=\"badge badge-staff\">Staff</span>",
+            "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 7.4pt (9.92px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "help": "Scrollable region must have keyboard access",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/scrollable-region-focusable?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              "pre"
+            ],
+            "html": "<pre><code class=\"language-php\">final class ReadingSurface\n{\n    public function measure(): string\n    {\n        return '66ch';\n    }\n}\n</code></pre>",
+            "failureSummary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "forum-index-guest-mobile-dark",
+    "url": "http://localhost:8027/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "violations": []
+  },
+  {
+    "name": "thread-guest-desktop-dark",
+    "url": "http://localhost:8027/t/30-how-should-a-durable-forum-thread-read",
+    "viewport": {
+      "width": 1266,
+      "height": 854
+    },
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".badge-staff"
+            ],
+            "html": "<span class=\"badge badge-staff\">Staff</span>",
+            "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 7.4pt (9.92px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "thread-member-desktop-light",
+    "url": "http://localhost:8027/t/30-how-should-a-durable-forum-thread-read",
+    "viewport": {
+      "width": 1266,
+      "height": 854
+    },
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".badge-staff"
+            ],
+            "html": "<span class=\"badge badge-staff\">Staff</span>",
+            "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 7.4pt (9.92px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "thread-member-mobile-light",
+    "url": "http://localhost:8027/t/30-how-should-a-durable-forum-thread-read",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".badge-staff"
+            ],
+            "html": "<span class=\"badge badge-staff\">Staff</span>",
+            "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 7.4pt (9.92px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "help": "Scrollable region must have keyboard access",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/scrollable-region-focusable?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              "pre"
+            ],
+            "html": "<pre><code class=\"language-php\">final class ReadingSurface\n{\n    public function measure(): string\n    {\n        return '66ch';\n    }\n}\n</code></pre>",
+            "failureSummary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  }
+]
