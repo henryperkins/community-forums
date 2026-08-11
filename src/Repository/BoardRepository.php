@@ -72,13 +72,13 @@ final class BoardRepository
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,edit_window_seconds?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,link_previews_enabled?:int,edit_window_seconds?:int} $data
      */
     public function create(array $data): int
     {
         return $this->db->insert(
-            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, assignment_mode, tags_enabled, wiki_enabled, edit_window_seconds, created_at)
-             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, :assignment_mode, :tags_enabled, :wiki_enabled, :edit_window_seconds, UTC_TIMESTAMP())',
+            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, assignment_mode, tags_enabled, wiki_enabled, link_previews_enabled, edit_window_seconds, created_at)
+             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, :assignment_mode, :tags_enabled, :wiki_enabled, :link_previews_enabled, :edit_window_seconds, UTC_TIMESTAMP())',
             [
                 'category_id' => $data['category_id'],
                 'slug' => $data['slug'],
@@ -92,20 +92,22 @@ final class BoardRepository
                 'assignment_mode' => $data['assignment_mode'] ?? 'off',
                 'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
                 'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
+                'link_previews_enabled' => !empty($data['link_previews_enabled']) ? 1 : 0,
                 'edit_window_seconds' => max(0, (int) ($data['edit_window_seconds'] ?? 0)),
             ],
         );
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,edit_window_seconds?:int,position?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,link_previews_enabled?:int,edit_window_seconds?:int,position?:int} $data
      */
     public function update(int $id, array $data): void
     {
         $sql = 'UPDATE boards SET category_id = :category_id, slug = :slug, name = :name, description = :description,
                 visibility = :visibility, post_min_role = :post_min_role, allow_anonymous = :allow_anonymous,
                 require_approval = :require_approval, assignment_mode = :assignment_mode,
-                tags_enabled = :tags_enabled, wiki_enabled = :wiki_enabled';
+                tags_enabled = :tags_enabled, wiki_enabled = :wiki_enabled,
+                link_previews_enabled = :link_previews_enabled';
         $params = [
             'category_id' => $data['category_id'],
             'slug' => $data['slug'],
@@ -118,6 +120,7 @@ final class BoardRepository
             'assignment_mode' => $data['assignment_mode'] ?? 'off',
             'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
             'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
+            'link_previews_enabled' => !empty($data['link_previews_enabled']) ? 1 : 0,
         ];
         if (array_key_exists('edit_window_seconds', $data)) {
             $sql .= ', edit_window_seconds = :edit_window_seconds';
@@ -170,6 +173,18 @@ final class BoardRepository
         return (int) $this->db->fetchValue(
             'SELECT COUNT(*) FROM threads WHERE board_id = ?' . ($forUpdate ? ' FOR UPDATE' : ''),
             [$id],
+        );
+    }
+
+    /**
+     * Boards where link previews would actually unfurl: opted in AND public
+     * (the service never fetches for a hidden/private board), so an operator
+     * cannot be told the feature is live because of an inert private opt-in.
+     */
+    public function countWithLinkPreviews(): int
+    {
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM boards WHERE link_previews_enabled = 1 AND visibility = 'public'",
         );
     }
 

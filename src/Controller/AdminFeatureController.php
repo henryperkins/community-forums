@@ -9,6 +9,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Repository\SettingRepository;
 use App\Security\AuthorityGate;
+use App\Service\LinkPreviewAdminService;
 
 final class AdminFeatureController extends Controller
 {
@@ -55,10 +56,13 @@ final class AdminFeatureController extends Controller
      * Read-only readiness classification for the rows that are not simply
      * shipped: the default-dark carryovers and the ADR-reserved Gate B set.
      * (`group_dms` graduated to default-on on 2026-07-18 — ADR 0022 — and left
-     * this map with the last "Ready for acceptance" row.)
-     * The two "Operational configuration required" rows (`capabilities` in
-     * shadow posture, `slash_giphy` without a key) are computed live in
-     * readiness() so the badge clears once the operational step is done.
+     * this map with the last "Ready for acceptance" row; `link_previews`
+     * graduated on 2026-08-09 — ADR 0025 — and took "Missing admin operations"
+     * with it, moving to the live-computed dormancy badge below.)
+     * The three "Operational configuration required" rows (`capabilities` in
+     * shadow posture, `link_previews` with no allowlist or no opted-in board,
+     * `slash_giphy` without a key) are computed live in readiness() so the badge
+     * clears once the operational step is done.
      * Deliberately not a toggle — enablement stays an explicit
      * settings.features write (docs/runbooks/operations.md §2). Findings and
      * next steps trace to docs/evidence/deploy-dark-features.md (2026-07-13).
@@ -70,11 +74,6 @@ final class AdminFeatureController extends Controller
             'status' => 'Missing user UI',
             'class' => 'state-paused',
             'note' => 'Backend POST /upload/file exists, but no member file chooser, no-JS upload form, or quarantine states render; the admin scanner health/outage workflows are also unbuilt.',
-        ],
-        'link_previews' => [
-            'status' => 'Missing admin operations',
-            'class' => 'state-paused',
-            'note' => 'Inert until link_preview_allowed_hosts is populated; GET /admin/link-previews does not exist (the POST refresh/purge routes are unlinked), and the per-board opt-in and author removal are absent.',
         ],
         'custom_css' => [
             'status' => 'Safety-blocked',
@@ -107,6 +106,7 @@ final class AdminFeatureController extends Controller
         'package_registry' => '/admin/packages',
         'package_themes' => '/admin/themes',
         'capabilities' => '/admin/roles',
+        'link_previews' => '/admin/link-previews',
         'provider_registry' => '/admin/providers',
         'invitations' => '/admin/invitations',
         'api_tokens' => '/admin/api-tokens',
@@ -205,6 +205,22 @@ final class AdminFeatureController extends Controller
                     'note' => 'Resolver posture is "' . $mode . '" — legacy authorization still decides every live answer. Soak resolver.shadow_mismatch, then set CAPABILITIES_MODE=enforce (docs/runbooks/capabilities.md §Staged rollout).',
                     'href' => '/admin/roles',
                     'link' => 'Roles & resolver posture',
+                ];
+            }
+        }
+
+        if ($effective['link_previews'] ?? false) {
+            // Two operator steps stand between "available" and "unfurling", and
+            // both are live state, so the badge clears itself once they are done.
+            // The policy itself lives in the service that owns link previews.
+            $missing = $this->container->get(LinkPreviewAdminService::class)->missingActivationSteps();
+            if ($missing !== []) {
+                $readiness['link_previews'] = [
+                    'status' => 'Operational configuration required',
+                    'class' => 'state-pending',
+                    'note' => 'Available but inert: ' . implode(' and ', $missing) . ', so nothing is fetched. Both are set on the link previews console (docs/runbooks/link_previews.md).',
+                    'href' => '/admin/link-previews',
+                    'link' => 'Link previews console',
                 ];
             }
         }

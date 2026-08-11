@@ -18,9 +18,10 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         // graduated on 2026-07-02 (inert until an operator sets giphy_public_key);
         // `custom_emoji` and `split_merge` graduated on 2026-07-03; Thread
         // Intelligence graduates community memory and automated context together
-        // on 2026-07-12.
+        // on 2026-07-12; `link_previews` graduated on 2026-08-09 (ADR 0025 — inert
+        // until a board opts in and a host is allowlisted).
         // The rest stay dark until their own rollout evidence lands.
-        foreach (['board_folders', 'bookmark_folders', 'saved_feeds', 'slash_giphy', 'profile_media', 'custom_emoji', 'split_merge'] as $flag) {
+        foreach (['board_folders', 'bookmark_folders', 'saved_feeds', 'slash_giphy', 'profile_media', 'custom_emoji', 'split_merge', 'link_previews'] as $flag) {
             self::assertArrayHasKey($flag, $flags->all(), "$flag must be declared, not merely unknown");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
@@ -31,7 +32,6 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         }
 
         $carryovers = [
-            'link_previews',
             'expanded_files',
         ];
 
@@ -40,12 +40,18 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
             self::assertFalse($flags->enabled($flag), "$flag must deploy dark by default");
         }
 
-        (new SettingRepository($this->db))->set('features', ['link_previews' => true]);
+        (new SettingRepository($this->db))->set('features', ['expanded_files' => true]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));
 
-        self::assertTrue($overridden->enabled('link_previews'));
+        self::assertTrue($overridden->enabled('expanded_files'));
         self::assertTrue($overridden->enabled('custom_emoji'), 'enabling one dark carryover flag must not disable graduated flags');
         self::assertTrue($overridden->enabled('board_folders'), 'enabling one dark carryover flag must not disable graduated flags');
+
+        // …and the graduated carryover keeps an independent rollback pin.
+        (new SettingRepository($this->db))->set('features', ['link_previews' => false]);
+        $previewsRolledBack = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($previewsRolledBack->enabled('link_previews'), 'link previews must retain an independent rollback pin');
+        self::assertTrue($previewsRolledBack->enabled('custom_emoji'), 'rolling back link previews must not disable its neighbours');
 
         (new SettingRepository($this->db))->set('features', [
             'community_memory' => false,

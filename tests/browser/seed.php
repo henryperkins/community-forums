@@ -135,6 +135,65 @@ $ensureAppealFixture = static function () use ($db, $users): bool {
 
     return true;
 };
+/**
+ * Link previews (ADR 0025). The flag is default-on, but the subsystem is inert
+ * until a board opts in AND a host is allowlisted — so the evidence run has to
+ * make both operator choices, exactly as an operator would. The fetch itself is
+ * the one thing a hermetic browser run cannot do, so one row is written straight
+ * into the `fetched` state: the spec certifies the rendered card and the author's
+ * remove/restore control, not the network client (AppLinkPreviewTest pins that
+ * against a real pinned-IP server).
+ */
+$ensureLinkPreviewFixture = static function () use ($db, $settings, $users): bool {
+    $alice = $users->findByUsername('alice');
+    $board = $db->fetch("SELECT id FROM boards WHERE slug = 'general'");
+    if ($alice === null || $board === null) {
+        return false;
+    }
+    $settings->set('link_preview_allowed_hosts', ['previews.example.test']);
+    $settings->set('link_preview_kill_switch', false);
+    $db->run('UPDATE boards SET link_previews_enabled = 1 WHERE id = ?', [(int) $board['id']]);
+
+    $post = $db->fetch(
+        "SELECT p.id FROM posts p JOIN threads t ON t.id = p.thread_id
+          WHERE t.board_id = ? AND p.user_id = ? AND p.is_deleted = 0
+          ORDER BY p.id ASC LIMIT 1",
+        [(int) $board['id'], (int) $alice['id']],
+    );
+    if ($post === null) {
+        return false;
+    }
+    $url = 'https://previews.example.test/handbook/threading';
+    $db->run(
+        "INSERT INTO link_previews
+            (source_type, source_id, url, url_hash, final_url, status, title, description, site_name,
+             http_status, fetched_at, created_at)
+         VALUES ('post', ?, ?, ?, ?, 'fetched', ?, ?, ?, 200, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+         ON DUPLICATE KEY UPDATE status = 'fetched', title = VALUES(title), description = VALUES(description),
+             site_name = VALUES(site_name), final_url = VALUES(final_url), removed_by = NULL, removed_at = NULL,
+             fetched_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP()",
+        [
+            (int) $post['id'],
+            $url,
+            hash('sha256', $url),
+            $url,
+            'Threading conventions handbook',
+            'How long-running topics stay readable: quoting, summaries, and when to split.',
+            'Example Handbook',
+        ],
+    );
+
+    // A blocked row so the console's failure vocabulary is captured too.
+    $blockedUrl = 'https://not-allowlisted.example.test/deep-link';
+    $db->run(
+        "INSERT INTO link_previews (source_type, source_id, url, url_hash, status, error, created_at)
+         VALUES ('post', ?, ?, ?, 'blocked', 'Preview host is not allowlisted.', UTC_TIMESTAMP())
+         ON DUPLICATE KEY UPDATE status = 'blocked', error = VALUES(error), updated_at = UTC_TIMESTAMP()",
+        [(int) $post['id'], $blockedUrl, hash('sha256', $blockedUrl)],
+    );
+
+    return true;
+};
 $ensureNewSurfaceFixtures = static function () use ($db, $users): bool {
     $admin = $users->findByUsername('admin');
     $bob = $users->findByUsername('bob');
@@ -490,6 +549,12 @@ if ($users->adminCount() > 0) {
     $pollReady = $ensureShortcutPoll();
     $registryReady = $ensureRegistryFixtures();
     $ensureAppealFixture();
+    // A false return means alice, #general or her first post is missing, which
+    // would let the seed report success and then fail link-previews.spec.ts with
+    // "no preview card" three steps later. Fail here instead.
+    if (!$ensureLinkPreviewFixture()) {
+        throw new RuntimeException('Link preview fixture could not be seeded (missing alice, #general, or a source post).');
+    }
     $newSurfaceFixturesReady = $includeDarkSurfaceFixtures ? $ensureNewSurfaceFixtures() : false;
     $seedThreadIntelligence();
     fwrite(STDOUT, $pollReady
@@ -627,6 +692,9 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
 
 $ensureRegistryFixtures();
 $ensureAppealFixture();
+if (!$ensureLinkPreviewFixture()) {
+    throw new RuntimeException('Link preview fixture could not be seeded (missing alice, #general, or a source post).');
+}
 
 if ($includeDarkSurfaceFixtures) {
     $ensureNewSurfaceFixtures();

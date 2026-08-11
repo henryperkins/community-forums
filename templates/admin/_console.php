@@ -103,6 +103,7 @@ $areas = [
         'features' => ['label' => 'Feature flags', 'href' => '/admin/features'],
         'badge_rules' => ['label' => 'Badge rules', 'href' => '/admin/badge-rules', 'flag' => 'badge_rules'],
         'custom_emoji' => ['label' => 'Custom emoji', 'href' => '/admin/custom-emoji', 'flag' => 'custom_emoji'],
+        'link_previews' => ['label' => 'Link previews', 'href' => '/admin/link-previews', 'flag' => 'link_previews'],
     ]],
     'settings' => ['label' => 'Settings', 'h1' => 'General & intelligence', 'aria' => 'Settings sections', 'tabs' => [
         'settings' => ['label' => 'General & registration', 'href' => '/admin/settings'],

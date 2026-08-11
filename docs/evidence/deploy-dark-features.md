@@ -121,8 +121,9 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
   independently reversible.
 - **group_dms default flip (2026-07-18):** the default split changed from
   `49`/`8` to `50`/`7` (ADR 0022). Gate B plus the three unfinished Phase 3/4
-  carryovers (`custom_css`, `link_previews`, `expanded_files`) remain
-  default-dark. The evidence run also hardened
+  carryovers (`custom_css`, `link_previews`, `expanded_files`) remained
+  default-dark at the time of that run; `link_previews` graduated on 2026-08-09
+  (ADR 0025), leaving `custom_css` and `expanded_files`. The evidence run also hardened
   `ConversationRepository::listForUser`: the conversation-list preview and its
   search now honour the viewer's `joined_after_message_id` boundary
   (regression: `AppDirectMessageTest::test_group_list_preview_respects_the_join_boundary`).
@@ -153,7 +154,7 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
-| `link_previews` | Allowlisted server-fetched URL metadata, admin purge/refresh | Deploy-dark; 2026-07-13 live drive: the fetch/render pipeline works but is inert until `link_preview_allowed_hosts` is populated, `GET /admin/link-previews` does not exist (the POST refresh/purge routes are unlinked from any page), and the DECISIONS §6 #5 per-board opt-in plus author preview removal are absent — build the admin console, board setting, author suppression, and worker/kill-switch status surface before the browser/crawler/load/runbook evidence |
+| `link_previews` | Allowlisted server-fetched URL metadata, per-board opt-in, author removal, operator console | **Graduated 2026-08-09 — now default-ON** (ADR 0025; no longer deploy-dark; reversible via `features` override — rollback returns the console, the board control and the member remove/restore routes to 404 while every stored row, board opt-in and allowlist entry survives). The 2026-07-13 build list was completed rather than merely evidenced: `GET /admin/link-previews` now exists (queue tiles, host allowlist, kill switch, per-board opt-in, per-row refresh/purge, all audited), `boards.link_previews_enabled` implements the DECISIONS §6 #5 per-board opt-in (default 0, re-checked at fetch time), and authors can remove a card from their own post with a sticky `removed` status that survives edits and that operator refresh refuses to override. **Default-on means available, not fetching**: a fresh or upgraded install has no allowlisted host and no opted-in board, so the flag flip is a no-op until an operator acts — `/admin/features` reports that dormancy live and clears it once both steps are done. Acceptance evidence: `AppLinkPreviewTest` (20 tests), `AppFeatureFlagTest::test_link_previews_defaults_on_and_is_operator_reversible`, `AppPhase4CarryoverFoundationTest`, `AppAdminFeaturesTest` (51/6 canary + readiness declassification), browser `tests/browser/link-previews.spec.ts` desktop+mobile incl. a no-JS author journey, `.admin-pane`/`.link-preview-cards` axe passes, runbook `docs/runbooks/link_previews.md`. Retained here for traceability. |
 | `expanded_files` | PDF/text-family uploads, scanner/quarantine state, download-only serving | Deploy-dark; 2026-07-13 live drive: backend `POST /upload/file` exists but enabling the flag surfaces no member file chooser or no-JS upload form (composer JS still uploads images only via `/upload`) — build the member upload/download/quarantine states plus admin scanner health/outage/quarantine workflows before the browser/no-JS, scanner-outage, and runbook evidence |
 | `polls` | One-poll-per-thread no-JS create/vote/close/result flow | **Graduated 2026-06-30 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `25-poll-voted`, `.poll-panel` axe pass, runbook `docs/runbooks/polls.md`. Retained here for traceability. |
 | `custom_emoji` | Operator-managed shortcode assets and optional reactions | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppCustomEmojiGiphyTest` (available-by-default + rollback, Markdown rendering, reaction compatibility), `AppPhase4CarryoverFoundationTest`, browser `48-custom-emoji-admin`/`49-custom-emoji-thread`, `.custom-emoji-panel`/`.post-body`/`.reactions` axe passes, runbook `docs/runbooks/custom_emoji.md`. Retained here for traceability. |
@@ -192,7 +193,11 @@ and the scanner operations surface must be built) → `custom_css`
 so the documented recovery path is unsafe until that is repaired). The original
 tier labels below are retained for history; the per-entry Have/Need lists are
 updated in place. **2026-07-18: the first item completed — `group_dms`
-graduated (ADR 0022); three dark carryovers remain in the order above.**
+graduated (ADR 0022). 2026-08-09: the second completed — `link_previews`
+graduated (ADR 0025) after its admin console, per-board opt-in and author
+removal were built. Two dark carryovers remain in the order above:
+`expanded_files` (build work outstanding) and `custom_css`
+(safety-blocked).**
 
 ### Tier 1 — browser evidence already captured; docs and sign-off remain
 
@@ -387,19 +392,25 @@ graduated (ADR 0022); three dark carryovers remain in the order above.**
 
 ### Tier 5 — full graduation packages across large surfaces
 
-14. **`link_previews`** — allowlisted server-side URL metadata fetch with egress
-    validation, metadata sanitization, kill switch, and admin purge/refresh;
-    private-board posts and DMs are never fetched. The only flag with a load
-    requirement.
-    - Have: `AppLinkPreviewTest`; the fetch/render pipeline verified working
-      (2026-07-13) once `link_preview_allowed_hosts` is populated.
-    - Need (revised 2026-07-13 — this is build work, not just evidence): the
-      admin console itself — `GET /admin/link-previews` does not exist and the
-      POST refresh/purge routes are unlinked from any page; the
+14. **`link_previews`** — ✓ **Graduated 2026-08-09 (default-ON, ADR 0025).**
+    Allowlisted server-side URL metadata fetch with egress validation, metadata
+    sanitization, kill switch, per-board opt-in, author removal, and the
+    `/admin/link-previews` operator console; private-board posts and DMs are
+    never fetched.
+    - *The list below is the 2026-07-13 audit snapshot, kept for traceability.*
+      Every "Need" item was **built** in the graduation change — see the
+      graduated-status entry above for the shipped scope and its evidence.
+    - Have (2026-07-13): `AppLinkPreviewTest`; the fetch/render pipeline
+      verified working once `link_preview_allowed_hosts` is populated.
+    - Needed then (revised 2026-07-13 — this was build work, not just
+      evidence): the admin console itself — `GET /admin/link-previews` did not
+      exist and the POST refresh/purge routes were unlinked from any page; the
       DECISIONS §6 #5 per-board opt-in; author preview suppression/removal; a
       worker/kill-switch status surface; then browser, crawler/noindex, load,
       and privacy evidence, plus a runbook covering the egress/allowlist
-      posture.
+      posture. **All closed except the load run**, which ADR 0025 does not
+      claim: the subsystem ships inert (no allowlisted host, no opted-in board),
+      so there is no fetch volume to load-test until an operator turns it on.
 15. **`community_memory`** — ✓ **Graduated with Thread Intelligence 2026-07-12
     (default-ON).** Manual summaries with source display and
     publish/retire/restore, curated related topics, and wiki edit history with

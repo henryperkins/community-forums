@@ -90,6 +90,14 @@
 
             <?php $wikiEnabled = $old['wiki_enabled'] ?? ($board['wiki_enabled'] ?? 0); ?>
             <label class="checkline"><input type="hidden" name="wiki_enabled" value="0"><input type="checkbox" name="wiki_enabled" value="1" <?= !empty($wikiEnabled) ? 'checked' : '' ?>> <span>Allow wiki-style post editing</span></label>
+
+            <?php // Per-board link-preview opt-in (DECISIONS §6 #5). Rendered only while
+                  // the flag is on; the service keeps the stored value when the field is
+                  // absent, so a rollback never silently revokes an opt-in. ?>
+            <?php if (!empty($features['link_previews'])): ?>
+                <?php $previewsEnabled = $old['link_previews_enabled'] ?? ($board['link_previews_enabled'] ?? 0); ?>
+                <label class="checkline"><input type="hidden" name="link_previews_enabled" value="0"><input type="checkbox" name="link_previews_enabled" value="1" <?= !empty($previewsEnabled) ? 'checked' : '' ?>> <span>Unfurl link previews on this board <span class="content-field-help">Public boards only. The server fetches metadata from allowlisted hosts &mdash; see <a href="/admin/link-previews">Link previews</a>.</span></span></label>
+            <?php endif; ?>
         </div>
 
         <div class="form-actions content-grid-actions">

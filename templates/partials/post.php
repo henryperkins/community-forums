@@ -73,14 +73,42 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
+        <?php // Link previews (DECISIONS §6 #5). The author of the post — and anyone who
+              // can moderate its board — keeps the last word on whether a card is shown;
+              // `removed` rows are only ever returned to those viewers, so the take-down
+              // is invisible to everyone else. Plain POSTs: this works with JS off. ?>
         <?php if (!empty($link_preview_cards)): ?>
-            <div class="reference-cards" aria-label="Link previews">
+            <div class="reference-cards link-preview-cards" aria-label="Link previews">
                 <?php foreach ($link_preview_cards as $card): ?>
-                    <a class="reference-card" href="<?= $e($card['url']) ?>" rel="nofollow ugc noopener">
-                        <?php if (($card['site_name'] ?? '') !== ''): ?><span class="badge badge-muted"><?= $e($card['site_name']) ?></span><?php endif; ?>
-                        <strong><?= $e($card['title']) ?></strong>
-                        <?php if (($card['description'] ?? '') !== ''): ?><span class="muted"><?= $e($card['description']) ?></span><?php endif; ?>
-                    </a>
+                    <?php if (!empty($card['removed'])): ?>
+                        <?php // Both branches state the same authorization condition. The
+                              // service already withholds removed rows from viewers without
+                              // manage rights, but a control that grants an action should not
+                              // depend on a cross-file invariant to stay hidden. ?>
+                        <?php if (!empty($card['can_manage'])): ?>
+                            <div class="link-preview-item is-removed">
+                                <span class="muted">Link preview removed from this post.</span>
+                                <form class="inline link-preview-action" method="post" action="/posts/<?= (int) $p['id'] ?>/previews/<?= (int) $card['id'] ?>/restore">
+                                    <?= $this->csrfField() ?>
+                                    <button class="linkbtn" type="submit">Restore preview</button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="link-preview-item">
+                            <a class="reference-card" href="<?= $e($card['url']) ?>" rel="nofollow ugc noopener">
+                                <?php if (($card['site_name'] ?? '') !== ''): ?><span class="badge badge-muted"><?= $e($card['site_name']) ?></span><?php endif; ?>
+                                <strong><?= $e($card['title']) ?></strong>
+                                <?php if (($card['description'] ?? '') !== ''): ?><span class="muted"><?= $e($card['description']) ?></span><?php endif; ?>
+                            </a>
+                            <?php if (!empty($card['can_manage'])): ?>
+                                <form class="inline link-preview-action" method="post" action="/posts/<?= (int) $p['id'] ?>/previews/<?= (int) $card['id'] ?>/remove">
+                                    <?= $this->csrfField() ?>
+                                    <button class="linkbtn" type="submit" aria-label="Remove the link preview for <?= $e($card['title']) ?>">Remove preview</button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>

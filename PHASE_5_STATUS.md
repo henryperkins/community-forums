@@ -1416,6 +1416,64 @@ strings (ADR 0024 obligation 5, "fix both surfaces or neither"). Both are record
 
 - **Duplicate badge rules are not guarded.** `BadgeRuleService::create` (`src/Service/BadgeRuleService.php:44-59`) validates badge, rule type, threshold and board scope independently, so two rules with an identical `(badge_id, rule_type, board_id)` triple can both be stored — and both audit their own grant against the same members. The Imladris design refuses that create (`docs/design-system/imladris/templates/admin-features/AdminFeatures.dc.html:424-426`); the restyle slice did **not** adopt the copy, because a message promising the invariant without an index behind it is worse than silence. Closing it needs a service check *plus* a unique index on `(badge_id, rule_type, board_id)`, which is a schema migration with a backfill decision for any duplicates already stored. Recorded as `FR-31` in `docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md`.
 
+## Link previews graduated (default-on, 2026-08-09)
+
+`link_previews` was the second of the four dark carryovers the 2026-07-13
+readiness audit ranked, and the first that needed work **built** rather than
+merely evidenced. All three gaps the audit named are closed:
+
+- **`GET /admin/link-previews` exists.** Queue-health tiles, the host allowlist
+  editor, the kill switch, the per-board opt-in roll-up, and per-row
+  refresh/purge — the previously unlinked POST routes now have a page, and every
+  operator write is audited (`setting` for the allowlist/kill switch, `board` for
+  an opt-in change, and the **post** for a per-row action so `idx_modlog_target`
+  surfaces it beside every other action on that post). It lives as a fourth tab
+  in the Features area and reports, in prose, which of its gates are closed.
+- **The DECISIONS §6 #5 per-board opt-in is real.** `boards.link_previews_enabled`
+  (migration `0081`, default `0`) is checked at queue time *and* re-checked in the
+  worker, so a backlog queued while a board was on cannot still reach the network
+  after an operator switches it off.
+- **Authors can remove a preview from their own post.** A new sticky `removed`
+  status (plus `removed_by`/`removed_at`) survives the queue upsert that
+  deliberately revives `purged` rows on edit, and operator refresh refuses to
+  override it.
+
+**The flip is a no-op on upgrade.** Default-on means the subsystem is
+*available*, not that anything is fetched: a fresh or upgraded install has no
+allowlisted host and no opted-in board, so nothing leaves the server until an
+operator makes both choices. `/admin/features` reports that dormancy live and
+clears the badge once both steps are done — the same "operationally dormant"
+posture `slash_giphy` carries without a `giphy_public_key`.
+
+Declared flags stay at 57; default-on moves 50 -> 51 and default-dark 7 -> 6
+(`custom_css`, `expanded_files`, and the four ADR 0018 Gate B reservations).
+The `link_previews` row also took the "Missing admin operations" readiness
+category out of `/admin/features` with it — the category is now empty and
+retired from the legend, exactly as "Ready for acceptance" was when `group_dms`
+graduated. Four readiness categories remain.
+
+ADR 0025 owns the decision; `docs/runbooks/link_previews.md` owns enablement,
+allowlist management, kill-switch and incident response, and data-preserving
+rollback. Evidence: `AppLinkPreviewTest` (20 tests),
+`AppFeatureFlagTest::test_link_previews_defaults_on_and_is_operator_reversible`,
+`AppPhase4CarryoverFoundationTest`, `AppAdminFeaturesTest` (51/6 canary +
+readiness declassification), and `tests/browser/link-previews.spec.ts`
+(desktop + mobile, **8 passed**, including the author remove/restore journey in
+a `javaScriptEnabled: false` context and `.admin-pane`/`.link-preview-cards`
+axe passes). Captures: `link-previews-console`,
+`link-previews-console-opted-out`, `link-preview-card`,
+`link-preview-removed-by-author`, `link-preview-other-member` under
+`docs/evidence/browser/{desktop,mobile}/`. Full suite after the change:
+`RB_TEST_FRESH=1 vendor/bin/phpunit` and a reused-schema `vendor/bin/phpunit`
+both -> **2614 tests / 18963 assertions / 2 skipped** (identical).
+`APP_ENV=testing verify:upgrade --force` -> **17/17 checks passed** through
+migration `0081`. `php bin/console worker:previews 5` on an unconfigured
+install -> **fetched=0 blocked=0 failed=0 skipped=0** (the inert default).
+
+`expanded_files` is now the only remaining default-dark carryover with build
+work outstanding; `custom_css` stays safety-blocked on the theme safe-mode
+defect.
+
 ## Dark-flag readiness audit (2026-07-13)
 
 A live enable-and-drive audit of the eight remaining default-dark flags was
@@ -1425,7 +1483,8 @@ mobile; remaining work is committed browser/no-JS/a11y evidence, the
 moderation runbook, and the enablement decision — admin access stays
 report-only), `link_previews` and `expanded_files` need **build work** before
 evidence capture (admin console / per-board opt-in / author removal; member
-file UI + scanner operations), `custom_css` is **safety-blocked** (theme safe
+file UI + scanner operations) — *`link_previews` completed that build work and
+graduated on 2026-08-09, ADR 0025*, `custom_css` is **safety-blocked** (theme safe
 mode does not suppress the `custom_css` block in `/brand.css` —
 `BrandingController::css()` checks only the flag and
 `brand_custom_css_enabled`), and the four Gate B flags stay reserved per

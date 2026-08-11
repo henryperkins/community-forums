@@ -1,6 +1,6 @@
 # RetroBoards — Admin & Moderation Design
 
-**Status:** v0.14 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-12
+**Status:** v0.16 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-09
 **Companion to [DESIGN.md](DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; `Done (mockup)` / `Planned` / `Live` status; InnoDB / `utf8mb4`).
 
 ## Scope
@@ -331,6 +331,7 @@ Admin CRUD with per-board settings:
 | **Allow anonymous posting** | Per-board toggle for the Anonymous mode (§1.3). |
 | **Require approval** | New threads/posts here enter a hold queue. |
 | **Edit window** | How long Users may edit their own posts (e.g. 0 = unlimited, or 15 min). |
+| **Unfurl link previews** | Per-board opt-in for server-side link previews (DECISIONS §6 #5; `boards.link_previews_enabled`, default off). The opt-in is storable on any board, but **only a public board ever fetches** — a hidden or private board keeps the setting inert, and the link-previews console labels it as such, so the choice survives a later change of visibility. The host allowlist on that console still decides what may be fetched. The checkbox renders only while the `link_previews` flag is on, and a board edit made while it is off never revokes a stored opt-in. |
 | Allowed tags / prefixes | Optional thread tags (e.g. "Hot", "Solved"). |
 | **Moderators** | Users assigned to moderate this board. |
 | State: locked / archived | Locked = read-only; archived = retired but preserved. |
@@ -587,7 +588,7 @@ A persistent two-row **console bar**, then the page, then the page's own section
 | **Notifications** | Email delivery · Announcements/broadcast. |
 | **Integrations** | API tokens · Webhooks · Sign-in providers. |
 | **Packages** | Package catalogue (install plan → consent → enable) · Registry trust · Extensions. |
-| **Features** | Feature flags · Badge rules · Custom emoji. |
+| **Features** | Feature flags · Badge rules · Custom emoji · Link previews. |
 | **Settings** | General · Registration · Thread Intelligence. |
 
 The page heading is a property of the **area**, not the leaf page (e.g. `/admin/structure` and
@@ -606,6 +607,7 @@ with JavaScript disabled.
 - **User manager** — directory + the per-user admin record (§5.2).
 - **Appearance** — live token/brand editor with a real-time preview pane and theme picker.
 - **Integrations** — installed plugins (enable/disable/configure with their permission prompts), webhook endpoints, API tokens.
+- **Link previews** (`/admin/link-previews`, ADR 0025) — queue-health tiles, the SSRF host allowlist, the kill switch, the per-board opt-in roll-up, and a recent-previews table with per-row refresh/purge. It names, in prose, whichever of its three gates (flag, board opt-in, allowlist) is still closed, so "nothing is unfurling" is never a mystery. Author-removed rows are shown but offer no refresh — the console is not a way around a member's decision about their own post.
 - **Settings → Registration/Security** — registration mode (open / approval / invite), email-verification requirement, password policy, rate limits, anonymous-posting default.
 
 ### 9.4 Design principles for the Console
@@ -839,6 +841,7 @@ Mapped onto DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" bu
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.16 | 2026-08-09 | Link previews completed and enabled (ADR 0025): §4.2 gains the **Unfurl link previews** per-board setting (`boards.link_previews_enabled`, DECISIONS §6 #5, default off; storable on any board but inert unless the board is public); §9.2 adds **Link previews** as a fourth tab in the Features area; §9.3 describes the `/admin/link-previews` console (queue tiles, host allowlist, kill switch, per-board opt-in, per-row refresh/purge, all audited — refresh deliberately unavailable on an author-removed row). Operator runbook: `docs/runbooks/link_previews.md`. |
 | v0.15 | 2026-07-18 | PR #44 safety remediation deviations recorded (ADR 0021): §3.4 "Add mod note" is admin-only in the shipped implementation (globally-scoped `user_notes` under any-board-mod read over-disclosed); §4.4 board delete ships as hard-DELETE-with-forced-move inside one locking transaction (every thread row moves, slugs un-reserve via cascade) with soft-delete + reserved slugs still deferred as ADR 0021 item 10. |
 | v0.14 | 2026-07-12 | Added §3.10 for Thread Intelligence health, recovery, curator, provenance/retention, and data-preserving rollback workflows; linked the canonical runbook, recorded the selected live-eval contract, and reconciled the joint default-on graduation with independent rollback pins. |
 | v0.13 | 2026-06-28 | Reconciled outbound webhook storage with the B2 delivery implementation: `webhooks.secret` is replaced by `secret_ref` (`svcsec_*` SecretVault reference), added the durable `webhook_deliveries` ledger, and documented show-once signing secrets. |

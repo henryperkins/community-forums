@@ -8137,6 +8137,32 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     font-size: .68rem;
     color: var(--text-muted);
 }
+/* Link previews: the card plus the author's remove/restore control. The item is
+   the flex child of .reference-cards; the card keeps its own geometry so an
+   unfurl and a reference card still read as the same object. */
+.link-preview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.link-preview-item > .reference-card {
+    flex: 1 1 auto;
+}
+.link-preview-item.is-removed {
+    border: 1px dashed var(--border-hair);
+    border-radius: var(--radius-sm);
+    padding: 7px 12px;
+    gap: 2px;
+}
+.link-preview-action {
+    align-self: flex-start;
+}
+/* Size de-emphasises this control; colour must not. --text-muted is the same
+   #AEB8B4 in both themes and drops under 4.5:1 on the light post surface at this
+   size, so the button keeps the standard .linkbtn accent (WCAG 1.4.1). */
+.link-preview-action .linkbtn {
+    font-size: .72rem;
+}
 /* Per-message report — opened from the hover ···, floats as a small card. */
 .dm-report {
     position: static;
@@ -12597,6 +12623,62 @@ body.thread-restructure-open { overflow: hidden; }
     font-size: .93rem;
     font-style: italic;
     color: var(--text-muted);
+}
+
+/* ---- Link previews console (ADR 0025) ----
+   Rides the shared .features-* console geometry; these rules only make the
+   multi-value cells stack and keep the no-JS status filter on one line, since
+   the pane's own vocabulary (URL + resolved title + error, thread + board,
+   status + HTTP code) is denser than the other Features tabs. */
+.features-link-previews .link-preview-filter {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin: 0 0 14px;
+    flex-wrap: wrap;
+}
+.features-link-previews .link-preview-filter .field {
+    flex: 0 0 auto;
+    margin: 0;
+}
+.features-link-previews .link-preview-filter select {
+    width: auto;
+    min-width: 11rem;
+}
+.features-link-previews .link-preview-hosts {
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    resize: vertical;
+}
+.features-link-previews .link-preview-url code,
+.features-link-previews .link-preview-url span,
+.features-link-previews .link-preview-state > span,
+.features-link-previews .link-preview-source > a,
+.features-link-previews .link-preview-source > span {
+    display: block;
+}
+.features-link-previews .link-preview-url code {
+    overflow-wrap: anywhere;
+}
+.features-link-previews .link-preview-url .muted,
+.features-link-previews .link-preview-url .field-error {
+    margin-top: 2px;
+    font-size: .78rem;
+}
+.features-link-previews .link-preview-table .features-col-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.features-link-previews .link-preview-blockers ul {
+    margin: 6px 0 0;
+    padding-left: 20px;
+}
+/* The source permalink sits directly above the board name in the same cell, so
+   colour alone would not separate the two (WCAG 1.4.1). */
+.features-link-previews .link-preview-table td a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 /* ---- Badge rule preview ---- */

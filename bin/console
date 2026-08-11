@@ -34,6 +34,7 @@ use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\RegistrySnapshotRepository;
 use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\SessionRepository;
+use App\Repository\LinkPreviewRepository;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
@@ -971,8 +972,11 @@ try {
 
         case 'worker:previews':
             $db = $database();
+            // The service reads the flag itself, so a rolled-back install drains
+            // nothing: every queued row is reported as skipped and left alone.
             $svc = new LinkPreviewService(
                 $db,
+                new LinkPreviewRepository($db),
                 new PostRepository($db),
                 new SettingRepository($db),
                 $config,
@@ -980,6 +984,8 @@ try {
                     (bool) $config->get('link_previews.allow_http', false),
                     (array) $config->get('link_previews.allowed_private_cidrs', []),
                 ),
+                new WriteGate(),
+                new FeatureFlags(new SettingRepository($db)),
             );
             $stats = $svc->fetchQueued((int) ($argv[2] ?? 25));
             $log(sprintf('Link previews: fetched=%d blocked=%d failed=%d skipped=%d', $stats['fetched'], $stats['blocked'], $stats['failed'], $stats['skipped']));
