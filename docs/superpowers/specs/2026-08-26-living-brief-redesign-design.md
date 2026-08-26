@@ -150,11 +150,19 @@ Judgment call: keep it, inside the More disclosure below the version list. It is
 curator tool and has nowhere else to go.
 
 **Pause** — new. `POST /t/{id}/summary/automation/pause`:
-- `CommunityMemoryService::pauseAutomation()` mirroring `resumeAutomation()` (`:189`)
-- the same curator capability check as resume
-- a `moderation_log` audit row
-- CSRF via `csrfField()`
+- `CommunityMemoryService::pauseAutomation()`, an exact mirror of `resumeAutomation()` (`:189`):
+  a `db->transaction`, `threads->findForUpdate()`, `assertCuratorForLockedThread()`, then
+  `ThreadIntelligenceQueue::setAutomationPaused($threadId, true, $actor->id())` — which already
+  exists (`ThreadIntelligenceQueue.php:132`) and handles both directions
+- controller mirrors `CommunityMemoryController::resumeAutomation()` (`:29-39`): `requireMemory()`,
+  `requireUser()`, `$this->run(...)` with the flash *Automatic refresh paused.*
+- CSRF is automatic — the kernel enforces it on every POST
 - renders only when not already paused; when paused, the existing Resume form renders instead
+
+**No `moderation_log` row.** None of the six existing memory actions write one; the audit trail
+for this action is `thread_intelligence_jobs.paused_by` / `paused_at`, which
+`setAutomationPaused()` already persists. Adding a `moderation_log` write only for Pause would
+make it inconsistent with Retire and Resume, which pause and unpause the same flag.
 
 **Retire** — destructive, and currently one click. Server-rendered two-step, no JS, no new route:
 
@@ -218,13 +226,28 @@ neither `thread-memory-slot` nor `living-brief`; and it matches the state's stat
 after Retire, the curator loses the only route back. Members are not shown an explainer on every
 young topic.
 
-Copy, with real numbers and this app's noun:
+**The handoff's copy states a contrast this app cannot produce.** It reads *"{N} of the {M} here
+are eligible; the rest are private, hidden, or held."* But `eligiblePostCounts()`
+(`ThreadIntelligenceEligibility.php:204`) counts `is_deleted = 0 AND is_pending = 0`, and the
+`{M}` a reader sees in the header is `threads.reply_count`, which `RepairService.php:85-88`
+recomputes with `is_deleted = 0 AND is_pending = 0 AND is_op = 0` — the *same* predicate plus the
+OP. Both numbers already exclude everything the sentence blames. The two differ by exactly one —
+the opening post — so the handoff's copy would reintroduce the off-by-one contradiction §5 exists
+to remove.
 
-> The archive draws a brief once a topic carries eight eligible public replies. {N} of the {M}
-> here are eligible; the rest are private, hidden, or held.
+Copy, stating the threshold and the honest count in a named currency:
 
-This needs a public accessor on `ThreadIntelligenceEligibility` exposing eligible count, total
-count and threshold, merged into `$memory_refresh` in `ViewService::emptyModel()` (`:118`).
+> The archive draws a brief once a topic carries eight eligible posts — the opening post plus
+> every reply that is public, visible, and approved. This one has {N}.
+
+`{N}` is `eligiblePostCounts($threadId, null)['total']`, which includes the OP; the sentence says
+so, which is why it does not contradict a header counting replies alone. No second number is
+invented, and no exclusion reason is claimed that the data cannot support.
+
+This needs a public accessor on `ThreadIntelligenceEligibility` exposing the eligible count and
+the threshold, merged into `$memory_refresh` in `ViewService::emptyModel()` (`:118`).
+`ThreadIntelligenceEligibility` is **already** a constructor dependency of the view service
+(`ThreadIntelligenceViewService.php:28`), so no container rewiring is needed.
 Counting must **not** be duplicated in `ThreadController` — that would re-implement the
 `is_deleted = 0 AND is_pending = 0` predicate outside the policy object.
 
@@ -319,8 +342,8 @@ in addition to server-side tests."* All four shipping changes are UI-visible.
 2. Suspended admin: state beats role — no curator affordance renders.
 3. Status line renders exactly once (`substr_count == 1`) in paused, ineligible, and eligible states.
 4. Restore-by-row posts the same `summary_id` the `<select>` did; one form per version; CSRF present.
-5. Pause route exists, is curator-gated, writes a `moderation_log` row, is CSRF-protected, and is
-   rejected for a non-curator.
+5. Pause route exists, is curator-gated, sets `thread_intelligence_jobs.automation_paused` with
+   `paused_by`, and is rejected for a non-curator and for a guest.
 6. Empty state: curator sees eligibility copy with numbers matching `ThreadIntelligenceEligibility`'s
    own predicate; guest sees nothing (preserving `SurfaceTest:137-140`).
 7. Empty state does not lie under a rolled-back `automated_context` flag.
