@@ -244,6 +244,37 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertSame(1, substr_count($html, 'living-brief-status-icon'));
     }
 
+    public function test_pause_automation_is_curator_gated_and_records_the_actor(): void
+    {
+        $seed = $this->seedThread(8, 'Pause automation route');
+        $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+
+        $member = $this->makeUser(['username' => 'pause-member']);
+        $this->actingAs($member);
+        $this->post('/t/' . $seed['thread_id'] . '/summary/automation/pause', []);
+        self::assertNotSame(
+            1,
+            (int) $this->db->fetchValue(
+                'SELECT COALESCE(automation_paused, 0) FROM thread_intelligence_jobs WHERE thread_id = ?',
+                [$seed['thread_id']],
+            ),
+        );
+
+        $admin = $this->makeAdmin(['username' => 'pause-curator']);
+        $this->actingAs($admin);
+        $allowed = $this->post('/t/' . $seed['thread_id'] . '/summary/automation/pause', []);
+        $this->assertRedirect($allowed, '/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT automation_paused FROM thread_intelligence_jobs WHERE thread_id = ?',
+            [$seed['thread_id']],
+        ));
+        self::assertSame($admin['id'], (int) $this->db->fetchValue(
+            'SELECT paused_by FROM thread_intelligence_jobs WHERE thread_id = ?',
+            [$seed['thread_id']],
+        ));
+    }
+
     private function rebuildAppWithProvider(): void
     {
         $items = $this->config->all();

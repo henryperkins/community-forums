@@ -39,6 +39,19 @@ final class CommunityMemoryController extends Controller
     }
 
     /** @param array<string,string> $params */
+    public function pauseAutomation(Request $request, array $params): Response
+    {
+        $this->requireMemory();
+        $user = $this->requireUser();
+        $threadId = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(CommunityMemoryService::class)->pauseAutomation($user, $threadId),
+            $this->threadUrl($threadId),
+            'Automatic refresh paused.',
+        );
+    }
+
+    /** @param array<string,string> $params */
     public function summary(Request $request, array $params): Response
     {
         $this->requireMemory();
