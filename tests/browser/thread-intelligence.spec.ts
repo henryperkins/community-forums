@@ -223,6 +223,10 @@ test('curator edit, real-worker refresh, retirement, restoration, and explicit r
   await restore.locator('select[name="summary_id"]').selectOption({ index: 0 });
   await restore.getByRole('button', { name: 'Restore summary' }).click();
   await expect(page.locator('.living-brief')).toBeVisible();
+  // The brief is back and automation is still paused — the Resume click below proves it.
+  // This is the member-visible status line, on the brief itself rather than in the drawer.
+  await expect(page.locator('.living-brief .living-brief-status.is-paused'))
+    .toContainText('Automatic refresh is paused for this topic. The brief stands as published.');
   memory = await openTopicTools(page, 'memory');
   await memory.details.getByRole('button', { name: 'Resume automatic refresh' }).click();
   memory = await openTopicTools(page, 'memory');
