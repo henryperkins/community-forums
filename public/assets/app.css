@@ -10213,6 +10213,26 @@ span.wf-btn {
     .living-brief-related { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* Living Brief — one status line. Only ever one renders. */
+.living-brief-status {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    font-size: .87rem;
+    line-height: 1.5;
+}
+.living-brief-status.is-paused {
+    padding: 0;
+    color: var(--text-muted);
+}
+.living-brief-status-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    margin-top: 2px;
+}
+.living-brief-status-icon svg { width: 13px; height: 13px; }
+
 /* ══ Thread View — The Study ═════════════════════════════════════════════ */
 :root { --keyboard-inset: 0px; }
 

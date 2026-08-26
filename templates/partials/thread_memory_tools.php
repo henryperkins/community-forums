@@ -3,7 +3,6 @@
 <?php if (!$embedded): ?><details class="memory-curator-tools"><summary class="linkbtn">Curate topic memory</summary><?php endif; ?>
     <div class="memory-curator-tools-body">
         <?php if (!empty($memory_automation_paused)): ?>
-            <p class="muted">Automatic refresh is paused for this topic.</p>
             <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/automation/resume">
                 <?= $this->csrfField() ?>
                 <button class="btn btn-small" type="submit">Resume automatic refresh</button>

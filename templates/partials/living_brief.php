@@ -15,6 +15,12 @@
         </p>
         <?php if (!empty($can_curate_memory)): ?><button type="button" class="living-brief-curate" data-topic-tools-open="memory" hidden>Curate</button><?php endif; ?>
     </div>
+    <?php if (!empty($memory_automation_paused)): ?>
+        <p class="living-brief-status is-paused">
+            <span class="living-brief-status-icon" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'pause']) ?></span>
+            <span>Automatic refresh is paused for this topic. The brief stands as published.</span>
+        </p>
+    <?php endif; ?>
     <div class="post-body formatted-content"><?= $living_brief['body_html'] ?></div>
 
     <?php if (!empty($living_brief_sources)): ?>

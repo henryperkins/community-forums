@@ -215,7 +215,9 @@ test('curator edit, real-worker refresh, retirement, restoration, and explicit r
   await memory.details.getByRole('button', { name: 'Retire summary' }).click();
   await expect(page.locator('.living-brief')).toHaveCount(0);
   memory = await openTopicTools(page, 'memory');
-  await expect(memory.details.getByText('Automatic refresh is paused for this topic.')).toBeVisible();
+  // The paused copy moved onto the brief itself (member-visible `.living-brief-status`),
+  // so the drawer's remaining paused signal is the resume affordance.
+  await expect(memory.details.getByRole('button', { name: 'Resume automatic refresh' })).toBeVisible();
 
   const restore = memory.details.locator('form[action$="/summary/restore"]');
   await restore.locator('select[name="summary_id"]').selectOption({ index: 0 });

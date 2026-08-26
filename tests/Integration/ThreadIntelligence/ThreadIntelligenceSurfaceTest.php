@@ -224,6 +224,26 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertSame('generation_paused', $decision['code'], 'resume cannot bypass the global pause');
     }
 
+    public function test_paused_automation_is_visible_to_members_not_only_curators(): void
+    {
+        $seed = $this->seedThread(8, 'Paused brief visibility');
+        $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $this->queue()->setAutomationPaused($seed['thread_id'], true, null);
+
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+
+        self::assertStringContainsString(
+            'Automatic refresh is paused for this topic. The brief stands as published.',
+            $html,
+        );
+        // Exactly one `.living-brief-status` element per brief. The character class keeps
+        // the descendant `.living-brief-status-icon` from being counted as a second one.
+        self::assertSame(1, preg_match_all('/class="living-brief-status[ "]/', $html));
+        self::assertSame(1, substr_count($html, 'living-brief-status-icon'));
+    }
+
     private function rebuildAppWithProvider(): void
     {
         $items = $this->config->all();
@@ -261,13 +281,20 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         );
     }
 
-    private function memory(): CommunityMemoryService
+    private function queue(): ThreadIntelligenceQueue
     {
         $apiKey = 'sk-test-surface';
         $config = ThreadIntelligenceConfig::fromArray(['api_key' => $apiKey]);
         $jobs = new ThreadIntelligenceJobRepository($this->db);
-        $settings = new ThreadIntelligenceSettings(new SettingRepository($this->db), $config, (string) $this->config->get('app.key'), $apiKey, $this->db);
-        $queue = new ThreadIntelligenceQueue(
+        $settings = new ThreadIntelligenceSettings(
+            new SettingRepository($this->db),
+            $config,
+            (string) $this->config->get('app.key'),
+            $apiKey,
+            $this->db,
+        );
+
+        return new ThreadIntelligenceQueue(
             $this->db,
             $jobs,
             new ThreadIntelligenceEligibility(
@@ -279,6 +306,12 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
                 $jobs,
             ),
         );
+    }
+
+    private function memory(): CommunityMemoryService
+    {
+        $queue = $this->queue();
+
         return new CommunityMemoryService(
             $this->db,
             new ThreadRepository($this->db),
