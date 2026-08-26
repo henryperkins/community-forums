@@ -150,6 +150,20 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringNotContainsString('gpt-', $privacy->body());
     }
 
+    public function test_living_brief_has_no_redundant_heading_and_keeps_an_accessible_name(): void
+    {
+        $seed = $this->seedThread(8, 'Brief heading removal');
+        $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+
+        self::assertStringNotContainsString('Where the discussion stands', $html);
+        self::assertStringNotContainsString('living-brief-heading', $html);
+        self::assertStringContainsString('aria-label="Living brief"', $html);
+        self::assertStringContainsString('/privacy#thread-intelligence', $html);
+    }
+
     public function test_living_brief_read_renders_a_missing_html_cache_without_writing_it(): void
     {
         $seed = $this->seedThread(1, 'Living brief cache fallback');

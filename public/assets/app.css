@@ -10153,7 +10153,6 @@ span.wf-btn {
     gap: var(--space-4);
     min-width: 0;
 }
-.living-brief-head h2,
 .related-topic-fallback h2 { margin: 0; }
 .living-brief-label {
     margin: 0 0 var(--space-1);

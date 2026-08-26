@@ -1,16 +1,13 @@
 <?php /** @var \App\Core\View $this */ ?>
-<section class="living-brief study-living-brief" data-living-brief aria-labelledby="living-brief-heading">
+<section class="living-brief study-living-brief" data-living-brief aria-label="Living brief">
     <div class="living-brief-head">
-        <div>
-            <p class="living-brief-label">
-                <?php if (!empty($living_brief['has_ai_lineage'])): ?>
-                    <a href="/privacy#thread-intelligence"><?= $e($living_brief['label']) ?></a>
-                <?php else: ?>
-                    <?= $e($living_brief['label']) ?>
-                <?php endif; ?>
-            </p>
-            <h2 id="living-brief-heading">Where the discussion stands</h2>
-        </div>
+        <p class="living-brief-label">
+            <?php if (!empty($living_brief['has_ai_lineage'])): ?>
+                <a href="/privacy#thread-intelligence"><?= $e($living_brief['label']) ?></a>
+            <?php else: ?>
+                <?= $e($living_brief['label']) ?>
+            <?php endif; ?>
+        </p>
         <p class="living-brief-meta">
             <span><?= $e($living_brief['metadata']) ?></span>
             <span>Version <?= (int) $living_brief['version'] ?></span>
