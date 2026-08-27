@@ -121,6 +121,7 @@ final class ThreadIntelligenceViewService
             $threadId,
             new DateTimeImmutable('now', new DateTimeZone('UTC')),
         );
+        $progress = $this->eligibility->initialPostProgress($threadId);
         return [
             'living_brief' => null,
             'sources' => [],
@@ -133,6 +134,8 @@ final class ThreadIntelligenceViewService
                 'message' => $decision->message,
                 'next_eligible_at' => $decision->nextEligibleAt?->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
                 'next_eligible_at_utc' => $decision->nextEligibleAt?->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z'),
+                'eligible_posts' => $progress['eligible'],
+                'initial_post_threshold' => $progress['threshold'],
             ],
             'automation_paused' => (int) ($job['automation_paused'] ?? 0) === 1,
         ];

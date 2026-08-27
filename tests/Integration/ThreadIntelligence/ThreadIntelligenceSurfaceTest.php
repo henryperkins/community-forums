@@ -533,6 +533,28 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         ));
     }
 
+    public function test_eligibility_counts_are_exposed_for_the_empty_state(): void
+    {
+        $seed = $this->seedThread(4, 'Eligibility counts');
+        $counts = $this->eligibility()->initialPostProgress($seed['thread_id']);
+
+        self::assertSame(8, $counts['threshold']);
+        self::assertSame(4, $counts['eligible']);
+        self::assertLessThan($counts['threshold'], $counts['eligible']);
+
+        // The empty view model carries both numbers so the empty state can say
+        // how far short the topic falls; `eligible` counts the OP, so it is one
+        // more than the reply count the topic header shows.
+        $refresh = $this->viewService()->forThread($seed['thread_id'], null)['refresh'];
+        self::assertSame('initial_post_threshold', $refresh['code']);
+        self::assertSame(4, $refresh['eligible_posts']);
+        self::assertSame(8, $refresh['initial_post_threshold']);
+        self::assertSame(3, (int) $this->db->fetchValue(
+            'SELECT reply_count FROM threads WHERE id = ?',
+            [$seed['thread_id']],
+        ));
+    }
+
     /**
      * The seven curator-gated forms rendered by partials/thread_memory_tools.php.
      * Payloads are chosen to REACH the authorization check rather than trip an earlier
@@ -566,7 +588,7 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         $this->app = new App($this->config, $this->db, $this->rateLimiter);
     }
 
-    private function viewService(): ThreadIntelligenceViewService
+    private function eligibility(): ThreadIntelligenceEligibility
     {
         $apiKey = 'sk-test-surface';
         $config = ThreadIntelligenceConfig::fromArray(['api_key' => $apiKey]);
@@ -578,47 +600,35 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
             $apiKey,
             $this->db,
         );
+
+        return new ThreadIntelligenceEligibility(
+            $this->db,
+            new FeatureFlags(new SettingRepository($this->db)),
+            $config,
+            $settings,
+            new ThreadIntelligenceBudget($this->db, $config),
+            $jobs,
+        );
+    }
+
+    private function viewService(): ThreadIntelligenceViewService
+    {
         return new ThreadIntelligenceViewService(
             db: $this->db,
             members: new BoardMemberRepository($this->db),
             policy: new BoardPolicy(),
-            eligibility: new ThreadIntelligenceEligibility(
-                $this->db,
-                new FeatureFlags(new SettingRepository($this->db)),
-                $config,
-                $settings,
-                new ThreadIntelligenceBudget($this->db, $config),
-                $jobs,
-            ),
-            jobs: $jobs,
+            eligibility: $this->eligibility(),
+            jobs: new ThreadIntelligenceJobRepository($this->db),
             markdown: new Markdown(new HtmlSanitizer()),
         );
     }
 
     private function queue(): ThreadIntelligenceQueue
     {
-        $apiKey = 'sk-test-surface';
-        $config = ThreadIntelligenceConfig::fromArray(['api_key' => $apiKey]);
-        $jobs = new ThreadIntelligenceJobRepository($this->db);
-        $settings = new ThreadIntelligenceSettings(
-            new SettingRepository($this->db),
-            $config,
-            (string) $this->config->get('app.key'),
-            $apiKey,
-            $this->db,
-        );
-
         return new ThreadIntelligenceQueue(
             $this->db,
-            $jobs,
-            new ThreadIntelligenceEligibility(
-                $this->db,
-                new FeatureFlags(new SettingRepository($this->db)),
-                $config,
-                $settings,
-                new ThreadIntelligenceBudget($this->db, $config),
-                $jobs,
-            ),
+            new ThreadIntelligenceJobRepository($this->db),
+            $this->eligibility(),
         );
     }
 
