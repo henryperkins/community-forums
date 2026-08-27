@@ -121,7 +121,17 @@ final class ThreadIntelligenceViewService
             $threadId,
             new DateTimeImmutable('now', new DateTimeZone('UTC')),
         );
-        $progress = $this->eligibility->initialPostProgress($threadId);
+        // decide() already counted eligible posts to reach this verdict, but the
+        // result object is the decision shared with the enqueue and worker paths,
+        // not view detail, so the count cannot ride back on it. Asking again is a
+        // duplicate COUNT over `posts` on every topic view, for every viewer — so
+        // it is asked only for the one denial whose copy spends it (the count
+        // sentence in partials/living_brief_empty.php). Null, not 0, elsewhere:
+        // zero eligible posts is a real answer, and must not be inferable from a
+        // state where nobody counted.
+        $progress = $decision->code === 'initial_post_threshold'
+            ? $this->eligibility->initialPostProgress($threadId)
+            : ['eligible' => null, 'threshold' => null];
         return [
             'living_brief' => null,
             'sources' => [],
