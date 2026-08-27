@@ -7,7 +7,6 @@ namespace Tests\Integration\Service;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
-use App\Repository\UserBoardPrefRepository;
 use App\Security\BoardPolicy;
 use App\Service\NavigationService;
 use Tests\Support\TestCase;
@@ -24,7 +23,6 @@ final class NavigationServiceTest extends TestCase
             new CategoryRepository($this->db),
             new BoardRepository($this->db),
             new BoardMemberRepository($this->db),
-            new UserBoardPrefRepository($this->db),
             new BoardPolicy(),
         );
 

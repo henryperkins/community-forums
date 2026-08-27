@@ -241,6 +241,7 @@ use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
 use App\Service\PermissionSimulatorService;
 use App\Service\PreferenceService;
+use App\Service\PresenceService;
 use App\Service\ProfileMediaService;
 use App\Service\RateLimitService;
 use App\Service\ReactionService;
@@ -581,18 +582,42 @@ final class App
         }
         $siteName = is_string($siteSettings['site_name']) ? $siteSettings['site_name'] : $appName;
 
-        $nav = [];
-        try {
-            $nav = $container->get(NavigationService::class)->sidebar($session->user());
-        } catch (Throwable) {
-            $nav = [];
-        }
-
         $features = [];
         try {
             $features = $container->get(FeatureFlags::class)->all();
         } catch (Throwable) {
             $features = [];
+        }
+
+        $nav = [];
+        $inboxUnreadCount = 0;
+        try {
+            $unreadCounts = [];
+            $user = $session->user();
+            if ($user !== null && !empty($features['engagement'])) {
+                $cutover = $container->get(SettingRepository::class)
+                    ->getString('engagement_cutover_at', ThreadUserRepository::NO_CUTOVER);
+                $unreadCounts = $container->get(ThreadUserRepository::class)->unreadCountsByBoard(
+                    $user->id(),
+                    $user->isAdmin(),
+                    $cutover,
+                    !empty($features['topic_workflow']),
+                );
+                $inboxUnreadCount = array_sum($unreadCounts);
+            }
+            $nav = $container->get(NavigationService::class)->sidebar($user, $unreadCounts);
+        } catch (Throwable) {
+            $nav = [];
+            $inboxUnreadCount = 0;
+        }
+
+        $presenceRoster = [];
+        try {
+            if (!empty($features['presence'])) {
+                $presenceRoster = $container->get(PresenceService::class)->roster($session->user());
+            }
+        } catch (Throwable) {
+            $presenceRoster = [];
         }
 
         // Appearance prefs stamp the document root (no theme flash; no-JS themes).
@@ -625,6 +650,24 @@ final class App
             }
         } catch (Throwable) {
             // keep safe defaults
+        }
+
+        // Shared member-surface state is server-rendered for a flash-free first
+        // paint. Guests use the same safe visual defaults without persistence.
+        $memberSurfaces = [
+            'rail_open' => true,
+            'inbox_reading_open' => true,
+            'directory_sort' => 'category',
+            'directory_peek' => 3,
+        ];
+        try {
+            $user = $session->user();
+            $preferences = $container->get(PreferenceService::class);
+            $memberSurfaces = $user !== null
+                ? $preferences->memberSurfaces($user->id())
+                : $preferences->memberSurfaceDefaults();
+        } catch (Throwable) {
+            // Pre-migration / DB-less render: keep safe defaults.
         }
 
         // Branding (P3-07): operator name/logo/favicon/colors with safe fallbacks.
@@ -742,11 +785,14 @@ final class App
             'flash' => $flash->current(),
             'request_path' => $request->path(),
             'nav' => $nav,
+            'inbox_unread_count' => $inboxUnreadCount,
+            'presence_roster' => $presenceRoster,
             'features' => $features,
             'oauth_providers' => $oauthProviders,
             'passkeys_usable' => $passkeysUsable,
             'appearance' => $appearance,
             'composing' => $composing,
+            'member_surfaces' => $memberSurfaces,
             'branding' => $branding,
             'package_theme' => $packageTheme,
             'asset_version' => $this->assetVersion(),
@@ -1007,8 +1053,12 @@ final class App
             $c->get(CategoryRepository::class),
             $c->get(BoardRepository::class),
             $c->get(BoardMemberRepository::class),
-            $c->get(UserBoardPrefRepository::class),
             $c->get(BoardPolicy::class),
+        ));
+        $c->bind(PresenceService::class, fn (Container $c) => new PresenceService(
+            $c->get(UserRepository::class),
+            $c->get(BlockRepository::class),
+            (int) $config->get('presence.online_window_seconds', 300),
         ));
         $c->bind(UserProfileFieldRepository::class, fn (Container $c) => new UserProfileFieldRepository($c->get(Database::class)));
         $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
@@ -2087,6 +2137,7 @@ final class App
         $r->get('/inbox', [InboxController::class, 'index']);
         $r->get('/search', [SearchController::class, 'index']);
         $r->get('/presence', [PresenceController::class, 'index']);
+        $r->get('/users-online', [PresenceController::class, 'page']);
 
         // Read-only Bearer API (B2 sub-project 2); GET-only so the CSRF/HTML
         // kernel is bypassed — ApiController self-authenticates and emits JSON.
@@ -2209,6 +2260,7 @@ final class App
         $r->post('/settings/preferences', [SettingsController::class, 'updatePreferences']);
         $r->get('/settings/composing', [SettingsController::class, 'composingForm']);
         $r->post('/settings/composing', [SettingsController::class, 'updateComposing']);
+        $r->post('/settings/member-surfaces', [SettingsController::class, 'updateMemberSurfaces']);
         $r->post('/settings/preferences/reset', [SettingsController::class, 'resetPreferences']);
         $r->get('/settings/preferences/export', [SettingsController::class, 'exportPreferences']);
         $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);

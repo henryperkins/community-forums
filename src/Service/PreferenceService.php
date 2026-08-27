@@ -96,6 +96,54 @@ final class PreferenceService
     }
 
     /**
+     * First-paint state for the shared member shell and Board Index controls.
+     * These values are server-owned so panel visibility never flashes from a
+     * client default before JavaScript loads.
+     *
+     * @return array{rail_open:bool,inbox_reading_open:bool,directory_sort:string,directory_peek:int}
+     */
+    public function memberSurfaces(int $userId): array
+    {
+        return $this->pickMemberSurfaces($this->resolved($userId));
+    }
+
+    /** @return array{rail_open:bool,inbox_reading_open:bool,directory_sort:string,directory_peek:int} */
+    public function memberSurfaceDefaults(): array
+    {
+        return $this->pickMemberSurfaces(PreferenceSchema::resolve([]));
+    }
+
+    /**
+     * Validate and merge only supplied surface keys. Contextual toggles post one
+     * field at a time, so omitted booleans must remain unchanged.
+     *
+     * @param array<string,mixed> $input
+     */
+    public function updateMemberSurfaces(int $userId, array $input): void
+    {
+        $changes = PreferenceSchema::validatePartial('surfaces', $input);
+        if ($changes === []) {
+            return;
+        }
+        $changes['__v'] = PreferenceSchema::VERSION;
+        $this->prefs->merge($userId, $changes);
+    }
+
+    /**
+     * @param array<string,mixed> $r
+     * @return array{rail_open:bool,inbox_reading_open:bool,directory_sort:string,directory_peek:int}
+     */
+    private function pickMemberSurfaces(array $r): array
+    {
+        return [
+            'rail_open' => (bool) ($r['rail_open'] ?? true),
+            'inbox_reading_open' => (bool) ($r['inbox_reading_open'] ?? true),
+            'directory_sort' => (string) ($r['directory_sort'] ?? 'category'),
+            'directory_peek' => (int) ($r['directory_peek'] ?? 3),
+        ];
+    }
+
+    /**
      * The composing subset the shared composer reads to gate its behaviour
      * (P3-01): enter-to-send, live preview, and smart list continuation. Values
      * are already validated by {@see PreferenceSchema}; the layout stamps them on

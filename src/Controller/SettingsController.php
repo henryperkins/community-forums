@@ -96,6 +96,20 @@ final class SettingsController extends Controller
         return $this->redirectWithFlash('/settings/composing', 'Your composing preferences were saved.');
     }
 
+    /** Persist one or more contextual shell/directory choices and return locally. */
+    public function updateMemberSurfaces(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $this->container->get(PreferenceService::class)
+            ->updateMemberSurfaces($user->id(), $request->allInput());
+
+        $return = (string) $request->post('return', '');
+        if ($return === '' || preg_match('#^/(?![/\\\\])#', $return) !== 1) {
+            $return = '/';
+        }
+        return $this->redirect($return);
+    }
+
     public function resetPreferences(Request $request): Response
     {
         $user = $this->requireUser();

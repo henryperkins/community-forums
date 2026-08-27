@@ -82,12 +82,12 @@
 - Adds `PresenceService::roster(?User $viewer): array`, shared by server shell and JSON polling.
 - Adds `POST /settings/member-surfaces` for validated preference changes and a safe local return path.
 
-- [ ] Add failing schema tests for defaults, coercion, version upgrade, section updates, unknown-key preservation, and export.
+- [x] Add failing schema tests for defaults, coercion, version upgrade, section updates, unknown-key preservation, and export.
 - [ ] Add failing integration tests proving one board-only rail across `/`, `/inbox`, `/search`, and `/compose`; muted boards remain; counts sum to the topbar Inbox pill; private/hidden access does not leak; the shell survives missing tables.
-- [ ] Add failing presence tests proving guest/server rendering, signed-in self/block exclusion, privacy exclusion, feature-dark behavior, and JSON parity.
+- [x] Add failing presence tests proving guest/server rendering, signed-in self/block exclusion, privacy exclusion, feature-dark behavior, and JSON parity.
 - [ ] Add failing navigation/persistence tests for Boards/Inbox/Messages active state, identity-menu destinations, New topic suppression on Compose, POST toggle CSRF, safe return validation, and server-first pane classes.
-- [ ] Implement the preference schema/service, bulk unread aggregation, presence service, routes/bindings, and defensive global sharing.
-- [ ] Rebuild the topbar and sidebar partials with real asset/icon partials and semantic landmarks.
+- [x] Implement the preference schema/service, bulk unread aggregation, presence service, routes/bindings, and defensive global sharing.
+- [x] Rebuild the topbar and sidebar partials with real asset/icon partials and semantic landmarks.
 - [ ] Re-run the focused unit/integration group green and commit `feat: establish the member surface shell`.
 
 ---

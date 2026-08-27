@@ -258,6 +258,50 @@ final class ThreadUserRepository
     }
 
     /**
+     * One bulk unread aggregate for the shared board rail. It deliberately uses
+     * the exact Inbox-unread predicate, including active snoozes and board mute,
+     * so the topbar total equals the sum of rendered rail pills.
+     *
+     * @return array<int,int> board_id => unread count (zero rows omitted)
+     */
+    public function unreadCountsByBoard(
+        int $userId,
+        bool $isAdmin,
+        string $cutover,
+        bool $workflowEnabled = true,
+    ): array {
+        [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
+        $rows = $this->db->fetchAll(
+            "SELECT t.board_id, COUNT(*) AS unread_count
+             FROM threads t
+             JOIN boards b ON b.id = t.board_id
+             LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
+             LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
+             WHERE t.is_deleted = 0
+               AND t.is_pending = 0
+               AND ($visSql)
+               " . $this->unreadQueueFragment($workflowEnabled) . '
+             GROUP BY t.board_id
+             ORDER BY t.board_id',
+            array_merge([$userId, $userId], $visParams, [$cutover]),
+        );
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $count = (int) $row['unread_count'];
+            if ($count > 0) {
+                $counts[(int) $row['board_id']] = $count;
+            }
+        }
+        return $counts;
+    }
+
+    /**
      * One page of the personal Inbox. Phase 4 adds workflow filters while
      * preserving the same board-visibility gate. Normal filters exclude active
      * snoozes; the snoozed filter is the explicit personal recovery view.

@@ -11,10 +11,10 @@ namespace App\Support;
  * documented default — so a tampered or stale blob can never break rendering or
  * bypass a server-side rule (PHASE_3_PLAN §3, §9 "Preferences").
  *
- * Prefs are grouped into three settings sections (appearance / reading /
- * composing). Each is its own form, so a section update only ever touches its
- * own keys and leaves the rest (and non-schema keys such as
- * `hide_from_leaderboard`) intact.
+ * Prefs are grouped into settings sections. Appearance / reading / composing
+ * have full account forms; surfaces is updated by small contextual controls.
+ * A section update only ever touches its own keys and leaves the rest (and
+ * non-schema keys such as `hide_from_leaderboard`) intact.
  *
  * Per-page keys carry a `null` default: they fall back to the server pagination
  * default in PreferenceService, preserving Phase 2 behaviour, and only persist
@@ -27,10 +27,12 @@ final class PreferenceSchema
      * validated independently against its own spec, so older blobs stay readable
      * without an explicit migration; `__v` is a forward-compat marker only.
      */
-    public const VERSION = 3;
+    public const VERSION = 4;
 
     public const THREADS_PER_PAGE = [20, 25, 50, 100];
     public const POSTS_PER_PAGE = [10, 20, 40];
+    public const DIRECTORY_SORTS = ['category', 'active', 'newest', 'unanswered', 'top', 'solved'];
+    public const DIRECTORY_PEEKS = [0, 3, 5];
 
     /**
      * section => [ key => spec ]. spec.type ∈ {enum, enumint, bool}.
@@ -50,6 +52,12 @@ final class PreferenceSchema
             'show_signatures'  => ['type' => 'bool', 'default' => true],
             'show_avatars'     => ['type' => 'bool', 'default' => true],
             'show_reactions'   => ['type' => 'bool', 'default' => true],
+        ],
+        'surfaces' => [
+            'rail_open'          => ['type' => 'bool', 'default' => true],
+            'inbox_reading_open' => ['type' => 'bool', 'default' => true],
+            'directory_sort'     => ['type' => 'enum', 'values' => self::DIRECTORY_SORTS, 'default' => 'category'],
+            'directory_peek'     => ['type' => 'enumint', 'values' => self::DIRECTORY_PEEKS, 'default' => 3],
         ],
         'composing' => [
             'enter_to_send' => ['type' => 'bool', 'default' => true],
@@ -139,11 +147,11 @@ final class PreferenceSchema
      *
      * v1 → v2 was purely additive (the reading-display + composing toggles were
      * introduced at v2). v3 retires thread_sort from the managed schema without
-     * transforming it, so legacy blobs preserve it as unknown data. {@see
-     * transformTo} remains the home for a future breaking change (e.g. a renamed
-     * enum value) so old blobs keep working across a schema bump. resolve() runs
-     * this on every read; a save (updateSection) re-stamps the version, so storage
-     * converges.
+     * transforming it, so legacy blobs preserve it as unknown data. v4 adds the
+     * member-surface panel/directory choices. {@see transformTo} remains the home
+     * for a future breaking change (e.g. a renamed enum value) so old blobs keep
+     * working across a schema bump. resolve() runs this on every read; a save
+     * (updateSection) re-stamps the version, so storage converges.
      *
      * @param array<string,mixed> $stored
      * @return array<string,mixed>
@@ -215,6 +223,29 @@ final class PreferenceSchema
             } else {
                 // enum → restore default; per-page (null default) → remove.
                 $changes[$key] = $spec['default'];
+            }
+        }
+        return $changes;
+    }
+
+    /**
+     * Validate only keys present in a contextual partial update. Unlike a full
+     * settings form, an omitted boolean means "leave it alone", not false.
+     * Invalid values and unknown keys are inert.
+     *
+     * @param array<string,mixed> $input
+     * @return array<string,mixed>
+     */
+    public static function validatePartial(string $section, array $input): array
+    {
+        $changes = [];
+        foreach (self::fields($section) as $key => $spec) {
+            if (!array_key_exists($key, $input)) {
+                continue;
+            }
+            $valid = self::coerce($spec, $input[$key]);
+            if ($valid !== null) {
+                $changes[$key] = $valid;
             }
         }
         return $changes;

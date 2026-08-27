@@ -39,7 +39,7 @@ final class AppForumIndexDesignTest extends TestCase
         self::assertStringNotContainsString('composer-details', $body);
     }
 
-    public function test_signed_in_shared_navigation_explains_and_marks_each_route(): void
+    public function test_signed_in_shared_navigation_places_and_marks_each_primary_route(): void
     {
         $this->actingAs($this->makeUser(['username' => 'route_reader']));
 
@@ -51,12 +51,9 @@ final class AppForumIndexDesignTest extends TestCase
         $this->assertStatus(200, $inbox);
         $this->assertStatus(200, $messages);
 
-        self::assertStringContainsString('>Forum index<', $home->body());
-        self::assertStringContainsString('>Browse boards<', $home->body());
-        self::assertStringContainsString('>Forum inbox<', $inbox->body());
-        self::assertStringContainsString('>Your personal queue<', $inbox->body());
-        self::assertStringContainsString('>Messages<', $messages->body());
-        self::assertStringContainsString('>Private conversations<', $messages->body());
+        self::assertStringContainsString('data-primary-route="boards"', $home->body());
+        self::assertStringContainsString('data-primary-route="inbox"', $inbox->body());
+        self::assertStringContainsString('data-primary-route="messages"', $messages->body());
 
         $this->assertActiveRoute($home->body(), '/');
         $this->assertActiveRoute($inbox->body(), '/inbox');
