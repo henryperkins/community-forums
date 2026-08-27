@@ -76,11 +76,6 @@ final class InvitationService
     /**
      * Issue an invitation. The raw token is returned ONCE and never persisted.
      *
-     * @param array<string,mixed> $input
-     * @return array{id:int, token:string}
-     * @throws ValidationException
-     */
-    /**
      * Axis 2, "state beats role". This service carried no authorization at all -
      * no isAdmin(), no WriteGate, no capability gate - and leaned entirely on
      * Controller::requireAdmin(), which checks role and nothing else. An invitation
@@ -89,6 +84,10 @@ final class InvitationService
      *
      * redeem() is deliberately NOT gated this way: it takes a raw token and no User,
      * and is the public carrier a brand-new account arrives through.
+     *
+     * @param array<string,mixed> $input
+     * @return array{id:int, token:string}
+     * @throws ValidationException
      */
     public function create(User $admin, array $input): array
     {

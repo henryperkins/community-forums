@@ -268,6 +268,18 @@ final class AppAdminProvidersTest extends TestCase
 
         $this->assertStatus(403, $this->post('/admin/providers', $this->createInput(['provider_key' => 'susp2'])));
         self::assertSame($before, (int) $this->db->fetchValue('SELECT COUNT(*) FROM identity_providers', []));
+
+        // Test connection is a mutation too, and the one the first pass walked past:
+        // it takes no User, so gating "every method with a User" missed it. It fires
+        // outbound discovery and JWKS fetches from the forum's own address and then
+        // writes cacheDiscovery / jwks->refresh / updateHealth.
+        $healthBefore = $this->providers()->find($id)['health_status'] ?? null;
+        $this->assertStatus(403, $this->post('/admin/providers/' . $id . '/test', ['current_password' => 'password123']));
+        self::assertSame(
+            $healthBefore,
+            $this->providers()->find($id)['health_status'] ?? null,
+            'a refused probe must not have written provider health',
+        );
     }
     public function test_enable_requires_reauth_and_audits(): void
     {

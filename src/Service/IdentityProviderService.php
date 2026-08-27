@@ -177,10 +177,18 @@ final class IdentityProviderService
      * env-configured reference data, and probing one would fire live fetches
      * and overwrite its health/caches.
      *
+     * It IS a console mutation, which is why it takes the actor and gates on state
+     * like the other two: it fires outbound discovery and JWKS fetches from the
+     * forum's own address and then writes `cacheDiscovery`, `jwks->refresh` and
+     * `updateHealth`. Reading the console does not do any of that; pressing Test
+     * does. Caught in review of the first pass, which gated the two methods that
+     * took a User and so walked straight past the one that did not.
+     *
      * @return array{status:string, name:string, detail:string}
      */
-    public function healthProbe(int $id): array
+    public function healthProbe(User $admin, int $id): array
     {
+        $this->assertCanOperate($admin);
         $row = $this->providers->find($id);
         if ($row === null) {
             throw new NotFoundException('Provider not found.');
