@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-27 — Stale preview bundle retired
+
+- Removed `_ds_bundle.js`: its embedded source hashes and compiled components had drifted from the checked-in JSX, and this repository has no compiler capable of reproducing it.
+- Production behavior is unchanged because the PHP application never loaded the preview namespace.
+- `README.md`, `SKILL.md`, and `PREVIEW_STATUS.md` now distinguish executable static HTML/CSS references from React authoring previews that require the upstream compiler.
+
 ## 2026-08-03 — Decision: one owner per route, and boards are not "rooms"
 Four templates and a kit all render a topbar, a rail and a list, so it had stopped
 being obvious what any of them was *for*. Settled by route, against

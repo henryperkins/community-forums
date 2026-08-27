@@ -8,8 +8,12 @@ export interface MonogramProps extends React.HTMLAttributes<HTMLElement> {
   name?: string;
   /** Seed for the colour (defaults to name). Same seed → same colour. */
   username?: string;
-  /** 'sm' 28px · 'md' 36px (default) · 'lg' 44px · 'xl' 64px. */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  /**
+   * Named rung — 'sm' 28px · 'md' 36px (default) · 'lg' 44px · 'xl' 64px — or a
+   * number for an exact pixel box (ink scales with it). The app uses `32` in the
+   * board topic row, where density is pinned at 32px/.6rem.
+   */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | number;
   /** Add the gold "gilt" ring — for OP, accepted answer, profile, top-3. */
   gilt?: boolean;
   /** Presence dot: true/'online' (leaf), 'away' (amber), 'offline' (grey). */

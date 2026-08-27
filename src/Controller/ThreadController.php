@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Core\FeatureFlags;
 use App\Core\Request;
 use App\Core\Response;
+use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
@@ -53,7 +54,12 @@ final class ThreadController extends Controller
         $expectedSlug = (string) $thread['slug'];
         $givenSlug = $params['slug'] ?? null;
         if ($givenSlug !== $expectedSlug) {
-            $query = $request->query('page') !== null ? '?page=' . (int) $request->int('page', 1) : '';
+            $query = '';
+            if ($request->query('page') !== null) {
+                $query = '?page=' . max(1, $request->int('page', 1));
+            } elseif ((string) $request->query('unread', '') === '1') {
+                $query = '?unread=1';
+            }
             return $this->redirect('/t/' . $id . '-' . $expectedSlug . $query, 301);
         }
 
@@ -91,13 +97,44 @@ final class ThreadController extends Controller
 
         $total = $postRepo->countByThread((int) $thread['id'], $includeDeleted);
         $pages = max(1, (int) ceil($total / $perPage));
-        // When re-rendering for a failed inline edit and the caller didn't pin an
-        // explicit ?page, open the page that actually contains the edited post so
-        // its re-opened edit form (with the rejected text) is on screen.
+        // Which page opens, in precedence order. Page-less topic permalinks always
+        // mean page 1; resuming at the first unread reply requires explicit
+        // ?unread=1 intent. Fragments never reach PHP, so a legacy /t/...#pID must
+        // remain a reliable page-one permalink.
+        //
+        //  1. render_page         a failed POST re-renders its originating page
+        //  2. ?page=N            the reader asked for it
+        //  3. edit_post_id       a failed inline edit re-renders the page that holds
+        //                        the edited post, so its re-opened form (with the
+        //                        rejected text) is on screen
+        //  4. page 1
+        //
+        // Resolve the unread location before markRead() even for an explicit page:
+        // it supplies the visible boundary marker as well as the redirect target.
         $editPostId = (int) ($extra['edit_post_id'] ?? 0);
-        $page = $editPostId > 0 && $request->query('page') === null
-            ? min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage, $includeDeleted)))
-            : min($pages, max(1, $request->int('page', 1)));
+        $renderPage = (int) ($extra['render_page'] ?? 0);
+        $firstUnread = $this->firstUnreadLocation($thread, $user, $postRepo, $perPage, $includeDeleted);
+        if (
+            $request->method() === 'GET'
+            && (string) $request->query('unread', '') === '1'
+            && $request->query('page') === null
+            && $firstUnread !== null
+        ) {
+            return $this->redirect(
+                '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
+                . '?page=' . $firstUnread['page'] . '#p' . $firstUnread['post_id'],
+            );
+        }
+
+        if ($renderPage > 0) {
+            $page = min($pages, max(1, $renderPage));
+        } elseif ($request->query('page') !== null) {
+            $page = min($pages, max(1, $request->int('page', 1)));
+        } elseif ($editPostId > 0) {
+            $page = min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage, $includeDeleted)));
+        } else {
+            $page = 1;
+        }
 
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage, $includeDeleted);
         $titleService = $this->container->get(TitleService::class);
@@ -111,6 +148,8 @@ final class ThreadController extends Controller
                     isset($post['author_title']) ? (string) $post['author_title'] : null,
                     (int) ($post['author_reputation'] ?? 0),
                 );
+            $post['is_first_unread'] = $firstUnread !== null
+                && (int) $post['id'] === $firstUnread['post_id'];
         }
         unset($post);
 
@@ -193,8 +232,16 @@ final class ThreadController extends Controller
                 $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
                 $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
             }
-            if (($engagement || $automatedContext) && $postIds !== []) {
-                $tuRepo->markRead($user->id(), (int) $thread['id'], max($postIds));
+            if (($engagement || $automatedContext) && $request->method() === 'GET' && $posts !== []) {
+                $livePosts = array_values(array_filter(
+                    $posts,
+                    static fn (array $post): bool => (int) ($post['is_deleted'] ?? 0) === 0
+                        && (int) ($post['is_pending'] ?? 0) === 0,
+                ));
+                if ($livePosts !== []) {
+                    $lastVisiblePost = $livePosts[array_key_last($livePosts)];
+                    $tuRepo->markRead($user->id(), (int) $thread['id'], (int) $lastVisiblePost['id']);
+                }
             }
         }
 
@@ -504,5 +551,37 @@ final class ThreadController extends Controller
     private function loadReadableThread(int $id): array
     {
         return $this->container->get(ThreadReadService::class)->loadForUser($this->currentUser(), $id);
+    }
+
+    /**
+     * Resolve the first unread post and its rendered page without mutating state.
+     *
+     * Gated on engagement/automated_context because those are the flags under which
+     * ThreadUserRepository::markRead() maintains the position at all; with both
+     * dark the stored value is whatever it was when they were last on, and steering
+     * from it would drop a reader mid-topic for no reason they could see.
+     *
+     * @param array<string,mixed> $thread
+     */
+    private function firstUnreadLocation(
+        array $thread,
+        ?User $user,
+        PostRepository $postRepo,
+        int $perPage,
+        bool $includeDeleted,
+    ): ?array {
+        if ($user === null) {
+            return null;
+        }
+        $featureFlags = $this->container->get(FeatureFlags::class);
+        if (!$featureFlags->enabled('engagement') && !$featureFlags->enabled('automated_context')) {
+            return null;
+        }
+        return $postRepo->firstUnreadLocationForUser(
+            $user->id(),
+            (int) $thread['id'],
+            $perPage,
+            $includeDeleted,
+        );
     }
 }

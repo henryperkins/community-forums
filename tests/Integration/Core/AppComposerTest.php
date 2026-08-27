@@ -7,6 +7,7 @@ namespace Tests\Integration\Core;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
 use App\Repository\SettingRepository;
+use App\Repository\UserPreferenceRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -339,6 +340,46 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString($tooLong, $response->body(), 'the rejected reply body remains in the composer');
         self::assertStringContainsString('class="composer composer-shell reply-composer thread-composer-card is-expanded"', $response->body());
         self::assertStringContainsString('data-thread-composer', $response->body());
+    }
+
+    public function test_failed_reply_preserves_page_without_advancing_read_state(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'reply-page-rerender']);
+        $author = $this->makeUser(['username' => 'replypageauthor']);
+        $viewer = $this->makeUser(['username' => 'replypageviewer']);
+        (new UserPreferenceRepository($this->db))->merge((int) $viewer['id'], ['posts_per_page' => 10]);
+        $thread = $this->makeThread($board, $author, 'Paged reply validation', 'Opening body.');
+
+        $replyIds = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $replyIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                (int) $thread['thread_id'],
+                ['body' => 'Reply page row ' . $i . '.'],
+            );
+        }
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], (int) $thread['thread_id'], $replyIds[8]],
+        );
+        $this->actingAs($viewer);
+
+        $tooLong = str_repeat('p', 20001);
+        $response = $this->post('/t/' . (int) $thread['thread_id'] . '/reply', [
+            'body' => $tooLong,
+            'page' => '2',
+            'idempotency_key' => bin2hex(random_bytes(16)),
+        ]);
+
+        $this->assertStatus(422, $response);
+        self::assertStringContainsString($tooLong, $response->body());
+        self::assertStringContainsString('id="p' . $replyIds[9] . '"', $response->body());
+        self::assertStringNotContainsString('id="p' . $replyIds[0] . '"', $response->body());
+        self::assertStringContainsString('name="page" value="2"', $response->body());
+        self::assertSame($replyIds[8], (int) $this->db->fetchValue(
+            'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+            [(int) $viewer['id'], (int) $thread['thread_id']],
+        ));
     }
 
     /**

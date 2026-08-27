@@ -136,12 +136,16 @@
     --warning: var(--amber);   --surface-review:  var(--gold-100);  --on-review:  #7E5F22;
     --pending: var(--ink-400); --surface-pending: var(--parchment-200); --on-pending: var(--ink-500);
     --info:    var(--river-500); --surface-info:  var(--river-100);  --on-info:    var(--river-700);
-    /* Staff is an authority mark rather than a status, but it takes the ledger's
-       shape so it flips register with everything else. The ink is one step darker
-       than --on-review so the badge never reads as the Needs answer chip. */
+    /* Staff — the one identity chip in the ledger. A semantic pair, never the
+       numbered ramp: gold-700 ink on gold-100 measures 3.55:1 (AA wants 4.5),
+       and the twilight block remaps only semantic tokens, so a numbered pairing
+       also renders a light chip on a dark page. This pair clears AA in both. */
     --surface-staff: var(--gold-100); --on-staff: var(--gold-800);
     --star:    var(--gold-600); /* the esteem star                              */
     --artifact-link: var(--river-500);
+    /* The scrim behind a drawer or modal. One value, so every overlay in the
+       system dims the page by the same amount. */
+    --scrim:         rgba(22,29,36,.42);
     --presence:      var(--leaf); /* the "online" leaf dot                      */
 
     /* ── Legacy aliases (kept so older rules recolour with the system) ────── */
@@ -199,6 +203,7 @@
     --info:    var(--river-400);  --surface-info:    rgba(63,110,137,.20); --on-info:    var(--river-200);
     --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --star:    var(--gold-400);
+    --scrim:   rgba(9,13,17,.58);
     --presence: var(--green-400);
     --focus-ring: rgba(210,176,98,.75);
 }
@@ -245,9 +250,14 @@
                                      which is the SEMANTIC INK COLOR in colors.css
                                      and production app.css — never a size) */
     --text-sm:         0.95rem;
+    --text-fine:       0.86rem;   /* small prose: signatures, notes,
+                                     helper lines under a control      */
     --text-meta:       0.78rem;   /* Marcellus meta lines             */
     --text-eyebrow:    0.72rem;   /* tracked caps eyebrow             */
-    --text-chip:       0.62rem;   /* status chip caps                 */
+    --text-chip:       0.7rem;    /* status chip caps — the scale floor.
+                                     Tracked caps below ~11px stop being read
+                                     and start being texture, so nothing in the
+                                     system is allowed to set type smaller. */
 }
 
 /* ── Base element styles ─────────────────────────────────────────────────── */
@@ -344,10 +354,15 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     /* ── Focus — a gold halo over a high-contrast ring. ─────────────────── */
     --focus-ring: rgba(194,154,68,.7);
 
-    /* ── Layout rails ────────────────────────────────────────────────────── */
+    /* ── Layout rails ─────────────────────────────────────────────────────
+       The app has one global shell (.app-shell = --sidebar-w + 1fr) and per-route
+       nested shells inside .main. --list-w is the inbox queue; --pane-w is the
+       third column (DM details rail). See guidelines/app-shell.card.html. */
     --maxw: 1280px;
     --sidebar-w: 272px;
     --list-w: 410px;
+    --pane-w: 320px;
+    --pane-min: 260px;
     --topbar-h: 62px;
 }
 
@@ -433,6 +448,11 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .badge-staff  { color: var(--on-staff); background: var(--surface-staff); border-color: var(--gold-200); }
 .badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
 .badge-solved { color: var(--on-done); background: var(--surface-raised); border-color: var(--green-200); }
+/* The failure register. The status ledger had commend, staff, done and review
+   but no refused — a gap the link-preview queue exposed, where "blocked by the
+   allowlist" and "fetch failed" are the two states an operator most needs to
+   pick out of a table. */
+.badge-blocked { color: var(--danger); background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-color: color-mix(in srgb, var(--danger) 28%, transparent); }
 /* Status chips */
 .chip-solved        { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
 .chip-needs         { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
@@ -510,6 +530,10 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .reaction-on .reaction-glyph { color: var(--gold-700); }
 .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
 .reaction-n::before { content: "· "; opacity: .7; }
+/* The "·" separates the NAME from the count. In the raw-emoji form there is no
+   name, so the separator has nothing to separate and reads as a stray dot
+   between the glyph and the number — "👍 · 4". Dropped with the label. */
+.reaction-bare .reaction-n::before { content: none; }
 .reaction-on .reaction-n { color: var(--gold-700); }
 
 /* ── Inputs / textarea — serif, gold focus halo ───────────────────────────── */
@@ -574,7 +598,36 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
         linear-gradient(var(--gold-500), var(--gold-500));
     background-repeat: no-repeat;
 }
+/* Invalid — client-side (:user-invalid, after a real edit and blur) and
+   server-rejected (.is-invalid, set from aria-invalid). These frames set
+   `border: 0` and draw their edge as background layers, so the border-color
+   rule the field guides suggest is invisible here: the eight layers have to be
+   restated in danger ink, and the inset depth restated with them or a focused
+   errored well silently flattens. Colour is never the only signal — the label
+   restates the fault in words. */
+.input-engraved:user-invalid, .textarea-engraved:user-invalid,
+.input-engraved.is-invalid, .textarea-engraved.is-invalid,
+.input-engraved[aria-invalid="true"], .textarea-engraved[aria-invalid="true"] {
+    background-image:
+        linear-gradient(135deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(225deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(45deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(315deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
+        linear-gradient(var(--danger), var(--danger)),
+        linear-gradient(var(--danger), var(--danger)),
+        linear-gradient(var(--danger), var(--danger)),
+        linear-gradient(var(--danger), var(--danger));
+    background-repeat: no-repeat;
+    box-shadow: var(--shadow-inset);
+}
 .field { display: block; margin-bottom: 14px; }
+/* One grid cell holds an errored control and its message. A bare .field-error
+   sibling in a .field-grid claims a cell of its own and shunts the next field
+   sideways the moment the server rejects one value. */
+.field-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field-cell > .field-error { margin: 0; }
+.field > .field-hint,
+.dm-form > .field-hint { display: block; font-size: .82rem; line-height: 1.45; color: var(--text-muted); }
 .field > .field-label { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .82rem; color: var(--text-muted); margin-bottom: 5px; }
 
 /* ── Switch (toggle) — a set-gem knob on a beveled parchment track ───────────────────────── */
@@ -641,9 +694,6 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* Checked & focus thicken and gild the same closed outline. An outer focus ring
    is impossible here — clip-path cuts everything outside the octagon — so focus
    is carried by the 2px accent rule itself. */
-/* Checked and focus thicken and gild the same closed outline. An outer focus
-   ring is impossible here — clip-path cuts everything outside the octagon — so
-   focus is carried by the 2px accent rule itself. */
 .choice-card:has(input:checked) {
     background-color: var(--brand-subtle);
     background-image:
@@ -863,10 +913,10 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .admin-bar-mode { margin-left: auto; flex: none; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
 /* Overflow stays visible on purpose: below ~900px the tier scrolls, and a thin
    scrollbar is the only honest signal that Settings is off-edge. */
-.admin-tier { display: flex; gap: 4px; padding: 0 26px 9px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border-hair) transparent; }
+.admin-tier { display: flex; gap: 4px; padding: 0 26px 9px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border-soft) transparent; }
 .admin-tier::-webkit-scrollbar { height: 4px; }
 .admin-tier::-webkit-scrollbar-track { background: transparent; }
-.admin-tier::-webkit-scrollbar-thumb { background: var(--border-hair); border-radius: 999px; }
+.admin-tier::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 999px; }
 .admin-tier-item { flex: none; white-space: nowrap; padding: 6px 10px; border: 0; border-radius: var(--radius-md); background: transparent; font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none; cursor: pointer; }
 .admin-tier-item:hover { color: var(--text-strong); background: var(--surface-sunken); }
 .admin-tier-item.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); font-weight: var(--weight-medium); cursor: default; }
@@ -1081,6 +1131,8 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .composer-box .composer-input {
     display: block;
     min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
     min-height: 82px;
     max-height: min(42dvh, 360px);
     padding: 10px 12px;
@@ -1264,7 +1316,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .composer-attach-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
 .composer-emoji-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
 .composer-identity { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: min(250px, 32vw); color: var(--text-muted); font-size: .8rem; }
-.composer-identity .monogram { width: 24px; height: 24px; flex: 0 0 24px; font-size: .58rem; }
+.composer-identity .monogram { width: 24px; height: 24px; flex: 0 0 24px; font-size: var(--text-chip); }
 .composer-identity-copy { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .composer-anonymous-chip { display: inline-flex; align-items: center; gap: 5px; min-width: 0; padding: 3px 7px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill); font-size: .78rem; }
 .composer-anonymous-chip input { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); }
@@ -1499,14 +1551,25 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     border-radius: var(--radius-lg); padding: 14px 16px; color: var(--text-body);
 }
 .joinbar > span { min-width: 0; }
+/* The neutral variants (locked, inactive, no permission) lead with a glyph and
+   carry no call to action — the bar is stating a fact, not inviting an act. */
+.joinbar-icon { flex: 0 0 auto; display: inline-flex; color: var(--text-faint); }
+.joinbar-icon svg { display: block; }
 .joinbar em { font-style: italic; color: var(--text-strong); }
 .joinbar .btn { flex: 0 0 auto; }
 .joinbar-archived { background: var(--surface-sunken); border-color: var(--border-hair); }
 
 /* ── Participant avatar stack ─────────────────────────────────────────────── */
+/* A participant is a person, so the avatar is a link wherever there is somewhere
+   to send the reader. The gilt ring marks whoever opened the topic. */
+.participant-stack a { display: inline-flex; border-radius: 50%; text-decoration: none; }
+.participant-stack a:hover { outline: 2px solid var(--green-200); outline-offset: 1px; }
+.participant-stack a.is-opener { box-shadow: var(--gilt); }
+.participant-stack a.is-opener:hover { outline-color: var(--gold-500); }
 .participant-stack { display: inline-flex; align-items: center; }
-.participant-stack .avatar-wrap, .participant-stack .monogram { margin-left: -8px; box-shadow: 0 0 0 2px var(--surface-page); border-radius: 50%; }
+.participant-stack > * { margin-left: -8px; }
 .participant-stack > :first-child { margin-left: 0; }
+.participant-stack .avatar-wrap, .participant-stack .monogram { box-shadow: 0 0 0 2px var(--surface-page); border-radius: 50%; }
 .participant-more { margin-left: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-muted); }
 
 /* ── Presence widget ("Online") ───────────────────────────────────────────── */
@@ -1573,5 +1636,63 @@ a.presence-person:hover { background: var(--surface-sunken); color: var(--text-s
 .hash { color: var(--gold-ink); font-weight: var(--weight-medium); }
 .muted { color: var(--text-muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ── Wide-table scroll affordance ─────────────────────────────────────────────
+   A table too wide for a phone stays a table. The cue is server-rendered, so it
+   is useful with JavaScript off; enhancement may only refine it (drop it once
+   the region is at its end, or never overflows) and must never be the thing
+   that makes the data reachable. The fade is decoration over a real scroll
+   region, so it never eats a pointer. */
+.table-shell { position: relative; min-width: 0; }
+.table-scroll { overflow-x: auto; }
+.table-scroll-cue { display: none; }
+.table-shell::after { content: none; }
+@media (max-width: 860px) {
+    .table-scroll-cue {
+        display: flex; align-items: center; gap: 6px; margin: 0 0 7px;
+        font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; color: var(--text-faint);
+    }
+    .table-shell::after {
+        content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 34px;
+        pointer-events: none; border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        background: linear-gradient(to right, transparent, var(--surface-raised));
+        transition: opacity var(--dur-fast) var(--ease-calm);
+    }
+}
+.table-shell.is-at-end::after, .table-shell.is-not-overflowing::after { opacity: 0; }
+.table-shell.is-not-overflowing .table-scroll-cue { display: none; }
+
+/* ── Link preview — an unfurled URL under a post ──────────────────────────────
+   Server-fetched, allowlisted, per-board opt-in, and deliberately imageless:
+   painting the captured image would make every reader's browser fetch a
+   third-party asset on page load, which is the exact disclosure the
+   server-side fetch exists to avoid. So the card is typographic — host as
+   eyebrow, title, one paragraph. */
+.link-preview-cards { display: flex; flex-direction: column; gap: 8px; margin: 13px 0 0; }
+.link-preview {
+    display: block; padding: 11px 14px 12px; text-decoration: none; color: inherit;
+    background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-md);
+    transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+}
+a.link-preview:hover { border-color: var(--gold-200); background: var(--surface-raised); }
+.link-preview-host { display: flex; align-items: center; gap: 6px; min-width: 0; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .02em; color: var(--text-faint); }
+.link-preview-host span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-preview-host svg { flex: none; }
+.link-preview-title { display: block; margin: 5px 0 0; font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1rem; line-height: 1.3; color: var(--text-strong); }
+a.link-preview:hover .link-preview-title { color: var(--accent); }
+.link-preview-desc { display: block; margin: 4px 0 0; font-size: .87rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty; }
+/* The author has the last word on their own post, so the control lives on the
+   card rather than in a menu. Removal is sticky — it outlives an edit — which
+   makes Restore the only way back and puts it in the same place. */
+.link-preview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
+.link-preview-action { padding: 0; border: 0; background: transparent; }
+.link-preview-action .linkbtn { font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer; }
+.link-preview-action .linkbtn:hover { color: var(--accent); }
+.link-preview-action .linkbtn.is-danger:hover { color: var(--danger); }
+/* Removed. Rendered only for viewers who could act on it, so no one else can
+   tell a card was ever there. */
+.link-preview.is-removed { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: transparent; border-style: dashed; }
+.link-preview-note { flex: 1 1 12ch; min-width: 0; font-size: .84rem; line-height: 1.45; color: var(--text-muted); }
+.link-preview-note code { font-family: var(--font-mono); font-size: .78rem; overflow-wrap: anywhere; }
 
 }

@@ -19,6 +19,15 @@ function monogramInitials(label) {
 
 const SIZE_CLASS = { sm: 'monogram-sm', md: '', lg: 'monogram-lg', xl: 'monogram-xl' };
 
+// The named scale has four rungs (28/36/44/64). A numeric `size` asks for an
+// exact pixel box instead — the app does this in the board topic row, which
+// pins 32px/.6rem (app.css `.board-view .thread-row-board > .monogram`). Ink
+// scales with the box at the app's own 0.3 ratio.
+function pixelSize(size) {
+  const n = typeof size === 'number' ? size : (/^\d+$/.test(String(size)) ? Number(size) : NaN);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 /**
  * Monogram — the brand avatar. A tinted ground + dark ink initials, with the
  * colour chosen deterministically from `username`. Add `gilt` for "precious"
@@ -33,9 +42,14 @@ export function Monogram({
   presence,             // true | 'online' | 'away' | 'offline'
   src,
   className = '',
+  style,
   ...rest
 }) {
-  const sizeCls = SIZE_CLASS[size] || '';
+  const px = pixelSize(size);
+  const sizeCls = px === null ? (SIZE_CLASS[size] || '') : '';
+  const sizeStyle = px === null ? style : {
+    width: px + 'px', height: px + 'px', fontSize: (px * 0.3) + 'px', flexShrink: 0, ...style,
+  };
   const seed = username || name;
 
   const avatar = src ? (
@@ -44,12 +58,14 @@ export function Monogram({
       src={src}
       alt=""
       aria-hidden="true"
+      style={sizeStyle}
       {...rest}
     />
   ) : (
     <span
       className={['monogram', monogramClass(seed), sizeCls, gilt ? 'monogram-gilt' : '', className].filter(Boolean).join(' ')}
       aria-hidden="true"
+      style={sizeStyle}
       {...rest}
     >
       {monogramInitials(name || username)}

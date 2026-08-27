@@ -26,7 +26,53 @@ echo json_encode($previous);
   return JSON.parse(previous) as boolean | null;
 }
 
-async function shot(page: Page, info: TestInfo, name: '80-thread-study' | '81-thread-tools'): Promise<void> {
+function purgeEvidenceRepliesWithText(text: string): number {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$body = (string) ($argv[1] ?? '');
+$rows = $db->fetchAll(
+    'SELECT p.id FROM posts p JOIN users u ON u.id = p.user_id WHERE p.is_op = 0 AND p.body = ? AND u.email = ?',
+    [$body, 'alice@retro.test'],
+);
+$db->transaction(function () use ($db, $rows): void {
+    foreach ($rows as $row) {
+        $id = (int) $row['id'];
+        $db->run('DELETE FROM notifications WHERE post_id = ?', [$id]);
+        $db->run('DELETE FROM email_deliveries WHERE idempotency_key LIKE ?', [(string) $id . ':%']);
+        $db->run("DELETE FROM submission_idempotency WHERE result_type = 'post' AND result_id = ?", [$id]);
+        $db->run("DELETE FROM content_references WHERE source_type = 'post' AND source_id = ?", [$id]);
+        $db->run("DELETE FROM link_previews WHERE source_type = 'post' AND source_id = ?", [$id]);
+        $db->run('DELETE FROM attachments WHERE post_id = ?', [$id]);
+        $db->run('UPDATE posts SET parent_post_id = NULL WHERE parent_post_id = ?', [$id]);
+        $db->run('UPDATE threads SET accepted_answer_post_id = NULL WHERE accepted_answer_post_id = ?', [$id]);
+        $db->run('UPDATE thread_user SET last_read_post_id = NULL WHERE last_read_post_id = ?', [$id]);
+        $db->run('DELETE FROM posts WHERE id = ?', [$id]);
+    }
+});
+echo (string) count($rows);
+`;
+  const value = execFileSync('php', ['-r', php, text], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  }).toString().trim();
+  const count = Number(value);
+  if (!Number.isInteger(count) || count < 0) {
+    throw new Error(`Unexpected evidence-reply purge result: ${JSON.stringify(value)}`);
+  }
+  return count;
+}
+
+type ShotName =
+  | '80-thread-study'
+  | '81-thread-tools'
+  | '89-thread-standing-chips'
+  | '90-thread-star-pill'
+  | '91-thread-reaction-chip';
+
+async function shot(page: Page, info: TestInfo, name: ShotName): Promise<void> {
   await expect(page.locator('.error-card')).toHaveCount(0);
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
@@ -80,12 +126,69 @@ async function openManagement(page: Page): Promise<void> {
   }
 }
 
+async function tabTo(page: Page, target: Locator, limit = 160): Promise<number> {
+  await expect(target).toHaveCount(1);
+  for (let presses = 0; presses <= limit; presses += 1) {
+    if (await target.evaluate((element) => document.activeElement === element)) {
+      return presses;
+    }
+    await page.keyboard.press('Tab');
+  }
+  throw new Error(`Tab order did not reach ${await target.evaluate((element) => element.outerHTML.slice(0, 160))}`);
+}
+
+async function setReactionState(post: Locator, emoji: string, enabled: boolean): Promise<void> {
+  const active = post.locator('.reactions .reaction-on').filter({ hasText: emoji }).first();
+  const isEnabled = await active.count() > 0;
+  if (isEnabled === enabled) return;
+  if (isEnabled) {
+    await active.click();
+    return;
+  }
+
+  await post.hover();
+  const picker = post.locator('[data-post-toolbar] .reaction-add');
+  if (!(await picker.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await picker.locator(':scope > summary').click();
+  }
+  const forms = picker.locator('form');
+  for (let index = 0; index < await forms.count(); index += 1) {
+    const form = forms.nth(index);
+    if (await form.locator('input[name="emoji"]').inputValue() === emoji) {
+      await form.locator('button.reaction').click();
+      return;
+    }
+  }
+  throw new Error(`Reaction picker did not offer ${JSON.stringify(emoji)}`);
+}
+
+async function deleteOwnedRepliesWithText(page: Page, text: string): Promise<void> {
+  for (let attempts = 0; attempts < 20; attempts += 1) {
+    const matches = page.locator('article[data-post]').filter({
+      has: page.locator('.post-body').filter({ hasText: text }),
+    });
+    if (await matches.count() === 0) {
+      purgeEvidenceRepliesWithText(text);
+      return;
+    }
+
+    const post = matches.first();
+    const menu = post.locator('[data-post-menu]');
+    if (!(await menu.evaluate((element) => (element as HTMLDetailsElement).open))) {
+      await menu.locator(':scope > summary').click();
+    }
+    await menu.locator('form[action$="/delete"] button').click();
+    await expect(page.locator('[data-thread-study]')).toBeVisible();
+  }
+  throw new Error(`Could not clean every browser-evidence reply matching ${JSON.stringify(text)}`);
+}
+
 test('desktop Topic tools accords, traps focus, and restores each opener', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'desktop drawer contract');
   await login(page);
   await openSeedTopic(page);
 
-  const trigger = page.getByRole('button', { name: 'Topic tools' });
+  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
   const tools = page.locator('[data-topic-tools]');
   const closeTools = page.getByRole('button', { name: 'Close Topic tools' });
 
@@ -123,7 +226,7 @@ test('split or merge closes by every dismissal path and restores focus', async (
   await login(page);
   await openSeedTopic(page);
 
-  const topicTrigger = page.getByRole('button', { name: 'Topic tools' });
+  const topicTrigger = page.getByRole('button', { name: 'Topic tools', exact: true });
   const dialog = page.locator('.thread-restructure-dialog');
   const closeRestructure = dialog.getByRole('button', { name: 'Close split or merge' });
 
@@ -320,7 +423,7 @@ test('Inbox-inserted topics get idempotent drawer, quote, and keyboard enhanceme
     const reading = page.locator('[data-inbox-reading]');
     const root = reading.locator('[data-thread-study]');
     await expect(root).toHaveAttribute('data-thread-enhanced', '1');
-    await reading.getByRole('button', { name: 'Topic tools' }).click();
+    await reading.getByRole('button', { name: 'Topic tools', exact: true }).click();
     await expect(reading.locator('[data-topic-tools]')).toBeVisible();
     await reading.getByRole('button', { name: 'Close Topic tools' }).click();
 
@@ -329,8 +432,8 @@ test('Inbox-inserted topics get idempotent drawer, quote, and keyboard enhanceme
     await shortcutRow.locator('a.thread-title').click();
     await expect(root).toHaveAttribute('data-thread-enhanced', '1');
     await expect(reading.locator('[data-topic-tools]')).toHaveCount(1);
-    await expect(reading.getByRole('button', { name: 'Topic tools' })).toHaveCount(1);
-    await reading.getByRole('button', { name: 'Topic tools' }).click();
+    await expect(reading.getByRole('button', { name: 'Topic tools', exact: true })).toHaveCount(1);
+    await reading.getByRole('button', { name: 'Topic tools', exact: true }).click();
     await expect(reading.locator('[data-topic-tools]')).toBeVisible();
     await reading.getByRole('button', { name: 'Close Topic tools' }).click();
 
@@ -354,10 +457,13 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
   await openSeedTopic(page);
 
   const thread = page.locator('[data-thread-study]');
+  await expect(thread).toHaveCSS('width', info.project.name === 'desktop' ? '860px' : '362px');
   const box = await thread.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.width).toBeLessThanOrEqual(860);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await expect(thread.locator('.thread-facts')).toHaveCSS('flex-wrap', info.project.name === 'desktop' ? 'nowrap' : 'wrap');
+  await expect(thread.locator('.thread-facts-identity')).toHaveCSS('flex-wrap', info.project.name === 'desktop' ? 'nowrap' : 'wrap');
   await expect(thread.locator('#reply textarea.composer-input')).toHaveAttribute('data-rb-enhanced', '1');
   await expect(thread.locator('#reply .composer-toolbar')).toHaveCount(1);
   await expect(thread.locator('#reply .composer-attach-toggle')).toHaveCount(1);
@@ -367,7 +473,7 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
     await page.setViewportSize({ width: 1280, height: 800 });
   }
 
-  await page.getByRole('button', { name: 'Topic tools' }).click();
+  await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
   const tools = page.locator('[data-topic-tools]');
   await tools.evaluate(async (element) => {
     await Promise.all(element.getAnimations().map((animation) => animation.finished));
@@ -395,9 +501,10 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
     expect(closeStyles.borderWidth).toBe('0px');
     expect(closeStyles.borderRadius).toBe('999px');
     expect(closeStyles.background).toBe('rgba(0, 0, 0, 0)');
-    const viewport = page.viewportSize();
-    expect(viewport).not.toBeNull();
-    expect(Math.abs((toolsBox!.x + toolsBox!.width) - viewport!.width)).toBeLessThanOrEqual(2);
+    const layoutViewportRight = await page.evaluate(() => document.body.getBoundingClientRect().right);
+    expect(
+      Math.abs((toolsBox!.x + toolsBox!.width) - layoutViewportRight),
+    ).toBeLessThanOrEqual(2);
   } else {
     expect(toolsBox!.width).toBeCloseTo(390, 0);
     expect(toolsBox!.height).toBeLessThanOrEqual(844 * 0.86 + 1);
@@ -499,7 +606,7 @@ test('reduced motion removes Study animations', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await login(page);
   await openSeedTopic(page);
-  await page.getByRole('button', { name: 'Topic tools' }).click();
+  await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
   const duration = await page.locator('[data-topic-tools]').evaluate((element) => getComputedStyle(element).animationDuration);
   expect(duration).toBe('0s');
 });
@@ -540,7 +647,7 @@ test('light and dark Study surfaces retain readable semantic colors', async ({ p
     });
     expect(semanticContrast.title).toBeGreaterThanOrEqual(4.5);
     expect(semanticContrast.chip).toBeGreaterThanOrEqual(4.5);
-    const toolsContrast = await page.getByRole('button', { name: 'Topic tools' }).evaluate((element) => {
+    const toolsContrast = await page.getByRole('button', { name: 'Topic tools', exact: true }).evaluate((element) => {
       const style = getComputedStyle(element);
       const channels = (value: string) => (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
       const luminance = (value: string) => {
@@ -620,4 +727,261 @@ test('the staff badge flips register and clears AA in both', async ({ page }) =>
   // flipping: the chip stays light-register cream sitting on a twilight page.
   // The ratio alone cannot catch that, so assert the ground actually changes.
   expect(measured.dark.ground, JSON.stringify(measured)).not.toBe(measured.light.ground);
+});
+/**
+ * B1/B2 from the round-2 thread-view handoff. The standing chips used to be
+ * children of the <h1>, so the page heading announced itself as "Pinned Locked
+ * Solved Where should…", and the solved chip alone carried a check glyph while
+ * the Topic tools drawer stated the identical state as a bare word.
+ */
+test('standing chips sit above the title and state status as a word alone', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one pointer type is enough for a markup contract');
+  await login(page);
+  await openSeedTopic(page);
+
+  const heading = page.getByRole('heading', { level: 1 });
+  const title = (await heading.textContent())?.trim() ?? '';
+  expect(title.length).toBeGreaterThan(0);
+
+  const setStatus = async (value: string): Promise<void> => {
+    await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
+    const tools = page.locator('[data-topic-tools]');
+    await tools.locator('[data-topic-tools-section="standing"] > summary').click();
+    await tools.locator('select[name="status"]').selectOption(value);
+    await tools.getByRole('button', { name: 'Update status' }).click();
+    await expect(page.locator('[data-thread-study]')).toBeVisible();
+  };
+
+  try {
+    await setStatus('solved');
+
+    const chip = page.locator('.thread-status-chip');
+    await expect(chip).toHaveCount(1);
+    // The word alone. Not the check glyph plus the word — the drawer states the
+    // same state glyph-less, and two labels for one status is the defect.
+    await expect(chip).toHaveText('Solved');
+    await expect(chip).toHaveAttribute('data-thread-status', 'solved');
+
+    // The chip is a sibling ABOVE the heading, never a descendant of it, so the
+    // heading's accessible name is the topic title and nothing else.
+    await expect(page.locator('.thread-study-chips')).toHaveCount(1);
+    expect(await chip.evaluate((el) => el.closest('h1') !== null)).toBe(false);
+    expect(await chip.evaluate((el) => {
+      const row = el.closest('.thread-study-chips');
+      const h1 = document.querySelector('.thread-study-title');
+      return !!row && !!h1 && row.nextElementSibling === h1;
+    })).toBe(true);
+    await expect(heading).toHaveAccessibleName(title);
+    expect(title).not.toContain('Solved');
+
+    await shot(page, info, '89-thread-standing-chips');
+  } finally {
+    await setStatus('open');
+  }
+});
+
+/**
+ * B3. One esteem glyph in the system — the four-point commend star that already
+ * marks regard and the accepted answer — and a facts row that does not break to
+ * a second line when "Star" grows into "Starred".
+ */
+test('the star pill uses the commend star and never wraps the facts row', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the wrap this guards against is a desktop-width failure');
+  await login(page);
+  await openSeedTopic(page);
+
+  const star = page.locator('.star-btn');
+  await expect(star).toHaveCount(1);
+  // The SVG is decorative, so the accessible name is exactly the label.
+  await expect(star).toHaveAccessibleName(/^Star(red)?$/);
+  await expect(star.locator('svg.icon-commend-star')).toHaveCount(1);
+  await expect(star.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  await expect(star.locator('svg path')).toHaveAttribute(
+    'd',
+    'M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z',
+  );
+  // No second star glyph anywhere in the head.
+  expect(await page.locator('.thread-study-head').innerText()).not.toMatch(/[★☆]/);
+
+  const rowHeight = async (): Promise<number> =>
+    page.locator('.thread-facts').evaluate((el) => el.getBoundingClientRect().height);
+  const before = await rowHeight();
+  const labelBefore = (await star.innerText()).trim();
+  const initiallyStarred = await star.getAttribute('aria-pressed') === 'true';
+
+  try {
+    // Toggle to the other label and prove the row is still one line. This is the
+    // layout half of B3: a wrapping flex container breaks its lines from content
+    // widths BEFORE flex-shrink applies, so a shrinkable byline on its own would
+    // not have saved it.
+    await expect(page.locator('.thread-facts')).toHaveCSS('flex-wrap', 'nowrap');
+    await star.click();
+    await expect(page.locator('.star-btn')).not.toHaveText(labelBefore);
+    const after = await rowHeight();
+    expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
+
+    await shot(page, info, '90-thread-star-pill');
+  } finally {
+    const current = await page.locator('.star-btn').getAttribute('aria-pressed') === 'true';
+    if (current !== initiallyStarred) await page.locator('.star-btn').click();
+  }
+});
+
+/**
+ * B4. `.reaction-n::before` puts a separator between a reaction's NAME and its
+ * count. Production reactions are raw emoji with no name, so the separator had
+ * nothing to separate and rendered as a stray dot before the number.
+ */
+test('a bare reaction chip drops the orphaned name separator', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the reaction picker differs only in placement by pointer type');
+  await login(page);
+  await openSeedTopic(page);
+
+  const post = page.locator('[data-post]').first();
+  const emoji = await post.locator('[data-post-toolbar] .reaction-menu input[name="emoji"]').first().inputValue();
+  const initiallyOn = await post.locator('.reactions .reaction-on').filter({ hasText: emoji }).count() > 0;
+  await setReactionState(post, emoji, false);
+  try {
+    await setReactionState(post, emoji, true);
+    await expect(page.locator('[data-thread-study]')).toBeVisible();
+
+    const chip = post.locator('.reactions .reaction-on').filter({ hasText: emoji }).first();
+    await expect(chip).toHaveClass(/reaction-bare/);
+    expect((await chip.innerText()).trim()).not.toContain('·');
+    // The rule has to WIN, not merely exist: the identical ::before ships inside
+    // @layer imladris.components, and app.css is unlayered.
+    const separator = await chip.locator('.reaction-n').evaluate(
+      (el) => getComputedStyle(el, '::before').content,
+    );
+    expect(separator).toBe('none');
+
+    await shot(page, info, '91-thread-reaction-chip');
+  } finally {
+    await setReactionState(post, emoji, initiallyOn);
+  }
+});
+
+test('server-invalid engraved controls receive the effective danger frame', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'cascade is viewport-independent');
+  await page.goto('/login');
+  const input = page.locator('.input-engraved').first();
+  const before = await input.evaluate((element) => getComputedStyle(element).backgroundImage);
+  const result = await input.evaluate((element) => {
+    element.setAttribute('aria-invalid', 'true');
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--danger)';
+    document.body.appendChild(probe);
+    const danger = getComputedStyle(probe).color;
+    probe.remove();
+    const image = getComputedStyle(element).backgroundImage;
+    return { image, danger, layers: (image.match(/linear-gradient/g) ?? []).length };
+  });
+  expect(result.image).not.toBe(before);
+  expect(result.image.replace(/\s/g, '')).toContain(result.danger.replace(/\s/g, ''));
+  expect(result.layers).toBeGreaterThanOrEqual(8);
+});
+
+/**
+ * Part D's no-JS pass. Every flow on this surface is server-rendered first; the
+ * enhancement only swaps which copy of a control is exposed.
+ */
+test('the Study reads and replies with JavaScript disabled', async ({ browser }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the no-JS contract is pointer-independent');
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  const evidenceReply = 'A no-JavaScript reply owned by the thread-view evidence run.';
+  try {
+    await page.goto('/login');
+    await page.fill('input[name="email"]', 'alice@retro.test');
+    await page.fill('input[name="password"]', 'password123');
+    await page.click('button[type="submit"]');
+    await page.goto('/c/general');
+    await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
+    await expect(page.locator('[data-thread-study]')).toBeVisible();
+    await deleteOwnedRepliesWithText(page, evidenceReply);
+
+    // Nothing is enhanced, so the toolbar stands at full opacity with no pointer.
+    await expect(page.locator('[data-thread-study]')).not.toHaveAttribute('data-thread-enhanced', '1');
+    const toolbar = page.locator('[data-post-toolbar]').first();
+    await expect(toolbar).toBeVisible();
+    await expect(toolbar).toHaveCSS('opacity', '1');
+
+    // Edit / Report / Remove reach the reader through the in-flow native
+    // disclosures, which JS hides in favour of the menu copies.
+    await expect(page.locator('.post-native-disclosure > summary').first()).toBeVisible();
+
+    // Topic tools is a JS-only affordance and stays hidden rather than dead.
+    await expect(page.locator('[data-topic-tools-open]').first()).toBeHidden();
+
+    // The composer degrades to a plain Markdown textarea that still posts.
+    const composer = page.locator('form[data-thread-composer]');
+    await expect(composer).toHaveCount(1);
+    await expect(composer.locator('.wysiwyg-surface')).toHaveCount(0);
+    const body = composer.locator('textarea[name="body"]');
+    await expect(body).toBeVisible();
+    await body.fill(evidenceReply);
+    await composer.locator('button.composer-send').click();
+    // Scoped to the stream: the same words also land in the split/merge picker
+    // and the catch-me-up strip, which is itself proof the plain POST went
+    // through every downstream consumer.
+    await expect(
+      page.locator('[data-post] .post-body').filter({ hasText: evidenceReply }),
+    ).toHaveCount(1);
+
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, info.project.name, '92-thread-no-js.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+  } finally {
+    if (!page.isClosed()) await deleteOwnedRepliesWithText(page, evidenceReply);
+    await context.close();
+  }
+});
+
+/** Part D's keyboard pass: every post action reachable without a pointer. */
+test('post actions are reachable by keyboard alone', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'coarse pointers stand the toolbar permanently');
+  await login(page);
+  await openSeedTopic(page);
+
+  const posts = page.locator('[data-post]:has([data-post-menu] > summary)');
+  const post = posts.first();
+  const toolbar = post.locator('[data-post-toolbar]');
+  // At rest, with no pointer anywhere near it: present in the DOM but quiet.
+  await expect(toolbar).toHaveCount(1);
+  await expect(toolbar).toHaveCSS('opacity', '0');
+
+  // Focus alone reveals it — this is why the toolbar fades rather than
+  // unmounting or going `visibility: hidden`: a hidden control is not tabbable,
+  // and tabbing to it is the point.
+  const menu = post.locator('[data-post-menu] > summary');
+  expect(await tabTo(page, menu)).toBeGreaterThan(0);
+  await expect(toolbar).toHaveCSS('opacity', '1');
+  await expect(menu).toBeFocused();
+
+  await page.keyboard.press('Enter');
+  await expect(post.locator('[data-post-menu]')).toHaveAttribute('open', '');
+  await expect(post.locator('.post-menu-pop')).toBeVisible();
+
+  const edit = post.locator('[data-post-menu]').getByRole('button', { name: 'Edit' });
+  expect(await tabTo(page, edit)).toBeGreaterThan(0);
+  await page.keyboard.press('Enter');
+  const editDisclosure = post.locator('.post-native-disclosure.post-edit');
+  await expect(editDisclosure).toHaveAttribute('open', '');
+
+  const secondMenu = posts.nth(1).locator('[data-post-menu] > summary');
+  expect(await tabTo(page, secondMenu)).toBeGreaterThan(0);
+  await page.keyboard.press('Enter');
+  await expect(posts.nth(1).locator('[data-post-menu]')).toHaveAttribute('open', '');
+
+  // Escape peels the topmost keyboard layer only: the second post menu closes,
+  // while the earlier edit disclosure remains open until the next keypress.
+  await page.keyboard.press('Escape');
+  await expect(posts.nth(1).locator('[data-post-menu]')).not.toHaveAttribute('open', '');
+  await expect(secondMenu).toBeFocused();
+  await expect(editDisclosure).toHaveAttribute('open', '');
+  await page.keyboard.press('Escape');
+  await expect(editDisclosure).not.toHaveAttribute('open', '');
+  await expect(menu).toBeFocused();
 });

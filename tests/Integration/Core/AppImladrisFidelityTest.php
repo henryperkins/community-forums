@@ -649,13 +649,30 @@ final class AppImladrisFidelityTest extends TestCase
     {
         $opener = $this->makeUser();
         $reader = $this->makeUser();
+        $assignee = $this->makeUser(['username' => 'thread_tender']);
         $board = $this->makeBoard($this->makeCategory());
         $thread = $this->makeThread($board, $opener, 'Actions', 'Opening.');
+        (new \App\Repository\ThreadAssignmentRepository($this->db))->assign(
+            (int) $thread['thread_id'],
+            (int) $assignee['id'],
+            (int) $opener['id'],
+        );
+        (new \App\Repository\ThreadUserRepository($this->db))->setSnooze(
+            (int) $reader['id'],
+            (int) $thread['thread_id'],
+            '2030-01-02 03:04:05',
+        );
 
         $this->actingAs($reader);
         $res = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $res);
         $this->assertSeeText($res, 'thread-facts');
+        self::assertSame(1, preg_match('/<p class="thread-byline">(?<byline>.*?)<\/p>/s', $res->body(), $match));
+        self::assertStringNotContainsString('Tended by', $match['byline']);
+        self::assertStringNotContainsString('Quiet until', $match['byline']);
+        self::assertStringContainsString('class="thread-operational-facts"', $res->body());
+        self::assertStringContainsString('Tended by @thread_tender', $res->body());
+        self::assertStringContainsString('Quiet until', $res->body());
         $this->assertSeeText($res, 'star-btn');
         $this->assertSeeText($res, 'data-topic-tools-section="watch"');
         self::assertSame(1, substr_count($res->body(), 'action="/t/' . (int) $thread['thread_id'] . '/subscribe"'));

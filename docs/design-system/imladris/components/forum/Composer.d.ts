@@ -32,11 +32,25 @@ export interface ComposerProps extends React.FormHTMLAttributes<HTMLFormElement>
   /** Board allows masked-identity posting — renders the Anonymous chip + disclosure. */
   allowAnonymous?: boolean;
   anonymousChecked?: boolean;
+  /** Receives the new checked state. Pass it whenever the value matters —
+   *  without it the chip keeps its own state and the consumer never learns
+   *  the reader asked to be masked. */
+  onAnonymousChange?: (checked: boolean) => void;
   anonymousDisclosure?: string;
   /** The Aa formatting-row state (production default: open). */
   toolbarOpen?: boolean;
   /** Toolbar keys shown active: 'bold' | 'italic' | 'strike' | 'code' | 'quote' | 'h2' | 'list' | 'orderedList' | 'codeblock' | 'spoiler' | 'link'. */
   activeFormats?: string[];
+  /** A toolbar press, by the same keys as activeFormats. Omit and the row is
+   *  a specimen — the buttons render and do nothing. */
+  onFormat?: (key: string) => void;
+  /** The "Draft saved · Discard" action. */
+  onDiscard?: () => void;
+  /** The attach ＋ press. Omit and the button renders disabled — a specimen,
+   *  not a control that swallows the click. */
+  onAttach?: () => void;
+  /** The emoji 😊 press. Omit and the button renders disabled. */
+  onEmoji?: () => void;
   /** Validation error, shown inside the box above the input. */
   error?: string;
   uploads?: ComposerUpload[];

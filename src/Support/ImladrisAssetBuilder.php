@@ -269,7 +269,6 @@ final class ImladrisAssetBuilder
             'font_files' => $fontFiles,
             'excluded' => [
                 '_archive',
-                '_ds_bundle.js',
                 'components/doc.css',
                 'feature-ui',
                 'templates',

@@ -7,6 +7,7 @@ $this->section('route', 'thread');
 // private/hidden board are excluded from indexing (defence in depth — the read
 // gate already blocks crawlers).
 $this->section('canonical', '/t/' . (int) $thread['id'] . '-' . $thread['slug']);
+$threadPageUrl = '/t/' . (int) $thread['id'] . '-' . $thread['slug'] . '?page=' . max(1, (int) $page);
 $this->section('og_type', 'article');
 $this->section('description', mb_strimwidth(preg_replace('/\s+/', ' ', (string) $thread['title']) ?? '', 0, 160, '…'));
 if (($thread['board_visibility'] ?? 'public') !== 'public') {
@@ -33,17 +34,29 @@ $status = ($workflow_on ?? false)
     ? (string) ($thread['status'] ?? 'open')
     : (($accepted_post_id ?? null) !== null ? 'solved' : null);
 $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replace('_', ' ', $status))) : null;
+// The standing chips are a row of their own, above the title. Precomputed here
+// rather than tested with :empty, because the row's markup carries whitespace
+// even when every chip is conditional-false and :empty would never match.
+$hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked'] === 1 || $status !== null;
 ?>
 <article class="thread thread-conversation thread-study" data-thread-study>
     <div class="thread-scroll">
     <header class="thread-head thread-study-head">
         <nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
-        <h1 class="thread-study-title">
+        <?php /* Standing chips sit above the title, never inside it: an <h1> holding
+                 three conditional chips announces itself as "Pinned Locked Solved Where
+                 should ratified decisions live…" to anything that reads the page aloud.
+                 Same rule the board row already follows for Pinned/Locked. Status is a
+                 word and a colour — no glyph; the Topic tools drawer states the identical
+                 state glyph-less, and two labels for one status is the defect. */ ?>
+        <?php if ($hasStandingChips): ?>
+        <div class="thread-study-chips">
             <?php if ((int) $thread['is_pinned'] === 1): ?><span class="thread-state-chip is-pinned">Pinned</span><?php endif; ?>
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="thread-state-chip is-locked">Locked</span><?php endif; ?>
-            <?php if ($status !== null): ?><span class="thread-status-chip is-<?= $e($status) ?>" data-thread-status="<?= $e($status) ?>"><?= $status === 'solved' ? '✓ ' : '' ?><?= $e($statusLabel) ?></span><?php endif; ?>
-            <?= $e($thread['title']) ?>
-        </h1>
+            <?php if ($status !== null): ?><span class="thread-status-chip is-<?= $e($status) ?>" data-thread-status="<?= $e($status) ?>"><?= $e($statusLabel) ?></span><?php endif; ?>
+        </div>
+        <?php endif; ?>
+        <h1 class="thread-study-title"><?= $e($thread['title']) ?></h1>
         <div class="thread-facts">
         <?php
         // "Opened by" byline — derive OP anonymity from the OP post on this page so an
@@ -54,7 +67,14 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         }
         $byReplies = (int) ($thread['reply_count'] ?? 0);
         ?>
-        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if (!empty($assignment)): ?> · Tended by @<?= $e($assignment['assigned_username']) ?><?php endif; ?><?php if (!empty($my_snooze)): ?> · Quiet until <?= $e(human_datetime($my_snooze)) ?><?php endif; ?></p>
+        <?php /* Three groups, one line. The row is flex-wrap: nowrap deliberately — a
+                 wrapping flex container breaks its lines from the items' CONTENT widths
+                 BEFORE flex-shrink applies, so a shrinkable byline on its own changes
+                 nothing and the Star pill widening to "Starred" (~20px) shoved the whole
+                 control group onto a second line. The identity side gives up width to an
+                 ellipsis; operational state and controls remain readable. */ ?>
+        <div class="thread-facts-identity">
+        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?></p>
         <?php foreach (($thread_tags ?? []) as $tag): ?><a class="tag" href="/tags/<?= $e($tag['slug']) ?>"><?= $e($tag['name']) ?></a><?php endforeach; ?>
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
@@ -69,16 +89,29 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                 <?php endif; ?>
             </ul>
         <?php endif; ?>
+        </div>
+        <?php if (!empty($assignment) || !empty($my_snooze)): ?>
+        <div class="thread-operational-facts" aria-label="Topic operations">
+            <?php if (!empty($assignment)): ?><span>Tended by @<?= $e($assignment['assigned_username']) ?></span><?php endif; ?>
+            <?php if (!empty($my_snooze)): ?><span>Quiet until <?= $e(human_datetime($my_snooze)) ?></span><?php endif; ?>
+        </div>
+        <?php endif; ?>
+        <div class="thread-facts-actions">
         <?php if (($engagement ?? false) && $current_user !== null && !empty($can_write)): ?>
             <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
                 <?= $this->csrfField() ?>
-                <input type="hidden" name="return" value="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">
-                <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>"><?= ($is_starred ?? false) ? '★ Starred' : '☆ Star' ?></button>
+                <input type="hidden" name="return" value="<?= $e($threadPageUrl) ?>">
+                <?php /* One esteem glyph in the system: the four-point commend star that
+                         already marks regard and the accepted answer. ★/☆ beside ✦ was two
+                         glyphs for one idea. The label keeps its own <span> so the button's
+                         accessible name is exactly "Star" / "Starred". */ ?>
+                <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>"><?= $this->partial('partials/icon', ['name' => 'commend-star']) ?><span><?= ($is_starred ?? false) ? 'Starred' : 'Star' ?></span></button>
             </form>
         <?php endif; ?>
         <?php if ($hasTopicTools): ?>
             <button type="button" class="topic-tools-open" data-topic-tools-open hidden aria-controls="topic-tools-<?= (int) $thread['id'] ?>" aria-expanded="false"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span></button>
         <?php endif; ?>
+        </div>
         </div>
         <?php if ($current_user === null): ?><?= $this->partial('partials/thread_status_history', compact('status_history', 'status_labels')) ?><?php endif; ?>
     </header>
@@ -128,6 +161,7 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         'restructure_error' => $restructure_error ?? '',
         'restructure_context' => $restructure_context ?? '',
         'restructure_old' => $restructure_old ?? [],
+        'page' => $page,
     ]) ?>
         <?php if (!empty($polls_on) && !empty($poll)): ?>
             <section class="poll-card poll-panel">
@@ -146,14 +180,19 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                     <?php $pollTotal = max(1, array_sum(array_map(static fn ($option): int => (int) $option['vote_count'], $poll['options']))); ?>
                     <ul class="poll-results link-list">
                         <?php foreach ($poll['options'] as $option): ?>
-                            <?php $n = (int) $option['vote_count']; ?>
+                            <?php $n = (int) $option['vote_count']; $pollPercent = (int) round(($n / $pollTotal) * 100); ?>
                             <li class="poll-result<?= !empty($option['viewer_voted']) ? ' is-mine' : '' ?>">
                                 <span class="poll-result-row">
                                     <strong><?= $e($option['body']) ?></strong>
                                     <?php if (!empty($option['viewer_voted'])): ?><span class="poll-result-mine">Your vote</span><?php endif; ?>
                                     <span class="poll-result-count"><?= $n ?> vote<?= $n === 1 ? '' : 's' ?></span>
                                 </span>
-                                <span class="poll-result-bar"><meter min="0" max="<?= $pollTotal ?>" value="<?= $n ?>"><?= $n ?></meter></span>
+                                <span class="poll-result-bar" role="img" aria-label="<?= $pollPercent ?>% of votes">
+                                    <svg class="poll-result-progress" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                        <rect class="poll-result-track" x="0" y="0" width="100" height="8" rx="4" />
+                                        <rect class="poll-result-fill" x="0" y="0" width="<?= $pollPercent ?>" height="8" rx="4" />
+                                    </svg>
+                                </span>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -318,6 +357,7 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                 'thread' => $thread,
                 'reply_errors' => $reply_errors,
                 'reply_old' => $reply_old,
+                'page' => $page,
                 'show_avatars' => $show_avatars ?? true,
             ]) ?>
         <?php elseif ($current_user === null): ?>

@@ -71,12 +71,14 @@ final class ThreadSplitMergeService
             }
 
             $slug = Str::slug($title);
+            $movedCursorRows = $this->cursorRowsForPosts($sourceThreadId, $selected);
             $newThreadId = $this->threads->create((int) $source['board_id'], (int) $selected[0]['user_id'], $title, $slug);
             $this->threads->findForUpdate($newThreadId);
             $ids = array_map(static fn (array $p): int => (int) $p['id'], $selected);
             $in = implode(',', array_fill(0, count($ids), '?'));
             $this->db->run("UPDATE posts SET thread_id = ?, is_op = 0 WHERE id IN ($in)", array_merge([$newThreadId], $ids));
             $this->db->run('UPDATE posts SET is_op = 1, parent_post_id = NULL WHERE id = ?', [(int) $selected[0]['id']]);
+            $this->rebaseSplitCursors($sourceThreadId, $movedCursorRows);
             $this->recountThread($sourceThreadId);
             $this->recountThread($newThreadId);
             $this->recountBoards([(int) $source['board_id']]);
@@ -170,6 +172,14 @@ final class ThreadSplitMergeService
                 throw new ForbiddenException('You do not moderate the target board.');
             }
             $this->db->run('UPDATE posts SET thread_id = ?, is_op = 0 WHERE thread_id = ?', [$targetThreadId, $sourceThreadId]);
+            // Source rows remain for personal star/snooze history and the 301,
+            // but their cursor posts now belong to the target. Clear only the
+            // invalid cursor; target-thread cursors remain valid and tuple-order
+            // unread comparison accounts for the newly moved posts.
+            $this->db->run(
+                'UPDATE thread_user SET last_read_post_id = NULL WHERE thread_id = ?',
+                [$sourceThreadId],
+            );
             $this->db->run('UPDATE threads SET is_deleted = 1 WHERE id = ?', [$sourceThreadId]);
             $this->recountThread($sourceThreadId);
             $this->recountThread($targetThreadId);
@@ -212,6 +222,71 @@ final class ThreadSplitMergeService
             throw new \RuntimeException('Merge target disappeared.');
         }
         return $target;
+    }
+
+    /**
+     * Capture source-thread cursors that point at selected posts before those
+     * posts move. The rows are locked by the surrounding split transaction.
+     *
+     * @param array<int,array<string,mixed>> $selected
+     * @return array<int,array{user_id:int,cursor_id:int,cursor_created_at:string}>
+     */
+    private function cursorRowsForPosts(int $sourceThreadId, array $selected): array
+    {
+        $ids = array_map(static fn (array $post): int => (int) $post['id'], $selected);
+        if ($ids === []) {
+            return [];
+        }
+        $in = implode(',', array_fill(0, count($ids), '?'));
+
+        return $this->db->fetchAll(
+            "SELECT tu.user_id, cursor_post.id AS cursor_id, cursor_post.created_at AS cursor_created_at
+             FROM thread_user tu
+             JOIN posts cursor_post
+               ON cursor_post.id = tu.last_read_post_id
+              AND cursor_post.thread_id = tu.thread_id
+              AND cursor_post.is_deleted = 0
+              AND cursor_post.is_pending = 0
+             WHERE tu.thread_id = ? AND cursor_post.id IN ($in)
+             FOR UPDATE",
+            array_merge([$sourceThreadId], $ids),
+        );
+    }
+
+    /**
+     * Rebase a moved split cursor to the latest source post that was not after
+     * its old tuple. NULL is correct when no source post remains in that range.
+     *
+     * @param array<int,array{user_id:int,cursor_id:int,cursor_created_at:string}> $cursorRows
+     */
+    private function rebaseSplitCursors(int $sourceThreadId, array $cursorRows): void
+    {
+        foreach ($cursorRows as $cursorRow) {
+            $replacement = $this->db->fetchValue(
+                'SELECT id
+                 FROM posts
+                 WHERE thread_id = ?
+                   AND is_deleted = 0
+                   AND is_pending = 0
+                   AND (created_at < ? OR (created_at = ? AND id <= ?))
+                 ORDER BY created_at DESC, id DESC
+                 LIMIT 1',
+                [
+                    $sourceThreadId,
+                    (string) $cursorRow['cursor_created_at'],
+                    (string) $cursorRow['cursor_created_at'],
+                    (int) $cursorRow['cursor_id'],
+                ],
+            );
+            $this->db->run(
+                'UPDATE thread_user SET last_read_post_id = ? WHERE user_id = ? AND thread_id = ?',
+                [
+                    $replacement === false ? null : $replacement,
+                    (int) $cursorRow['user_id'],
+                    $sourceThreadId,
+                ],
+            );
+        }
     }
 
     private function recountThread(int $threadId): void

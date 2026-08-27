@@ -10,8 +10,9 @@ use App\Core\Database;
  * Per-user thread state (P2-01): read position + star, plus unread derivation
  * and the personal Inbox queries.
  *
- * Unread model (DECISIONS §3): a thread is unread for a user when its newest
- * post id (threads.last_post_id) is greater than the user's last_read_post_id.
+ * Unread model (DECISIONS §3): last_read_post_id identifies the per-thread
+ * cursor. Its post's (created_at, id) tuple is compared to the thread's canonical
+ * (last_post_at, last_post_id) tuple, matching render order even after merges.
  * Threads with no thread_user row are unread only when their last activity is
  * after the launch cutover (settings.engagement_cutover_at) — this avoids a
  * historical-unread flood (PHASE_2_PLAN §7.2). A far-future cutover (the unset
@@ -36,17 +37,58 @@ final class ThreadUserRepository
     }
 
     /**
-     * Advance the user's read position to $postId. Never regresses (GREATEST),
-     * so paging backwards or a slow request cannot un-read newer posts.
+     * Advance to a live post in this thread. Never regresses in chronological
+     * render order, even when the later post has a numerically smaller id.
      */
     public function markRead(int $userId, int $threadId, int $postId): void
     {
-        $this->db->run(
-            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred)
-             VALUES (:uid, :tid, :pid, 0)
-             ON DUPLICATE KEY UPDATE last_read_post_id = GREATEST(COALESCE(last_read_post_id, 0), VALUES(last_read_post_id))',
-            ['uid' => $userId, 'tid' => $threadId, 'pid' => $postId],
-        );
+        $this->db->transaction(function () use ($userId, $threadId, $postId): void {
+            $candidate = $this->db->fetch(
+                'SELECT id, created_at
+                 FROM posts
+                 WHERE id = ? AND thread_id = ? AND is_deleted = 0 AND is_pending = 0',
+                [$postId, $threadId],
+            );
+            if ($candidate === null) {
+                return;
+            }
+
+            // Ensure a row exists without changing an existing cursor or star.
+            $this->db->run(
+                'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred)
+                 VALUES (:uid, :tid, :pid, 0)
+                 ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)',
+                ['uid' => $userId, 'tid' => $threadId, 'pid' => $postId],
+            );
+            $current = $this->db->fetch(
+                'SELECT tu.last_read_post_id, current_post.id AS current_id,
+                        current_post.created_at AS current_created_at
+                 FROM thread_user tu
+                 LEFT JOIN posts current_post
+                   ON current_post.id = tu.last_read_post_id
+                  AND current_post.thread_id = tu.thread_id
+                  AND current_post.is_deleted = 0
+                  AND current_post.is_pending = 0
+                 WHERE tu.user_id = ? AND tu.thread_id = ?
+                 FOR UPDATE',
+                [$userId, $threadId],
+            );
+
+            $currentId = (int) ($current['current_id'] ?? 0);
+            $currentAt = (string) ($current['current_created_at'] ?? '');
+            $candidateId = (int) $candidate['id'];
+            $candidateAt = (string) $candidate['created_at'];
+            if (
+                $currentId <= 0
+                || $candidateAt > $currentAt
+                || ($candidateAt === $currentAt && $candidateId > $currentId)
+            ) {
+                $this->db->run(
+                    'UPDATE thread_user SET last_read_post_id = ? WHERE user_id = ? AND thread_id = ?',
+                    [$candidateId, $userId, $threadId],
+                );
+            }
+        });
     }
 
     /**
@@ -70,8 +112,10 @@ final class ThreadUserRepository
 
     /**
      * Clear every unread topic on one board in a single statement. Still
-     * monotonic — a topic already read past its last post stays where it is.
-     * Threads with no posts at all carry no watermark to advance to.
+     * Threads with no posts at all carry no watermark to advance to. The
+     * denormalised `threads.last_post_id` is already the canonical tuple endpoint,
+     * so an explicit mark-all-read sets that endpoint directly rather than using
+     * numeric-id GREATEST semantics.
      */
     public function markBoardRead(int $userId, int $boardId): void
     {
@@ -83,8 +127,7 @@ final class ThreadUserRepository
                AND t.is_deleted = 0
                AND t.is_pending = 0
                AND t.last_post_id IS NOT NULL
-             ON DUPLICATE KEY UPDATE
-               last_read_post_id = GREATEST(COALESCE(last_read_post_id, 0), VALUES(last_read_post_id))',
+             ON DUPLICATE KEY UPDATE last_read_post_id = VALUES(last_read_post_id)',
             ['uid' => $userId, 'bid' => $boardId],
         );
     }
@@ -104,6 +147,11 @@ final class ThreadUserRepository
             'SELECT COUNT(*)
              FROM threads t
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
              WHERE t.board_id = ?
                AND t.is_deleted = 0
                AND t.is_pending = 0
@@ -168,12 +216,14 @@ final class ThreadUserRepository
         $place = implode(',', array_fill(0, count($threadIds), '?'));
         $rows = $this->db->fetchAll(
             "SELECT t.id,
-                    CASE
-                      WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
-                      ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
-                    END AS is_unread
+                    " . $this->unreadStateSql() . " AS is_unread
              FROM threads t
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
              WHERE t.id IN ($place) AND t.is_pending = 0",
             array_merge([$cutover, $userId], $threadIds),
         );
@@ -193,6 +243,11 @@ final class ThreadUserRepository
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
              LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
              WHERE t.is_deleted = 0
                AND t.is_pending = 0
@@ -248,16 +303,18 @@ final class ThreadUserRepository
                     ta.assigned_user_id,
                     assignee.username AS assigned_username,
                     assignee.display_name AS assigned_display_name,
-                    CASE
-                      WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
-                      ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
-                    END AS is_unread,
+                     " . $this->unreadStateSql() . " AS is_unread,
                     " . $this->inboxUnreadStateSql($workflowEnabled) . " AS is_inbox_unread
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              JOIN users au ON au.id = t.user_id
              LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
              LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
              LEFT JOIN thread_assignments ta ON ta.thread_id = t.id
              LEFT JOIN users assignee ON assignee.id = ta.assigned_user_id
@@ -318,6 +375,11 @@ final class ThreadUserRepository
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
              LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
              WHERE t.is_deleted = 0
                AND t.is_pending = 0
@@ -516,7 +578,15 @@ final class ThreadUserRepository
     {
         return 'CASE
                   WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
-                  ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
+                  ELSE (
+                    t.last_post_id IS NOT NULL
+                    AND (
+                      tu.last_read_post_id IS NULL
+                      OR read_post.id IS NULL
+                      OR t.last_post_at > read_post.created_at
+                      OR (t.last_post_at = read_post.created_at AND t.last_post_id > read_post.id)
+                    )
+                  )
                 END';
     }
 

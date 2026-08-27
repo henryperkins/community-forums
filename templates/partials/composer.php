@@ -17,6 +17,7 @@ $replyInstance = 'reply-thread-' . $replyThreadId;
     'form_class' => 'reply-composer thread-composer-card',
     'expanded' => $replyExpanded,
     'body_error' => (string) ($reply_errors['body'] ?? ''),
+    'hidden_fields' => ['page' => max(1, (int) ($page ?? 1))],
     'identity' => [
         'display_name' => $current_user->displayName(),
         'username' => $current_user->username(),

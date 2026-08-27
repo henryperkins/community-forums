@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\BoardModeratorRepository;
+use App\Repository\ThreadUserRepository;
+use App\Repository\UserPreferenceRepository;
 use Tests\Support\TestCase;
 
 final class AppThreadSplitMergeTest extends TestCase
@@ -163,5 +165,118 @@ final class AppThreadSplitMergeTest extends TestCase
         self::assertSame($late, (string) $targetAfter['last_post_at']);
         self::assertSame($late, (string) $this->db->fetchValue('SELECT last_post_at FROM boards WHERE id = ?', [(int) $this->board['id']]));
         self::assertSame((int) $target['thread_id'], (int) $this->db->fetchValue('SELECT last_thread_id FROM boards WHERE id = ?', [(int) $this->board['id']]));
+    }
+
+    public function test_split_rebases_a_cursor_whose_post_moves_to_the_new_thread(): void
+    {
+        $reader = $this->makeUser(['username' => 'split-cursor-reader']);
+        $thread = $this->makeThread($this->board, $this->member, 'Cursor split source', 'Opening post');
+        $firstReply = $this->posting()->reply(
+            $this->userEntity($this->member),
+            (int) $thread['thread_id'],
+            ['body' => 'Cursor predecessor'],
+        );
+        $movedCursor = $this->posting()->reply(
+            $this->userEntity($this->member),
+            (int) $thread['thread_id'],
+            ['body' => 'Cursor row to move'],
+        );
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $reader['id'], (int) $thread['thread_id'], $movedCursor],
+        );
+
+        $this->actingAs($this->admin);
+        $response = $this->post('/mod/t/' . $thread['thread_id'] . '/split', [
+            'title' => 'Cursor split destination',
+            'post_ids' => [$movedCursor],
+            'page' => '1',
+        ]);
+
+        $this->assertRedirectContains($response, '/t/');
+        self::assertSame($firstReply, (int) $this->db->fetchValue(
+            'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+            [(int) $reader['id'], (int) $thread['thread_id']],
+        ));
+    }
+
+    public function test_merge_clears_source_cursors_and_keeps_target_cursor_tuple_semantics(): void
+    {
+        $reader = $this->makeUser(['username' => 'merge-cursor-reader']);
+        $source = $this->makeThread($this->board, $this->member, 'Cursor merge source', 'Source OP');
+        $sourceReply = $this->posting()->reply(
+            $this->userEntity($this->member),
+            (int) $source['thread_id'],
+            ['body' => 'Lower id but later time'],
+        );
+        $target = $this->makeThread($this->board, $this->member, 'Cursor merge target', 'Target OP');
+        $targetCursor = $this->posting()->reply(
+            $this->userEntity($this->member),
+            (int) $target['thread_id'],
+            ['body' => 'Higher id but earlier time'],
+        );
+        $this->db->run('UPDATE posts SET created_at = ? WHERE id = ?', ['2026-08-27 11:00:00', $sourceReply]);
+        $this->db->run('UPDATE posts SET created_at = ? WHERE id = ?', ['2026-08-27 10:00:00', $targetCursor]);
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0), (?, ?, ?, 0)',
+            [
+                (int) $reader['id'], (int) $source['thread_id'], $sourceReply,
+                (int) $reader['id'], (int) $target['thread_id'], $targetCursor,
+            ],
+        );
+
+        $this->actingAs($this->admin);
+        $response = $this->post('/mod/t/' . $source['thread_id'] . '/merge', [
+            'target_thread_id' => (int) $target['thread_id'],
+            'page' => '1',
+        ]);
+
+        $this->assertRedirect($response, '/t/' . $target['thread_id'] . '-' . $target['slug']);
+        self::assertNull($this->db->fetchValue(
+            'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+            [(int) $reader['id'], (int) $source['thread_id']],
+        ));
+        self::assertSame($targetCursor, (int) $this->db->fetchValue(
+            'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+            [(int) $reader['id'], (int) $target['thread_id']],
+        ));
+        self::assertTrue((new ThreadUserRepository($this->db))->unreadFlags(
+            (int) $reader['id'],
+            [(int) $target['thread_id']],
+            ThreadUserRepository::NO_CUTOVER,
+        )[(int) $target['thread_id']]);
+    }
+
+    public function test_split_validation_preserves_page_title_and_checked_replies(): void
+    {
+        (new UserPreferenceRepository($this->db))->merge((int) $this->admin['id'], ['posts_per_page' => 10]);
+        $thread = $this->makeThread($this->board, $this->member, 'Paged split validation', 'Opening post');
+        $replyIds = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $replyIds[] = $this->posting()->reply(
+                $this->userEntity($this->member),
+                (int) $thread['thread_id'],
+                ['body' => 'Paged split reply ' . $i],
+            );
+        }
+        $selected = $replyIds[10];
+        $this->actingAs($this->admin);
+
+        $response = $this->post('/mod/t/' . $thread['thread_id'] . '/split', [
+            'title' => 'Preserved split title',
+            'post_ids' => [$selected, 999999999],
+            'page' => '2',
+        ]);
+
+        $this->assertStatus(422, $response);
+        self::assertStringContainsString('Every selected post must belong to this thread.', $response->body());
+        self::assertStringContainsString('name="title" maxlength="255" value="Preserved split title"', $response->body());
+        self::assertStringContainsString('Paged split reply 11', $response->body());
+        self::assertStringNotContainsString('Paged split reply 1<', $response->body());
+        self::assertMatchesRegularExpression(
+            '#name="post_ids\[\]" value="' . $selected . '" checked#',
+            $response->body(),
+        );
+        self::assertGreaterThanOrEqual(2, substr_count($response->body(), 'name="page" value="2"'));
     }
 }

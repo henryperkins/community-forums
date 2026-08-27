@@ -18,7 +18,10 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
       // wiki posts are also left ungrouped so their role/Wiki badge is never hidden. ?>
 <?php $grouped = ($grouped ?? false) && !$accepted && (int) $p['is_op'] !== 1
     && (($p['author_role'] ?? 'user') === 'user') && empty($p['is_wiki']); ?>
-<article class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>" data-post>
+<?php if (!empty($p['is_first_unread'])): ?>
+    <div class="first-unread-divider" data-first-unread-boundary role="separator"><span>First unread</span></div>
+<?php endif; ?>
+<article class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>" data-post<?= !empty($p['is_first_unread']) ? ' data-first-unread="1"' : '' ?>>
     <?php if ($show_avatars ?? true): ?>
         <?php if ($grouped): ?><span class="post-avatar-spacer" aria-hidden="true"></span>
         <?php else: ?>
@@ -136,11 +139,15 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                     <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                        <button type="submit" class="reaction<?= $on ? ' reaction-on' : '' ?>" aria-pressed="<?= $on ? 'true' : 'false' ?>"
+                        <?php /* reaction-bare: the "·" in .reaction-n::before separates a
+                                 reaction's NAME from its count, and production reactions are
+                                 raw emoji with no name (ReactionService::ALLOWED). Unconditional
+                                 because there is no named form to render. */ ?>
+                        <button type="submit" class="reaction<?= $on ? ' reaction-on' : '' ?> reaction-bare" aria-pressed="<?= $on ? 'true' : 'false' ?>"
                                 title="<?= $on ? 'Remove your reaction' : 'React' ?>"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></button>
                     </form>
                 <?php else: ?>
-                    <span class="reaction reaction-static"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></span>
+                    <span class="reaction reaction-static reaction-bare"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></span>
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>

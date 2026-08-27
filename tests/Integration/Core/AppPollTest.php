@@ -117,6 +117,9 @@ final class AppPollTest extends TestCase
         $after = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
         self::assertStringContainsString('poll-result', $after->body());
         self::assertStringContainsString('poll-result-bar', $after->body());
+        self::assertStringContainsString('class="poll-result-progress"', $after->body());
+        self::assertStringContainsString('role="img"', $after->body());
+        self::assertStringNotContainsString('<meter', $after->body());
         self::assertStringContainsString('Your vote', $after->body());
     }
 

@@ -73,7 +73,7 @@ $readReturn = (string) ($return_to ?? '');
             </div>
         <?php endif; ?>
         <?php if ($boardPresentation): ?><span class="thread-title-line"><?php endif; ?>
-        <a class="thread-title" href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?>">
+        <a class="thread-title" href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?><?= $unread ? '?unread=1' : '' ?>">
             <?= $e($t['title']) ?>
         </a>
         <?php if ($boardPresentation): ?>

@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.42 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-09
+**Status:** v1.43 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-27
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -352,6 +352,7 @@ CREATE TABLE posts (
   deleted_by     BIGINT UNSIGNED NULL,
   PRIMARY KEY (id),
   KEY idx_posts_thread (thread_id, created_at),
+  KEY idx_posts_thread_read (thread_id, is_deleted, is_pending, created_at, id), -- chronological live-read cursor/rank (`0082`)
   KEY idx_posts_author (user_id),
   FULLTEXT KEY ft_posts_body (body),                        -- search (PRODUCT_DESIGN §6.9); index BUILT in Phase 2 (P2-06), not Phase 1
   CONSTRAINT fk_posts_thread FOREIGN KEY (thread_id) REFERENCES threads(id),
@@ -376,7 +377,7 @@ CREATE TABLE reactions (
 CREATE TABLE thread_user (
   user_id           BIGINT UNSIGNED NOT NULL,
   thread_id         BIGINT UNSIGNED NOT NULL,
-  last_read_post_id BIGINT UNSIGNED NULL,                   -- unread = thread.last_post_id > this
+  last_read_post_id BIGINT UNSIGNED NULL,                   -- cursor identity; compare its post's (created_at,id) with thread (last_post_at,last_post_id)
   is_starred        TINYINT(1)      NOT NULL DEFAULT 0,
   PRIMARY KEY (user_id, thread_id),
   KEY idx_tu_starred (user_id, is_starred),
@@ -1308,6 +1309,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.43 | 2026-08-27 | Chronological read-cursor migration `0082_posts_read_order_index` adds `posts.idx_posts_thread_read (thread_id,is_deleted,is_pending,created_at,id)`. `thread_user.last_read_post_id` remains the locked per-thread cursor identity; unread, first-unread, context, and repair logic resolve its post and compare `(created_at,id)` tuples so split/merge/import ID skew cannot move readers backward or hide later posts. No cursor column or per-post receipt table was added. |
 | v1.42 | 2026-08-09 | Link-preview enablement migration `0081_link_preview_enablement` completes the `link_previews` carryover for its default-on graduation (ADR 0025). Adds `boards.link_previews_enabled TINYINT(1) NOT NULL DEFAULT 0` — the DECISIONS §6 #5 locked per-board opt-in, re-checked at fetch time so switching a board off stops its queued backlog — and extends `link_previews.status` with a `removed` member plus `removed_by`/`removed_at`. `removed` exists because `purged` is deliberately revived by the queue upsert (`status = IF(status = 'purged', 'queued', status)`), so a member who removed a card from their own post would see it return on the next edit; `removed` survives that upsert and is refused by operator refresh. Both directions `information_schema`-guarded; `down()` drops the columns and folds any surviving `removed` row into `purged` before narrowing the ENUM, so MySQL never rewrites those rows to the empty string. |
 | v1.41 | 2026-08-04 | Index-hygiene migration `0080_drop_redundant_indexes` finishes the sweep started by `0079`: drops `conversation_participants.idx_cp_user (user_id)` — added by `0025`, superseded by `0048`'s `idx_cp_active_user (user_id, left_at)` — and `link_previews.idx_preview_source (source_type, source_id)`, a prefix of `0058`'s own `uq_preview_source_url (source_type, source_id, url_hash)`. Both are strict leftmost prefixes of a surviving index, so no read and no foreign key loses coverage (`fk_cp_user` keeps `user_id` leftmost on `idx_cp_active_user`; the link-preview upsert still resolves `ON DUPLICATE KEY` through the unique key). Measured on a seeded scratch DB, dropping `idx_cp_user` also removed an `index_merge intersect` plan from the DM inbox query in favour of a single `ref` lookup. Both directions `information_schema`-guarded. New `AppSchemaIndexHygieneTest` asserts the invariant (no non-unique BTREE index may be a leftmost prefix of another) so a reintroduction fails the suite rather than surfacing later as a provider advisory. |
 | v1.40 | 2026-08-04 | Index-hygiene migration `0079_drop_redundant_profile_field_index` drops `user_profile_fields.idx_user_profile_field_user (user_id, position)`, a strict duplicate of `uq_user_profile_field_position (user_id, position)` created by `0062` (flagged by a PlanetScale redundant-index recommendation on `imladris-db`). No column shape change and no lost coverage: the unique key serves `WHERE user_id = ? ORDER BY position` and keeps `user_id` as its leftmost prefix for `fk_user_profile_field_user`. Both directions are `information_schema`-guarded so an out-of-band drop/re-add does not break the run. |

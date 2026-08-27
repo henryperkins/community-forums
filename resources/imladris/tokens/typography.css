@@ -36,9 +36,14 @@
                                      which is the SEMANTIC INK COLOR in colors.css
                                      and production app.css — never a size) */
     --text-sm:         0.95rem;
+    --text-fine:       0.86rem;   /* small prose: signatures, notes,
+                                     helper lines under a control      */
     --text-meta:       0.78rem;   /* Marcellus meta lines             */
     --text-eyebrow:    0.72rem;   /* tracked caps eyebrow             */
-    --text-chip:       0.62rem;   /* status chip caps                 */
+    --text-chip:       0.7rem;    /* status chip caps — the scale floor.
+                                     Tracked caps below ~11px stop being read
+                                     and start being texture, so nothing in the
+                                     system is allowed to set type smaller. */
 }
 
 /* ── Base element styles ─────────────────────────────────────────────────── */

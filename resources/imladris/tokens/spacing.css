@@ -42,10 +42,15 @@
     /* ── Focus — a gold halo over a high-contrast ring. ─────────────────── */
     --focus-ring: rgba(194,154,68,.7);
 
-    /* ── Layout rails ────────────────────────────────────────────────────── */
+    /* ── Layout rails ─────────────────────────────────────────────────────
+       The app has one global shell (.app-shell = --sidebar-w + 1fr) and per-route
+       nested shells inside .main. --list-w is the inbox queue; --pane-w is the
+       third column (DM details rail). See guidelines/app-shell.card.html. */
     --maxw: 1280px;
     --sidebar-w: 272px;
     --list-w: 410px;
+    --pane-w: 320px;
+    --pane-min: 260px;
     --topbar-h: 62px;
 }
 

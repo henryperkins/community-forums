@@ -6,7 +6,7 @@ Where most forum software looks cheap, RetroBoards is dressed in Imladris: **par
 
 > *Status is verified, not asserted; outcomes resolve into artifacts; testimony never outranks the work.*
 
-This project is the **source of truth**: the tokens consumers link, the reusable React primitives, the foundation specimens, and high-fidelity recreations of the product. Everything renders from CSS variables on `styles.css`; the components compile into `_ds_bundle.js`, exposed as `window.ImladrisDesignSystem_c3e027`.
+This project is the **source of truth** for tokens, component source, foundation specimens, and high-fidelity product references. Everything visual derives from CSS variables on `styles.css`. The formerly checked-in `_ds_bundle.js` preview output was retired on 2026-08-27 because this repository has no reproducible compiler for it and its compiled code had drifted from the JSX. Production never loaded it. See `PREVIEW_STATUS.md` before trying to execute an imported React preview.
 
 **Also at the root:** `PRODUCTION.md` (the runtime contract consumers must honour + the production parity matrix) · `production-contract.json` (feature-flag truth) · `manifest.json` (inspected commit, open gaps) · `imladris-spec.md` (the distilled implementation spec: status taxonomy, button and monogram anatomy) · `SKILL.md` · `CHANGELOG.md`.
 
@@ -99,7 +99,7 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 - `assets/` — `elven-star.svg`, `commend-star.svg`, `brand/` mood imagery, `fonts/` (WOFF2 + OFL).
 - `guidelines/` — 19 foundation specimens shown on the Design System tab: parchment, evergreen, gold, river, ink, twilight, status; type-display / label / body / mono / scale; spacing, radii, shadows; star, motifs, voice, vocabulary.
 
-**Components** — 8 groups on `window.ImladrisDesignSystem_c3e027`; each has `.jsx` + `.d.ts`, the primitives also a `.prompt.md`, and one `@dsCard` per group.
+**Components** — 8 source groups; each has `.jsx` + `.d.ts`, the primitives also a `.prompt.md`, and one `@dsCard` per group. Treat the JSX as reference source unless it has been compiled by the upstream authoring environment.
 - `brand/` — `EightPointStar`, `CommendStar`.
 - `core/` — `Button`, `Pill`, `Tag`, `Badge`, `Chip`, `Card`.
 - `identity/` — `Monogram`, `StarButton`, `Reaction`.
@@ -109,7 +109,7 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 - `admin/` — `AdminNav`, `ADMIN_AREAS`: the admin chrome every `Admin —` template mounts. Pass `area` and nothing else; it renders real hrefs to its sibling templates unless you pass `onNavigate`.
 - `doc/` — `DocCover`, `SectionHeader`, `Figure`, `Callout`, `SpecTable`: the printable long-form document layer, twilight-safe; `Figure` renders a fill-in slot with no image.
 
-**Templates** (`templates/<slug>/` — starting folders a consumer copies; each a `.dc.html` loading the system via `ds-base.js`)
+**Templates** (`templates/<slug>/` — source handoffs a consumer adapts; their `ds-base.js` loaders target the retired upstream preview namespace and are not an executable runtime in this mirror)
 - **Member surfaces** — one per route, in the order you meet them: `board-index` (`/`: every board by category, plus the digest / tags / search / notices / compose panes that share this shell) · `forum-inbox` (`/inbox`: the cross-board queue, all fifteen server-backed filters, reading pane) · `board-page` (`/c/{slug}`: board masthead over a compact ruled topic list) · `thread-view` (the council topic: post stream, poll, living-brief slot, composer, warden's tools) · `living-brief` (the evidence-bound brief in its three provenance postures) · `user-profile` (gilt cover, regard, marks of esteem, activity tabs) · `users-online` (sidebar roster beside the member directory) · `account-settings` (grouped rail, engraved forms, live two-factor, sessions, connections, guarded delete).
 - **Operator surfaces** — ten `admin-*` templates, all wearing `AdminNav`: `admin-overview` (dashboard & audit) · `admin-content` (boards & tags) · `admin-members` (members & invitations) · `admin-people` (roles & capabilities) · `admin-features` (features & badges) · `admin-settings` (settings & Thread Intelligence) · `admin-appearance` (branding & themes) · `admin-notifications` (email & announcements) · `admin-packages` (packages & registries) · `admin-integrations` (tokens, webhooks & sign-in).
 - **Document** — `engineering-handoff`: a long-form reference built from `components/doc/` — cover, numbered sections, figure slots, callouts, spec tables, with a Parchment / Twilight tweak.
@@ -117,7 +117,7 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 **Feature activation** (`feature-ui/` — one designed surface per GA flag, indexed at `feature-ui/index.html`)
 - `polls/` · `tags/` · `rail/` (board folders, saved feeds, expanded feeds, bookmark folders) · `organize/` (the same rail features gathered into the one surface a member works in) · `moderation/` (workflow bar, split & merge). `shared/` holds their common chrome.
 
-**UI kits** (`ui_kits/<product>/` — interactive recreations of real product surfaces; each has its own `README.md`)
+**UI kits** (`ui_kits/<product>/` — imported authoring references; source remains inspectable, but bundle-dependent interaction requires the upstream compiler)
 - `retroboards/` — the **Council Inbox**: the three-pane shell, member/guest split, twilight Profile, Top contributors.
 - `auth/` — the **gate**: login, passkeys, register, forgot, reset, MFA, email-verify, OAuth, colophon.
 - `dm/` — **private counsel**: one reading room in the cool Bruinen register with a lock signature — grouped letters, overflow controls, the new-message dialog, read receipts.
@@ -129,14 +129,6 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 
 ## Using it
 
-```html
-<link rel="stylesheet" href="styles.css">
-<script src="_ds_bundle.js"></script>   <!-- exposes window.ImladrisDesignSystem_c3e027 -->
-<script type="text/babel">
-  const { Button, ThreadRow, Post } = window.ImladrisDesignSystem_c3e027;
-</script>
-```
-
-For static artifacts that don't need the bundle, link `styles.css` and write markup with the documented classNames (`.thread-row`, `.chip`, `.btn`, `.monogram`, …) — see `components.css`.
+For runnable artifacts in this repository, link `styles.css` and write static HTML with the documented class names (`.thread-row`, `.chip`, `.btn`, `.monogram`, …); see `components.css`. For React work, compile the `.jsx` sources in the consuming application or in the upstream design authoring environment. Do not recreate or hand-edit `_ds_bundle.js` here.
 
 **Fonts are self-hosted.** All four families ship as WOFF2 in `assets/fonts/` with their OFL licenses; `tokens/fonts.css` declares plain `@font-face` — no CDN, no `@import`, matching the app's `style-src 'self'` CSP. The app itself ships no webfonts and falls back to a system serif stack; these files exist so design artifacts render the true register.

@@ -68,6 +68,23 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertStringNotContainsString('className="composer-id"', $composer);
     }
 
+    public function test_stale_preview_bundle_is_retired_and_cannot_be_presented_as_generated_source(): void
+    {
+        $mirror = self::ROOT . '/docs/design-system/imladris';
+
+        self::assertFileDoesNotExist($mirror . '/_ds_bundle.js');
+
+        $readme = (string) file_get_contents($mirror . '/README.md');
+        $skill = (string) file_get_contents($mirror . '/SKILL.md');
+        $builder = (string) file_get_contents(self::ROOT . '/src/Support/ImladrisAssetBuilder.php');
+
+        self::assertStringContainsString('retired', strtolower($readme));
+        self::assertStringContainsString('retired', strtolower($skill));
+        self::assertStringNotContainsString('<script src="_ds_bundle.js"></script>', $readme);
+        self::assertStringNotContainsString('<script src="_ds_bundle.js"></script>', $skill);
+        self::assertStringNotContainsString("'_ds_bundle.js',", $builder);
+    }
+
     public function test_reviewed_application_baseline_covers_forum_presentation_and_composer_contracts(): void
     {
         $path = self::ROOT . '/config/imladris-runtime-baseline.json';
@@ -110,6 +127,37 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertDoesNotMatchRegularExpression('/\:root\s*\{[^}]*--parchment-50\s*:/s', $css);
         self::assertStringContainsString('font-size: var(--text-size-body)', $css);
         self::assertStringContainsString('background-image: var(--surface-texture, none)', $css);
+    }
+
+    public function test_thread_and_form_css_keeps_state_on_controls_and_responsive_metadata_readable(): void
+    {
+        $app = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $design = (string) file_get_contents(self::ROOT . '/docs/design-system/imladris/components.css');
+
+        self::assertMatchesRegularExpression(
+            '/\.input-engraved\[aria-invalid="true"\][^{]*\{[^}]*var\(--danger\)/s',
+            $app,
+        );
+        self::assertMatchesRegularExpression('/\.field-cell\s*\{[^}]*gap:\s*4px/s', $app);
+        self::assertMatchesRegularExpression('/\.field-cell\s*>\s*\.field-error\s*\{[^}]*margin:\s*0/s', $app);
+        self::assertStringContainsString('.first-unread-divider', $app);
+        self::assertMatchesRegularExpression('/\.thread-facts-identity\s*\{[^}]*flex-wrap:\s*nowrap/s', $app);
+        self::assertMatchesRegularExpression('/\.thread-operational-facts\s*\{[^}]*white-space:\s*nowrap/s', $app);
+        self::assertMatchesRegularExpression(
+            '/@media \(max-width:\s*768px\).*\.thread-operational-facts\s*\{[^}]*flex:\s*1 1 100%/s',
+            $app,
+        );
+
+        self::assertStringContainsString('.field > .field-hint', $design);
+        self::assertDoesNotMatchRegularExpression('/(^|})\s*\.field-hint\s*\{/m', $design);
+        self::assertMatchesRegularExpression(
+            '/\.link-preview-action\s*\{(?:(?!font-family|cursor).)*\}/s',
+            $design,
+        );
+        self::assertMatchesRegularExpression(
+            '/\.link-preview-action\s+\.linkbtn\s*\{[^}]*(font-family|cursor)/s',
+            $design,
+        );
     }
 
     public function test_shared_console_component_css_is_scoped_and_keeps_existing_layout_guardrails(): void
