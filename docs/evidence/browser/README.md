@@ -54,4 +54,8 @@ surface including its reply shell and `81-thread-tools` for the open Topic tools
 journeys now capture their controls in the Study locations: `29-topic-workflow`
 uses Standing, Watch, and Topic management; `50-split-merge-panel` records the
 restructure modal; `51-thread-merged` records its merged result; and
-`77-living-brief-curator-controls` records curator forms in the Memory section.
+`77-living-brief-curator-controls` records the curator footer at the foot of the
+brief itself — the Memory section of the drawer now holds only the anchor that
+jumps to it — with its Amend composer and More disclosure open, and
+`75-thread-intelligence-fallback` records the curator-only empty panel beside
+the deterministic fallback.
