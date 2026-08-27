@@ -16,6 +16,14 @@ $hasBrief = !empty($living_brief);
 // for: a retired brief, or an AI brief suppressed as stale, leaves its version
 // rows behind. Keyed on $history, which every caller already passes.
 $everPublished = $hasBrief || $history !== [];
+// With no brief showing, partials/living_brief_empty.php promotes the version
+// rows above this footer and gives the first one the filled `.btn`. That is the
+// one state where a filled Resume here would sit adjacent to a filled Restore
+// with nothing arbitrating between them, against the design's one-primary rule.
+// Restore is the action that undoes the retirement; Resume only matters once a
+// brief exists again — restoring one does not resume automation — so Resume is
+// the one that steps down, and only here.
+$restorePromoted = !$hasBrief && $history !== [];
 ?>
 <div class="living-brief-curator" id="living-brief-curator-<?= $threadId ?>">
     <?php /* While automation is paused the brief itself already carries the paused line
@@ -30,7 +38,7 @@ $everPublished = $hasBrief || $history !== [];
         <?php if ($paused): ?>
             <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/automation/resume">
                 <?= $this->csrfField() ?>
-                <button class="btn" type="submit">Resume automatic refresh</button>
+                <button class="<?= $restorePromoted ? 'linkbtn' : 'btn' ?>" type="submit">Resume automatic refresh</button>
             </form>
         <?php else: ?>
             <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/refresh">
@@ -115,6 +123,12 @@ $everPublished = $hasBrief || $history !== [];
                 <button class="btn btn-small" type="submit">Add related topic</button>
             </form>
 
+            <?php /* Both children are gated — Pause on `!$paused`, Retire on `$hasBrief` —
+                     and the post-Retire state is exactly the state where both are false.
+                     An unconditional wrapper there emits an empty `<div>` that `.lb-more-foot`
+                     still paints with a top rule and padding: a curator opening More would
+                     read the related-topic form, then a rule with nothing beneath it. */ ?>
+            <?php if (!$paused || $hasBrief): ?>
             <div class="lb-more-foot">
                 <?php if (!$paused): ?>
                     <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/automation/pause">
@@ -139,6 +153,7 @@ $everPublished = $hasBrief || $history !== [];
                     </details>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
     </details>
 </div>

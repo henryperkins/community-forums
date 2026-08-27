@@ -13824,6 +13824,13 @@ a.account-row-name:hover {
 .lb-version-v { color: var(--gold-ink); font-family: var(--font-mono); font-size: .78rem; }
 .lb-version-status,
 .lb-version-when { color: var(--text-muted); font-size: .78rem; }
+/* `.lb-version-who` is a misnomer kept for the browser spec's row helper: the
+   cell holds the summary's KIND ("Curated summary", "AI-generated · curator
+   edited"), never a person. Undeclared it inherited body size and was the
+   largest text in a row of .78rem meta — the least meaningful reading as the
+   most important. It drops to the row's meta size but keeps body ink, because
+   it IS the cell a curator scans to choose which version to restore. */
+.lb-version-who { color: var(--text-body); font-size: .78rem; }
 .lb-version form { margin-left: auto; }
 
 .lb-more-foot {
@@ -13878,24 +13885,29 @@ a.account-row-name:hover {
    top margin would double that gap inside this tighter panel. */
 .living-brief-empty .living-brief-curator { margin-top: var(--space-2); }
 
-/* Living Brief - entrance motion. The memory slot renders exactly one card,
-   either the published brief or the curator-only empty panel, so the fade
-   belongs to the slot's arrival rather than to which variant filled it;
-   animating the brief alone would leave the curator view the one surface that
-   snaps in. The More disclosure is a native <details>, so its body fades on
-   [open] with no JS involved. The global reduced-motion clamps near the top of
-   this file already reach these, but the per-component opt-out is restated the
-   way every other animated surface here restates it. */
+/* Living Brief - entrance motion. The memory slot holds the published brief OR
+   the pair below it: templates/thread.php renders `.related-topic-fallback` and
+   `.living-brief-empty` together whenever a brief-less topic carries
+   deterministic related rows and its viewer can curate, so the slot can hold two
+   cards, not one. The fade therefore belongs to the slot's arrival rather than to
+   which variant filled it, and all three of its children take it — animating a
+   subset would leave one card fading while its neighbour snapped. The More
+   disclosure is a native <details>, so its body fades on [open] with no JS
+   involved. The global reduced-motion clamps near the top of this file already
+   reach these, but the per-component opt-out is restated the way every other
+   animated surface here restates it. */
 @keyframes lbFade {
     from { opacity: 0; transform: translateY(5px); }
     to   { opacity: 1; transform: none; }
 }
 .living-brief,
+.related-topic-fallback,
 .living-brief-empty { animation: lbFade 240ms var(--ease-calm); }
 .lb-more[open] > .lb-more-body { animation: lbFade 180ms var(--ease-calm); }
 
 @media (prefers-reduced-motion: reduce) {
     .living-brief,
+    .related-topic-fallback,
     .living-brief-empty,
     .lb-more[open] > .lb-more-body { animation: none; }
 }

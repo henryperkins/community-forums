@@ -27,6 +27,36 @@ $thresholdLabel = $thresholdWords[$threshold] ?? (string) $threshold;
 // action the curator came for.
 $hasHistory = $history !== [];
 $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => 'Retired'];
+// Retiring does two things in one transaction (CommunityMemoryService::
+// retireSummary): it retires the published row AND pauses automation. So the
+// ladder's first denial after a retirement is `automation_paused` — a
+// CONSEQUENCE of the retirement, not the reason the brief is gone. The other
+// route into this panel with versions behind it, an AI brief suppressed as
+// stale, leaves its row `published`; that is how the two absences tell
+// themselves apart without guessing.
+$statuses = array_column($history, 'status');
+$wasRetired = in_array('retired', $statuses, true) && !in_array('published', $statuses, true);
+// The eligibility ladder speaks the schema's register: no terminal period, and
+// "thread" where this app's noun is "topic" — including in the member-visible
+// pause line on partials/living_brief.php. Its strings are pinned at source by
+// tests/Unit/ThreadIntelligence/ThreadIntelligenceEligibilityTest.php and shared
+// with the operator console, where "thread" is the right word, so they are
+// adapted HERE, at the one render that puts them in front of a curator reading a
+// topic. The brief-present twin of this paragraph — thread_memory_tools.php's
+// `.living-brief-curator-note` — is mutually exclusive with this panel, so no
+// reader ever sees the two registers side by side.
+$ladderMessage = (string) ($refresh['message'] ?? '');
+if ($ladderMessage === '') {
+    $ladderMessage = 'No brief has been published for this topic yet.';
+} else {
+    // strtr() with an array matches longest key first, so "threads" wins over
+    // "thread". Deliberately case-sensitive: "Thread memory is disabled" names
+    // the operator-facing subsystem, not the topic.
+    $ladderMessage = strtr($ladderMessage, ['threads' => 'topics', 'thread' => 'topic']);
+    if (!str_ends_with($ladderMessage, '.')) {
+        $ladderMessage .= '.';
+    }
+}
 ?>
 <section class="living-brief-empty" aria-label="<?= $hasHistory ? 'No living brief showing' : 'No living brief yet' ?>">
     <p class="living-brief-empty-eyebrow"><?= $hasHistory ? 'No brief showing' : 'No brief yet' ?></p>
@@ -42,6 +72,20 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
             the opening post plus every reply that is public, visible, and approved.
             This one has <?= $eligiblePosts ?>.
         </p>
+    <?php elseif ($wasRetired && $code === 'automation_paused'): ?>
+        <?php /* The canonical post-Retire state. Falling through to the ladder's
+                 message here would answer the curator's question — "where did the
+                 brief go?" — with the pause that retiring switched on, which is the
+                 one slot on this panel where every other branch gives the real
+                 reason. The second clause also arbitrates between the two actions
+                 now on screen: Restore above undoes the retirement, Resume in the
+                 footer below does not, and restoring deliberately leaves automation
+                 paused (AppPhase4GateATest: "restore must not silently resume
+                 automation"). */ ?>
+        <p class="living-brief-empty-copy">
+            Retiring the brief hid it from this topic and paused automatic refresh.
+            Restore a version below to bring it back; automatic refresh stays paused until you resume it.
+        </p>
     <?php elseif ($refreshAllowed && $hasHistory): ?>
         <p class="living-brief-empty-copy">
             This topic is ready for a brief. Refresh to draw a new one, or restore a version below.
@@ -52,9 +96,10 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
             Refresh to draw it now, or publish the first summary yourself.
         </p>
     <?php else: ?>
-        <?php /* Any other denial: say what the eligibility ladder actually said. */ ?>
+        <?php /* Any other denial: say what the eligibility ladder actually said, in
+                 this panel's register rather than the schema's — see $ladderMessage. */ ?>
         <p class="living-brief-empty-copy">
-            <?= $e($refresh['message'] ?? 'No brief has been published for this topic yet.') ?>
+            <?= $e($ladderMessage) ?>
             <?php /* `hourly_limit` is the one denial whose MESSAGE already carries a
                      formatted time — decide() embeds one whenever `$explicit`, and the
                      view model only ever asks through forExplicitRefresh(). Appending

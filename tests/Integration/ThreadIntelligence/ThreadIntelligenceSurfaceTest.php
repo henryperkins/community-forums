@@ -611,7 +611,13 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         $this->assertStatus(200, $offPublicPage);
         $offPublicHtml = $offPublicPage->body();
         self::assertStringContainsString('living-brief-empty', $offPublicHtml);
-        self::assertStringContainsString('Refresh is available only for eligible public threads', $offPublicHtml);
+        // The ladder's own wording is 'Refresh is available only for eligible public
+        // threads' (ThreadIntelligenceEligibility::decide()) — schema register, no
+        // terminal period. That string is pinned at source by the unit test and shared
+        // with the operator console, so the panel adapts it at the render instead: this
+        // app's noun is "topic", and every sentence the panel writes ends in a period.
+        self::assertStringContainsString('Refresh is available only for eligible public topics.', $offPublicHtml);
+        self::assertStringNotContainsString('eligible public threads', $offPublicHtml);
         self::assertStringNotContainsString('eight eligible posts', $offPublicHtml);
         self::assertStringNotContainsString('This one has 8.', $offPublicHtml);
 
@@ -624,7 +630,7 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
             'automated_context' => false,
         ]);
         $rolledBack = $this->get($url)->body();
-        self::assertStringContainsString('Automatic context is disabled', $rolledBack);
+        self::assertStringContainsString('Automatic context is disabled.', $rolledBack);
         self::assertStringNotContainsString('eight eligible posts', $rolledBack);
     }
 
@@ -666,6 +672,28 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         // as "No living brief yet" contradicts the "No brief showing" above it.
         self::assertStringContainsString('aria-label="No living brief showing"', $html);
         self::assertStringNotContainsString('aria-label="No living brief yet"', $html);
+
+        // The panel must give the REASON the brief is gone, not the side effect.
+        // Retiring pauses automation, so the eligibility ladder's first denial here
+        // is `automation_paused` — true, but an answer to a different question, and
+        // this is the one slot where every other branch explains the absence itself.
+        self::assertStringContainsString('Retiring the brief hid it from this topic and paused automatic refresh.', $html);
+        self::assertStringNotContainsString('Automatic refresh is paused for this topic.</p>', $html);
+        self::assertStringNotContainsString('Automatic refresh is paused for this thread', $html);
+
+        // One primary action. Restore is promoted to the surface with the filled
+        // `.btn`, so Resume — which does not undo the retirement, and which restoring
+        // deliberately leaves untouched — steps down beside it rather than presenting
+        // a second filled button with nothing arbitrating between them.
+        self::assertStringContainsString('<button class="linkbtn" type="submit">Resume automatic refresh</button>', $html);
+        self::assertStringNotContainsString('<button class="btn" type="submit">Resume automatic refresh</button>', $html);
+        self::assertStringContainsString('automatic refresh stays paused until you resume it', $html);
+
+        // Pause is gated on `!$paused` and Retire on a published brief, so in this
+        // one state both children of the More footer are absent. The wrapper must go
+        // with them: `.lb-more-foot` carries a top rule and padding, and an empty one
+        // draws a rule under the related-topic form with nothing beneath it.
+        self::assertStringNotContainsString('<div class="lb-more-foot">', $html);
         $rowAt = strpos($html, $restoreRow);
         $footerAt = strpos($html, 'id="living-brief-curator-' . $seed['thread_id'] . '"');
         self::assertNotFalse($rowAt);
