@@ -10,6 +10,11 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
 // partials/living_brief_empty.php (none is). The footer is the same set of
 // controls either way; only the copy that names a published brief changes.
 $hasBrief = !empty($living_brief);
+// "Is a brief showing" and "has this topic ever carried one" are different
+// questions, and the gap between them is exactly the state this panel exists
+// for: a retired brief, or an AI brief suppressed as stale, leaves its version
+// rows behind. Keyed on $history, which every caller already passes.
+$everPublished = $hasBrief || $history !== [];
 ?>
 <div class="living-brief-curator" id="living-brief-curator-<?= $threadId ?>">
     <?php /* While automation is paused the brief itself already carries the paused line
@@ -33,9 +38,10 @@ $hasBrief = !empty($living_brief);
             </form>
         <?php endif; ?>
         <details class="lb-amend">
-            <?php /* There is nothing to amend until something is published, and the
-                     route is the same either way, so only the naming shifts. */ ?>
-            <summary class="linkbtn"><?= $hasBrief ? 'Amend' : 'Write the first summary' ?></summary>
+            <?php /* One route, three truths: amending what is showing, writing the
+                     topic's first summary, and writing its next one after a
+                     retirement — "first" would be a lie when the next publish is v3. */ ?>
+            <summary class="linkbtn"><?= $hasBrief ? 'Amend' : ($everPublished ? 'Write a new summary' : 'Write the first summary') ?></summary>
             <form class="composer" method="post" action="/t/<?= $threadId ?>/summary">
                 <?= $this->csrfField() ?>
                 <label for="summary-body-<?= $threadId ?>">Summary</label>
@@ -65,7 +71,11 @@ $hasBrief = !empty($living_brief);
     <details class="lb-more">
         <summary class="linkbtn"><span class="lb-more-shut">More</span><span class="lb-more-open">Less</span></summary>
         <div class="lb-more-body">
-            <?php if (!empty($history)): ?>
+            <?php /* Gated on $hasBrief: with no brief showing, Restore is the panel's
+                     whole point, so partials/living_brief_empty.php promotes these same
+                     rows above this footer rather than burying them two disclosures
+                     deep. Rendering them here as well would duplicate every form. */ ?>
+            <?php if ($hasBrief && !empty($history)): ?>
                 <?php /* Every summary row, including the one currently published — the view
                          service applies no status or version filter — so the heading must not
                          promise "earlier". A re-restore of the live version stays reachable. */ ?>

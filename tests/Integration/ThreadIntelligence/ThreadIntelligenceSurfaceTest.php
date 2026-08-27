@@ -612,6 +612,92 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('Refresh is available only for eligible public threads', $offPublicHtml);
         self::assertStringNotContainsString('eight eligible posts', $offPublicHtml);
         self::assertStringNotContainsString('This one has 8.', $offPublicHtml);
+
+        // Design acceptance #7: under a rolled-back `automated_context` the ladder
+        // denies before it ever counts posts, so the panel must repeat the ladder's
+        // reason rather than invent a post-count one. Last in this test because
+        // SettingRepository::set() replaces the whole features override.
+        (new SettingRepository($this->db))->set('features', [
+            'community_memory' => true,
+            'automated_context' => false,
+        ]);
+        $rolledBack = $this->get($url)->body();
+        self::assertStringContainsString('Automatic context is disabled', $rolledBack);
+        self::assertStringNotContainsString('eight eligible posts', $rolledBack);
+    }
+
+    public function test_empty_state_after_a_retirement_leads_with_restore_not_first_summary(): void
+    {
+        $seed = $this->seedThread(8, 'Retired brief topic');
+        $admin = $this->makeAdmin(['username' => 'retire-curator']);
+        $this->memory()->publishSummary($this->userEntity($admin), $seed['thread_id'], 'First curated brief', [$seed['post_ids'][0]]);
+        $summaryId = (int) $this->db->fetchValue(
+            'SELECT id FROM thread_summaries WHERE thread_id = ? ORDER BY id DESC LIMIT 1',
+            [$seed['thread_id']],
+        );
+        $this->memory()->retireSummary($this->userEntity($admin), $seed['thread_id']);
+
+        $this->actingAs($admin);
+        $url = '/t/' . $seed['thread_id'] . '-' . $seed['slug'];
+        $html = $this->get($url)->body();
+
+        // A retired version is still a version: the panel must not claim the topic
+        // has never carried a brief, nor offer to write its "first" summary when the
+        // next publish would be v2.
+        self::assertStringContainsString('No brief showing', $html);
+        self::assertStringNotContainsString('No brief yet', $html);
+        self::assertStringContainsString('Write a new summary', $html);
+        self::assertStringNotContainsString('Write the first summary', $html);
+
+        // Restore is the primary action in this state, not a footnote two
+        // disclosures deep, and it renders exactly once.
+        self::assertStringContainsString('Restore a version', $html);
+        $restoreRow = 'name="summary_id" value="' . $summaryId . '"';
+        self::assertSame(1, substr_count($html, $restoreRow), 'one restore form per version, not two');
+        self::assertStringContainsString('<button class="btn" type="submit">Restore</button>', $html);
+        $rowAt = strpos($html, $restoreRow);
+        $footerAt = strpos($html, 'id="living-brief-curator-' . $seed['thread_id'] . '"');
+        self::assertNotFalse($rowAt);
+        self::assertNotFalse($footerAt);
+        self::assertLessThan($footerAt, $rowAt, 'the version rows sit above the curator footer');
+
+        // With automation resumed and a provider configured the ladder allows a
+        // refresh, which is the one branch that would otherwise say "the archive has
+        // not drawn one yet" over a topic whose brief it drew and a curator retired.
+        $this->memory()->resumeAutomation($this->userEntity($admin), $seed['thread_id']);
+        $this->rebuildAppWithProvider();
+        $ready = $this->get($url)->body();
+        self::assertStringContainsString('restore a version below', $ready);
+        self::assertStringNotContainsString('the archive has not drawn one yet', $ready);
+        self::assertStringNotContainsString('publish the first summary yourself', $ready);
+    }
+
+    public function test_empty_state_states_the_next_refresh_time_exactly_once(): void
+    {
+        $seed = $this->seedThread(8, 'Hourly limited topic');
+        $this->db->run(
+            "INSERT INTO thread_intelligence_jobs
+                (thread_id, state, trigger_code, last_generated_at, activity_version, created_at, updated_at)
+             VALUES (?, 'idle', 'post_created', UTC_TIMESTAMP(), 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$seed['thread_id']],
+        );
+        $this->rebuildAppWithProvider();
+        $admin = $this->makeAdmin(['username' => 'hourly-curator']);
+        $this->actingAs($admin);
+        $html = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug'])->body();
+
+        $copyAt = strpos($html, 'class="living-brief-empty-copy"');
+        self::assertNotFalse($copyAt, 'the curator empty state renders');
+        $copyEnd = strpos($html, '</p>', (int) $copyAt);
+        self::assertNotFalse($copyEnd);
+        $copy = substr($html, (int) $copyAt, (int) $copyEnd - (int) $copyAt);
+
+        // ThreadIntelligenceEligibility::decide() embeds a formatted time in the
+        // `hourly_limit` message itself whenever the ask is explicit — and the view
+        // model only ever asks explicitly. Appending the UTC <time> as well would
+        // restate one instant in two timezones.
+        self::assertStringContainsString('Refresh available after', $copy);
+        self::assertStringNotContainsString('<time', $copy);
     }
 
     /**
