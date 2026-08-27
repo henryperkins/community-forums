@@ -132,7 +132,23 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('/privacy#thread-intelligence', $html);
         self::assertStringContainsString('Updated automatically', $html);
         self::assertMatchesRegularExpression('/<time datetime="[^"]+Z">/', $html);
-        self::assertStringNotContainsString('Curate topic memory', substr($html, 0, (int) $headerEnd));
+        // The curator surface must stay out of the TOPIC head. Scope the slice from
+        // `data-thread-study` to the next `</header>`: the first `</header>` in the
+        // document belongs to the shell topbar (`partials/topbar.php:60`), so slicing
+        // from zero would guard the wrong region. Asserted against a curator render,
+        // because a guest never emits the marker at all and the check would be vacuous.
+        $curator = $this->makeAdmin(['username' => 'dom-order-curator']);
+        $this->actingAs($curator);
+        $curatorHtml = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug'])->body();
+        $studyStart = strpos($curatorHtml, 'data-thread-study');
+        self::assertNotFalse($studyStart);
+        $topicHeadEnd = strpos($curatorHtml, '</header>', (int) $studyStart);
+        self::assertNotFalse($topicHeadEnd);
+        $topicHead = substr($curatorHtml, (int) $studyStart, (int) $topicHeadEnd - (int) $studyStart);
+        self::assertStringContainsString('class="breadcrumb"', $topicHead, 'the slice is the topic head');
+        self::assertStringContainsString('living-brief-curator', $curatorHtml);
+        self::assertStringNotContainsString('living-brief-curator', $topicHead);
+        $this->logoutClient();
 
         $empty = $this->seedThread(1, 'No memory panel');
         $emptyPage = $this->get('/t/' . $empty['thread_id'] . '-' . $empty['slug']);
