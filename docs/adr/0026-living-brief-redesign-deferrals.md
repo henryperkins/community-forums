@@ -33,8 +33,9 @@ What shipped is the half of each proposal that is real:
 | §3 | Curator tools moved from the topic-tools drawer to the foot of `.living-brief`, one primary action, plus a new Pause route. |
 | §5 | The curator gate is enforced inside `partials/thread_memory_tools.php` rather than only at the call site, and the empty state explains eligibility with the real threshold and the real count. |
 
-This ADR records what was **not** built, the two judgement calls the specs were
-silent on, and three findings this work surfaced but did not fix.
+This ADR records what was **not** built, the judgement calls the specs were
+silent on or that deviate from them (D1–D5), the three findings this work
+surfaced but did not fix (F1–F3), and the follow-ups it is handing on.
 
 ## Decisions
 
@@ -84,6 +85,41 @@ prominent than the collapsed topic-tools drawer section it replaced. That is a
 deliberate trade — the drawer hid first-summary authoring behind two disclosures
 — but it is a real increase in what a moderator sees on young topics, and if it
 proves noisy the fix is a collapse affordance, not re-hiding Restore.
+
+**D4 — The eligibility ladder's strings are adapted at the render, not at source.**
+`ThreadIntelligenceEligibility::decide()` writes operator-register messages: no
+terminal period, and "thread" where this app's nouns — set by the design spec and
+used by every string this branch wrote, including the member-visible pause line on
+`partials/living_brief.php` — are "topic" and "replies". The curator empty state
+renders those messages verbatim in the one slot where every other branch gives a
+real explanation, so the mismatch is visible there.
+
+Fixed in `partials/living_brief_empty.php` rather than in the service. Three
+reasons. The messages are pinned character-for-character at source by
+`tests/Unit/ThreadIntelligence/ThreadIntelligenceEligibilityTest.php` (six
+assertions) and reused by `ThreadIntelligenceOperationsService` and
+`ThreadIntelligenceQueue`; the operator console is the surface those other
+consumers feed, and there "thread" is the right word, matching
+`thread_intelligence_jobs` and the thread ids the console works in. And the
+brief-present twin of this paragraph — `thread_memory_tools.php`'s
+`.living-brief-curator-note` — is gated on `$hasBrief` while the empty state is
+gated on its negation, so the two registers are mutually exclusive and no reader
+ever sees them side by side. The adaptation is a case-sensitive
+`strtr(['threads' => 'topics', 'thread' => 'topic'])` plus a terminal period,
+deliberately leaving "Thread memory is disabled" alone: that names the subsystem,
+not the topic.
+
+**D5 — Raw `.78rem` rather than `var(--text-meta)`, against the design spec's §9.**
+Spec §9 asks for `.living-brief-label`'s `.78rem` to be swapped for `--text-meta`,
+which is defined as exactly `0.78rem` at `public/assets/imladris.css:248`. It was
+not swapped, and the new rules this branch added (`.lb-more-title`,
+`.lb-version-*`, `.living-brief-empty-eyebrow`) use the raw value too. That is
+deliberate and was previously unrecorded: `--text-meta` has **zero** consumers
+tree-wide, while `app.css` carries ~60 raw `.78rem` declarations, so a lone
+token-using rule in the middle of the living-brief block would read as an
+inconsistency rather than a migration. Adopting the token is a whole-file sweep
+with its own visual-diff evidence, not a line inside a UI slice. Recorded so the
+sweep, when someone runs it, knows this block was skipped on purpose.
 
 ## Deferrals (owned, not dropped)
 
@@ -184,7 +220,23 @@ every later ordinal. Equality is what prevents that today. **Relaxing the union
 semantics would break the ordinal guarantee, so the two must be designed
 together.**
 
-**F2 — An enumeration oracle on `/summary/restore`. Code-reading, not an executed repro.**
+**F2 — An enumeration oracle on the memory routes. Code-reading, not an executed repro.**
+
+**Precision note, added after a whole-branch review: this is not restore-specific,
+and the heading above previously said it was.** The root cause is
+`assertCuratorForLockedThread()`, which runs `WriteGate::assertCanWrite()`, a
+`is_deleted` check, and the `Cap::MEMORY_CURATE` gate — and **no `BoardPolicy`
+read gate at all**. Every route that funnels through it therefore answers **403 on
+a thread that exists but the actor cannot read, and 404 otherwise**: refresh,
+publish, retire, restore, related, pause, and resume — all seven. A non-curator
+can already distinguish "this thread id exists on a board I cannot see" from
+"this thread id does not exist" on any of them, with no `summary_id` involved.
+
+What is specific to `republishSummary()` is only that it resolves the summary row
+*before* the curator check, which makes **its** oracle finer-grained — it leaks
+summary-to-thread membership as well as thread existence. So the ordering below is
+a real second-order finding, but the fix for the class of them is **one read gate
+in one helper**, not one route:
 
 `CommunityMemoryService::republishSummary()` resolves the summary row *before*
 the curator check, and no board read gate runs on that path at all:
@@ -202,10 +254,11 @@ that thread — including a thread on a private or hidden board it cannot read.
 no title, no author, no board name, no write, and no state change. The two miss
 cases are byte-identical 404s.
 
-**Deferred deliberately.** Hoisting the curator assert above the lookup changes
-observable statuses on a route that already has committed browser and PHPUnit
-evidence, so it needs its own change and its own evidence pass rather than a
-drive-by edit inside a UI redesign. It is owned here.
+**Deferred deliberately.** Adding the read gate to
+`assertCuratorForLockedThread()` — and hoisting the summary lookup behind it —
+changes observable statuses on seven routes that already carry committed browser
+and PHPUnit evidence, so it needs its own change and its own evidence pass rather
+than a drive-by edit inside a UI redesign. It is owned here.
 
 **F3 — An entire browser evidence group has been dead, and is dead in CI. Executed repro.**
 
@@ -292,6 +345,43 @@ recorded so it is not lost again.
    consumers in `app.css`. The token itself is still a trap for the next
    consumer. Fixing it belongs to the Imladris token layer, not to app CSS.
 
+3. **One extra `COUNT(*)` per topic-page render, for every viewer, feeding a
+   curator-only sentence.** `ThreadIntelligenceViewService::emptyModel()` calls
+   `ThreadIntelligenceEligibility::initialPostProgress()` unconditionally, which
+   runs a `SELECT COUNT(*) … FROM posts WHERE thread_id = ?` of its own — separate
+   from the count `decide()` already ran on the same predicate. `emptyModel()` is
+   built at the top of `forThread()` on every path, and `ThreadController::show()`
+   calls `forThread()` for every viewer whenever `community_memory` is on. The two
+   numbers it produces are rendered in exactly one place: the
+   `initial_post_threshold` branch of the curator-only empty state. So a guest on
+   a topic that will never show them pays for them.
+
+   Related to follow-up 1 but distinct: that one is `history()`'s unbounded
+   lineage fan-out, this one is a single flat count. **The cheapest fix is a guard,
+   not a refactor** — make `initialPostProgress()` conditional on the viewer being
+   able to reach the branch that renders it, or fold it into the count `decide()`
+   already performs. Recorded rather than implemented: it is a behaviour change to
+   a hot read path, landing last in a UI slice, and it belongs with the
+   follow-up-1 work where the same call site is already being re-examined.
+
+4. **Two `<time datetime>` formats on one topic page.** The brief's own stamp comes
+   from `ThreadIntelligenceViewService::brief()`'s `published_at_utc`, formatted
+   `Y-m-d\TH:i:s\Z` → `2026-08-27T12:00:00Z`. The version rows in the same panel
+   use the global `iso_datetime()` helper (`src/Support/helpers.php`), which is
+   `gmdate('c')` → `2026-08-27T12:00:00+00:00`. Both are valid HTML and denote the
+   same instant; they simply disagree in a machine-readable attribute a scraper or
+   a future JS enhancement would compare. `iso_datetime()` is site-wide, so
+   converging on it is a one-line change in the view service — but it changes a
+   value the browser spec asserts on (`toHaveAttribute('datetime', /Z$/)`), so it
+   needs a spec update and a browser run. Not this branch's to spend.
+
+5. **`.lb-more-related` is an inert hook.** The class is on the related-topic form
+   in `partials/thread_memory_tools.php` and has **zero** references anywhere else
+   — no rule in `app.css`, no selector in `public/assets/*.js`, no test. It was
+   added for a layout rule that the flex defaults on `.lb-more-body` made
+   unnecessary. Harmless, but it reads as a live styling hook to the next person
+   editing that block. Delete it, or give it the rule it implies.
+
 ## Evidence
 
 - **PHPUnit** — `ThreadIntelligenceSurfaceTest` (curator gate across role, state,
@@ -300,8 +390,14 @@ recorded so it is not lost again.
   CSRF-carrying form per version; the pause route curator-gated and rejected for
   guests and non-curators; the curator empty state's numbers matching
   `ThreadIntelligenceEligibility`'s own predicate, and the guest seeing nothing);
-  `AppPhase4GateATest` (anonymous-author masking on brief sources — extended, not
-  weakened); `ThreadIntelligenceOperationsServiceTest` (the partial rendered
+  `AppPhase4GateATest` (anonymous-author masking on brief sources — **unchanged
+  and still green**: this branch touched neither the file nor the masking path,
+  and `git log b04f4726..HEAD -- tests/Integration/Core/AppPhase4GateATest.php`
+  is empty. An earlier draft of this ADR said the coverage was "extended, not
+  weakened", following the design spec's prediction that three methods there
+  would need updating. The prediction was wrong and harmless — the masking
+  contract holds without a change — but no such work happened, so the claim is
+  withdrawn); `ThreadIntelligenceOperationsServiceTest` (the partial rendered
   without a `can_curate_memory` key stays inert); `FormattedContentContractTest`
   (the pinned `class="post-body formatted-content"` contract preserved).
 - **Browser** — `tests/browser/thread-intelligence.spec.ts`, desktop + mobile,

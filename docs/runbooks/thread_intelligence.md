@@ -445,6 +445,14 @@ panel that states why, and leads with Restore when there are versions to restore
 That panel is curator-only by contract: a guest or ordinary member on a
 brief-less topic sees no living-brief markup at all.
 
+After a **retirement** specifically, the panel names the retirement itself as the
+reason rather than the pause it switched on, and Restore is the single primary
+action: Resume renders beside it as a quiet control, because restoring a version
+deliberately leaves automation paused. Pause and Retire both drop out of the More
+disclosure in that state — Pause because automation is already paused, Retire
+because there is no standing brief to retire — so the disclosure holds only the
+related-topic form.
+
 Administrators use `/admin/thread-intelligence` for the redacted health/budget
 dashboard, global pause/resume, provider-latch retry, and per-thread
 retry/reconcile/pause/resume. All mutations are POST + CSRF protected and
