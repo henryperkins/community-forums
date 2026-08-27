@@ -1,9 +1,12 @@
 # ADR 0026: Living Brief redesign — decisions, deferrals, and findings
 
 **Date:** 2026-08-27
-**Status:** Accepted and implemented. Four of the design handoff's five proposed
-changes shipped on branch `worktree-living-brief-redesign` (baseline `b04f4726`);
-the other two are deferred here with the evidence a follow-on slice needs.
+**Status:** Accepted and implemented. The design handoff proposed five changes.
+Four shipped on branch `worktree-living-brief-redesign` (baseline `b04f4726`) —
+§1, §3, §5, and the half of §2 that is buildable here (§2a). Two are deferred
+with the evidence a follow-on slice needs: §2's other half (§2b) and §4. The
+count does not divide evenly because §2 splits into a shipped half and a
+deferred one: four shipped rows in the table below, two deferrals after them.
 **Relates to:** ADR 0019 (Thread Intelligence auto-publication — the subsystem
 this surface renders), `docs/superpowers/specs/2026-08-26-living-brief-redesign-design.md`
 (the design this branch implements, and the authority for what was deferred and
@@ -120,7 +123,8 @@ check**, so the next slice does not have to rediscover them:
 - `[^n]` survives the pipeline as inert literal text. No footnote extension is
   loaded (`src/Support/Markdown.php` registers CommonMark core, Strikethrough,
   Table, TaskList, Autolink, and the app's Spoiler extension, and nothing else),
-  so `A claim [^1].` renders as `<p>A claim about the thing [^1].</p>`.
+  so `A claim about the thing [^1].` renders as
+  `<p>A claim about the thing [^1].</p>`.
 - **But it must carry a leading space.** Appended with no separator to an item
   ending in `!`, `Ship it![^3]` contains `![`, which matches
   `ThreadIntelligenceOutputValidator::UNSAFE_PATTERNS`' Markdown-image-opener
@@ -229,9 +233,24 @@ It matters operationally. `npm run evidence` chains its four groups with `&&`:
 4. `admin-remediation` + `admin-dashboard`
 
 Group 3's non-zero exit means group 4 never runs. `.github/workflows/browser-evidence.yml`
-— the repository's only GitHub workflow — runs exactly `npm run evidence` on any
-push touching `src/`, `templates/`, `public/`, `database/migrations/`, or
-`tests/browser/`, so this fails on Linux CI too, not just locally.
+— the repository's only GitHub workflow — runs exactly `npm run evidence`, on
+`workflow_dispatch` and on any push touching `src/`, `templates/`, `public/`,
+`database/migrations/`, `tests/browser/`, or the workflow file itself. So this
+is a CI failure, not merely a local one.
+
+**Caveat for whoever picks this up: group 1 may stop you before group 3 does,
+and for an unrelated reason.** On Windows, `thread-view-study.spec.ts:349`
+("Study layout matches desktop and mobile geometry") fails on a 15px delta
+where it allows 2 — the width of a classic
+Windows scrollbar gutter (`html { scrollbar-gutter: stable }`, `app.css:11`).
+This branch demonstrated it is not ours by checking `templates/` out at `main`,
+leaving the branch's CSS and PHP in place, and re-running the single test: it
+failed identically. Headless Chromium on Linux — where the workflow runs — uses
+overlay scrollbars and reserves nothing, so group 1 is expected to pass in CI
+and group 3 is expected to be the first real stop there. That expectation has
+**not** been confirmed against an actual CI run; a maintainer reproducing this
+locally on Windows should run the groups individually rather than conclude the
+chain dies at group 1.
 
 **Not fixed here.** Choosing which of the two `openTopicComposer` implementations
 survives (they differ only in parenthesisation of the same ternary) is a decision
@@ -245,12 +264,24 @@ recorded so it is not lost again.
    `ThreadIntelligenceViewService::history()` selects every `thread_summaries`
    row for the thread with no `LIMIT` and no pagination, then calls `lineage()`
    per row — and `lineage()` walks the `parent_summary_id` chain one query per
-   ancestor. Cost is `O(versions × chain depth)` queries per topic-page render
-   for a curator. This is **unchanged from before the redesign** (the old
-   `<select id="summary-restore">` iterated the same rows); rendering forms
-   instead of `<option>`s adds no queries. Left uncapped deliberately, to avoid
-   smuggling a behaviour change into a visual slice. A cap or a single recursive
-   CTE is the fix.
+   ancestor. Cost is `O(versions × chain depth)` queries per topic-page render.
+
+   **Every viewer pays this, not only curators.** `history()` is called
+   unconditionally inside `forThread()` on every path that gets past the read
+   gate, and `ThreadController::show()` calls `forThread()` for every viewer
+   whenever `community_memory` is on — the flag is the only condition, and
+   `$user` may be `null`. Only the *rendering* of the version rows is
+   curator-gated. So a guest reading a heavily-amended public topic runs the
+   same query fan-out and is shown none of it. Size the fix against total topic
+   traffic, not curator traffic.
+
+   This is **unchanged from before the redesign** (the old
+   `<select id="summary-restore">` iterated the same rows, and `forThread()`
+   called `history()` the same way); rendering forms instead of `<option>`s adds
+   no queries. Left uncapped deliberately, to avoid smuggling a behaviour change
+   into a visual slice. A cap, a single recursive CTE, or deferring the
+   `history()` call to viewers who can act on it are all fixes — the last is the
+   cheapest and closes the guest cost outright.
 
 2. **`--surface-cool` still has no dark override.** It is defined once, at
    `public/assets/imladris.css:117` as `var(--mist-100)` (`#EEF1ED`), and neither
