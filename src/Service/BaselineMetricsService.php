@@ -630,6 +630,7 @@ final class BaselineMetricsService
                 new BoardRepository($this->db),
                 new BoardMemberRepository($this->db),
                 new ModerationLogRepository($this->db),
+                new WriteGate(),
             );
 
             $suffix = bin2hex(random_bytes(4));

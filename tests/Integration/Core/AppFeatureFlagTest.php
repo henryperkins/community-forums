@@ -423,6 +423,7 @@ final class AppFeatureFlagTest extends TestCase
             $this->boards(),
             new BoardMemberRepository($this->db),
             new \App\Repository\ModerationLogRepository($this->db),
+            new \App\Security\WriteGate(),
         );
         $invite = $service->create($admin, ['onboarding_board_id' => (string) $board['id']]);
 

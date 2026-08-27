@@ -12,6 +12,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
+use App\Security\WriteGate;
 use App\Service\AuthService;
 use App\Service\InvitationService;
 use Tests\Support\TestCase;
@@ -179,6 +180,46 @@ final class AppInvitationsTest extends TestCase
         ));
     }
 
+
+    /**
+     * Axis 2, "state beats role". `InvitationService` carried no authorization at
+     * all — no `isAdmin()`, no `WriteGate`, no capability gate — and leaned entirely
+     * on `Controller::requireAdmin()`, which checks role and nothing else. So a
+     * suspended admin could still mint invitations and revoke other operators'.
+     *
+     * Minting is the sharper half: an invitation is a credential that outlives the
+     * session that issued it, so a suspended operator handing one out survives their
+     * own suspension.
+     *
+     * `redeem()` is deliberately untouched by this gate — it takes a raw token and no
+     * `User`, and is the public carrier a brand-new account arrives through.
+     */
+    public function test_a_suspended_admin_reads_the_console_but_can_neither_mint_nor_revoke(): void
+    {
+        $this->enableInvitations();
+        $admin = $this->makeAdmin();
+        $this->actingAs($admin);
+        $this->get('/admin/invitations');
+        $this->post('/admin/invitations', []);
+        $id = (int) $this->db->fetchValue('SELECT id FROM invitations ORDER BY id DESC LIMIT 1', []);
+        $before = (int) $this->db->fetchValue('SELECT COUNT(*) FROM invitations', []);
+
+        $this->db->run(
+            "UPDATE users SET status = 'suspended', suspended_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 DAY) WHERE id = ?",
+            [(int) $admin['id']],
+        );
+
+        // Reading survives.
+        $this->assertStatus(200, $this->get('/admin/invitations'));
+
+        // Minting does not.
+        $this->assertStatus(403, $this->post('/admin/invitations', []));
+        self::assertSame($before, (int) $this->db->fetchValue('SELECT COUNT(*) FROM invitations', []));
+
+        // Nor revoking.
+        $this->assertStatus(403, $this->post('/admin/invitations/' . $id . '/revoke', []));
+        self::assertNull($this->db->fetch('SELECT revoked_at FROM invitations WHERE id = ?', [$id])['revoked_at']);
+    }
     public function test_issuance_is_rate_limited(): void
     {
         // TM-IN-07 second half: burst issuance trips the invite_create policy.
@@ -232,6 +273,7 @@ final class AppInvitationsTest extends TestCase
             $this->boards(),
             new BoardMemberRepository($this->db),
             new ModerationLogRepository($this->db),
+            new WriteGate(),
         );
         return $service->create($admin, $input);
     }

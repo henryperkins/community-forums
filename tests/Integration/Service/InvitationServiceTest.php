@@ -12,6 +12,7 @@ use App\Repository\InvitationRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
+use App\Security\WriteGate;
 use App\Service\AuthService;
 use App\Service\InvitationService;
 use App\Service\RepairService;
@@ -42,6 +43,7 @@ final class InvitationServiceTest extends TestCase
             new BoardRepository($this->db),
             new BoardMemberRepository($this->db),
             new ModerationLogRepository($this->db),
+            new WriteGate(),
         );
     }
 
