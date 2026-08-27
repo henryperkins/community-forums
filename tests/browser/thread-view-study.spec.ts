@@ -644,6 +644,7 @@ test('post menu rows stack full-width with no user-agent chrome', async ({ page 
           label: (row.textContent ?? '').trim(),
           top: Math.round(row.getBoundingClientRect().top),
           width: Math.round(row.getBoundingClientRect().width),
+          height: row.getBoundingClientRect().height,
           borderTop: parseFloat(style.borderTopWidth),
           fontFamily: style.fontFamily,
         };
@@ -660,6 +661,23 @@ test('post menu rows stack full-width with no user-agent chrome', async ({ page 
     // The touch block's leading separator is the only sanctioned border in here.
     expect(row.borderTop, `${row.label} carries no user-agent button border`).toBeLessThanOrEqual(1);
     expect(row.fontFamily, `${row.label} uses the label face`).toContain('Marcellus');
+  }
+
+  // On a coarse pointer this menu is not a convenience — it is where the four
+  // toolbar targets went when hover stopped existing, so its rows owe the same
+  // 44px the toolbar buttons pay. The shared row above is sized for a mouse.
+  const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches
+    || matchMedia('(hover: none)').matches
+    || window.innerWidth <= 768);
+  if (coarse) {
+    for (const row of menu.rows) {
+      expect(row.height, `${row.label} clears the 44px touch target`).toBeGreaterThanOrEqual(44);
+    }
+    const pill = pop.locator('.post-menu-reactions .reaction').first();
+    if (await pill.count()) {
+      const box = (await pill.boundingBox())!;
+      expect(box.height, 'reaction pills clear the 44px touch target').toBeGreaterThanOrEqual(44);
+    }
   }
 });
 

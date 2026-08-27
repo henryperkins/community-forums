@@ -10976,6 +10976,15 @@ body.thread-restructure-open { overflow: hidden; }
     .post-toolbar-button,
     .post-toolbar > form > button,
     .post-toolbar > details > summary { width: 44px; height: 44px; }
+    /* This menu exists on touch precisely to hold the targets the toolbar gave
+       up, so its rows have to clear 44px too — the shared row above is sized
+       for a mouse and lands at ~31px. The reaction pills already carry their
+       own floor (`.reaction`, ~800). */
+    .post-menu-pop > a,
+    .post-menu-pop > button,
+    .post-menu-pop > form > button,
+    .post-menu-touch > button,
+    .post-menu-touch > form > button { min-height: 44px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
