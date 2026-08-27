@@ -44,11 +44,50 @@ function fixture(action: string, info: TestInfo): FixtureState {
  * Naming the element is necessary but not sufficient: what a scroll container
  * clips is never painted, and no capture can record pixels the compositor did
  * not draw — an element shot of a surface taller than the pane comes back with
- * the overflow as flat background. So grow the viewport (the pane is
- * viewport-height, so it grows with it) until the whole surface is on screen,
- * capture it, and put the viewport back. The admin console is an ordinary
- * document and keeps its page-level capture.
+ * the overflow as flat background.
+ *
+ * What has to be measured is the scroller, not the viewport. `.thread-conversation`
+ * is `calc(100dvh - var(--topbar-h) - 48px)` and pins `.thread-dock` below the
+ * scroller (app.css:1942-1955), so the visible budget is the viewport less the
+ * topbar, that 48px, and the reply dock — roughly 290px on desktop. Padding by a
+ * constant guesses at that chrome and gets it wrong; `fit()` reads `clientHeight`
+ * off the element's own scrolling ancestor instead, so the pad is whatever the
+ * chrome actually costs, on either viewport, and survives a change to it.
+ *
+ * The assertion is containment for the same reason. Comparing the element's
+ * height against a viewport height set two lines earlier is near-tautological,
+ * and it stayed silent on a genuinely clipped capture. Whether the element's rect
+ * lies inside the scroller's rect is the question the artifact depends on, and it
+ * cannot be satisfied while any part of the surface is still cut off.
+ *
+ * The admin console is an ordinary document and keeps its page-level capture.
  */
+type Fit = { height: number; port: number; deficit: number; clipped: boolean };
+
+/** Measure an element against the ancestor that actually clips it. */
+const fit = (node: Element): Fit => {
+  let scroller: Element | null = node.parentElement;
+  while (scroller !== null && scroller !== document.body && scroller !== document.documentElement) {
+    const overflowY = getComputedStyle(scroller).overflowY;
+    if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') break;
+    scroller = scroller.parentElement;
+  }
+  const rect = node.getBoundingClientRect();
+  const height = Math.ceil(rect.height);
+  if (scroller === null || scroller === document.body || scroller === document.documentElement) {
+    const port = document.documentElement.clientHeight;
+    return { height, port, deficit: height - port, clipped: rect.top < -1 || rect.bottom > port + 1 };
+  }
+  const box = scroller.getBoundingClientRect();
+  return {
+    height,
+    port: scroller.clientHeight,
+    deficit: height - scroller.clientHeight,
+    // A pixel of tolerance for subpixel layout; a clipped surface misses by far more.
+    clipped: rect.top < box.top - 1 || rect.bottom > box.bottom + 1,
+  };
+};
+
 async function shot(page: Page, info: TestInfo, name: string, element?: string): Promise<void> {
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
@@ -66,25 +105,27 @@ async function shot(page: Page, info: TestInfo, name: string, element?: string):
   const locator = page.locator(element);
   const viewport = page.viewportSize();
   expect(viewport, 'element captures need a known viewport to restore').not.toBeNull();
-  // Two passes: growing the viewport reflows the surface, so re-measure once
-  // before deciding the capture height is enough.
-  let grown = false;
-  for (let pass = 0; pass < 2; pass += 1) {
-    const box = await locator.boundingBox();
-    expect(box, `${element} should have a box to capture`).not.toBeNull();
-    const needed = Math.ceil(box!.height) + 160;
-    if (needed <= page.viewportSize()!.height) break;
-    await page.setViewportSize({ width: viewport!.width, height: needed });
-    grown = true;
+  try {
+    // Growing the viewport grows the scroller with it and reflows the surface, so
+    // re-measure each pass rather than trusting the first deficit.
+    for (let pass = 0; pass < 4; pass += 1) {
+      const measured = await locator.evaluate(fit);
+      if (measured.deficit <= 0) break;
+      const current = page.viewportSize()!;
+      await page.setViewportSize({ width: current.width, height: current.height + measured.deficit + 8 });
+    }
+    await locator.scrollIntoViewIfNeeded();
+
+    const framed = await locator.evaluate(fit);
+    expect(
+      framed.clipped,
+      `${element} is still clipped by its scroller (${framed.height}px surface in a ${framed.port}px port): `
+        + 'the capture would record unpainted background where the overflow is',
+    ).toBe(false);
+    await locator.screenshot({ path: target, animations: 'disabled' });
+  } finally {
+    await page.setViewportSize(viewport!);
   }
-  await locator.scrollIntoViewIfNeeded();
-  // The guard for the defect above: a surface taller than the viewport cannot be
-  // wholly on screen, so part of the capture would be unpainted background.
-  const framed = await locator.boundingBox();
-  expect(Math.ceil(framed!.height), `${element} must fit the viewport to be painted whole`)
-    .toBeLessThanOrEqual(page.viewportSize()!.height);
-  await locator.screenshot({ path: target, animations: 'disabled' });
-  if (grown) await page.setViewportSize(viewport!);
 }
 
 async function visit(page: Page, url: string): Promise<void> {
