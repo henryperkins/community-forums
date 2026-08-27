@@ -14,7 +14,7 @@ This is a focused remediation, not a redesign. It preserves every existing route
 
 ## Sources and boundaries
 
-Repository authority remains `DECISIONS.md` → `DESIGN.md` → `SCHEMA.md` → `ADMIN.md`. `ADMIN.md` §9.2 requires the two-row console bar and real-route navigation; §9.4 requires progressive disclosure, a visible horizontal-tier scrollbar, 44px touch targets below 860px, and no JavaScript dependency. `DESIGN.md` §13 requires browser proof as well as server-side tests for visible work.
+Repository authority remains `DECISIONS.md` → `PRODUCT_DESIGN.md` → `SCHEMA.md` → `ADMIN.md`. `ADMIN.md` §9.2 requires the two-row console bar and real-route navigation; §9.4 requires progressive disclosure, a visible horizontal-tier scrollbar, 44px touch targets below 860px, and no JavaScript dependency. `PRODUCT_DESIGN.md` §13 requires browser proof as well as server-side tests for visible work.
 
 ADR 0024 remains binding:
 

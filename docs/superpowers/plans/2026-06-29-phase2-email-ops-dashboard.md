@@ -1058,7 +1058,7 @@ Create `docs/adr/0005-phase2-operator-surface-closeout.md`:
 Recorded under the locked product decisions in
 `docs/superpowers/plans/2026-06-29-phase2-operator-surfaces-contract.md` (decision #1).
 Reverses a recorded Gate B deferral deliberately rather than silently
-(DESIGN §13 / CLAUDE.md "never silently dropped").
+(PRODUCT_DESIGN §13 / CLAUDE.md "never silently dropped").
 
 ## Context
 

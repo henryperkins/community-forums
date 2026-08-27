@@ -15,7 +15,7 @@ This design **keeps** the Slack-like default (no behaviour change, no spec rever
 
 ### Authority / precedence
 
-Unchanged: `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` > `COMPOSER.md`/`USER.md`, and the security invariants outrank this document. In particular:
+Unchanged: `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` > `COMPOSER.md`/`USER.md`, and the security invariants outrank this document. In particular:
 - **Strict CSP holds** — no inline `<script>`/`<style>`. The cue is server-rendered HTML styled by the external `app.css`. **No JavaScript is required.**
 - The canonical Markdown `<textarea>` remains the submit source and no-JS fallback; nothing here touches the submit path.
 - No schema, no migration, no feature flag, no change to `enter_to_send`'s default (`src/Support/PreferenceSchema.php:56` stays `true`).
@@ -98,7 +98,7 @@ On touch the author simply taps Send, which sits in the same box.
 - `PreferenceSchema`, `PreferenceService`, migrations, feature flags, `DECISIONS.md`/`COMPOSER.md`/`USER.md` (no behaviour or default change).
 - The `/settings/composing` page itself (already documents the rule; it is the link target).
 
-## Testing & evidence (DESIGN §13)
+## Testing & evidence (PRODUCT_DESIGN §13)
 
 Behaviour-visible UI change ⇒ PHPUnit **and** browser evidence.
 

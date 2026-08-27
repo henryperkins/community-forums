@@ -1581,7 +1581,7 @@ git commit -m "test: migrate browser evidence to Study tools"
 
 **Interfaces:**
 - Consumes: all prior tasks.
-- Produces: fresh PHPUnit, Playwright, axe, syntax, diff, and visual evidence required by `DESIGN.md` §13.
+- Produces: fresh PHPUnit, Playwright, axe, syntax, diff, and visual evidence required by `PRODUCT_DESIGN.md` §13.
 
 - [ ] **Step 1: Run PHP syntax checks on every changed PHP file**
 

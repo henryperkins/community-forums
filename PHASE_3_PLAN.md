@@ -4,7 +4,7 @@
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
 **Plan status:** **Draft — execution is gated by formal Phase 2 closeout**  
 **Prepared:** 2026-06-25  
-**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
+**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
 
 ## 1. Phase objective
 
@@ -279,7 +279,7 @@ The following decisions are treated as fixed for Phase 3:
 
 - Run the complete Phase 1–3 regression suite and route-permission matrix.
 - Rehearse clean install, Phase 1→latest upgrade where supported, Phase 2→Phase 3 upgrade, feature disablement, safe-mode theme recovery, plugin failure isolation, worker pause/replay, token revocation, and backup restore.
-- Reconcile `README.md`, `DESIGN.md`, `SCHEMA.md`, surface-specific docs, route inventory, runbooks, changelog, and completion evidence with the deployed product.
+- Reconcile `README.md`, `PRODUCT_DESIGN.md`, `SCHEMA.md`, surface-specific docs, route inventory, runbooks, changelog, and completion evidence with the deployed product.
 - Record all accepted Gate A/Gate B items and every explicit deferral.
 - Capture post-release baselines and capacity triggers for later infrastructure decisions.
 
@@ -633,7 +633,7 @@ Later roadmap candidates remain public plugin ecosystem/sandbox, passkeys, addit
 
 - `PHASE_2_PLAN.md` — Gate A/Gate B ownership, Phase 2 closeout requirements, explicit deferrals, and Phase 3 handoff expectations.
 - `README.md` — current live status, top-level Phase 3 scope, selected stack, and evidence policy.
-- `DESIGN.md` §§6.5, 6.13–6.18, 9–13 — composer, settings, theming, presence ownership, onboarding, inbox direction, architecture, non-functional requirements, success measures, and phasing.
+- `PRODUCT_DESIGN.md` §§6.5, 6.13–6.18, 9–13 — composer, settings, theming, presence ownership, onboarding, inbox direction, architecture, non-functional requirements, success measures, and phasing.
 - `DECISIONS.md` — authoritative stack, Markdown/editor, storage, polling, plugin trust, role, anti-abuse, OAuth, 2FA timing, and deferred-system decisions.
 - `SCHEMA.md` §§1–8 — authoritative deployed/future table shapes, Phase 3 build cut, and foreshadowed schema gaps.
 - `COMPOSER.md` §§1–17 — shared composer contract, canonical syntax, media, drafts, submission resilience, safety, accessibility, mobile behavior, architecture, schema, and P0/P1/P2 boundaries.

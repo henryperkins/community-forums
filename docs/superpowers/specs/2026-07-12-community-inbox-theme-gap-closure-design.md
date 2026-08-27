@@ -6,7 +6,7 @@
 
 ## Context
 
-The Engineering Handoff and `DESIGN.md` define RetroBoards as a Community
+The Engineering Handoff and `PRODUCT_DESIGN.md` define RetroBoards as a Community
 Inbox: the inbox is personal, the topic is durable, and the composer is
 immediate. The current Imladris theme already supplies the right visual tokens,
 desktop rail, split-pane Inbox, topic cards, and progressive-enhancement base.

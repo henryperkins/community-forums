@@ -17,7 +17,7 @@
 - **Private keys never touch the database or production code.** Only `registry_trust_keys.public_key` (VARBINARY, PUBLIC bytes) is written. The signing harness lives under `tests/Support/` (autoload-dev only — not shipped) and exposes no secret-key accessor.
 - **PDO `EMULATE_PREPARES=false`:** never bind `LIMIT`/`OFFSET`; never reuse a named placeholder (use `?` positional); **UTC everywhere** (`UTC_TIMESTAMP()` in SQL, `gmdate()` in PHP).
 - **PHPUnit is strict** (`failOnWarning`, `failOnRisky`, `beStrictAboutOutputDuringTests`): ≥1 assertion per test, no stray output, no PHP warnings. Never `echo`/`print` from harness code; telemetry's default sink is `error_log` (stderr — the established kernel pattern at `src/Core/App.php:348`), and unit tests inject a capture sink instead.
-- **Escaping/CSP untouched:** no UI surface anywhere in this plan ⇒ no template, no JS, no Playwright/axe requirement (DESIGN §13 applies to UI-visible work only). Evidence here is enforcing PHPUnit + recorded docs.
+- **Escaping/CSP untouched:** no UI surface anywhere in this plan ⇒ no template, no JS, no Playwright/axe requirement (PRODUCT_DESIGN §13 applies to UI-visible work only). Evidence here is enforcing PHPUnit + recorded docs.
 - **Docs are artifacts:** F11 dossiers are **Recorded — pending owner review** (the exact posture A1/A4/A5 used before ADR 0012 accepted them). Do not mark them accepted.
 - **Commits:** small, per task, message prefix `feat(phase5):`/`test(phase5):`/`docs(phase5):`/`refactor(phase5):`, and end every commit message with:
   `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
@@ -2476,7 +2476,7 @@ Application ↔ database (only ciphertext/hashes cross); application ↔ logs/te
 | TM-SE-07 | APP_KEY loss or rotation bricks every encrypted secret | Total vault loss (availability) | Documented DR: re-mint path per consumer; rotation prefers re-issue over decrypt-migrate (§8.4 last bullet) | Runbook rehearsal: vault unreadable → webhooks/providers re-key without data loss | Inc10 |
 
 ## Residual risk & review notes
-Server-side plaintext IS readable to a root attacker at decrypt time — encryption at rest protects backups/dumps, not a fully compromised host (accepted single-VPS posture, DESIGN §11). Registry trust-root private keys are deliberately absent from this system (operator-held, A4) so no server compromise can sign releases.
+Server-side plaintext IS readable to a root attacker at decrypt time — encryption at rest protects backups/dumps, not a fully compromised host (accepted single-VPS posture, PRODUCT_DESIGN §11). Registry trust-root private keys are deliberately absent from this system (operator-held, A4) so no server compromise can sign releases.
 ```
 
 Create `docs/phase5/threat-models/invitation-privilege.md`:

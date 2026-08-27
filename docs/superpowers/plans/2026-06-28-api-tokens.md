@@ -9,7 +9,7 @@
 **Phase / gate:** Phase 5, Gate A prerequisite. **Sub-project 2 of 4** of the B2
 "trusted hook/webhook/API-token/secret foundation" (ADR 0004 Part B, row B2).
 
-> Precedence (CLAUDE.md): `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` > surface specs.
+> Precedence (CLAUDE.md): `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` > surface specs.
 > Where this design and an authoritative doc disagree, the authoritative doc wins.
 
 ---
@@ -269,7 +269,7 @@ prefixes — first-match-wins is not at risk).
 
 ### 9. Testing & evidence (the "done" bar)
 
-This slice is **UI-visible** (admin token management), so per DESIGN §13 it needs
+This slice is **UI-visible** (admin token management), so per PRODUCT_DESIGN §13 it needs
 **PHPUnit *and* browser/no-JS evidence**.
 
 **Integration (kernel HTTP via `TestCase`; Bearer sent through the `$server`
@@ -373,7 +373,7 @@ existing session/CSRF path is untouched.
 - **Token = `'rbt_' . bin2hex(random_bytes(24))`**, stored only as `hash('sha256', token)`, shown once. Plaintext + password appear in **no** audit/log/response/exception.
 - **PHPUnit strict** (`failOnWarning`/`failOnRisky`): ≥1 assertion per test, no stray output. Integration tests extend `Tests\Support\TestCase`; assert observable HTTP behavior.
 - **Test DB** is the `forum-software-db-1` container (port 3307, `retro`/`retro`); `tests/bootstrap.php` migrate:fresh-es it every run, so `0056` applies automatically.
-- **Commit trailer:** `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`. Stage only each task's named files (never `git add -A`; the tree has a stray `DESIGN.md`).
+- **Commit trailer:** `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`. Stage only each task's named files (never `git add -A`; the tree has a stray `PRODUCT_DESIGN.md`).
 - **Branch:** `b2-service-secret-registry` (current B2 branch).
 
 ---

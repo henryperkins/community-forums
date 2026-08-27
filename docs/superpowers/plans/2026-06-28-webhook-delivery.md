@@ -13,7 +13,7 @@
 - **Program:** Phase 5 Gate A · ADR 0004 Part B (B2 "trusted hook/webhook/API-token/service-secret foundation")
 - **Position:** Sub-project 3 of 4. SP1 (service-secret registry, `0055`) and SP2 (read-only API tokens, `0056`) have landed deploy-dark. SP4 (first-party hook registry) follows.
 - **Branch:** `b2-webhook-delivery` (off the SP1+SP2 HEAD; `main` does not yet contain `0055`/`0056`).
-- **Precedence:** `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` > surface specs. Where this spec and an authoritative doc disagree, the authoritative doc wins.
+- **Precedence:** `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` > surface specs. Where this spec and an authoritative doc disagree, the authoritative doc wins.
 
 ---
 

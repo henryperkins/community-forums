@@ -1458,7 +1458,7 @@ git commit -m "test(thread-intelligence): record live quality acceptance"
 - Create: `docs/evidence/phase4-closeout/thread-intelligence-rollback.md`
 - Create: `docs/evidence/phase4-closeout/thread-intelligence-operations.md`
 - Create: `tests/Unit/Core/ThreadIntelligenceEvidenceMapTest.php`
-- Modify: `DESIGN.md`
+- Modify: `PRODUCT_DESIGN.md`
 - Modify: `USER.md`
 - Modify: `ADMIN.md`
 - Modify: `COMMUNITY.md`
@@ -1533,7 +1533,7 @@ Expected: all desktop/mobile/no-JS cases pass; no serious/critical axe findings;
 - data-processing boundary and provider-storage setting; and
 - data-preserving rollback order.
 
-Update `DESIGN.md`, `COMMUNITY.md`, `USER.md`, and `ADMIN.md` with the approved member, curator, processor, provenance, retention, and operator workflows. Update README/runtime/worker pointers, CHANGELOG, current `PHASE_5_STATUS.md`, Phase 4 ledger/history, Imladris activation map, and ADR implementation/evidence links. Do not yet claim default-on.
+Update `PRODUCT_DESIGN.md`, `COMMUNITY.md`, `USER.md`, and `ADMIN.md` with the approved member, curator, processor, provenance, retention, and operator workflows. Update README/runtime/worker pointers, CHANGELOG, current `PHASE_5_STATUS.md`, Phase 4 ledger/history, Imladris activation map, and ADR implementation/evidence links. Do not yet claim default-on.
 
 - [ ] **Step 5: Add a machine-readable evidence gate test**
 
@@ -1627,7 +1627,7 @@ Expected: PASS while both production defaults remain false because all twelve pr
 - [ ] **Step 8: Commit all pre-flip graduation evidence**
 
 ```bash
-git add tests/browser/thread-intelligence.spec.ts tests/browser/thread-intelligence-fixture.php tests/browser/seed.php tests/browser/package.json tests/browser/README.md .github/workflows/browser-evidence.yml tests/backup/rehearse.sh tests/Integration/Core/AppThreadIntelligenceMigrationTest.php tests/Integration/ThreadIntelligence/ThreadIntelligenceOperationsServiceTest.php docs/runbooks/thread_intelligence.md docs/evidence/phase4-closeout/thread-intelligence-index.md docs/evidence/phase4-closeout/thread-intelligence-security-privacy.md docs/evidence/phase4-closeout/thread-intelligence-rollback.md docs/evidence/phase4-closeout/thread-intelligence-operations.md tests/Unit/Core/ThreadIntelligenceEvidenceMapTest.php DESIGN.md USER.md ADMIN.md COMMUNITY.md README.md CHANGELOG.md PHASE_5_STATUS.md docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md docs/history/PHASE_1-4_HISTORY.md docs/design-system/imladris/ACTIVATED_FEATURES.md docs/adr/0019-thread-intelligence-auto-publication.md docs/evidence/browser/desktop/75-thread-intelligence-fallback.png docs/evidence/browser/desktop/76-living-brief.png docs/evidence/browser/desktop/77-living-brief-curator-controls.png docs/evidence/browser/desktop/78-living-brief-last-good.png docs/evidence/browser/desktop/79-admin-thread-intelligence.png docs/evidence/browser/mobile/75-thread-intelligence-fallback.png docs/evidence/browser/mobile/76-living-brief.png docs/evidence/browser/mobile/77-living-brief-curator-controls.png docs/evidence/browser/mobile/78-living-brief-last-good.png docs/evidence/browser/mobile/79-admin-thread-intelligence.png
+git add tests/browser/thread-intelligence.spec.ts tests/browser/thread-intelligence-fixture.php tests/browser/seed.php tests/browser/package.json tests/browser/README.md .github/workflows/browser-evidence.yml tests/backup/rehearse.sh tests/Integration/Core/AppThreadIntelligenceMigrationTest.php tests/Integration/ThreadIntelligence/ThreadIntelligenceOperationsServiceTest.php docs/runbooks/thread_intelligence.md docs/evidence/phase4-closeout/thread-intelligence-index.md docs/evidence/phase4-closeout/thread-intelligence-security-privacy.md docs/evidence/phase4-closeout/thread-intelligence-rollback.md docs/evidence/phase4-closeout/thread-intelligence-operations.md tests/Unit/Core/ThreadIntelligenceEvidenceMapTest.php PRODUCT_DESIGN.md USER.md ADMIN.md COMMUNITY.md README.md CHANGELOG.md PHASE_5_STATUS.md docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md docs/history/PHASE_1-4_HISTORY.md docs/design-system/imladris/ACTIVATED_FEATURES.md docs/adr/0019-thread-intelligence-auto-publication.md docs/evidence/browser/desktop/75-thread-intelligence-fallback.png docs/evidence/browser/desktop/76-living-brief.png docs/evidence/browser/desktop/77-living-brief-curator-controls.png docs/evidence/browser/desktop/78-living-brief-last-good.png docs/evidence/browser/desktop/79-admin-thread-intelligence.png docs/evidence/browser/mobile/75-thread-intelligence-fallback.png docs/evidence/browser/mobile/76-living-brief.png docs/evidence/browser/mobile/77-living-brief-curator-controls.png docs/evidence/browser/mobile/78-living-brief-last-good.png docs/evidence/browser/mobile/79-admin-thread-intelligence.png
 git commit -m "docs(thread-intelligence): complete graduation evidence"
 ```
 
@@ -1647,7 +1647,7 @@ git commit -m "docs(thread-intelligence): complete graduation evidence"
 - Modify: `docs/evidence/phase4-closeout/thread-intelligence-index.md`
 - Modify: `docs/evidence/phase4-closeout/thread-intelligence-operations.md`
 - Modify: `docs/runbooks/thread_intelligence.md`
-- Modify: `DESIGN.md`
+- Modify: `PRODUCT_DESIGN.md`
 - Modify: `README.md`
 - Modify: `CHANGELOG.md`
 - Modify: `PHASE_5_STATUS.md`
@@ -1798,7 +1798,7 @@ Expected: the guarded scan exits 0 because `rg` found no matches, there are no w
 - [ ] **Step 8: Commit the isolated default-on graduation**
 
 ```bash
-git add src/Core/FeatureFlags.php tests/Integration/Core/AppFeatureFlagTest.php tests/Integration/Core/AppPhase4CarryoverFoundationTest.php tests/Integration/Core/AppAutomatedContextTest.php tests/Integration/Worker/RelatedTopicRefreshWorkerTest.php tests/Integration/Admin/AppAdminFeaturesTest.php CLAUDE.md docs/evidence/deploy-dark-features.md docs/evidence/phase4-closeout/thread-intelligence-index.md docs/evidence/phase4-closeout/thread-intelligence-operations.md docs/runbooks/thread_intelligence.md DESIGN.md README.md CHANGELOG.md PHASE_5_STATUS.md docs/history/PHASE_1-4_HISTORY.md docs/design-system/imladris/ACTIVATED_FEATURES.md docs/adr/0019-thread-intelligence-auto-publication.md docs/superpowers/specs/2026-07-09-thread-intelligence-graduation-design.md
+git add src/Core/FeatureFlags.php tests/Integration/Core/AppFeatureFlagTest.php tests/Integration/Core/AppPhase4CarryoverFoundationTest.php tests/Integration/Core/AppAutomatedContextTest.php tests/Integration/Worker/RelatedTopicRefreshWorkerTest.php tests/Integration/Admin/AppAdminFeaturesTest.php CLAUDE.md docs/evidence/deploy-dark-features.md docs/evidence/phase4-closeout/thread-intelligence-index.md docs/evidence/phase4-closeout/thread-intelligence-operations.md docs/runbooks/thread_intelligence.md PRODUCT_DESIGN.md README.md CHANGELOG.md PHASE_5_STATUS.md docs/history/PHASE_1-4_HISTORY.md docs/design-system/imladris/ACTIVATED_FEATURES.md docs/adr/0019-thread-intelligence-auto-publication.md docs/superpowers/specs/2026-07-09-thread-intelligence-graduation-design.md
 git commit -m "feat(thread-intelligence): graduate defaults on"
 ```
 

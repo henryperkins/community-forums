@@ -18,7 +18,7 @@ Built by reading the product's own code. The authoritative material, in **`henry
 
 - `public/assets/app.css` — the **authoritative token + component CSS**, transcribed into `tokens/` and `components.css`, values unchanged.
 - `templates/partials/*.php` — the real markup (topbar, sidebar, thread_row, post, monogram) the React primitives recreate.
-- `DESIGN.md` — the "Community Inbox" thesis, IA, feature catalog, the tokenised-theme section.
+- `PRODUCT_DESIGN.md` — the "Community Inbox" thesis, IA, feature catalog, the tokenised-theme section.
 - The *RetroBoards Engineering Handoff* + `TOKENS-REF.md` — drove the fidelity pass and the UI-kit screens.
 
 **Related repos** (Imladris lineage): `henryperkins/hperkins-tokens` (the Imladris WordPress block theme), `henryperkins/imladris-governance-theme`. **Mood references** in `assets/brand/`: `mood-hall.png`, `mood-elements.png` — warm stone, mallorn gold, evergreen, candlelight.

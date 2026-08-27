@@ -7,7 +7,7 @@ advisories, key rotation, release documents, manifest validation, and the
 flag-gated install/update lifecycle. Inc 4 adds the declarative theme runtime:
 verified theme packages can build deterministic token-only stylesheets and serve
 them only after explicit operator activation.
-**Authority:** subordinate to `DECISIONS.md` -> `DESIGN.md` -> ADR 0004 (D1-D3)
+**Authority:** subordinate to `DECISIONS.md` -> `PRODUCT_DESIGN.md` -> ADR 0004 (D1-D3)
 -> `docs/phase5/registry-signing-key-custody.md` (A4).
 
 ## Documents (`rb-*.v1`)

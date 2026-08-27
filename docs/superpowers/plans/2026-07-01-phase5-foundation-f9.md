@@ -19,7 +19,7 @@
 - **Non-production guard.** The seeder and runner must **refuse when `app.env` is `production`** (mirror `verify:upgrade`, `bin/console:221`). Pass the env in explicitly so it is unit-testable.
 - **D11 budgets are the gate values (ADR 0004 D11, verbatim):** registry snapshot freshness `24h`; registry fetch p95 `2s`; signature verification p95 `250ms/package`; declarative install/update p95 `10s`; **resolver p95 `5ms`**; WebAuthn/TOTP ceremony p95 `2s` server time; OIDC discovery/JWKS p95 `2s` cached / `5s` cold; invitation redemption p95 `500ms`; webhook delivery timeout `5s`; sandbox execution wall-time default `2s`; no high-impact audit write skipped silently.
 - **§11.3 measurement envelope (required on every record):** route/job, hardware class, OS/isolation profile, PHP version, database version, data fixture, installed-package/role count, concurrency, cache state, measurement window, p50/p95/p99, query count/time, peak memory/CPU, queue age where relevant, error rate.
-- **Evidence (DESIGN §13).** "Inert schema is not evidence." F9 ships enforcing PHPUnit; the generated `docs/evidence/phase5/performance-budgets.md` is the A3 artifact. No UI surface ⇒ no Playwright/axe.
+- **Evidence (PRODUCT_DESIGN §13).** "Inert schema is not evidence." F9 ships enforcing PHPUnit; the generated `docs/evidence/phase5/performance-budgets.md` is the A3 artifact. No UI surface ⇒ no Playwright/axe.
 
 ---
 

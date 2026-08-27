@@ -201,7 +201,7 @@ constraint is progressive enhancement: the page is server-rendered in one pass, 
 render. The report does say this second; it should be the only reason given.
 
 The report's other three `constraint` calls (rows 1, 43, 31) each name a real production constraint —
-layout-owns-the-shell, PE + DESIGN §5.3 crawlable URLs, and ADR 0023 item 4 respectively — and survive.
+layout-owns-the-shell, PE + PRODUCT_DESIGN §5.3 crawlable URLs, and ADR 0023 item 4 respectively — and survive.
 
 ---
 

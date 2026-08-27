@@ -8,7 +8,7 @@ Every surface is real server-rendered HTML + external `app.css`/`app.js` under t
 strict CSP (`script-src 'self'; style-src 'self'`, no inline) — no canvas markup.
 
 The matching server-side behaviour is exercised by
-`tests/Integration/Core/AppImladrisFidelityTest.php` (DESIGN §13: behaviour is
+`tests/Integration/Core/AppImladrisFidelityTest.php` (PRODUCT_DESIGN §13: behaviour is
 tested, not just drawn).
 
 | File | Surface | Shows |

@@ -187,10 +187,10 @@ P5-16 closeout evidence is collected and indexed at `docs/evidence/phase5/gate-a
 Consolidated the documentation tree with **no code-behavior change** (comment-only source edits). A full grep sweep repointed every **path- and link-form** citation on the live/authoritative surface (spec chain, ADRs, evidence, tests, code) to the new locations:
 
 - **Phase 1–4 history merged** — `docs/PHASE_1_COMPLETION.md`, `docs/PHASE_2_STATUS.md`, `docs/PHASE_3_STATUS.md`, and `PHASE_4_STATUS.md` folded into a single `docs/history/PHASE_1-4_HISTORY.md` (anchored `#phase-1-completion` … `#phase-4-status`); every citation across the spec chain, ADRs, evidence, tests, and code repointed to the anchors.
-- **Phase 1 migration manifest relocated** standalone to `docs/history/PHASE_1_MIGRATIONS.md` — kept intact, as it remains SCHEMA's authoritative Phase‑1 column-cut reference with its `§1–§7` numbering. Path/link-form references were repointed; **bare in-prose mentions** of `PHASE_1_MIGRATIONS` (in the phase plans, `DESIGN.md`, and two code comments) were left as-is — the filename is unchanged, so they still resolve by name.
+- **Phase 1 migration manifest relocated** standalone to `docs/history/PHASE_1_MIGRATIONS.md` — kept intact, as it remains SCHEMA's authoritative Phase‑1 column-cut reference with its `§1–§7` numbering. Path/link-form references were repointed; **bare in-prose mentions** of `PHASE_1_MIGRATIONS` (in the phase plans, `PRODUCT_DESIGN.md`, and two code comments) were left as-is — the filename is unchanged, so they still resolve by name.
 - **Design archive consolidated** — `docs/superpowers/specs/` removed, each spec folded into its paired implementation plan (now an *Archived design record*); the five WYSIWYG docs merged into one; added a `docs/superpowers/README.md` index. 38 → 27 files.
 - **Relocated** `docs/PHASE_2_RUNBOOK.md` → `docs/runbooks/operations.md` (live ops runbook) and `admin_ui_review.md` → `docs/history/admin-ux-review-2026-07.md`.
-- **Removed** the unreferenced `docs/design-system/imladris/_scratch/` (a byte-for-byte duplicate of `DESIGN.md` plus scratch PNGs).
+- **Removed** the unreferenced `docs/design-system/imladris/_scratch/` (a byte-for-byte duplicate of `PRODUCT_DESIGN.md` plus scratch PNGs).
 - Net: root `.md` 21 → 18. The `docs/superpowers/` archive and frozen backup-restore logs intentionally retain their historical internal references.
 
 ## [Unreleased] — Phase 4 engineering closeout

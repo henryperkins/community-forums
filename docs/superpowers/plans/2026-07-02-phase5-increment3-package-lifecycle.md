@@ -25,7 +25,7 @@
 - **Audit:** every lifecycle operator action writes a `moderation_log` row (`target_type='package'`, `target_id` = `packages.id` — the 0068 ENUM already covers it). Worker/enforcement actions audit with `actor_id=null`.
 - **Denormalized state gets repairs.** The advisory/blocklist → installed-state enforcement in `PackageHealthService::enforcePolicy()` gets a DB-only mirror `RepairService::repairInstalledPackageStates()` with **identical WHERE semantics**, wired into `repairAll()`.
 - **Public packages are non-critical (decision #10).** Nothing on any core route reads package state; registry fetch happens only on the admin plan/install POST and in workers. An enabled declarative package **executes nothing** in this increment — "enabled" is recorded eligibility; themes activate in Inc 4, integrations in Inc 5.
-- **Evidence (DESIGN §13, §F):** PHPUnit unit + integration; browser (desktop+mobile) + axe for the UI surfaces; noindex assertions; telemetry emission; `package.install_update_p95` measured (D11: 10000 ms p95); runbook + protocol-doc updates; threat-model fixtures **TM-SC-06, TM-SC-07, TM-SC-09** flipped to `implemented` with real test paths.
+- **Evidence (PRODUCT_DESIGN §13, §F):** PHPUnit unit + integration; browser (desktop+mobile) + axe for the UI surfaces; noindex assertions; telemetry emission; `package.install_update_p95` measured (D11: 10000 ms p95); runbook + protocol-doc updates; threat-model fixtures **TM-SC-06, TM-SC-07, TM-SC-09** flipped to `implemented` with real test paths.
 - **Strict PHPUnit:** every test ≥1 assertion; no output; no warnings. Feature flags set per-test via `(new SettingRepository($this->db))->set('features', ['package_registry' => true])`.
 - **Never `git add -A`; every commit stages explicit paths.**
 

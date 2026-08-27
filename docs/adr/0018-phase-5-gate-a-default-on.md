@@ -74,7 +74,7 @@ This decision does not accept Gate B. `server_extensions`, `governance`,
 `service_principals`, and `verified_links` remain default-off and reserved
 until each Gate B workstream lands its own release evidence.
 
-## Verification and DESIGN §13
+## Verification and PRODUCT_DESIGN §13
 
 The flip does change one piece of default rendered output: with `passkeys` on
 by default, `/login` gains the passkey sign-in affordance and every page loads

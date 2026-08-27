@@ -119,7 +119,7 @@ copy(placement).
 
 All eight other `constraint` calls hold and name a real constraint: D1/F-strings (fiction lexicon), D2 (PE +
 ADR 0023 item 6 — verified: *"Console IA per ADMIN §9.2: grouped admin nav (Dashboard · Moderation · Content ·
-People · Appearance · Notifications · Integrations · Settings)"*), D4 (DESIGN.md §5.3 verified line 131:
+People · Appearance · Notifications · Integrations · Settings)"*), D4 (PRODUCT_DESIGN.md §5.3 verified line 131:
 *"every view has a real, shareable, crawlable URL rendered by the server"*), D6, D7 (CSP), D15 (CSRF), D23
 (PE), D67 (PE + CSRF).
 

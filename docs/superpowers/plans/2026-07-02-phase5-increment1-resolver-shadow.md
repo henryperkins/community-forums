@@ -18,7 +18,7 @@
 - **High-impact admin actions require reauth:** role create/update/clone require `current_password` via `ReauthGate::requirePassword` (F7) and `WriteGate::assertCanWrite`.
 - **Strict CSP / no-JS first:** templates are plain PHP server-rendered forms, no inline `<script>`/`<style>`; escape everything with `$e()`.
 - **PHPUnit is strict:** every test ≥1 assertion, no output, no warnings. Integration tests roll back one transaction per test — assert observable behavior, not row counts after "rollback inside rollback".
-- **Evidence (DESIGN §13):** UI-visible surfaces need Playwright desktop+mobile + axe in addition to PHPUnit. Authorization evidence uses direct requests against the real resolver.
+- **Evidence (PRODUCT_DESIGN §13):** UI-visible surfaces need Playwright desktop+mobile + axe in addition to PHPUnit. Authorization evidence uses direct requests against the real resolver.
 - **Reputation/badges/profile fields are never capabilities** (taxonomy §8). Protected keys (`CapabilityCatalog::PROTECTED`) are never role-mapped, never editable, never delegable.
 - Commit after every task: `git commit -m "<type>(phase5): <what> (Inc 1 SPn)"` ending with the `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>` trailer.
 

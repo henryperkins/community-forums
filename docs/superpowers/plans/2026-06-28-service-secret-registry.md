@@ -12,7 +12,7 @@ B2/B3).
 `docs/superpowers/specs/2026-06-28-service-secret-registry-design.md`, now merged into
 this record).
 
-> Precedence reminder (CLAUDE.md): `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` >
+> Precedence reminder (CLAUDE.md): `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` >
 > surface specs. This design implements requirements that those docs already locked;
 > where this doc and an authoritative doc disagree, the authoritative doc wins and
 > this design must be corrected.
@@ -321,7 +321,7 @@ A regression test asserts the flag defaults dark.
 
 ## 7. Testing & evidence (the "done" bar)
 
-Per DESIGN §13: this increment is non-UI infrastructure, so PHPUnit is the evidence
+Per PRODUCT_DESIGN §13: this increment is non-UI infrastructure, so PHPUnit is the evidence
 (no browser/no-JS capture required — there is no rendered surface yet).
 
 **`tests/Integration/Service/SecretVaultTest`** (real test DB; assert observable
@@ -522,7 +522,7 @@ use Tests\Support\TestCase;
 /**
  * Schema-shape checks for the B2 service-secret registry (migration 0055).
  * Additive + inert: the tables exist and match the documented shape; behavior
- * lives in SecretVaultTest. "Inert schema is not evidence" (DESIGN §13).
+ * lives in SecretVaultTest. "Inert schema is not evidence" (PRODUCT_DESIGN §13).
  */
 final class AppServiceSecretsSchemaTest extends TestCase
 {

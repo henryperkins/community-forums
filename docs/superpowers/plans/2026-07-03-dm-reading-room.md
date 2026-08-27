@@ -96,7 +96,7 @@ No new routes, no new tables, no migration.
 4. De-box: grouped runs + hairline dividers over nested cards; one accent plate for "mine/primary"; one decorative move per surface.
 5. Status = word + colour (never colour alone, never emoji); reuse `:root` tokens; motion `--ease-calm` 140/240/420ms, `prefers-reduced-motion` respected.
 
-## Evidence (per phase, per DESIGN §13)
+## Evidence (per phase, per PRODUCT_DESIGN §13)
 
 - `composer test` green (unit + integration; TDD the additive backend reads before wiring templates).
 - Playwright/browser capture of the DM surface (list, conversation, rail open/closed, compose dialog, per-message menu, no-JS fallback) into `docs/evidence/`. "Inert schema is not evidence" — behavior must be exercised.

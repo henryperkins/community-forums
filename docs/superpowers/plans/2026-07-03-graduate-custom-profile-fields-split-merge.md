@@ -15,7 +15,7 @@
 
 Graduate two Phase 4 deploy-dark feature flags out of deploy-dark (`FeatureFlags::DEFAULTS`
 `false` → `true`, operator-reversible via the `features` override), completing their
-DESIGN §13 acceptance evidence:
+PRODUCT_DESIGN §13 acceptance evidence:
 
 1. **`custom_profile_fields`** — bounded extra public profile fields (member surface).
 2. **`split_merge`** — moderator thread split/merge (moderator surface).
@@ -209,7 +209,7 @@ established graduation ritual used by `polls`, `topic_workflow`, `appeals`,
 
 ---
 
-## Verification (before claiming done — DESIGN §13)
+## Verification (before claiming done — PRODUCT_DESIGN §13)
 
 - Full `composer test` green (flipping a default-ON flag makes the surface render on
   every thread + routes go live — catches tests that assumed dark).
@@ -251,7 +251,7 @@ established graduation ritual used by `polls`, `topic_workflow`, `appeals`,
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Flip two Phase 4 deploy-dark flags (`custom_profile_fields`, `split_merge`) to default-ON with the full DESIGN §13 acceptance evidence (PHPUnit + browser/a11y + a seeded-scale repair rehearsal + runbooks + inventory reconciliation).
+**Goal:** Flip two Phase 4 deploy-dark flags (`custom_profile_fields`, `split_merge`) to default-ON with the full PRODUCT_DESIGN §13 acceptance evidence (PHPUnit + browser/a11y + a seeded-scale repair rehearsal + runbooks + inventory reconciliation).
 
 **Architecture:** Follow the established graduation ritual (precedents: `polls`, `appeals`, `custom_emoji`, `profile_media`). `custom_profile_fields` is **render-gated** (marker-based test); `split_merge` is **route-gated** (route-based test) and additionally needs a seeded-scale proof that its in-transaction counter maintenance matches `RepairService`. Each flag lands as its own scoped commit on the current branch.
 
@@ -1304,7 +1304,7 @@ EOF
 
 ---
 
-### Task 8: Final verification (DESIGN §13 completion gate)
+### Task 8: Final verification (PRODUCT_DESIGN §13 completion gate)
 
 **Files:** none (verification only).
 

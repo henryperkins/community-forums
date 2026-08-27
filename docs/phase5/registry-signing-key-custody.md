@@ -4,7 +4,7 @@
 **Status:** Recorded as the A4 entry-gate artifact required by `PHASE_5_PLAN.md`
 §2/§7 (#1); operationalizes ADR 0004 **D2**. **Pending product-owner sign-off**
 on the rotation cadence and the key custodian (§7).
-**Precedence:** subordinate to `DECISIONS.md` → `DESIGN.md` → ADR 0004 (**D2**).
+**Precedence:** subordinate to `DECISIONS.md` → `PRODUCT_DESIGN.md` → ADR 0004 (**D2**).
 
 > **Scope.** This runbook covers the **package-registry / publisher signing trust
 > root** (the supply-chain ed25519 root behind P5-01/02/04/07). It is *not*

@@ -79,7 +79,7 @@ scoped to the active area) → pane**. Depth 2, both horizontal, no rail anywher
 
 `ADMIN.md §9.2` (line 561-563) says verbatim: **"Console information architecture — Left-nav,
 grouped:"** followed by the eight-group table. `ADMIN.md §9.4` says the console *"collapses to one
-column with the section nav in a drawer"*. Neither `DECISIONS.md` nor `DESIGN.md` mentions the
+column with the section nav in a drawer"*. Neither `DECISIONS.md` nor `PRODUCT_DESIGN.md` mentions the
 admin nav model at all (grepped: zero hits for `admin nav`, `left-nav`, `console IA`, `grouped
 rail`, `admin rail`). Under the precedence chain that makes **ADMIN.md the highest authority
 currently on record**, and it mandates the very rail the design deletes.
@@ -375,7 +375,7 @@ All found by `grep -rn "admin-nav-group\|admin-nav-link\|admin-subnav\|Admin sec
 | `tests/browser/admin-dashboard.spec.ts:61` + `expectGroupedDirectory()` (`:93-105`) | `expect(page.locator('.admin-nav-group-title')).toHaveText(GROUPS)` and 26 `[data-admin-nav] :is(a[href=…], [data-destination=…])` each `toHaveCount(1)` | **Hard break.** Same rewrite; `[data-admin-nav]` selector must become `[data-admin-tier]`. |
 | `tests/browser/admin-dashboard.spec.ts` (`expectAxeClean`, `.include('.admin')`) | axe-clean scoped to `.admin` | **Scope break.** The tier moves *outside* `.admin` (it is full-bleed above the content column). The axe include must widen to `.admin-console` or `body`. |
 | `tests/Integration/Core/AppImladrisFidelityTest.php:81` | `assertSeeText($res, 'admin-subnav')` | **Hard break.** `.admin-subnav` is deleted. Retarget to `admin-tier`. |
-| `docs/evidence/browser/<project>/r2-*.png` (grouped nav + appeals card) — produced per `docs/superpowers/plans/2026-07-18-admin-audit-round2-remediation.md:473` | pixel evidence of the grouped rail | Superseded; must be re-shot under DESIGN §13. |
+| `docs/evidence/browser/<project>/r2-*.png` (grouped nav + appeals card) — produced per `docs/superpowers/plans/2026-07-18-admin-audit-round2-remediation.md:473` | pixel evidence of the grouped rail | Superseded; must be re-shot under PRODUCT_DESIGN §13. |
 
 Also in the blast radius (nav mechanics, not placement): `public/assets/app.js:766-875` (drawer,
 scrim, focus trap, 860px `matchMedia`) and `public/assets/app.css:2800-2932`, `:3279-3387`,

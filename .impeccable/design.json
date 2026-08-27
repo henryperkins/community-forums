@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-27T09:33:57Z",
+  "title": "Design System: RetroBoards — Imladris",
+  "extensions": {
+    "colorMeta": {
+      "green-700": {
+        "role": "primary",
+        "displayName": "Evergreen",
+        "canonical": "#2E4A3A",
+        "tonalRamp": ["#1C2E24", "#24402F", "#2E4A3A", "#3A5C49", "#4E7459", "#6E9479", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+      },
+      "gold-500": {
+        "role": "secondary",
+        "displayName": "Mallorn Gold",
+        "canonical": "#C29A44",
+        "tonalRamp": ["#6B5120", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "gold-ink": {
+        "role": "secondary",
+        "displayName": "Gold Ink",
+        "canonical": "#7E5F22",
+        "tonalRamp": ["#6B5120", "#7E5F22", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "river-500": {
+        "role": "tertiary",
+        "displayName": "Bruinen Blue",
+        "canonical": "#3F6E89",
+        "tonalRamp": ["#1E3040", "#2C4D63", "#3F6E89", "#5E8CA6", "#BAD2DF", "#DCE9F0"]
+      },
+      "parchment-100": {
+        "role": "neutral",
+        "displayName": "Parchment",
+        "canonical": "#F5EFE1",
+        "tonalRamp": ["#DED2B8", "#ECE4D2", "#F5EFE1", "#FAF6EC"]
+      },
+      "ink-900": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1B231D",
+        "tonalRamp": ["#1B231D", "#313B33", "#515C52", "#5C685D", "#94A095"]
+      },
+      "mist-100": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#EEF1ED",
+        "tonalRamp": ["#DCE3DD", "#EEF1ED"]
+      },
+      "twilight-900": {
+        "role": "neutral",
+        "displayName": "Twilight",
+        "canonical": "#161D24",
+        "tonalRamp": ["#161D24", "#1E2730", "#283440"]
+      },
+      "leaf": {
+        "role": "primary",
+        "displayName": "Leaf",
+        "canonical": "#4E7459",
+        "tonalRamp": ["#1C2E24", "#24402F", "#3A5C49", "#4E7459", "#6E9479", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+      },
+      "amber": {
+        "role": "secondary",
+        "displayName": "Amber",
+        "canonical": "#B7842F",
+        "tonalRamp": ["#6B5120", "#9A7530", "#B7842F", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "rust": {
+        "role": "tertiary",
+        "displayName": "Rust",
+        "canonical": "#9C4A33",
+        "tonalRamp": ["#4A2318", "#6D3324", "#9C4A33", "#B96A53", "#D18F7B", "#E4B9AC", "#F2DCD5"]
+      },
+      "slate": {
+        "role": "tertiary",
+        "displayName": "Slate",
+        "canonical": "#3F6E89",
+        "tonalRamp": ["#1E3040", "#2C4D63", "#3F6E89", "#5E8CA6", "#BAD2DF", "#DCE9F0"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display — Cormorant Garamond", "purpose": "Page titles, thread and post titles, profile names, the wordmark. Medium weight, never bold." },
+      "headline": { "displayName": "Headline — Cormorant Garamond", "purpose": "Section headings (h2) and the inbox heading." },
+      "title": { "displayName": "Title — Cormorant Garamond", "purpose": "Sub-headings (h3) and board names." },
+      "body": { "displayName": "Body — EB Garamond", "purpose": "Post prose and all reading copy at 17px/1.62, measure ≈ 64ch." },
+      "label": { "displayName": "Label — Marcellus", "purpose": "Lapidary roman caps for eyebrows, chips, meta lines. Button labels use the same family at 0.9rem and are NOT uppercased." },
+      "mono": { "displayName": "Mono — JetBrains Mono", "purpose": "Anything countable: timestamps, reply counts, regard, routes, breadcrumbs. Always tabular numerals." }
+    },
+    "shadows": [
+      { "name": "shadow-xs", "value": "0 1px 2px rgba(27,35,29,.06)", "purpose": "The resting state of every card, thread row, post and button. Barely there." },
+      { "name": "shadow-sm", "value": "0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)", "purpose": "Selected row, accepted answer, switch knob." },
+      { "name": "shadow-md", "value": "0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)", "purpose": "Hover lift on an interactive row." },
+      { "name": "shadow-lg", "value": "0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)", "purpose": "Popovers and menus." },
+      { "name": "shadow-xl", "value": "0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08)", "purpose": "Modal dialogs only." },
+      { "name": "shadow-inset", "value": "inset 0 1px 2px rgba(27,35,29,.07)", "purpose": "Fields and tracks — something pressed into the page." },
+      { "name": "gilt", "value": "inset 0 0 0 1px rgba(194,154,68,.38)", "purpose": "A thin gold inner ring marking a precious avatar: OP, accepted answer, profile, leaderboard top three." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(194,154,68,.7)", "purpose": "The gold focus halo, layered over a 2px evergreen outline." }
+    ],
+    "motion": [
+      { "name": "ease-calm", "value": "cubic-bezier(.22,.61,.36,1)", "purpose": "The only easing in the system. Nothing bounces in Rivendell." },
+      { "name": "dur-fast", "value": "140ms", "purpose": "Hover and press feedback on rows, buttons and tabs." },
+      { "name": "dur-base", "value": "240ms", "purpose": "State transitions with travel — switches, drawers, disclosure." },
+      { "name": "dur-slow", "value": "420ms", "purpose": "Reserved for the largest transitions. All three collapse to 0.001ms under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "shell", "value": "860px" },
+      { "name": "admin-chrome", "value": "900px" },
+      { "name": "pane-density", "value": "760px" }
+    ],
+    "layoutRails": [
+      { "name": "topbar-h", "value": "62px" },
+      { "name": "sidebar-w", "value": "272px" },
+      { "name": "list-w", "value": "410px" },
+      { "name": "maxw", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The evergreen action button. Marcellus label, sentence case, never uppercased.",
+      "html": "<button class=\"ds-btn-primary\">Add your counsel</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: var(--brand, #2E4A3A); color: var(--accent-contrast, #FAF6EC); border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .9rem; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background 140ms cubic-bezier(.22,.61,.36,1), box-shadow 140ms cubic-bezier(.22,.61,.36,1), transform 140ms cubic-bezier(.22,.61,.36,1); } .ds-btn-primary:hover { background: var(--brand-hover, #24402F); } .ds-btn-primary:active { transform: translateY(0.5px) scale(.995); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)), 0 0 0 3px rgba(194,154,68,.7); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The parchment-outline sibling. Same box as primary so rows never shift.",
+      "html": "<button class=\"ds-btn-secondary\">Preview</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: var(--surface-raised, #FAF6EC); color: var(--text, #1B231D); border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .9rem; letter-spacing: .03em; cursor: pointer; transition: background 140ms cubic-bezier(.22,.61,.36,1), border-color 140ms cubic-bezier(.22,.61,.36,1); } .ds-btn-secondary:hover { background: var(--surface-sunken, #ECE4D2); border-color: var(--border-strong, #94A095); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "chip-status",
+      "description": "The status token. Always a wash plus a matching 1px border, and always a word beside the colour.",
+      "html": "<span class=\"ds-chip ds-chip-solved\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><path d=\"M22 4 12 14.01l-3-3\"/></svg>Solved</span><span class=\"ds-chip ds-chip-needs\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3\"/><path d=\"M12 17h.01\"/></svg>Needs answer</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; line-height: 1; padding: 3px 9px; border-radius: 999px; border: 1px solid; vertical-align: middle; } .ds-chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-chip-solved { color: var(--on-done, #24402F); background: var(--surface-done, #EDF3ED); border-color: var(--green-200, #BCD0BF); } .ds-chip-needs { color: var(--on-review, #7E5F22); background: var(--surface-review, #F4EBCF); border-color: var(--gold-200, #EAD9A8); margin-left: 6px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Serif field on raised parchment, with the gold focus halo over an evergreen outline.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Topic title</span><input class=\"ds-input\" type=\"text\" placeholder=\"What would you set before the council?\"></label>",
+      "css": ".ds-field { display: block; } .ds-field-label { display: block; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); letter-spacing: .02em; font-size: .82rem; color: var(--text-muted, #515C52); margin-bottom: 5px; } .ds-input { width: 100%; padding: 9px 11px; font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: 1.0625rem; color: var(--text, #1B231D); background: var(--surface-raised, #FAF6EC); border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)); } .ds-input::placeholder { color: var(--text-faint, #5C685D); } .ds-input:focus { border-color: var(--gold-400, #D2B062); outline: 2px solid var(--accent, #2E4A3A); outline-offset: 1px; box-shadow: inset 0 1px 2px rgba(27,35,29,.07), inset 0 0 0 1px var(--gold-200, #EAD9A8), 0 0 0 3px rgba(194,154,68,.7); }"
+    },
+    {
+      "name": "Filter Tabs",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "Marcellus pills for inbox filters. The active tab fills evergreen; the rest stay transparent until hover.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-tab-active\">All</button><button class=\"ds-tab\">Unread</button><button class=\"ds-tab\">Starred</button><button class=\"ds-tab\">Mine</button></nav>",
+      "css": ".ds-tabs { display: inline-flex; gap: 6px; } .ds-tab { flex: none; white-space: nowrap; border-radius: 999px; padding: 6px 13px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted, #515C52); border: 1px solid transparent; background: transparent; cursor: pointer; } .ds-tab:hover { background: var(--surface-sunken, #ECE4D2); } .ds-tab:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-tab-active { background: var(--brand, #2E4A3A); color: var(--parchment-50, #FAF6EC); font-weight: 500; border-color: var(--brand, #2E4A3A); }"
+    },
+    {
+      "name": "Monogram Avatar",
+      "kind": "custom",
+      "refersTo": "monogram",
+      "description": "A tinted ground with legible dark ink, rotating through ten variants. The gilt ring marks a precious avatar; the leaf dot marks presence.",
+      "html": "<span class=\"ds-avatar-wrap\"><span class=\"ds-monogram ds-monogram-gilt\">EL</span><span class=\"ds-presence-dot\"></span></span><span class=\"ds-monogram ds-mono-river\">AR</span><span class=\"ds-monogram ds-mono-gold\">GL</span>",
+      "css": ".ds-avatar-wrap { position: relative; display: inline-flex; } .ds-monogram { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-weight: 500; font-size: .8rem; letter-spacing: .02em; color: var(--green-800, #24402F); background: var(--green-100, #DCE8DD); flex: 0 0 auto; margin-right: 8px; } .ds-monogram-gilt { box-shadow: inset 0 0 0 1px rgba(194,154,68,.38); } .ds-mono-river { color: var(--river-700, #2C4D63); background: var(--river-100, #DCE9F0); } .ds-mono-gold { color: var(--gold-700, #9A7530); background: var(--gold-100, #F4EBCF); } .ds-presence-dot { position: absolute; right: 7px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; background: var(--presence, #4E7459); box-shadow: 0 0 0 2px var(--surface-raised, #FAF6EC); }"
+    },
+    {
+      "name": "Thread Row",
+      "kind": "card",
+      "refersTo": "thread-row",
+      "description": "The signature object: a parchment card with a status left-rule, a gold unread dot with a translucent halo, and a Cormorant title. Lifts 1px on hover.",
+      "html": "<article class=\"ds-thread-row ds-thread-solved\"><span class=\"ds-monogram\">EL</span><div class=\"ds-thread-main\"><div class=\"ds-thread-byline\"><a class=\"ds-thread-author\" href=\"#\">Elrond</a><span class=\"ds-chip ds-chip-solved\">Solved</span></div><a class=\"ds-thread-title\" href=\"#\">On the disposition of the Ring</a><p class=\"ds-thread-snippet\">The council has weighed every road out of Rivendell, and one remains that none of us would choose freely.</p><div class=\"ds-thread-meta\"><a class=\"ds-thread-board\" href=\"#\">#counsel</a><span>14 counsels</span><time>2h ago</time></div></div><span class=\"ds-unread-dot\"></span></article>",
+      "css": ".ds-thread-row { position: relative; display: flex; gap: 13px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--border-hair, #DED2B8); border-radius: var(--radius-lg, 12px); background: var(--surface-raised, #FAF6EC); box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); overflow: hidden; transition: box-shadow 140ms cubic-bezier(.22,.61,.36,1), border-color 140ms cubic-bezier(.22,.61,.36,1), transform 140ms cubic-bezier(.22,.61,.36,1); } .ds-thread-row::before { content: \"\"; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; } .ds-thread-solved::before { background: var(--leaf, #4E7459); } .ds-thread-row:hover { box-shadow: var(--shadow-md, 0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)); border-color: var(--green-200, #BCD0BF); transform: translateY(-1px); } .ds-thread-main { min-width: 0; flex: 1; } .ds-thread-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; } .ds-thread-author { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, serif); font-weight: 600; font-size: 1.02rem; line-height: 1.05; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-thread-title { display: block; font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, serif); font-weight: 500; font-size: 1.2rem; line-height: 1.2; color: var(--text-strong, #1B231D); letter-spacing: -.01em; text-decoration: none; } .ds-thread-title:hover { color: var(--brand, #2E4A3A); } .ds-thread-snippet { color: var(--text-muted, #515C52); margin: 5px 0 0; font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", Palatino, Georgia, serif); font-size: .98rem; line-height: 1.5; } .ds-thread-meta { font-family: var(--font-label, \"Marcellus\", Optima, Palatino, serif); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint, #5C685D); margin-top: 7px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; } .ds-thread-board { color: var(--gold-ink, #7E5F22); text-decoration: none; } .ds-unread-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2, #C29A44); flex: 0 0 auto; align-self: center; box-shadow: 0 0 0 2px rgba(194,154,68,.22); }"
+    },
+    {
+      "name": "Accepted Answer Post",
+      "kind": "card",
+      "refersTo": "post-accepted",
+      "description": "A post marked as the answer: the done wash, an evergreen left border, a gilt-ringed avatar, and a lapidary flag.",
+      "html": "<article class=\"ds-post ds-post-accepted\"><div class=\"ds-post-avatar\"><span class=\"ds-monogram ds-monogram-gilt\">GA</span></div><div class=\"ds-post-main\"><p class=\"ds-accepted-flag\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><path d=\"M22 4 12 14.01l-3-3\"/></svg>Marked as the answer</p><div class=\"ds-post-head\"><a class=\"ds-post-author\" href=\"#\">Gandalf</a><time class=\"ds-post-time\">3h ago</time></div><div class=\"ds-post-body\"><p>The road goes ever on, but not every road need be walked by the same feet.</p><blockquote>Testimony never outranks the work.</blockquote></div></div></article>",
+      "css": ".ds-post { display: flex; gap: 16px; background: var(--surface-raised, #FAF6EC); border: 1px solid var(--border-hair, #DED2B8); border-radius: var(--radius-lg, 12px); padding: 18px 20px; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); } .ds-post-accepted { border: 1px solid var(--green-200, #BCD0BF); border-left: 3px solid var(--success, #4E7459); background: var(--surface-done, #EDF3ED); box-shadow: var(--shadow-sm, 0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)); } .ds-post-avatar { flex: 0 0 auto; } .ds-post-avatar .ds-monogram { width: 56px; height: 56px; font-size: 1.25rem; margin-right: 0; } .ds-post-main { min-width: 0; flex: 1; } .ds-accepted-flag { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; font-family: var(--font-label, \"Marcellus\", Optima, Palatino, serif); text-transform: uppercase; letter-spacing: .09em; font-size: .64rem; color: var(--on-done, #24402F); } .ds-accepted-flag svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; } .ds-post-head { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; } .ds-post-author { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, serif); font-weight: 600; font-size: 1.2rem; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-post-time { font-family: var(--font-mono, \"JetBrains Mono\", ui-monospace, Menlo, Consolas, monospace); font-size: .72rem; color: var(--text-faint, #5C685D); margin-left: auto; } .ds-post-body { font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", Palatino, Georgia, serif); font-size: 1.0625rem; line-height: 1.62; color: var(--text-body, #313B33); } .ds-post-body > :first-child { margin-top: 0; } .ds-post-body > :last-child { margin-bottom: 0; } .ds-post-body blockquote { margin: 8px 0; padding: 4px 14px; border-left: 2px solid var(--rule-gold, #C29A44); color: var(--text-strong, #1B231D); font-style: italic; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Councillor's Hall",
+    "overview": "This is a room where people keep counsel together and the record survives the conversation. Warm stone and aged parchment, evergreen boughs at the windows, one thread of mallorn gold catching the candlelight — and, underneath the ceremony, a working table. The register is Tolkien-adjacent without cosplay: considered, literary, quietly premium, and never a toy social app. Where most forum software looks cheap, Imladris is dressed.\n\nGravity is the point. The whole product is set in serif — four families, no sans anywhere — because a conversation worth keeping for years deserves the typography of a book rather than a chat client. Colour is warm and low-chroma; nothing is neon; the single gold accent is an indicator, never a field. Motion is calm and short. Nothing bounces in Rivendell.\n\nCeremony is earned, not applied. The hall is dignified, but the table is plain: the everyday controls a member touches a hundred times a day are quiet, legible, and unornamented. Ornament belongs to colophons and footnotes — the marks of esteem, the gilt ring on an accepted answer, the eight-pointed star watermark behind a topic header — not to functional chrome.",
+    "keyCharacteristics": [
+      "All-serif voice: display, lapidary caps, book prose, and tabular mono — four families, zero sans.",
+      "Parchment ground, evergreen brand, one mallorn-gold accent used sparingly.",
+      "Warm-ink shadows, never pure black; surfaces flat at rest and lifting only on state.",
+      "Status always carries a word as well as a colour.",
+      "Two registers, day and twilight, driven entirely by semantic tokens.",
+      "Restrained radii — nothing rounder than 12px except tokens, which are pills."
+    ],
+    "rules": [
+      { "name": "The One Gold Rule", "body": "Mallorn gold is an indicator, never a field. It may be a dot, a rule, a ring, a star, a hairline, or a halo — it may not be the background of anything larger than a chip. Audit test: if a gold region on screen is bigger than a status chip, it is wrong.", "section": "colors" },
+      { "name": "The Word-and-Colour Rule", "body": "Status is never carried by colour alone. Every state that has a hue also has a word: Solved, Needs answer, Decision, Locked, Archived. Audit test: cover the screen's colour and the state is still readable.", "section": "colors" },
+      { "name": "The Semantic-Only Rule", "body": "Application code paints from semantic tokens, never from primitives. The twilight register is a re-pointing of semantics; anything painted from a primitive fails to flip.", "section": "colors" },
+      { "name": "The All-Serif Rule", "body": "There is no sans-serif in this product. Four families, three serif and one mono for data. A sans-serif anywhere is an intrusion from another design system.", "section": "typography" },
+      { "name": "The Lapidary Caps Rule", "body": "The only uppercase text is Marcellus, tracked at 0.08–0.16em, at label sizes. It is a typographic device, not emphasis and not shouting. Sentence case everywhere else, including buttons.", "section": "typography" },
+      { "name": "The Tabular Rule", "body": "Anything countable is set in JetBrains Mono with tabular numerals, so columns align and a changing count does not reflow its row.", "section": "typography" },
+      { "name": "The Real-URL Rule", "body": "Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view.", "section": "layout" },
+      { "name": "The Two-Breakpoint Rule", "body": "860px is the shell breakpoint and 900px is the admin-chrome breakpoint. The stylesheet currently carries twelve distinct max-widths; that sprawl is debt, not vocabulary.", "section": "layout" },
+      { "name": "The Warm-Shadow Rule", "body": "No pure-black drop shadows anywhere. Every shadow is mixed from ink or twilight so it reads as candlelight on parchment rather than a UI kit default.", "section": "elevation" },
+      { "name": "The Lift-On-State Rule", "body": "Surfaces are flat at rest at shadow-xs. Elevation is a response — hover, selection, focus — not a decoration. A thread row lifts exactly 1px on hover.", "section": "elevation" },
+      { "name": "The Twelve-Max Rule", "body": "Nothing that holds content is rounder than 12px. Pills are for tokens only — a pill-shaped button or card misreads as a status token.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do paint from semantic tokens (--surface-raised, --brand, --on-done) so the twilight register flips for free.",
+      "Do pair every status colour with a status word, in the taxonomy already established (Solved, Needs answer, Decision, Pinned, Locked, Archived).",
+      "Do set button labels in Marcellus, sentence case, at 0.9rem/0.03em — tracked capitals are for chips, eyebrows, and meta lines only.",
+      "Do put anything countable in JetBrains Mono with tabular numerals.",
+      "Do keep prose at 17px/1.62 with a measure near 64ch, and topic titles near 28ch.",
+      "Do reach for a hairline before a shadow, and for shadow-xs before anything heavier.",
+      "Do honour prefers-reduced-motion: reduce — the stylesheet already collapses every duration to 0.001ms, and new motion must inherit that.",
+      "Do ship every state server-rendered first; JavaScript decorates through data-* hooks and the existing JSON endpoints."
+    ],
+    "donts": [
+      "Don't introduce a sans-serif, a fifth family, or a webfont from a CDN. The CSP is same-origin and the fonts are self-hosted under OFL.",
+      "Don't write an inline <style> block, an inline <script>, or a style=\"…\" attribute. style-src 'self' blocks all three and the page fails silently.",
+      "Don't use gold as a background for anything larger than a chip, and don't use two accents — the palette has exactly one.",
+      "Don't put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)",
+      "Don't paint directly from a primitive scale token in application CSS.",
+      "Don't round anything holding content past 12px, and don't make a button or card pill-shaped.",
+      "Don't use a pure-black shadow, or add elevation to something that is merely at rest.",
+      "Don't extend the chamfered lapidary register to new surfaces; it is legacy and shrinking.",
+      "Don't invent a new breakpoint. 860px collapses the shell and 900px wraps the admin chrome; reuse them.",
+      "Don't rename the forum lexicon. Reply is counsel, reputation is regard, badges are marks of esteem, like is commend — this vocabulary is a binding brand commitment recorded in PRODUCT.md."
+    ]
+  }
+}

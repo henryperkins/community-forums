@@ -40,7 +40,7 @@ with `prepare.sh` re-seeding between spec groups exactly as `npm run evidence` d
 as a third eyebrow-headed subsection (`:349-354`) and has no `composing` key in its own view state
 machine. `FA-04` classifies the separate `/settings/composing` **rail item** as `feature-added` while
 its *content* is modelled — so the route stays (it has a real GET+POST and a shareable URL,
-DESIGN §5.3) and takes the design's section anatomy.
+PRODUCT_DESIGN §5.3) and takes the design's section anatomy.
 
 ## The two primitives this slice is really about
 

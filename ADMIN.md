@@ -1,11 +1,11 @@
 # RetroBoards — Admin & Moderation Design
 
 **Status:** v0.16 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-09
-**Companion to [DESIGN.md](DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; `Done (mockup)` / `Planned` / `Live` status; InnoDB / `utf8mb4`).
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, PRODUCT_DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; `Done (mockup)` / `Planned` / `Live` status; InnoDB / `utf8mb4`).
 
 ## Scope
 
-This document breaks down the operator side of RetroBoards: **roles & permissions, moderation workflows, board management, user management, theming, notifications, the integrations/plugin system, and the admin Settings UX/UI**. It does not re-spec member-facing reading/posting (see DESIGN.md §6).
+This document breaks down the operator side of RetroBoards: **roles & permissions, moderation workflows, board management, user management, theming, notifications, the integrations/plugin system, and the admin Settings UX/UI**. It does not re-spec member-facing reading/posting (see PRODUCT_DESIGN.md §6).
 
 ## Contents
 
@@ -18,7 +18,7 @@ This document breaks down the operator side of RetroBoards: **roles & permission
 7. Notifications (admin & mod)
 8. Integrations & Plugin System
 9. Admin Settings UX / UI
-10. Data-Model Additions (delta to DESIGN.md §8)
+10. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
 11. Roadmap Delta (admin/mod phasing)
 12. Open Questions
 13. Changelog
@@ -29,7 +29,7 @@ This document breaks down the operator side of RetroBoards: **roles & permission
 
 RetroBoards uses a **fixed role set** (no admin-defined custom roles in v1), deliberately small and legible. Authority is the product of three independent dimensions: **role** (what you are), **state** (whether your account is in good standing), and **scope** (where a power applies).
 
-> **Naming note.** **Resolved (v0.4): the role is "User"** across all docs (DESIGN.md updated to match); "member" appears only casually in prose.
+> **Naming note.** **Resolved (v0.4): the role is "User"** across all docs (PRODUCT_DESIGN.md updated to match); "member" appears only casually in prose.
 
 ### 1.1 Roles
 
@@ -244,7 +244,7 @@ Auto-flags (spam filters, word lists, throttles — §3.8) enter the **same queu
 
 ### 3.6 Audit log
 
-Every moderation and admin action appends an immutable record (`moderation_log`, DESIGN.md §8 + extensions §10): **who, what action, on what target, in what scope, why (reason), when**, plus a before/after snapshot for edits. Append-only (no edit/delete). Visible to Admins site-wide and to Moderators for their boards (`mod.log.view`). The log is the backbone of accountability and appeals.
+Every moderation and admin action appends an immutable record (`moderation_log`, PRODUCT_DESIGN.md §8 + extensions §10): **who, what action, on what target, in what scope, why (reason), when**, plus a before/after snapshot for edits. Append-only (no edit/delete). Visible to Admins site-wide and to Moderators for their boards (`mod.log.view`). The log is the backbone of accountability and appeals.
 
 ### 3.7 Appeals (Phase 3)
 
@@ -324,7 +324,7 @@ Admin CRUD with per-board settings:
 
 | Setting | Purpose |
 |---|---|
-| Name, **slug**, description, icon/emoji | Identity. Slug change issues a 301 redirect (SEO, DESIGN.md §11). |
+| Name, **slug**, description, icon/emoji | Identity. Slug change issues a 301 redirect (SEO, PRODUCT_DESIGN.md §11). |
 | Category, position | Placement & ordering. |
 | **Visibility:** public / hidden / private | Who can see it (§4.3). |
 | **`post_min_role`** | Minimum role to post (e.g. Admin-only announcements). |
@@ -418,7 +418,7 @@ v1: brand (name/logo/colors) + light/dark. Later: retro skin toggle, full token 
 
 ## 7. Notifications (admin & mod)
 
-This section covers **staff-facing** alerts and the Admin's control over the whole notification system. Member-facing notifications are specified in DESIGN.md §6.10; the admin angle (templates, what triggers email, broadcasts) lives here.
+This section covers **staff-facing** alerts and the Admin's control over the whole notification system. Member-facing notifications are specified in PRODUCT_DESIGN.md §6.10; the admin angle (templates, what triggers email, broadcasts) lives here.
 
 ### 7.1 Staff event types
 
@@ -452,7 +452,7 @@ This section covers **staff-facing** alerts and the Admin's control over the who
 
 ### 7.5 Notification email infrastructure (doc v0.2; delivered Phase 2)
 
-The subscription/notification system (DESIGN.md §6.10, §8.3) emails subscribers on new posts/threads. The Admin owns the infrastructure:
+The subscription/notification system (PRODUCT_DESIGN.md §6.10, §8.3) emails subscribers on new posts/threads. The Admin owns the infrastructure:
 
 - **Domain setup first.** Before any notification email can send, the operator configures a sending domain (SPF/DKIM). The Console surfaces domain status and a setup dialog if it isn't ready — **sending is blocked until then.** (Adapts the adjacent project's "check domain status → set up infra" flow to our email integration, §8.7.)
 - **Transactional templates:** `new-post-in-thread` and `new-thread-in-board`, each rendered with thread title, board name, a snippet, and a deep link; subject lines kept short and specific. Editable with preview + test-send (as §7.4).
@@ -466,7 +466,7 @@ Completeness items (audited against an adjacent implementation), translated to o
 
 **Frequency & digests**
 
-- **Per-subscription frequency** — each subscription is **Instant / Daily / Off** (`subscriptions.frequency`, DESIGN.md §8.3); a **thread setting overrides its board**, and "Off" skips all sends for that target.
+- **Per-subscription frequency** — each subscription is **Instant / Daily / Off** (`subscriptions.frequency`, PRODUCT_DESIGN.md §8.3); a **thread setting overrides its board**, and "Off" skips all sends for that target.
 - **Instant** rides the post-insert fan-out (queue worker); **Daily** activity is collected for the digest.
 - **Timezone-aware daily digest** — each user has a **timezone** and a **preferred digest hour** (`users.timezone`, `users.digest_hour`). An **hourly cron** sends a user's digest when their local clock hits that hour and there's new activity.
 - **Watermarking** — `users.last_daily_digest_at` ensures a digest contains only activity since the last one and is never sent twice or empty.
@@ -542,7 +542,7 @@ Server-side plugins run with app privileges, so v1 is **conservative**:
 
 ### 8.7 First-party integration targets
 
-Built as modules/plugins on the hook system, both to be useful and to validate it: **Email/SMTP provider**, **Spam** (Akismet-style `spam.score` provider), **Outbound webhooks** (Slack/Discord), **OAuth login**, **Analytics**, **Search backend** (swap MySQL FULLTEXT → Meilisearch/Elastic, DESIGN.md §14), **Media/CDN** storage.
+Built as modules/plugins on the hook system, both to be useful and to validate it: **Email/SMTP provider**, **Spam** (Akismet-style `spam.score` provider), **Outbound webhooks** (Slack/Discord), **OAuth login**, **Analytics**, **Search backend** (swap MySQL FULLTEXT → Meilisearch/Elastic, PRODUCT_DESIGN.md §14), **Media/CDN** storage.
 
 ### 8.8 v1 scope
 
@@ -550,7 +550,7 @@ Internal event/filter system + the post-render filter pipeline + the email/SMTP 
 
 ## 9. Admin Settings UX / UI
 
-**The Admin Console should feel like a control room / operations inbox** — searchable queues, bulk actions, filters, scoped views, strong auditability, and reversible-by-default actions. It applies Outlook's triage discipline (dense lists, a command bar, keyboard flow) to *running* a community, consistent with the Community-Inbox thesis (DESIGN.md).
+**The Admin Console should feel like a control room / operations inbox** — searchable queues, bulk actions, filters, scoped views, strong auditability, and reversible-by-default actions. It applies Outlook's triage discipline (dense lists, a command bar, keyboard flow) to *running* a community, consistent with the Community-Inbox thesis (PRODUCT_DESIGN.md).
 
 ### 9.1 Two surfaces
 
@@ -626,9 +626,9 @@ with JavaScript disabled.
 
 **Deferred:** email/domain configuration and registration mode (open / approval / invite) stay in the later admin/settings slice because those enforcement paths do not exist yet.
 
-## 10. Data-Model Additions (delta to DESIGN.md §8)
+## 10. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
 
-These extend the core schema in DESIGN.md §8. Same conventions (InnoDB, `utf8mb4`, `BIGINT UNSIGNED` keys).
+These extend the core schema in PRODUCT_DESIGN.md §8. Same conventions (InnoDB, `utf8mb4`, `BIGINT UNSIGNED` keys).
 
 ### 10.1 New tables
 
@@ -803,7 +803,7 @@ CREATE TABLE email_deliveries (
 | Table | Add | Why |
 |---|---|---|
 | `users` | `suspended_until DATETIME NULL` | Temporary suspension expiry (`status` already exists). |
-| `boards` | `visibility ENUM('public','hidden','private') DEFAULT 'public'`, `allow_anonymous TINYINT(1) DEFAULT 0`, `require_approval TINYINT(1) DEFAULT 0`, `edit_window_seconds INT DEFAULT 0` | Per-board access, anon mode, approval hold, edit window. (`post_min_role`, `is_archived` already in DESIGN.md.) |
+| `boards` | `visibility ENUM('public','hidden','private') DEFAULT 'public'`, `allow_anonymous TINYINT(1) DEFAULT 0`, `require_approval TINYINT(1) DEFAULT 0`, `edit_window_seconds INT DEFAULT 0` | Per-board access, anon mode, approval hold, edit window. (`post_min_role`, `is_archived` already in PRODUCT_DESIGN.md.) |
 | `posts` | `is_anonymous TINYINT(1) DEFAULT 0`, `is_pending TINYINT(1) DEFAULT 0`, `ip VARBINARY(16) NULL` | Masked rendering (author still `user_id`); hold/approval queue; post IP (90-day retention, Admin-only audited; built Phase 2). |
 | `threads` | `is_pending TINYINT(1) DEFAULT 0` | New-thread approval hold. |
 | `reports` | `assigned_to BIGINT UNSIGNED NULL`, `reason_code ENUM(...)` | Queue claim; structured reasons (plus free-text). |
@@ -813,12 +813,12 @@ CREATE TABLE email_deliveries (
 
 ## 11. Roadmap Delta (admin/mod phasing)
 
-Mapped onto DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" buckets subdivide into delivery Phases 3–7 — see SCHEMA §6):
+Mapped onto PRODUCT_DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" buckets subdivide into delivery Phases 3–7 — see SCHEMA §6):
 
 - **Phase 1 (MVP) — planned, not yet built.** Seed roles (Admin / User / Guest); a **first-run setup wizard** for creating the first admin, setting the community name, and creating starter categories/boards on a fresh migrated install. Admin board & category CRUD in a minimal **`/admin` console** (create/edit/hide/admin-only private visibility/delete-empty, with slug-change 301 redirects that respect the same read gate before redirecting) alongside **site naming** and a **baseline audit feed**. **Inline moderation**: admins can pin/unpin and lock/unlock threads and soft-delete any post from the thread view, with every action audited to `moderation_log`. **Suspended/banned user write gating**: suspended users keep login + read access but are blocked (403) from creating threads, replying, editing, or deleting; stale sessions for banned users are likewise blocked at write time. **Target evidence (to be created):** `tests/Integration/Core/AppSetupTest.php`, `tests/Integration/Service/SetupServiceTest.php`, `tests/Integration/Core/AppAdminTest.php`, `tests/Integration/Core/AppModerationTest.php`, `tests/Integration/Core/AppWriteGateTest.php`, `tests/Integration/Core/AppPrivateBoardAccessTest.php`, plus HTTP/browser smoke on `/setup`, `/admin`, and authenticated admin flows.
 - **Phase 2 (community essentials).** Moderator role + per-board assignment; **flagging + reports queue**; full content & user moderation actions; audit-log UI; **user management** screen; board visibility (hidden/private) + `board_members`; **in-app notifications + the full notification-preference matrix and timezone-aware daily digests** (the email worker comes online here — see USER §4.6); **password-reset and registration email-verification flows**; email templates; **admin announcements/broadcast** (site banner + opt-in broadcast notification/email, §7.4); **reporter outcome-notifications** ("notify me of the outcome", §3.1); **board/category drag-reorder and board archive** (§4.4–§4.5 — deferred from the Phase 1 minimal console). _(Theming/branding, outbound webhooks, and spam integration moved to Phase 3 — see §11 Phase 3.)_
 - **Phase 3 (polish & scale).** **Branding/theming (brand + dark mode) and retro skin / custom CSS**; automation rules (filters, throttles, approval queues); **spam-scoring integration**; appeals; **internal plugin/hook system GA** + first-party integrations; **outbound webhooks (durable delivery)** + admin API & tokens; advanced privacy flows (export/delete); category-scoped mods; **IP-capture retention/purge job** (90-day purge + anonymise of login/post IPs, §5.5 — the `sessions.ip`/`posts.ip` seam). _(Notification matrix + digests moved to Phase 2.)_
-- **Later — delivery Phases 5–7.** Public plugin ecosystem + sandbox/review (**Phase 5**); granular custom roles (**Phase 5**); multi-community administration (**Phase 7**). _(Priority tier P2; see PHASE_5_PLAN / PHASE_7_PLAN and DESIGN §13.)_
+- **Later — delivery Phases 5–7.** Public plugin ecosystem + sandbox/review (**Phase 5**); granular custom roles (**Phase 5**); multi-community administration (**Phase 7**). _(Priority tier P2; see PHASE_5_PLAN / PHASE_7_PLAN and PRODUCT_DESIGN §13.)_
 
 ## 12. Open Questions
 
@@ -827,7 +827,7 @@ Mapped onto DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" bu
 | # | Question | Owner | Blocking? |
 |---|---|---|---|
 | 1 | **Anonymous** = masked identity for logged-in Users (recommended) vs. guests posting without an account? | Product | §1.3, schema — Phase 2 |
-| 2 | Standardise role naming: **"User"** (this doc) vs "Member" (DESIGN.md). | Product / docs | Low, do soon |
+| 2 | Standardise role naming: **"User"** (this doc) vs "Member" (PRODUCT_DESIGN.md). | Product / docs | Low, do soon |
 | 3 | Confirm fixed roles for v1 (no granular custom roles until P2). | Product | Phase 1 |
 | 4 | Plugin runtime & **sandbox/review** model before any third-party plugins. | Eng | Blocks public ecosystem (P2) |
 | 5 | Do we store IP addresses at all, and for how long? (Ban-evasion vs privacy.) | Henry / legal | Phase 2 privacy |
@@ -847,9 +847,9 @@ Mapped onto DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" bu
 | v0.13 | 2026-06-28 | Reconciled outbound webhook storage with the B2 delivery implementation: `webhooks.secret` is replaced by `secret_ref` (`svcsec_*` SecretVault reference), added the durable `webhook_deliveries` ledger, and documented show-once signing secrets. |
 | v0.12 | 2026-06-26 | Consistency pass: aligned the §2.4 SUSPENDED resolver branch (`GUEST_READONLY_PLUS_SELF` → **`GUEST_READONLY`**) and the §2.5 worked example ("read-only+self" → "read-only") to the already-decided read-only (no self-write) behaviour in §11 + PHASE_1_PLAN; corrected §8.8 v1 scope to the internal hook system + email only, noting outbound webhooks, spam integration, and hook-system GA land in **Phase 3** (DECISIONS §4 #10; v1 = Phases 1–2); added `posts.ip VARBINARY(16) NULL` to the §10.2 additions (90-day retention, Admin-only audited; built Phase 2 — DECISIONS §4 #5, SCHEMA reconciliation #10). **Resolved (suspend scope) [Henry]:** set §3.4 Suspend scope to **Board/Site** to match §2.2 — Admins suspend site-wide (global `users.status`/`suspended_until`); a moderator suspends within their assigned board(s) as a time-limited board read-only state (`bans` `scope='board'`/`type='post'`/`expires_at`), enforced via the board-level gate, not the global account flag. |
 | v0.11 | 2026-06-26 | **Status-truth pass (nothing is built yet):** rewrote the §11 Phase 1 bullet from "is live" to planned and relabeled its test-file list as **target** evidence (none exists); relabeled the §9 "Live Phase 1 subset" as planned; reworded the v0.5/v0.6/v0.7 entries below from "Shipped/now live" to "Specified (design only — not built)". No scope changes. |
-| v0.10 | 2026-06-26 | Consistency pass: corrected the §3.5 lifecycle-diagram appeal annotation `(P2)` → `(P3)` (the v0.9 pass relabeled the §3.7 header but missed the diagram; Appeals is P3 priority / Phase 3 delivery — DECISIONS §4 #6); mapped §11's "Later (P2)" items to **delivery Phases 5–7** (public plugin ecosystem & custom roles → Phase 5, multi-community → Phase 7) and noted DESIGN §13 subdivides into Phases 3–7; set §12 row 10 (webhooks/API) to its decided value (Phase 3); added **P3** to the header conventions legend; bumped the stale header (was v0.8, behind its own v0.9 row). |
+| v0.10 | 2026-06-26 | Consistency pass: corrected the §3.5 lifecycle-diagram appeal annotation `(P2)` → `(P3)` (the v0.9 pass relabeled the §3.7 header but missed the diagram; Appeals is P3 priority / Phase 3 delivery — DECISIONS §4 #6); mapped §11's "Later (P2)" items to **delivery Phases 5–7** (public plugin ecosystem & custom roles → Phase 5, multi-community → Phase 7) and noted PRODUCT_DESIGN §13 subdivides into Phases 3–7; set §12 row 10 (webhooks/API) to its decided value (Phase 3); added **P3** to the header conventions legend; bumped the stale header (was v0.8, behind its own v0.9 row). |
 | v0.9 | 2026-06-26 | Consistency pass: changed the §3.7 Appeals header from "(P2)" to "(Phase 3)" (matches DECISIONS §4 #6 + the Phase 3 plan); gave previously-unscheduled operator features explicit owners in §11 — announcements/broadcast, reporter outcome-notifications, and board/category reorder + archive to **Phase 2**, the IP-retention purge job to **Phase 3**; added `email_deliveries.idempotency_key` + `uq_deliv_idem` to the §10.1 DDL to match SCHEMA §7 #9; set §12 row 9 (mod scope) to its decided value and tagged §7.5/§7.6 with their delivery phase. |
-| v0.8 | 2026-06-25 | Consistency pass on §11: moved the full notification matrix + daily digests into **Phase 2** (matching DESIGN/USER and the Phase 2 plan) and added the password-reset/email-verification flows there; moved branding/theming, outbound webhooks, and spam integration to **Phase 3** (matching DESIGN §13 and the Phase 3 plan). |
+| v0.8 | 2026-06-25 | Consistency pass on §11: moved the full notification matrix + daily digests into **Phase 2** (matching DESIGN/USER and the Phase 2 plan) and added the password-reset/email-verification flows there; moved branding/theming, outbound webhooks, and spam integration to **Phase 3** (matching PRODUCT_DESIGN §13 and the Phase 3 plan). |
 | v0.7 | 2026-06-21 | **Specified** the Phase 1 first-run setup wizard (design only — not built): a fresh migrated install gates normal routes to `/setup`, creates the first admin, persists `settings.site_name`, creates starter categories/boards, signs the admin in, and redirects to `/admin`. Email/domain setup and registration-mode controls remain deferred. |
 | v0.6 | 2026-06-21 | **Specified** the next operator slice (design only — not built): **admin inline moderation** (pin/unpin, lock/unlock threads, soft-delete any post) with every action audited to `moderation_log` (actor, action, target, before/after), plus **suspended/banned user write gating** (403 on every write path; stale sessions for banned users are blocked at write time, not just at login). Updated §11. |
 | v0.5 | 2026-06-21 | **Specified** the first admin/operator slice (design only — not built): `/admin` for board/category management, hidden-board toggle, admin-only private visibility, empty-item deletes, site naming, and a lightweight audit feed. The setup wizard, full moderation controls, and the broader Console surface remain follow-up work. |

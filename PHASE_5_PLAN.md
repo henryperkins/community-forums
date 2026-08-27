@@ -4,7 +4,7 @@
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
 **Plan status:** **Draft — execution is gated by formal Phase 4 closeout and Milestone 0 trust-model approval**  
 **Prepared:** 2026-06-25  
-**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
+**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
 
 ## 1. Phase objective
 
@@ -409,7 +409,7 @@ The following decisions are treated as fixed for Phase 5:
 
 - Run the complete Phase 1–5 regression suite and route/permission matrix, including old/new resolver parity and extension-disabled operation.
 - Rehearse clean install, supported historical upgrades, role import, permission-cache invalidation, owner recovery, registry/signing-key rotation, package revoke/rollback, sandbox disable, worker pause/replay, passkey/provider recovery, invitation pause, service-token revoke, theme safe mode, and backup restore.
-- Reconcile `README.md`, `DESIGN.md`, `SCHEMA.md`, surface documents, route/capability inventory, extension SDK, review policy, runbooks, changelog, and completion evidence with the deployed product.
+- Reconcile `README.md`, `PRODUCT_DESIGN.md`, `SCHEMA.md`, surface documents, route/capability inventory, extension SDK, review policy, runbooks, changelog, and completion evidence with the deployed product.
 - Record all accepted Gate A/Gate B requirements and every explicit deferral.
 - Capture post-release adoption, incident, privilege, authentication, and host-capacity baselines for Phase 6 and Phase 7 decisions.
 
@@ -900,7 +900,7 @@ The intended next phase is **Phase 6 — Realtime & Scale**: capacity-triggered 
 - `PHASE_4_PLAN.md` — Phase 4 closeout requirements, explicit Phase 5 handoff, product/capacity evidence, and the boundary between ecosystem work and Phase 6/7.
 - `PHASE_3_PLAN.md` — accepted first-party/vetted hook runtime, plugin lifecycle, webhooks, admin API tokens, theming safe mode, TOTP/recovery, and explicit public-ecosystem/custom-role/passkey deferrals.
 - `README.md` — product thesis, selected single-VPS stack, interface seams, roadmap baseline, and completion-evidence policy.
-- `DESIGN.md` §§2, 6.6, 6.14, 9–14 — identity, plugin/theme direction, permissions, non-functional requirements, success metrics, phasing, and later platform systems.
+- `PRODUCT_DESIGN.md` §§2, 6.6, 6.14, 9–14 — identity, plugin/theme direction, permissions, non-functional requirements, success metrics, phasing, and later platform systems.
 - `DECISIONS.md` §§1–8 — authoritative fixed-role, plugin trust, provider, passkey, single-install, storage, search, realtime, and later-work decisions.
 - `SCHEMA.md` §§1–9 — the consolidated Phase 1–3 table shapes, reconciliation decisions (§7), and foreshadowed schema (§8). **Note:** Phase 5 ecosystem/identity/governance tables (packages/manifests, custom roles/capabilities, passkey credentials, generic-OIDC provider config, invitations, service principals, verified links) are **not yet in SCHEMA.md**; the schema **requirements** are defined in §8.2; DDL is authored at Milestone 1, then folded into SCHEMA.md on acceptance. _(Fixed 2026-06-26: this plan carries schema requirements only, not DDL.)_
 - `ADMIN.md` §§1–2, 5–6, 8–12 — capability catalogue/resolver, custom-role seam, invitations, theming, plugin architecture/lifecycle/security, extension points, Console UX, and public-ecosystem review dependency.

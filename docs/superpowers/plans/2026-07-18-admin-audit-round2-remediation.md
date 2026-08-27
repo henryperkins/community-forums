@@ -466,7 +466,7 @@ Per-input wiring pattern (`field_attrs` inside the input tag, `field_error` repl
 - [ ] **History doc `docs/history/admin-ux-audit-round2-2026-07-18.md`**: intro naming the source audit; `| # | Finding | Disposition |` table for round-2 findings 1-13 (bare numbers, convention) with evidence pointers (test names); an **F24 correction row** (prior "Already fixed pre-remediation" disposition was wrong — fixed now, task 4); audit-premise correction note (the un-gated Approval-hold card kept a live pointer when `moderation_queue` was off — both sides now gated); environment note (private `retroboards_test_r2` DB used due to parallel-session collisions).
 - [ ] **CLAUDE.md accuracy fix**: "bootstrap.php drops + re-migrates on every run" → describe the fingerprint reuse + `RB_TEST_FRESH=1` recovery (one sentence).
 
-### Task 11: Verification (DESIGN §13)
+### Task 11: Verification (PRODUCT_DESIGN §13)
 
 - [ ] Full suite green: `DB_TEST_DATABASE=retroboards_test_r2 RB_TEST_FRESH=1 vendor/bin/phpunit` (compare against the pre-change baseline log in the session scratchpad).
 - [ ] Browser verification on a private stack (never `retroboards_e2e`): `DB_DATABASE=retroboards_audit php -S 127.0.0.1:8012 -t public public/index.php` (schema is current — no new migrations); drive: over-length warn → 422 with preserved reason; deleted reply → stub + Restore round-trip; `/admin/email` three-fact status; grouped nav + Appeals card; `dir=sideways` rejected; 390px nav pass.

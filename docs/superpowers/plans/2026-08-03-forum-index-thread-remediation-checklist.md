@@ -54,7 +54,7 @@ Do not mark a row Done because code landed. Update Owner, PR/commit, and Evidenc
 
 ## Global constraints
 
-- Authority order remains `DECISIONS.md` → `DESIGN.md` → `SCHEMA.md` and migrations → `USER.md` / `ADMIN.md` / `COMMUNITY.md` / `COMPOSER.md`.
+- Authority order remains `DECISIONS.md` → `PRODUCT_DESIGN.md` → `SCHEMA.md` and migrations → `USER.md` / `ADMIN.md` / `COMMUNITY.md` / `COMPOSER.md`.
 - Use Blocker/High/Medium/Low for this tracker. Do not use `P0`–`P3` as phase labels; those are MoSCoW priority tiers in this repository.
 - Preserve one authoritative server-rendered copy of every form. Every write remains POST + CSRF and keeps its current service authorization.
 - Account state beats role. Anonymous rendering must suppress real name, title, reputation, avatar, and signature.
@@ -62,7 +62,7 @@ Do not mark a row Done because code landed. Update Owner, PR/commit, and Evidenc
 - Do not edit generated `public/assets/imladris.css` directly. Change `resources/imladris/` and rebuild when the generated foundation must change.
 - Keep the Forum Index a quiet policy-filtered directory, the Inbox a personal queue, and the board list fixed to pinned → latest activity → id.
 - Preserve unrelated dirty and untracked files. Stage with an explicit allowlist if commits are later authorized.
-- UI-visible completion requires PHPUnit plus browser evidence under `DESIGN.md` §13.
+- UI-visible completion requires PHPUnit plus browser evidence under `PRODUCT_DESIGN.md` §13.
 
 ## Dependencies and execution order
 

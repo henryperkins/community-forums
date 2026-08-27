@@ -20,7 +20,7 @@ This archive consolidates the WYSIWYG composer program into one document: the pr
 **Scope:** True rich composer (`A`) with searchable user, board, tag, topic, and post
 references.
 
-> Precedence: `DECISIONS.md`, `COMPOSER.md`, `DESIGN.md`, `SCHEMA.md`, and accepted
+> Precedence: `DECISIONS.md`, `COMPOSER.md`, `PRODUCT_DESIGN.md`, `SCHEMA.md`, and accepted
 > ADRs remain authoritative. Where this design conflicts, the authoritative source wins.
 
 ---
@@ -611,7 +611,7 @@ TDD order: rewrite tests first, observe red, flip the default, observe green.
 - `PHASE_5_STATUS.md`: record the graduation (the WYSIWYG stream landed via PR #33 alongside Inc 4).
 - `CLAUDE.md` flags paragraph: note the `wysiwyg_composer` graduation with runbook pointer.
 - `COMPOSER.md`: the §"priority vs phase" note ("deploy-dark behind `wysiwyg_composer` per ADR 0013") becomes "default-ON as of 2026-07-02"; changelog gains v0.6.
-- `DESIGN.md`/`DECISIONS.md`: audit for stale "deploy-dark wysiwyg" posture claims; update only if they assert the default.
+- `PRODUCT_DESIGN.md`/`DECISIONS.md`: audit for stale "deploy-dark wysiwyg" posture claims; update only if they assert the default.
 - ADR 0013 is **not** edited: its consequences ("operators can roll back by setting `wysiwyg_composer=false`") remain true.
 
 ## Non-goals / deferred (recorded, not dropped)

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-18
 **Status:** Accepted as the deferral record for the 2026-07-18 admin-console remediation.
-This ADR exists because the repo's rule (DESIGN §13 / CLAUDE.md) is that deferrals are
+This ADR exists because the repo's rule (PRODUCT_DESIGN §13 / CLAUDE.md) is that deferrals are
 recorded, never silently dropped — and the 2026-07 admin UX review found four spec
 promises tracked nowhere. The remediation ships most of them; this document owns
 the remainder so later status cannot silently claim the ADMIN.md sections complete.

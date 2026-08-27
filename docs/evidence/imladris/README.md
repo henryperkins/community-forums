@@ -7,7 +7,7 @@ vanilla-PHP / strict-CSP app. Captured live in Chromium by driving the running
 server (`php -S 127.0.0.1:8000`), logged in as a seeded admin, at 1440×900
 (desktop) and 390×844 (mobile).
 
-These satisfy DESIGN §13 (UI-visible work needs browser evidence): every surface
+These satisfy PRODUCT_DESIGN §13 (UI-visible work needs browser evidence): every surface
 is the **real server-rendered HTML + external `app.css` + PE `app.js`** under the
 strict CSP (`script-src 'self'; style-src 'self'`, no inline) — no canvas markup,
 no React, no CDN fonts (system-serif fallback stacks).

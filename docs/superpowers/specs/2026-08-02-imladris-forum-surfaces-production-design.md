@@ -25,7 +25,7 @@ The production application remains the behavioral authority. The prototype suppl
 The production sources retain repository precedence:
 
 1. `DECISIONS.md`
-2. `DESIGN.md`
+2. `PRODUCT_DESIGN.md`
 3. `SCHEMA.md` and applied migrations
 4. `USER.md`, `ADMIN.md`, `COMMUNITY.md`, and `COMPOSER.md`
 5. existing server-side routes, capability checks, forms, and progressive-enhancement contracts
@@ -37,7 +37,7 @@ The approved visual sources are:
 - `docs/superpowers/specs/2026-08-02-imladris-forum-inbox-board-identity-design.md`
 - `docs/superpowers/specs/2026-07-12-thread-view-study-design.md`
 
-This specification intentionally reconciles older product statements with the approved route model. `DESIGN.md` must be amended where its shell and URL sections describe `/` or `/c/{slug}` as an open-conversation inbox, and where it specifies board sort tabs. `USER.md` must be amended where it specifies the persisted Default thread sort preference. Those documentation changes ship with the implementation so the higher-precedence product contract and production behavior agree.
+This specification intentionally reconciles older product statements with the approved route model. `PRODUCT_DESIGN.md` must be amended where its shell and URL sections describe `/` or `/c/{slug}` as an open-conversation inbox, and where it specifies board sort tabs. `USER.md` must be amended where it specifies the persisted Default thread sort preference. Those documentation changes ship with the implementation so the higher-precedence product contract and production behavior agree.
 
 ## Shared route identity
 

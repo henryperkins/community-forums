@@ -5,7 +5,7 @@
 and §7; satisfies ADR 0004 **D4** ("permission taxonomy, high-risk data classes,
 non-delegable list, consent vocabulary"). **Pending product-owner review** (see
 `docs/adr/0012-phase-5-gate-a-entry-gate-artifacts.md`).
-**Precedence:** subordinate to `DECISIONS.md` → `DESIGN.md` → ADR 0004; this
+**Precedence:** subordinate to `DECISIONS.md` → `PRODUCT_DESIGN.md` → ADR 0004; this
 document *instantiates* D4, it does not change it.
 
 > **Data classes are a separate artifact.** D4 also calls for high-risk *data

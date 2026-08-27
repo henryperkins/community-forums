@@ -328,7 +328,7 @@ V §4 opened and confirmed every production citation in D: routes (`App.php:2148
 four flags, every `BrandingController` / `AdminThemeController` / `ThemeStateService` line,
 `PackageThemeRepository:159` (three states), `App.php:567`, `ReauthGate.php:43`, `_nav.php`, the CSS
 blocks, `AppImladrisFidelityTest:97-98`, zero inline `style="` under `templates/`, the fiction sweep
-(exactly one hit, `branding.php:20`), `DESIGN.md:131` §5.3, ADR 0023 items 4/5/6, ADR 0009, and all
+(exactly one hit, `branding.php:20`), `PRODUCT_DESIGN.md:131` §5.3, ADR 0023 items 4/5/6, ADR 0009, and all
 six byte-identical strings. No proposed action reverts an ADR 0021 or ADR 0023 deferral.
 
 ---

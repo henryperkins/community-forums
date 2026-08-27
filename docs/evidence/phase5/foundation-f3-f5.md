@@ -8,7 +8,7 @@ coverage) and **F5** (protected-owner seed + shared `LastOwnerGuard`).
 
 This is a **dark, no-UI** increment. It ships the authorization *policy data* and the
 owner-invariant *seam* behind the `capabilities` flag; nothing resolves against it until
-the resolver (P5-08, Increment 1) lands. Per DESIGN §13 "inert schema is not evidence",
+the resolver (P5-08, Increment 1) lands. Per PRODUCT_DESIGN §13 "inert schema is not evidence",
 F3/F5 ship **enforcing tests**, not just seeds. Because no member- or operator-facing
 surface is introduced, there is **no Playwright/axe evidence** for this increment — all
 evidence is PHPUnit + `bin/console verify:upgrade` + `bin/console repair`.

@@ -1,7 +1,7 @@
 # RetroBoards — Composer (Unified Input) Design
 
 **Status:** v0.10 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-09
-**Companion to [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
 
@@ -14,7 +14,7 @@ One component, four mounts. The composer has three primary contexts, plus **Edit
 
 Everything the input can do — formatting, shortcuts, mentions, media, drafts, validation — is **the same in all four**. The only differences are the thin wrapper around the input (a title field for New Thread, a recipient for DM) and a few context-scoped limits. This doc specifies the input itself, exhaustively, and defines that unified contract (§15).
 
-> **Editing model decision:** **WYSIWYG over canonical Markdown** — the enhanced surface is Milkdown, mounted only when `rich_composer` and `wysiwyg_composer` are both enabled. The server-rendered `<textarea>` remains the submit source, source-mode editor, and no-JS/kill-switch fallback. This resolves DESIGN.md open question #2 and is recorded in ADR 0013.
+> **Editing model decision:** **WYSIWYG over canonical Markdown** — the enhanced surface is Milkdown, mounted only when `rich_composer` and `wysiwyg_composer` are both enabled. The server-rendered `<textarea>` remains the submit source, source-mode editor, and no-JS/kill-switch fallback. This resolves PRODUCT_DESIGN.md open question #2 and is recorded in ADR 0013.
 
 ## Contents
 
@@ -46,7 +46,7 @@ The composer is the most-used surface in the product — every thread, reply, an
 **Principles**
 
 1. **One surface, learned once.** Whatever you can do in a reply, you can do when starting a thread or DMing someone. No "this box is different."
-2. **Rich for the eye, Markdown for the record.** Formatting appears live as you type; what's stored is portable Markdown (DESIGN.md §9.5 render/sanitise pipeline).
+2. **Rich for the eye, Markdown for the record.** Formatting appears live as you type; what's stored is portable Markdown (PRODUCT_DESIGN.md §9.5 render/sanitise pipeline).
 3. **Fast for keyboards, discoverable for mice.** Every action has a shortcut *and* a visible control; the toolbar shows active state.
 4. **Never lose work.** Drafts autosave continuously and survive reloads, navigation, and crashes.
 5. **Safe by construction.** Stored Markdown is rendered through an allowlist sanitiser; no raw HTML or scripts; new-user and per-board limits curb spam.
@@ -151,7 +151,7 @@ Identical in all four contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 
 **Global (when not typing in the composer):** `c` / `n` starts a New Thread; `r` focuses the Reply composer on the open thread; `Cmd/Ctrl+K` opens **search** (command palette).
 
-> **Reconciliation:** DESIGN.md §6.1/§6.5 earlier listed `Cmd/Ctrl+K` as "focus the composer/search." This doc makes it precise: **inside** the composer `Cmd/Ctrl+K` inserts a link (editor standard); **outside** it, `Cmd/Ctrl+K` is search and `r`/`c` focus the composer. DESIGN.md is updated to match (§17 of this doc).
+> **Reconciliation:** PRODUCT_DESIGN.md §6.1/§6.5 earlier listed `Cmd/Ctrl+K` as "focus the composer/search." This doc makes it precise: **inside** the composer `Cmd/Ctrl+K` inserts a link (editor standard); **outside** it, `Cmd/Ctrl+K` is search and `r`/`c` focus the composer. PRODUCT_DESIGN.md is updated to match (§17 of this doc).
 
 ## 6. Mentions, Emoji & References
 
@@ -161,7 +161,7 @@ Identical in all four contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 - Inserts a **mention token** that renders as a link to `/u/{username}`. On submit, mentions are parsed server-side and create a **notification** for each mentioned user — respecting their notification prefs and **block list** (a blocked user is not notifiable; USER.md §4.7).
 - **Visibility-gated:** you can only mention users who can see the context (e.g. not someone outside a private board).
 - **Anti-spam:** a per-post mention cap (e.g. ≤10); excess mentions are stripped or flagged (ADMIN.md §3.8).
-- *Priority:* **P1**; *delivery:* **Phase 2** (DESIGN.md had @mentions deferred; the composer is where they live — autocomplete + parse-on-submit notifications land in Phase 2, then ride the unified rich composer in Phase 3). _(P1 is a priority tier, not Phase 1 — DECISIONS §2.)_
+- *Priority:* **P1**; *delivery:* **Phase 2** (PRODUCT_DESIGN.md had @mentions deferred; the composer is where they live — autocomplete + parse-on-submit notifications land in Phase 2, then ride the unified rich composer in Phase 3). _(P1 is a priority tier, not Phase 1 — DECISIONS §2.)_
 
 ### 6.2 Emoji
 
@@ -199,7 +199,7 @@ All media references live in the Markdown as standard image/link syntax; an `att
   - DM → `draft:dm:{conversationId}:{userId}`
   - Edit → `draft:edit:{postId}:{userId}` (kept separate so editing never clobbers a fresh reply draft)
 - **Restored on mount**, **cleared on successful send.** Survives reload, navigation, and crashes. A subtle "Draft saved" indicator confirms.
-- The **"Drafts"** sidebar quick-filter (DESIGN §5.2/§6.5) lists active drafts with their context + a preview; click to resume in the right composer.
+- The **"Drafts"** sidebar quick-filter (PRODUCT_DESIGN §5.2/§6.5) lists active drafts with their context + a preview; click to resume in the right composer.
 - **Signed-out** users' drafts still save locally; after sign-in, offer to restore the text into the composer.
 - **Server-side draft sync** across devices (a `drafts` table) is **P2**; v1 is local-only. When it lands, a local/remote divergence prompts a choose-which.
 
@@ -255,7 +255,7 @@ The WYSIWYG surface is the inline editing view, not the source of truth for fina
 | Link limit for new accounts | capped/blocked until a threshold | ADMIN.md §3.8 |
 | Word & link filters | block / flag / hold per rule | ADMIN.md §3.8 |
 | Rate limit / new-user throttle | posting-frequency caps | ADMIN.md §3.8 |
-| Sanitisation | allowlist render; no raw HTML/scripts | DESIGN.md §9.5 |
+| Sanitisation | allowlist render; no raw HTML/scripts | PRODUCT_DESIGN.md §9.5 |
 | Banned / suspended | composer read-only / replaced | ADMIN.md §2.4 |
 | Idempotency | one logical submit = one post (short-lived/transient dedupe; §14.3) | core (§14) |
 
@@ -273,7 +273,7 @@ Safety notes: the rich surface **never** stores HTML — Markdown only, rendered
 ## 13. Responsive & Mobile
 
 - **Reply / DM:** sticky to the bottom, sitting **above the software keyboard** (keyboard-aware inset); auto-grows to a max height, then scrolls.
-- **New Thread on mobile:** a **full-screen** composer (title + body), launched by the FAB (DESIGN.md §6.1).
+- **New Thread on mobile:** a **full-screen** composer (title + body), launched by the FAB (PRODUCT_DESIGN.md §6.1).
 - **Toolbar:** an essential set + a **“+”** overflow; tap targets ≥44px; formatting is toolbar-driven (no reliance on shortcuts).
 - **Send vs Enter on mobile:** soft-keyboard `Enter` inserts a newline; sending is the explicit button (override of the desktop Enter-to-send default).
 - **Attachments:** camera / photo-library picker; clipboard image paste supported.
@@ -317,7 +317,7 @@ Avoid heavy block-document editors — **the composer is an input system, not a 
 
 - Server renders a `<form>` with a `<textarea>` holding the Markdown. `public/assets/composer.js` builds the shared bridge for toolbar, preview, drafts, uploads, slash inserts, and `@`/`#` suggestions. When both `rich_composer` and `wysiwyg_composer` are enabled, the committed Milkdown bundle registers a bridge adapter and hides the textarea behind the WYSIWYG surface.
 - **No JS, `wysiwyg_composer=false`, or adapter failure → the textarea posts the form**; the server renders Markdown → sanitised HTML. **`rich_composer=false`** is the broad emergency kill switch and prevents all enhanced composer assets from loading.
-- **Server submit:** validate → run content filters → persist `body` (Markdown) + cached `body_html` (sanitised) → update counters → fan out notifications (DESIGN.md §9.6) → parse mentions → notify. Wrapped in a transaction; returns the rendered post for the client to reconcile.
+- **Server submit:** validate → run content filters → persist `body` (Markdown) + cached `body_html` (sanitised) → update counters → fan out notifications (PRODUCT_DESIGN.md §9.6) → parse mentions → notify. Wrapped in a transaction; returns the rendered post for the client to reconcile.
 - **Idempotency:** every shared shell server-renders a fresh idempotency key. The first successful topic, reply, DM start/reply, post edit, or wiki edit records `(user, hashed key, context) → result` in the existing `submission_idempotency` ledger inside the write transaction; retries replay the matching result and cross-context key reuse is rejected. JavaScript's in-flight guard is immediate feedback, not the consistency guarantee.
 
 ### 14.4 The payoff
@@ -348,7 +348,7 @@ If a future feature can't be offered identically in all four, that's a signal to
 
 ### 16.1 Changes to the other docs
 
-- **DESIGN.md** — this doc is the authoritative composer spec referenced by §6.5. Open question **#2 (post markup) is resolved: WYSIWYG/source-mode editing over canonical Markdown.** **@mentions** are promoted from "deferred" to **P1** (they live in the composer). The `Cmd/Ctrl+K` shortcut is reconciled (link inside the composer; search / `r` / `c` outside).
+- **PRODUCT_DESIGN.md** — this doc is the authoritative composer spec referenced by §6.5. Open question **#2 (post markup) is resolved: WYSIWYG/source-mode editing over canonical Markdown.** **@mentions** are promoted from "deferred" to **P1** (they live in the composer). The `Cmd/Ctrl+K` shortcut is reconciled (link inside the composer; search / `r` / `c` outside).
 - **ADMIN.md** — the composer consumes ADMIN-owned controls: word/link **filters**, **attachment limits**, **edit window**, **approval hold**, and **new-user gates**; board settings (`allow images`, `post_min_role`, `allow_anonymous`, `edit_window`) gate it.
 - **USER.md** — composing preferences (§4.5: **Enter-to-send vs Cmd/Ctrl+Enter**, attach-signature default, draft behaviour) drive the composer's per-user defaults. The **Anonymous** posting mode (USER.md §2 / ADMIN.md §1.3) is a composer affordance where the board allows it.
 
@@ -376,7 +376,7 @@ CREATE TABLE attachments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-- **`posts.body` already stores Markdown** (canonical) and **`posts.body_html`** the cached sanitised render (DESIGN.md §8) — no change needed; this doc just fixes the markup *flavour* as Markdown.
+- **`posts.body` already stores Markdown** (canonical) and **`posts.body_html`** the cached sanitised render (PRODUCT_DESIGN.md §8) — no change needed; this doc just fixes the markup *flavour* as Markdown.
 - **Drafts** are local (`localStorage`) in v1; an optional **`drafts`** table (`user_id`, `context_type`, `context_id`, `title`, `body`, `updated_at`) backs cross-device sync at **P2**.
 - **Mentions** are parsed at submit; an optional `post_mentions` lookup table can speed "who was mentioned" queries if needed (P2).
 - **Content references** use `content_references.target_type ENUM('board','thread','post','tag')`; migration `0071_content_reference_tags` added `tag` so WYSIWYG `#` tag suggestions and `/tags/{slug}` links can resolve through the same read-gated reference-card path.
@@ -411,10 +411,10 @@ CREATE TABLE attachments (
 
 | Version | Date | Notes |
 |---|---|---|
-| v0.1 | 2026-06-19 | Initial composer design. One shared component across New Thread / Reply / DM (+ edit) with an identical feature surface; **hybrid live-Markdown** editing model (resolves DESIGN.md markup question); toolbar; full keyboard shortcuts (Cmd/Ctrl+K reconciled); mentions/emoji/references; attachments/images/embeds; drafts & autosave; submission/feedback + edit mode + error taxonomy; preview; validation/limits/safety; accessibility & i18n; responsive/mobile; architecture (one component + mount config, hybrid editor, progressive enhancement); the unified feature-surface matrix; `attachments` schema; phasing & open questions. |
+| v0.1 | 2026-06-19 | Initial composer design. One shared component across New Thread / Reply / DM (+ edit) with an identical feature surface; **hybrid live-Markdown** editing model (resolves PRODUCT_DESIGN.md markup question); toolbar; full keyboard shortcuts (Cmd/Ctrl+K reconciled); mentions/emoji/references; attachments/images/embeds; drafts & autosave; submission/feedback + edit mode + error taxonomy; preview; validation/limits/safety; accessibility & i18n; responsive/mobile; architecture (one component + mount config, hybrid editor, progressive enhancement); the unified feature-surface matrix; `attachments` schema; phasing & open questions. |
 | v0.2 | 2026-06-19 | Framework integration: resolved the editor engine to a **spike ladder — Milkdown first**, then Tiptap/ProseMirror, then CodeMirror/ink-mde (§14.2). Added non-negotiables: **reject editor-specific canonical storage**, **Markdown round-trip fixtures** in acceptance tests, and "the composer is an input system, not a mini document editor." |
 | v0.3 | 2026-06-26 | Wording/citation fixes: corrected the **Drafts** sidebar quick-filter cross-ref **§6.2 → §5.2/§6.5** (§8); reframed post **idempotency** as a **short-lived/transient dedupe** (double-submit + brief client retries, not durable persistence), with a durable post-idempotency column **foreshadowed in SCHEMA §8, not yet committed** (§9.2/§11/§14.3). |
-| v0.4 | 2026-06-26 | Consistency fix: §17.1 now maps the P0/P1/P2 *priority* tiers to *delivery* phases — Phase 1 = no-JS Markdown baseline, Phase 2 = @mentions + DM, the unified rich `Composer` = Phase 3 Gate A, server draft sync = Phase 3 Gate B — resolving the "P0 composer vs Phase 3 delivery" ambiguity (DESIGN §13.1 / PHASE_3_PLAN). §6.1 @mentions clarified as priority P1 / delivery Phase 2. |
+| v0.4 | 2026-06-26 | Consistency fix: §17.1 now maps the P0/P1/P2 *priority* tiers to *delivery* phases — Phase 1 = no-JS Markdown baseline, Phase 2 = @mentions + DM, the unified rich `Composer` = Phase 3 Gate A, server draft sync = Phase 3 Gate B — resolving the "P0 composer vs Phase 3 delivery" ambiguity (PRODUCT_DESIGN §13.1 / PHASE_3_PLAN). §6.1 @mentions clarified as priority P1 / delivery Phase 2. |
 | v0.5 | 2026-07-02 | WYSIWYG closeout: recorded ADR 0013's Milkdown selection, the `wysiwyg_composer` narrow flag under the `rich_composer` kill switch, source-mode textarea contract, adapter-based `@`/`#` pickers and chips, internal URL paste normalization, server-preview parity, no-op edit protection, committed static bundle, and `content_references.target_type='tag'` schema follow-up. |
 | v0.6 | 2026-07-02 | `wysiwyg_composer` graduated to **default-ON** (GA 2026-07-02; reversible via `features` override; `rich_composer` remains the broad kill switch). §17.1 delivery note updated. Browser evidence split recorded: gate-a screenshots keep the textarea baseline via a seed pin; `wysiwyg-composer.spec.ts` proves the GA default mounts with no override. |
 | v0.7 | 2026-07-13 | Slack-style shell closeout: one server-rendered shell now covers all four mount types across the eight `.composer-input` forms; the engraved icon toolbar and contained narrow overflow supersede the earlier sentence-case handoff detail. Desktop Enter-to-send is context-aware, `Cmd/Ctrl+Enter` always sends, touch soft-Enter stays editorial, and an in-flight guard prevents duplicate sends. Preview state follows the composing preference and source-mode initialization contract; every input gains a near-limit counter. Unicode and custom emoji use a server-backed autocomplete plus accessible dialog/grid picker. Image upload has a visible Attach path and compact in-box chips, with rich-mode reorder preserved in canonical Markdown. Inbox fragment replacement now destroys adapter/listener/request state before enhancing the next shell. All shared-shell writes consume the server-rendered idempotency token, and every identity-bearing mount honors `show_avatars`. Optimistic send, global navigation keys, edit-last, and a visual replying-to chip remain engineering follow-ups in ADR 0020. |

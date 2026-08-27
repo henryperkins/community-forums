@@ -4,7 +4,7 @@
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
 **Plan status:** **Draft — execution is gated by formal Phase 3 closeout and Milestone 0 scope approval**  
 **Prepared:** 2026-06-25  
-**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
+**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
 
 ## 1. Phase objective
 
@@ -359,7 +359,7 @@ The following decisions are treated as fixed for Phase 4:
 
 - Run the complete Phase 1–4 regression suite and route/permission matrix.
 - Rehearse clean install, supported historical upgrades, feature-disable paths, worker pause/replay, scanner outage, preview-fetch isolation, ledger rebuild, badge-rule rollback, summary/context-job outage, wiki revert, split/merge repair, and backup restore.
-- Reconcile `README.md`, `DESIGN.md`, `SCHEMA.md`, surface documents, route inventory, runbooks, changelog, and completion evidence with the deployed product.
+- Reconcile `README.md`, `PRODUCT_DESIGN.md`, `SCHEMA.md`, surface documents, route inventory, runbooks, changelog, and completion evidence with the deployed product.
 - Record all accepted Gate A/Gate B requirements and every explicit deferral.
 - Capture post-release product baselines and capacity triggers for Phase 5 ecosystem work and Phase 6 infrastructure swaps.
 
@@ -810,7 +810,7 @@ The intended next phase is **Phase 5 — Ecosystem, Identity & Governance**: pub
 
 - `PHASE_3_PLAN.md` — Phase 3 closeout requirements, explicit deferrals beyond Phase 3, capacity evidence, and the post-Phase 3 handoff.
 - `README.md` — product thesis, selected stack, roadmap baseline, interface seams, and completion-evidence policy.
-- `DESIGN.md` §§6.5, 6.8, 6.12, 6.18, 8–14 — group DMs, advanced composer/media, profiles, Community Inbox triage/status, architecture, permissions, non-functional requirements, metrics, phasing, and later systems.
+- `PRODUCT_DESIGN.md` §§6.5, 6.8, 6.12, 6.18, 8–14 — group DMs, advanced composer/media, profiles, Community Inbox triage/status, architecture, permissions, non-functional requirements, metrics, phasing, and later systems.
 - `DECISIONS.md` §§1–8 — authoritative stack, Markdown, short-polling, local storage, embed allowlist, attachment limits, fixed roles, community-memory, leaderboard, badge, plugin, identity, and infrastructure deferrals.
 - `SCHEMA.md` §§1–8 — current table shapes, composer/community seams, `reputation_events`, phase map, reconciliation decisions, and foreshadowed topic-status/snooze/assignment schema.
 - `COMPOSER.md` §§3–17 — canonical Markdown, P2 syntax, references, files, previews/embeds, custom emoji, slash menu, GIFs/polls, safety, accessibility, unified surfaces, and schema.

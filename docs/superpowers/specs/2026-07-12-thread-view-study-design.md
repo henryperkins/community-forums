@@ -10,7 +10,7 @@ The attached Imladris design-system handoff selects [ThreadView.dc.html](../../d
 
 The current application already implements the underlying behavior through server-rendered forms and capability-gated services: starring, subscriptions, snooze, assignment, workflow status and history, tags, polls, Living Brief curation, accepted answers, reactions, anonymous-author reveal, wiki posts, pin/lock, and split/merge. The work therefore adapts the selected visual design to the existing PHP and progressive-enhancement architecture. It does not copy the prototype runtime or replace authoritative server behavior with client-side state.
 
-`DECISIONS.md`, `DESIGN.md`, `USER.md`, `COMMUNITY.md`, `COMPOSER.md`, and the repository security invariants continue to outrank prototype behavior. In particular:
+`DECISIONS.md`, `PRODUCT_DESIGN.md`, `USER.md`, `COMMUNITY.md`, `COMPOSER.md`, and the repository security invariants continue to outrank prototype behavior. In particular:
 
 - authorization remains capability- and board-scope-based rather than inferred from a generic “staff” role;
 - anonymous authors remain masked in every public render; the existing reveal action stays a separate audited disclosure and does not mutate the public byline;
@@ -94,7 +94,7 @@ When `topic_workflow` is enabled, exactly one workflow-status chip is always sho
 
 Assignment and snooze are rendered as byline facts, never as header controls. Tag editing, subscription frequency, status changes, assignment, pin/lock, memory curation, poll creation/closure, and split/merge leave the header entirely.
 
-This intentionally places subscription frequency in **Your watch** rather than restoring the older Bell/Bell-off header treatment described in `DESIGN.md` §6.10 and `USER.md` §4.6. It follows the selected Study handoff and the current consolidated thread-action direction: Star remains the one-tap header action, while notification configuration stays on the thread page behind Topic tools. Subscription persistence, channels, frequency, and precedence do not change.
+This intentionally places subscription frequency in **Your watch** rather than restoring the older Bell/Bell-off header treatment described in `PRODUCT_DESIGN.md` §6.10 and `USER.md` §4.6. It follows the selected Study handoff and the current consolidated thread-action direction: Star remains the one-tap header action, while notification configuration stays on the thread page behind Topic tools. Subscription persistence, channels, frequency, and precedence do not change.
 
 The participant stack remains privacy-safe: anonymous contributors are excluded by the repository and never inferred in the template. On narrow screens it may collapse to a count label rather than overflow horizontally.
 

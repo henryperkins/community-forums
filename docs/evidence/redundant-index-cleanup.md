@@ -4,7 +4,7 @@
 schema recommendation on `hello-hperkins/imladris-db` ("Remove redundant index
 `idx_user_profile_field_user` on `user_profile_fields`", issue #3).
 
-Per DESIGN §13, this file is the completion evidence for the two migrations. A
+Per PRODUCT_DESIGN §13, this file is the completion evidence for the two migrations. A
 dropped index is a behavioural change to every query that could have used it, so
 "the ALTER succeeded" is not evidence on its own — what follows is the plan and
 constraint proof.

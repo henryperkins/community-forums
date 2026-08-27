@@ -4,7 +4,7 @@
 **Status:** Recorded as the A5 entry-gate artifact required by `PHASE_5_PLAN.md`
 §2/§7 (and §5 #28); operationalizes ADR 0004 **D6**. **Pending product-owner
 sign-off** on the self-host framing (§6).
-**Precedence:** subordinate to `DECISIONS.md` → `DESIGN.md` → ADR 0004 (**D6**).
+**Precedence:** subordinate to `DECISIONS.md` → `PRODUCT_DESIGN.md` → ADR 0004 (**D6**).
 
 > **Self-hostable framing.** RetroBoards runs on a single VPS per operator, so
 > there is no one global production domain to pin. This artifact records the

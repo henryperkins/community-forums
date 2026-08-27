@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Preserve the authority chain in `AGENTS.md` and the completion-evidence rule in `DESIGN.md` §13.
+- Preserve the authority chain in `AGENTS.md` and the completion-evidence rule in `PRODUCT_DESIGN.md` §13.
 - Preserve no-JavaScript operation, strict CSP, CSRF on every POST, admin authorization, `WriteGate`, feature-gate 404 behavior, transactions, and audits.
 - Preserve `POST /admin/site` and every existing custom-emoji mutation URL.
 - Remove `POST /admin/settings`; do not add a compatibility alias.

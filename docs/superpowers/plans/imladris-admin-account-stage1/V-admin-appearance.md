@@ -329,7 +329,7 @@ The production side of this report is unusually accurate. Every one of these was
 * **Zero inline `style="` attributes anywhere under `templates/`** (`grep -rn 'style="' templates/ | wc -l` → `0`). #67 correct.
 * **Fiction sweep** — `grep -rniE "council|the hall|warden|counsel|third age|imladris|mallorn|rivendell" templates/admin/`
   returns exactly one hit, `branding.php:20`. The report's "no other fiction found" claim holds.
-* **`DESIGN.md:131` (§5.3)** — "every view has a real, shareable, crawlable URL rendered by the
+* **`PRODUCT_DESIGN.md:131` (§5.3)** — "every view has a real, shareable, crawlable URL rendered by the
   server." #4's constraint is properly grounded.
 * **ADR 0023** — item 4 (anti-draft-loss incl. custom emoji + honest replace copy), item 5
   (`field_error`/`field_attrs`, table scopes/regions, `role="alert"`), item 6 (grouped IA). All three

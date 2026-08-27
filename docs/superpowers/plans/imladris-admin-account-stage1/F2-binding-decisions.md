@@ -15,7 +15,7 @@ design must not touch) — **not** a "copy" fix. Nothing here may be silently re
 `docs/superpowers/plans/2026-07-18-admin-dashboard-ui-remediation.md`,
 `docs/superpowers/plans/2026-07-18-admin-audit-round2-remediation.md`,
 `docs/superpowers/plans/2026-08-02-imladris-forum-surfaces-production.md`,
-`DECISIONS.md`, `DESIGN.md` (§5, §6.11–§6.14, §9, §13), `ADMIN.md`, `USER.md`,
+`DECISIONS.md`, `PRODUCT_DESIGN.md` (§5, §6.11–§6.14, §9, §13), `ADMIN.md`, `USER.md`,
 `PHASE_5_STATUS.md`.
 
 ---
@@ -30,7 +30,7 @@ All are CONSTRAINT deviations.
 **B1 — Server-rendered + progressive enhancement; no client rendering.**
 - Source: `DECISIONS.md` §1 ("server-rendered + progressive enhancement", "vanilla PHP + a
   micro-router"), §2 Rendering row ("Server-rendered HTML + progressive-enhancement JS; no-JS
-  fallbacks everywhere"); `DESIGN.md` §5.3 ("JavaScript enhances navigation but is not
+  fallbacks everywhere"); `PRODUCT_DESIGN.md` §5.3 ("JavaScript enhances navigation but is not
   required"); `2026-07-02-admin-ux-remediation.md` Global Constraints ("Keep no-JS form posts
   working; JavaScript may decorate but cannot be required");
   `2026-07-18-admin-dashboard-ui-remediation.md` Global Constraints ("Preserve
@@ -58,7 +58,7 @@ All are CONSTRAINT deviations.
   pseudo-attributes; two keyframe animations live in an inline `<style>`.
 
 **B3 — Design-system preview JS and kits never ship.**
-- Source: `DESIGN.md` §6.14 "Imladris runtime ownership" — "design-system preview JavaScript,
+- Source: `PRODUCT_DESIGN.md` §6.14 "Imladris runtime ownership" — "design-system preview JavaScript,
   UI kits, documentation CSS, uploads, archived app snapshots … never ship"; `2026-08-02`
   plan Global Constraints ("Do not edit generated `public/assets/imladris.css`, add inline
   script/style, ship prototype runtime code, create handcrafted SVGs, or add dependencies").
@@ -68,7 +68,7 @@ All are CONSTRAINT deviations.
 
 **B4 — Generated `imladris.css` is the token layer; app CSS is the feature layer; the
 application-surface digest is a gate.**
-- Source: `DESIGN.md` §6.14; `config/imladris-runtime-baseline.json`
+- Source: `PRODUCT_DESIGN.md` §6.14; `config/imladris-runtime-baseline.json`
   (`application_surface.roots = ["templates","public/assets"]`, `files` includes `ADMIN.md`,
   `USER.md`, `COMMUNITY.md`, `COMPOSER.md`, `src/Core/FeatureFlags.php`; `excluded:
   public/assets/imladris.css`); `2026-08-02` plan Task 5 Step 7 (refresh **only**
@@ -103,7 +103,7 @@ application-surface digest is a gate.**
 
 **B7 — Short-polling only; no WebSockets, no SSE in v1.**
 - Source: `DECISIONS.md` §2 Realtime row ("Short-polling for the bell + presence; SSE later if
-  needed; no WebSockets in v1"), §3 #4 and #13; `DESIGN.md` §6.15.
+  needed; no WebSockets in v1"), §3 #4 and #13; `PRODUCT_DESIGN.md` §6.15.
 - Design would do instead: `AdminOverview` shows a pulsing "Live" chip (`@keyframes adPulse`)
   on Queue health and `AdminSettings` shows "Heartbeat · Nominal · Last run 6 minutes ago". Both
   must be server-rendered per request (or refreshed by an existing polling endpoint), never a
@@ -145,7 +145,7 @@ unconditionally; dark routes must not be linked.**
   in-section subnav on top of it**, and each tab must be a real route.
 
 **B11 — Local tabs must be real routes, not client state.**
-- Source: `DESIGN.md` §5.3 (real, shareable, crawlable URL per view); `2026-07-18-dashboard`
+- Source: `PRODUCT_DESIGN.md` §5.3 (real, shareable, crawlable URL per view); `2026-07-18-dashboard`
   Task 5 ("Disable JavaScript in a dedicated context and prove grouped navigation reaches
   `/admin/settings`").
 - Design tabs → real production routes (verify against `src/Core/App.php::buildRouter()`):
@@ -306,7 +306,7 @@ links to dark consoles.**
   the entire **Default thread sort** `<label>` from `templates/account/preferences.php`";
   `PreferenceSchema::VERSION = 3`; legacy JSON preserved, never deleted); `USER.md` §4.2 ("Board
   topic order | **Fixed: pinned first, then latest activity.** Newest and Unanswered are Inbox
-  filters"); `DESIGN.md` §5.2. Confirmed shipped: `src/Support/PreferenceSchema.php:141,180`;
+  filters"); `PRODUCT_DESIGN.md` §5.2. Confirmed shipped: `src/Support/PreferenceSchema.php:141,180`;
   no `thread_sort` control remains under `templates/`.
 - Design would do instead: `AccountSettings` Reading panel renders
   **"Default sort · Last post / Newest / Most replies"**. Copying it reverts a locked decision.
@@ -469,7 +469,7 @@ design screens omit. Dropping them is a spec regression, not a "copy" fix.
 
 | # | Design does | Locked decision | Resolution |
 |---|---|---|---|
-| C1 | `AccountSettings` Reading panel: **"Default sort · Last post / Newest / Most replies"** | `2026-08-02-imladris-forum-surfaces-production.md` Task 1 (retire `thread_sort`, `PreferenceSchema::VERSION = 3`, remove the label) + `USER.md` §4.2 "Fixed: pinned first, then latest activity" + `DESIGN.md` §5.2 | **Do not build.** The control stays deleted. Record as feature-removed. Operator note: the design predates/ignores the 2026-08-02 fixed-order decision. |
+| C1 | `AccountSettings` Reading panel: **"Default sort · Last post / Newest / Most replies"** | `2026-08-02-imladris-forum-surfaces-production.md` Task 1 (retire `thread_sort`, `PreferenceSchema::VERSION = 3`, remove the label) + `USER.md` §4.2 "Fixed: pinned first, then latest activity" + `PRODUCT_DESIGN.md` §5.2 | **Do not build.** The control stays deleted. Record as feature-removed. Operator note: the design predates/ignores the 2026-08-02 fixed-order decision. |
 | C2 | `AdminContent` one-click **Delete category** / **Delete** board / **Archive** with no confirm, no impact stats, no thread-destination picker | `ADMIN.md` §4.4/§4.5, §9.4; `2026-07-02` plan Task 5 acceptance criteria; ADR 0021 (board delete-with-move, hard-DELETE-with-forced-move) | **Decision wins.** Keep the GET confirmation routes, typed confirmation, impact copy, and the forced-move destination picker. The design's row buttons become links to those confirmation pages. |
 | C3 | Every admin screen's section nav is a dead `<span>` "Moderation · Content · People · Appearance · Notifications · Integrations · Settings" | `ADMIN.md` §9.2; ADR 0023 shipped item 6; `2026-07-18-dashboard` Task 1/Task 4 | **Decision wins.** Keep the real 8-group nav with feature-aware disabled spans. Shipping the `<span>` would be dead chrome (explicitly forbidden). |
 | C4 | `AdminPeople` = Roles & simulator only; no user directory, no user record, no bulk moderation | `ADMIN.md` §5.1–§5.6; ADR 0021 (bulk moderation shipped end-to-end "replacing the dead phantom UI") | **Decision wins.** People must contain Users *and* Roles. Adopting the design's People screen as the whole section would delete shipped, audited functionality. |
@@ -565,7 +565,7 @@ Every one of these is a CONSTRAINT deviation (governing rule 3). Design string �
 
 ### 4.1 The rule
 
-`DESIGN.md` §13, line 873 — verbatim:
+`PRODUCT_DESIGN.md` §13, line 873 — verbatim:
 
 > **Completion-evidence rule:** anything marked `Live` must be accompanied by the tests, smoke
 > checks, or Playwright/browser verification that prove the claim. **UI-visible work needs browser
@@ -573,7 +573,7 @@ Every one of these is a CONSTRAINT deviation (governing rule 3). Design string �
 
 Reinforced by `CLAUDE.md`: *"Adding a column/table is not shipping a feature — behavior must be
 enforced and tested… 'Inert schema is not evidence.'"* and by `PHASE_5_STATUS.md`
-(*"'Inert schema is not evidence' (DESIGN §13)"*). ADR 0021 deferral #3 restates it for this exact
+(*"'Inert schema is not evidence' (PRODUCT_DESIGN §13)"*). ADR 0021 deferral #3 restates it for this exact
 surface: *"The UI ships only with the enforcement (inert settings are not evidence)."*
 
 Every one of these screens is UI-visible ⇒ **PHPUnit alone is never sufficient.**

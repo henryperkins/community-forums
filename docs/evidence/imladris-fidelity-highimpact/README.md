@@ -11,7 +11,7 @@ All changes are CSP-safe (no inline `<script>`/`<style>`; inline `<svg>` only) a
 token-derived (twilight-safe). Functional proof is in
 `tests/Integration/Core/AppImladrisFidelityHighImpactTest.php` (10 tests asserting
 the exact rendered markup) — the full suite is **819 green**. These screenshots
-add the DESIGN §13 visual layer for the surfaces the canonical gate-a evidence
+add the PRODUCT_DESIGN §13 visual layer for the surfaces the canonical gate-a evidence
 seed does not exercise.
 
 | Shot | Gap(s) | What it shows |

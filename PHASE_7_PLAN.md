@@ -4,7 +4,7 @@
 **Plan type:** Delivery baseline, strategy-gated release train, and formal roadmap closeout  
 **Plan status:** **Draft — execution is gated by formal Phase 6 closeout and Milestone 0 platform-strategy approval**  
 **Prepared:** 2026-06-25  
-**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
+**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
 
 ## 1. Phase objective
 
@@ -432,7 +432,7 @@ The following decisions are treated as fixed for Phase 7 unless Milestone 0 reco
 - Run the complete Phase 1–7 regression and permission matrix in single-community and multi-community modes, source and translated locales, online/offline/PWA states, supported clients, and federation enabled/disabled where applicable.
 - Rehearse clean install, every supported historical upgrade, default-community backfill, second-community creation, domain move, community export/import, locale rollback, service-worker purge, push revoke, client-version disable, federation shutdown, backup restore, and one-community compatibility mode.
 - Verify every platform strategy record against actual outcomes and record adoption/no-adoption, owner, support window, incidents, budgets, and remaining limitations.
-- Reconcile `README.md`, `DESIGN.md`, `DECISIONS.md`, `SCHEMA.md`, surface documents, archive/API/federation specifications, locale packages, deployment manifests, runbooks, changelog, and evidence index with the deployed product.
+- Reconcile `README.md`, `PRODUCT_DESIGN.md`, `DECISIONS.md`, `SCHEMA.md`, surface documents, archive/API/federation specifications, locale packages, deployment manifests, runbooks, changelog, and evidence index with the deployed product.
 - Record every accepted Gate A/Gate B requirement and every signed omission outside the seven-phase roadmap.
 - Capture post-release product, isolation, portability, locale, client, federation, cost, and support baselines.
 
@@ -1090,7 +1090,7 @@ Every measurement record must include route/job/client/protocol, topology/hardwa
 - [ ] Clean install and every supported historical upgrade, default-community backfill, second-community launch, domain move, community export/import, client disable, federation shutdown, and clean restore rehearsals pass.
 - [ ] No critical/high security, privacy, accessibility, authorization, data-integrity, localization, offline, import, tenant-isolation, client, federation, recovery, or release-operability defect remains.
 - [ ] Every conditional omission has a signed adoption/no-adoption or out-of-roadmap record rather than a silent “later.”
-- [ ] Final `README.md`, `DESIGN.md`, `DECISIONS.md`, `SCHEMA.md`, surface docs, locale/archive/API/federation specs, deployment manifests, runbooks, changelog, and evidence index match the deployed product.
+- [ ] Final `README.md`, `PRODUCT_DESIGN.md`, `DECISIONS.md`, `SCHEMA.md`, surface docs, locale/archive/API/federation specs, deployment manifests, runbooks, changelog, and evidence index match the deployed product.
 - [ ] Final platform/product/isolation/portability/client/federation metrics, support ownership, review dates, and cost baselines are recorded.
 - [ ] Phase 7 and seven-phase roadmap product-owner closeout are recorded.
 
@@ -1117,8 +1117,8 @@ Further product work—such as real-time chat, voice/video, end-to-end encrypted
 - `PHASE_3_PLAN.md` — canonical composer/drafts/media, accessibility/SEO baseline, PWA/import/multi-community/i18n deferral, and product/capacity evidence handoff.
 - `PHASE_2_PLAN.md` — notifications/email, search, DMs, private boards, profiles/community state, polling, worker behavior, and explicit Phase 7-class deferrals.
 - `PHASE_1_PLAN.md` — universal server-rendered/no-JS core, setup/auth/session/CSRF, posting, admin/moderation, health, and release-evidence baseline that every expanded client/community must preserve.
-- `README.md` *(orientation pointer only — not a source of ground truth)* — product thesis and self-hosted PHP/MySQL/server-rendered stack overview. _(The replaceable interface seams are authoritative in DECISIONS §2, and the roadmap + completion-evidence policy in DESIGN §13 — not README; consistent with PHASE_6_PLAN §16.)_
-- `DESIGN.md` §§2–3, 6, 8–14 — single-community v1, responsive-web/PWA-later, no v1 federation/import, durable-topic product model, permissions, architecture, accessibility, metrics, and later PWA/mobile/import/multi-community/i18n direction.
+- `README.md` *(orientation pointer only — not a source of ground truth)* — product thesis and self-hosted PHP/MySQL/server-rendered stack overview. _(The replaceable interface seams are authoritative in DECISIONS §2, and the roadmap + completion-evidence policy in PRODUCT_DESIGN §13 — not README; consistent with PHASE_6_PLAN §16.)_
+- `PRODUCT_DESIGN.md` §§2–3, 6, 8–14 — single-community v1, responsive-web/PWA-later, no v1 federation/import, durable-topic product model, permissions, architecture, accessibility, metrics, and later PWA/mobile/import/multi-community/i18n direction.
 - `DECISIONS.md` §§1–8 — authoritative single-install v1 decision, global stack/identity/storage/search/realtime choices, future multi-tenancy, and settled later-work boundaries.
 - `SCHEMA.md` §§1–9 — the consolidated Phase 1–3 tables, timezone fields, reconciliation rules (§7), and foreshadowed schema (§8). **Note:** Phase 7 platform schema (per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables) is **not yet in SCHEMA.md**; it is defined in this plan and should be folded back on acceptance.
 - `ADMIN.md` §§1–12 — capabilities, protected authority, registration/membership, moderation/private-content limits, branding/localized communications, integrations/plugins/API, Console operations, audit, retention, and later multi-community administration.

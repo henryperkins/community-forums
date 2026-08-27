@@ -14,7 +14,7 @@ RetroBoards presents durable forum topics through a Slack/email-style three-pane
 
 Additional review findings this design addresses: the slash and reference menus are in-flow blocks that reflow the card (`app.css:948`, `:976`) instead of floating; the counter renders `n / 20000` from character zero (spec §11 says near-limit) and lies on DM pages whose real cap is 5000 (tech-debt #3); the always-on preview pane duplicates the message now that WYSIWYG is default-ON (spec §10 wants a toggle); the mobile compact dock leaks a Discard chip and an orphaned monogram (`app.css:1531–1542` hide-list misses them); the toolbar has no numbered-list control (spec §4); and topics loaded into the Community Inbox pane are never enhanced at all (tech-debt #5), leaving the flagship view a bare textarea.
 
-Authority is unchanged: `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` > `COMPOSER.md`/`USER.md` and the repository security invariants outrank this document. In particular:
+Authority is unchanged: `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` > `COMPOSER.md`/`USER.md` and the repository security invariants outrank this document. In particular:
 
 - the canonical Markdown `<textarea>` remains the submit source and the no-JS/kill-switch surface; all submissions stay CSRF-protected form POSTs through the existing endpoints;
 - `rich_composer=false` remains the broad kill switch that prevents all enhanced composer assets from loading; `wysiwyg_composer` behavior is unchanged;

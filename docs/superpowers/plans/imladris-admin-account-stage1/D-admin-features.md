@@ -348,4 +348,4 @@ diff on two unrelated admin screens.
 Duplicate badge-rule guard (design:425). Needs a `BadgeRuleService::create` check plus a unique
 index on `(badge_id, rule_type, board_id)`. Record as a design-identified gap; decide separately.
 **Do not** ship the error string without the enforcement — inert copy is not evidence
-(DESIGN §13).
+(PRODUCT_DESIGN §13).

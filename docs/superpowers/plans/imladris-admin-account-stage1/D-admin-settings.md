@@ -391,7 +391,7 @@ status set named (`failed`, `dead`, `rejected`, `review_required`, `stale`) and 
 sketch; (d) the design's local tab strip is refused in favour of the ADR 0023 §6 grouped rail; (e)
 `/admin/features` has no design representation and is retained as feature-added; (f) `/admin/thread-intelligence`
 answering 200 with both flags off is affirmed as deliberate rollback reachability, not drift.
-**Tested by:** nothing to run; it is the deferral discipline required by DESIGN §13 / ADR precedent.
+**Tested by:** nothing to run; it is the deferral discipline required by PRODUCT_DESIGN §13 / ADR precedent.
 
 **Order:** S1 and S5 are independent of the rest. S2 → S3 → S4 share the TI template and should land
 in that order. S6 can land first (it costs nothing and unblocks the refusals in S1/S4).

@@ -237,7 +237,7 @@ Slices 5–14 are mutually independent once 2 and 3 land; 15–17 depend on 4.
 ## 7. Standing execution rules
 
 1. **One ADR, one plan doc, one owner** — `docs/adr/0024-imladris-admin-account-adoption.md`. Eleven
-   separately-proposed `0024-*.md` files collapse into sections of it, or DESIGN §13's "deferrals are
+   separately-proposed `0024-*.md` files collapse into sections of it, or PRODUCT_DESIGN §13's "deferrals are
    never silently dropped" fails by accident.
 2. **`.admin-bar`/`.admin-tier` CSS ships from `composer build:imladris`**, never hand-copied. The
    builder reads `docs/design-system/imladris/`; `resources/imladris/` and `public/assets/imladris.css`

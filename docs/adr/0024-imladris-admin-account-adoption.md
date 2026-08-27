@@ -7,7 +7,7 @@
 - **Ledger:** `docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md`
 
 This is the **single** ADR for this adoption. Every deferral, gap and constraint arising from it is
-recorded here as a section rather than in a separate file, so DESIGN §13's "deferrals are never
+recorded here as a section rather than in a separate file, so PRODUCT_DESIGN §13's "deferrals are never
 silently dropped" holds by construction.
 
 ---
@@ -84,7 +84,7 @@ chrome change, not after:
 | `AppAdminDashboardRemediationTest:77-120` | the 26-destination single-page directory is structurally impossible under scoped tabs → 11 tier destinations in order + the active area's tabs |
 | `admin-dashboard.spec.ts:61`, `:93-105` | `expectGroupedDirectory()` rewritten; `[data-admin-nav]` → `[data-admin-tier]`; the axe `include` widens beyond `.admin` because the tier is full-bleed |
 | `AppImladrisFidelityTest:81` | `admin-subnav` → `admin-tier` |
-| `docs/evidence/browser/**/r2-*.png` | superseded; re-shot under DESIGN §13 |
+| `docs/evidence/browser/**/r2-*.png` | superseded; re-shot under PRODUCT_DESIGN §13 |
 
 `public/assets/app.js:766-875` (drawer, scrim, focus trap, 860px `matchMedia`) is **deleted**
 together with its no-JS expanded-grid fallback at `app.css:3290-3301`. Leaving either orphaned would

@@ -2,7 +2,7 @@
 
 **Owner:** Henry  
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
-**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `DESIGN.md` is the product source of truth; `SCHEMA.md` owns the final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  
+**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns the final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  
 **Status context:** Phase 1 is **not yet built** — it is the prerequisite for Phase 2. Phase 2 is the next planned product slice and starts only after Phase 1 is implemented and accepted.
 
 **Entry gate — Phase 1 must be built and closed first.** Phase 2 may begin only once Phase 1's definition of done is green with evidence (auth/session/CSRF; posting create/read/edit/delete; first-run admin + inline moderation; suspended/banned write-gates) and the Phase 1 schema is migrated and seeded per SCHEMA §6 (`users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`). Phase 2 begins only on that green baseline. _(Phases 3–7 carry this as their own "## 2. Entry gate"; Phase 2 keeps it inline here to avoid renumbering its sections.)_
@@ -57,7 +57,7 @@ Phase 2 is accepted only when all of the following are true:
 
 ### Gate A — Phase 2 core community release
 
-Gate A is the minimum public release that satisfies the top-level Phase 2 roadmap in `DESIGN.md` and `README.md`:
+Gate A is the minimum public release that satisfies the top-level Phase 2 roadmap in `PRODUCT_DESIGN.md` and `README.md`:
 
 - Persistent reactions, stars, and per-thread unread tracking.
 - Inbox filters/sorts backed by server state: Unread, Starred, Mine, Active, Newest, and Unanswered where supported.
@@ -447,7 +447,7 @@ Before handoff, carry forward measured baselines for notification delivery, sear
 ## 15. Source references
 
 - `README.md` — current live status, top-level Phase 2 community-essentials scope, stack, and evidence policy.
-- `DESIGN.md` §§6.7–6.16, 8–13 — engagement, DMs, search, notifications, moderation, profiles, presence, schema deltas, architecture, permissions, non-functional requirements, metrics, and phasing.
+- `PRODUCT_DESIGN.md` §§6.7–6.16, 8–13 — engagement, DMs, search, notifications, moderation, profiles, presence, schema deltas, architecture, permissions, non-functional requirements, metrics, and phasing.
 - `DECISIONS.md` — authoritative choices for unread state, polling, search, DMs, notification fan-out, email/worker hosting, roles, OAuth providers, and reputation.
 - `SCHEMA.md` §§1–7 — authoritative table shapes, Phase 2 build cut, and reconciliation decisions.
 - `ADMIN.md` §§2–5, 7, 10–11 — scoped capabilities, reports queue, content/user moderation, private boards, user management, notification email operations, and admin phasing.

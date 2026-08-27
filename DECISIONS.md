@@ -1,7 +1,7 @@
 # RetroBoards — Decisions Log
 
 **Status:** v1.6 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-09
-**This file settles the open questions** across [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md), and [COMMUNITY.md](COMMUNITY.md). Where a doc's "Open Questions" section lists an item, the resolution here is authoritative. Decisions are either **[Henry]** (an explicit choice) or **[Rec]** (a recommended default — easily changed, with rationale).
+**This file settles the open questions** across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md), and [COMMUNITY.md](COMMUNITY.md). Where a doc's "Open Questions" section lists an item, the resolution here is authoritative. Decisions are either **[Henry]** (an explicit choice) or **[Rec]** (a recommended default — easily changed, with rationale).
 
 ## 1. Confirmed by Henry
 
@@ -43,7 +43,7 @@
 
 > **Phase vs priority:** "P0/P1/P2/P3" in these docs are **MoSCoW priority tiers** — **P0** must-have, **P1** should-have, **P2** could-have, **P3** won't-have-this-round (deferred / later) — and are **not** delivery-phase numbers. Delivery is sequenced independently across **Phases 1–7** (see the PHASE_*_PLAN docs); a priority tier and a delivery phase are orthogonal, so a "P2" or "P3" item may land in any later delivery phase (e.g. Appeals and 2FA are P3 *and* delivered in Phase 3). Where a doc writes "P1…P7" as a shorthand for the **delivery** sequence, read it as "Phase 1…7."
 
-## 3. DESIGN.md decisions
+## 3. PRODUCT_DESIGN.md decisions
 
 | # | Question | Decision | Why |
 |---|---|---|---|
@@ -58,7 +58,7 @@
 | 9 | Retro theme toggle | **P2 optional skin** [Rec] | The preserved `styles.css` as a switchable theme; not v1. |
 | 10 | Single vs multi-community | **Single per install (v1)**; multi-tenant P2 [Rec] | Avoid `tenant_id` everywhere now; design doesn't preclude it. |
 | 11 | Anonymous/guest posting | **Account required to post**; "Anonymous" = masked logged-in User where a board allows [Henry/Rec] | No unaccountable guest posting; accountability preserved. |
-| 12 | Stack divergence (adjacent Postgres/React build) | **Stay PHP/MySQL; translate** [Henry] | Resolved (DESIGN §14 Q12); revisit only if stacks consolidate. |
+| 12 | Stack divergence (adjacent Postgres/React build) | **Stay PHP/MySQL; translate** [Henry] | Resolved (PRODUCT_DESIGN §14 Q12); revisit only if stacks consolidate. |
 | 13 | Realtime mechanism | **Short-polling** (see #4) [Rec] | One mechanism for bell + presence. |
 | 14 | Notification fan-out | **App-layer, in the write transaction + queue worker** [Rec] | Portable; no DB-trigger lock-in; the VPS runs the worker. |
 | 15 | Reputation input | **Σ reactions received (+1 each); no separate Like** [Rec] | Simplest, reuses existing reactions; see COMMUNITY.md §2. |

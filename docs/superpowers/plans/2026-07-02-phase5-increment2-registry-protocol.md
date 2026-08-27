@@ -23,7 +23,7 @@
 - **CSRF on every POST; no GET mutates state.** High-impact **trust-root changes** (create/enable registry, pin/rotate/revoke keys, blocklist *removal*) require recent reauthentication via `ReauthGate::requirePassword($admin, $currentPassword)` (PHASE_5_PLAN §5 #26 extends to trust-root changes). Blocklist **add** is the deliberate no-friction emergency brake (registry-independent, §5 #40) and is audited but not password-gated.
 - **Per-surface noindex:** every admin response (including redirects) carries `X-Robots-Tag: noindex` (Inc 1 review precedent).
 - **Audit:** every trust/blocklist/advisory operator action writes a `moderation_log` row (`target_type` `'registry'` or `'package'`, added by `0068`).
-- **Evidence (DESIGN §13, §F distributed discipline):** PHPUnit unit + integration; browser (Playwright desktop+mobile) + axe for the UI surfaces; per-surface noindex assertions; telemetry emission; the D11 budget rows measured on the F9 fixture; runbook entry; threat-model fixtures TM-SC-01…05 flipped to `implemented` with real test paths (`tests/Unit/Core/ThreatModelIndexTest.php` enforces the paths exist).
+- **Evidence (PRODUCT_DESIGN §13, §F distributed discipline):** PHPUnit unit + integration; browser (Playwright desktop+mobile) + axe for the UI surfaces; per-surface noindex assertions; telemetry emission; the D11 budget rows measured on the F9 fixture; runbook entry; threat-model fixtures TM-SC-01…05 flipped to `implemented` with real test paths (`tests/Unit/Core/ThreatModelIndexTest.php` enforces the paths exist).
 - **Strict PHPUnit:** every test ≥1 assertion; no output; no warnings. Per-test isolation is one rolled-back transaction — **no savepoints**, so assert observable behavior, not rollback effects.
 - **Do not touch `docs/evidence/deploy-dark-features.md`** — it has uncommitted operator edits in the working tree. Never `git add -A`; every commit stages explicit paths.
 
@@ -5142,7 +5142,7 @@ Create `docs/phase5/registry-protocol.md`:
 **Status:** Landed 2026-07-02, deploy-dark behind `package_registry`.
 **Scope:** wire contract + verification rules for signed catalogue snapshots,
 advisories, and key rotation. Install/manifest semantics are Inc 3 (P5-02).
-**Authority:** subordinate to `DECISIONS.md` → `DESIGN.md` → ADR 0004 (D1–D3)
+**Authority:** subordinate to `DECISIONS.md` → `PRODUCT_DESIGN.md` → ADR 0004 (D1–D3)
 → `docs/phase5/registry-signing-key-custody.md` (A4).
 
 ## Documents (rb-*.v1)

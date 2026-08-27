@@ -308,7 +308,7 @@ number is 0024** (confirmed; the synthesis's claim was right).
 Rules:
 
 1. **Eleven proposed `0024-*.md` files collapse into the single ADR above.** Every per-screen
-   decision becomes a numbered *section* of 0024, never its own ADR. This is what keeps DESIGN §13's
+   decision becomes a numbered *section* of 0024, never its own ADR. This is what keeps PRODUCT_DESIGN §13's
    "deferrals are never silently dropped" true — one ledger, not eleven.
 2. **The `feature-removed` ledger is one table in 0024 §"Design-side sections with no production
    home"**, seeded from S-synthesis §4's list.

@@ -46,12 +46,12 @@ The authoritative documents are:
 | Document | Owns |
 |---|---|
 | [DECISIONS.md](DECISIONS.md) | Locked decisions; the resolved stack; the **replaceable-interface seams** (email, search, media storage, feed — §2); the priority-tier-vs-delivery-phase rule. **Authoritative on any conflict.** |
-| [DESIGN.md](DESIGN.md) | The product & technical design — the product source of truth; the **roadmap** and **completion-evidence policy** (§13). |
+| [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) | The product & technical design — the product source of truth; the **roadmap** and **completion-evidence policy** (§13). |
 | [SCHEMA.md](SCHEMA.md) | The consolidated database schema (final table shapes) and the per-phase build cut (§6). |
 | [USER.md](USER.md) · [ADMIN.md](ADMIN.md) · [COMMUNITY.md](COMMUNITY.md) · [COMPOSER.md](COMPOSER.md) | The member, operator, community-layer, and composer surfaces. |
 | `PHASE_1_PLAN.md` … `PHASE_7_PLAN.md` (+ `docs/history/PHASE_1_MIGRATIONS.md`) | The seven-phase delivery sequence, entry/exit gates, and migration manifests. |
 
-**Precedence:** when this README and any document above disagree, the document above wins — and **DECISIONS.md wins over all**. In particular, the replaceable-interface seams live in **DECISIONS §2**, and the roadmap and completion-evidence policy in **DESIGN §13** — not here.
+**Precedence:** when this README and any document above disagree, the document above wins — and **DECISIONS.md wins over all**. In particular, the replaceable-interface seams live in **DECISIONS §2**, and the roadmap and completion-evidence policy in **PRODUCT_DESIGN §13** — not here.
 
 ## The seven delivery phases (at a glance)
 

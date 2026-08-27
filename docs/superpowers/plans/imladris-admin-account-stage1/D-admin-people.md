@@ -385,7 +385,7 @@ plus the `form[action="/admin/roles"]` selector hazard), R2 (system-role assignm
 shows, production forbids), S8 (record-save redirect target), S3/S4/S5 (server-side validation
 microcopy changes), and the confirmation that Users / Invitations / Badge rules are out of this
 screen's scope and belong to `admin-members` / `admin-features`.
-**Tests** none — but per DESIGN §13 no slice above may be called complete without the ADR entry
+**Tests** none — but per PRODUCT_DESIGN §13 no slice above may be called complete without the ADR entry
 for whatever it deferred.
 
 **Ordering.** 1 → 2 → 3 → 4 → 5 → 6 are independently shippable and independently testable in that

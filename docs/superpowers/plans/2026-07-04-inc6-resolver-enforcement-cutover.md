@@ -10,7 +10,7 @@
 (owner-loss safeguard wiring). Satisfies **GA-DOD-11**, advances **GA-DOD-10** and
 **GA-DOD-12** (`docs/phase5/requirement-ledger.json`).
 
-> Precedence reminder (CLAUDE.md): `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` >
+> Precedence reminder (CLAUDE.md): `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` >
 > surface specs. The Phase 5 `decision #NN` register lives in **`PHASE_5_PLAN.md` §5**
 > (not DECISIONS.md). Where this doc and an authoritative doc disagree, the
 > authoritative doc wins and this design must be corrected.

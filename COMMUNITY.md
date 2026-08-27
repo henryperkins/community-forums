@@ -1,7 +1,7 @@
 # RetroBoards — Community Layer Design
 
 **Status:** v0.3 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-12
-**Companion to [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md).** This is the third "pass" — the **community / social layer** that earlier docs deferred. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; vanilla PHP + MySQL, server-rendered + progressive enhancement).
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md).** This is the third "pass" — the **community / social layer** that earlier docs deferred. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; vanilla PHP + MySQL, server-rendered + progressive enhancement).
 
 ## Scope & stance
 
@@ -15,7 +15,7 @@ This layer is deliberately **lightweight and Twitter-like** (Henry's call), not 
 - **No rich badge taxonomy, no point store, no streaks/loss mechanics.** A small set of honest badges only.
 - **No competitive pressure by default.** Leaderboards are light and opt-out; nothing shames low activity.
 
-> This pass finalises the stubs other docs left open: reputation (DESIGN.md §6.16), profile rank/badges (USER.md §5.1, §5.5), and the "community memory" gestures (DESIGN.md §6.18).
+> This pass finalises the stubs other docs left open: reputation (PRODUCT_DESIGN.md §6.16), profile rank/badges (USER.md §5.1, §5.5), and the "community memory" gestures (PRODUCT_DESIGN.md §6.18).
 
 ## Contents
 
@@ -39,7 +39,7 @@ This layer is deliberately **lightweight and Twitter-like** (Henry's call), not 
 
 ## 1. Overview & Principles
 
-The Community-Inbox thesis (DESIGN.md) splits cleanly: the **inbox** is *triage* (what needs me), while the **community layer** is *connection and discovery* (who I follow, what they're saying, what I've earned). Both sit on the same durable topics.
+The Community-Inbox thesis (PRODUCT_DESIGN.md) splits cleanly: the **inbox** is *triage* (what needs me), while the **community layer** is *connection and discovery* (who I follow, what they're saying, what I've earned). Both sit on the same durable topics.
 
 **Principles**
 
@@ -75,12 +75,12 @@ and `docs/runbooks/thread_intelligence.md`.
 
 ## 2. Reputation
 
-A single, honest, public number: **how much your contributions have been appreciated.** This finalises the "simple, Twitter-like" reputation folded in at DESIGN.md v0.2.
+A single, honest, public number: **how much your contributions have been appreciated.** This finalises the "simple, Twitter-like" reputation folded in at PRODUCT_DESIGN.md v0.2.
 
 ### 2.1 How it accrues
 
-- **`users.reputation` = lifetime reactions received** across your posts (each reaction = **+1**). This reuses the existing reactions system (DESIGN.md §8) — the reactions *are* the likes, so we need no separate "Like" primitive. *(This settles DESIGN.md open question #15.)*
-- **Accepted/"solved" answers** (DESIGN.md §6.18) are worth a small bonus (e.g. +5) — answering questions well is the most valuable contribution.
+- **`users.reputation` = lifetime reactions received** across your posts (each reaction = **+1**). This reuses the existing reactions system (PRODUCT_DESIGN.md §8) — the reactions *are* the likes, so we need no separate "Like" primitive. *(This settles PRODUCT_DESIGN.md open question #15.)*
+- **Accepted/"solved" answers** (PRODUCT_DESIGN.md §6.18) are worth a small bonus (e.g. +5) — answering questions well is the most valuable contribution.
 - **No decay, no negative reputation.** Removing a post or reaction recomputes downward naturally (it's derived); we never punish with rep loss as a mechanic.
 
 ### 2.2 Display
@@ -97,7 +97,7 @@ It does **not** grant abilities, lift limits, or gate features. It's a social si
 Reactions are the social primitive and the input to reputation.
 
 - The mockup already has multi-emoji reactions (🔥 😂 💯 …). We **keep them** — they're fun and expressive — and **every reaction received counts as +1 reputation** (§2.1). No need to privilege a single heart.
-- **One reaction per (user, post, emoji)** (the `reactions` unique key, DESIGN.md §8); toggling removes it.
+- **One reaction per (user, post, emoji)** (the `reactions` unique key, PRODUCT_DESIGN.md §8); toggling removes it.
 - Reacting is a P1 feature (persisted); it's already in the mockup visually.
 - **Self-reactions don't count** toward reputation (you can't like your own posts for rep).
 
@@ -110,7 +110,7 @@ The Twitter-like social graph — the heart of this pass.
 | Target | Effect | Phase |
 |---|---|---|
 | **A user** | Their new threads/posts appear in your **Following feed** (§5); optional "new post from someone you follow" notification (low-priority/digest). | P1 |
-| A tag or board | Surfaces that area in your feed (overlaps "Watching", USER.md / DESIGN.md §6.18). | P2 |
+| A tag or board | Surfaces that area in your feed (overlaps "Watching", USER.md / PRODUCT_DESIGN.md §6.18). | P2 |
 
 ### 4.2 Mechanics
 
@@ -127,7 +127,7 @@ Backed by a `follows` table (§11).
 
 A clear split keeps the product coherent:
 
-- **Inbox** (DESIGN.md) = *triage of what concerns you* — replies to you, mentions, watched/assigned topics.
+- **Inbox** (PRODUCT_DESIGN.md) = *triage of what concerns you* — replies to you, mentions, watched/assigned topics.
 - **Following feed** (this layer) = *discovery from who you follow* — a reverse-chronological stream of new threads and notable posts from the users (and P2: tags/boards) you follow. Each item is **topic-anchored**: it links straight to the durable thread, so the feed feeds the forum rather than competing with it.
 
 The left rail carries both entry points ("Inbox" and "Following"). A feed item shows who + what (started a thread in `#board` / replied in {thread}), a snippet, time, and reactions; it respects blocks and profile privacy.
@@ -179,7 +179,7 @@ This finalises the profile (USER.md §5). The profile now carries the full commu
 
 ## 9. Notifications Integration
 
-Reuses the notification system (DESIGN.md §6.10, §8.3); new kinds, member-controlled (USER.md §4.6):
+Reuses the notification system (PRODUCT_DESIGN.md §6.10, §8.3); new kinds, member-controlled (USER.md §4.6):
 
 | Trigger | Default channel | Notes |
 |---|---|---|
@@ -257,7 +257,7 @@ Additions to existing tables / notes:
 
 | Table | Change | Why |
 |---|---|---|
-| `threads` | `accepted_answer_post_id BIGINT UNSIGNED NULL` | "Solved" answer (rep bonus + Problem Solver badge); also the DESIGN.md §6.18 "Solved" status. |
+| `threads` | `accepted_answer_post_id BIGINT UNSIGNED NULL` | "Solved" answer (rep bonus + Problem Solver badge); also the PRODUCT_DESIGN.md §6.18 "Solved" status. |
 | `users` | `reputation` (already present) = Σ reactions received (§2) | Denormalised; no new column. |
 | `users` | `title` (already present) = cosmetic rank from thresholds (§8) | No new column. |
 | Leaderboard opt-out | stored in `user_preferences.prefs` (USER.md §4.7) | No new column. |
@@ -269,7 +269,7 @@ To be explicit: **there are no Discourse-style trust levels.** Reputation, title
 
 ## 13. Cross-Doc Deltas
 
-- **DESIGN.md** — finalises §6.16 reputation (resolves open question #15: reputation = Σ reactions received, +1 each, no separate Like). Gives §6.18 "Solved" a concrete home (`threads.accepted_answer_post_id`) and §6.19 owns the graduated Thread Intelligence contract.
+- **PRODUCT_DESIGN.md** — finalises §6.16 reputation (resolves open question #15: reputation = Σ reactions received, +1 each, no separate Like). Gives §6.18 "Solved" a concrete home (`threads.accepted_answer_post_id`) and §6.19 owns the graduated Thread Intelligence contract.
 - **USER.md** — completes the profile community elements (§5.1) and resolves the rank/title stub (§5.5) as cosmetic. Adds follow/badge/solved notification types (§4.6), a leaderboard opt-out privacy pref (§4.7), and the Living Brief processor/provenance disclosure (§4.9).
 - **ADMIN.md** — reputation/badges/leaderboards add moderation levers (§10 here) but **no** new role gating; §3.10 owns Thread Intelligence operator and curator recovery.
 - **Schema** — new: `follows`, `badges`, `user_badges`, `reputation_events` (optional); `threads.accepted_answer_post_id`.
@@ -301,4 +301,4 @@ acceptance boundary.
 |---|---|---|
 | v0.3 | 2026-07-12 | Added §1.1 and reconciled the Living Brief member and curator workflows, processor boundary, provenance, retention, last-good behavior, and joint default-on graduation with independent rollback pins. |
 | v0.2 | 2026-06-26 | Consistency pass: relabeled §14.1 "P1/P2" with their delivery phases (P1 priority → Phase 2, P2 priority → Phase 4+) to remove the priority-vs-phase ambiguity; marked §14.2 rows 2 (titles) and 3 (who marks "solved") **Resolved**, matching §8 and the Phase 2 build (DECISIONS §8 updated to match). |
-| v0.1 | 2026-06-19 | Initial community-layer design — **lightweight / Twitter-like** (no Discourse trust-level gating). Reputation (Σ reactions received, resolves DESIGN.md Q15); reactions/likes; following/followers + activity feed (vs the inbox); a minimal fixed badge set; light opt-out leaderboards; cosmetic titles (resolves the rank stub); notifications integration; anti-abuse & humane-design wellbeing rules; data model (`follows`, `badges`, `user_badges`, `reputation_events`, `threads.accepted_answer_post_id`); explicit no-trust-gating stance; phasing & open questions. |
+| v0.1 | 2026-06-19 | Initial community-layer design — **lightweight / Twitter-like** (no Discourse trust-level gating). Reputation (Σ reactions received, resolves PRODUCT_DESIGN.md Q15); reactions/likes; following/followers + activity feed (vs the inbox); a minimal fixed badge set; light opt-out leaderboards; cosmetic titles (resolves the rank stub); notifications integration; anti-abuse & humane-design wellbeing rules; data model (`follows`, `badges`, `user_badges`, `reputation_events`, `threads.accepted_answer_post_id`); explicit no-trust-gating stance; phasing & open questions. |

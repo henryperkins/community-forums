@@ -1,6 +1,6 @@
 # RetroBoards — Phase 1-4 History
 
-This document consolidates the completed-phase status and completion records for Phases 1-4 — previously maintained as separate files (`docs/PHASE_1_COMPLETION.md`, `docs/PHASE_2_STATUS.md`, `docs/PHASE_3_STATUS.md`, `PHASE_4_STATUS.md`) — into a single history record. The Phase 1 migration manifest is retained as a standalone sibling reference at [`PHASE_1_MIGRATIONS.md`](PHASE_1_MIGRATIONS.md). This record is retained for traceability and as DESIGN §13 completion evidence. Each source's original content is reproduced faithfully under its section below.
+This document consolidates the completed-phase status and completion records for Phases 1-4 — previously maintained as separate files (`docs/PHASE_1_COMPLETION.md`, `docs/PHASE_2_STATUS.md`, `docs/PHASE_3_STATUS.md`, `PHASE_4_STATUS.md`) — into a single history record. The Phase 1 migration manifest is retained as a standalone sibling reference at [`PHASE_1_MIGRATIONS.md`](PHASE_1_MIGRATIONS.md). This record is retained for traceability and as PRODUCT_DESIGN §13 completion evidence. Each source's original content is reproduced faithfully under its section below.
 
 ## Phase 1 completion
 

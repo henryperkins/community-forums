@@ -1,7 +1,7 @@
 # RetroBoards — User Account, Preferences & Profile Design
 
 **Status:** v0.12 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-02
-**Companion to [DESIGN.md](DESIGN.md) and [ADMIN.md](ADMIN.md).** DESIGN.md is the source of truth; ADMIN.md owns the operator surface; **this doc owns the member's own surface** — how a person signs in, configures their account, tailors their experience, and presents themselves. Same conventions (P0/P1/P2/P3; `Done (mockup)` / `Planned` / `Live`; InnoDB / `utf8mb4`).
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) and [ADMIN.md](ADMIN.md).** PRODUCT_DESIGN.md is the source of truth; ADMIN.md owns the operator surface; **this doc owns the member's own surface** — how a person signs in, configures their account, tailors their experience, and presents themselves. Same conventions (P0/P1/P2/P3; `Done (mockup)` / `Planned` / `Live`; InnoDB / `utf8mb4`).
 
 ## Scope
 
@@ -9,7 +9,7 @@ In scope: **third-party login**, **account settings** (security, email/password,
 
 **Explicitly deferred to the upcoming "community" pass** (the third beat): reputation systems, badges/trophies, following/followers, activity feeds and leaderboards, social graph, trust levels. This doc designs the *individual's* surface; the community pass designs how individuals relate. Where a profile element foreshadows community features (e.g. rank/title), it is stubbed here and finished there.
 
-> **Naming:** **Resolved (v0.4): the role is "User"** across all docs (DESIGN.md updated to match); "member" appears only casually in prose.
+> **Naming:** **Resolved (v0.4): the role is "User"** across all docs (PRODUCT_DESIGN.md updated to match); "member" appears only casually in prose.
 
 ## Contents
 
@@ -19,7 +19,7 @@ In scope: **third-party login**, **account settings** (security, email/password,
 4. User Preferences
 5. User Profiles
 6. Key Flows
-7. Data-Model Additions (delta to DESIGN.md §8)
+7. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
 8. Roadmap Delta (user/account phasing)
 9. Open Questions
 10. Changelog
@@ -28,7 +28,7 @@ In scope: **third-party login**, **account settings** (security, email/password,
 
 ## 1. Overview
 
-The member surface has three jobs: **get you in** (low-friction, trustworthy authentication), **let you tune it** (settings and preferences that make the forum *yours*), and **let you show up** (a profile that builds identity). The guiding principle from DESIGN.md applies throughout: familiar patterns, low friction, progressive disclosure. Account and profile changes are self-serve wherever safe; anything sensitive (email, password, deletion) is gated and verified.
+The member surface has three jobs: **get you in** (low-friction, trustworthy authentication), **let you tune it** (settings and preferences that make the forum *yours*), and **let you show up** (a profile that builds identity). The guiding principle from PRODUCT_DESIGN.md applies throughout: familiar patterns, low friction, progressive disclosure. Account and profile changes are self-serve wherever safe; anything sensitive (email, password, deletion) is gated and verified.
 
 ## 2. Authentication & Third-Party Login
 
@@ -36,7 +36,7 @@ The member surface has three jobs: **get you in** (low-friction, trustworthy aut
 
 | Method | Priority | Status | Notes |
 |---|---|---|---|
-| Email + password | P0 | Planned | Baseline, specified in DESIGN.md §6.6. Argon2id hashing. |
+| Email + password | P0 | Planned | Baseline, specified in PRODUCT_DESIGN.md §6.6. Argon2id hashing. |
 | **Sign in with Google** | P1 | Planned | OIDC. Email provided + verified. |
 | **Sign in with Apple** | P1 | Planned | OIDC. Private-relay email; name/email returned **only on first authorization**. |
 | **Sign in with GitHub** | P1 | Planned | OAuth2. Email may be private/unverified — must request `user:email` and check. |
@@ -148,7 +148,7 @@ A `/settings` area with a left-nav (mirrors the admin Console pattern, ADMIN.md 
 
 - **Change password** (requires current password). **Set password** for OAuth-only accounts (§2.4).
 - **Two-factor (TOTP)** with recovery codes — **P3 (delivered in Phase 3)** (DECISIONS §5 #12).
-- **Active sessions & devices:** list each session (device, browser, IP/region, last active, current) with **revoke** per-session and **"log out everywhere else."** (Backed by the `sessions` table, DESIGN.md §8.)
+- **Active sessions & devices:** list each session (device, browser, IP/region, last active, current) with **revoke** per-session and **"log out everywhere else."** (Backed by the `sessions` table, PRODUCT_DESIGN.md §8.)
 - **Security activity:** recent logins, new-device sign-ins, password/email changes, provider link/unlink — also surfaced as notifications.
 - **Recovery:** email-based password reset; recovery codes if 2FA enabled.
 
@@ -166,7 +166,7 @@ Manage linked logins (Google/Apple/GitHub + email/password): add a provider, rem
 
 These make the forum *theirs*. Defaults are inherited from site settings (ADMIN.md §6/§9); the user overrides what they care about.
 
-**User preferences are how the global community becomes a personal inbox:** what I follow, what interrupts me, what I hide, how dense the interface feels, and how I compose (the Community-Inbox thesis, DESIGN.md).
+**User preferences are how the global community becomes a personal inbox:** what I follow, what interrupts me, what I hide, how dense the interface feels, and how I compose (the Community-Inbox thesis, PRODUCT_DESIGN.md).
 
 ### 4.1 Appearance
 
@@ -227,7 +227,7 @@ on its own board and not only in your inbox. A guest sees none of it.
 
 ### 4.4 Bookmarks & saved
 
-> **Reconciliation:** "bookmark a thread" and the **star** from DESIGN.md (`thread_user.is_starred`) are the **same action** — we surface it as **Save/Star** consistently and do not create a parallel concept. "Subscribe" (get notified) stays distinct from "Save" (bookmark for later).
+> **Reconciliation:** "bookmark a thread" and the **star** from PRODUCT_DESIGN.md (`thread_user.is_starred`) are the **same action** — we surface it as **Save/Star** consistently and do not create a parallel concept. "Subscribe" (get notified) stays distinct from "Save" (bookmark for later).
 
 - **Saved threads** = starred threads (`thread_user.is_starred`).
 - **Favorite boards** = `user_board_prefs.is_favorite` (§4.3).
@@ -236,7 +236,7 @@ on its own board and not only in your inbox. A guest sees none of it.
 
 ### 4.5 Composing
 
-- Default post format (Markdown — the site's canonical markup; DESIGN.md §14, DECISIONS §3 #2).
+- Default post format (Markdown — the site's canonical markup; PRODUCT_DESIGN.md §14, DECISIONS §3 #2).
 - **Attach my signature** by default (per-post override).
 - Draft auto-save behaviour; **Enter to send** vs Enter-for-newline preference (the composer default is Enter-to-send).
 
@@ -256,7 +256,7 @@ The member controls *what reaches them*; ADMIN.md §7 owns templates and routing
 
 Plus: **email digest cadence** (off / daily), **quiet hours**, **per-thread mute**, and a global "pause all email" switch.
 
-**Subscriptions (v0.2).** Beyond the per-type matrix above, a member can **subscribe to a specific thread or a whole board**, each with independent **In-app** and **Email** toggles (a Bell control on the thread page and the board header — DESIGN.md §6.10). A dedicated **`/settings/notifications`** page lists every active subscription with per-row toggles and one-click unsubscribe. Subscriptions are stored in `subscriptions` (DESIGN.md §8.3), which **supersedes** the old per-thread `is_subscribed` flag.
+**Subscriptions (v0.2).** Beyond the per-type matrix above, a member can **subscribe to a specific thread or a whole board**, each with independent **In-app** and **Email** toggles (a Bell control on the thread page and the board header — PRODUCT_DESIGN.md §6.10). A dedicated **`/settings/notifications`** page lists every active subscription with per-row toggles and one-click unsubscribe. Subscriptions are stored in `subscriptions` (PRODUCT_DESIGN.md §8.3), which **supersedes** the old per-thread `is_subscribed` flag.
 
 **Per-subscription frequency & digests (v0.4).** Each subscription's frequency is **Instant / Daily / Off**, set per board or thread — a **thread overrides its board**, and "Off" silences that target. Daily activity rolls into a **timezone-aware daily digest** sent at the member's chosen **digest hour** (with their timezone, §4.2). `/settings/notifications` also offers a **digest preview** (what the next digest will include), a **test send** to verify deliverability, and — if an address was auto-suppressed after a bounce — a **re-enable** action once the inbox is working again. (Infra in ADMIN.md §7.6.)
 
@@ -311,7 +311,7 @@ refresh and explicit automation-resume controls (COMMUNITY.md §1.1; ADMIN.md
 ### 5.1 Profile page anatomy (`/u/{username}`)
 
 - **Header:** avatar, display name, `@username`, title/rank, presence dot (if shown), "Member since {date}", location, last-seen.
-- **Stats (light):** post count, threads started, and **reputation** — a simple, Twitter-like count of likes/reactions received (DESIGN.md §6.16). Online/offline presence shows by the name when the member allows it (§4.7). *(Badges, trust levels, and the fuller reputation system are the community pass — §5.5.)*
+- **Stats (light):** post count, threads started, and **reputation** — a simple, Twitter-like count of likes/reactions received (PRODUCT_DESIGN.md §6.16). Online/offline presence shows by the name when the member allows it (§4.7). *(Badges, trust levels, and the fuller reputation system are the community pass — §5.5.)*
 - **Actions:** Message · Block · Report. *(Follow is stubbed — community pass.)*
 - **Tabs:** Overview · Threads started · Posts · Reactions · About.
 - **Activity:** a light recent-activity list (richer feeds are a community-pass feature).
@@ -344,7 +344,7 @@ Short **bio** (length-capped, sanitised), **location**, **website** (`nofollow`)
 
 ### 5.5 Title / rank (stub for the community pass)
 
-A profile shows a **title/rank**, derived from **reputation/post-count thresholds** and **admin-overridable** (COMMUNITY §8, DECISIONS §8). A **simple reputation score** (likes received — DESIGN.md §6.16) is folded into v0.2 and shown on the profile. The richer mechanics — **badges, trophies, trust levels, and ranks-derived-from-reputation — are designed in the community pass.** Designing the storage now (`users.title`, `users.reputation`) keeps that pass additive.
+A profile shows a **title/rank**, derived from **reputation/post-count thresholds** and **admin-overridable** (COMMUNITY §8, DECISIONS §8). A **simple reputation score** (likes received — PRODUCT_DESIGN.md §6.16) is folded into v0.2 and shown on the profile. The richer mechanics — **badges, trophies, trust levels, and ranks-derived-from-reputation — are designed in the community pass.** Designing the storage now (`users.title`, `users.reputation`) keeps that pass additive.
 
 ### 5.6 Editing & ownership
 
@@ -356,7 +356,7 @@ Self-service edits are immediate (subject to sanitisation and the new-user gates
 
 ### 5.7 New-user onboarding (product tour)
 
-A first-run interactive tour helps newcomers learn the Slack/email-style layout fast (DESIGN.md §6.17).
+A first-run interactive tour helps newcomers learn the Slack/email-style layout fast (PRODUCT_DESIGN.md §6.17).
 
 - **Library:** a lightweight client-side tour (e.g. driver.js, ~6kb, no framework peer issues) run as a singleton controller.
 - **Steps (6–7):** highlight the **board rail/list**, the **thread inbox**, the **search bar**, the **quick-reply composer**, the **notification bell**, and the **"New thread"** button. Each step is plain text + a one-line tip — no screenshots.
@@ -379,7 +379,7 @@ A first-run interactive tour helps newcomers learn the Slack/email-style layout 
 11. **Tune reading.** Settings → Preferences → theme = Dark, threads per page = 50 → applies immediately (theme) and on next list load (pagination).
 12. **Export / delete account.** Settings → Data & Account → export (download archive) or delete (confirm → grace period → purge, posts anonymised by default).
 
-## 7. Data-Model Additions (delta to DESIGN.md §8)
+## 7. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
 
 Same conventions (InnoDB, `utf8mb4`, `BIGINT UNSIGNED` keys).
 
@@ -465,7 +465,7 @@ CREATE TABLE username_history (
 
 | Table | Add | Why |
 |---|---|---|
-| `users` | `bio TEXT NULL`, `website VARCHAR(255) NULL`, `pronouns VARCHAR(32) NULL` | Profile fields (`location`, `title`, `signature`, `avatar_path` already in DESIGN.md). |
+| `users` | `bio TEXT NULL`, `website VARCHAR(255) NULL`, `pronouns VARCHAR(32) NULL` | Profile fields (`location`, `title`, `signature`, `avatar_path` already in PRODUCT_DESIGN.md). |
 | `users` | `avatar_source ENUM('monogram','upload','gravatar','oauth') DEFAULT 'monogram'` | Drives the avatar fallback chain (§5.2). |
 | `users` | `profile_visibility ENUM('public','members') DEFAULT 'public'`, `allow_dms ENUM('everyone','members','none') DEFAULT 'members'`, `show_presence TINYINT(1) DEFAULT 1` | Privacy gates checked **server-side per interaction** — promoted to columns (not JSON) for cheap enforcement. |
 | `users` | `password_hash` becomes **NULLable** | OAuth-only accounts may have no password until they set one (§2.4). |
@@ -473,19 +473,19 @@ CREATE TABLE username_history (
 
 ### 7.3 Reconciliation notes
 
-- **Saved/bookmarked threads reuse `thread_user.is_starred`** (DESIGN.md §8) — no new table. Favorite **boards** use `user_board_prefs`.
+- **Saved/bookmarked threads reuse `thread_user.is_starred`** (PRODUCT_DESIGN.md §8) — no new table. Favorite **boards** use `user_board_prefs`.
 - **Active sessions/devices** (§3.3) build on the **`sessions`** table, which **ships in Phase 1** (SCHEMA §7 #7 / `0005_sessions.sql`); only the device-management UI is Phase 2.
 - **Notification preferences** (§4.6) live inside `user_preferences.prefs`; ADMIN.md §7 owns the templates and routing those preferences gate.
-- **Subscriptions** (thread/board, with in-app/email toggles, §4.6) live in `subscriptions` (DESIGN.md §8.3) and **supersede** `thread_user.is_subscribed`.
+- **Subscriptions** (thread/board, with in-app/email toggles, §4.6) live in `subscriptions` (PRODUCT_DESIGN.md §8.3) and **supersede** `thread_user.is_subscribed`.
 
 ## 8. Roadmap Delta (user/account phasing)
 
-Mapped onto DESIGN.md §13 (whose strategic "Phase 3" and "Later (P2)" buckets subdivide into delivery Phases 3–7 — see SCHEMA §6):
+Mapped onto PRODUCT_DESIGN.md §13 (whose strategic "Phase 3" and "Later (P2)" buckets subdivide into delivery Phases 3–7 — see SCHEMA §6):
 
 - **Phase 1 (MVP) — planned, not yet built.** Email/password auth and the first member account slice: `/settings/account` updates display name, bio, and location; `/settings/security` changes password; `/u/{username}` renders a basic public profile with join date, post count, and reputation. The `verifications` table and `users.email_verified_at` ship in Phase 1, but the password-reset and change-email-verification *flows* are scheduled for **Phase 2** (sending requires the Phase 2 email worker); avatars, signatures, privacy controls, and reading prefs remain later work.
 - **Phase 2 (community essentials window).** **Password-reset and registration email-verification flows** (email worker online); **OAuth (Google/Apple/GitHub)** + Connections/linking (`oauth_identities`); **board organization** (favorite/mute/reorder, `user_board_prefs`); **Saved** view; **notification preferences** matrix; **privacy** prefs + **block list** (`blocks`); **device-management UI** + security activity over the Phase 1 `sessions` table (revoke / log-out-everywhere); self-serve export/delete.
 - **Phase 3 (polish).** 2FA/TOTP; **avatar uploads + Gravatar** (both ride the Phase 3 `attachments` pipeline — SCHEMA §6; monogram in Phase 1, OAuth-import with OAuth in Phase 2); bookmark folders; retro skin per-user; advanced composing prefs; deactivate (vs delete); custom profile fields (with ADMIN).
-- **Later — delivery Phase 5 (ecosystem & identity).** Passkeys/WebAuthn; additional OAuth providers (generic OIDC); verified website links; richer custom fields. _(Priority tier P2; see PHASE_5_PLAN and DESIGN §13.)_
+- **Later — delivery Phase 5 (ecosystem & identity).** Passkeys/WebAuthn; additional OAuth providers (generic OIDC); verified website links; richer custom fields. _(Priority tier P2; see PHASE_5_PLAN and PRODUCT_DESIGN §13.)_
 
 ## 9. Open Questions
 
@@ -514,7 +514,7 @@ Mapped onto DESIGN.md §13 (whose strategic "Phase 3" and "Later (P2)" buckets s
 | v0.11 | 2026-07-12 | Added §4.9 with Living Brief reading, processor disclosure, access-gated provenance, retention, and last-good behavior; reconciled the joint default-on graduation of both Thread Intelligence flags and their independent rollback pins. |
 | v0.10 | 2026-06-26 | Wording/citation pass: dropped digest **"weekly"** cadence (§4.6 — daily-only per SCHEMA `subscriptions.frequency`); dropped **"optional"** from the Phase-1 `sessions` table (§3.3); fixed SCHEMA citations **§7.7 → §7 #7** (§7.3, §9 row 9); settled §4.5 default post format to **Markdown-canonical** (DECISIONS §3 #2, dropped the BBCode either/or); §5.5 title/rank now **reputation/post-count thresholds, admin-overridable** (COMMUNITY §8, DECISIONS §8). |
 | v0.9 | 2026-06-26 | **Status-truth pass (nothing is built yet):** reworded §8 Phase 1 from "auth is live / now live" to planned, and "monogram shipped Phase 1" → "monogram in Phase 1"; reworded the v0.5 entry below from "Shipped" to "Specified (design only — not built)". No scope changes. |
-| v0.8 | 2026-06-26 | Consistency pass: mapped §8's "Later (P2)" account items (passkeys, more providers, verified links, richer custom fields) to **delivery Phase 5** and noted DESIGN §13 now subdivides into Phases 3–7 (they previously had no home phase past Phase 3); added **P3** to the header conventions legend; bumped the stale header (was v0.6, behind its own v0.7 row). |
+| v0.8 | 2026-06-26 | Consistency pass: mapped §8's "Later (P2)" account items (passkeys, more providers, verified links, richer custom fields) to **delivery Phase 5** and noted PRODUCT_DESIGN §13 now subdivides into Phases 3–7 (they previously had no home phase past Phase 3); added **P3** to the header conventions legend; bumped the stale header (was v0.6, behind its own v0.7 row). |
 | v0.7 | 2026-06-26 | Consistency pass: set `allow_dms` default to `'members'` (§7.2) per DECISIONS §5 #8; corrected 2FA from "P2" to **P3 / Phase 3** (§3.3 and §9 row 12); gave avatar uploads a definite owner — **Phase 3** on the attachments pipeline (§8, §9 row 4); replaced the blocking-phase that read like an answer with the actual decided value in §9 rows 4/6/7/8/12. |
 | v0.6 | 2026-06-25 | Consistency pass: scheduled password-reset and email-verification *flows* to Phase 2 (storage already ships Phase 1); clarified that the `sessions` table is Phase 1 (per SCHEMA §7.7) and only the device-management UI is Phase 2 (§7.3, §8, §9). |
 | v0.1 | 2026-06-19 | Initial user/account/profile design. Third-party login (Google/Apple/GitHub) with pluggable providers, account resolution & linking, provider edge cases; account settings (security, sessions, data); preferences (appearance, reading, board organization, bookmarks, notifications, privacy/block list); profiles (avatars, signatures, bio, rank stub); key flows; data-model delta; roadmap delta; open questions. Community features (reputation, badges, following, feeds) deferred to the community pass. |

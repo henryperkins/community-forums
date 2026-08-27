@@ -20,7 +20,7 @@
 not compatible with production.** The design is one DOM with 13 panes switched by `go(k)` client state
 (`AccountSettings.dc.html:571`, `:621-634`, `:704-707`). Production is 13 URLs, each rendering the same
 shell + rail + one pane. Collapsing to one page would break three binding contracts at once:
-(a) DESIGN §5.3 "every view has a real, shareable, crawlable URL"; (b) the anti-draft-loss 422 contract
+(a) PRODUCT_DESIGN §5.3 "every view has a real, shareable, crawlable URL"; (b) the anti-draft-loss 422 contract
 — `AccountController::updateAccount` (`src/Controller/AccountController.php:85-92`) and nine sibling
 methods re-render **their own template** at 422 carrying `->errors` + `->old`, which a single page with
 13 concurrently-mounted forms cannot express; (c) progressive enhancement — with JS off, `go(k)` does
@@ -499,7 +499,7 @@ Touches `templates/account/privacy.php:40` ("regard" → "reputation") and `temp
 `rg -n "<script|<style| on[a-z]+=" templates/account templates/partials/settings_nav.php -S` clean;
 full `vendor/bin/phpunit` read to completion; `npm run evidence` + `npm run a11y` on desktop and mobile.
 
-**Cross-slice evidence gate (DESIGN §13):** every slice above is UI-visible, so PHPUnit alone is never
+**Cross-slice evidence gate (PRODUCT_DESIGN §13):** every slice above is UI-visible, so PHPUnit alone is never
 sufficient — each needs Playwright screenshots filed under `docs/evidence/<slice>/{desktop,mobile}/`
 plus a prototype-vs-production comparison sheet, and any deferral (the Regard pane, the strength meter,
 the per-event email matrix, the 2FA cancel route, the drafts autosave card) must be recorded in a new

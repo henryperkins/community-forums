@@ -4,7 +4,7 @@
 **Plan type:** Delivery baseline, capacity-triggered release train, and formal phase closeout  
 **Plan status:** **Draft — execution is gated by formal Phase 5 closeout, Milestone 0 capacity approval, and at least one evidenced scale trigger**  
 **Prepared:** 2026-06-25  
-**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
+**Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
 
 ## 1. Phase objective
 
@@ -406,7 +406,7 @@ The following decisions are treated as fixed for Phase 6:
 - Run the complete Phase 1–6 regression suite and route/permission matrix in single-node/fallback and activated distributed topologies.
 - Rehearse clean install, supported historical upgrades, mixed-version rolling deploy, all optional-service bypasses, Redis cold start, worker pause/replay, search rebuild, object/CDN rollback, node loss, SSE fallback, replica loss, feed rebuild, credential rotation, and clean-environment restore.
 - Verify capacity decision records against actual results and record whether each candidate was activated, rejected, or deferred with reassessment date.
-- Reconcile `README.md`, `DESIGN.md`, `DECISIONS.md`, `SCHEMA.md`, surface documents, service/data-flow inventory, deployment manifests, runbooks, changelog, and evidence index with the deployed product.
+- Reconcile `README.md`, `PRODUCT_DESIGN.md`, `DECISIONS.md`, `SCHEMA.md`, surface documents, service/data-flow inventory, deployment manifests, runbooks, changelog, and evidence index with the deployed product.
 - Capture post-release SLOs, costs, headroom, incident history, fallback use, and Phase 7 platform-expansion constraints.
 - Record every accepted Gate A/Gate B requirement and every signed no-adoption/scope-change decision.
 
@@ -942,7 +942,7 @@ The intended next phase is **Phase 7 — Platform Expansion**: product-level dec
 - `PHASE_3_PLAN.md` — single-VPS performance/caching baseline, short-polling decision, media/search/cache interfaces, worker operation, and the rule that new infrastructure requires measured need.
 - `PHASE_2_PLAN.md` — accepted FULLTEXT search, notification/email outbox behavior, short-polling presence/bell, query-time feeds, private-board access, and worker/fallback semantics.
 - `README.md` *(orientation pointer only — not a source of ground truth)* — product thesis + selected PHP/MySQL/server-rendered stack overview. _(The design seam placing email, search, media storage, and feeds behind replaceable interfaces is authoritative in DECISIONS §2, not README.)_
-- `DESIGN.md` §§6.9–6.15, 8–14 — search, notifications, realtime/presence, request architecture, non-functional requirements, success metrics, phasing, and later SSE/WebSocket/platform direction.
+- `PRODUCT_DESIGN.md` §§6.9–6.15, 8–14 — search, notifications, realtime/presence, request architecture, non-functional requirements, success metrics, phasing, and later SSE/WebSocket/platform direction.
 - `DECISIONS.md` §§1–8 — authoritative MySQL/VPS/worker shape, short-polling-first realtime, MySQL FULLTEXT with Meilisearch later, local disk with S3/CDN later, and interface-backed growth decisions.
 - `SCHEMA.md` §§1–9 — the consolidated Phase 1–3 tables, FULLTEXT indexes, attachment storage seam, reconciliation rules (§7), and foreshadowed schema (§8). **Note:** Phase 6 infrastructure schema (transactional-outbox/event and job tables, search-projection state, object-storage/media metadata, feed-projection/checkpoint tables) is **not yet in SCHEMA.md**; it is defined in this plan and should be folded back on acceptance.
 - `ADMIN.md` §§2–12 — capability/state precedence, notification/worker operation, integration/plugin isolation, audit, privacy, Console operations, and later ecosystem/governance boundaries.

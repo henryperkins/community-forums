@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-18
 **Status:** Approved by the implementation brief in this task
-**Authority:** `DECISIONS.md` → `DESIGN.md` → `ADMIN.md`, with the task brief defining this remediation's domain-page information architecture.
+**Authority:** `DECISIONS.md` → `PRODUCT_DESIGN.md` → `ADMIN.md`, with the task brief defining this remediation's domain-page information architecture.
 
 ## Outcome
 
@@ -84,4 +84,4 @@ All writes remain normal forms, authorized and CSRF-protected. A `ValidationExce
 
 PHP integration tests pin authorization, feature gates, route removal, write isolation, validation preservation, redirects, audit payloads, navigation grouping/active/disabled state, dashboard order/card statuses, and absence of dashboard configuration.
 
-A focused Playwright suite covers 1280×800 and 390×844 desktop/mobile behavior, no-JS reachability, focus containment/restoration, Escape/scrim/link closure, 44px controls, table scrolling/fade cleanup, keyboard traversal, console cleanliness, and zero serious/critical axe violations. The existing settings 422 browser journey moves from `/admin` to `/admin/settings`. Final verification follows `DESIGN.md` §13.
+A focused Playwright suite covers 1280×800 and 390×844 desktop/mobile behavior, no-JS reachability, focus containment/restoration, Escape/scrim/link closure, 44px controls, table scrolling/fade cleanup, keyboard traversal, console cleanliness, and zero serious/critical axe violations. The existing settings 422 browser journey moves from `/admin` to `/admin/settings`. Final verification follows `PRODUCT_DESIGN.md` §13.

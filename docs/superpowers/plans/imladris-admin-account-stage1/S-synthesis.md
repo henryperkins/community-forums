@@ -438,11 +438,11 @@ hamburger bound (`app.js:741–763` binds on `navToggle` alone).
 `package-security`, `package-review`, `package-integrations`, `role-assignments`, `passkeys`,
 `totp`, `profile-surface`; and there is **no** spec at all for structure/tags, branding/themes,
 email/announcements, users/user_record, settings, roles list, registries, extensions, custom emoji
-or badge rules outside `gate-a.spec.ts`. Under DESIGN §13 every screen here is UI-visible, so
+or badge rules outside `gate-a.spec.ts`. Under PRODUCT_DESIGN §13 every screen here is UI-visible, so
 PHPUnit alone is never sufficient. Each slice must name the *specific* npm script (`evidence`,
 `evidence:webhooks`, `evidence:packages`, `evidence:integrations`, `evidence:passkeys`, `a11y`) or
 author a new spec.
 
 **R12 — ADR/plan collision.** Eleven reports each propose `docs/adr/0024-*.md`; next free is 0024.
-One ADR, one plan doc, one owner, or the deferral ledger fragments and DESIGN §13's "never silently
+One ADR, one plan doc, one owner, or the deferral ledger fragments and PRODUCT_DESIGN §13's "never silently
 dropped" rule fails by accident.

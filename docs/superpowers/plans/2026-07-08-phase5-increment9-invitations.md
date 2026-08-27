@@ -34,7 +34,7 @@
 - Admin console + `/invite/*` responses carry `X-Robots-Tag: noindex` (PHASE_5_PLAN §103).
 - Tests: strict PHPUnit (≥1 assertion, no output); per-test rollback has **no savepoints** — inner "rollbacks" don't undo rows; use the own-transaction pattern (`$this->pdo->rollBack()` … work … cleanup … `beginTransaction()`, per `PackageInstallBudgetTest`) where real atomicity must be proven.
 - Migrations additive-only; next number is **0076**; hand-update `SCHEMA.md` (shape + §9 changelog + version bump) after landing it.
-- "Done" requires evidence (DESIGN §13): PHPUnit + Playwright PNGs + runbook + budget measurement + ledger/fixture updates.
+- "Done" requires evidence (PRODUCT_DESIGN §13): PHPUnit + Playwright PNGs + runbook + budget measurement + ledger/fixture updates.
 
 ## File Structure
 

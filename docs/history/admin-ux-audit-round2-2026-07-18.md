@@ -67,7 +67,7 @@ programmatically linked without replacing existing help text. The post-review
 suite completed at **2,387 tests / 16,900 assertions / 2 skipped**, and the full
 desktop/mobile browser-evidence workflow passed after three clean reseeds.
 
-## Browser evidence (DESIGN §13)
+## Browser evidence (PRODUCT_DESIGN §13)
 
 Captured live against a private stack (`DB_DATABASE=retroboards_audit`, `:8012` — never
 the shared `retroboards_e2e`), Playwright-driven; the deleted-reply pair replays the

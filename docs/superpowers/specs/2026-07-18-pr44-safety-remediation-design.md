@@ -40,10 +40,10 @@ threads, and the failing Actions job. The release-blocking findings are:
    PHPUnit suite separately has two reproducible Thread Intelligence
    concurrency failures.
 
-Authority remains `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` > `ADMIN.md` and
+Authority remains `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` > `ADMIN.md` and
 the other surface specifications. In particular, ADMIN §1.4/§2.3 requires board
 scope to be explicit, ADMIN §5.1 limits moderators to participants in their
-boards, and DESIGN §13 requires both automated behavior coverage and browser
+boards, and PRODUCT_DESIGN §13 requires both automated behavior coverage and browser
 evidence for visible work.
 
 ## Scope

@@ -2,7 +2,7 @@
 
 **Owner:** Henry  
 **Plan type:** Delivery baseline and formal closeout  
-**Source of truth:** `DESIGN.md`, with `DECISIONS.md` authoritative where documents conflict. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  
+**Source of truth:** `PRODUCT_DESIGN.md`, with `DECISIONS.md` authoritative where documents conflict. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  
 **Status context:** **Nothing is built yet** — there is no code, schema, or tests on disk; the project is at the planning stage. This plan is the **build-and-acceptance checklist** for Phase 1: follow it in sequence to implement the MVP, then use its definition of done and evidence policy to accept the result.
 
 ## 1. Phase objective
@@ -48,8 +48,8 @@ Phase 1 is accepted only when all of the following are true:
 - Public board and thread reading, including pagination.
 - Email/password registration and authentication.
 - DB-backed sessions, CSRF protection, logout, and password change.
-- Baseline auth abuse protection: rate limiting on login and registration, plus basic posting throttles (P0 security per DESIGN §11). _(Throttle/counter state is held in a fast process or shared store — e.g. APCu, or a file/cache backend — behind a small limiter interface; it is **not a DB table** in Phase 1. The configurable, MySQL-backed limiter is Phase 3 / P3-05. See PHASE_1_MIGRATIONS §7.)_
-- Baseline security headers: HSTS, a starter Content-Security-Policy, `X-Content-Type-Options`, and `Referrer-Policy` (P0 per DESIGN §11).
+- Baseline auth abuse protection: rate limiting on login and registration, plus basic posting throttles (P0 security per PRODUCT_DESIGN §11). _(Throttle/counter state is held in a fast process or shared store — e.g. APCu, or a file/cache backend — behind a small limiter interface; it is **not a DB table** in Phase 1. The configurable, MySQL-backed limiter is Phase 3 / P3-05. See PHASE_1_MIGRATIONS §7.)_
+- Baseline security headers: HSTS, a starter Content-Security-Policy, `X-Content-Type-Options`, and `Referrer-Policy` (P0 per PRODUCT_DESIGN §11).
 - Thread and post creation, editing, soft deletion, sanitization, and authorization.
 - Basic account settings: display name, bio, and location.
 - Basic public profile: username/display name, monogram avatars (computed from the username; no avatar column), bio, location, join date, post count, and reputation field. _(Clarified 2026-06-26: monogram avatars are the assigned Phase-1 avatar deliverable — DECISIONS §5 #4, PHASE_1_MIGRATIONS; uploads/Gravatar come in later phases.)_
@@ -78,7 +78,7 @@ The following must not delay Phase 1 acceptance:
 - The configurable/tunable anti-spam + rate-limit service (per-action limits, new-user throttles, link/word filters, spam scoring) — deferred to Phase 3 (P3-05). Phase 1 ships only the baseline auth/posting limits listed in scope above.
 - Email-verification-gated first post — lands in Phase 2 alongside email verification and fan-out (Phase 1 defers all email). Until then, first-post spam is mitigated by the Phase 1 baseline rate limits and inline moderation.
 
-> **Decision (2026-06-26):** DESIGN §11 marks rate limiting, the first-post email gate, and security headers as **P0**, but no phase previously owned them for the MVP (the configurable limiter is Phase 3 / P3-05, and the email gate needs Phase 2 email). To avoid shipping public auth with no brute-force protection, *baseline* login/registration rate limiting and security headers are pulled into Phase 1 (see P1-03). The *configurable* anti-spam service (P3-05) and the *email-verification* first-post gate (Phase 2) stay deferred because they depend on infrastructure not built in Phase 1 (a tunable limiter; email delivery). Note: these baseline items are **P0 and part of Phase 1's build scope** (like everything else in this phase — nothing is built yet). Flip any of these if you'd rather sequence differently.
+> **Decision (2026-06-26):** PRODUCT_DESIGN §11 marks rate limiting, the first-post email gate, and security headers as **P0**, but no phase previously owned them for the MVP (the configurable limiter is Phase 3 / P3-05, and the email gate needs Phase 2 email). To avoid shipping public auth with no brute-force protection, *baseline* login/registration rate limiting and security headers are pulled into Phase 1 (see P1-03). The *configurable* anti-spam service (P3-05) and the *email-verification* first-post gate (Phase 2) stay deferred because they depend on infrastructure not built in Phase 1 (a tunable limiter; email delivery). Note: these baseline items are **P0 and part of Phase 1's build scope** (like everything else in this phase — nothing is built yet). Flip any of these if you'd rather sequence differently.
 
 ## 4. Delivery workstreams
 
@@ -233,7 +233,7 @@ After Phase 1 acceptance, the next prioritized slice is Phase 2 community essent
 ## 11. Source references
 
 - `README.md` — current status, Phase 1 roadmap, setup instructions, and completion evidence.
-- `DESIGN.md` §§2, 6, 9–13 — product goals, feature catalog, architecture, permissions, non-functional requirements, success metrics, and Phase 1 definition of done.
+- `PRODUCT_DESIGN.md` §§2, 6, 9–13 — product goals, feature catalog, architecture, permissions, non-functional requirements, success metrics, and Phase 1 definition of done.
 - `DECISIONS.md` — authoritative stack, session, role, rendering, hosting, and deferral decisions.
 - `ADMIN.md` §§1.2, 3, 9–11 — account states (§1.2), moderation workflows/actions (§3) and the audit log (§3.6), plus first-run setup, the minimal admin console, and the data-model/roadmap deltas (§§9–11).
 - `USER.md` §8 — Phase 1 account/profile slice and deferred account features.

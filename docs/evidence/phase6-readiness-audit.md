@@ -12,7 +12,7 @@ This audit reviewed:
 
 - source-of-truth docs: `PHASE_6_PLAN.md`, `PHASE_5_STATUS.md`,
   `docs/history/PHASE_1-4_HISTORY.md#phase-4-status`, `PHASE_7_PLAN.md`, `SCHEMA.md`, `DECISIONS.md`, and
-  `DESIGN.md`;
+  `PRODUCT_DESIGN.md`;
 - runtime code under `src/`;
 - migrations under `database/migrations/`;
 - tests under `tests/`;

@@ -6,7 +6,7 @@
 > product decisions + DECISIONS.md/ADMIN.md precedence).
 
 **Date locked:** 2026-06-29
-**Authoritative specs:** DECISIONS.md > DESIGN.md > SCHEMA.md > ADMIN.md / COMMUNITY.md (CLAUDE.md precedence chain).
+**Authoritative specs:** DECISIONS.md > PRODUCT_DESIGN.md > SCHEMA.md > ADMIN.md / COMMUNITY.md (CLAUDE.md precedence chain).
 **Migrations:** none required — all six surfaces are schema-ready (verified against `database/migrations/` up to `0057`). Do **not** add a migration; if a plan thinks it needs one, stop and escalate.
 
 ---
@@ -35,7 +35,7 @@
 - **Anti-draft-loss:** controllers catch `App\Core\ValidationException` themselves (kernel does NOT) and re-render the form at **422** carrying `$e->errors` + `$e->old` (render-in-place pattern), or `redirectWithFlash($to, $e->first())` for actions whose form lives elsewhere (mirror `AdminController::run()`).
 - **DB rules:** `EMULATE_PREPARES=false` — never bind `LIMIT`/`OFFSET` (clamp to int + concatenate); never reuse a named placeholder. UTC everywhere. Every multi-table mutation runs inside `$db->transaction(fn)`.
 - **Counters:** none of these surfaces touch denormalized counters or reputation. Do **not** add `RepairService` hooks. (Archive must NOT recompute/zero `boards.*_count` — content is preserved.)
-- **Tests:** PHPUnit is strict (`failOnWarning`/`failOnRisky`, ≥1 assertion/test). Per-test isolation is one rolled-back transaction with no savepoints — **assert observable HTTP behavior, not row counts**, except where the production path commits its own transaction. Every UI-visible surface also needs Playwright evidence in `tests/browser` (DESIGN §13).
+- **Tests:** PHPUnit is strict (`failOnWarning`/`failOnRisky`, ≥1 assertion/test). Per-test isolation is one rolled-back transaction with no savepoints — **assert observable HTTP behavior, not row counts**, except where the production path commits its own transaction. Every UI-visible surface also needs Playwright evidence in `tests/browser` (PRODUCT_DESIGN §13).
 
 ---
 

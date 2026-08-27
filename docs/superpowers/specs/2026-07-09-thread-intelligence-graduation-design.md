@@ -1001,7 +1001,7 @@ graduation commit updates the exact 47/10 count assertions in
    `tests/Integration/Core/AppFeatureFlagTest.php:151-152`,
    `tests/Integration/Admin/AppAdminFeaturesTest.php:31-33`,
    `docs/evidence/deploy-dark-features.md:45-52` counts/inventory/ranking,
-   `.env.example`, `config/config.php`, `SCHEMA.md`, `DESIGN.md`, phase
+   `.env.example`, `config/config.php`, `SCHEMA.md`, `PRODUCT_DESIGN.md`, phase
    status/history, evidence index, and runbook.
 8. Run the complete post-flip suite twice and record identical results.
 
@@ -1039,7 +1039,7 @@ rollback override cannot clobber unrelated flag overrides.
 - updated `docs/evidence/deploy-dark-features.md`;
 - a Thread Intelligence evidence index under `docs/evidence/phase4-closeout/`;
 - updated `SCHEMA.md` table shapes and changelog;
-- updated `DESIGN.md`, `USER.md`, `ADMIN.md`, and `COMMUNITY.md` sections for the
+- updated `PRODUCT_DESIGN.md`, `USER.md`, `ADMIN.md`, and `COMMUNITY.md` sections for the
   Living Brief, processor disclosure, and admin/curator workflows;
 - `.env.example` and `config/config.php` documentation/wiring for all eight
   `THREAD_INTELLIGENCE_*` values plus `OPENAI_API_KEY`;

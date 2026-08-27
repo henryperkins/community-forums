@@ -1,7 +1,7 @@
 # RetroBoards — Consolidated Database Schema
 
 **Status:** v1.42 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-09
-**This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
+**This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
 
@@ -10,31 +10,31 @@ Those source docs remain the narrative source of truth for *why* each field exis
 - **Engine / charset:** InnoDB, `utf8mb4` everywhere.
 - **Keys:** `BIGINT UNSIGNED` surrogate PKs; `DATETIME` stored UTC.
 - **Soft deletes** where history matters (`is_deleted`, `lifted_at`, etc.).
-- **Denormalised counters** (`post_count`, `reply_count`, `thread_count`, `last_post_*`, `reputation`) are maintained transactionally on write (DESIGN.md §8.1).
+- **Denormalised counters** (`post_count`, `reply_count`, `thread_count`, `last_post_*`, `reputation`) are maintained transactionally on write (PRODUCT_DESIGN.md §8.1).
 - Inline `-- comments` mark **provenance** (which doc contributed a column) and **phase**.
-- Lengths/types are sensible starting points, not immutable (DESIGN.md §8.1).
+- Lengths/types are sensible starting points, not immutable (PRODUCT_DESIGN.md §8.1).
 
 ## Table index
 
 | # | Table | Domain | Phase | Source doc |
 |---|---|---|---|---|
-| 1 | `users` | Core | 1 | DESIGN §8.2 (+USER §7.2, ADMIN §10.2, DESIGN §8.3) |
+| 1 | `users` | Core | 1 | PRODUCT_DESIGN §8.2 (+USER §7.2, ADMIN §10.2, PRODUCT_DESIGN §8.3) |
 | 2 | `sessions` | Core / auth | 1 | Canonical DDL consolidated in §1 (origin: the auth-design slice `2026-06-20-auth-design.md` §7.1, a planned/historical artifact — the DDL now lives here) |
-| 3 | `categories` | Core | 1 | DESIGN §8.2 |
-| 4 | `boards` | Core | 1 | DESIGN §8.2 (+ADMIN §10.2) |
+| 3 | `categories` | Core | 1 | PRODUCT_DESIGN §8.2 |
+| 4 | `boards` | Core | 1 | PRODUCT_DESIGN §8.2 (+ADMIN §10.2) |
 | 5 | `board_slug_history` | Core | 1 | Admin Console slug redirects |
-| 6 | `board_moderators` | Core / mod | 2 | DESIGN §8.2 |
-| 7 | `threads` | Core | 1 | DESIGN §8.2 (+DESIGN §8.3, ADMIN §10.2, COMMUNITY §11) |
-| 8 | `posts` | Core | 1 | DESIGN §8.2 (+ADMIN §10.2) |
-| 9 | `reactions` | Engagement | 2 | DESIGN §8.2 |
-| 10 | `thread_user` | Engagement | 1–2 | DESIGN §8.2 (is_subscribed removed — §7.4) |
-| 11 | `subscriptions` | Notifications | 2 | DESIGN §8.3 |
-| 12 | `notifications` | Notifications | 2 | DESIGN §8.2 (enum reconciled — §7.3) |
-| 13 | `conversations` | DMs | 2 | DESIGN §8.2 |
-| 14 | `conversation_participants` | DMs | 2 | DESIGN §8.2 |
-| 15 | `dm_messages` | DMs | 2 | DESIGN §8.2 |
-| 16 | `reports` | Moderation | 2 | DESIGN §8.2 (+ADMIN §10.2; status/reason — §7.5) |
-| 17 | `moderation_log` | Moderation | 1 | DESIGN §8.2 (+ADMIN §10.2; actor — §7.6) |
+| 6 | `board_moderators` | Core / mod | 2 | PRODUCT_DESIGN §8.2 |
+| 7 | `threads` | Core | 1 | PRODUCT_DESIGN §8.2 (+PRODUCT_DESIGN §8.3, ADMIN §10.2, COMMUNITY §11) |
+| 8 | `posts` | Core | 1 | PRODUCT_DESIGN §8.2 (+ADMIN §10.2) |
+| 9 | `reactions` | Engagement | 2 | PRODUCT_DESIGN §8.2 |
+| 10 | `thread_user` | Engagement | 1–2 | PRODUCT_DESIGN §8.2 (is_subscribed removed — §7.4) |
+| 11 | `subscriptions` | Notifications | 2 | PRODUCT_DESIGN §8.3 |
+| 12 | `notifications` | Notifications | 2 | PRODUCT_DESIGN §8.2 (enum reconciled — §7.3) |
+| 13 | `conversations` | DMs | 2 | PRODUCT_DESIGN §8.2 |
+| 14 | `conversation_participants` | DMs | 2 | PRODUCT_DESIGN §8.2 |
+| 15 | `dm_messages` | DMs | 2 | PRODUCT_DESIGN §8.2 |
+| 16 | `reports` | Moderation | 2 | PRODUCT_DESIGN §8.2 (+ADMIN §10.2; status/reason — §7.5) |
+| 17 | `moderation_log` | Moderation | 1 | PRODUCT_DESIGN §8.2 (+ADMIN §10.2; actor — §7.6) |
 | 18 | `oauth_identities` | Accounts | 2 | USER §7.1 |
 | 19 | `user_preferences` | Accounts | 2 | USER §7.1 |
 | 20 | `user_board_prefs` | Accounts | 2 | USER §7.1 |
@@ -134,7 +134,7 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 114 | `thread_intelligence_jobs` | Knowledge / AI | 4 | ADR 0019 Thread Intelligence / migration 0077 |
 | 115 | `thread_intelligence_generations` | Knowledge / AI | 4 | ADR 0019 Thread Intelligence / migration 0077 |
 
-> "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
+> "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the PRODUCT_DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to PRODUCT_DESIGN §13.
 >
 > Tables 55–77 are the **Phase 5 foundation** (migrations `0049`–`0053`): originally additive and inert so no Gate A feature depended on an undocumented shape (Milestone 1). Accepted Gate A workstreams default on as of 2026-07-09 for any install without an explicit `features` override (fresh and upgraded alike), and each remains reversible through that override (see §5A and `PHASE_5_STATUS.md`).
 >
@@ -185,11 +185,11 @@ Those source docs remain the narrative source of truth for *why* each field exis
 
 ---
 
-## 1. Core forum (DESIGN.md §8)
+## 1. Core forum (PRODUCT_DESIGN.md §8)
 
 ```sql
 -- USERS ---------------------------------------------------------------
--- Consolidated: DESIGN §8.2 base + DESIGN §8.3 (onboarding/digest) + USER §7.2 (profile/privacy/avatar)
+-- Consolidated: PRODUCT_DESIGN §8.2 base + PRODUCT_DESIGN §8.3 (onboarding/digest) + USER §7.2 (profile/privacy/avatar)
 -- + ADMIN §10.2 (suspended_until). Role value 'user' and NULLable password_hash per §7.1/§7.2 reconciliations.
 CREATE TABLE users (
   id                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -214,12 +214,12 @@ CREATE TABLE users (
   status               ENUM('active','suspended','banned') NOT NULL DEFAULT 'active',
   suspended_until      DATETIME        NULL,                 -- ADMIN §10.2 (auto-restore on expiry)
   email_verified_at    DATETIME        NULL,
-  onboarded_at         DATETIME        NULL,                 -- DESIGN §8.3 (product tour, cross-device); ADDED in Phase 3 (PHASE_3_PLAN §8.1 / P3-11), not Phase 1
-  timezone             VARCHAR(64)     NULL,                 -- DESIGN §8.3 (daily digests); added in Phase 2 (digest worker)
-  digest_hour          TINYINT         NULL,                 -- DESIGN §8.3 (0–23 local); added in Phase 2 (digests)
-  last_daily_digest_at DATETIME        NULL,                 -- DESIGN §8.3 (digest watermark: never duplicate/empty); added in Phase 2
+  onboarded_at         DATETIME        NULL,                 -- PRODUCT_DESIGN §8.3 (product tour, cross-device); ADDED in Phase 3 (PHASE_3_PLAN §8.1 / P3-11), not Phase 1
+  timezone             VARCHAR(64)     NULL,                 -- PRODUCT_DESIGN §8.3 (daily digests); added in Phase 2 (digest worker)
+  digest_hour          TINYINT         NULL,                 -- PRODUCT_DESIGN §8.3 (0–23 local); added in Phase 2 (digests)
+  last_daily_digest_at DATETIME        NULL,                 -- PRODUCT_DESIGN §8.3 (digest watermark: never duplicate/empty); added in Phase 2
   created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_seen_at         DATETIME        NULL,                 -- presence heartbeat (DESIGN §6.15)
+  last_seen_at         DATETIME        NULL,                 -- presence heartbeat (PRODUCT_DESIGN §6.15)
   signature_removed_at DATETIME        NULL,                 -- Phase 4 carryover profile moderation (migration 0058)
   signature_removed_by BIGINT UNSIGNED NULL,                 -- FK users(id) ON DELETE SET NULL
   avatar_removed_at    DATETIME        NULL,                 -- Phase 4 carryover profile moderation (migration 0058)
@@ -261,7 +261,7 @@ CREATE TABLE categories (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- NOTE: ADMIN §4.1 mentions a "default-collapsed" flag for categories; no column is specced. See §8.
 
--- Consolidated: DESIGN §8.2 base + ADMIN §10.2 (visibility/anon/approval/edit_window). post_min_role value 'user'.
+-- Consolidated: PRODUCT_DESIGN §8.2 base + ADMIN §10.2 (visibility/anon/approval/edit_window). post_min_role value 'user'.
 CREATE TABLE boards (
   id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   category_id         BIGINT UNSIGNED NOT NULL,
@@ -306,7 +306,7 @@ CREATE TABLE board_moderators (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- THREADS & POSTS -----------------------------------------------------
--- Consolidated: DESIGN §8.2 base + DESIGN §8.3 (ft_threads_title) + ADMIN §10.2 (is_pending) + COMMUNITY §11 (accepted_answer_post_id).
+-- Consolidated: PRODUCT_DESIGN §8.2 base + PRODUCT_DESIGN §8.3 (ft_threads_title) + ADMIN §10.2 (is_pending) + COMMUNITY §11 (accepted_answer_post_id).
 CREATE TABLE threads (
   id                      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   board_id                BIGINT UNSIGNED NOT NULL,
@@ -317,7 +317,7 @@ CREATE TABLE threads (
   is_locked               TINYINT(1)      NOT NULL DEFAULT 0,
   is_deleted              TINYINT(1)      NOT NULL DEFAULT 0,
   is_pending              TINYINT(1)      NOT NULL DEFAULT 0,-- ADMIN §10.2 (new-thread approval hold)
-  accepted_answer_post_id BIGINT UNSIGNED NULL,             -- COMMUNITY §11 ("Solved" / DESIGN §6.18)
+  accepted_answer_post_id BIGINT UNSIGNED NULL,             -- COMMUNITY §11 ("Solved" / PRODUCT_DESIGN §6.18)
   reply_count             INT UNSIGNED    NOT NULL DEFAULT 0,-- denormalised (excludes OP)
   view_count              INT UNSIGNED    NOT NULL DEFAULT 0,
   last_post_id            BIGINT UNSIGNED NULL,
@@ -327,20 +327,20 @@ CREATE TABLE threads (
   PRIMARY KEY (id),
   KEY idx_threads_inbox (board_id, is_pinned DESC, last_post_at DESC),
   KEY idx_threads_author (user_id),
-  FULLTEXT KEY ft_threads_title (title),                    -- DESIGN §8.3 (global search §6.9); index BUILT in Phase 2 (search, P2-06), not Phase 1
+  FULLTEXT KEY ft_threads_title (title),                    -- PRODUCT_DESIGN §8.3 (global search §6.9); index BUILT in Phase 2 (search, P2-06), not Phase 1
   CONSTRAINT fk_threads_board FOREIGN KEY (board_id) REFERENCES boards(id),
   CONSTRAINT fk_threads_user  FOREIGN KEY (user_id)  REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
--- FORESHADOWED (DESIGN §6.18, not yet committed): topic_status ENUM (Solved/Needs Answer/Decision/…). See §8.
+-- FORESHADOWED (PRODUCT_DESIGN §6.18, not yet committed): topic_status ENUM (Solved/Needs Answer/Decision/…). See §8.
 
--- Consolidated: DESIGN §8.2 base + ADMIN §10.2 (is_anonymous, is_pending).
+-- Consolidated: PRODUCT_DESIGN §8.2 base + ADMIN §10.2 (is_anonymous, is_pending).
 CREATE TABLE posts (
   id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   thread_id      BIGINT UNSIGNED NOT NULL,
   user_id        BIGINT UNSIGNED NOT NULL,                  -- always the REAL author (even when is_anonymous)
-  parent_post_id BIGINT UNSIGNED NULL,                      -- quote/reply target (DESIGN §6.4)
+  parent_post_id BIGINT UNSIGNED NULL,                      -- quote/reply target (PRODUCT_DESIGN §6.4)
   body           MEDIUMTEXT      NOT NULL,                  -- canonical Markdown (COMPOSER.md)
-  body_html      MEDIUMTEXT      NULL,                      -- cached sanitised render (DESIGN §9.5)
+  body_html      MEDIUMTEXT      NULL,                      -- cached sanitised render (PRODUCT_DESIGN §9.5)
   is_op          TINYINT(1)      NOT NULL DEFAULT 0,
   is_anonymous   TINYINT(1)      NOT NULL DEFAULT 0,        -- ADMIN §10.2 (masked PUBLIC render only; mods reveal — audited)
   is_pending     TINYINT(1)      NOT NULL DEFAULT 0,        -- ADMIN §10.2 (approval hold)
@@ -353,7 +353,7 @@ CREATE TABLE posts (
   PRIMARY KEY (id),
   KEY idx_posts_thread (thread_id, created_at),
   KEY idx_posts_author (user_id),
-  FULLTEXT KEY ft_posts_body (body),                        -- search (DESIGN §6.9); index BUILT in Phase 2 (P2-06), not Phase 1
+  FULLTEXT KEY ft_posts_body (body),                        -- search (PRODUCT_DESIGN §6.9); index BUILT in Phase 2 (P2-06), not Phase 1
   CONSTRAINT fk_posts_thread FOREIGN KEY (thread_id) REFERENCES threads(id),
   CONSTRAINT fk_posts_user   FOREIGN KEY (user_id)   REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -383,9 +383,9 @@ CREATE TABLE thread_user (
   CONSTRAINT fk_tu_user   FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
   CONSTRAINT fk_tu_thread FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
--- FORESHADOWED (DESIGN §6.18, not yet committed): snoozed_until DATETIME, assigned_to BIGINT UNSIGNED. See §8.
+-- FORESHADOWED (PRODUCT_DESIGN §6.18, not yet committed): snoozed_until DATETIME, assigned_to BIGINT UNSIGNED. See §8.
 
--- SUBSCRIPTIONS (DESIGN §8.3) — supersedes thread_user.is_subscribed; per-channel + frequency.
+-- SUBSCRIPTIONS (PRODUCT_DESIGN §8.3) — supersedes thread_user.is_subscribed; per-channel + frequency.
 CREATE TABLE subscriptions (
   id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id        BIGINT UNSIGNED NOT NULL,
@@ -401,7 +401,7 @@ CREATE TABLE subscriptions (
   CONSTRAINT fk_sub_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- NOTIFICATIONS (DESIGN §8.2) — enum reconciled to the full union; column 'type'; read flag 'is_read' (see §7.3).
+-- NOTIFICATIONS (PRODUCT_DESIGN §8.2) — enum reconciled to the full union; column 'type'; read flag 'is_read' (see §7.3).
 CREATE TABLE notifications (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id         BIGINT UNSIGNED NOT NULL,                 -- recipient
@@ -449,7 +449,7 @@ CREATE TABLE dm_messages (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- REPORTS & MODERATION LOG --------------------------------------------
--- Consolidated: DESIGN §8.2 base + ADMIN §10.2 (assigned_to, reason_code) + 'triaged' state (ADMIN §3.2). See §7.5.
+-- Consolidated: PRODUCT_DESIGN §8.2 base + ADMIN §10.2 (assigned_to, reason_code) + 'triaged' state (ADMIN §3.2). See §7.5.
 CREATE TABLE reports (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   reporter_id BIGINT UNSIGNED NOT NULL,
@@ -471,7 +471,7 @@ CREATE TABLE reports (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- NOTE: "one open report per (user, post)" dedup (ADMIN §3.1) is enforced in app logic.
 
--- Consolidated: DESIGN §8.2 base + ADMIN §10.2 (before/after JSON, system actor). actor_id NULLable = system (see §7.6).
+-- Consolidated: PRODUCT_DESIGN §8.2 base + ADMIN §10.2 (before/after JSON, system actor). actor_id NULLable = system (see §7.6).
 CREATE TABLE moderation_log (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   actor_id    BIGINT UNSIGNED NULL,                         -- NULL = system/automated action (ADMIN §3.8/§10.2)
@@ -735,7 +735,7 @@ CREATE TABLE email_deliveries (
   next_attempt_at DATETIME NULL,                             -- NULL = immediately claimable when status='queued'
   error      VARCHAR(255) NULL,
   message_id VARCHAR(191) NULL,
-  idempotency_key VARCHAR(191) NULL,                          -- DESIGN §9.6: post_id+':'+user_id for transactional 'instant' fan-out; NULL for digest/test/system
+  idempotency_key VARCHAR(191) NULL,                          -- PRODUCT_DESIGN §9.6: post_id+':'+user_id for transactional 'instant' fan-out; NULL for digest/test/system
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   sent_at    DATETIME NULL,
   PRIMARY KEY (id),
@@ -964,7 +964,7 @@ shapes that PR #26 implemented. All are additive; the member-facing surfaces are
 feature-flag controlled (`appeals` and `custom_profile_fields` default off;
 `bookmark_folders` and `account_lifecycle` graduated to default-on on 2026-07-01
 and 2026-07-02 respectively, both reversible via the `features` override).
-"Inert schema is not evidence" (DESIGN §13).
+"Inert schema is not evidence" (PRODUCT_DESIGN §13).
 
 Modified existing tables:
 
@@ -1123,7 +1123,7 @@ the registry trust roots, signing-key custody, WebAuthn RP ID, OIDC provider
 choice, isolation profile, numeric budgets, and permission taxonomy are
 **owner-approved Milestone-0 policy** and are deliberately **not** encoded here;
 private trust-root/signing keys never live in the application DB (§8.2 #1).
-"Inert schema is not evidence" of a shipped feature (DESIGN §13) — see
+"Inert schema is not evidence" of a shipped feature (PRODUCT_DESIGN §13) — see
 `PHASE_5_STATUS.md`,
 `docs/adr/0004-phase-5-entry-and-carryover.md`, and
 `docs/adr/0018-phase-5-gate-a-default-on.md`.
@@ -1255,7 +1255,7 @@ jobs queued.
 
 ## 6. Phase map (suggested build cut)
 
-This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above; appeals, bookmark-folders, custom-profile-fields, and server drafts are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); its remaining automation-rule table is **identified as a schema gap in PHASE_3_PLAN §8.2 and is not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
+This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the PRODUCT_DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above; appeals, bookmark-folders, custom-profile-fields, and server drafts are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); its remaining automation-rule table is **identified as a schema gap in PHASE_3_PLAN §8.2 and is not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
 
 - **Phase 1 (MVP backend):** `users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`. → See **[docs/history/PHASE_1_MIGRATIONS.md](docs/history/PHASE_1_MIGRATIONS.md)** for the exact Phase‑1 column cut, migration order (`0001`–`0010`), and which columns are held back to Phases 2–3.
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
@@ -1265,7 +1265,7 @@ This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
 
-> **Crosswalk to DESIGN §13 (three-phase strategic roadmap):** DESIGN's *Phase 3 / Later (P2)* bucket is delivered across Phases 3–7 above. Phases 4–7 schema is **defined in each phase plan's data-model section** (as requirements, not yet committed DDL) and folded back into this file on acceptance; only Phases 1–2 are fully consolidated here today, and Phase 3 only partially (see above).
+> **Crosswalk to PRODUCT_DESIGN §13 (three-phase strategic roadmap):** DESIGN's *Phase 3 / Later (P2)* bucket is delivered across Phases 3–7 above. Phases 4–7 schema is **defined in each phase plan's data-model section** (as requirements, not yet committed DDL) and folded back into this file on acceptance; only Phases 1–2 are fully consolidated here today, and Phase 3 only partially (see above).
 
 > FK note: a few columns reference rows in not-yet-built tables (e.g. `notifications.conversation_id`, `posts`/`threads` self-references like `last_post_id`). Add the FK constraints in the migration that introduces the *referenced* table, or leave them as plain indexed columns until then — don't block Phase 1 on Phase 2 tables.
 
@@ -1275,15 +1275,15 @@ This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_
 
 Where the docs genuinely disagreed, this file picks one answer. Each is reversible — flag any you'd rather flip.
 
-1. **Role enum value `'member'` → `'user'`** on `users.role` and `boards.post_min_role` (+ defaults). DECISIONS §4 standardised the role on **"User"** and DESIGN claimed it was "updated to match," but the §8.2 DDL still read `'member'`. Source-doc DDL in DESIGN.md was also corrected.
-2. **`users.password_hash` is NULLable.** USER §2.4/§7.2 require OAuth-only accounts to exist before a password is set; the DESIGN §8.2 base had it `NOT NULL`.
+1. **Role enum value `'member'` → `'user'`** on `users.role` and `boards.post_min_role` (+ defaults). DECISIONS §4 standardised the role on **"User"** and DESIGN claimed it was "updated to match," but the §8.2 DDL still read `'member'`. Source-doc DDL in PRODUCT_DESIGN.md was also corrected.
+2. **`users.password_hash` is NULLable.** USER §2.4/§7.2 require OAuth-only accounts to exist before a password is set; the PRODUCT_DESIGN §8.2 base had it `NOT NULL`.
 3. **`notifications` enum unified; column is `type`; read flag is `is_read`.** The base DDL (`type`, `is_read`, 5 values), the §8.3 prose (`kind`/`read_at`, +`new_post`/`new_thread`), and COMMUNITY §9 (`kind`, +`follow`/`badge`/`solved`) disagreed on both column names and contents. Canonical: column **`type`**, read flag **`is_read`** (keeps the existing `idx_notif_user` index coherent), enum = the **full union** (now 11 values, incl. `announcement` — see #13).
-4. **`thread_user.is_subscribed` dropped.** DESIGN §8.3 + USER §7.3 mark it *superseded by `subscriptions`*. On a greenfield build there's nothing to migrate, so it's omitted rather than left as dead weight. (`is_starred` + `last_read_post_id` stay.)
+4. **`thread_user.is_subscribed` dropped.** PRODUCT_DESIGN §8.3 + USER §7.3 mark it *superseded by `subscriptions`*. On a greenfield build there's nothing to migrate, so it's omitted rather than left as dead weight. (`is_starred` + `last_read_post_id` stay.)
 5. **`reports`: added `'triaged'` status + a derived `reason_code` enum.** ADMIN §3.2's lifecycle is open→**triaged**→resolved/dismissed (the base enum lacked `triaged`); `reason_code` values are derived from ADMIN §3.1's fixed reason list (free-text `reason` retained for "other").
 6. **`moderation_log.actor_id` is NULLable, NULL = system.** ADMIN §3.8/§10.2 require accountable *automated* actions; the base had `actor_id NOT NULL`.
 7. **`sessions` DDL is canonical (reconciled 2026-06-20).** DECISIONS §5 #9 scheduled a `sessions` table for Phase 1; the auth slice (`2026-06-20-auth-design.md` §7.1) set the canonical DDL — adding `csrf_secret`, `expires_at NOT NULL`, `revoked_at`, and `idx_sessions_active` — and the §1 definition above is the canonical Phase 1 shape (target migration `0005_sessions.sql`, not yet built). (IP retention per ADMIN §5.5 remains a later purge-job seam.)
 8. **`moderation_log.target_type` widened to include `category` and `setting`.** The planned admin console audits board/category structure changes and site-name changes, so the original four target types were too narrow for real operator actions.
-9. **`email_deliveries.idempotency_key` added (`UNIQUE`).** DESIGN §9.6 mandates `idempotency_key = post_id + ':' + user_id` for transactional fan-out, and PHASE_2 (P2-00 / Milestone 0) treats the missing column as a blocker for email work — but the consolidated DDL had no such column. Added as `VARCHAR(191) NULL` with `UNIQUE KEY uq_deliv_idem` (NULL for digest/test/system sends; InnoDB permits multiple NULLs). (Reconciled 2026-06-26.)
+9. **`email_deliveries.idempotency_key` added (`UNIQUE`).** PRODUCT_DESIGN §9.6 mandates `idempotency_key = post_id + ':' + user_id` for transactional fan-out, and PHASE_2 (P2-00 / Milestone 0) treats the missing column as a blocker for email work — but the consolidated DDL had no such column. Added as `VARCHAR(191) NULL` with `UNIQUE KEY uq_deliv_idem` (NULL for digest/test/system sends; InnoDB permits multiple NULLs). (Reconciled 2026-06-26.)
 10. **`posts.ip` added (`VARBINARY(16) NULL`).** DECISIONS §4 #5 commits to storing *post* IPs — not just the login IP in `sessions.ip` — as a ban-evasion signal (ADMIN §5.4); the consolidated `posts` table had no IP column, leaving that decision and feature with no schema home. Added with the same 90-day-retention / Admin-only-audited posture as `sessions.ip`; the purge job is a later seam (ADMIN §5.5). **Build phase: added in the Phase 2 migration** — the phase that first uses it (ban-evasion P2-08). It was previously slated to ship with `posts` in Phase 1, but no Phase 1 plan item built it; PHASE_2_PLAN §7.1 (group 4) now owns it. (Reconciled 2026-06-26; build phase clarified.)
 11. **Forward-phase columns tagged with their build phase.** Several columns live in Phase 1 *table* definitions (so each table has one consolidated final shape) but are *built* later, and the phase plans say so: `users.onboarded_at` → **Phase 3** (PHASE_3_PLAN §8.1 / P3-11 creates it explicitly); `users.timezone` / `digest_hour` / `last_daily_digest_at` and the `ft_threads_title` / `ft_posts_body` FULLTEXT indexes → **Phase 2** (PHASE_1_PLAN defers FULLTEXT; PHASE_2_PLAN P2-06 builds it); `posts.ip` and `sessions.ip` → **Phase 2** (post/login IP, ban-evasion ADMIN §5.4; `posts.ip` per #10; both omitted from the Phase 1 migrations — docs/history/PHASE_1_MIGRATIONS.md §3). These are now annotated inline rather than left implicitly Phase 1, honouring the Conventions note that inline comments mark each column's phase. The owning *table* still appears under its creation phase in §6. (Reconciled 2026-06-26.)
 12. **`oauth_identities.avatar_url` added (`VARCHAR(512) NULL`).** DECISIONS §5 #4 schedules **OAuth avatar-import for Phase 2**, and PHASE_1_MIGRATIONS §4 puts `users.avatar_source` in Phase 2 — but the consolidated schema gave the imported provider avatar nowhere to live (`users.avatar_path` is Phase 3, for the local uploads/Gravatar pipeline). Added `oauth_identities.avatar_url` as the Phase-2 cache of the provider avatar: import sets `users.avatar_source='oauth'` and renders from it (monogram fallback). The local copy (`users.avatar_path`), user uploads, and Gravatar stay Phase 3 (PHASE_3_PLAN P3-12). PHASE_2_PLAN P2-10 / §7.1 group 5 now build `avatar_source` + `avatar_url`. (Reconciled 2026-06-26.)
@@ -1345,8 +1345,8 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 | v1.7 | 2026-06-26 | **Status-truth pass (nothing is built yet):** removed "shipped" wording implying existing code — the `0005_sessions.sql` / `0007_moderation_log.sql` references (§7 #7, table index, v1.1 entry) are **target** migrations, and §7 #8 now says the **planned** admin console. No DDL/scope changes. |
 | v1.6 | 2026-06-26 | Consistency pass vs the phase plans: corrected §6 — only Phases **1–2** are fully consolidated; **Phase 3 is partial** (its TOTP/appeals/automation/`drafts`/bookmark/custom-field/webhook-ledger tables are schema *gaps* in PHASE_3_PLAN §8.2, not specced DDL) and Phases 4–7 hold *requirements*, not DDL. Tagged forward-phase columns with their real build phase as new §7 reconciliation #11 (`onboarded_at` → Phase 3; digest columns, `ft_*` FULLTEXT indexes, and `posts.ip` → Phase 2), and moved `posts.ip`'s build from Phase 1 to the Phase 2 migration (§7 #10) so it has an owner. Header bumped (was v1.4, behind its own v1.5 row). |
 | v1.5 | 2026-06-26 | Consistency pass: set `users.allow_dms` default to `'members'` (was `'everyone'`) to match DECISIONS §5 #8; added `posts.ip VARBINARY(16) NULL` to give the "store post IPs" decision (DECISIONS §4 #5) a schema home, recorded as §7 reconciliation #10; flagged the §5 `reputation_events` block as a non-canonical Phase-4 preview (committed DDL owned by PHASE_4_PLAN §8.2). |
-| v1.4 | 2026-06-26 | Added `email_deliveries.idempotency_key` (`VARCHAR(191) NULL`, `UNIQUE KEY uq_deliv_idem`) to close the DESIGN §9.6 / PHASE_2 Milestone-0 idempotency gap; recorded as §7 reconciliation #9; bumped the stale header (was "v1.2 · 2026-06-21"). |
-| v1.3 | 2026-06-25 | Consistency pass: extended the §6 phase map to the full seven-phase delivery plan with a DESIGN §13 crosswalk; moved `attachments` to Phase 3 and `reputation_events` to Phase 4 to match the delivery plans; clarified the "Phase" column note. |
+| v1.4 | 2026-06-26 | Added `email_deliveries.idempotency_key` (`VARCHAR(191) NULL`, `UNIQUE KEY uq_deliv_idem`) to close the PRODUCT_DESIGN §9.6 / PHASE_2 Milestone-0 idempotency gap; recorded as §7 reconciliation #9; bumped the stale header (was "v1.2 · 2026-06-21"). |
+| v1.3 | 2026-06-25 | Consistency pass: extended the §6 phase map to the full seven-phase delivery plan with a PRODUCT_DESIGN §13 crosswalk; moved `attachments` to Phase 3 and `reputation_events` to Phase 4 to match the delivery plans; clarified the "Phase" column note. |
 | v1.2 | 2026-06-21 | Added `board_slug_history` as the Phase 1 alias table for Admin Console board slug changes, preserving old `/c/{slug}` links with 301 redirects. |
 | v1.1 | 2026-06-21 | Added the `0007_moderation_log.sql` table to the canonical Phase 1 schema (planned); widened `moderation_log.target_type` to include `category` and `setting`; recorded the actor FK (`ON DELETE SET NULL`); moved `moderation_log` into the explicit Phase 1 build cut. |
 | v1.0 | 2026-06-19 | Initial consolidation of all 37 tables from DESIGN/USER/ADMIN/COMPOSER/COMMUNITY into one reference; folded "additions to existing tables" into each definition; recorded 7 reconciliation decisions (§7) and foreshadowed-but-unspecced schema (§8); added a per-phase build cut (§6). |

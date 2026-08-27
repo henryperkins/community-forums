@@ -322,7 +322,7 @@ the disclosure panel uses 180ms, same easing. Both gated on `prefers-reduced-mot
 
 ## 10. Testing and evidence
 
-DESIGN §13: *"anything marked `Live` must be accompanied by the tests, smoke checks, or
+PRODUCT_DESIGN §13: *"anything marked `Live` must be accompanied by the tests, smoke checks, or
 Playwright/browser verification that prove the claim. UI-visible work needs browser verification
 in addition to server-side tests."* All four shipping changes are UI-visible.
 

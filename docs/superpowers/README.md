@@ -1,6 +1,6 @@
 # Superpowers design archive
 
-This directory is the **design-decision archive** for RetroBoards: the brainstorming design specs and implementation plans behind shipped work. It is historical — the authoritative product/technical source of truth remains the spec chain (`DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` > the surface specs) and the phase plans/status. ADRs and `PHASE_5_STATUS.md` cite entries here as the rationale record.
+This directory is the **design-decision archive** for RetroBoards: the brainstorming design specs and implementation plans behind shipped work. It is historical — the authoritative product/technical source of truth remains the spec chain (`DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` > the surface specs) and the phase plans/status. ADRs and `PHASE_5_STATUS.md` cite entries here as the rationale record.
 
 **Consolidated 2026-07-09:** the former `plans/` + `specs/` split was collapsed — each design spec was merged into its paired implementation plan (the doc now carries an *Archived design record* note and holds design + plan + review in one file), the five WYSIWYG docs merged into one, and the empty `specs/` directory was removed. Archived entries retain their original internal references (to since-moved status docs, etc.) as historical records; they are not repointed.
 

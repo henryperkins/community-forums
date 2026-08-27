@@ -5,7 +5,7 @@
 Recorded under the locked product decisions in
 `docs/superpowers/plans/2026-06-29-phase2-operator-surfaces-contract.md` (decision #1).
 This ADR reverses a recorded Gate B deferral **deliberately rather than silently**
-(DESIGN §13 / CLAUDE.md "deferrals are recorded in `docs/adr/000N-*.md` — never
+(PRODUCT_DESIGN §13 / CLAUDE.md "deferrals are recorded in `docs/adr/000N-*.md` — never
 silently dropped"). It does **not** accept any item it lists as still deferred.
 
 ## Context

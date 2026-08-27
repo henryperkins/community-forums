@@ -6,7 +6,7 @@
 **Status:** Accepted for implementation planning — the **whole** Increment 5 (SP0 B2 retrofits + P5-04 + P5-07-A) approved as a single implementation plan on 2026-07-03; the §12 open review decisions are adopted per their stated recommendations (reuse `api_tokens.created_by` + `installed_package_credentials` link; link webhooks via that table with no B2 table mutation; no new `worker:advisories`; widen `package_history.event` only if tests prove detail-only history unclear; jobs stay consent/visibility metadata only).
 **Phase / gate:** Phase 5 Gate A, Increment 5. Covers **P5-04** and **P5-07-A part 2**.
 **Primary flags:** `package_registry`, `service_secrets`, `api_tokens`, `webhooks`, `first_party_hooks`.
-**Precedence:** `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` > surface specs > this draft. Where this draft conflicts with an authoritative document, correct this draft.
+**Precedence:** `DECISIONS.md` > `PRODUCT_DESIGN.md` > `SCHEMA.md` > surface specs > this draft. Where this draft conflicts with an authoritative document, correct this draft.
 
 ---
 
@@ -5036,7 +5036,7 @@ Steps:
   ```
   Expected: `json ok` and PHPUnit `OK`. This guard is not optional; do not redirect or mask failures.
 
-- [ ] **Step 5: Run the full suite once (no regressions) per DESIGN §13 / verification-before-completion.**
+- [ ] **Step 5: Run the full suite once (no regressions) per PRODUCT_DESIGN §13 / verification-before-completion.**
   ```bash
   composer test
   ```
@@ -11065,7 +11065,7 @@ The evidence-closeout group uses the pre-existing `ThreatModelIndexTest`, `Phase
   git add tests/browser/package.json PHASE_5_STATUS.md
   git commit -m "test(inc5): wire integration/security browser evidence + record closeout gate"
   ```
-- [ ] **Step 11: Final verification-before-completion sign-off.** Re-run `git status` (expect clean tree) and re-run the Step 7 guard trio once more. Only after all three guards + `composer test` are green and the browser/axe artifacts are captured is the increment eligible to be called done (DESIGN §13 — "inert schema is not evidence").
+- [ ] **Step 11: Final verification-before-completion sign-off.** Re-run `git status` (expect clean tree) and re-run the Step 7 guard trio once more. Only after all three guards + `composer test` are green and the browser/axe artifacts are captured is the increment eligible to be called done (PRODUCT_DESIGN §13 — "inert schema is not evidence").
 
 ---
 

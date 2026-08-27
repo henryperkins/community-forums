@@ -10,7 +10,7 @@
 
 ## Global constraints
 
-- `DECISIONS.md` wins over every other document. The approved scope is `docs/superpowers/specs/2026-07-13-composer-slackify-design.md`; `DESIGN.md` §13 requires browser evidence for this UI-visible work.
+- `DECISIONS.md` wins over every other document. The approved scope is `docs/superpowers/specs/2026-07-13-composer-slackify-design.md`; `PRODUCT_DESIGN.md` §13 requires browser evidence for this UI-visible work.
 - Preserve one canonical Markdown `<textarea>` and normal CSRF-protected form POST submission. Do not add an AJAX submission path, route, migration, table, endpoint, or feature flag.
 - Keep `rich_composer=false` as the broad asset kill switch and `wysiwyg_composer` as the narrower Milkdown switch.
 - Preserve every existing form `action`, field name, validation path, 422 anti-draft-loss value, draft key, rate limit, and sanitizer path.

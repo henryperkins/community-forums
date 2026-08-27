@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Repository precedence remains `DECISIONS.md` → `DESIGN.md` → `SCHEMA.md` and migrations → `USER.md` / `ADMIN.md` / `COMMUNITY.md` / `COMPOSER.md`.
+- Repository precedence remains `DECISIONS.md` → `PRODUCT_DESIGN.md` → `SCHEMA.md` and migrations → `USER.md` / `ADMIN.md` / `COMMUNITY.md` / `COMPOSER.md`.
 - `/` is a calm directory of policy-listed boards; `/inbox` is the signed-in member's personal cross-board queue; `/messages` is private conversation; `/c/{slug}` is one board's topic list; `/t/{id}-{slug}` is focused reading and reply.
 - The Forum Index has no topic preview, recent-topic feed, Inbox filters, composer, or board picker.
 - Board order is exactly pinned first, then `last_post_at DESC`, then `id DESC`; `/c/{slug}` has no Active, Newest, Unanswered, or Most replies controls.
@@ -42,7 +42,7 @@
 - Modify: `tests/Integration/Core/AppUserPreferencesTest.php:200-235`
 - Modify: `tests/Integration/Core/AppComposerShellTest.php:230-250`
 - Modify: `tests/Unit/Preferences/PreferenceSchemaTest.php:1-155`
-- Modify: `DESIGN.md:118-139,178-190`
+- Modify: `PRODUCT_DESIGN.md:118-139,178-190`
 - Modify: `USER.md:183-198`
 
 **Interfaces:**
@@ -153,7 +153,7 @@ Remove `$sort` and the entire Default thread sort `<label>` from `templates/acco
 
 - [ ] **Step 6: Reconcile the authoritative product docs**
 
-Update `DESIGN.md` so its shell and URL map name `/` the Forum Index directory, `/inbox` the personalized thread inbox, `/c/{slug}` one board's topic list, and `/t/{id}-{slug}` the canonical conversation. Replace the board sort-tab statement with the exact fixed order and state that Newest/Unanswered are Inbox filters. Update `USER.md` to remove Default thread sort/Most replies and describe fixed board order. Increment each document's version and add a dated 2026-08-02 changelog entry using its existing format.
+Update `PRODUCT_DESIGN.md` so its shell and URL map name `/` the Forum Index directory, `/inbox` the personalized thread inbox, `/c/{slug}` one board's topic list, and `/t/{id}-{slug}` the canonical conversation. Replace the board sort-tab statement with the exact fixed order and state that Newest/Unanswered are Inbox filters. Update `USER.md` to remove Default thread sort/Most replies and describe fixed board order. Increment each document's version and add a dated 2026-08-02 changelog entry using its existing format.
 
 - [ ] **Step 7: Run focused tests, then commit**
 
@@ -169,7 +169,7 @@ Expected: all tests pass and the diff check is empty.
 Commit:
 
 ```powershell
-git add -- src/Repository/ThreadRepository.php src/Controller/BoardController.php src/Controller/Api/BoardsController.php src/Support/PreferenceSchema.php src/Service/PreferenceService.php templates/account/preferences.php tests/Integration/Core/AppReadingPreferencesTest.php tests/Integration/Api/ApiReadEndpointsTest.php tests/Integration/Core/AppUserPreferencesTest.php tests/Integration/Core/AppComposerShellTest.php tests/Unit/Preferences/PreferenceSchemaTest.php DESIGN.md USER.md
+git add -- src/Repository/ThreadRepository.php src/Controller/BoardController.php src/Controller/Api/BoardsController.php src/Support/PreferenceSchema.php src/Service/PreferenceService.php templates/account/preferences.php tests/Integration/Core/AppReadingPreferencesTest.php tests/Integration/Api/ApiReadEndpointsTest.php tests/Integration/Core/AppUserPreferencesTest.php tests/Integration/Core/AppComposerShellTest.php tests/Unit/Preferences/PreferenceSchemaTest.php PRODUCT_DESIGN.md USER.md
 git commit -m "feat: fix board topics to activity order"
 ```
 

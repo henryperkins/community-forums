@@ -9,7 +9,7 @@ file is the evidence trail.
 execution permissions denied `php`/`phpunit`/browser tooling, so the PHPUnit
 files below were written but **not executed** by the author. Run
 `composer test` before claiming green, and capture Playwright evidence for the
-UI-visible items per DESIGN §13.
+UI-visible items per PRODUCT_DESIGN §13.
 
 ## Finding → disposition (numbers from the 2026-07 review)
 

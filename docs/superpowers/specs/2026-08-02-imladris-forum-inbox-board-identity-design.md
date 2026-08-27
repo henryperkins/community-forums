@@ -23,7 +23,7 @@ The visual source is:
 The production behavior sources remain, in order:
 
 1. `DECISIONS.md`
-2. `DESIGN.md`
+2. `PRODUCT_DESIGN.md`
 3. `SCHEMA.md` and applied migrations
 4. `USER.md`, `ADMIN.md`, `COMMUNITY.md`, and `COMPOSER.md`
 5. existing server-side routes, authorization gates, and progressive-enhancement contracts

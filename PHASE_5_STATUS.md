@@ -125,7 +125,7 @@ controls, a `worker:webhooks` drainer, and a code-only first-party hook registry
 that routes catalogued public-board domain events into the existing webhook
 dispatch path.
 
-> "Inert schema is not evidence" (DESIGN §13). The `0049`–`0053` foundation
+> "Inert schema is not evidence" (PRODUCT_DESIGN §13). The `0049`–`0053` foundation
 > was originally inert; accepted Gate A flags now default on after ADR 0018.
 > Migration `0054`
 > is opt-in account-security behavior used only when a member enrolls in TOTP.

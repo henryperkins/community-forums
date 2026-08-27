@@ -4,9 +4,9 @@
 **Scope:** P5-04 integration runtime + P5-07-A security-response console, deploy-dark
 behind `package_registry`, plus the four B2 predecessor slices
 (`service_secrets`, `api_tokens`, `webhooks`, `first_party_hooks`).
-**Question:** Is Inc 5 *done-with-evidence* per DESIGN §13, or are there gaps?
+**Question:** Is Inc 5 *done-with-evidence* per PRODUCT_DESIGN §13, or are there gaps?
 **Method:** 35-agent adversarial audit workflow (`wf_b6ab25a4-b42`) — contract
-extraction, on-disk evidence inventory, six per-surface DESIGN §13 audits, an
+extraction, on-disk evidence inventory, six per-surface PRODUCT_DESIGN §13 audits, an
 empirical full-suite run, a security-invariant sweep, and a process/evidence
 sweep; every candidate gap was then independently re-verified by a skeptic that
 defaulted to refuting it (24 candidates → **14 confirmed, 10 refuted**).
@@ -33,7 +33,7 @@ staged-enablement pending) and do **not** yet meet the §14 Gate-A pass bar
 | Security invariants | **7 / 7 PASS** — incl. PR#36 `bool`/`getString` kill-switch footgun **fixed** (canonical `'1'`/`'0'`, all readers `==='1'`), CSRF on every POST, no inline script/style in 11 Inc5 admin templates, EgressGuard on every outbound path + IP-pinned, secrets sha256/AES-GCM at rest, flag-dark 404, reveal paths admin+reauth-gated |
 | Process/evidence | 6 PASS, 1 CONCERN (verify:upgrade for migration 0073 unrecorded — now closed, see below) |
 
-## Per-surface DESIGN §13 matrix
+## Per-surface PRODUCT_DESIGN §13 matrix
 
 | Surface | Flag | Behavior | Tests | Browser | Readiness (audit) |
 |---|---|---|---|---|---|
