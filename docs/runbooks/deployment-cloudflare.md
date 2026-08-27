@@ -21,8 +21,10 @@ against the account that owns the zone.
 > whichever directory it is standing in remains true, and is why the stale
 > instruction was dangerous rather than merely wrong.
 >
-> Verified four ways when PR #65 was merged: live `/assets/app.css` byte-matched
-> `origin/main` (469,390 vs 469,391 — one trailing newline) while the deploy
+> Verified four ways when PR #65 was merged: live `/assets/app.css` matched
+> `origin/main` — 469,390 measured off the wire against 469,391 for the checked-in
+> blob, the one byte being the trailing newline that shell command substitution
+> strips, not a content difference — while the deploy
 > branch's copy was **239,937 bytes**; the markers `.field-cell` and
 > `.textarea-engraved` were live and in `main` but absent from that branch;
 > `main`'s HEAD carried a successful `Workers Builds: retroboards` check run; and
@@ -35,9 +37,13 @@ against the account that owns the zone.
 > those from the main checkout, whose config now matches what is deployed.
 >
 > **Before merging**, since production rebuilds the image from source on every
-> merge: confirm `git diff --name-only <base> origin/main -- database/migrations/`
-> is empty (a migration makes the entrypoint's `RUN_MIGRATIONS=true` live, and a
-> failure aborts the boot rather than serving), and that `wrangler.jsonc`,
+> merge: confirm that
+> `git diff --name-only origin/main...HEAD -- database/migrations/` is empty. A
+> migration makes the entrypoint's `RUN_MIGRATIONS=true` live, and a failure there
+> aborts the boot rather than serving. **Three dots, run from the PR branch** —
+> two named refs (`<base> origin/main`) compare `main` with itself and report a
+> migration on your branch as absent, which is the one answer this check must
+> never get wrong. Confirm too that `wrangler.jsonc`,
 > `worker/`, `Dockerfile` and `deploy/` are untouched — `ForumContainer.
 > pingEndpoint` must stay a static file (see §6). Propagation is not instant:
 > container provisioning is asynchronous, so the edge keeps serving the previous
@@ -187,11 +193,19 @@ the already-onboarded `candidary.online` sending domain.
 ## 6. Deploy
 
 **The normal path is to merge to `main`.** Workers Builds runs `npm ci`, then its
-configured build command, then the deploy — no local step. Watch it with:
+configured build command, then the deploy — no local step.
+
+Watch the build **on the merge commit**, not on the PR. `gh pr checks <n>`
+reports the feature-branch build, which this file has just finished explaining is
+a non-production one — and the health check below answers `200` from the *previous*
+deployment while the new container is still provisioning, so the pair of them will
+happily agree that a merge has shipped when it has not:
 
 ```sh
-gh pr checks <n>                          # "Workers Builds: retroboards"
-curl -sS https://forum.example.com/healthz
+SHA=$(git rev-parse origin/main)          # the merge commit
+gh api repos/<owner>/<repo>/commits/$SHA/check-runs \
+  --jq '.check_runs[] | select(.name|test("Workers")) | "\(.status) \(.conclusion)"'
+curl -sS https://forum.example.com/healthz    # only meaningful once that says completed/success
 ```
 
 The commands below are the **first-time / disaster-recovery** path, for standing
