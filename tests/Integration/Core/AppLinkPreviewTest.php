@@ -187,6 +187,48 @@ final class AppLinkPreviewTest extends TestCase
         );
     }
 
+    /**
+     * The guard measures characters, not bytes, and this is the test that can tell the
+     * difference — the two above cannot, because their fixtures are ASCII, where
+     * `strlen()` and `mb_strlen()` agree and either implementation passes.
+     *
+     * MySQL counts `VARCHAR(n)` in characters, verified against this schema: a 914-char
+     * / 1814-byte utf8mb4 string INSERTs into `link_previews.url` without complaint. So
+     * an IRI — a path with accents, Cyrillic, or CJK, which `extractUrls()` captures
+     * byte-wise and therefore keeps intact — can sit well inside the column while its
+     * byte length is multiples of it. A `strlen()` guard would refuse to queue a URL the
+     * database would happily have stored, silently costing previews that should render.
+     *
+     * Fails if `isStorableUrl()` is ever "simplified" to `strlen()`.
+     */
+    public function test_the_guard_measures_characters_not_bytes(): void
+    {
+        $settings = new SettingRepository($this->db);
+        $settings->set('link_preview_allowed_hosts', ['preview.example.test']);
+
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewmb', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'mblinker']);
+        $this->actingAs($author);
+
+        // Inside the column by characters, well past it by bytes.
+        $url = 'http://preview.example.test/' . str_repeat('é', 900);
+        self::assertLessThanOrEqual(1024, mb_strlen($url, 'UTF-8'), 'fixture must fit the column');
+        self::assertGreaterThan(1024, strlen($url), 'fixture must exceed the column in bytes');
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Multibyte link topic',
+            'body' => 'An IRI: ' . $url,
+        ]));
+
+        self::assertSame(
+            [['url' => $url]],
+            $this->db->fetchAll('SELECT url FROM link_previews ORDER BY id ASC'),
+            'a URL that fits the column in characters must queue, however many bytes it takes',
+        );
+    }
+
     public function test_private_board_posts_do_not_queue_outbound_previews(): void
     {
         $cat = $this->makeCategory();
