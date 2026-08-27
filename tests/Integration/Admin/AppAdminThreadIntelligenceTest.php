@@ -326,6 +326,62 @@ final class AppAdminThreadIntelligenceTest extends TestCase
         self::assertStringNotContainsString('warning need ', $dashboard->body());
     }
 
+
+    /**
+     * Axis 2, "state beats role": `WriteGate::assertCanWrite()` throws for
+     * banned/suspended on EVERY write path. `assertAdmin()` here checked `isAdmin()`
+     * and nothing else, and `Controller::requireAdmin()` checks role only too, so a
+     * suspended admin kept global generation pause/resume, the provider-latch retry,
+     * and per-thread retry/reconcile/pause.
+     *
+     * The same asymmetry was closed for link previews in #67, and this subsystem
+     * already had the other half right: the curator path
+     * (`CommunityMemoryService::assertCuratorForLockedThread()`) does call
+     * `assertCanWrite`. Only the operator path did not.
+     *
+     * Reading stays open, which is what makes this the state axis rather than a
+     * second role check.
+     */
+    public function test_a_suspended_admin_keeps_the_console_but_loses_every_operator_write(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['community_memory' => true, 'automated_context' => true]);
+        $this->rebuildApp('sk-suspended-operator');
+        $seed = $this->seedThread(2);
+        $this->actingAs($this->admin);
+
+        $this->db->run(
+            "UPDATE users SET status = 'suspended', suspended_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 DAY) WHERE id = ?",
+            [(int) $this->admin['id']],
+        );
+
+        // Reading survives: state closes writes, not the console.
+        $this->assertStatus(200, $this->get('/admin/thread-intelligence'));
+
+        foreach ([
+            '/admin/thread-intelligence/generation/pause',
+            '/admin/thread-intelligence/generation/resume',
+            '/admin/thread-intelligence/provider/retry',
+            '/admin/thread-intelligence/threads/' . $seed['thread_id'] . '/retry',
+            '/admin/thread-intelligence/threads/' . $seed['thread_id'] . '/reconcile',
+            '/admin/thread-intelligence/threads/' . $seed['thread_id'] . '/pause',
+            '/admin/thread-intelligence/threads/' . $seed['thread_id'] . '/resume',
+        ] as $route) {
+            $this->assertStatus(403, $this->post($route));
+        }
+
+        // The site-wide generation pause has the widest blast radius of the seven:
+        // it stops every thread's automation at once. A refused write must not set it.
+        self::assertFalse((new SettingRepository($this->db))->has(ThreadIntelligenceSettings::PAUSE_KEY));
+        // The per-thread pause may not even have a job row yet; either way it must
+        // not read as paused. Resolved before indexing, since find() returns null.
+        $job = (new ThreadIntelligenceJobRepository($this->db))->find($seed['thread_id']);
+        self::assertSame(0, (int) ($job['automation_paused'] ?? 0));
+
+        // A refused write is not an audited one.
+        self::assertSame(0, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE action LIKE 'thread_intelligence_%'",
+        ));
+    }
     private function rebuildApp(string $apiKey): void
     {
         $items = $this->config->all();

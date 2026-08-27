@@ -1243,6 +1243,7 @@ final class App
             $c->get(ThreadIntelligenceJobRepository::class),
             $c->get(ThreadIntelligenceGenerationRepository::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(ThreadIntelligenceViewService::class, fn (Container $c) => new ThreadIntelligenceViewService(
             $c->get(Database::class),
@@ -1919,6 +1920,7 @@ final class App
             $c->get(ReauthGate::class),
             $c->get(ModerationLogRepository::class),
             $c->get(FeatureFlags::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(IdentityProviderRepository::class, fn (Container $c) => new IdentityProviderRepository($c->get(Database::class)));
         $c->bind(InvitationRepository::class, fn (Container $c) => new InvitationRepository($c->get(Database::class)));
@@ -1929,6 +1931,7 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(BoardMemberRepository::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(OidcDiscovery::class, fn (Container $c) => new OidcDiscovery($c->get(OAuthHttpClient::class)));
         $c->bind(JwksCache::class, fn (Container $c) => new JwksCache(

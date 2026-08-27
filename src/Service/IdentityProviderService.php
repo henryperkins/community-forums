@@ -12,6 +12,7 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\IdentityProviderRepository;
 use App\Repository\ModerationLogRepository;
+use App\Security\WriteGate;
 use App\Security\ReauthGate;
 use App\Service\OAuth\Oidc\JwksCache;
 use App\Service\OAuth\Oidc\OidcDiscovery;
@@ -38,12 +39,32 @@ final class IdentityProviderService
         private ReauthGate $reauth,
         private ModerationLogRepository $log,
         private FeatureFlags $flags,
+        private WriteGate $writeGate,
     ) {
+    }
+
+    /**
+     * Axis 2, "state beats role". Both mutators already call
+     * ReauthGate::requirePassword(), which looks like a strong gate but only
+     * verifies the password hash - a suspended admin knows their own password, so
+     * the step-up passes. Step-up answers "is this really you"; the write gate
+     * answers "may you still act", and nothing here was asking the second question:
+     * this service carried no isAdmin(), no WriteGate and no capability gate, and
+     * Controller::requireAdmin() checks role alone.
+     *
+     * It runs BEFORE the reauth so a suspended operator is refused outright rather
+     * than prompted for a password that could never buy them the write, and so the
+     * reauth's 422-vs-403 split cannot be used to probe.
+     */
+    private function assertCanOperate(User $admin): void
+    {
+        $this->writeGate->assertCanWrite($admin);
     }
 
     /** @param array<string,mixed> $input @return int the new provider id */
     public function create(User $admin, string $currentPassword, array $input): int
     {
+        $this->assertCanOperate($admin);
         $this->reauth->requirePassword($admin, $currentPassword);
 
         $errors = [];
@@ -121,6 +142,7 @@ final class IdentityProviderService
     /** @return array<string,mixed> the row, with is_enabled updated */
     public function setEnabled(User $admin, string $currentPassword, int $id, bool $enabled): array
     {
+        $this->assertCanOperate($admin);
         $this->reauth->requirePassword($admin, $currentPassword);
 
         $row = $this->providers->find($id);
@@ -155,10 +177,18 @@ final class IdentityProviderService
      * env-configured reference data, and probing one would fire live fetches
      * and overwrite its health/caches.
      *
+     * It IS a console mutation, which is why it takes the actor and gates on state
+     * like the other two: it fires outbound discovery and JWKS fetches from the
+     * forum's own address and then writes `cacheDiscovery`, `jwks->refresh` and
+     * `updateHealth`. Reading the console does not do any of that; pressing Test
+     * does. Caught in review of the first pass, which gated the two methods that
+     * took a User and so walked straight past the one that did not.
+     *
      * @return array{status:string, name:string, detail:string}
      */
-    public function healthProbe(int $id): array
+    public function healthProbe(User $admin, int $id): array
     {
+        $this->assertCanOperate($admin);
         $row = $this->providers->find($id);
         if ($row === null) {
             throw new NotFoundException('Provider not found.');

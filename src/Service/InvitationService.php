@@ -12,6 +12,7 @@ use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
 use App\Repository\InvitationRepository;
 use App\Repository\ModerationLogRepository;
+use App\Security\WriteGate;
 
 /**
  * Invitation lifecycle (P5-13, Inc 9). Tokens are 256-bit random, hash-only
@@ -48,6 +49,7 @@ final class InvitationService
         private BoardRepository $boards,
         private BoardMemberRepository $boardMembers,
         private ModerationLogRepository $log,
+        private WriteGate $writeGate,
     ) {
     }
 
@@ -74,12 +76,22 @@ final class InvitationService
     /**
      * Issue an invitation. The raw token is returned ONCE and never persisted.
      *
+     * Axis 2, "state beats role". This service carried no authorization at all -
+     * no isAdmin(), no WriteGate, no capability gate - and leaned entirely on
+     * Controller::requireAdmin(), which checks role and nothing else. An invitation
+     * is a credential that outlives the session that issued it, so a suspended
+     * operator minting one survives their own suspension.
+     *
+     * redeem() is deliberately NOT gated this way: it takes a raw token and no User,
+     * and is the public carrier a brand-new account arrives through.
+     *
      * @param array<string,mixed> $input
      * @return array{id:int, token:string}
      * @throws ValidationException
      */
     public function create(User $admin, array $input): array
     {
+        $this->writeGate->assertCanWrite($admin);
         $email = strtolower(self::stringField($input, 'email'));
         $domain = strtolower(ltrim(self::stringField($input, 'domain'), '@'));
         $maxUsesRaw = self::stringField($input, 'max_uses');
@@ -189,6 +201,8 @@ final class InvitationService
 
     public function revoke(User $admin, int $id): void
     {
+        // Before the lookup, so a suspended admin cannot probe invitation ids.
+        $this->writeGate->assertCanWrite($admin);
         if ($this->invitations->find($id) === null) {
             throw new NotFoundException('Invitation not found.');
         }

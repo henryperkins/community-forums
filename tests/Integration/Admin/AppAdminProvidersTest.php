@@ -233,6 +233,54 @@ final class AppAdminProvidersTest extends TestCase
 
     // ---- enable / disable ---------------------------------------------------------
 
+
+    /**
+     * Axis 2, "state beats role". These two routes look well defended - both call
+     * ReauthGate::requirePassword() first - but that gate only verifies the password
+     * hash (ReauthGate.php:41). A suspended admin knows their own password, so the
+     * step-up passes and nothing else asks about account state:
+     * IdentityProviderService carried no isAdmin(), no WriteGate and no capability
+     * gate, and Controller::requireAdmin() checks role alone.
+     *
+     * Step-up auth answers "is this really you"; the write gate answers "may you
+     * still act". A suspended operator can prove the first and must still fail the
+     * second - here more than most, since enabling an identity provider changes who
+     * can log in at all.
+     */
+    public function test_a_suspended_admin_passes_reauth_and_is_still_refused(): void
+    {
+        $this->enableFlags();
+        $this->actingAs($this->admin);
+        $id = $this->createProviderRow('susp', 'Suspended IdP');
+        $before = (int) $this->db->fetchValue('SELECT COUNT(*) FROM identity_providers', []);
+
+        $this->db->run(
+            "UPDATE users SET status = 'suspended', suspended_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 DAY) WHERE id = ?",
+            [(int) $this->admin['id']],
+        );
+
+        // Reading survives.
+        $this->assertStatus(200, $this->get('/admin/providers'));
+
+        // The correct password no longer buys a write.
+        $this->assertStatus(403, $this->post('/admin/providers/' . $id . '/enable', ['current_password' => 'password123']));
+        self::assertSame(0, (int) $this->providers()->find($id)['is_enabled'], 'a refused enable must not land');
+
+        $this->assertStatus(403, $this->post('/admin/providers', $this->createInput(['provider_key' => 'susp2'])));
+        self::assertSame($before, (int) $this->db->fetchValue('SELECT COUNT(*) FROM identity_providers', []));
+
+        // Test connection is a mutation too, and the one the first pass walked past:
+        // it takes no User, so gating "every method with a User" missed it. It fires
+        // outbound discovery and JWKS fetches from the forum's own address and then
+        // writes cacheDiscovery / jwks->refresh / updateHealth.
+        $healthBefore = $this->providers()->find($id)['health_status'] ?? null;
+        $this->assertStatus(403, $this->post('/admin/providers/' . $id . '/test', ['current_password' => 'password123']));
+        self::assertSame(
+            $healthBefore,
+            $this->providers()->find($id)['health_status'] ?? null,
+            'a refused probe must not have written provider health',
+        );
+    }
     public function test_enable_requires_reauth_and_audits(): void
     {
         $this->enableFlags();

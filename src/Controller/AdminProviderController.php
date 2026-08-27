@@ -57,11 +57,11 @@ final class AdminProviderController extends Controller
     /** @param array<string,string> $params */
     public function test(Request $request, array $params): Response
     {
-        $this->requireAdmin();
+        $admin = $this->requireAdmin();
         $this->gate();
 
         try {
-            $result = $this->container->get(IdentityProviderService::class)->healthProbe((int) ($params['id'] ?? 0));
+            $result = $this->container->get(IdentityProviderService::class)->healthProbe($admin, (int) ($params['id'] ?? 0));
         } catch (ValidationException $e) {
             return $this->providersView($e->errors, [], 422);
         }

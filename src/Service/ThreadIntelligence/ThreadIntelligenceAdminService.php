@@ -10,6 +10,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Domain\User;
 use App\Repository\ModerationLogRepository;
+use App\Security\WriteGate;
 use App\Repository\ThreadIntelligenceGenerationRepository;
 use App\Repository\ThreadIntelligenceJobRepository;
 
@@ -25,6 +26,7 @@ final class ThreadIntelligenceAdminService
         private readonly ThreadIntelligenceJobRepository $jobs,
         private readonly ThreadIntelligenceGenerationRepository $generations,
         private readonly ModerationLogRepository $audit,
+        private readonly WriteGate $writeGate,
     ) {
     }
 
@@ -139,11 +141,25 @@ final class ThreadIntelligenceAdminService
         });
     }
 
+    /**
+     * Both authorization axes this surface answers to. Role first, then account
+     * state - CLAUDE.md's "state beats role": WriteGate::assertCanWrite() throws for
+     * banned/suspended on EVERY write path, and Controller::requireAdmin() checks
+     * isAdmin() and nothing else. Without the second call a suspended admin keeps
+     * global generation pause/resume, the provider-latch retry, and per-thread
+     * retry/reconcile/pause.
+     *
+     * The curator half of this subsystem already had it right
+     * (CommunityMemoryService::assertCuratorForLockedThread); only the operator half
+     * did not. Reading is not gated here at all, which is what keeps the dashboard
+     * open to a suspended operator who can no longer move it.
+     */
     private function assertAdmin(User $admin): void
     {
         if (!$admin->isAdmin()) {
             throw new ForbiddenException('Administrator access required.');
         }
+        $this->writeGate->assertCanWrite($admin);
     }
 
     /** @param array<string,mixed> $status @return list<string> */
