@@ -4,15 +4,51 @@ Operating procedure for the Cloudflare deployment defined by `wrangler.jsonc`,
 `worker/index.js`, `Dockerfile`, and `deploy/`, with `wrangler` authenticated
 against the account that owns the zone.
 
-> **Run every `wrangler` command from the deployment worktree, not from the
-> main checkout.** The deployment lives in a git worktree —
-> `.worktrees/cloudflare-production-20260804`, branch
-> `deploy/cloudflare-production-20260804` — and the main checkout carries its
-> own older, uncommitted `wrangler.jsonc` and `worker/`. `wrangler deploy` reads
-> whichever it is standing in, and deploying from the wrong one silently ships
-> a stale Worker **and** rebuilds the container image from stale source. That
-> has already caused one outage. `git worktree list` shows the path; prefer
-> `npx wrangler deploy --cwd <path>` if you are unsure where you are.
+> **Merging to `main` IS the deploy.** Production is built and released by a
+> git-connected **Workers Builds** pipeline watching `main`. There is no manual
+> `wrangler deploy` step in the normal path, and no branch to fast-forward by
+> hand. Feature-branch pushes produce non-production builds — the Cloudflare bot
+> still comments "Deployment successful" on the PR and the dashboard URL still
+> contains `/production/`, so treat neither as evidence that a branch went live.
+>
+> **Corrected 2026-08-27. This box previously said the opposite**, and following
+> it now would cause the outage it warned about. It directed every `wrangler`
+> command at the worktree `.worktrees/cloudflare-production-20260804` (branch
+> `deploy/cloudflare-production-20260804`). That branch is **~47 commits behind
+> `main`** and is no longer the deploy path, so deploying from it would ship a
+> stale Worker *and* rebuild the container image from stale source — the same
+> failure, with the direction reversed. Its warning that `wrangler deploy` reads
+> whichever directory it is standing in remains true, and is why the stale
+> instruction was dangerous rather than merely wrong.
+>
+> Verified four ways when PR #65 was merged: live `/assets/app.css` matched
+> `origin/main` — 469,390 measured off the wire against 469,391 for the checked-in
+> blob, the one byte being the trailing newline that shell command substitution
+> strips, not a content difference — while the deploy
+> branch's copy was **239,937 bytes**; the markers `.field-cell` and
+> `.textarea-engraved` were live and in `main` but absent from that branch;
+> `main`'s HEAD carried a successful `Workers Builds: retroboards` check run; and
+> `wrangler.jsonc`, `worker/index.js`, `Dockerfile` and `deploy/entrypoint.sh`
+> are now **identical** between `main` and the deploy branch — so the old
+> "the main checkout's copies are older and uncommitted" hazard is also gone.
+>
+> `wrangler` is still the right tool for reading and for recovery —
+> `wrangler tail`, `containers list`, `deployments list`, `rollback` (§12). Run
+> those from the main checkout, whose config now matches what is deployed.
+>
+> **Before merging**, since production rebuilds the image from source on every
+> merge: confirm that
+> `git diff --name-only origin/main...HEAD -- database/migrations/` is empty. A
+> migration makes the entrypoint's `RUN_MIGRATIONS=true` live, and a failure there
+> aborts the boot rather than serving. **Three dots, run from the PR branch** —
+> two named refs (`<base> origin/main`) compare `main` with itself and report a
+> migration on your branch as absent, which is the one answer this check must
+> never get wrong. Confirm too that `wrangler.jsonc`,
+> `worker/`, `Dockerfile` and `deploy/` are untouched — `ForumContainer.
+> pingEndpoint` must stay a static file (see §6). Propagation is not instant:
+> container provisioning is asynchronous, so the edge keeps serving the previous
+> assets for minutes after the merge commit lands, and a single Cloudflare `1101`
+> during the swap is normal.
 
 > **Cloudflare cannot host the whole stack.** Workers runs JavaScript, Python and
 > WebAssembly — not PHP — so the application runs as a *container* fronted by a
@@ -155,6 +191,27 @@ perform. The email token needs **Email Sending: Edit** on the account that owns
 the already-onboarded `candidary.online` sending domain.
 
 ## 6. Deploy
+
+**The normal path is to merge to `main`.** Workers Builds runs `npm ci`, then its
+configured build command, then the deploy — no local step.
+
+Watch the build **on the merge commit**, not on the PR. `gh pr checks <n>`
+reports the feature-branch build, which this file has just finished explaining is
+a non-production one — and the health check below answers `200` from the *previous*
+deployment while the new container is still provisioning, so the pair of them will
+happily agree that a merge has shipped when it has not:
+
+```sh
+SHA=$(git rev-parse origin/main)          # the merge commit
+gh api repos/<owner>/<repo>/commits/$SHA/check-runs \
+  --jq '.check_runs[] | select(.name|test("Workers")) | "\(.status) \(.conclusion)"'
+curl -sS https://forum.example.com/healthz    # only meaningful once that says completed/success
+```
+
+The commands below are the **first-time / disaster-recovery** path, for standing
+a deployment up before the git integration exists or when it is unavailable. Run
+them from the main checkout, whose `wrangler.jsonc` and `worker/` now match what
+is deployed:
 
 ```sh
 npm install
@@ -548,10 +605,15 @@ As of 2026-08-06 the deployment serves traffic:
   `app.css`/`brand.css` and for fonts; hits return in ~0.1–0.15s
 - Latency after the 2026-08-06 move: public home TTFB ~0.56–0.85s (was ~1.42s),
   warm browser load (LCP/FCP) ~0.9s, cold font burst 0.09–0.22s each
-- The deployed code is the published `deploy/cloudflare-production-20260804`
-  branch at `5fd1ba0`, fast-forwarded to `main`. It deliberately does **not**
-  include the eight feature-only Imladris admin/account commits on the
-  separately published `feat/imladris-admin-account` branch.
+- **Superseded 2026-08-27.** This line used to read: "The deployed code is the
+  published `deploy/cloudflare-production-20260804` branch at `5fd1ba0`,
+  fast-forwarded to `main`." That is no longer how releases happen. The deployed
+  code is now **`main`**, released by Workers Builds on merge; the
+  `deploy/cloudflare-production-20260804` branch is ~47 commits behind and is
+  retained only as history. See the corrected box at the top of this file.
+- The rest of this section is a snapshot dated **2026-08-06** and has not been
+  re-measured since. Treat the Worker version, image digest, latency figures and
+  migration count as of that date, not as current.
 - The throwaway Workers `rb-nginx-test` and `rb-egress-probe`, and their
   corresponding container apps, were deleted after confirming they had no
   custom domains, routes, or Cron Triggers. Only
