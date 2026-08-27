@@ -13847,3 +13847,33 @@ a.account-row-name:hover {
     .lb-version form,
     .lb-more-foot .lb-confirm { margin-left: 0; }
 }
+
+/* Living Brief - curator-only empty state. Dashed rather than solid so the panel
+   reads as an absence, not a published card; raised rather than sunken so the
+   nested .lb-more-body (itself sunken) keeps its contrast. */
+.living-brief-empty {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-4);
+    border: 1px dashed var(--border-hair);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+}
+.living-brief-empty-eyebrow {
+    margin: 0;
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .78rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+}
+.living-brief-empty-copy {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+/* The curator footer already rules itself off from the copy above, so its own
+   top margin would double that gap inside this tighter panel. */
+.living-brief-empty .living-brief-curator { margin-top: var(--space-2); }

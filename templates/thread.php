@@ -173,7 +173,12 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                 <?php endif; ?>
             </section>
         <?php endif; ?>
-    <?php if ($living_brief !== null || $related_fallback !== []): ?>
+    <?php // Matches $topicToolSections['memory'] exactly, so the drawer's
+          // "Go to the brief's curator tools" anchor always has a target: with a
+          // brief the footer rides inside it, without one the empty state carries
+          // the same footer. `can_curate_memory` already implies a signed-in user. ?>
+    <?php $canCurateMemory = !empty($can_write) && !empty($can_curate_memory); ?>
+    <?php if ($living_brief !== null || $related_fallback !== [] || $canCurateMemory): ?>
     <div class="thread-memory-slot">
         <?php if ($living_brief !== null): ?>
             <?= $this->partial('partials/living_brief', [
@@ -181,18 +186,32 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                 'living_brief' => $living_brief,
                 'living_brief_sources' => $living_brief_sources,
                 'living_brief_related' => $living_brief_related,
-                'can_curate_memory' => !empty($can_write) && !empty($can_curate_memory),
+                'can_curate_memory' => $canCurateMemory,
                 'memory_automation_paused' => $memory_automation_paused,
                 'memory_history' => $memory_history,
                 'memory_refresh' => $memory_refresh,
             ]) ?>
-        <?php elseif ($related_fallback !== []): ?>
-            <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
-                <h2 id="related-topic-fallback-heading">Related topics</h2>
-                <?php foreach ($related_fallback as $related): ?>
-                    <a href="<?= $e($related['url']) ?>"><?= $e($related['title']) ?></a>
-                <?php endforeach; ?>
-            </section>
+        <?php else: ?>
+            <?php // The fallback and the empty state are independent: a brief-less
+                  // topic that happens to carry deterministic related rows would
+                  // otherwise strand its curator behind them. ?>
+            <?php if ($related_fallback !== []): ?>
+                <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
+                    <h2 id="related-topic-fallback-heading">Related topics</h2>
+                    <?php foreach ($related_fallback as $related): ?>
+                        <a href="<?= $e($related['url']) ?>"><?= $e($related['title']) ?></a>
+                    <?php endforeach; ?>
+                </section>
+            <?php endif; ?>
+            <?php if ($canCurateMemory): ?>
+                <?= $this->partial('partials/living_brief_empty', [
+                    'thread' => $thread,
+                    'can_curate_memory' => $canCurateMemory,
+                    'memory_automation_paused' => $memory_automation_paused,
+                    'memory_history' => $memory_history,
+                    'memory_refresh' => $memory_refresh,
+                ]) ?>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     <?php endif; ?>

@@ -6,6 +6,10 @@ $paused = !empty($memory_automation_paused);
 $refresh = $memory_refresh ?? [];
 $history = $memory_history ?? [];
 $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => 'Retired'];
+// Two callers: partials/living_brief.php (a brief is published) and
+// partials/living_brief_empty.php (none is). The footer is the same set of
+// controls either way; only the copy that names a published brief changes.
+$hasBrief = !empty($living_brief);
 ?>
 <div class="living-brief-curator" id="living-brief-curator-<?= $threadId ?>">
     <?php /* While automation is paused the brief itself already carries the paused line
@@ -29,19 +33,27 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
             </form>
         <?php endif; ?>
         <details class="lb-amend">
-            <summary class="linkbtn">Amend</summary>
+            <?php /* There is nothing to amend until something is published, and the
+                     route is the same either way, so only the naming shifts. */ ?>
+            <summary class="linkbtn"><?= $hasBrief ? 'Amend' : 'Write the first summary' ?></summary>
             <form class="composer" method="post" action="/t/<?= $threadId ?>/summary">
                 <?= $this->csrfField() ?>
                 <label for="summary-body-<?= $threadId ?>">Summary</label>
                 <textarea id="summary-body-<?= $threadId ?>" class="composer-input" name="body" rows="4" maxlength="20000"></textarea>
                 <label for="summary-sources-<?= $threadId ?>">Source post IDs</label>
                 <input id="summary-sources-<?= $threadId ?>" class="input" type="text" name="source_post_ids" placeholder="1, 2, 3">
-                <button class="btn btn-small" type="submit">Publish amendment</button>
+                <button class="btn btn-small" type="submit"><?= $hasBrief ? 'Publish amendment' : 'Publish summary' ?></button>
             </form>
         </details>
     </div>
 
-    <?php if (!$paused && empty($refresh['eligible'])): ?>
+    <?php /* Gated on $hasBrief as well: with no brief, the empty state directly
+             above this footer already states why none has been drawn — in the
+             `initial_post_threshold` case with the real numbers, otherwise with
+             this very message — so repeating it here would be a near-duplicate
+             sentence one nesting level down, the same trap the paused primary
+             above avoids. */ ?>
+    <?php if ($hasBrief && !$paused && empty($refresh['eligible'])): ?>
         <p class="muted living-brief-curator-note">
             <?= $e($refresh['message'] ?? 'Refresh is not currently available.') ?>
             <?php if (!empty($refresh['next_eligible_at_utc'])): ?>
@@ -93,7 +105,7 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
                         <button class="linkbtn muted" type="submit">Pause automatic refresh</button>
                     </form>
                 <?php endif; ?>
-                <?php if (!empty($living_brief)): ?>
+                <?php if ($hasBrief): ?>
                     <details class="lb-confirm">
                         <summary class="linkbtn danger">Retire brief</summary>
                         <div class="lb-confirm-body">

@@ -555,6 +555,65 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         ));
     }
 
+    public function test_empty_state_explains_eligibility_to_curators_only(): void
+    {
+        $seed = $this->seedThread(4, 'Empty brief eligibility');
+        $url = '/t/' . $seed['thread_id'] . '-' . $seed['slug'];
+
+        // Guest sees nothing — this preserves the existing no-empty-panel contract.
+        $this->logoutClient();
+        $guestHtml = $this->get($url)->body();
+        self::assertStringNotContainsString('living-brief', $guestHtml);
+        self::assertStringNotContainsString('thread-memory-slot', $guestHtml);
+
+        $admin = $this->makeAdmin(['username' => 'empty-curator']);
+        $this->actingAs($admin);
+        $curatorPage = $this->get($url);
+        $this->assertStatus(200, $curatorPage);
+        $curatorHtml = $curatorPage->body();
+
+        self::assertStringContainsString('eight eligible posts', $curatorHtml);
+        self::assertStringContainsString('the opening post plus every reply', $curatorHtml);
+        self::assertStringContainsString('This one has 4.', $curatorHtml);
+        self::assertStringNotContainsString('counsels', $curatorHtml);
+        self::assertStringNotContainsString('six eligible', $curatorHtml);
+        // No invented second number, and no exclusion reason the data cannot support.
+        self::assertStringNotContainsString('are eligible; the rest', $curatorHtml);
+
+        // The empty state restores what moving the curator tools inside the brief
+        // removed: before the redesign a curator could author the FIRST summary of
+        // any topic and link a related one. It also carries the anchor
+        // partials/thread_tools.php links to, so that link resolves with no brief.
+        self::assertStringContainsString('id="living-brief-curator-' . $seed['thread_id'] . '"', $curatorHtml);
+        self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/summary"', $curatorHtml);
+        self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/related"', $curatorHtml);
+        self::assertStringContainsString('name="source_post_ids"', $curatorHtml);
+        // Nothing to retire when nothing is published.
+        self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/summary/retire"', $curatorHtml);
+
+        // A deterministic related-topic fallback must not strand the curator: the
+        // empty state renders beside it, not instead of it.
+        $fallbackTarget = $this->seedThread(1, 'Empty state fallback target');
+        $this->insertRelated($seed['thread_id'], $fallbackTarget['thread_id'], 'tag', null);
+        $withFallback = $this->get($url)->body();
+        self::assertStringContainsString('related-topic-fallback', $withFallback);
+        self::assertStringContainsString('living-brief-empty', $withFallback);
+        self::assertStringContainsString('eight eligible posts', $withFallback);
+
+        // A topic can lack a brief for reasons the post count cannot explain. Only
+        // the `initial_post_threshold` denial earns the count sentence; every other
+        // denial shows the reason the eligibility ladder actually gave.
+        $offPublic = $this->seedThread(8, 'Empty brief off a public board');
+        $this->db->run('UPDATE boards SET visibility = ? WHERE id = ?', ['private', (int) $offPublic['board']['id']]);
+        $offPublicPage = $this->get('/t/' . $offPublic['thread_id'] . '-' . $offPublic['slug']);
+        $this->assertStatus(200, $offPublicPage);
+        $offPublicHtml = $offPublicPage->body();
+        self::assertStringContainsString('living-brief-empty', $offPublicHtml);
+        self::assertStringContainsString('Refresh is available only for eligible public threads', $offPublicHtml);
+        self::assertStringNotContainsString('eight eligible posts', $offPublicHtml);
+        self::assertStringNotContainsString('This one has 8.', $offPublicHtml);
+    }
+
     /**
      * The seven curator-gated forms rendered by partials/thread_memory_tools.php.
      * Payloads are chosen to REACH the authorization check rather than trip an earlier
