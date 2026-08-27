@@ -10183,7 +10183,7 @@ span.wf-btn {
     padding: var(--space-3);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-md);
-    background: var(--surface-cool);
+    background: var(--surface-sunken);
     overflow-wrap: anywhere;
 }
 .living-brief-related-card span { color: var(--text-muted); }
