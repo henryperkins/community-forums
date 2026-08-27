@@ -10780,6 +10780,8 @@ body.thread-restructure-open { overflow: hidden; }
     top: calc(100% + 8px);
     right: 0;
     z-index: 60;
+    display: flex;
+    flex-direction: column;
     min-width: 188px;
     padding: 5px;
     border: 1px solid var(--border-soft);
@@ -10787,11 +10789,63 @@ body.thread-restructure-open { overflow: hidden; }
     background: var(--surface-raised);
     box-shadow: var(--shadow-lg);
 }
+/* The reference carries each row on the element (ThreadView.dc.html:436) and is a
+   flat list of <button>s; this port took the popover box and left the row behind,
+   so the items fell back to UA chrome — an inline <a> and an inline-block <button>
+   sharing a line, a 2px outset border, 13px Arial, and the <form> around every
+   POST action breaking the column. There is no global button reset in this
+   codebase (each component owns its own: .btn, .linkbtn, .notif-link,
+   .dm-menu-item), so the row has to be stated here. The forms stay flex items —
+   `display: contents` would buy nothing and costs the <form> its a11y box. */
+.post-menu-pop > a,
+.post-menu-pop > button,
+.post-menu-pop > form > button,
+.post-menu-touch > button,
+.post-menu-touch > form > button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: var(--text-meta);
+    line-height: 1.35;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.post-menu-pop > a:hover,
+.post-menu-pop > a:focus-visible,
+.post-menu-pop > button:hover,
+.post-menu-pop > button:focus-visible,
+.post-menu-pop > form > button:hover,
+.post-menu-pop > form > button:focus-visible,
+.post-menu-touch > button:hover,
+.post-menu-touch > button:focus-visible,
+.post-menu-touch > form > button:hover,
+.post-menu-touch > form > button:focus-visible {
+    background: var(--surface-sunken);
+    color: var(--text-strong);
+    text-decoration: none;
+}
+/* Edit / Remove / Report ship `hidden` and are unhidden by app.js once the
+   disclosure they target is enhanced; the row above must not out-specify that. */
+.post-menu-pop > a[hidden],
+.post-menu-pop > button[hidden],
+.post-menu-pop > form > button[hidden],
+.post-menu-touch > button[hidden],
+.post-menu-touch > form > button[hidden] { display: none; }
+.post-menu-pop .icon { flex: 0 0 auto; color: var(--text-muted); }
+.post-menu-pop .danger,
+.post-menu-pop .danger .icon { color: var(--danger); }
 /* Fine-pointer default: the toolbar itself carries react/quote/accept, so the
    menu's touch duplicates stay out of the DOM's accessibility tree entirely. */
 .post-menu-touch { display: none; }
 .post-menu-reactions { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 6px 6px; }
-.post-menu-touch + a { border-top: 1px solid var(--border-hair); }
 [data-thread-enhanced="1"] .post-native-disclosure > summary { display: none; }
 .post-disclosure-close { min-width: 44px; margin: 0 0 8px auto; }
 .thread-restructure-scrim:not([hidden]) {
@@ -10910,6 +10964,15 @@ body.thread-restructure-open { overflow: hidden; }
     .post-toolbar > [data-quote-post],
     .post-toolbar > form { display: none; }
     .post-menu-touch { display: block; }
+    /* Only now is there a block to separate from. Unconditionally, this drew a
+       hairline over "Copy link" on a mouse, where .post-menu-touch is
+       display:none but is still the adjacent sibling. Needs the extra
+       specificity to beat the row's `border: 0`. */
+    .post-menu-pop > .post-menu-touch + a {
+        margin-top: 4px;
+        padding-top: 11px;
+        border-top: 1px solid var(--border-hair);
+    }
     .post-toolbar-button,
     .post-toolbar > form > button,
     .post-toolbar > details > summary { width: 44px; height: 44px; }

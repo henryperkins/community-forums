@@ -602,6 +602,67 @@ test('coarse pointers keep post actions visible and reachable above the mobile b
   await expect(touch.locator('.post-menu-reactions .reaction').first()).toBeVisible();
 });
 
+/**
+ * The overflow menu is a column of rows, not a bag of default-chrome buttons.
+ *
+ * Regression guard: `.post-menu-pop` shipped with the popover box styled and no
+ * rule at all for what sits inside it. The reference carries each row on the
+ * element (ThreadView.dc.html:436), so the port had nothing to copy and the
+ * items fell back to user-agent chrome — the <a> ran `inline` and the <button>
+ * `inline-block`, putting "Copy link" and "Edit" on one line, while the <form>
+ * wrapping every POST action broke the next row onto its own, all of it in 2px
+ * outset borders and 13px Arial.
+ */
+test('post menu rows stack full-width with no user-agent chrome', async ({ page }) => {
+  await login(page);
+  await openSeedTopic(page);
+
+  const post = page.locator('[data-post]:has([data-post-menu] > summary)').first();
+  await post.locator('[data-post-menu] > summary').click();
+  const pop = post.locator('.post-menu-pop');
+  await expect(pop).toBeVisible();
+
+  const menu = await pop.evaluate((element) => {
+    const popStyle = getComputedStyle(element);
+    // clientWidth, not the border box: a row's `width: 100%` resolves against
+    // the padding box, and the popover carries a 1px border on each side.
+    const inner = element.clientWidth
+      - parseFloat(popStyle.paddingLeft)
+      - parseFloat(popStyle.paddingRight);
+    // The touch duplicates are display:none on a mouse; a child of a hidden
+    // parent still reports its own cascaded `display`, so filter on real boxes.
+    const rows = [...element.querySelectorAll<HTMLElement>(
+      ':scope > a, :scope > button, :scope > form > button,'
+      + ' :scope > .post-menu-touch > button, :scope > .post-menu-touch > form > button',
+    )].filter((row) => row.getClientRects().length > 0);
+    return {
+      inner,
+      direction: popStyle.flexDirection,
+      rows: rows.map((row) => {
+        const style = getComputedStyle(row);
+        return {
+          label: (row.textContent ?? '').trim(),
+          top: Math.round(row.getBoundingClientRect().top),
+          width: Math.round(row.getBoundingClientRect().width),
+          borderTop: parseFloat(style.borderTopWidth),
+          fontFamily: style.fontFamily,
+        };
+      }),
+    };
+  });
+
+  expect(menu.direction).toBe('column');
+  expect(menu.rows.length).toBeGreaterThan(1);
+  // One row per line: no two share a top edge.
+  expect(new Set(menu.rows.map((row) => row.top)).size).toBe(menu.rows.length);
+  for (const row of menu.rows) {
+    expect(row.width, `${row.label} fills the menu`).toBe(Math.round(menu.inner));
+    // The touch block's leading separator is the only sanctioned border in here.
+    expect(row.borderTop, `${row.label} carries no user-agent button border`).toBeLessThanOrEqual(1);
+    expect(row.fontFamily, `${row.label} uses the label face`).toContain('Marcellus');
+  }
+});
+
 test('reduced motion removes Study animations', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await login(page);
