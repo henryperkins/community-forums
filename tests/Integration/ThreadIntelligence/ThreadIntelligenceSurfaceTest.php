@@ -267,7 +267,10 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
 
         $member = $this->makeUser(['username' => 'pause-member']);
         $this->actingAs($member);
-        $this->post('/t/' . $seed['thread_id'] . '/summary/automation/pause', []);
+        // The DB assertion below would also pass on a 404, a 405, or a simply absent
+        // job row, so it is no proof of a gate on its own. Pin the refusal itself, the
+        // way the refresh route's denial is pinned above.
+        $this->assertStatus(403, $this->post('/t/' . $seed['thread_id'] . '/summary/automation/pause', []));
         self::assertNotSame(
             1,
             (int) $this->db->fetchValue(
@@ -387,6 +390,108 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
             'action="/t/' . $seed['thread_id'] . '/summary/automation/pause"',
             $html,
         );
+    }
+
+    /**
+     * Axis 2 of the three authorization axes (DECISIONS: "state beats role"). A
+     * suspended admin keeps every read affordance and loses every write one. Proven
+     * twice over: the page hides the curator markup, AND each of the seven curator
+     * routes refuses the POST — hidden markup is an affordance, not a gate.
+     */
+    public function test_suspended_admin_keeps_reading_but_loses_every_curator_affordance(): void
+    {
+        $seed = $this->seedThread(8, 'Suspended curator gate');
+        [$summaryId] = $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $neighbour = $this->makeThread($seed['board'], $this->makeUser(['username' => 'suspended-neighbour']), 'Neighbour topic');
+        $admin = $this->makeAdmin(['username' => 'suspended-curator']);
+        $this->db->run(
+            "UPDATE users SET status = 'suspended', suspended_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 DAY) WHERE id = ?",
+            [$admin['id']],
+        );
+        $this->actingAs($admin);
+
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+
+        self::assertStringContainsString('data-living-brief', $html);
+        self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/summary', $html);
+        self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/related"', $html);
+        // Covers both the footer's own wrapper id and the topic-tools jump link to it.
+        self::assertStringNotContainsString('living-brief-curator-' . $seed['thread_id'], $html);
+
+        foreach ($this->curatorForms($seed['thread_id'], $summaryId, (int) $neighbour['thread_id']) as $label => [$path, $body]) {
+            self::assertSame(
+                403,
+                $this->post($path, $body)->status(),
+                $label . ' must refuse a suspended admin: state beats role',
+            );
+        }
+    }
+
+    /**
+     * Axes 1 and 3: a plain logged-in member and a guest. The rendered assertions
+     * prove the affordance is hidden; the route assertions prove the server refuses a
+     * hand-rolled POST, which is the part that actually holds. A member is refused
+     * (403); a guest never reaches the gate at all and is bounced to /login.
+     */
+    public function test_curator_routes_refuse_plain_members_and_guests_on_every_form(): void
+    {
+        $seed = $this->seedThread(8, 'Curator route gate');
+        [$summaryId] = $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $neighbour = $this->makeThread($seed['board'], $this->makeUser(['username' => 'gate-neighbour']), 'Neighbour topic');
+        $url = '/t/' . $seed['thread_id'] . '-' . $seed['slug'];
+        $forms = $this->curatorForms($seed['thread_id'], $summaryId, (int) $neighbour['thread_id']);
+
+        $member = $this->makeUser(['username' => 'gate-member']);
+        $this->actingAs($member);
+        $memberHtml = $this->get($url)->body();
+        self::assertStringContainsString('data-living-brief', $memberHtml);
+        self::assertStringNotContainsString('living-brief-curator-' . $seed['thread_id'], $memberHtml);
+        foreach ($forms as $label => [$path, $body]) {
+            self::assertSame(403, $this->post($path, $body)->status(), $label . ' must refuse a plain member');
+        }
+
+        $this->logoutClient();
+        // This GET also seeds the guest CSRF cookie, so the POSTs below carry a valid
+        // token: the 302 to /login is the auth gate answering, not the CSRF gate's 403.
+        $guestHtml = $this->get($url)->body();
+        self::assertStringContainsString('data-living-brief', $guestHtml);
+        self::assertStringNotContainsString('living-brief-curator-' . $seed['thread_id'], $guestHtml);
+        foreach ($forms as $label => [$path, $body]) {
+            $response = $this->post($path, $body);
+            self::assertContains($response->status(), [302, 303], $label . ' must bounce a guest');
+            self::assertStringContainsString(
+                '/login',
+                (string) $response->getHeader('location'),
+                $label . ' must send a guest to the login page',
+            );
+        }
+    }
+
+    /**
+     * The seven curator-gated forms rendered by partials/thread_memory_tools.php.
+     * Payloads are chosen to REACH the authorization check rather than trip an earlier
+     * branch: publishSummary rejects an empty body, republishSummary resolves the
+     * summary row, and addRelated rejects a self-reference — all before assertCurator —
+     * so placeholder payloads would answer 302/404 and prove nothing about the gate.
+     *
+     * @return array<string,array{0:string,1:array<string,mixed>}>
+     */
+    private function curatorForms(int $threadId, int $summaryId, int $relatedThreadId): array
+    {
+        return [
+            'amend' => ['/t/' . $threadId . '/summary', ['body' => 'Unauthorized amendment']],
+            'refresh' => ['/t/' . $threadId . '/summary/refresh', []],
+            'retire' => ['/t/' . $threadId . '/summary/retire', []],
+            'restore' => ['/t/' . $threadId . '/summary/restore', ['summary_id' => $summaryId]],
+            'pause' => ['/t/' . $threadId . '/summary/automation/pause', []],
+            'resume' => ['/t/' . $threadId . '/summary/automation/resume', []],
+            'related' => [
+                '/t/' . $threadId . '/related',
+                ['related_thread_id' => $relatedThreadId, 'reason' => 'Unauthorized link'],
+            ],
+        ];
     }
 
     private function rebuildAppWithProvider(): void
