@@ -13877,3 +13877,25 @@ a.account-row-name:hover {
 /* The curator footer already rules itself off from the copy above, so its own
    top margin would double that gap inside this tighter panel. */
 .living-brief-empty .living-brief-curator { margin-top: var(--space-2); }
+
+/* Living Brief - entrance motion. The memory slot renders exactly one card,
+   either the published brief or the curator-only empty panel, so the fade
+   belongs to the slot's arrival rather than to which variant filled it;
+   animating the brief alone would leave the curator view the one surface that
+   snaps in. The More disclosure is a native <details>, so its body fades on
+   [open] with no JS involved. The global reduced-motion clamps near the top of
+   this file already reach these, but the per-component opt-out is restated the
+   way every other animated surface here restates it. */
+@keyframes lbFade {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: none; }
+}
+.living-brief,
+.living-brief-empty { animation: lbFade 240ms var(--ease-calm); }
+.lb-more[open] > .lb-more-body { animation: lbFade 180ms var(--ease-calm); }
+
+@media (prefers-reduced-motion: reduce) {
+    .living-brief,
+    .living-brief-empty,
+    .lb-more[open] > .lb-more-body { animation: none; }
+}
