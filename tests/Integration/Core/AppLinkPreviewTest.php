@@ -89,6 +89,146 @@ final class AppLinkPreviewTest extends TestCase
         ], $urls);
     }
 
+    /**
+     * A URL longer than `link_previews.url` — VARCHAR(1024), migration 0058 — used to
+     * reach the INSERT unclamped. `extractUrls()`'s `[^\s<>"\')\]]+` is unbounded and
+     * `post_body_max` is 20000, so one link can be twenty times the column: signed S3
+     * links, Google Maps, and tracking URLs routinely pass 1024 characters.
+     *
+     * Under `STRICT_TRANS_TABLES` — this project's dev container and MySQL 8's default —
+     * that INSERT raises SQLSTATE 22001. A `PDOException` is neither `ValidationException`
+     * nor `HttpException`, so the kernel maps it to a 500; and `queueFromBody()` is called
+     * from inside `PostingService`'s own `db->transaction()` (PostingService.php:168),
+     * so in production the rollback takes the thread and the post with it. The member's
+     * typed body is gone, with no 422 re-render carrying it back — the exact draft loss
+     * the anti-draft-loss pattern exists to prevent.
+     *
+     * The assertion is the HTTP outcome, not a row count, because
+     * `Database::transaction()` returns `$callback()` unchanged when a transaction is
+     * already open (Database.php:165) — so under the per-test transaction the app's
+     * rollback never runs, and rows would survive a failure that destroys them in
+     * production.
+     *
+     * A preview is a progressive enhancement, so a link too long to store simply gets
+     * none. The rest of the body's links must still queue: the skip belongs to the one
+     * URL, not to the post.
+     */
+    public function test_an_unstorable_url_is_skipped_without_destroying_the_post_that_carried_it(): void
+    {
+        $settings = new SettingRepository($this->db);
+        $settings->set('link_preview_allowed_hosts', ['preview.example.test']);
+
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewlong', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'longlinker']);
+        $this->actingAs($author);
+
+        $longUrl = 'http://preview.example.test/' . str_repeat('a', 1100);
+        self::assertGreaterThan(1024, strlen($longUrl), 'the fixture must exceed the column');
+
+        $response = $this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Long link topic',
+            'body' => 'Short http://preview.example.test/ok and long ' . $longUrl . ' together.',
+        ]);
+
+        // The post is the thing that has to survive.
+        $this->assertRedirect($response);
+        self::assertNotNull(
+            $this->db->fetch('SELECT id FROM threads WHERE title = ?', ['Long link topic']),
+            'the topic must be created even though one of its links cannot be stored',
+        );
+
+        // The storable link still queues — the skip is scoped to the URL, not the post.
+        self::assertSame(
+            [['url' => 'http://preview.example.test/ok']],
+            $this->db->fetchAll('SELECT url FROM link_previews ORDER BY id ASC'),
+        );
+    }
+
+    /**
+     * The guard's constant has to track the column in both directions: one character
+     * short silently drops legitimate links, one character long puts the 500 back.
+     * So the width is read from the schema rather than restated here — a migration
+     * that widens `link_previews.url` without moving `URL_MAX_LENGTH` fails on this
+     * test instead of quietly under-previewing, and one that narrows it fails instead
+     * of quietly destroying posts again.
+     */
+    public function test_a_url_at_exactly_the_column_width_still_queues(): void
+    {
+        $width = (int) $this->db->fetchValue(
+            "SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'link_previews' AND COLUMN_NAME = 'url'",
+        );
+        self::assertGreaterThan(0, $width, 'link_previews.url must be a bounded character column');
+
+        $settings = new SettingRepository($this->db);
+        $settings->set('link_preview_allowed_hosts', ['preview.example.test']);
+
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewedge', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'edgelinker']);
+        $this->actingAs($author);
+
+        $prefix = 'http://preview.example.test/';
+        $exact = $prefix . str_repeat('a', $width - strlen($prefix));
+        self::assertSame($width, strlen($exact));
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Edge link topic',
+            'body' => 'Exactly at the limit: ' . $exact,
+        ]));
+
+        self::assertSame(
+            [['url' => $exact]],
+            $this->db->fetchAll('SELECT url FROM link_previews ORDER BY id ASC'),
+            'a URL that fits the column exactly must not be skipped',
+        );
+    }
+
+    /**
+     * The guard measures characters, not bytes, and this is the test that can tell the
+     * difference — the two above cannot, because their fixtures are ASCII, where
+     * `strlen()` and `mb_strlen()` agree and either implementation passes.
+     *
+     * MySQL counts `VARCHAR(n)` in characters, verified against this schema: a 914-char
+     * / 1814-byte utf8mb4 string INSERTs into `link_previews.url` without complaint. So
+     * an IRI — a path with accents, Cyrillic, or CJK, which `extractUrls()` captures
+     * byte-wise and therefore keeps intact — can sit well inside the column while its
+     * byte length is multiples of it. A `strlen()` guard would refuse to queue a URL the
+     * database would happily have stored, silently costing previews that should render.
+     *
+     * Fails if `isStorableUrl()` is ever "simplified" to `strlen()`.
+     */
+    public function test_the_guard_measures_characters_not_bytes(): void
+    {
+        $settings = new SettingRepository($this->db);
+        $settings->set('link_preview_allowed_hosts', ['preview.example.test']);
+
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewmb', 'link_previews_enabled' => 1]);
+        $author = $this->makeUser(['username' => 'mblinker']);
+        $this->actingAs($author);
+
+        // Inside the column by characters, well past it by bytes.
+        $url = 'http://preview.example.test/' . str_repeat('é', 900);
+        self::assertLessThanOrEqual(1024, mb_strlen($url, 'UTF-8'), 'fixture must fit the column');
+        self::assertGreaterThan(1024, strlen($url), 'fixture must exceed the column in bytes');
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Multibyte link topic',
+            'body' => 'An IRI: ' . $url,
+        ]));
+
+        self::assertSame(
+            [['url' => $url]],
+            $this->db->fetchAll('SELECT url FROM link_previews ORDER BY id ASC'),
+            'a URL that fits the column in characters must queue, however many bytes it takes',
+        );
+    }
+
     public function test_private_board_posts_do_not_queue_outbound_previews(): void
     {
         $cat = $this->makeCategory();
