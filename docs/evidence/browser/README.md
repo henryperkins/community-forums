@@ -56,6 +56,10 @@ uses Standing, Watch, and Topic management; `50-split-merge-panel` records the
 restructure modal; `51-thread-merged` records its merged result; and
 `77-living-brief-curator-controls` records the curator footer at the foot of the
 brief itself — the Memory section of the drawer now holds only the anchor that
-jumps to it — with its Amend composer and More disclosure open, and
+jumps to it — with its Amend composer open and its More disclosure open on the
+version history, the related-topic form, Pause, and the Retire confirm, and
 `75-thread-intelligence-fallback` records the curator-only empty panel beside
-the deterministic fallback.
+the deterministic fallback. `75`–`78` are captures of the surface itself rather
+than of the page: the Study's thread column is its own scroll container, so a
+full-page shot frames only what the pane has not scrolled past, and what the
+pane clips is never painted. See `tests/browser/README.md`.
