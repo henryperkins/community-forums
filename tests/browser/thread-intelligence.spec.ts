@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { expect, test, type BrowserContext, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type BrowserContext, type Locator, type Page, type TestInfo } from '@playwright/test';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const evidenceDir = path.join(repoRoot, 'docs', 'evidence', 'browser');
@@ -33,7 +33,62 @@ function fixture(action: string, info: TestInfo): FixtureState {
   return JSON.parse(output) as FixtureState;
 }
 
-async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
+/**
+ * `fullPage` is the wrong instrument for the Living Brief. The Study's thread
+ * column is its own scroll container, so the document stays viewport-height and
+ * a page-level capture records only what the pane has not scrolled past. That
+ * was survivable while curation lived in the viewport-pinned Topic tools drawer;
+ * the redesign moved it into the scroller, and a page-level shot then framed the
+ * footer's header while leaving the disclosure body it is named for out of frame.
+ *
+ * Naming the element is necessary but not sufficient: what a scroll container
+ * clips is never painted, and no capture can record pixels the compositor did
+ * not draw — an element shot of a surface taller than the pane comes back with
+ * the overflow as flat background.
+ *
+ * What has to be measured is the scroller, not the viewport. `.thread-conversation`
+ * is `calc(100dvh - var(--topbar-h) - 48px)` and pins `.thread-dock` below the
+ * scroller (app.css:1942-1955), so the visible budget is the viewport less the
+ * topbar, that 48px, and the reply dock — roughly 290px on desktop. Padding by a
+ * constant guesses at that chrome and gets it wrong; `fit()` reads `clientHeight`
+ * off the element's own scrolling ancestor instead, so the pad is whatever the
+ * chrome actually costs, on either viewport, and survives a change to it.
+ *
+ * The assertion is containment for the same reason. Comparing the element's
+ * height against a viewport height set two lines earlier is near-tautological,
+ * and it stayed silent on a genuinely clipped capture. Whether the element's rect
+ * lies inside the scroller's rect is the question the artifact depends on, and it
+ * cannot be satisfied while any part of the surface is still cut off.
+ *
+ * The admin console is an ordinary document and keeps its page-level capture.
+ */
+type Fit = { height: number; port: number; deficit: number; clipped: boolean };
+
+/** Measure an element against the ancestor that actually clips it. */
+const fit = (node: Element): Fit => {
+  let scroller: Element | null = node.parentElement;
+  while (scroller !== null && scroller !== document.body && scroller !== document.documentElement) {
+    const overflowY = getComputedStyle(scroller).overflowY;
+    if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') break;
+    scroller = scroller.parentElement;
+  }
+  const rect = node.getBoundingClientRect();
+  const height = Math.ceil(rect.height);
+  if (scroller === null || scroller === document.body || scroller === document.documentElement) {
+    const port = document.documentElement.clientHeight;
+    return { height, port, deficit: height - port, clipped: rect.top < -1 || rect.bottom > port + 1 };
+  }
+  const box = scroller.getBoundingClientRect();
+  return {
+    height,
+    port: scroller.clientHeight,
+    deficit: height - scroller.clientHeight,
+    // A pixel of tolerance for subpixel layout; a clipped surface misses by far more.
+    clipped: rect.top < box.top - 1 || rect.bottom > box.bottom + 1,
+  };
+};
+
+async function shot(page: Page, info: TestInfo, name: string, element?: string): Promise<void> {
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   if (name === '79-admin-thread-intelligence' && info.project.name === 'mobile') {
@@ -41,11 +96,36 @@ async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
       region.scrollLeft = region.scrollWidth;
     });
   }
-  await page.screenshot({
-    path: path.join(evidenceDir, info.project.name, `${name}.png`),
-    fullPage: true,
-    animations: 'disabled',
-  });
+  const target = path.join(evidenceDir, info.project.name, `${name}.png`);
+  if (element === undefined) {
+    await page.screenshot({ path: target, fullPage: true, animations: 'disabled' });
+    return;
+  }
+
+  const locator = page.locator(element);
+  const viewport = page.viewportSize();
+  expect(viewport, 'element captures need a known viewport to restore').not.toBeNull();
+  try {
+    // Growing the viewport grows the scroller with it and reflows the surface, so
+    // re-measure each pass rather than trusting the first deficit.
+    for (let pass = 0; pass < 4; pass += 1) {
+      const measured = await locator.evaluate(fit);
+      if (measured.deficit <= 0) break;
+      const current = page.viewportSize()!;
+      await page.setViewportSize({ width: current.width, height: current.height + measured.deficit + 8 });
+    }
+    await locator.scrollIntoViewIfNeeded();
+
+    const framed = await locator.evaluate(fit);
+    expect(
+      framed.clipped,
+      `${element} is still clipped by its scroller (${framed.height}px surface in a ${framed.port}px port): `
+        + 'the capture would record unpainted background where the overflow is',
+    ).toBe(false);
+    await locator.screenshot({ path: target, animations: 'disabled' });
+  } finally {
+    await page.setViewportSize(viewport!);
+  }
 }
 
 async function visit(page: Page, url: string): Promise<void> {
@@ -63,6 +143,66 @@ async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags'
   const details = tools.locator(`[data-topic-tools-section="${section}"]`);
   if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) await details.locator(':scope > summary').click();
   return { tools, details };
+}
+
+/**
+ * The curator controls now live inside three nested `<details>` disclosures
+ * (`.lb-amend`, `.lb-more`, `.lb-confirm`), so nothing in them is actionable —
+ * with JS or without it — until the disclosure is opened. Idempotent, because a
+ * form POST re-renders the page with every disclosure shut again.
+ */
+async function openDisclosure(details: Locator): Promise<void> {
+  // Read the attribute rather than the DOM property: this also runs inside the
+  // javaScriptEnabled:false context, where page-world evaluate() is dead. The
+  // summary is opened from the keyboard rather than clicked, which is both the
+  // stronger claim (a disclosure nobody can reach by keyboard is broken) and the
+  // only one that does not depend on Playwright's pointer actionability sampling
+  // — that sampling stalls against the brief's entrance animation in a context
+  // with no script engine driving the frame loop.
+  if (await details.getAttribute('open') === null) {
+    const summary = details.locator(':scope > summary');
+    await summary.focus();
+    await expect(summary).toBeFocused();
+    await summary.page().keyboard.press('Enter');
+  }
+  await expect(details).toHaveAttribute('open', '');
+}
+
+/**
+ * Restore is no longer one `<select>` of versions: every row carries its own
+ * form, so `form[action$="/summary/restore"]` matches several elements on any
+ * topic with history and Playwright's strict mode rejects it. Each row's button
+ * carries a distinct accessible name ("Restore version 3") instead, which is
+ * what this reads back off the row rather than hard-coding a version number
+ * that shifts with every publish.
+ */
+async function versionRow(scope: Locator, index: number): Promise<{
+  row: Locator;
+  version: number;
+  label: string;
+  restore: Locator;
+}> {
+  const row = scope.locator('.lb-version').nth(index);
+  await expect(row).toBeVisible();
+  const version = Number((await row.locator('.lb-version-v').innerText()).trim().replace(/^v/i, ''));
+  expect(Number.isInteger(version), 'version row should carry a numeric vN').toBe(true);
+  const label = (await row.locator('.lb-version-who').innerText()).trim();
+  return { row, version, label, restore: row.getByRole('button', { name: `Restore version ${version}`, exact: true }) };
+}
+
+function threadIdOf(threadPath: string): number {
+  const match = threadPath.match(/^\/t\/(\d+)/);
+  expect(match, `no thread id in ${threadPath}`).not.toBeNull();
+  return Number(match![1]);
+}
+
+/**
+ * With JavaScript off a submit button performs a real navigation, so the click
+ * must be paired with the load it causes; asserting straight afterwards races
+ * the document being torn down.
+ */
+async function submitNative(page: Page, button: Locator): Promise<void> {
+  await Promise.all([page.waitForEvent('load'), button.click()]);
 }
 
 async function dismissTour(page: Page): Promise<void> {
@@ -123,6 +263,23 @@ function generationRow(page: Page, threadTitle: string) {
 }
 
 async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include: string): Promise<void> {
+  // Land any running entrance animation first. axe reads the composited colour,
+  // so a card still fading in reports its foreground blended toward the surface
+  // — mid-fade axe read the brief's gold and rust inks as #8a6d35 and #a55a44 at
+  // 3.9:1 and 4.06:1, against a background it had blended too. Settled, the real
+  // tokens #7E5F22 and #9C4A33 on --surface-sunken #ECE4D2 measure 4.68:1 and
+  // 4.82:1: a 0.18 margin over AA, which is exactly why the fade must land
+  // before the scan rather than be argued away.
+  // Infinite animations cannot be finished; they are left running.
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) {
+      try {
+        animation.finish();
+      } catch {
+        /* an infinite animation has no finished state to jump to */
+      }
+    }
+  });
   const result = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .include(include)
@@ -144,24 +301,32 @@ async function expectNoHorizontalOverflow(page: Page, selector: string): Promise
 
 test.describe.configure({ mode: 'serial' });
 
-test('fallback and generated Living Brief render safely with provenance, navigation, and responsive wrapping', async ({ page }, info) => {
+test('fallback, curator empty state, and generated Living Brief render safely with provenance, navigation, and responsive wrapping', async ({ page }, info) => {
   const state = fixture('reset-brief', info);
 
+  // A member without curator authority sees the deterministic fallback and
+  // nothing else: the empty panel is curator-only markup and must not leak.
   await visit(page, state.fallback.path);
   await expect(page.locator('.related-topic-fallback')).toBeVisible();
   await expect(page.locator('.living-brief')).toHaveCount(0);
+  await expect(page.locator('.living-brief-empty')).toHaveCount(0);
   await expect(page.locator('.thread-memory-slot')).not.toBeEmpty();
-  await shot(page, info, '75-thread-intelligence-fallback');
 
   await visit(page, state.brief.path);
   const brief = page.locator('.living-brief');
   await expect(brief).toBeVisible();
+  // The section's only heading was replaced by an accessible name on the
+  // section itself, so the label is now an attribute rather than an <h2>.
+  await expect(brief).toHaveAttribute('aria-label', 'Living brief');
+  await expect(brief.locator('.living-brief-head h2')).toHaveCount(0);
   await expect(brief).toContainText('AI-generated living brief');
   await expect(brief).toContainText('Version 1');
   await expect(brief.locator('time')).toHaveAttribute('datetime', /Z$/);
   await expect(brief.getByRole('link', { name: 'AI-generated living brief' })).toHaveAttribute('href', '/privacy#thread-intelligence');
   await expect(brief.locator('.living-brief-sources a')).toHaveCount(8);
   await expect(brief.locator('.living-brief-related-card')).toHaveCount(1);
+  // A reader with no curator authority gets the brief and none of its tools.
+  await expect(brief.locator('.living-brief-curator')).toHaveCount(0);
 
   await brief.locator('.living-brief-sources a').first().click();
   await expect(page).toHaveURL(new RegExp(`#p${state.brief.source_id}$`));
@@ -181,50 +346,156 @@ test('fallback and generated Living Brief render safely with provenance, navigat
     expect(new Set(cards.map((card) => card.left)).size).toBe(1);
     expect(cards[0].width).toBeGreaterThan(250);
   }
-  await shot(page, info, '76-living-brief');
+  await shot(page, info, '76-living-brief', '.living-brief');
+
+  // The same brief-less topic, seen by a curator: the empty panel renders
+  // beside the fallback and explains the eligibility ladder's actual denial.
+  await login(page, 'alice@retro.test');
+  await visit(page, state.fallback.path);
+  await expect(page.locator('.related-topic-fallback')).toBeVisible();
+  const empty = page.locator('.living-brief-empty');
+  await expect(empty).toBeVisible();
+  await expect(empty).toHaveAttribute('aria-label', 'No living brief yet');
+  await expect(empty.locator('.living-brief-empty-eyebrow')).toHaveText('No brief yet');
+  const emptyCopy = empty.locator('.living-brief-empty-copy');
+  await expect(emptyCopy).toContainText('eight eligible posts');
+  await expect(emptyCopy).toContainText('This one has 3.');
+  // Nothing has ever been published here, so the composer names a first summary
+  // and Retire — which needs a brief to act on — stays out of the panel.
+  await expect(empty.locator('.lb-amend > summary')).toHaveText('Write the first summary');
+  await expect(empty.locator('.lb-confirm')).toHaveCount(0);
+  await expect(empty.locator('.lb-versions')).toHaveCount(0);
+  await expect(empty.getByRole('button', { name: 'Refresh', exact: true })).toBeDisabled();
+  await expectNoHorizontalOverflow(page, '.living-brief-empty');
+  await shot(page, info, '75-thread-intelligence-fallback', '.thread-memory-slot');
 });
 
-test('curator edit, real-worker refresh, retirement, restoration, and explicit resume preserve lineage', async ({ page }, info) => {
+test('curator tools hang off the brief, and edit, real-worker refresh, retirement, restoration and explicit resume preserve lineage', async ({ page }, info) => {
   const state = fixture('reset-brief', info);
+  const threadId = threadIdOf(state.brief.path);
   await login(page, 'alice@retro.test');
   await visit(page, state.brief.path);
 
-  let memory = await openTopicTools(page, 'memory');
-  await expect(memory.details.locator('form[action$="/summary"]')).toBeVisible();
-  await shot(page, info, '77-living-brief-curator-controls');
+  // The drawer no longer carries the controls — only a pointer at them.
+  const memory = await openTopicTools(page, 'memory');
+  await expect(memory.details.locator('form')).toHaveCount(0);
+  const jump = memory.details.getByRole('link', { name: "Go to the brief's curator tools" });
+  await expect(jump).toHaveAttribute('href', `#living-brief-curator-${threadId}`);
+  await jump.click();
+  // The anchor doubles as the modal's closer, and the fragment navigation still runs.
+  await expect(page.locator('[data-topic-tools]')).toBeHidden();
+  await expect(page).toHaveURL(new RegExp(`#living-brief-curator-${threadId}$`));
 
-  const editor = memory.details.locator('form[action$="/summary"]');
+  const curator = page.locator(`#living-brief-curator-${threadId}`);
+  await expect(curator).toBeVisible();
+  // Exactly one such panel in the document, and it hangs off the brief it acts on.
+  await expect(page.locator('.living-brief > .living-brief-curator')).toHaveCount(1);
+  await expect(page.locator('[id^="living-brief-curator-"]')).toHaveCount(1);
+
+  // One primary action in the row; everything else is a disclosure away.
+  await expect(curator.locator('.living-brief-curator-row').getByRole('button', { name: 'Refresh', exact: true })).toBeVisible();
+  const amend = curator.locator('.lb-amend');
+  await expect(amend.locator('> summary')).toHaveText('Amend');
+  await openDisclosure(amend);
+  const more = curator.locator('.lb-more');
+  await expect(more.locator('.lb-more-shut')).toBeVisible();
+  await openDisclosure(more);
+  await expect(more.locator('.lb-more-open')).toBeVisible();
+  await expect(more.locator('.lb-more-shut')).toBeHidden();
+  await expect(more.getByRole('button', { name: 'Pause automatic refresh' })).toBeVisible();
+  await expect(more.locator('.lb-confirm > summary')).toHaveText('Retire brief');
+  // Restore is per row now: no <select>, and several forms share the action.
+  await expect(curator.locator('select[name="summary_id"]')).toHaveCount(0);
+  await expect(curator.locator('form[action$="/summary/restore"] input[name="summary_id"]').first())
+    .toHaveAttribute('type', 'hidden');
+  await expectNoHorizontalOverflow(page, '.lb-more-body');
+  await shot(page, info, '77-living-brief-curator-controls', '.living-brief');
+
+  const editor = amend.locator('form[action$="/summary"]');
   await editor.locator('textarea[name="body"]').fill(`Curator baseline for ${projectKey(info)} with retained public evidence.`);
   await editor.locator('input[name="source_post_ids"]').fill(String(state.brief.source_id));
-  await editor.getByRole('button', { name: 'Publish summary' }).click();
+  await editor.getByRole('button', { name: 'Publish amendment' }).click();
   await expect(page.locator('.living-brief')).toContainText('AI-generated · curator edited');
   await expect(page.locator('.living-brief')).toContainText('@alice');
 
   fixture('prepare-refresh', info);
   await page.reload();
-  memory = await openTopicTools(page, 'memory');
-  await memory.details.getByRole('button', { name: 'Refresh living brief' }).click();
+  await curator.locator('.living-brief-curator-row').getByRole('button', { name: 'Refresh', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Refresh queued' })).toBeVisible();
   fixture('run-refresh', info);
   await page.reload();
   await expect(page.locator('.living-brief')).toContainText('AI-generated living brief');
   await expect(page.locator('.living-brief')).toContainText('Curator baseline carried forward');
-  memory = await openTopicTools(page, 'memory');
-  await expect(memory.details.locator('form[action$="/summary/restore"] select')).toContainText('AI-generated · curator edited');
 
-  await memory.details.getByRole('button', { name: 'Retire summary' }).click();
+  // The curator edit is still reachable as its own row in the version history.
+  await openDisclosure(more);
+  expect(await more.locator('form[action$="/summary/restore"]').count(),
+    'several restore forms share one action, so only the per-row names are safe selectors').toBeGreaterThan(1);
+  const edited = more.locator('.lb-version', { hasText: 'AI-generated · curator edited' }).first();
+  await expect(edited).toBeVisible();
+
+  const confirm = more.locator('.lb-confirm');
+  await openDisclosure(confirm);
+  await confirm.getByRole('button', { name: 'Confirm retirement' }).click();
   await expect(page.locator('.living-brief')).toHaveCount(0);
-  memory = await openTopicTools(page, 'memory');
-  await expect(memory.details.getByText('Automatic refresh is paused for this topic.')).toBeVisible();
 
-  const restore = memory.details.locator('form[action$="/summary/restore"]');
-  await restore.locator('select[name="summary_id"]').selectOption({ index: 0 });
-  await restore.getByRole('button', { name: 'Restore summary' }).click();
-  await expect(page.locator('.living-brief')).toBeVisible();
-  memory = await openTopicTools(page, 'memory');
-  await memory.details.getByRole('button', { name: 'Resume automatic refresh' }).click();
-  memory = await openTopicTools(page, 'memory');
-  await expect(memory.details.getByRole('button', { name: 'Resume automatic refresh' })).toHaveCount(0);
+  // Retiring pauses automation, so the curator-only panel takes over: it names
+  // the absence honestly, promotes Restore, and offers Resume as the primary.
+  const empty = page.locator('.living-brief-empty');
+  await expect(empty).toBeVisible();
+  await expect(empty).toHaveAttribute('aria-label', 'No living brief showing');
+  await expect(empty.locator('.living-brief-empty-eyebrow')).toHaveText('No brief showing');
+  await expect(empty.locator('.lb-amend > summary')).toHaveText('Write a new summary');
+  await expect(empty.getByRole('button', { name: 'Resume automatic refresh' })).toBeVisible();
+  await expect(empty.getByRole('button', { name: 'Refresh', exact: true })).toHaveCount(0);
+  await expect(empty.locator('.lb-confirm')).toHaveCount(0);
+
+  const target = await versionRow(empty, 0);
+  await target.restore.click();
+  const brief = page.locator('.living-brief');
+  await expect(brief).toBeVisible();
+  await expect(brief).toContainText(`Version ${target.version}`);
+  await expect(brief).toContainText(target.label);
+  // The brief is back and automation is still paused — this is the
+  // member-visible status line, on the brief itself rather than in the drawer.
+  await expect(brief.locator('.living-brief-status.is-paused'))
+    .toContainText('Automatic refresh is paused for this topic. The brief stands as published.');
+  // A paused topic must not offer a dead Refresh above a near-duplicate sentence.
+  await expect(curator.locator('.living-brief-curator-row').getByRole('button', { name: 'Refresh', exact: true })).toHaveCount(0);
+
+  await curator.getByRole('button', { name: 'Resume automatic refresh' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Automatic refresh resumed.' })).toBeVisible();
+  await expect(page.locator('.living-brief .living-brief-status.is-paused')).toHaveCount(0);
+  await expect(curator.getByRole('button', { name: 'Resume automatic refresh' })).toHaveCount(0);
+  await expect(curator.locator('.living-brief-curator-row').getByRole('button', { name: 'Refresh', exact: true })).toBeVisible();
+  // Resume and Pause swap places by state; Pause lives in the More disclosure.
+  await openDisclosure(more);
+  await expect(more.getByRole('button', { name: 'Pause automatic refresh' })).toBeVisible();
+});
+
+test('the brief entrance and the More disclosure honour prefers-reduced-motion', async ({ page }, info) => {
+  const state = fixture('reset-brief', info);
+  await login(page, 'alice@retro.test');
+  await visit(page, state.brief.path);
+
+  const brief = page.locator('.living-brief');
+  const more = brief.locator('.lb-more');
+  await expect(brief).toHaveCSS('animation-name', 'lb-fade');
+  await openDisclosure(more);
+  await expect(more.locator('.lb-more-body')).toHaveCSS('animation-name', 'lb-fade');
+
+  // The global clamp only shortens durations; the per-component opt-out is what
+  // removes the animation itself, and only this can prove it.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(brief).toHaveCSS('animation-name', 'none');
+  await expect(more.locator('.lb-more-body')).toHaveCSS('animation-name', 'none');
+
+  // The memory slot renders one card either way, so the curator-only panel is
+  // covered by the same opt-out.
+  await visit(page, state.fallback.path);
+  await expect(page.locator('.living-brief-empty')).toHaveCSS('animation-name', 'none');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(page.locator('.living-brief-empty')).toHaveCSS('animation-name', 'lb-fade');
 });
 
 test('provider failure, budget exhaustion, and stale sources preserve or suppress the correct last-good content', async ({ page }, info) => {
@@ -234,9 +505,13 @@ test('provider failure, budget exhaustion, and stale sources preserve or suppres
     await visit(page, state.last_good.path);
     await expect(page.locator('.living-brief')).toContainText('Last good brief remains published');
     await expect(page.locator('.living-brief')).toContainText('Version 1');
-    const memory = await openTopicTools(page, 'memory');
-    await expect(memory.details.getByText('Daily refresh capacity has been reached')).toBeVisible();
-    await shot(page, info, '78-living-brief-last-good');
+    // The denial explains itself under the curator's own primary action, which
+    // is disabled rather than absent, instead of inside the topic-tools drawer.
+    const curatorRow = page.locator('.living-brief .living-brief-curator-row');
+    await expect(curatorRow.getByRole('button', { name: 'Refresh', exact: true })).toBeDisabled();
+    await expect(page.locator('.living-brief .living-brief-curator-note'))
+      .toContainText('Daily refresh capacity has been reached');
+    await shot(page, info, '78-living-brief-last-good', '.living-brief');
 
     fixture('invalidate-source', info);
     try {
@@ -244,6 +519,10 @@ test('provider failure, budget exhaustion, and stale sources preserve or suppres
       await expect(page.locator('.living-brief')).toHaveCount(0);
       await expect(page.locator('.related-topic-fallback')).toBeVisible();
       await expect(page.locator('.living-brief-related-card')).toHaveCount(0);
+      // Suppressed-as-stale leaves the version rows behind, so the curator panel
+      // says "no brief showing" rather than pretending none was ever drawn.
+      await expect(page.locator('.living-brief-empty'))
+        .toHaveAttribute('aria-label', 'No living brief showing');
     } finally {
       fixture('restore-source', info);
     }
@@ -376,9 +655,24 @@ test('flags-off admin route stays live while its Thread Intelligence tab is disa
   }
 });
 
-test('no-JS: Living Brief, source and related navigation, details, and curator forms remain native', async ({ browser, baseURL }, info) => {
-  const state = fixture('show', info);
-  const context: BrowserContext = await browser.newContext({ javaScriptEnabled: false, baseURL });
+test('no-JS: Living Brief navigation, every disclosure, and all five curator forms remain native', async ({ browser, baseURL }, info) => {
+  const state = fixture('reset-brief', info);
+  // An AI-selected related topic is only shown while the published summary's own
+  // generation still owns the relation row (selectRelated()), so a run that has
+  // already refreshed this topic would leave `reset-brief` republishing v1 beside
+  // a relation the newer generation owns. Publishing a fresh generation makes the
+  // related card deterministic whether or not the earlier tests ran.
+  fixture('run-refresh', info);
+  const threadId = threadIdOf(state.brief.path);
+  // Reduced motion as well as no JavaScript: with no script engine driving the
+  // page's frame loop, Playwright's pointer actionability sampling stalls
+  // against the brief's entrance fade. The fade's own opt-out is proved by its
+  // dedicated test above; here the point is the forms, not the animation.
+  const context: BrowserContext = await browser.newContext({
+    javaScriptEnabled: false,
+    reducedMotion: 'reduce',
+    baseURL,
+  });
   const page = await context.newPage();
   try {
     await loginWithoutJavaScript(page, 'alice@retro.test');
@@ -395,19 +689,83 @@ test('no-JS: Living Brief, source and related navigation, details, and curator f
     await expect(page).toHaveURL(new RegExp(state.brief.related_path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
     await page.goBack();
 
+    // The topic-tools drawer is a plain <details> stack without JS, and its
+    // Living Brief section is now one ordinary in-page anchor.
     const tools = page.locator('[data-topic-tools]');
-    const details = tools.locator('[data-topic-tools-section="memory"]');
-    const summary = details.locator(':scope > summary');
+    const drawer = tools.locator('[data-topic-tools-section="memory"]');
+    const summary = drawer.locator(':scope > summary');
     await expect(tools).toBeVisible();
-    await expect(details).toBeVisible();
+    await expect(drawer).toBeVisible();
     await expect(summary).toBeVisible();
     await summary.focus();
     await expect(summary).toBeFocused();
     await summary.press('Enter');
-    await expect(details).toHaveAttribute('open', '');
-    await expect(details.locator('form[action$="/summary"]')).toBeVisible();
-    await expect(details.locator('form[action$="/summary/restore"]')).toBeVisible();
-    await expect(details.locator('form[action$="/related"]')).toBeVisible();
+    await expect(drawer).toHaveAttribute('open', '');
+    const jump = drawer.getByRole('link', { name: "Go to the brief's curator tools" });
+    await expect(jump).toHaveAttribute('href', `#living-brief-curator-${threadId}`);
+    await jump.click();
+    await expect(page).toHaveURL(new RegExp(`#living-brief-curator-${threadId}$`));
+
+    const curator = page.locator(`#living-brief-curator-${threadId}`);
+    const amend = curator.locator('.lb-amend');
+    const more = curator.locator('.lb-more');
+
+    // (1) The disclosures open natively — no script involved.
+    await openDisclosure(amend);
+    await expect(amend.locator('form[action$="/summary"]')).toBeVisible();
+    await openDisclosure(more);
+    await expect(more.locator('form[action$="/related"]')).toBeVisible();
+    await expect(more.locator('.lb-versions .lb-version').first()).toBeVisible();
+
+    // (2) Amend submits as a plain POST.
+    await amend.locator('textarea[name="body"]').fill(`No-JS curator baseline for ${projectKey(info)}.`);
+    await amend.locator('input[name="source_post_ids"]').fill(String(state.brief.source_id));
+    await submitNative(page, amend.getByRole('button', { name: 'Publish amendment' }));
+    await expect(page.locator('.living-brief')).toContainText('AI-generated · curator edited');
+
+    // (3) Restore submits as a plain POST, addressed by its per-row name.
+    await openDisclosure(more);
+    const original = more.locator('.lb-version', { hasText: 'AI-generated living brief' }).first();
+    const originalVersion = Number((await original.locator('.lb-version-v').innerText()).trim().replace(/^v/i, ''));
+    await submitNative(page, original.getByRole('button', { name: `Restore version ${originalVersion}`, exact: true }));
+    await expect(page.locator('.living-brief')).toContainText(`Version ${originalVersion}`);
+    await expect(page.locator('.living-brief')).toContainText('AI-generated living brief');
+
+    // (4) The Retire confirm step works without JS: a nested <details> guard in
+    // front of a real POST, not a script-driven dialog.
+    await openDisclosure(more);
+    const confirm = more.locator('.lb-confirm');
+    await expect(confirm.getByRole('button', { name: 'Confirm retirement' })).toBeHidden();
+    await openDisclosure(confirm);
+    await expect(confirm.getByRole('button', { name: 'Confirm retirement' })).toBeVisible();
+    await submitNative(page, confirm.getByRole('button', { name: 'Confirm retirement' }));
+    await expect(page.locator('.living-brief')).toHaveCount(0);
+
+    // Restore from the curator-only panel, where the rows are promoted.
+    const empty = page.locator('.living-brief-empty');
+    await expect(empty).toBeVisible();
+    const target = await versionRow(empty, 0);
+    await submitNative(page, target.restore);
+    await expect(page.locator('.living-brief')).toContainText(`Version ${target.version}`);
+    // Retirement paused automation, and restoring says so on the brief itself.
+    await expect(page.locator('.living-brief .living-brief-status.is-paused')).toBeVisible();
+
+    // (5) Resume and Pause are both plain POSTs, in whichever slot their state puts them.
+    await submitNative(page, curator.getByRole('button', { name: 'Resume automatic refresh' }));
+    await expect(page.locator('.living-brief .living-brief-status.is-paused')).toHaveCount(0);
+    await openDisclosure(more);
+    await submitNative(page, more.getByRole('button', { name: 'Pause automatic refresh' }));
+    await expect(page.locator('.living-brief .living-brief-status.is-paused')).toBeVisible();
+    await submitNative(page, curator.getByRole('button', { name: 'Resume automatic refresh' }));
+    await expect(page.locator('.living-brief .living-brief-status.is-paused')).toHaveCount(0);
+
+    // (6) Refresh submits once the eligibility ladder allows it.
+    fixture('prepare-refresh', info);
+    await visit(page, state.brief.path);
+    const refresh = curator.locator('.living-brief-curator-row').getByRole('button', { name: 'Refresh', exact: true });
+    await expect(refresh).toBeEnabled();
+    await submitNative(page, refresh);
+    await expect(page.getByRole('status').filter({ hasText: 'Refresh queued' })).toBeVisible();
   } finally {
     await context.close();
   }
@@ -433,8 +791,11 @@ test('no-JS: Thread Intelligence recovery controls remain native POST forms', as
   }
 });
 
-test('axe: Living Brief, provenance, history, curator, fallback, and admin surfaces have no serious findings', async ({ page }, info) => {
+test('axe: Living Brief, provenance, curator footer, empty state, fallback, and admin surfaces have no serious findings', async ({ page }, info) => {
   const state = fixture('reset-admin', info);
+  // Same reason as the no-JS test: scan a brief whose own generation still owns
+  // the related row, so `.living-brief-related` is present to be scanned.
+  fixture('run-refresh', info);
   await login(page, 'admin@retro.test');
   const themeSafeModeChanged = await enterThemeSafeMode(page);
   try {
@@ -443,14 +804,30 @@ test('axe: Living Brief, provenance, history, curator, fallback, and admin surfa
 
     await login(page, 'alice@retro.test');
     await visit(page, state.brief.path);
+    // The section lost its heading in the redesign and names itself instead, so
+    // the swap is scanned rather than assumed.
+    await expect(page.locator('.living-brief')).toHaveAttribute('aria-label', 'Living brief');
+    await expect(page.locator('.living-brief-head h2')).toHaveCount(0);
     await expectNoSeriousA11yViolations(page, info, '.living-brief');
     await expectNoSeriousA11yViolations(page, info, '.living-brief-sources');
     await expectNoSeriousA11yViolations(page, info, '.living-brief-related');
+
+    // Every curator control, including the ones a disclosure hides by default.
+    const curator = page.locator('.living-brief .living-brief-curator');
+    await openDisclosure(curator.locator('.lb-amend'));
+    await openDisclosure(curator.locator('.lb-more'));
+    await openDisclosure(curator.locator('.lb-confirm'));
+    await expectNoSeriousA11yViolations(page, info, '.living-brief-curator');
+
     await openTopicTools(page, 'memory');
     await expectNoSeriousA11yViolations(page, info, '[data-topic-tools]');
 
     await visit(page, state.fallback.path);
     await expectNoSeriousA11yViolations(page, info, '.related-topic-fallback');
+    await expect(page.locator('.living-brief-empty')).toBeVisible();
+    await openDisclosure(page.locator('.living-brief-empty .lb-amend'));
+    await openDisclosure(page.locator('.living-brief-empty .lb-more'));
+    await expectNoSeriousA11yViolations(page, info, '.living-brief-empty');
   } finally {
     await login(page, 'admin@retro.test');
     await exitThemeSafeMode(page, themeSafeModeChanged);

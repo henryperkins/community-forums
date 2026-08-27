@@ -2134,6 +2134,7 @@ final class App
         $r->post('/t/{id}/summary/restore', [CommunityMemoryController::class, 'republishSummary']);
         $r->post('/t/{id}/summary/refresh', [CommunityMemoryController::class, 'refreshSummary']);
         $r->post('/t/{id}/summary/automation/resume', [CommunityMemoryController::class, 'resumeAutomation']);
+        $r->post('/t/{id}/summary/automation/pause', [CommunityMemoryController::class, 'pauseAutomation']);
         $r->post('/t/{id}/related', [CommunityMemoryController::class, 'related']);
         $r->post('/t/{id}/poll', [PollController::class, 'create']);
         $r->post('/polls/{id}/vote', [PollController::class, 'vote']);

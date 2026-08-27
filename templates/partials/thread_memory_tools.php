@@ -1,62 +1,144 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $embedded = !empty($embedded); ?>
-<?php if (!$embedded): ?><details class="memory-curator-tools"><summary class="linkbtn">Curate topic memory</summary><?php endif; ?>
-    <div class="memory-curator-tools-body">
-        <?php if (!empty($memory_automation_paused)): ?>
-            <p class="muted">Automatic refresh is paused for this topic.</p>
-            <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/automation/resume">
+<?php if (empty($can_curate_memory)) { return; } ?>
+<?php
+$threadId = (int) $thread['id'];
+$paused = !empty($memory_automation_paused);
+$refresh = $memory_refresh ?? [];
+$history = $memory_history ?? [];
+$code = (string) ($refresh['code'] ?? '');
+// Two callers: partials/living_brief.php (a brief is published) and
+// partials/living_brief_empty.php (none is). The footer is the same set of
+// controls either way; only the copy that names a published brief changes.
+$hasBrief = !empty($living_brief);
+// "Is a brief showing" and "has this topic ever carried one" are different
+// questions, and the gap between them is exactly the state this panel exists
+// for: a retired brief, or an AI brief suppressed as stale, leaves its version
+// rows behind. Keyed on $history, which every caller already passes.
+$everPublished = $hasBrief || $history !== [];
+// With no brief showing, partials/living_brief_empty.php promotes the version
+// rows above this footer and gives the first one the filled `.btn`. That is the
+// one state where a filled button here would sit adjacent to a filled Restore
+// with nothing arbitrating between them, against the design's one-primary rule.
+// The step-down belongs to this leading SLOT, not to whichever control happens
+// to occupy it: Resume holds the slot while automation is paused, Refresh the
+// moment a curator resumes. Retire pauses automation, so Retire → Resume is a
+// two-click path out of any retirement into a still-brief-less panel — stepping
+// only Resume down would land a filled Refresh beside the filled Restore there.
+$restorePromoted = !$hasBrief && $history !== [];
+?>
+<div class="living-brief-curator" id="living-brief-curator-<?= $threadId ?>">
+    <?php /* While automation is paused the brief itself already carries the paused line
+             (partials/living_brief.php), and refresh is denied, so a Refresh control here
+             would be a dead primary above a near-duplicate of that sentence. Resume takes
+             the primary slot instead — it is the only meaningful action in this state, and
+             it renders here rather than in the More footer so it appears exactly once.
+             Keyed on $paused, not $refresh['code']: the eligibility ladder reports only its
+             FIRST denial, so a paused topic that is also below the post threshold reports
+             `initial_post_threshold` while `automation_paused` on the job row stays true. */ ?>
+    <div class="living-brief-curator-row">
+        <?php if ($paused): ?>
+            <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/automation/resume">
                 <?= $this->csrfField() ?>
-                <button class="btn btn-small" type="submit">Resume automatic refresh</button>
+                <button class="<?= $restorePromoted ? 'linkbtn' : 'btn' ?>" type="submit">Resume automatic refresh</button>
             </form>
         <?php else: ?>
-            <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/refresh">
+            <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/refresh">
                 <?= $this->csrfField() ?>
-                <button class="btn btn-small" type="submit"<?= empty($memory_refresh['eligible']) ? ' disabled' : '' ?>>Refresh living brief</button>
-            </form>
-            <?php if (empty($memory_refresh['eligible'])): ?>
-                <p class="muted">
-                    <?= $e($memory_refresh['message'] ?? 'Refresh is not currently available.') ?>
-                    <?php if (!empty($memory_refresh['next_eligible_at_utc'])): ?>
-                        <time datetime="<?= $e($memory_refresh['next_eligible_at_utc']) ?>"><?= $e(($memory_refresh['next_eligible_at'] ?? '') . ' UTC') ?></time>
-                    <?php endif; ?>
-                </p>
-            <?php endif; ?>
-        <?php endif; ?>
-
-        <form class="composer" method="post" action="/t/<?= (int) $thread['id'] ?>/summary">
-            <?= $this->csrfField() ?>
-            <label for="summary-body">Summary</label>
-            <textarea id="summary-body" class="composer-input" name="body" rows="4" maxlength="20000"></textarea>
-            <label for="summary-sources">Source post IDs</label>
-            <input id="summary-sources" class="input" type="text" name="source_post_ids" placeholder="1, 2, 3">
-            <button class="btn btn-small" type="submit">Publish summary</button>
-        </form>
-
-        <?php if (!empty($living_brief)): ?>
-            <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/retire">
-                <?= $this->csrfField() ?>
-                <button class="linkbtn muted" type="submit">Retire summary</button>
+                <button class="<?= $restorePromoted ? 'linkbtn' : 'btn' ?>" type="submit"<?= empty($refresh['eligible']) ? ' disabled' : '' ?>>Refresh</button>
             </form>
         <?php endif; ?>
-
-        <?php if (!empty($memory_history)): ?>
-            <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/restore">
+        <details class="lb-amend">
+            <?php /* One route, three truths: amending what is showing, writing the
+                     topic's first summary, and writing its next one after a
+                     retirement — "first" would be a lie when the next publish is v3. */ ?>
+            <summary class="linkbtn"><?= $hasBrief ? 'Amend' : ($everPublished ? 'Write a new summary' : 'Write the first summary') ?></summary>
+            <form class="composer" method="post" action="/t/<?= $threadId ?>/summary">
                 <?= $this->csrfField() ?>
-                <label class="sr-only" for="summary-restore">Restore summary</label>
-                <select id="summary-restore" class="input input-small" name="summary_id">
-                    <?php foreach ($memory_history as $item): ?>
-                        <option value="<?= (int) $item['id'] ?>">v<?= (int) $item['version'] ?> · <?= $e($item['label']) ?> · <?= $e($item['status']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <button class="btn btn-small" type="submit">Restore summary</button>
+                <label for="summary-body-<?= $threadId ?>">Summary</label>
+                <textarea id="summary-body-<?= $threadId ?>" class="composer-input" name="body" rows="4" maxlength="20000"></textarea>
+                <label for="summary-sources-<?= $threadId ?>">Source post IDs</label>
+                <input id="summary-sources-<?= $threadId ?>" class="input" type="text" name="source_post_ids" placeholder="1, 2, 3">
+                <button class="btn btn-small" type="submit"><?= $hasBrief ? 'Publish amendment' : 'Publish summary' ?></button>
             </form>
-        <?php endif; ?>
-
-        <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/related">
-            <?= $this->csrfField() ?>
-            <input class="input input-small" type="number" name="related_thread_id" min="1" placeholder="Thread ID" required>
-            <input class="input" type="text" name="reason" maxlength="255" placeholder="Reason">
-            <button class="btn btn-small" type="submit">Add related topic</button>
-        </form>
+        </details>
     </div>
-<?php if (!$embedded): ?></details><?php endif; ?>
+
+    <?php /* Gated on $hasBrief as well: with no brief, the empty state directly
+             above this footer already states why none has been drawn — in the
+             `initial_post_threshold` case with the real numbers, otherwise with
+             this very message — so repeating it here would be a near-duplicate
+             sentence one nesting level down, the same trap the paused primary
+             above avoids. */ ?>
+    <?php if ($hasBrief && !$paused && empty($refresh['eligible'])): ?>
+        <p class="muted living-brief-curator-note">
+            <?= $e($refresh['message'] ?? 'Refresh is not currently available.') ?>
+            <?php /* Same narrow denylist the empty state applies: `hourly_limit` is the
+                     one denial whose MESSAGE already carries a formatted time, because
+                     decide() embeds one whenever the ask is explicit and the view model
+                     only ever asks through forExplicitRefresh(). Appending the UTC
+                     <time> as well would restate one instant in two timezones. Every
+                     other code keeps its machine-readable stamp. */ ?>
+            <?php if ($code !== 'hourly_limit' && !empty($refresh['next_eligible_at_utc'])): ?>
+                <time datetime="<?= $e($refresh['next_eligible_at_utc']) ?>"><?= $e(($refresh['next_eligible_at'] ?? '') . ' UTC') ?></time>
+            <?php endif; ?>
+        </p>
+    <?php endif; ?>
+
+    <details class="lb-more">
+        <summary class="linkbtn"><span class="lb-more-shut">More</span><span class="lb-more-open">Less</span></summary>
+        <div class="lb-more-body">
+            <?php /* Gated on $hasBrief: with no brief showing, Restore is the panel's
+                     whole point, so partials/living_brief_empty.php promotes these same
+                     rows above this footer rather than burying them two disclosures
+                     deep. Rendering them here as well would duplicate every form. */ ?>
+            <?php if ($hasBrief && !empty($history)): ?>
+                <?= $this->partial('partials/living_brief_versions', [
+                    'thread_id' => $threadId,
+                    'history' => $history,
+                    'title' => 'Version history',
+                ]) ?>
+            <?php endif; ?>
+
+            <form class="inline-form" method="post" action="/t/<?= $threadId ?>/related">
+                <?= $this->csrfField() ?>
+                <label class="sr-only" for="related-thread-<?= $threadId ?>">Related topic ID</label>
+                <input id="related-thread-<?= $threadId ?>" class="input input-small" type="number" name="related_thread_id" min="1" placeholder="Thread ID" required>
+                <label class="sr-only" for="related-reason-<?= $threadId ?>">Reason</label>
+                <input id="related-reason-<?= $threadId ?>" class="input" type="text" name="reason" maxlength="255" placeholder="Reason">
+                <button class="btn btn-small" type="submit">Add related topic</button>
+            </form>
+
+            <?php /* Both children are gated — Pause on `!$paused`, Retire on `$hasBrief` —
+                     and the post-Retire state is exactly the state where both are false.
+                     An unconditional wrapper there emits an empty `<div>` that `.lb-more-foot`
+                     still paints with a top rule and padding: a curator opening More would
+                     read the related-topic form, then a rule with nothing beneath it. */ ?>
+            <?php if (!$paused || $hasBrief): ?>
+            <div class="lb-more-foot">
+                <?php if (!$paused): ?>
+                    <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/automation/pause">
+                        <?= $this->csrfField() ?>
+                        <button class="linkbtn muted" type="submit">Pause automatic refresh</button>
+                    </form>
+                <?php endif; ?>
+                <?php if ($hasBrief): ?>
+                    <details class="lb-confirm">
+                        <summary class="linkbtn danger">Retire brief</summary>
+                        <div class="lb-confirm-body">
+                            <p>Retiring hides the brief from the topic and pauses automatic refresh. Curators can restore it from this panel.</p>
+                            <?php /* Distinct from the summary's "Retire brief" so the confirm step is
+                                     audible, not merely visual: a screen reader announcing the same name
+                                     twice one nesting level apart gives no signal that a second, real
+                                     commit follows the disclosure. */ ?>
+                            <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/retire">
+                                <?= $this->csrfField() ?>
+                                <button class="btn danger" type="submit">Confirm retirement</button>
+                            </form>
+                        </div>
+                    </details>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+    </details>
+</div>

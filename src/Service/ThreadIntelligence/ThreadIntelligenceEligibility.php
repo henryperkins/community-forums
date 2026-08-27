@@ -86,6 +86,23 @@ final class ThreadIntelligenceEligibility
         return $this->decide($threadId, $this->jobs->find($threadId), $now, enqueueOnly: false, explicit: true);
     }
 
+    /**
+     * Progress toward the first brief, so an empty state can explain the
+     * `initial_post_threshold` denial. `eligible` reuses the same
+     * `is_deleted = 0 AND is_pending = 0` predicate `decide()` compares against
+     * the threshold, so it counts the opening post: it is one greater than
+     * `threads.reply_count`, which applies that predicate plus `is_op = 0`.
+     *
+     * @return array{eligible:int,threshold:int}
+     */
+    public function initialPostProgress(int $threadId): array
+    {
+        return [
+            'eligible' => $this->eligiblePostCounts($threadId, null)['total'],
+            'threshold' => self::INITIAL_POST_THRESHOLD,
+        ];
+    }
+
     /** @param array<string,mixed>|null $job */
     private function decide(
         int $threadId,

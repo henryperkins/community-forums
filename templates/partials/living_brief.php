@@ -1,23 +1,33 @@
 <?php /** @var \App\Core\View $this */ ?>
-<section class="living-brief study-living-brief" data-living-brief aria-labelledby="living-brief-heading">
+<section class="living-brief study-living-brief" data-living-brief aria-label="Living brief">
+    <?php // The topic title leads the region visually, so this heading is never seen —
+          // but the section still carries <h3>Sources</h3>, and dropping the level
+          // outright left that h3 hanging directly off the topic <h1>. The browser
+          // suite cannot catch that: axe tags `heading-order` `best-practice`, which
+          // the spec's wcag2a/2aa/21a/21aa filter excludes, and scores it `moderate`,
+          // below its serious/critical threshold. Kept out of `.living-brief-head` so
+          // the head stays headingless, as the redesign and its specs require. ?>
+    <h2 class="sr-only">Living brief</h2>
     <div class="living-brief-head">
-        <div>
-            <p class="living-brief-label">
-                <?php if (!empty($living_brief['has_ai_lineage'])): ?>
-                    <a href="/privacy#thread-intelligence"><?= $e($living_brief['label']) ?></a>
-                <?php else: ?>
-                    <?= $e($living_brief['label']) ?>
-                <?php endif; ?>
-            </p>
-            <h2 id="living-brief-heading">Where the discussion stands</h2>
-        </div>
+        <p class="living-brief-label">
+            <?php if (!empty($living_brief['has_ai_lineage'])): ?>
+                <a href="/privacy#thread-intelligence"><?= $e($living_brief['label']) ?></a>
+            <?php else: ?>
+                <?= $e($living_brief['label']) ?>
+            <?php endif; ?>
+        </p>
         <p class="living-brief-meta">
             <span><?= $e($living_brief['metadata']) ?></span>
             <span>Version <?= (int) $living_brief['version'] ?></span>
             <time datetime="<?= $e($living_brief['published_at_utc']) ?>"><?= $e($living_brief['published_at']) ?></time>
         </p>
-        <?php if (!empty($can_curate_memory)): ?><button type="button" class="living-brief-curate" data-topic-tools-open="memory" hidden>Curate</button><?php endif; ?>
     </div>
+    <?php if (!empty($memory_automation_paused)): ?>
+        <p class="living-brief-status is-paused">
+            <span class="living-brief-status-icon" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'pause']) ?></span>
+            <span>Automatic refresh is paused for this topic. The brief stands as published.</span>
+        </p>
+    <?php endif; ?>
     <div class="post-body formatted-content"><?= $living_brief['body_html'] ?></div>
 
     <?php if (!empty($living_brief_sources)): ?>
@@ -55,5 +65,16 @@
                 </a>
             <?php endforeach; ?>
         </div>
+    <?php endif; ?>
+
+    <?php if (!empty($can_curate_memory)): ?>
+        <?= $this->partial('partials/thread_memory_tools', [
+            'thread' => $thread,
+            'living_brief' => $living_brief,
+            'memory_history' => $memory_history ?? [],
+            'memory_refresh' => $memory_refresh ?? [],
+            'memory_automation_paused' => !empty($memory_automation_paused),
+            'can_curate_memory' => true,
+        ]) ?>
     <?php endif; ?>
 </section>

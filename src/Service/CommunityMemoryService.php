@@ -195,6 +195,15 @@ final class CommunityMemoryService
         });
     }
 
+    public function pauseAutomation(User $actor, int $threadId): void
+    {
+        $this->db->transaction(function () use ($actor, $threadId): void {
+            $thread = $this->threads->findForUpdate($threadId);
+            $this->assertCuratorForLockedThread($actor, $thread);
+            $this->threadIntelligence?->setAutomationPaused($threadId, true, $actor->id());
+        });
+    }
+
     public function makeWiki(User $actor, int $postId): void
     {
         $post = $this->postOrFail($postId);

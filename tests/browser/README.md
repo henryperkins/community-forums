@@ -52,7 +52,7 @@ harness grows. The current branch also captures:
 - `46-profile-media-avatar`, `47-profile-media-moderation` (`profile_media` member avatar/signature flow plus admin moderation controls; graduated to default-on 2026-07-03)
 - `48-custom-emoji-admin`, `49-custom-emoji-thread` (`custom_emoji` admin catalogue, Markdown rendering, and reaction compatibility; graduated to default-on 2026-07-03)
 - `50-split-merge-panel`, `51-thread-merged` (the Study split/merge modal and the merged topic result)
-- `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (Thread Intelligence fallback, generated provenance, curator lifecycle in the Study Memory section, last-good guardrails, and operator recovery evidence; captured before and reverified after the default-on flip)
+- `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (Thread Intelligence fallback beside the curator-only empty panel, generated provenance as a member sees it, the curator footer at the foot of the brief with its Amend composer and More disclosure open, last-good guardrails, and operator recovery evidence; captured before and reverified after the default-on flip, and re-captured for the Living Brief redesign that moved curation out of the Topic tools drawer). **75–78 are element captures, not page captures.** The Study's thread column is its own scroll container, so a `fullPage` shot records only what the pane has not scrolled past — and because a scroll container never paints what it clips, naming the element is not enough on its own either. `shot()` measures the element against `clientHeight` on its own scrolling ancestor (not against the viewport: `.thread-conversation` is `calc(100dvh - var(--topbar-h) - 48px)` and pins `.thread-dock` below the scroller, so the chrome costs a different amount on each viewport and a padding constant guesses it wrong), grows the viewport by the measured deficit until the surface fits, captures, and restores. It then asserts **containment** — the element's rect inside the scroller's rect — which is the property the artifact depends on and which a clipped surface cannot satisfy. `79` is an ordinary document and stays a page capture.
 - `group-dms-01…06` desktop+mobile and `group-dms-07-no-js` (`group_dms` graduated to default-on 2026-07-18, ADR 0022: group creation with the details rail, 422 validation draft preservation, owner tools + group history, the late joiner's membership-interval view, the departed member's read-only view, the staff report queue with the report-only 404 proof, and the JavaScript-disabled create/:target-rail/mute/report pass — driven by `group-dms.spec.ts` with the flag at its GA default, no seed override)
 - `80-thread-study`, `81-thread-tools` (the closed Study reading surface with the new reply shell, and its open desktop drawer/mobile sheet)
 - `82-composer-emoji` (server-backed emoji dialog/grid with remembered insertion in desktop popover and mobile sheet layouts)
@@ -143,6 +143,21 @@ critical WCAG 2A/2AA axe violations.
 
 The same command then runs the Thread Intelligence `no-JS` and `axe` cases.
 Those cases scope scans to the Living Brief, provenance lists, related cards,
-history/curator forms, deterministic fallback, and admin console. Before the
-admin scan they enter the application's theme safe mode and restore it after
-the scan.
+the curator footer with every disclosure open, the curator-only empty panel,
+the Topic tools drawer, the deterministic fallback, and the admin console.
+Before the admin scan they enter the application's theme safe mode and restore
+it after the scan.
+
+Every scan lands the document's running animations first. axe reads the
+composited colour, so a card still inside the brief's entrance fade reports a
+foreground — and a background — blended toward whatever is behind it: mid-fade
+it read the brief's gold and rust inks as `#8a6d35` and `#a55a44`, at 3.9:1 and
+4.06:1. Settled, the real tokens `#7E5F22` and `#9C4A33` on `--surface-sunken`
+`#ECE4D2` measure 4.68:1 and 4.82:1. Both clear AA — the gold by 0.18 and the
+rust by 0.32 — but the gold's margin is thin enough that the fade has to land
+before the scan rather than be argued away.
+
+For the same reason the `no-JS` case asks its context for reduced motion, and
+disclosures are opened from the keyboard rather than clicked: with no script
+engine driving the frame loop, Playwright's pointer actionability sampling
+stalls against the fade.

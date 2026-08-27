@@ -404,11 +404,54 @@ gate.
 
 Authorized curators (admins and in-scope board moderators) may publish/edit a
 manual sourced brief, refresh, retire, restore a prior version, curate related
-topics, and pause/resume automation for the thread. A human edit becomes the
+topics, and pause or resume automation for the thread. A human edit becomes the
 baseline for the next generation. Retiring a brief also pauses that thread;
 restoring a version does not silently resume automation. Resume is a separate,
 explicit action that requeues current work. Curated related-topic rows outrank
 AI overlays and are never overwritten by generation.
+
+These are the seven curator actions, all `POST` + CSRF and all gated on
+`CommunityMemoryService::assertCuratorForLockedThread()` — account state beats
+role, so a suspended admin can read the brief but operate none of them:
+
+| Route | Action |
+|---|---|
+| `POST /t/{id}/summary` | Publish the first summary, or amend the standing one. |
+| `POST /t/{id}/summary/refresh` | Ask the archive for a new generation now. |
+| `POST /t/{id}/summary/retire` | Hide the brief **and** pause automation for the thread. |
+| `POST /t/{id}/summary/restore` | Republish a prior version by `summary_id`. Does not resume automation. |
+| `POST /t/{id}/summary/automation/pause` | Freeze automatic refresh, leaving the published brief standing. |
+| `POST /t/{id}/summary/automation/resume` | Unfreeze and requeue current work. |
+| `POST /t/{id}/related` | Add a curated related topic. |
+
+**Pause** is the standalone counterpart to Resume. Before it existed, a thread
+could only be paused as a side effect of Retire, so a curator who wanted to stop
+automatic refresh without hiding the brief had to retire and restore it. Pause
+and Retire write the same flag: `thread_intelligence_jobs.automation_paused`,
+with `paused_by` and `paused_at` recording the actor and the moment. **That job
+row is the audit trail for a curator pause — none of the seven curator actions
+writes a `moderation_log` row.** The administrator path to the same operation
+(`/admin/thread-intelligence`, below) *is* logged, as
+`thread_intelligence_thread_pause` / `_resume` against the thread; the
+asymmetry is deliberate and is recorded in ADR 0026.
+
+**Where the controls render.** As of the 2026-08-26 Living Brief redesign the
+curator tools sit at the **foot of the brief itself**
+(`#living-brief-curator-{threadId}`), not in the Topic tools drawer. The drawer
+keeps a "Living Brief" section, but its body is now a link down to that anchor.
+On a topic with no brief showing — never drawn, retired, or an AI brief
+suppressed as stale — the same footer rides under a curator-only "No brief"
+panel that states why, and leads with Restore when there are versions to restore.
+That panel is curator-only by contract: a guest or ordinary member on a
+brief-less topic sees no living-brief markup at all.
+
+After a **retirement** specifically, the panel names the retirement itself as the
+reason rather than the pause it switched on, and Restore is the single primary
+action: Resume renders beside it as a quiet control, because restoring a version
+deliberately leaves automation paused. Pause and Retire both drop out of the More
+disclosure in that state — Pause because automation is already paused, Retire
+because there is no standing brief to retire — so the disclosure holds only the
+related-topic form.
 
 Administrators use `/admin/thread-intelligence` for the redacted health/budget
 dashboard, global pause/resume, provider-latch retry, and per-thread
@@ -446,7 +489,10 @@ same last-good version is still present before allowing new generation.
 ## 13. Evidence pointers
 
 - Decision: `docs/adr/0019-thread-intelligence-auto-publication.md`
+- Living Brief surface decisions, deferrals, and open findings:
+  `docs/adr/0026-living-brief-redesign-deferrals.md`
 - Detailed design: `docs/superpowers/specs/2026-07-09-thread-intelligence-graduation-design.md`
+- Living Brief redesign design: `docs/superpowers/specs/2026-08-26-living-brief-redesign-design.md`
 - Live result: `docs/evidence/phase4-closeout/thread-intelligence-live-eval.md`
 - Human rubric: `docs/evidence/phase4-closeout/thread-intelligence-live-rubric.json`
 - Phase 3/4 carryover ledger:

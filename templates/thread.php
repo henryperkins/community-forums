@@ -12,11 +12,15 @@ $this->section('description', mb_strimwidth(preg_replace('/\s+/', ' ', (string) 
 if (($thread['board_visibility'] ?? 'public') !== 'public') {
     $this->section('robots', 'noindex, nofollow');
 }
+// One expression, two consumers: the Topic tools drawer's Living Brief section
+// and the memory slot below. The drawer's only content is an anchor into markup
+// that the slot alone renders, so the two must not be able to drift apart.
+$canCurateMemory = $current_user !== null && !empty($can_write) && !empty($can_curate_memory);
 $topicToolSections = [
     'watch' => $current_user !== null && !empty($can_write) && (($notifications_on ?? false) || ($workflow_on ?? false)),
     'standing' => $current_user !== null && ($workflow_on ?? false),
     'tags' => $current_user !== null && ($tags_on ?? false) && (!empty($thread_tags) || !empty($can_edit_tags)),
-    'memory' => $current_user !== null && !empty($can_write) && !empty($can_curate_memory),
+    'memory' => $canCurateMemory,
     'management' => $current_user !== null && !empty($can_write) && (
         !empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)
         || !empty($can_mark_solved) || !empty($can_pin) || !empty($can_lock)
@@ -100,10 +104,6 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         'thread_tags' => $thread_tags,
         'all_tags' => $all_tags,
         'can_edit_tags' => $can_edit_tags,
-        'living_brief' => $living_brief,
-        'memory_history' => $memory_history,
-        'memory_refresh' => $memory_refresh,
-        'memory_automation_paused' => $memory_automation_paused,
         'assignment' => $assignment,
         'can_self_assign' => $can_self_assign,
         'can_staff_assign' => $can_staff_assign,
@@ -177,22 +177,44 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                 <?php endif; ?>
             </section>
         <?php endif; ?>
-    <?php if ($living_brief !== null || $related_fallback !== []): ?>
+    <?php // $canCurateMemory is $topicToolSections['memory'] itself (hoisted above),
+          // so the drawer's "Go to the brief's curator tools" anchor always has a
+          // target: with a brief the footer rides inside it, without one the empty
+          // state carries the same footer. ?>
+    <?php if ($living_brief !== null || $related_fallback !== [] || $canCurateMemory): ?>
     <div class="thread-memory-slot">
         <?php if ($living_brief !== null): ?>
             <?= $this->partial('partials/living_brief', [
+                'thread' => $thread,
                 'living_brief' => $living_brief,
                 'living_brief_sources' => $living_brief_sources,
                 'living_brief_related' => $living_brief_related,
-                'can_curate_memory' => !empty($can_write) && !empty($can_curate_memory),
+                'can_curate_memory' => $canCurateMemory,
+                'memory_automation_paused' => $memory_automation_paused,
+                'memory_history' => $memory_history,
+                'memory_refresh' => $memory_refresh,
             ]) ?>
-        <?php elseif ($related_fallback !== []): ?>
-            <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
-                <h2 id="related-topic-fallback-heading">Related topics</h2>
-                <?php foreach ($related_fallback as $related): ?>
-                    <a href="<?= $e($related['url']) ?>"><?= $e($related['title']) ?></a>
-                <?php endforeach; ?>
-            </section>
+        <?php else: ?>
+            <?php // The fallback and the empty state are independent: a brief-less
+                  // topic that happens to carry deterministic related rows would
+                  // otherwise strand its curator behind them. ?>
+            <?php if ($related_fallback !== []): ?>
+                <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
+                    <h2 id="related-topic-fallback-heading">Related topics</h2>
+                    <?php foreach ($related_fallback as $related): ?>
+                        <a href="<?= $e($related['url']) ?>"><?= $e($related['title']) ?></a>
+                    <?php endforeach; ?>
+                </section>
+            <?php endif; ?>
+            <?php if ($canCurateMemory): ?>
+                <?= $this->partial('partials/living_brief_empty', [
+                    'thread' => $thread,
+                    'can_curate_memory' => $canCurateMemory,
+                    'memory_automation_paused' => $memory_automation_paused,
+                    'memory_history' => $memory_history,
+                    'memory_refresh' => $memory_refresh,
+                ]) ?>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     <?php endif; ?>

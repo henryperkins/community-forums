@@ -90,18 +90,6 @@ async function login(page: Page, email: string): Promise<void> {
   await expect(page.locator('.tour-popover')).toHaveCount(0);
 }
 
-async function openTopicComposer(page: Page): Promise<void> {
-  const details = page.locator('details.composer-details#new-topic');
-  const promoted = page.locator('.board-identity-actions [data-open-topic-composer]');
-  const fab = page.locator('a.fab[href="#new-topic"]');
-  const summary = details.locator(':scope > summary');
-  const opener = await promoted.isVisible()
-    ? promoted
-    : (await fab.isVisible() ? fab : summary);
-  await opener.click();
-  await expect(details).toHaveJSProperty('open', true);
-}
-
 // Neutralise any package theme gate-a left active site-wide on the shared evidence DB so
 // this surface is certified under the standard appearance. Idempotent: if safe mode is
 // already on the "Enter" button is absent and this is a no-op.
