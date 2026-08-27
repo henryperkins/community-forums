@@ -62,4 +62,7 @@ version history, the related-topic form, Pause, and the Retire confirm, and
 the deterministic fallback. `75`–`78` are captures of the surface itself rather
 than of the page: the Study's thread column is its own scroll container, so a
 full-page shot frames only what the pane has not scrolled past, and what the
-pane clips is never painted. See `tests/browser/README.md`.
+pane clips is never painted. The capture helper sizes the viewport from the
+scroller's own `clientHeight` and then asserts the surface is contained by it,
+so a clipped frame fails the run instead of shipping. See
+`tests/browser/README.md`.
