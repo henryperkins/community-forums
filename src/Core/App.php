@@ -2255,6 +2255,9 @@ final class App
         $r->post('/posts/{id}/previews/{preview}/remove', [LinkPreviewController::class, 'remove']);
         $r->post('/posts/{id}/previews/{preview}/restore', [LinkPreviewController::class, 'restore']);
         $r->post('/t/{id}/star', [EngagementController::class, 'star']);
+        // Manual read state: one topic's gutter marker, and a whole board.
+        $r->post('/t/{id}/read', [EngagementController::class, 'readState']);
+        $r->post('/c/{slug}/read', [EngagementController::class, 'markBoardRead']);
 
         // Subscriptions + notifications (P2-03).
         $r->post('/t/{id}/subscribe', [SubscriptionController::class, 'subscribeThread']);

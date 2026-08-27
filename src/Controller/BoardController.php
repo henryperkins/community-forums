@@ -59,21 +59,39 @@ final class BoardController extends Controller
         // Reading prefs (P3-01): avatar visibility in the list.
         $reading = $user !== null ? $prefSvc->reading($user->id()) : $prefSvc->readingDefaults();
         $threadRepo = $this->container->get(ThreadRepository::class);
+        $features = $this->container->get(FeatureFlags::class);
+        $engagement = $user !== null && $features->enabled('engagement');
         $total = $threadRepo->countByBoard((int) $board['id']);
         $page = $this->pageNumber($request, $total, $perPage);
-        $threads = $threadRepo->listByBoard((int) $board['id'], $perPage, ($page - 1) * $perPage);
-        $features = $this->container->get(FeatureFlags::class);
+        // The viewer's own state — starred / assigned / snoozed — rides along
+        // with the rows, so a topic you starred reads as starred on its own
+        // board and not only in your inbox. Each flag gates the columns it
+        // owns, so a rollback takes its state off the page with its controls.
+        $threads = $threadRepo->listByBoard(
+            (int) $board['id'],
+            $perPage,
+            ($page - 1) * $perPage,
+            $user?->id(),
+            $features->enabled('topic_workflow'),
+            $engagement,
+        );
 
         // Annotate unread state for the signed-in reader (P2-01).
-        if ($user !== null && $features->enabled('engagement') && $threads !== []) {
+        $unreadCount = 0;
+        if ($engagement) {
             $cutover = $this->container->get(SettingRepository::class)
                 ->getString('engagement_cutover_at', ThreadUserRepository::NO_CUTOVER);
-            $ids = array_map(static fn (array $t): int => (int) $t['id'], $threads);
-            $unread = $this->container->get(ThreadUserRepository::class)->unreadFlags($user->id(), $ids, $cutover);
-            foreach ($threads as &$t) {
-                $t['is_unread'] = $unread[(int) $t['id']] ?? false;
+            $threadUsers = $this->container->get(ThreadUserRepository::class);
+            if ($threads !== []) {
+                $ids = array_map(static fn (array $t): int => (int) $t['id'], $threads);
+                $unread = $threadUsers->unreadFlags($user->id(), $ids, $cutover);
+                foreach ($threads as &$t) {
+                    $t['is_unread'] = $unread[(int) $t['id']] ?? false;
+                }
+                unset($t);
             }
-            unset($t);
+            // Board-wide, not page-wide: "3 unread" must not shrink on page 2.
+            $unreadCount = $threadUsers->unreadCountForBoard($user->id(), (int) $board['id'], $cutover);
         }
 
         $gate = $this->container->get(AuthorityGate::class);
@@ -86,9 +104,12 @@ final class BoardController extends Controller
                 ['board_id' => (int) $board['id']],
                 'BoardController::show',
             );
+        // FT-08: state beats role — a suspended member keeps reading but is not
+        // offered a Follow control whose POST the write gate would refuse.
         $community = $features->enabled('community');
         $expandedFeeds = $features->enabled('expanded_feeds');
-        $canFollowBoard = $user !== null && $community && $expandedFeeds;
+        $canFollowBoard = $user !== null && $community && $expandedFeeds
+            && $this->container->get(WriteGate::class)->canWrite($user);
         $isFollowingBoard = $canFollowBoard
             && $this->container->get(FollowRepository::class)->isFollowingTarget($user->id(), 'board', (int) $board['id']);
 
@@ -102,6 +123,8 @@ final class BoardController extends Controller
             'can_follow_board' => $canFollowBoard,
             'is_following_board' => $isFollowingBoard,
             'show_avatars' => $reading['show_avatars'],
+            'unread_count' => $unreadCount,
+            'can_mark_read' => $engagement,
         ]);
     }
 

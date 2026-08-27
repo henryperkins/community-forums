@@ -53,6 +53,10 @@ $iconStroke = [
 ];
 $iconFilled = [
     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',
+    // Solid, not the Lucide outline: at the 9px the board row's Pinned mark
+    // renders it, a stroked pin turns to mush. Taken from the Imladris
+    // board-page template.
+    'pin'             => '<path d="M14 2l8 8-3 1-2 6-4-4-6 6-1-1 6-6-4-4 6-2z"/>',
 ];
 $iconCustomFilled = [
     'eight-point-star' => '<path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"/>',

@@ -12,11 +12,22 @@ if (($board['visibility'] ?? 'public') !== 'public') {
 $topicCount = (int) ($board['thread_count'] ?? $total);
 $postCount = (int) ($board['post_count'] ?? 0);
 $archived = (int) ($board['is_archived'] ?? 0) === 1;
-$visibilityLabel = match ((string) ($board['visibility'] ?? 'public')) {
-    'hidden' => 'Hidden board',
-    'private' => 'Private board',
-    default => 'Public board',
+// The eyebrow names the shelf this board sits on. An orphaned board (no
+// category row) falls back to the constant the band used before.
+$categoryName = trim((string) ($board['category_name'] ?? '')) ?: 'Board';
+$accessWord = match ((string) ($board['visibility'] ?? 'public')) {
+    'hidden' => 'Hidden',
+    'private' => 'Private',
+    default => 'Public',
 };
+$perPage = max(1, (int) $per_page);
+$pageCount = max(1, (int) ceil($total / $perPage));
+$shownCount = count($threads);
+$topicNoun = $total === 1 ? 'topic' : 'topics';
+$unreadCount = (int) ($unread_count ?? 0);
+$canMarkRead = !empty($can_mark_read);
+// Every gutter form posts back to the exact page the reader is on.
+$returnTo = '/c/' . $board['slug'] . ($page > 1 ? '?page=' . (int) $page : '');
 ?>
 <div class="read-main read-pad board-view">
     <nav class="breadcrumb board-identity-breadcrumb" aria-label="Breadcrumb">
@@ -27,32 +38,50 @@ $visibilityLabel = match ((string) ($board['visibility'] ?? 'public')) {
 
     <header class="board-identity" data-board-identity>
         <div class="board-identity-copy">
-            <p class="eyebrow">Board</p>
+            <p class="eyebrow"><?= $e($categoryName) ?></p>
             <h1><span class="hash">#</span><?= $e($board['name']) ?></h1>
             <?php if (!empty($board['description'])): ?><p class="board-identity-description"><?= $e($board['description']) ?></p><?php endif; ?>
-            <div class="board-identity-facts" aria-label="Board facts">
-                <span data-board-fact="topics"><?= $topicCount ?> <?= $topicCount === 1 ? 'topic' : 'topics' ?></span>
-                <span data-board-fact="posts"><?= $postCount ?> <?= $postCount === 1 ? 'post' : 'posts' ?></span>
-                <span data-board-fact="visibility"><?= $visibilityLabel ?></span>
-                <?php if ($archived): ?><span data-board-fact="archive">Archived</span><?php endif; ?>
-            </div>
         </div>
-        <?php if (!empty($can_follow_board) || !empty($can_post)): ?>
-            <div class="board-identity-actions">
-                <?php if (!empty($can_follow_board)): ?>
-                    <form method="post" action="/b/<?= (int) $board['id'] ?>/follow">
-                        <?= $this->csrfField() ?>
-                        <button class="btn btn-secondary<?= !empty($is_following_board) ? ' btn-on' : '' ?>" type="submit" data-follow-board aria-pressed="<?= !empty($is_following_board) ? 'true' : 'false' ?>"><?= !empty($is_following_board) ? 'Following' : 'Follow board' ?></button>
-                    </form>
+        <div class="board-identity-aside">
+            <?php /* Label + value, ruled apart — the facts read as a register
+                     rather than a run-on sentence, and each one names itself. */ ?>
+            <dl class="board-identity-facts" aria-label="Board facts">
+                <div data-board-fact="topics">
+                    <dt>Topics</dt>
+                    <dd><?= $e(number_format($topicCount)) ?></dd>
+                </div>
+                <div data-board-fact="posts">
+                    <dt>Posts</dt>
+                    <dd><?= $e(number_format($postCount)) ?></dd>
+                </div>
+                <div data-board-fact="visibility">
+                    <dt>Access</dt>
+                    <dd><?= $accessWord ?></dd>
+                </div>
+                <?php if ($archived): ?>
+                    <div data-board-fact="archive">
+                        <dt>Status</dt>
+                        <dd>Archived</dd>
+                    </div>
                 <?php endif; ?>
-                <?php if (!empty($can_post)): ?>
-                    <button class="btn btn-accent" type="button" hidden data-open-topic-composer aria-controls="new-topic" aria-expanded="false">
-                        <?= $this->partial('partials/icon', ['name' => 'plus']) ?>
-                        <span>New topic</span>
-                    </button>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
+            </dl>
+            <?php if (!empty($can_follow_board) || !empty($can_post)): ?>
+                <div class="board-identity-actions">
+                    <?php if (!empty($can_follow_board)): ?>
+                        <form method="post" action="/b/<?= (int) $board['id'] ?>/follow">
+                            <?= $this->csrfField() ?>
+                            <button class="btn btn-secondary<?= !empty($is_following_board) ? ' btn-on' : '' ?>" type="submit" data-follow-board aria-pressed="<?= !empty($is_following_board) ? 'true' : 'false' ?>" title="Following affects your discovery feed; it does not change this board's order."><?= !empty($is_following_board) ? 'Following' : 'Follow board' ?></button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if (!empty($can_post)): ?>
+                        <button class="btn btn-accent" type="button" hidden data-open-topic-composer aria-controls="new-topic" aria-expanded="false">
+                            <?= $this->partial('partials/icon', ['name' => 'plus']) ?>
+                            <span>New topic</span>
+                        </button>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </div>
     </header>
 
     <?php /* A pointer-only echo of the slab for the scrolled state. aria-hidden
@@ -91,17 +120,40 @@ $visibilityLabel = match ((string) ($board['visibility'] ?? 'public')) {
         </details>
     <?php endif; ?>
 
-    <section class="board-topics" data-board-topics aria-labelledby="board-topics-heading">
+    <section class="board-topics<?= ($show_avatars ?? true) ? '' : ' is-flat' ?>" data-board-topics aria-labelledby="board-topics-heading">
+        <?php /* The header carries the row's own track list, so its labels rule
+                 the columns beneath them instead of merely sitting above them. */ ?>
         <header class="board-topics-heading">
-            <div>
+            <div class="board-topics-heading-main">
                 <p class="eyebrow">Latest activity</p>
                 <h2 id="board-topics-heading">Topics</h2>
+                <p class="board-topics-order">Pinned first, then last post</p>
             </div>
-            <p>Pinned first, then last post</p>
+            <div class="board-topics-heading-aside">
+                <?php if ($canMarkRead && $unreadCount > 0): ?>
+                    <span class="board-topics-unread" data-board-unread><?= (int) $unreadCount ?> unread</span>
+                    <form method="post" action="/c/<?= $e($board['slug']) ?>/read">
+                        <?= $this->csrfField() ?>
+                        <input type="hidden" name="return" value="<?= $e($returnTo) ?>">
+                        <button class="board-topics-markread" type="submit" data-mark-board-read>Mark all read</button>
+                    </form>
+                <?php endif; ?>
+            </div>
         </header>
 
         <?php if (empty($threads)): ?>
-            <p class="muted empty">No topics here yet.</p>
+            <div class="board-empty">
+                <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'board-empty-mark']) ?>
+                <p class="board-empty-headline">No topics here yet.</p>
+                <?php if (!empty($can_post)): ?>
+                    <p class="board-empty-sub">Be the first to open one in #<?= $e($board['name']) ?>.</p>
+                    <?php /* Carries the same hook as the slab and the FAB, or JS
+                             would leave it a dead anchor: app.js hides the
+                             <summary> as soon as a promoted trigger exists, so
+                             jumping to #new-topic would land on nothing. */ ?>
+                    <a class="btn btn-secondary board-empty-cta" href="#new-topic" data-open-topic-composer>New topic</a>
+                <?php endif; ?>
+            </div>
         <?php else: ?>
             <ul class="thread-list board-topics-list">
                 <?php foreach ($threads as $t): ?>
@@ -110,16 +162,20 @@ $visibilityLabel = match ((string) ($board['visibility'] ?? 'public')) {
                         'board' => $board,
                         'show_avatars' => $show_avatars ?? true,
                         'presentation' => 'board',
+                        'read_toggle' => $canMarkRead,
+                        'return_to' => $returnTo,
                     ]) ?>
                 <?php endforeach; ?>
             </ul>
-        <?php endif; ?>
 
-        <?= $this->partial('partials/pagination', [
-            'page' => $page,
-            'pages' => max(1, (int) ceil($total / $per_page)),
-            'base_url' => '/c/' . $board['slug'] . '?',
-        ]) ?>
+            <?= $this->partial('partials/pagination', [
+                'page' => $page,
+                'pages' => $pageCount,
+                'base_url' => '/c/' . $board['slug'] . '?',
+                'variant' => 'board',
+                'count_label' => 'Showing ' . number_format($shownCount) . ' of ' . number_format($total) . ' ' . $topicNoun,
+            ]) ?>
+        <?php endif; ?>
     </section>
 
     <?php if (!empty($can_post)): ?>

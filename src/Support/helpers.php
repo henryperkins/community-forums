@@ -113,6 +113,58 @@ if (!function_exists('post_datetime')) {
     }
 }
 
+if (!function_exists('relative_datetime')) {
+    /**
+     * Elapsed-time stamp for an activity COLUMN — the board list's "when did
+     * this last move?".
+     *
+     * A column is read by comparing its rows, and "6 hours ago" answers that
+     * question in a glance where "Aug 27, 2026 at 04:38 UTC" makes you do the
+     * arithmetic. It is also short: the absolute form is ~24 unwrappable
+     * characters, which overflows any column narrow enough to leave the title
+     * its measure. The exact instant stays on the element's datetime/title
+     * attributes, so nothing is actually lost.
+     *
+     * Deliberately coarse — no "3 minutes ago" precision on a list that is only
+     * ever scanned, and no future tense: a clock skew reads as "just now".
+     */
+    function relative_datetime(?string $utcDateTime): string
+    {
+        if ($utcDateTime === null || $utcDateTime === '') {
+            return '';
+        }
+        $ts = strtotime($utcDateTime . ' UTC');
+        if ($ts === false) {
+            return '';
+        }
+        $seconds = time() - $ts;
+        if ($seconds < 60) {
+            return 'just now';
+        }
+        $plural = static fn (int $n, string $unit): string => $n . ' ' . $unit . ($n === 1 ? '' : 's') . ' ago';
+        if ($seconds < 3600) {
+            return $plural(intdiv($seconds, 60), 'minute');
+        }
+        if ($seconds < 86400) {
+            return $plural(intdiv($seconds, 3600), 'hour');
+        }
+        $days = intdiv($seconds, 86400);
+        if ($days === 1) {
+            return 'yesterday';
+        }
+        if ($days < 7) {
+            return $days . ' days ago';
+        }
+        if ($days < 35) {
+            return $plural(intdiv($days, 7), 'week');
+        }
+        if ($days < 365) {
+            return $plural(max(1, intdiv($days, 30)), 'month');
+        }
+        return $plural(intdiv($days, 365), 'year');
+    }
+}
+
 if (!function_exists('human_date')) {
     function human_date(?string $utcDateTime): string
     {

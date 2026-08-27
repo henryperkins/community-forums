@@ -527,9 +527,17 @@
     border-radius: var(--radius-pill);
     background: var(--surface-sunken); color: var(--text-muted); border: 1px solid var(--border-hair);
 }
-.tier-legend     { color: var(--gold-700);  background: var(--gold-100);    border-color: var(--gold-200); }
-.tier-loremaster { color: var(--green-800); background: var(--brand-subtle); border-color: var(--green-200); }
-.tier-veteran    { color: var(--river-700); background: var(--river-100);   border-color: var(--river-200); }
+/* Semantic pairs, not the numbered primitives they resolve to in the day
+   register. The numbered ramps are never remapped for twilight, so a literal
+   --gold-700 on --gold-100 shipped a light-register chip onto a dark page, and
+   --green-800 on the brand wash (which DOES flip) put dark ink on a dark
+   ground. Each pair below flips together; --tier-member already did, and is
+   the model. The one visible day-register change is Legend's ink, gold-700 →
+   gold-800: --on-staff exists because gold-700 on gold-100 measured 3.55:1 and
+   missed AA. */
+.tier-legend     { color: var(--on-staff);  background: var(--surface-staff); border-color: var(--gold-200); }
+.tier-loremaster { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
+.tier-veteran    { color: var(--on-info);   background: var(--surface-info);  border-color: var(--river-200); }
 .tier-member     { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
 
 /* Inline regard — "✦ 5.1k" in gold mono. */

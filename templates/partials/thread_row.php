@@ -22,25 +22,42 @@ if ($pinned) { $rowClasses .= ' thread-pinned'; }
 if ($locked) { $rowClasses .= ' thread-locked'; }
 if ($status !== 'open') { $rowClasses .= ' thread-status-' . $statusSlug; }
 
-// Board presentation states status as a coloured word on the meta line rather
-// than a chip stacked above the title, so the title stays the first thing read.
-$flags = [];
+// Board presentation states status once, as a pill in its own reserved column
+// AFTER the title — so the title is still the first thing read, and the column
+// stays put whether or not a topic has a status. Pinned and Locked are not
+// status: they are marks on the title itself and ride the title line.
+$statusPill = null;
 if ($boardPresentation) {
-    if ($status === 'solved') {
-        $flags[] = ['is-solved', 'Solved'];
-    } elseif ($status === 'needs_answer') {
-        $flags[] = ['is-needs', 'Needs answer'];
-    } elseif ($status !== 'open') {
-        $flags[] = ['is-' . $statusSlug, ucwords(str_replace('_', ' ', $status))];
-    }
-    if ($pinned) { $flags[] = ['is-pinned', 'Pinned']; }
-    if ($locked) { $flags[] = ['is-locked', 'Locked']; }
+    $statusPill = match ($status) {
+        'solved' => ['chip-solved', 'Solved', 'check'],
+        'needs_answer' => ['chip-needs', 'Needs answer', null],
+        'decision_made' => ['chip-decision_made', 'Decision', null],
+        'archived' => ['chip-archived', 'Archived', null],
+        default => null,
+    };
 }
+// The gutter marker is a real control only for a signed-in reader with
+// engagement live; everyone else gets the same glyph, inert.
+$readToggle = ($read_toggle ?? false) && $boardPresentation;
+$readReturn = (string) ($return_to ?? '');
 ?>
 <li class="<?= $rowClasses ?>"<?= $inboxUnread ? ' data-inbox-unread="1"' : '' ?>>
     <?php if ($boardPresentation): ?>
         <?php /* The gutter is emitted read or unread, so every row shares one left edge. */ ?>
-        <span class="unread-slot"><?php if ($unread): ?><span class="unread-dot" title="Unread" aria-label="Unread"></span><?php endif; ?></span>
+        <span class="unread-slot">
+            <?php if ($readToggle): ?>
+                <form class="unread-form" method="post" action="/t/<?= (int) $t['id'] ?>/read">
+                    <?= $this->csrfField() ?>
+                    <input type="hidden" name="state" value="<?= $unread ? 'read' : 'unread' ?>">
+                    <?php if ($readReturn !== ''): ?><input type="hidden" name="return" value="<?= $e($readReturn) ?>"><?php endif; ?>
+                    <button class="unread-toggle" type="submit" title="<?= $unread ? 'Unread — mark as read' : 'Read — mark as unread' ?>" aria-label="<?= $unread ? 'Unread. Mark as read.' : 'Read. Mark as unread.' ?>">
+                        <span class="<?= $unread ? 'unread-dot' : 'unread-ring' ?>" aria-hidden="true"></span>
+                    </button>
+                </form>
+            <?php elseif ($unread): ?>
+                <span class="unread-dot" title="Unread" aria-label="Unread"></span>
+            <?php endif; ?>
+        </span>
     <?php elseif ($unread): ?>
         <span class="unread-dot" title="Unread" aria-label="Unread"></span>
     <?php endif; ?>
@@ -60,34 +77,51 @@ if ($boardPresentation) {
             <?= $e($t['title']) ?>
         </a>
         <?php if ($boardPresentation): ?>
-            <?php if ($starred): ?><span class="thread-star" title="Starred" aria-label="Starred">★</span><?php endif; ?>
+            <?php /* Siblings of the anchor, never children: the title alone is the
+                     link's accessible name, and specs match it exactly. */ ?>
+            <?php if ($pinned): ?><span class="thread-mark is-pinned" title="Pinned"><?= $this->partial('partials/icon', ['name' => 'pin']) ?>Pinned</span><?php endif; ?>
+            <?php if ($locked): ?><span class="thread-mark is-locked" title="Locked"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Locked</span><?php endif; ?>
             </span>
         <?php endif; ?>
         <span class="thread-meta">
-            <?php foreach ($flags as [$flagClass, $flagLabel]): ?><span class="thread-flag <?= $flagClass ?>"><?= $e($flagLabel) ?></span><span class="sep" aria-hidden="true">·</span> <?php endforeach; ?>
-            <?php if ($showBoard): ?><a class="thread-board" href="/c/<?= $e($t['board_slug']) ?>"><span class="hash">#</span><?= $e($t['board_name'] ?? $t['board_slug']) ?></a> · <?php endif; ?>
-            by <?= $e($a['label']) ?>
-            <?php if (!$boardPresentation): ?>
+            <?php if ($boardPresentation): ?>
+                <span class="thread-meta-author">by <?= $e($a['label']) ?></span>
+                <?php if (!empty($t['assigned_username'])): ?><span class="thread-meta-aside">assigned to @<?= $e($t['assigned_username']) ?></span><?php endif; ?>
+                <?php /* The day, not the minute: a snooze is a date you are waiting on. */ ?>
+                <?php if (!empty($t['snoozed_until'])): ?><span class="thread-meta-aside">snoozed until <?= $e(human_date($t['snoozed_until'])) ?></span><?php endif; ?>
+            <?php else: ?>
+                <?php if ($showBoard): ?><a class="thread-board" href="/c/<?= $e($t['board_slug']) ?>"><span class="hash">#</span><?= $e($t['board_name'] ?? $t['board_slug']) ?></a> · <?php endif; ?>
+                by <?= $e($a['label']) ?>
                 · <?= $replyCount ?> <?= $replyNoun ?>
                 · <?= $e($activityLabel) ?>
-            <?php endif; ?>
-            <?php if (!empty($t['assigned_username'])): ?>
-                · assigned to @<?= $e($t['assigned_username']) ?>
-            <?php endif; ?>
-            <?php if (!empty($t['for_you_reason'])): ?>
-                · <?= $e($t['for_you_reason']) ?>
-            <?php endif; ?>
-            <?php if (!empty($t['snoozed_until'])): ?>
-                · snoozed until <?= $e(human_datetime($t['snoozed_until'])) ?>
+                <?php if (!empty($t['assigned_username'])): ?>
+                    · assigned to @<?= $e($t['assigned_username']) ?>
+                <?php endif; ?>
+                <?php if (!empty($t['for_you_reason'])): ?>
+                    · <?= $e($t['for_you_reason']) ?>
+                <?php endif; ?>
+                <?php if (!empty($t['snoozed_until'])): ?>
+                    · snoozed until <?= $e(human_datetime($t['snoozed_until'])) ?>
+                <?php endif; ?>
             <?php endif; ?>
         </span>
     </div>
     <?php if ($boardPresentation): ?>
-        <?php /* The glyph is the scannable value; the count keeps its noun for screen readers. */ ?>
+        <?php /* The pill column is emitted whether or not there is a status, so
+                 the activity column never shifts between rows. */ ?>
+        <span class="thread-row-status">
+            <?php if ($statusPill !== null): ?>
+                <span class="chip <?= $statusPill[0] ?>"><?php if ($statusPill[2] !== null): ?><?= $this->partial('partials/icon', ['name' => $statusPill[2]]) ?><?php endif; ?><?= $e($statusPill[1]) ?></span>
+            <?php endif; ?>
+        </span>
+        <?php /* Elapsed time in the column, the exact instant on the element —
+                 a column is read by comparing its rows. */ ?>
         <div class="thread-row-activity">
-            <span class="thread-row-replies"><span aria-hidden="true"><?= $replyCount === 0 ? '—' : $replyCount ?></span><span class="sr-only"><?= $replyCount ?> <?= $replyNoun ?></span></span>
-            <time datetime="<?= $e($activityAt) ?>"><?= $e($activityLabel) ?></time>
+            <time datetime="<?= $e($activityAt) ?>" title="<?= $e($activityLabel) ?>"><?= $e(relative_datetime($activityAt)) ?></time>
+            <span class="thread-row-replies"><?= $replyCount ?> <?= $replyNoun ?></span>
         </div>
+        <?php /* A reserved cell, so a starred row is the same width as its neighbours. */ ?>
+        <span class="thread-row-star"><?php if ($starred): ?><span class="thread-star" title="Starred" aria-label="Starred">★</span><?php endif; ?></span>
     <?php endif; ?>
     <?php if ($starred && !$boardPresentation): ?><span class="thread-star" title="Starred" aria-label="Starred">★</span><?php endif; ?>
 </li>

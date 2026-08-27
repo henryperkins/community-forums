@@ -2,6 +2,68 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Imladris board page
+
+- Adopted the Imladris `board-page` template on `/c/{slug}` (ADR 0027). The
+  identity band's eyebrow now names the board's **category** instead of the
+  constant word "Board", and its facts become a labelled register — `Topics /
+  24`, `Posts / 1,204`, `Access / Public` — ruled apart in the band's right
+  column above the actions, rather than one interpunct-separated sentence in
+  which a number could be read against the wrong noun.
+- **Rebuilt the topic row on six columns**: gutter · monogram · copy · status ·
+  activity · star. Status is now a pill in a **reserved column after the
+  title** — stated once, and the column is emitted whether or not a topic has
+  one, so the activity column never shifts between rows. The 3px status
+  left-rule is dropped on this presentation; it existed only because status had
+  nowhere else to live. Pinned and Locked leave the meta line and become bare
+  marks on the title line, as siblings of the link so the title alone stays its
+  accessible name.
+- **Board rows now carry the viewer's own state — starred, assigned, snoozed.**
+  All three were already rendered by `partials/thread_row.php` and had never
+  been selected by the board query, so they were dead on every board page. A
+  topic you starred now reads as starred on its own board, not only in your
+  inbox.
+- **Unread is something you can set, not only something that happens to you.**
+  The row's gutter marker became a real control (`POST /t/{id}/read`) and the
+  topics header gained `{N} unread` + `Mark all read` (`POST /c/{slug}/read`).
+  Both are ordinary CSRF-bearing form POSTs that work with no JavaScript, and
+  both go dark with the existing `engagement` flag. `markUnread()` is a new
+  write rather than a reuse: `markRead()` is monotonic (`GREATEST`) and would
+  have silently no-opped.
+- The topics header became a **sticky column ruler** carrying the row's own
+  track list, so its labels rule the columns beneath them. It sticks *below*
+  the condensed masthead, never at the same offset.
+- Added the full empty state (the eight-point mark, the headline, and a
+  first-topic invitation gated on posting authority) and two-move pagination
+  with `Showing N of M topics`. An unavailable move renders as a
+  `<span aria-disabled>`, not a dead anchor, so it is neither focusable nor
+  announced as a link. Every other caller keeps the numbered strip.
+- Fixed `.chip-decision_made`, which was **invisible in twilight**: it painted
+  the numbered `--green-800` — which never flips — on the dark brand wash. Now
+  `--on-brand-subtle`; unchanged in the day register.
+- Fixed the same class of bug in the four `.tier-*` pills, three of which broke
+  in twilight for painting from numbered primitives that the dark register never
+  remaps. Measured before: **Loremaster 1.23:1** — the pill effectively vanished;
+  **Legend 3.55:1**, below AA, on a chip glaring at 14.27:1 against the page;
+  **Veteran** legible but a pale-blue slab in the wrong register. `.tier-member`
+  was already built from semantic tokens and is the model the other three now
+  follow. All four measure 5.5–10.1 in parchment and 6.2–9.3 in twilight.
+  Legend's day-register ink moves gold-700 → gold-800, which is why `--on-staff`
+  exists. These classes have no consumer in the app today, so the fix is
+  design-system CSS verified by computed-style measurement rather than a
+  screenshot.
+- Fixed FT-08: `can_follow_board` now consults `WriteGate::canWrite`, so a
+  suspended member is no longer offered a Follow control whose POST the write
+  gate refuses. State beats role.
+- Added `relative_datetime()`. The activity column is read by comparing its
+  rows, and `human_datetime()`'s ~24 unwrappable characters overflowed any
+  column narrow enough to leave the title its measure — visibly, over the new
+  status pill. The exact instant stays on the element's `datetime`/`title`.
+- Kept, against the design and now recorded in ADR 0027 rather than only in a
+  commit message: the band's three approved hex literals, the condensed sticky
+  masthead, the mobile FAB, the "Latest activity" eyebrow, the visible follow
+  note, and the composer-as-modal.
+
 ## [Unreleased] - Link previews completed and default-on
 
 - Completed the `link_previews` carryover and graduated it to default-on

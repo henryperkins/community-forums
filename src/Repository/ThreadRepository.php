@@ -98,10 +98,33 @@ final class ThreadRepository
         );
     }
 
-    /** @return array<int,array<string,mixed>> */
-    public function listByBoard(int $boardId, int $limit, int $offset): array
-    {
-        return $this->listBoardRows($boardId, $limit, $offset, 't.is_pinned DESC, t.last_post_at DESC, t.id DESC');
+    /**
+     * The board page's one page of topics, in the board's fixed order.
+     *
+     * $viewerId annotates each row with that member's own state — starred,
+     * snoozed, assigned — because a topic you starred must read as starred on
+     * its own board, not only in your inbox. Guests pass null and nothing is
+     * joined.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function listByBoard(
+        int $boardId,
+        int $limit,
+        int $offset,
+        ?int $viewerId = null,
+        bool $workflowEnabled = true,
+        bool $engagementEnabled = true,
+    ): array {
+        return $this->listBoardRows(
+            $boardId,
+            $limit,
+            $offset,
+            't.is_pinned DESC, t.last_post_at DESC, t.id DESC',
+            $viewerId,
+            $workflowEnabled,
+            $engagementEnabled,
+        );
     }
 
     /** @return array<int,array<string,mixed>> */
@@ -116,27 +139,76 @@ final class ThreadRepository
      *
      * @return array<int,array<string,mixed>>
      */
-    private function listBoardRows(int $boardId, int $limit, int $offset, string $orderBy): array
-    {
+    private function listBoardRows(
+        int $boardId,
+        int $limit,
+        int $offset,
+        string $orderBy,
+        ?int $viewerId = null,
+        bool $workflowEnabled = true,
+        bool $engagementEnabled = true,
+    ): array {
         // LIMIT/OFFSET are app-controlled integers, inlined after an int cast
         // because native prepared statements can't bind them as placeholders.
         $limit = max(1, $limit);
         $offset = max(0, $offset);
-        return $this->db->fetchAll(
+        $params = ['board_id' => $boardId];
+        $viewerSelect = '';
+        $viewerJoin = '';
+        if ($viewerId !== null) {
+            $params['viewer_id'] = $viewerId;
+            // The assignment joins carry no viewer id — an assignment belongs to
+            // the topic, not to the reader — so only thread_user is keyed to it.
+            $viewerSelect = ',
+                    COALESCE(tu.is_starred, 0) AS is_starred,
+                    tu.snoozed_until AS snoozed_until,
+                    ta.assigned_user_id,
+                    assignee.username AS assigned_username';
+            $viewerJoin = '
+             LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = :viewer_id
+             LEFT JOIN thread_assignments ta ON ta.thread_id = t.id
+             LEFT JOIN users assignee ON assignee.id = ta.assigned_user_id';
+        }
+
+        $rows = $this->db->fetchAll(
             // last_post_user identity is intentionally NOT selected: the listing
             // shows only last_post_at, and joining the last poster would leak the
             // real author of an anonymous final reply. Add a masked column if a
-            // "last reply by" byline is ever introduced.
+            // "last reply by" byline is ever introduced. The viewer joins above
+            // are subject to the same rule — they carry the viewer's own state,
+            // never another member's identity.
             'SELECT t.*, au.username AS author_username, au.display_name AS author_display_name,
-                    COALESCE(op.is_anonymous, 0) AS op_is_anonymous
+                    COALESCE(op.is_anonymous, 0) AS op_is_anonymous' . $viewerSelect . '
              FROM threads t
              JOIN users au ON au.id = t.user_id
-             LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
+             LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1' . $viewerJoin . '
              WHERE t.board_id = :board_id AND t.is_deleted = 0 AND t.is_pending = 0
              ORDER BY ' . $orderBy . '
              LIMIT ' . $limit . ' OFFSET ' . $offset,
-            ['board_id' => $boardId],
+            $params,
         );
+
+        if ($viewerId !== null && (!$workflowEnabled || !$engagementEnabled)) {
+            // A rollback must suppress retained state from every presentation,
+            // not merely remove its controls — mirroring
+            // ThreadUserRepository::inbox(). Each flag owns its own columns:
+            // topic_workflow owns snooze and assignment, engagement owns the
+            // star. Rolling engagement back while a star still rendered would
+            // leave a mark with no control to clear it.
+            foreach ($rows as &$row) {
+                if (!$workflowEnabled) {
+                    $row['snoozed_until'] = null;
+                    $row['assigned_user_id'] = null;
+                    $row['assigned_username'] = null;
+                }
+                if (!$engagementEnabled) {
+                    $row['is_starred'] = 0;
+                }
+            }
+            unset($row);
+        }
+
+        return $rows;
     }
 
     public function countByBoard(int $boardId): int
