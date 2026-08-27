@@ -13,6 +13,7 @@ use App\Repository\BoardRepository;
 use App\Repository\LinkPreviewRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
+use App\Security\WriteGate;
 
 /**
  * Read model and operator writes behind `GET /admin/link-previews` (ADR 0025).
@@ -39,6 +40,7 @@ final class LinkPreviewAdminService
         private ModerationLogRepository $log,
         private LinkPreviewService $service,
         private Config $config,
+        private WriteGate $writeGate,
     ) {
     }
 
@@ -161,8 +163,26 @@ final class LinkPreviewAdminService
      *
      * @param array<string,mixed> $input
      */
+    /**
+     * Axis 2 of the three authorization axes: account state, which beats role.
+     * `Controller::requireAdmin()` checks `isAdmin()` and nothing else, so without
+     * this a suspended or banned admin keeps every lever on this console — including
+     * the SSRF host allowlist and the kill switch, which decide what the server will
+     * fetch. Every sibling operator service already does this (`AdminService::
+     * assertAdmin()`, `AdminSettingsService`); this one did not.
+     *
+     * Writes only. Reading the console stays open to a suspended operator, which is
+     * what makes this the state axis rather than a second role check — and the role
+     * gate stays at the controller, exactly as it does for `AdminSettingsService`.
+     */
+    private function assertCanOperate(User $admin): void
+    {
+        $this->writeGate->assertCanWrite($admin);
+    }
+
     public function saveSettings(User $admin, array $input): void
     {
+        $this->assertCanOperate($admin);
         $hosts = $this->parseHosts((string) ($input['allowed_hosts'] ?? ''));
         $killSwitch = !empty($input['kill_switch']);
 
@@ -184,6 +204,7 @@ final class LinkPreviewAdminService
 
     public function setBoardOptIn(User $admin, int $boardId, bool $enabled): string
     {
+        $this->assertCanOperate($admin);
         $board = $this->boards->find($boardId);
         if ($board === null) {
             throw new NotFoundException('Board not found.');
@@ -243,6 +264,7 @@ final class LinkPreviewAdminService
      */
     private function act(User $admin, int $previewId, string $action, string $success): string
     {
+        $this->assertCanOperate($admin);
         return $this->db->transaction(function () use ($admin, $previewId, $action, $success): string {
             // Read before the mutation so the audit row still carries the URL.
             $row = $this->requirePreview($previewId);
