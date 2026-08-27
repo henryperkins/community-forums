@@ -44,6 +44,9 @@ final class LinkPreviewService
     /** The board simply has not opted in — reversible, so never terminal. */
     private const GATE_OPTED_OUT = 'opted_out';
 
+    /** Width of `link_previews.url` (VARCHAR(1024), migration 0058). See isStorableUrl(). */
+    private const URL_MAX_LENGTH = 1024;
+
     public function __construct(
         private Database $db,
         private LinkPreviewRepository $previews,
@@ -77,12 +80,42 @@ final class LinkPreviewService
 
         $queued = 0;
         foreach ($this->extractUrls($body) as $url) {
-            if ($this->isNeverFetchedLocalUrl($url)) {
+            if ($this->isNeverFetchedLocalUrl($url) || !$this->isStorableUrl($url)) {
                 continue;
             }
             $queued += $this->previews->queue($sourceType, $sourceId, $url, hash('sha256', $url)) ? 1 : 0;
         }
         return $queued;
+    }
+
+    /**
+     * `link_previews.url` is VARCHAR(1024) (migration 0058) while extractUrls()'s
+     * pattern is unbounded and a post body may run to `post_body_max` = 20000, so a
+     * single link can be twenty times the column — routine for signed S3 links, map
+     * links and tracking URLs.
+     *
+     * Left to reach the INSERT it raises SQLSTATE 22001 under STRICT_TRANS_TABLES
+     * (this project's dev container, and MySQL 8's default). A PDOException is
+     * neither ValidationException nor HttpException, so the kernel maps it to a 500 —
+     * and queueFromBody() is called from inside PostingService's own write
+     * transaction, so the rollback takes the thread and the post with it. The member
+     * loses the body they typed, with no 422 re-render to carry it back. A link is
+     * not worth a post.
+     *
+     * Skipping, not clamping. `url_hash` is the sha256 of the WHOLE url and carries
+     * the unique key `uq_preview_source_url`, so a truncated `url` beside a full-url
+     * hash would be permanently unfetchable while every re-edit queued the same
+     * doomed row again — which is also what a non-strict server does silently today.
+     * A preview is a progressive enhancement; a link too long to store gets none, and
+     * the skip is scoped to that one URL so the rest of the body still queues.
+     *
+     * Measured in characters, not bytes: MySQL counts VARCHAR(n) in characters, and
+     * the column is utf8mb4. mb_strlen on invalid UTF-8 over-counts rather than
+     * under-counts, so the error is on the side of skipping.
+     */
+    private function isStorableUrl(string $url): bool
+    {
+        return mb_strlen($url, 'UTF-8') <= self::URL_MAX_LENGTH;
     }
 
     /**
