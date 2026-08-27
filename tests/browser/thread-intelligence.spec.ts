@@ -33,7 +33,23 @@ function fixture(action: string, info: TestInfo): FixtureState {
   return JSON.parse(output) as FixtureState;
 }
 
-async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
+/**
+ * `fullPage` is the wrong instrument for the Living Brief. The Study's thread
+ * column is its own scroll container, so the document stays viewport-height and
+ * a page-level capture records only what the pane has not scrolled past. That
+ * was survivable while curation lived in the viewport-pinned Topic tools drawer;
+ * the redesign moved it into the scroller, and a page-level shot then framed the
+ * footer's header while leaving the disclosure body it is named for out of frame.
+ *
+ * Naming the element is necessary but not sufficient: what a scroll container
+ * clips is never painted, and no capture can record pixels the compositor did
+ * not draw — an element shot of a surface taller than the pane comes back with
+ * the overflow as flat background. So grow the viewport (the pane is
+ * viewport-height, so it grows with it) until the whole surface is on screen,
+ * capture it, and put the viewport back. The admin console is an ordinary
+ * document and keeps its page-level capture.
+ */
+async function shot(page: Page, info: TestInfo, name: string, element?: string): Promise<void> {
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   if (name === '79-admin-thread-intelligence' && info.project.name === 'mobile') {
@@ -41,11 +57,34 @@ async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
       region.scrollLeft = region.scrollWidth;
     });
   }
-  await page.screenshot({
-    path: path.join(evidenceDir, info.project.name, `${name}.png`),
-    fullPage: true,
-    animations: 'disabled',
-  });
+  const target = path.join(evidenceDir, info.project.name, `${name}.png`);
+  if (element === undefined) {
+    await page.screenshot({ path: target, fullPage: true, animations: 'disabled' });
+    return;
+  }
+
+  const locator = page.locator(element);
+  const viewport = page.viewportSize();
+  expect(viewport, 'element captures need a known viewport to restore').not.toBeNull();
+  // Two passes: growing the viewport reflows the surface, so re-measure once
+  // before deciding the capture height is enough.
+  let grown = false;
+  for (let pass = 0; pass < 2; pass += 1) {
+    const box = await locator.boundingBox();
+    expect(box, `${element} should have a box to capture`).not.toBeNull();
+    const needed = Math.ceil(box!.height) + 160;
+    if (needed <= page.viewportSize()!.height) break;
+    await page.setViewportSize({ width: viewport!.width, height: needed });
+    grown = true;
+  }
+  await locator.scrollIntoViewIfNeeded();
+  // The guard for the defect above: a surface taller than the viewport cannot be
+  // wholly on screen, so part of the capture would be unpainted background.
+  const framed = await locator.boundingBox();
+  expect(Math.ceil(framed!.height), `${element} must fit the viewport to be painted whole`)
+    .toBeLessThanOrEqual(page.viewportSize()!.height);
+  await locator.screenshot({ path: target, animations: 'disabled' });
+  if (grown) await page.setViewportSize(viewport!);
 }
 
 async function visit(page: Page, url: string): Promise<void> {
@@ -72,8 +111,6 @@ async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags'
  * form POST re-renders the page with every disclosure shut again.
  */
 async function openDisclosure(details: Locator): Promise<void> {
-  // Read the attribute rather than the DOM property: this also runs inside the
-  // javaScriptEnabled:false context, where page-world evaluate() is dead.
   // Read the attribute rather than the DOM property: this also runs inside the
   // javaScriptEnabled:false context, where page-world evaluate() is dead. The
   // summary is opened from the keyboard rather than clicked, which is both the
@@ -187,9 +224,11 @@ function generationRow(page: Page, threadTitle: string) {
 async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include: string): Promise<void> {
   // Land any running entrance animation first. axe reads the composited colour,
   // so a card still fading in reports its foreground blended toward the surface
-  // — on the sunken More panel the brief's gold and rust inks measure 3.91:1 and
-  // 4.07:1 at 89% opacity mid-fade, and 4.76:1 and 4.90:1 once the 180ms
-  // disclosure fade lands.
+  // — mid-fade axe read the brief's gold and rust inks as #8a6d35 and #a55a44 at
+  // 3.9:1 and 4.06:1, against a background it had blended too. Settled, the real
+  // tokens #7E5F22 and #9C4A33 on --surface-sunken #ECE4D2 measure 4.68:1 and
+  // 4.82:1: a 0.18 margin over AA, which is exactly why the fade must land
+  // before the scan rather than be argued away.
   // Infinite animations cannot be finished; they are left running.
   await page.evaluate(() => {
     for (const animation of document.getAnimations()) {
@@ -266,7 +305,7 @@ test('fallback, curator empty state, and generated Living Brief render safely wi
     expect(new Set(cards.map((card) => card.left)).size).toBe(1);
     expect(cards[0].width).toBeGreaterThan(250);
   }
-  await shot(page, info, '76-living-brief');
+  await shot(page, info, '76-living-brief', '.living-brief');
 
   // The same brief-less topic, seen by a curator: the empty panel renders
   // beside the fallback and explains the eligibility ladder's actual denial.
@@ -287,7 +326,7 @@ test('fallback, curator empty state, and generated Living Brief render safely wi
   await expect(empty.locator('.lb-versions')).toHaveCount(0);
   await expect(empty.getByRole('button', { name: 'Refresh', exact: true })).toBeDisabled();
   await expectNoHorizontalOverflow(page, '.living-brief-empty');
-  await shot(page, info, '75-thread-intelligence-fallback');
+  await shot(page, info, '75-thread-intelligence-fallback', '.thread-memory-slot');
 });
 
 test('curator tools hang off the brief, and edit, real-worker refresh, retirement, restoration and explicit resume preserve lineage', async ({ page }, info) => {
@@ -329,7 +368,7 @@ test('curator tools hang off the brief, and edit, real-worker refresh, retiremen
   await expect(curator.locator('form[action$="/summary/restore"] input[name="summary_id"]').first())
     .toHaveAttribute('type', 'hidden');
   await expectNoHorizontalOverflow(page, '.lb-more-body');
-  await shot(page, info, '77-living-brief-curator-controls');
+  await shot(page, info, '77-living-brief-curator-controls', '.living-brief');
 
   const editor = amend.locator('form[action$="/summary"]');
   await editor.locator('textarea[name="body"]').fill(`Curator baseline for ${projectKey(info)} with retained public evidence.`);
@@ -431,7 +470,7 @@ test('provider failure, budget exhaustion, and stale sources preserve or suppres
     await expect(curatorRow.getByRole('button', { name: 'Refresh', exact: true })).toBeDisabled();
     await expect(page.locator('.living-brief .living-brief-curator-note'))
       .toContainText('Daily refresh capacity has been reached');
-    await shot(page, info, '78-living-brief-last-good');
+    await shot(page, info, '78-living-brief-last-good', '.living-brief');
 
     fixture('invalidate-source', info);
     try {
