@@ -208,6 +208,23 @@ The member shapes their own sidebar:
 
 Backed by `user_board_prefs` (§7).
 
+**On a board page**, the member also controls their own read state directly:
+
+- The **gutter marker** on each row toggles that topic between read and unread
+  — a gold dot when unread, a hollow ring when read. It posts an explicit
+  target state, so a repeated submit lands where the member clicked rather than
+  flipping past it.
+- **Mark all read** clears every unread topic on that board. It appears beside
+  the `{N} unread` count and disappears with it, so the control is never
+  offered when it would do nothing.
+- Both are ordinary form POSTs and work with no JavaScript. Both require the
+  `engagement` feature; without it the gutter is still reserved (so the rows
+  keep one left edge) but carries no control.
+
+The board row also shows the member's **own** state on a topic — starred,
+assigned to, snoozed until — because a topic you starred must read as starred
+on its own board and not only in your inbox. A guest sees none of it.
+
 ### 4.4 Bookmarks & saved
 
 > **Reconciliation:** "bookmark a thread" and the **star** from DESIGN.md (`thread_user.is_starred`) are the **same action** — we surface it as **Save/Star** consistently and do not create a parallel concept. "Subscribe" (get notified) stays distinct from "Save" (bookmark for later).

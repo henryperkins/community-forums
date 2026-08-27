@@ -49,6 +49,69 @@ final class ThreadUserRepository
         );
     }
 
+    /**
+     * Push the thread back to unread by hand — the board row's read marker.
+     *
+     * markRead() cannot be reused in reverse: it is monotonic by construction
+     * (GREATEST), so asking it for a lower watermark silently no-ops. This
+     * clears the watermark instead, and INSERTs the row when none exists —
+     * deleting the row would fall the thread back to the engagement cutover,
+     * which on a default install reads as *read* and would invert the action.
+     */
+    public function markUnread(int $userId, int $threadId): void
+    {
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred)
+             VALUES (:uid, :tid, NULL, 0)
+             ON DUPLICATE KEY UPDATE last_read_post_id = NULL',
+            ['uid' => $userId, 'tid' => $threadId],
+        );
+    }
+
+    /**
+     * Clear every unread topic on one board in a single statement. Still
+     * monotonic — a topic already read past its last post stays where it is.
+     * Threads with no posts at all carry no watermark to advance to.
+     */
+    public function markBoardRead(int $userId, int $boardId): void
+    {
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred)
+             SELECT :uid, t.id, t.last_post_id, 0
+             FROM threads t
+             WHERE t.board_id = :bid
+               AND t.is_deleted = 0
+               AND t.is_pending = 0
+               AND t.last_post_id IS NOT NULL
+             ON DUPLICATE KEY UPDATE
+               last_read_post_id = GREATEST(COALESCE(last_read_post_id, 0), VALUES(last_read_post_id))',
+            ['uid' => $userId, 'bid' => $boardId],
+        );
+    }
+
+    /**
+     * Unread topics on one board, for the board page's own count.
+     *
+     * Deliberately NOT unreadCount()'s predicate: this counts exactly the rows
+     * unreadFlags() puts a dot on, so the header's number always equals the
+     * dots below it. Board visibility is already settled by the caller's read
+     * gate, and a muted board still shows its own unread state to a reader who
+     * has navigated to it.
+     */
+    public function unreadCountForBoard(int $userId, int $boardId, string $cutover): int
+    {
+        return (int) $this->db->fetchValue(
+            'SELECT COUNT(*)
+             FROM threads t
+             LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             WHERE t.board_id = ?
+               AND t.is_deleted = 0
+               AND t.is_pending = 0
+               AND (' . $this->unreadStateSql() . ')',
+            [$userId, $boardId, $cutover],
+        );
+    }
+
     public function isStarred(int $userId, int $threadId): bool
     {
         return (int) $this->db->fetchValue(

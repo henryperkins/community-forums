@@ -9,15 +9,27 @@ $newThreadTitleError = trim((string) ($errors['title'] ?? ''));
 $newThreadTitleFocus = $newThreadTitleError !== '' && array_key_first($errors ?? []) === 'title';
 // board_id is a hidden field, so it can sit outside the box; the title is the
 // composer's own header field and belongs inside it.
-$newThreadWrapper = function () use ($board): void {
+$newThreadWrapper = function () use ($board, $e): void {
     ?>
     <input type="hidden" name="board_id" value="<?= (int) $board['id'] ?>">
+    <?php /* The destination, stated at the top of the panel. It must live in
+             the wrapper slot — inside the <form> — because under JS only
+             `.composer-details[open] > .composer` is lifted into the centred
+             modal; a sibling of the form is left behind the scrim, on the page. */ ?>
+    <p class="composer-scope-eyebrow">New topic in #<?= $e($board['name']) ?></p>
     <?php
 };
 $newThreadHeader = function () use ($old, $e, $newThreadTitleId, $newThreadTitleErrorId, $newThreadTitleError, $newThreadTitleFocus): void {
     ?>
     <?php if ($newThreadTitleError !== ''): ?><p class="field-error" id="<?= $e($newThreadTitleErrorId) ?>"><?= $e($newThreadTitleError) ?></p><?php endif; ?>
-    <input type="text" id="<?= $e($newThreadTitleId) ?>" name="title" class="input" placeholder="Title" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= $newThreadTitleError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($newThreadTitleErrorId) . '"' . ($newThreadTitleFocus ? ' autofocus' : '') : '' ?> aria-label="Topic title" required>
+    <?php /* No wrapping element: `.composer-header > .input` is a direct-child
+             selector that strips the field's own border and matches the body's
+             inset, so the composer reads as one surface rather than a detached
+             input stacked above a framed component. A <label> here would make
+             the input a grandchild and quietly give it its border back. The
+             design's visible "Title" label is deferred for that reason
+             (ADR 0027); aria-label carries the name meanwhile. */ ?>
+    <input type="text" id="<?= $e($newThreadTitleId) ?>" name="title" class="input" placeholder="What should the council consider?" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= $newThreadTitleError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($newThreadTitleErrorId) . '"' . ($newThreadTitleFocus ? ' autofocus' : '') : '' ?> aria-label="Topic title" required>
     <?php
 };
 $newThreadBeforeSubmit = function (): void {

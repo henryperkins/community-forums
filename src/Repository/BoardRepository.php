@@ -35,10 +35,24 @@ final class BoardRepository
         return $this->db->fetch('SELECT * FROM boards WHERE id = ?', [$id]);
     }
 
-    /** @return array<string,mixed>|null */
+    /**
+     * A board plus the name of the category it files under. The board page's
+     * identity band uses `category_name` as its eyebrow, so it is joined here
+     * rather than fetched separately. LEFT JOIN, not INNER: `category_id` is
+     * NOT NULL, but an orphaned row must still resolve to the board rather
+     * than to "board not found".
+     *
+     * @return array<string,mixed>|null
+     */
     public function findBySlug(string $slug): ?array
     {
-        return $this->db->fetch('SELECT * FROM boards WHERE slug = ?', [$slug]);
+        return $this->db->fetch(
+            'SELECT b.*, c.name AS category_name
+             FROM boards b
+             LEFT JOIN categories c ON c.id = b.category_id
+             WHERE b.slug = ?',
+            [$slug],
+        );
     }
 
     /** @return array<int,array<string,mixed>> */
