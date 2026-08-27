@@ -588,6 +588,8 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/summary"', $curatorHtml);
         self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/related"', $curatorHtml);
         self::assertStringContainsString('name="source_post_ids"', $curatorHtml);
+        // Nothing has ever been published here, so "yet" is true of the landmark too.
+        self::assertStringContainsString('aria-label="No living brief yet"', $curatorHtml);
         // Nothing to retire when nothing is published.
         self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/summary/retire"', $curatorHtml);
 
@@ -654,7 +656,16 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('Restore a version', $html);
         $restoreRow = 'name="summary_id" value="' . $summaryId . '"';
         self::assertSame(1, substr_count($html, $restoreRow), 'one restore form per version, not two');
-        self::assertStringContainsString('<button class="btn" type="submit">Restore</button>', $html);
+        // Distinct accessible name per row: several buttons reading only "Restore"
+        // are the first thing a screen-reader user meets now that the rows lead.
+        self::assertStringContainsString(
+            '<button class="btn" type="submit">Restore<span class="sr-only"> version 1</span></button>',
+            $html,
+        );
+        // The landmark name must track the visible eyebrow: a region still announced
+        // as "No living brief yet" contradicts the "No brief showing" above it.
+        self::assertStringContainsString('aria-label="No living brief showing"', $html);
+        self::assertStringNotContainsString('aria-label="No living brief yet"', $html);
         $rowAt = strpos($html, $restoreRow);
         $footerAt = strpos($html, 'id="living-brief-curator-' . $seed['thread_id'] . '"');
         self::assertNotFalse($rowAt);
@@ -698,6 +709,40 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         // restate one instant in two timezones.
         self::assertStringContainsString('Refresh available after', $copy);
         self::assertStringNotContainsString('<time', $copy);
+    }
+
+    public function test_curator_note_states_the_next_refresh_time_exactly_once(): void
+    {
+        $seed = $this->seedThread(8, 'Hourly limited brief topic');
+        $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Published brief body');
+        $this->db->run(
+            "INSERT INTO thread_intelligence_jobs
+                (thread_id, state, trigger_code, last_generated_at, activity_version, created_at, updated_at)
+             VALUES (?, 'idle', 'post_created', UTC_TIMESTAMP(), 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$seed['thread_id']],
+        );
+        $this->rebuildAppWithProvider();
+        $admin = $this->makeAdmin(['username' => 'hourly-brief-curator']);
+        $this->actingAs($admin);
+        $html = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug'])->body();
+
+        // The brief-present surface carries the SAME denial through a different
+        // element — partials/thread_memory_tools.php's curator note — so the
+        // one-instant-two-timezones restatement has to be guarded there too.
+        $noteAt = strpos($html, 'class="muted living-brief-curator-note"');
+        self::assertNotFalse($noteAt, 'the curator note renders beside a published brief');
+        $noteEnd = strpos($html, '</p>', (int) $noteAt);
+        self::assertNotFalse($noteEnd);
+        $note = substr($html, (int) $noteAt, (int) $noteEnd - (int) $noteAt);
+        self::assertStringContainsString('Refresh available after', $note);
+        self::assertStringNotContainsString('<time', $note);
+
+        // The version rows in the brief's More panel carry the same per-row
+        // accessible name as the promoted rows in the empty state.
+        self::assertStringContainsString(
+            'Restore<span class="sr-only"> version 1</span>',
+            $html,
+        );
     }
 
     /**

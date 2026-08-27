@@ -5,6 +5,7 @@ $threadId = (int) $thread['id'];
 $paused = !empty($memory_automation_paused);
 $refresh = $memory_refresh ?? [];
 $history = $memory_history ?? [];
+$code = (string) ($refresh['code'] ?? '');
 $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => 'Retired'];
 // Two callers: partials/living_brief.php (a brief is published) and
 // partials/living_brief_empty.php (none is). The footer is the same set of
@@ -62,7 +63,13 @@ $everPublished = $hasBrief || $history !== [];
     <?php if ($hasBrief && !$paused && empty($refresh['eligible'])): ?>
         <p class="muted living-brief-curator-note">
             <?= $e($refresh['message'] ?? 'Refresh is not currently available.') ?>
-            <?php if (!empty($refresh['next_eligible_at_utc'])): ?>
+            <?php /* Same narrow denylist the empty state applies: `hourly_limit` is the
+                     one denial whose MESSAGE already carries a formatted time, because
+                     decide() embeds one whenever the ask is explicit and the view model
+                     only ever asks through forExplicitRefresh(). Appending the UTC
+                     <time> as well would restate one instant in two timezones. Every
+                     other code keeps its machine-readable stamp. */ ?>
+            <?php if ($code !== 'hourly_limit' && !empty($refresh['next_eligible_at_utc'])): ?>
                 <time datetime="<?= $e($refresh['next_eligible_at_utc']) ?>"><?= $e(($refresh['next_eligible_at'] ?? '') . ' UTC') ?></time>
             <?php endif; ?>
         </p>
@@ -92,7 +99,7 @@ $everPublished = $hasBrief || $history !== [];
                             <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/restore">
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="summary_id" value="<?= (int) $item['id'] ?>">
-                                <button class="linkbtn" type="submit">Restore</button>
+                                <button class="linkbtn" type="submit">Restore<span class="sr-only"> version <?= (int) $item['version'] ?></span></button>
                             </form>
                         </li>
                     <?php endforeach; ?>

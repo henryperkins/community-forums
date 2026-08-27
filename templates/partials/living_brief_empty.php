@@ -28,7 +28,7 @@ $thresholdLabel = $thresholdWords[$threshold] ?? (string) $threshold;
 $hasHistory = $history !== [];
 $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => 'Retired'];
 ?>
-<section class="living-brief-empty" aria-label="No living brief yet">
+<section class="living-brief-empty" aria-label="<?= $hasHistory ? 'No living brief showing' : 'No living brief yet' ?>">
     <p class="living-brief-empty-eyebrow"><?= $hasHistory ? 'No brief showing' : 'No brief yet' ?></p>
     <?php if ($code === 'initial_post_threshold'): ?>
         <?php /* The count sentence is earned only by the post-count denial. A topic
@@ -84,7 +84,7 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
                     <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/restore">
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="summary_id" value="<?= (int) $item['id'] ?>">
-                        <button class="<?= $index === 0 ? 'btn' : 'linkbtn' ?>" type="submit">Restore</button>
+                        <button class="<?= $index === 0 ? 'btn' : 'linkbtn' ?>" type="submit">Restore<span class="sr-only"> version <?= (int) $item['version'] ?></span></button>
                     </form>
                 </li>
             <?php endforeach; ?>
