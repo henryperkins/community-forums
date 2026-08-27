@@ -430,10 +430,15 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
     }
 
     /**
-     * Axes 1 and 3: a plain logged-in member and a guest. The rendered assertions
-     * prove the affordance is hidden; the route assertions prove the server refuses a
-     * hand-rolled POST, which is the part that actually holds. A member is refused
-     * (403); a guest never reaches the gate at all and is bounced to /login.
+     * Axis 1 (global role, at its floor) plus the unauthenticated case — which is not
+     * one of the three axes but the gate standing in front of all of them. Per-board
+     * authority, the real axis 3, is pinned separately in
+     * test_board_moderator_curates_their_own_board_and_no_other().
+     *
+     * The rendered assertions prove the affordance is hidden; the route assertions
+     * prove the server refuses a hand-rolled POST, which is the part that actually
+     * holds. A member is refused (403); a guest never reaches the gate at all and is
+     * bounced to /login.
      */
     public function test_curator_routes_refuse_plain_members_and_guests_on_every_form(): void
     {
@@ -467,6 +472,65 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
                 $label . ' must send a guest to the login page',
             );
         }
+    }
+
+    /**
+     * Axis 3, per-board authority — the axis with the most moving parts, because
+     * assertCuratorForLockedThread() resolves it through AuthorityGate::allows() with
+     * Cap::MEMORY_CURATE rather than a bare role read, so a capability-rule regression
+     * could open the gate with every other test in this file still green.
+     *
+     * Two board_moderators rows, identical in every respect except which board they
+     * name, decide the same thread's brief in opposite directions. Neither actor is an
+     * admin: the positive half is the only allowed case in this file that is not a site
+     * admin, which is what would catch a rule that silently narrowed to admin-only.
+     */
+    public function test_board_moderator_curates_their_own_board_and_no_other(): void
+    {
+        $seed = $this->seedThread(8, 'Per-board curator authority');
+        [$summaryId] = $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $neighbour = $this->makeThread($seed['board'], $this->makeUser(['username' => 'board-neighbour']), 'Neighbour topic');
+        $url = '/t/' . $seed['thread_id'] . '-' . $seed['slug'];
+        $forms = $this->curatorForms($seed['thread_id'], $summaryId, (int) $neighbour['thread_id']);
+        $boardMods = new BoardModeratorRepository($this->db);
+
+        // Moderator of a DIFFERENT board: global role `user`, a real board_moderators
+        // row, and no authority at all over this thread.
+        $elsewhere = $this->makeBoard($this->makeCategory('Elsewhere'));
+        $offBoardMod = $this->makeUser(['username' => 'off-board-mod']);
+        $boardMods->assign((int) $elsewhere['id'], (int) $offBoardMod['id']);
+        $this->actingAs($offBoardMod);
+        $offBoardHtml = $this->get($url)->body();
+        self::assertStringContainsString('data-living-brief', $offBoardHtml);
+        self::assertStringNotContainsString('living-brief-curator-' . $seed['thread_id'], $offBoardHtml);
+        self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/summary', $offBoardHtml);
+        foreach ($forms as $label => [$path, $body]) {
+            self::assertSame(
+                403,
+                $this->post($path, $body)->status(),
+                $label . ' must refuse a moderator assigned to another board',
+            );
+        }
+
+        // Moderator of THIS board: the same shape of row, now naming the thread's board.
+        $onBoardMod = $this->makeUser(['username' => 'on-board-mod']);
+        $boardMods->assign((int) $seed['board']['id'], (int) $onBoardMod['id']);
+        $this->actingAs($onBoardMod);
+        $onBoardHtml = $this->get($url)->body();
+        self::assertStringContainsString('id="living-brief-curator-' . $seed['thread_id'] . '"', $onBoardHtml);
+        self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/summary/refresh"', $onBoardHtml);
+
+        // Rendered affordance is not authority: make a curator route actually act, and
+        // pin that it books a non-admin as the curator who did it.
+        $this->assertRedirect($this->post('/t/' . $seed['thread_id'] . '/summary/automation/pause', []), $url);
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT automation_paused FROM thread_intelligence_jobs WHERE thread_id = ?',
+            [$seed['thread_id']],
+        ));
+        self::assertSame((int) $onBoardMod['id'], (int) $this->db->fetchValue(
+            'SELECT paused_by FROM thread_intelligence_jobs WHERE thread_id = ?',
+            [$seed['thread_id']],
+        ));
     }
 
     /**
