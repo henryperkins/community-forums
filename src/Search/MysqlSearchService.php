@@ -23,70 +23,106 @@ final class MysqlSearchService implements SearchService
     {
     }
 
-    public function search(string $query, ?User $viewer, int $limit = 20): array
+    public function search(SearchQuery $query, ?User $viewer): array
     {
-        $query = trim($query);
-        if (mb_strlen($query) < 3) {
-            // Below the InnoDB FULLTEXT min token size — no results rather than a scan.
+        if (!$query->isSearchable() || ($query->scope === 'mine' && $viewer === null)) {
             return [];
         }
-        $limit = max(1, min(50, $limit));
 
         [$visSql, $visParams] = $this->visibility($viewer);
+        $branches = [];
+        $params = [];
 
-        $threads = $this->db->fetchAll(
-            "SELECT 'thread' AS type, t.id AS thread_id, t.slug, t.title, b.slug AS board_slug, b.name AS board_name,
-                    MATCH(t.title) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
-             FROM threads t JOIN boards b ON b.id = t.board_id
-             WHERE t.is_deleted = 0 AND t.is_pending = 0 AND ($visSql)
-               AND MATCH(t.title) AGAINST (? IN NATURAL LANGUAGE MODE)
-             ORDER BY score DESC LIMIT " . $limit,
-            array_merge([$query], $visParams, [$query]),
-        );
-
-        $posts = $this->db->fetchAll(
-            "SELECT 'post' AS type, p.id AS post_id, p.body, p.thread_id, t.slug AS thread_slug, t.title,
-                    b.slug AS board_slug, b.name AS board_name,
-                    MATCH(p.body) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
-             FROM posts p
-             JOIN threads t ON t.id = p.thread_id
-             JOIN boards b ON b.id = t.board_id
-             WHERE p.is_deleted = 0 AND p.is_pending = 0 AND t.is_deleted = 0 AND t.is_pending = 0 AND ($visSql)
-               AND MATCH(p.body) AGAINST (? IN NATURAL LANGUAGE MODE)
-             ORDER BY score DESC LIMIT " . $limit,
-            array_merge([$query], $visParams, [$query]),
-        );
-
-        $results = [];
-        foreach ($threads as $r) {
-            $results[] = [
-                'type' => 'thread',
-                'thread_id' => (int) $r['thread_id'],
-                'slug' => (string) $r['slug'],
-                'title' => (string) $r['title'],
-                'snippet' => '',
-                'board_slug' => (string) $r['board_slug'],
-                'board_name' => (string) $r['board_name'],
-                'url' => '/t/' . (int) $r['thread_id'] . '-' . $r['slug'],
-                'score' => (float) $r['score'],
-            ];
-        }
-        foreach ($posts as $r) {
-            $results[] = [
-                'type' => 'post',
-                'thread_id' => (int) $r['thread_id'],
-                'slug' => (string) $r['thread_slug'],
-                'title' => (string) $r['title'],
-                'snippet' => $this->snippet((string) $r['body'], $query),
-                'board_slug' => (string) $r['board_slug'],
-                'board_name' => (string) $r['board_name'],
-                'url' => '/t/' . (int) $r['thread_id'] . '-' . $r['thread_slug'] . '#p' . (int) $r['post_id'],
-                'score' => (float) $r['score'],
-            ];
+        if (in_array($query->scope, ['everything', 'topics', 'mine'], true)) {
+            $mineSql = $query->scope === 'mine' ? ' AND t.user_id = ?' : '';
+            $branches[] = "
+                SELECT 'thread' AS result_type, NULL AS post_id,
+                       t.id AS thread_id, t.slug, t.title,
+                       b.slug AS board_slug, b.name AS board_name,
+                       op.body AS snippet_body, t.created_at, t.user_id AS author_id,
+                       MATCH(t.title) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
+                FROM threads t
+                JOIN boards b ON b.id = t.board_id
+                LEFT JOIN posts op
+                  ON op.thread_id = t.id
+                 AND op.is_op = 1
+                 AND op.is_deleted = 0
+                 AND op.is_pending = 0
+                WHERE t.is_deleted = 0
+                  AND t.is_pending = 0
+                  AND ($visSql)
+                  AND MATCH(t.title) AGAINST (? IN NATURAL LANGUAGE MODE)
+                  $mineSql";
+            $params[] = $query->query;
+            array_push($params, ...$visParams);
+            $params[] = $query->query;
+            if ($query->scope === 'mine') {
+                $params[] = $viewer->id();
+            }
         }
 
-        usort($results, static fn (array $a, array $b): int => $b['score'] <=> $a['score']);
-        return array_slice($results, 0, $limit);
+        if (in_array($query->scope, ['everything', 'replies', 'mine'], true)) {
+            $mineSql = $query->scope === 'mine' ? ' AND p.user_id = ?' : '';
+            $branches[] = "
+                SELECT 'post' AS result_type, p.id AS post_id,
+                       p.thread_id, t.slug, t.title,
+                       b.slug AS board_slug, b.name AS board_name,
+                       p.body AS snippet_body, p.created_at, p.user_id AS author_id,
+                       MATCH(p.body) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
+                FROM posts p
+                JOIN threads t ON t.id = p.thread_id
+                JOIN boards b ON b.id = t.board_id
+                WHERE p.is_op = 0
+                  AND p.is_deleted = 0
+                  AND p.is_pending = 0
+                  AND t.is_deleted = 0
+                  AND t.is_pending = 0
+                  AND ($visSql)
+                  AND MATCH(p.body) AGAINST (? IN NATURAL LANGUAGE MODE)
+                  $mineSql";
+            $params[] = $query->query;
+            array_push($params, ...$visParams);
+            $params[] = $query->query;
+            if ($query->scope === 'mine') {
+                $params[] = $viewer->id();
+            }
+        }
+
+        $order = $query->order === 'newest'
+            ? "ranked.created_at DESC,
+               CASE WHEN ranked.result_type = 'thread' THEN 0 ELSE 1 END,
+               ranked.thread_id DESC, COALESCE(ranked.post_id, 0) DESC"
+            : "ranked.score DESC, ranked.created_at DESC,
+               CASE WHEN ranked.result_type = 'thread' THEN 0 ELSE 1 END,
+               ranked.thread_id DESC, COALESCE(ranked.post_id, 0) DESC";
+        $rows = $this->db->fetchAll(
+            'SELECT ranked.*
+             FROM (' . implode("\nUNION ALL\n", $branches) . ") ranked
+             ORDER BY $order
+             LIMIT " . $query->limit,
+            $params,
+        );
+
+        return array_map(function (array $row) use ($query): array {
+            $type = (string) $row['result_type'];
+            $threadId = (int) $row['thread_id'];
+            $postId = $row['post_id'] === null ? null : (int) $row['post_id'];
+            $slug = (string) $row['slug'];
+            return [
+                'type' => $type,
+                'post_id' => $postId,
+                'thread_id' => $threadId,
+                'slug' => $slug,
+                'title' => (string) $row['title'],
+                'snippet' => $this->snippet((string) ($row['snippet_body'] ?? ''), $query->query),
+                'board_slug' => (string) $row['board_slug'],
+                'board_name' => (string) $row['board_name'],
+                'url' => '/t/' . $threadId . '-' . $slug . ($postId === null ? '' : '#p' . $postId),
+                'score' => (float) $row['score'],
+                'created_at' => (string) $row['created_at'],
+                'author_id' => (int) $row['author_id'],
+            ];
+        }, $rows);
     }
 
     /**

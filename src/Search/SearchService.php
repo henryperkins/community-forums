@@ -13,10 +13,11 @@ use App\Domain\User;
  *
  * A result: ['type'=>'thread'|'post', 'thread_id'=>int, 'slug'=>string,
  *            'title'=>string, 'snippet'=>string (HTML-safe), 'board_slug'=>string,
- *            'board_name'=>string, 'url'=>string, 'score'=>float].
+ *            'board_name'=>string, 'url'=>string, 'score'=>float,
+ *            'created_at'=>string, 'author_id'=>int].
  */
 interface SearchService
 {
     /** @return array<int,array<string,mixed>> ranked, read-gated results */
-    public function search(string $query, ?User $viewer, int $limit = 20): array;
+    public function search(SearchQuery $query, ?User $viewer): array;
 }

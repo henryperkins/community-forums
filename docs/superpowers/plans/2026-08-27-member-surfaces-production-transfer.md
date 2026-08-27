@@ -172,11 +172,11 @@
 - `SearchService::search(SearchQuery $query, ?User $viewer): array` remains replaceable and read-gated.
 - Results add `created_at` and `author_id` only as internal presentation fields; URLs/snippets remain safe and stable.
 
-- [ ] Add failing tests for every scope/order combination, guest `mine`, read gating, limit-before/after union correctness, deterministic newest/relevance ties, short queries, escaped snippets, and URL fragments.
-- [ ] Add failing page tests for query retention, active controls, count line, result kinds, engraved-well validation, and empty/initial states.
-- [ ] Implement the immutable query object, update the MySQL union/ranking path without reused placeholders or bound limits, and update call sites.
-- [ ] Render the approved Search surface and re-run focused tests green.
-- [ ] Commit `feat: transfer the search surface`.
+- [x] Add failing tests for every scope/order combination, guest `mine`, read gating, limit-before/after union correctness, deterministic newest/relevance ties, short queries, escaped snippets, and URL fragments.
+- [x] Add failing page tests for query retention, active controls, count line, result kinds, engraved-well validation, and empty/initial states.
+- [x] Implement the immutable query object, update the MySQL union/ranking path without reused placeholders or bound limits, and update call sites.
+- [x] Render the approved Search surface and re-run focused tests green.
+- [x] Commit `feat: transfer the search surface`.
 
 ---
 
