@@ -275,6 +275,35 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         ));
     }
 
+    public function test_curator_tools_render_inside_the_brief_and_never_for_members(): void
+    {
+        $seed = $this->seedThread(8, 'Curator tools relocation');
+        $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $url = '/t/' . $seed['thread_id'] . '-' . $seed['slug'];
+
+        $admin = $this->makeAdmin(['username' => 'tools-curator']);
+        $this->actingAs($admin);
+        $curatorHtml = $this->get($url)->body();
+        $briefStart = strpos($curatorHtml, 'data-living-brief');
+        // Match the container's own id, not the topic-tools link's `href="#..."`:
+        // the aside renders before the brief, so a bare substring would find the
+        // link first and invert the ordering assertion.
+        $tools = strpos($curatorHtml, 'id="living-brief-curator-' . $seed['thread_id'] . '"');
+        self::assertNotFalse($briefStart);
+        self::assertNotFalse($tools);
+        self::assertLessThan($tools, $briefStart);
+        self::assertSame(1, substr_count($curatorHtml, 'action="/t/' . $seed['thread_id'] . '/summary/refresh"'));
+
+        $member = $this->makeUser(['username' => 'tools-member']);
+        $this->actingAs($member);
+        $memberHtml = $this->get($url)->body();
+        self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/summary', $memberHtml);
+
+        $this->logoutClient();
+        $guestHtml = $this->get($url)->body();
+        self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/summary', $guestHtml);
+    }
+
     private function rebuildAppWithProvider(): void
     {
         $items = $this->config->all();

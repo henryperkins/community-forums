@@ -97,7 +97,8 @@ $moveSelected = (int) ($move_selected ?? 0);
         <details data-topic-tools-section="memory">
             <summary><span>Living Brief</span><span aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?></span></summary>
             <div class="topic-tools-section-body">
-                <?= $this->partial('partials/thread_memory_tools', compact('thread', 'living_brief', 'memory_history', 'memory_refresh', 'memory_automation_paused') + ['embedded' => true]) ?>
+                <p class="muted">Curator tools for this brief sit at the foot of the brief itself.</p>
+                <a class="linkbtn" href="#living-brief-curator-<?= (int) $thread['id'] ?>">Go to the brief's curator tools</a>
             </div>
         </details>
         <?php endif; ?>

@@ -209,6 +209,19 @@ final class AppThreadViewStudyTest extends TestCase
         $this->posting()->reply($this->userEntity($author), (int) $thread['thread_id'], ['body' => 'Movable reply.']);
 
         $this->actingAs($admin);
+        // The curator's memory forms now hang off the living brief itself rather than the
+        // topic-tools drawer, so this topic needs a published brief for them to have a
+        // home. Publishing through the real route keeps the "renders exactly once"
+        // contract below intact instead of weakening it.
+        $opPostId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [(int) $thread['thread_id']],
+        );
+        $this->post('/t/' . $thread['thread_id'] . '/summary', [
+            'body' => 'Curated brief so the curator footer has a home.',
+            'source_post_ids' => (string) $opPostId,
+        ]);
+
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
         $html = $page->body();
 

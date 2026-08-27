@@ -13,7 +13,6 @@
             <span>Version <?= (int) $living_brief['version'] ?></span>
             <time datetime="<?= $e($living_brief['published_at_utc']) ?>"><?= $e($living_brief['published_at']) ?></time>
         </p>
-        <?php if (!empty($can_curate_memory)): ?><button type="button" class="living-brief-curate" data-topic-tools-open="memory" hidden>Curate</button><?php endif; ?>
     </div>
     <?php if (!empty($memory_automation_paused)): ?>
         <p class="living-brief-status is-paused">
@@ -58,5 +57,16 @@
                 </a>
             <?php endforeach; ?>
         </div>
+    <?php endif; ?>
+
+    <?php if (!empty($can_curate_memory)): ?>
+        <?= $this->partial('partials/thread_memory_tools', [
+            'thread' => $thread,
+            'living_brief' => $living_brief,
+            'memory_history' => $memory_history ?? [],
+            'memory_refresh' => $memory_refresh ?? [],
+            'memory_automation_paused' => !empty($memory_automation_paused),
+            'can_curate_memory' => true,
+        ]) ?>
     <?php endif; ?>
 </section>

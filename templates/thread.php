@@ -181,11 +181,14 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
     <div class="thread-memory-slot">
         <?php if ($living_brief !== null): ?>
             <?= $this->partial('partials/living_brief', [
+                'thread' => $thread,
                 'living_brief' => $living_brief,
                 'living_brief_sources' => $living_brief_sources,
                 'living_brief_related' => $living_brief_related,
                 'can_curate_memory' => !empty($can_write) && !empty($can_curate_memory),
                 'memory_automation_paused' => $memory_automation_paused,
+                'memory_history' => $memory_history,
+                'memory_refresh' => $memory_refresh,
             ]) ?>
         <?php elseif ($related_fallback !== []): ?>
             <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
