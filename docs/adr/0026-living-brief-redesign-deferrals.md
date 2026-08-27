@@ -177,7 +177,7 @@ check**, so the next slice does not have to rediscover them:
 **The only viable route is plain text through the generation pipeline, upgraded
 to an anchor in the view layer.**
 
-## Findings — surfaced here, not fixed here
+## Findings — F1 and F2 surfaced here, F3 fixed here
 
 **F1 — The source-union mismatch that blocks §4. Code-reading, not an executed repro.**
 
@@ -260,7 +260,7 @@ changes observable statuses on seven routes that already carry committed browser
 and PHPUnit evidence, so it needs its own change and its own evidence pass rather
 than a drive-by edit inside a UI redesign. It is owned here.
 
-**F3 — An entire browser evidence group has been dead, and is dead in CI. Executed repro.**
+**F3 — An entire browser evidence group has been dead, and is dead in CI. Executed repro; fixed on this branch after review.**
 
 `tests/browser/role-assignments.spec.ts` cannot be parsed:
 
@@ -305,11 +305,23 @@ and group 3 is expected to be the first real stop there. That expectation has
 locally on Windows should run the groups individually rather than conclude the
 chain dies at group 1.
 
-**Not fixed here.** Choosing which of the two `openTopicComposer` implementations
-survives (they differ only in parenthesisation of the same ternary) is a decision
-for whoever owns that spec, and the fix must be evidenced by a green group-3 run
-under `CAPABILITIES_MODE=enforce`, which is outside this branch's surface. It is
-recorded so it is not lost again.
+**Fixed on this branch, during the review pass that followed this ADR.** There was
+nothing to choose between: the two implementations are the same function — the same
+locators, the same fallback order, the same assertion — differing only in the
+parenthesisation of one ternary. The second copy (line 93) was deleted; the
+documented first survives, because it carries the comment explaining why the
+promoted control is preferred over the hidden `<summary>`. `npx playwright test
+role-assignments.spec.ts --list` now exits 0 and lists **6 tests in 1 file**
+(3 × desktop, 3 × mobile), so groups 3 and 4 can reach the runner again.
+
+**What that does and does not evidence.** It evidences that the spec parses and
+collects — not that group 3 *passes* under `CAPABILITIES_MODE=enforce`. Three of
+those six tests have not run since 2026-08-08 and may carry their own drift. The
+repository `capture` workflow cannot supply the answer on this branch either: it
+has not started at all, for an unrelated reason — "The job was not started because
+your account is locked due to a billing issue". A maintainer with the runner
+available should run group 3 alone before treating the chain as healthy, and the
+Windows caveat above still applies to reproducing any of it locally.
 
 ## Known follow-ups
 
@@ -380,7 +392,22 @@ recorded so it is not lost again.
    — no rule in `app.css`, no selector in `public/assets/*.js`, no test. It was
    added for a layout rule that the flex defaults on `.lb-more-body` made
    unnecessary. Harmless, but it reads as a live styling hook to the next person
-   editing that block. Delete it, or give it the rule it implies.
+   editing that block. **Closed on this branch:** the class was deleted rather than
+   given a rule, since the layout it implied is already what the flex defaults do.
+
+6. **The browser a11y gate cannot see a heading-level skip.** The shared
+   `expectNoSeriousA11yViolations()` helper runs axe under
+   `withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])` and then keeps only
+   `serious`/`critical`. axe tags `heading-order`
+   `best-practice` and scores it `moderate`, so the rule is excluded twice over.
+   Removing the brief's `<h2>` (Decision §1) therefore left `<h3>Sources</h3>`
+   hanging off the topic `<h1>` with a green a11y run. The outline is now pinned in
+   PHPUnit instead — `ThreadIntelligenceSurfaceTest` walks every `<hN>` on the topic
+   page and asserts no level is skipped — and the section carries a screen-reader-only
+   `<h2>` so the topic title still leads visually. **The gap is general**, not local to
+   this surface: any other screen that drops or reorders a heading has the same blind
+   spot. Adding `best-practice` to the shared helper's tags, or asserting the outline
+   in the shared helper, would close it everywhere; both are wider than this branch.
 
 ## Evidence
 
