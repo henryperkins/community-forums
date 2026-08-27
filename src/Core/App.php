@@ -44,7 +44,9 @@ use App\Controller\FeedController;
 use App\Controller\FollowController;
 use App\Controller\HealthController;
 use App\Controller\HomeController;
+use App\Controller\InboxBulkController;
 use App\Controller\InboxController;
+use App\Controller\InboxPreviewController;
 use App\Controller\LeaderboardController;
 use App\Controller\LinkPreviewController;
 use App\Controller\MediaController;
@@ -209,6 +211,7 @@ use App\Service\LegacyAuthorityProjection;
 use App\Service\LinkPreviewAdminService;
 use App\Service\LinkPreviewService;
 use App\Service\IdentityProviderService;
+use App\Service\InboxBulkService;
 use App\Service\InvitationService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
@@ -1028,6 +1031,12 @@ final class App
         $c->bind(BoardModeratorRepository::class, fn (Container $c) => new BoardModeratorRepository($c->get(Database::class)));
         $c->bind(BoardMemberRepository::class, fn (Container $c) => new BoardMemberRepository($c->get(Database::class)));
         $c->bind(ThreadUserRepository::class, fn (Container $c) => new ThreadUserRepository($c->get(Database::class)));
+        $c->bind(InboxBulkService::class, fn (Container $c) => new InboxBulkService(
+            $c->get(Database::class),
+            $c->get(ThreadUserRepository::class),
+            $c->get(ThreadReadService::class),
+            $c->get(WriteGate::class),
+        ));
         $c->bind(ReactionRepository::class, fn (Container $c) => new ReactionRepository($c->get(Database::class)));
         $c->bind(SubscriptionRepository::class, fn (Container $c) => new SubscriptionRepository($c->get(Database::class)));
         $c->bind(NotificationRepository::class, fn (Container $c) => new NotificationRepository($c->get(Database::class)));
@@ -2136,6 +2145,8 @@ final class App
         $r->get('/sitemap.xml', [SeoController::class, 'sitemap']);
         $r->get('/robots.txt', [SeoController::class, 'robots']);
         $r->get('/inbox', [InboxController::class, 'index']);
+        $r->get('/inbox/preview/{id}', [InboxPreviewController::class, 'show']);
+        $r->post('/inbox/bulk', [InboxBulkController::class, 'apply']);
         $r->get('/search', [SearchController::class, 'index']);
         $r->get('/presence', [PresenceController::class, 'index']);
         $r->get('/users-online', [PresenceController::class, 'page']);

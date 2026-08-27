@@ -144,12 +144,12 @@
 - `POST /inbox/bulk` accepts current-view thread IDs plus one allow-listed action and redirects to the current scope/order.
 - Existing single-topic POST routes remain canonical; bulk operations call their owning services in a transaction-safe, authorization-checked loop.
 
-- [ ] Add failing repository tests for the 12 scopes crossed with all three orders, pinned-first behavior, deterministic ties, commend counts, pagination, feature-disabled scopes, and mute/snooze parity with unread totals.
-- [ ] Add failing route/template tests for `scope`, `order`, `page`, legacy `filter` normalization, count labels, canonical links, row/menu/sweep forms, no duplicate IDs, and precise empty states.
-- [ ] Add failing preview tests for public/private/hidden access, deleted/pending content, anonymity, bounded replies, canonical link, locked/reply permission, and absence of full topic tools.
-- [ ] Add failing bulk tests for CSRF, invalid/missing IDs, cross-view/cross-board access, suspended accounts, partial authorization, read/unread/star/snooze actions, and view-scoped redirects.
-- [ ] Implement the query split, preview controller/template, and service-backed bulk endpoint.
-- [ ] Re-run the focused Inbox group green and commit `feat: transfer the forum inbox surface`.
+- [x] Add failing repository tests for the 12 scopes crossed with all three orders, pinned-first behavior, deterministic ties, commend counts, pagination, feature-disabled scopes, and mute/snooze parity with unread totals.
+- [x] Add failing route/template tests for `scope`, `order`, `page`, legacy `filter` normalization, count labels, canonical links, row/menu/sweep forms, no duplicate IDs, and precise empty states.
+- [x] Add failing preview tests for public/private/hidden access, deleted/pending content, anonymity, bounded replies, canonical link, locked/reply permission, and absence of full topic tools.
+- [x] Add failing bulk tests for CSRF, invalid/missing IDs, cross-view/cross-board access, suspended accounts, partial authorization, read/unread/star/snooze actions, and view-scoped redirects.
+- [x] Implement the query split, preview controller/template, and service-backed bulk endpoint.
+- [x] Re-run the focused Inbox group green and commit `feat: transfer the forum inbox surface`.
 
 ---
 

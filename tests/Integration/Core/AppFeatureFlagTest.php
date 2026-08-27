@@ -1032,6 +1032,8 @@ final class AppFeatureFlagTest extends TestCase
             (int) $snoozed['thread_id'],
             '2999-01-01 00:00:00',
         );
+        (new ThreadUserRepository($this->db))->setStar((int) $viewer['id'], (int) $snoozed['thread_id'], true);
+        (new ThreadUserRepository($this->db))->setStar((int) $viewer['id'], (int) $solved['thread_id'], true);
         $this->db->run("UPDATE threads SET status = 'needs_answer' WHERE id = ?", [(int) $snoozed['thread_id']]);
         (new ThreadAssignmentRepository($this->db))->assign(
             (int) $snoozed['thread_id'],
@@ -1049,7 +1051,7 @@ final class AppFeatureFlagTest extends TestCase
         $this->setFlags(['topic_workflow' => false, 'mentions' => false]);
         $this->actingAs($viewer);
 
-        $active = $this->get('/inbox', ['filter' => 'active']);
+        $active = $this->get('/inbox', ['scope' => 'starred', 'order' => 'active']);
         $this->assertStatus(200, $active);
         $this->assertSeeText($active, 'Workflow state must not hide this topic');
         $this->assertDontSeeText($active, 'Needs answer');
@@ -1059,16 +1061,16 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertSeeText($active, 'Accepted answer stays solved');
         self::assertStringContainsString('thread-status-solved', $active->body());
         foreach (['mentions', 'needs_answer', 'assigned', 'decisions', 'solved', 'snoozed'] as $disabled) {
-            self::assertStringNotContainsString('href="/inbox?filter=' . $disabled . '"', $active->body());
+            self::assertStringNotContainsString('scope=' . $disabled, $active->body());
         }
 
-        $forYou = $this->get('/inbox', ['filter' => 'for_you']);
+        $forYou = $this->get('/inbox', ['scope' => 'for_you', 'order' => 'active']);
         $this->assertStatus(200, $forYou);
         $this->assertDontSeeText($forYou, 'Retained mention must not rank');
 
-        $disabledFilter = $this->get('/inbox', ['filter' => 'snoozed']);
+        $disabledFilter = $this->get('/inbox', ['scope' => 'snoozed', 'order' => 'active']);
         $this->assertStatus(200, $disabledFilter);
-        self::assertStringNotContainsString('href="/inbox?filter=snoozed"', $disabledFilter->body());
+        self::assertStringNotContainsString('scope=snoozed', $disabledFilter->body());
     }
 
     public function test_oauth_off_hides_connections(): void

@@ -208,8 +208,13 @@ final class AppContentApprovalTest extends TestCase
         // surface the held-content hardening missed).
         $viewer = $this->makeUser(['username' => 'inboxviewer']);
         $this->actingAs($viewer);
-        foreach (['newest', 'active', 'unanswered', 'unread'] as $filter) {
-            $this->assertDontSeeText($this->get('/inbox', ['filter' => $filter]), 'Held inbox topic');
+        foreach ([
+            ['scope' => 'for_you', 'order' => 'newest'],
+            ['scope' => 'for_you', 'order' => 'active'],
+            ['scope' => 'needs_answer', 'order' => 'newest'],
+            ['scope' => 'unread', 'order' => 'active'],
+        ] as $view) {
+            $this->assertDontSeeText($this->get('/inbox', $view), 'Held inbox topic');
         }
         $cutover = gmdate('Y-m-d H:i:s', time() - 3600);
         self::assertSame(0, (new ThreadUserRepository($this->db))->unreadCount((int) $viewer['id'], false, $cutover));

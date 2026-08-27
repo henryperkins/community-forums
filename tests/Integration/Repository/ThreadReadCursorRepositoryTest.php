@@ -141,7 +141,7 @@ final class ThreadReadCursorRepositoryTest extends TestCase
         self::assertSame(1, $repo->unreadCount($viewerId, false, ThreadUserRepository::NO_CUTOVER));
         self::assertSame(
             ['Cursor target surfaces'],
-            array_column($repo->inbox($viewerId, 'unread', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
+            array_column($repo->inbox($viewerId, 'unread', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
         );
     }
 

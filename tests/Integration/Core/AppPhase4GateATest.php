@@ -111,14 +111,14 @@ final class AppPhase4GateATest extends TestCase
         $this->post('/t/' . $threadId . '/assign', ['self' => '1']);
         self::assertSame((int) $author['id'], (int) $this->db->fetchValue('SELECT assigned_user_id FROM thread_assignments WHERE thread_id = ?', [$threadId]));
 
-        $assigned = $this->get('/inbox', ['filter' => 'assigned']);
+        $assigned = $this->get('/inbox', ['scope' => 'assigned', 'order' => 'active']);
         $this->assertStatus(200, $assigned);
         $this->assertSeeText($assigned, 'Needs triage');
 
         $this->post('/t/' . $threadId . '/snooze', ['until' => 'tomorrow']);
-        $assignedAfterSnooze = $this->get('/inbox', ['filter' => 'assigned']);
+        $assignedAfterSnooze = $this->get('/inbox', ['scope' => 'assigned', 'order' => 'active']);
         $this->assertDontSeeText($assignedAfterSnooze, 'Needs triage');
-        $snoozed = $this->get('/inbox', ['filter' => 'snoozed']);
+        $snoozed = $this->get('/inbox', ['scope' => 'snoozed', 'order' => 'active']);
         $this->assertSeeText($snoozed, 'Needs triage');
     }
 
