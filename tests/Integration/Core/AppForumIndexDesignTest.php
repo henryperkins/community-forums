@@ -27,13 +27,19 @@ final class AppForumIndexDesignTest extends TestCase
 
         $this->assertStatus(200, $response);
         self::assertStringContainsString('class="forum-directory__hero"', $body);
-        self::assertStringContainsString('>Forum index<', $body);
-        self::assertStringContainsString('Forum inbox', $body);
-        self::assertStringContainsString('personal cross-board queue', $body);
+        self::assertStringContainsString('data-directory-pane="boards"', $body);
+        self::assertStringContainsString('>Every board in the valley<', $body);
+        self::assertStringContainsString('Your own cross-board queue is the', $body);
+        self::assertStringContainsString('href="/inbox"', $body);
+        self::assertStringContainsString('href="/?pane=boards"', $body);
+        self::assertStringContainsString('href="/?pane=tags"', $body);
+        self::assertStringContainsString('href="/?pane=notices"', $body);
+        self::assertStringContainsString('href="/?pane=connections"', $body);
         self::assertStringContainsString('data-forum-total="boards">1 board', $body);
         self::assertStringContainsString('data-forum-total="topics">7 topics', $body);
         self::assertStringContainsString('data-forum-total="posts">42 posts', $body);
         self::assertStringContainsString('href="/c/public-design-board"', $body);
+        self::assertStringContainsString('data-directory-board="public-design-board"', $body);
         self::assertStringNotContainsString('hidden-design-board', $body);
         self::assertStringNotContainsString('data-inbox-list', $body);
         self::assertStringNotContainsString('composer-details', $body);

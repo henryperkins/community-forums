@@ -220,6 +220,159 @@ final class ThreadRepository
     }
 
     /**
+     * Public Board Index facts and bounded topic peeks for an already
+     * policy-filtered set of board ids. The visible-board CTE is deliberately
+     * supplied by the caller: this query cannot discover a hidden/private board
+     * that NavigationService did not first admit through BoardPolicy.
+     *
+     * One statement computes every board-level rank signal and at most five
+     * topic rows per board. No personal thread_user/user_board_prefs state is
+     * joined, which keeps the directory identical for every reader.
+     *
+     * @param list<int> $boardIds
+     * @return array<int,array{
+     *     latest_activity_at:?string,
+     *     newest_thread_at:?string,
+     *     unanswered_count:int,
+     *     top_commend_count:int,
+     *     settled_count:int,
+     *     latest_settled_at:?string,
+     *     topics:list<array<string,mixed>>
+     * }>
+     */
+    public function directorySignals(array $boardIds, string $sort, int $peek): array
+    {
+        $boardIds = array_values(array_unique(array_filter(array_map('intval', $boardIds), static fn (int $id): bool => $id > 0)));
+        if ($boardIds === []) {
+            return [];
+        }
+
+        $peek = in_array($peek, [0, 3, 5], true) ? $peek : 3;
+        $sort = in_array($sort, ['category', 'active', 'newest', 'unanswered', 'top', 'solved'], true)
+            ? $sort
+            : 'category';
+
+        $visibleSelects = [];
+        $params = [];
+        foreach ($boardIds as $ordinal => $boardId) {
+            $visibleSelects[] = ($ordinal === 0 ? 'SELECT ? AS board_id' : 'SELECT ?') . ', ' . $ordinal . ' AS ordinal';
+            $params[] = $boardId;
+        }
+
+        $topicOrder = match ($sort) {
+            'newest' => 'created_at DESC, id DESC',
+            'unanswered' => 'is_unanswered DESC, created_at DESC, id DESC',
+            'top' => 'commend_count DESC, last_post_at DESC, id DESC',
+            'solved' => 'is_settled DESC, COALESCE(status_changed_at, last_post_at) DESC, id DESC',
+            default => 'last_post_at DESC, id DESC',
+        };
+        $topicMatch = match ($sort) {
+            'unanswered' => 'r.is_unanswered = 1',
+            'solved' => 'r.is_settled = 1',
+            default => '1 = 1',
+        };
+        $peekJoin = $peek === 0 ? '1 = 0' : 'r.topic_rank <= ' . $peek . ' AND ' . $topicMatch;
+
+        $rows = $this->db->fetchAll(
+            'WITH visible_boards AS (
+                 ' . implode(' UNION ALL ', $visibleSelects) . '
+             ),
+             reaction_counts AS (
+                 SELECT p.thread_id, COUNT(r.id) AS commend_count
+                 FROM posts p
+                 JOIN threads scoped ON scoped.id = p.thread_id
+                 JOIN visible_boards vb ON vb.board_id = scoped.board_id
+                 JOIN reactions r ON r.post_id = p.id AND r.user_id <> p.user_id
+                 WHERE p.is_op = 1 AND p.is_deleted = 0 AND p.is_pending = 0
+                 GROUP BY p.thread_id
+             ),
+             base AS (
+                 SELECT t.id, t.board_id, t.title, t.slug, t.created_at,
+                        t.last_post_at, t.reply_count, t.status, t.status_changed_at,
+                        u.username AS author_username,
+                        u.display_name AS author_display_name,
+                        u.role AS author_role,
+                        COALESCE(op.is_anonymous, 0) AS op_is_anonymous,
+                        COALESCE(rc.commend_count, 0) AS commend_count,
+                        CASE WHEN t.status = \'needs_answer\' OR t.reply_count = 0 THEN 1 ELSE 0 END AS is_unanswered,
+                        CASE WHEN t.status IN (\'solved\', \'decision_made\') THEN 1 ELSE 0 END AS is_settled
+                 FROM threads t
+                 JOIN visible_boards vb ON vb.board_id = t.board_id
+                 JOIN users u ON u.id = t.user_id
+                 LEFT JOIN posts op
+                   ON op.thread_id = t.id
+                  AND op.is_op = 1
+                  AND op.is_deleted = 0
+                  AND op.is_pending = 0
+                 LEFT JOIN reaction_counts rc ON rc.thread_id = t.id
+                 WHERE t.is_deleted = 0 AND t.is_pending = 0
+             ),
+             aggregates AS (
+                 SELECT board_id,
+                        MAX(last_post_at) AS latest_activity_at,
+                        MAX(created_at) AS newest_thread_at,
+                        SUM(is_unanswered) AS unanswered_count,
+                        MAX(commend_count) AS top_commend_count,
+                        SUM(is_settled) AS settled_count,
+                        MAX(CASE WHEN is_settled = 1 THEN COALESCE(status_changed_at, last_post_at) END) AS latest_settled_at
+                 FROM base
+                 GROUP BY board_id
+             ),
+             ranked AS (
+                 SELECT base.*,
+                        ROW_NUMBER() OVER (PARTITION BY board_id ORDER BY ' . $topicOrder . ') AS topic_rank
+                 FROM base
+             )
+             SELECT vb.board_id,
+                    a.latest_activity_at, a.newest_thread_at,
+                    COALESCE(a.unanswered_count, 0) AS unanswered_count,
+                    COALESCE(a.top_commend_count, 0) AS top_commend_count,
+                    COALESCE(a.settled_count, 0) AS settled_count,
+                    a.latest_settled_at,
+                    r.id AS thread_id, r.title, r.slug, r.created_at, r.last_post_at,
+                    r.reply_count, r.status, r.status_changed_at,
+                    r.author_username, r.author_display_name, r.author_role,
+                    r.op_is_anonymous, r.commend_count
+             FROM visible_boards vb
+             LEFT JOIN aggregates a ON a.board_id = vb.board_id
+             LEFT JOIN ranked r ON r.board_id = vb.board_id AND ' . $peekJoin . '
+             ORDER BY vb.ordinal ASC, r.topic_rank ASC',
+            $params,
+        );
+
+        $signals = [];
+        foreach ($boardIds as $boardId) {
+            $signals[$boardId] = [
+                'latest_activity_at' => null,
+                'newest_thread_at' => null,
+                'unanswered_count' => 0,
+                'top_commend_count' => 0,
+                'settled_count' => 0,
+                'latest_settled_at' => null,
+                'topics' => [],
+            ];
+        }
+        foreach ($rows as $row) {
+            $boardId = (int) $row['board_id'];
+            $signals[$boardId]['latest_activity_at'] = $row['latest_activity_at'] !== null ? (string) $row['latest_activity_at'] : null;
+            $signals[$boardId]['newest_thread_at'] = $row['newest_thread_at'] !== null ? (string) $row['newest_thread_at'] : null;
+            $signals[$boardId]['unanswered_count'] = (int) $row['unanswered_count'];
+            $signals[$boardId]['top_commend_count'] = (int) $row['top_commend_count'];
+            $signals[$boardId]['settled_count'] = (int) $row['settled_count'];
+            $signals[$boardId]['latest_settled_at'] = $row['latest_settled_at'] !== null ? (string) $row['latest_settled_at'] : null;
+            if ($row['thread_id'] !== null) {
+                $row['thread_id'] = (int) $row['thread_id'];
+                $row['reply_count'] = (int) $row['reply_count'];
+                $row['op_is_anonymous'] = (int) $row['op_is_anonymous'];
+                $row['commend_count'] = (int) $row['commend_count'];
+                $signals[$boardId]['topics'][] = $row;
+            }
+        }
+
+        return $signals;
+    }
+
+    /**
      * Recent non-deleted threads by author, for the PUBLIC profile. Restricted
      * to public boards so a member's activity never reveals the existence or
      * titles of threads in hidden/private boards (the board read/list gate).

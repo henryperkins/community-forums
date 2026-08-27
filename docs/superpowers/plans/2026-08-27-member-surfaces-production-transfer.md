@@ -113,12 +113,12 @@
 - Adds one read-gated board-directory query returning board facts, ranked signal, and at most five topic peeks without per-board queries.
 - Uses stored sort/peek only when the query omits them; authenticated submissions persist through Task 2's POST route.
 
-- [ ] Add failing tests for the hero/tabs/totals, allowed query normalization, member preference fallback, guest URL state, category-vs-ranked grouping, all six sort orders, all three peek sizes, and absence of personal row signals.
-- [ ] Add failing visibility tests proving totals and topic peeks reveal only policy-listed/readable boards and content.
-- [ ] Add failing pane tests for read-gated tag catalog, notification actions, follower/following lists, feature gates, and guest states.
-- [ ] Implement one bounded repository query for directory facts/peeks and the controller's validated view model.
-- [ ] Render the approved Board Index anatomy with canonical links and existing notification/follow actions.
-- [ ] Re-run the focused index tests green and commit `feat: transfer the board index surface`.
+- [x] Add failing tests for the hero/tabs/totals, allowed query normalization, member preference fallback, guest URL state, category-vs-ranked grouping, all six sort orders, all three peek sizes, and absence of personal row signals.
+- [x] Add failing visibility tests proving totals and topic peeks reveal only policy-listed/readable boards and content.
+- [x] Add failing pane tests for read-gated tag catalog, notification actions, follower/following lists, feature gates, and guest states.
+- [x] Implement one bounded repository query for directory facts/peeks and the controller's validated view model.
+- [x] Render the approved Board Index anatomy with canonical links and existing notification/follow actions.
+- [x] Re-run the focused index tests green and commit `feat: transfer the board index surface`.
 
 ---
 
