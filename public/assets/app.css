@@ -2161,6 +2161,12 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 
 /* — Reactions read "emoji · count"; the dot is the lapidary separator (§5.1) — */
 .reaction-n::before { content: "· "; color: inherit; opacity: .7; }
+/* The "·" separates a reaction's NAME from its count. Production reactions are raw
+   emoji with no name (ReactionService::ALLOWED), so on a bare chip the separator has
+   nothing to separate and reads as a stray dot — "👍 · 4". Dropped with the label.
+   This rule has to live here, unlayered: the identical ::before ships inside
+   @layer imladris.components, and a layered override would lose to app.css. */
+.reaction-bare .reaction-n::before { content: none; }
 
 /* — Conversation header: one calm action bar instead of stacked raw links (§5.1) —
    The star is already a pill (.star-btn); the notify <select> and the
@@ -10522,12 +10528,15 @@ span.wf-btn {
 .thread-study { width: min(100%, 860px); margin-inline: auto; }
 .thread-study-head { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--border-hair); }
 .thread-study-title { max-width: 28ch; margin: 12px 0 0; font-size: 2.15rem; line-height: 1.14; text-wrap: balance; }
+/* The standing chips are a row above the title, not children of the <h1>, so the
+   heading's accessible name is the title alone. The 12px base margin on the title
+   stays as the no-chips fallback; the row takes it over when it renders. */
+.thread-study-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.thread-study-chips + .thread-study-title { margin-top: 8px; }
 .thread-status-chip,
 .thread-state-chip {
     display: inline-flex;
     align-items: center;
-    vertical-align: .35em;
-    margin-right: 8px;
     padding: 3px 10px;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-pill);
@@ -10543,8 +10552,15 @@ span.wf-btn {
 .thread-status-chip.is-archived,
 .thread-state-chip.is-locked { color: var(--text-muted); background: var(--surface-sunken); }
 .thread-state-chip.is-pinned { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
-.thread-facts { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; margin-top: 10px; }
-.thread-facts .thread-byline { margin: 0; }
+/* nowrap, deliberately: a wrapping flex container breaks its lines from the items'
+   CONTENT widths BEFORE flex-shrink is applied, so a shrinkable byline alone never
+   gets the chance to give up its width — the Star pill widening to "Starred" pushed
+   the whole control group onto a second line. Identity shrinks to an ellipsis; the
+   controls never do. The row wraps again below 768px, where two lines are right. */
+.thread-facts { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px 12px; margin-top: 10px; }
+.thread-facts-identity { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; flex: 1 1 auto; min-width: 0; }
+.thread-facts-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; margin-left: auto; }
+.thread-facts .thread-byline { margin: 0; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .thread-facts .thread-participants { margin-left: auto; }
 .topic-tools-open,
 .star-btn {
@@ -10555,6 +10571,9 @@ span.wf-btn {
     background: var(--surface-raised);
     color: var(--text-body);
 }
+/* One esteem glyph. The commend star is gold whether or not the topic is starred —
+   the pill's own colour carries the state, as .star-on already does. */
+.star-btn .icon-commend-star { flex: 0 0 auto; width: 13px; height: 13px; color: var(--star); }
 .post-stream { gap: 0; }
 /* The Study stream is deliberately flat — no cards. That leaves NOTHING marking
    where one person stops and the next begins, so the padding and the hairline
@@ -10774,7 +10793,12 @@ body.thread-restructure-open { overflow: hidden; }
 
 @media (max-width: 768px) {
     .thread-study-title { font-size: 1.75rem; max-width: none; }
-    .thread-facts .thread-byline { flex-basis: 100%; }
+    /* Two lines is the right answer on a phone: the identity group takes the first,
+       the controls the second, and nothing is ellipsised away to reach one line. */
+    .thread-facts { flex-wrap: wrap; }
+    .thread-facts-identity { flex: 1 1 100%; }
+    .thread-facts-actions { margin-left: 0; }
+    .thread-facts .thread-byline { flex-basis: 100%; overflow: visible; white-space: normal; }
     .thread-facts .thread-participants-label { display: none; }
     .thread-facts .thread-participants { margin-left: 0; }
     [data-thread-enhanced="1"] .topic-tools:not([hidden]) {

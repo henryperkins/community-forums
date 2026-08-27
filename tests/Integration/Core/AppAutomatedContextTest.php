@@ -259,15 +259,25 @@ final class AppAutomatedContextTest extends TestCase
                 ['body' => 'Unread paging update ' . $i . '.'],
             );
         }
+        // Read position straddles the page boundary on purpose: the topic now opens
+        // on the page holding the FIRST unread reply, so the read position has to
+        // leave part of the catch-me-up window off that page for this test to still
+        // be about cross-page links. replyIds[7] and [8] land on page 1 with the
+        // viewer; [9] onwards are on page 2.
         $this->db->run(
             'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
-            [(int) $viewer['id'], $thread['thread_id'], $replyIds[8]],
+            [(int) $viewer['id'], $thread['thread_id'], $replyIds[6]],
         );
 
         $this->actingAs($viewer);
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
+        // On this page: a bare fragment, and the post itself is actually rendered.
+        self::assertStringContainsString('id="p' . $replyIds[7] . '"', $page->body());
+        self::assertStringContainsString('href="#p' . $replyIds[7] . '"', $page->body());
+        // Off this page: an absolute link carrying the page number, never a bare
+        // fragment that would scroll to nothing.
         self::assertStringContainsString(
             '/t/' . $thread['thread_id'] . '-' . $thread['slug'] . '?page=2#p' . $replyIds[9],
             $page->body(),
@@ -276,6 +286,109 @@ final class AppAutomatedContextTest extends TestCase
             'href="#p' . $replyIds[9] . '"',
             $page->body(),
         );
+    }
+
+    public function test_thread_opens_on_the_page_holding_the_first_unread_reply(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['automated_context' => true]);
+        $author = $this->makeUser(['username' => 'unreadpageauthor']);
+        $viewer = $this->makeUser(['username' => 'unreadpageviewer']);
+        (new UserPreferenceRepository($this->db))->merge((int) $viewer['id'], ['posts_per_page' => 10]);
+        $board = $this->makeBoard($this->makeCategory('Unread Landing'), ['slug' => 'unread-landing']);
+        $thread = $this->makeThread($board, $author, 'Unread landing topic', 'Opening post.');
+
+        $replyIds = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $replyIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                $thread['thread_id'],
+                ['body' => 'Landing update ' . $i . '.'],
+            );
+        }
+        // OP + replies 1-9 fill page 1; replyIds[9] is the first post on page 2.
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], $thread['thread_id'], $replyIds[8]],
+        );
+
+        $this->actingAs($viewer);
+        $url = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+        $landing = $this->get($url);
+
+        $this->assertStatus(200, $landing);
+        self::assertStringContainsString('id="p' . $replyIds[9] . '"', $landing->body());
+        self::assertStringNotContainsString('id="p' . $replyIds[0] . '"', $landing->body());
+
+        // An explicit ?page always wins — including ?page=1, which is the only way
+        // back to the top of a topic once the unread rule exists.
+        $this->db->run(
+            'UPDATE thread_user SET last_read_post_id = ? WHERE user_id = ? AND thread_id = ?',
+            [$replyIds[8], (int) $viewer['id'], $thread['thread_id']],
+        );
+        $first = $this->get($url, ['page' => '1']);
+        $this->assertStatus(200, $first);
+        self::assertStringContainsString('id="p' . $replyIds[0] . '"', $first->body());
+        self::assertStringNotContainsString('id="p' . $replyIds[9] . '"', $first->body());
+    }
+
+    public function test_a_caught_up_reader_opens_a_thread_on_page_one(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['automated_context' => true]);
+        $author = $this->makeUser(['username' => 'caughtupauthor']);
+        $viewer = $this->makeUser(['username' => 'caughtupviewer']);
+        (new UserPreferenceRepository($this->db))->merge((int) $viewer['id'], ['posts_per_page' => 10]);
+        $board = $this->makeBoard($this->makeCategory('Caught Up'), ['slug' => 'caught-up']);
+        $thread = $this->makeThread($board, $author, 'Caught up topic', 'Opening post.');
+
+        $replyIds = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $replyIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                $thread['thread_id'],
+                ['body' => 'Caught up update ' . $i . '.'],
+            );
+        }
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], $thread['thread_id'], $replyIds[14]],
+        );
+
+        $this->actingAs($viewer);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('id="p' . $replyIds[0] . '"', $page->body());
+        self::assertStringNotContainsString('id="p' . $replyIds[14] . '"', $page->body());
+    }
+
+    public function test_a_first_time_reader_opens_a_thread_on_page_one(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['automated_context' => true]);
+        $author = $this->makeUser(['username' => 'firsttimeauthor']);
+        $viewer = $this->makeUser(['username' => 'firsttimeviewer']);
+        (new UserPreferenceRepository($this->db))->merge((int) $viewer['id'], ['posts_per_page' => 10]);
+        $board = $this->makeBoard($this->makeCategory('First Time'), ['slug' => 'first-time']);
+        $thread = $this->makeThread($board, $author, 'First time topic', 'Opening post.');
+
+        $replyIds = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $replyIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                $thread['thread_id'],
+                ['body' => 'First time update ' . $i . '.'],
+            );
+        }
+
+        // No thread_user row at all — nothing to steer from, so page 1.
+        $this->actingAs($viewer);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('id="p' . $replyIds[0] . '"', $page->body());
+        self::assertStringNotContainsString('id="p' . $replyIds[14] . '"', $page->body());
     }
 
     public function test_staff_context_links_rank_posts_against_deleted_stub_pages(): void
@@ -302,15 +415,21 @@ final class AppAutomatedContextTest extends TestCase
                 ['body' => 'Staff paging update ' . $i . '.'],
             );
         }
+        // Same reasoning as the test above: the read position leaves part of the
+        // catch-me-up window off the landing page, so this stays a test about
+        // cross-page ranking. It is also the whole point here — page 2 exists at
+        // all ONLY because the deleted stub occupies a slot in the staff stream.
+        // Without it, OP + nine replies is exactly one page.
         $this->db->run(
             'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
-            [(int) $viewer['id'], $thread['thread_id'], $replyIds[7]],
+            [(int) $viewer['id'], $thread['thread_id'], $replyIds[5]],
         );
 
         $this->actingAs($viewer);
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
+        self::assertStringContainsString('href="#p' . $replyIds[6] . '"', $page->body());
         self::assertStringContainsString(
             '/t/' . $thread['thread_id'] . '-' . $thread['slug'] . '?page=2#p' . $replyIds[8],
             $page->body(),

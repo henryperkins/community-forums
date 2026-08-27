@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Core\FeatureFlags;
 use App\Core\Request;
 use App\Core\Response;
+use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
@@ -91,13 +92,32 @@ final class ThreadController extends Controller
 
         $total = $postRepo->countByThread((int) $thread['id'], $includeDeleted);
         $pages = max(1, (int) ceil($total / $perPage));
-        // When re-rendering for a failed inline edit and the caller didn't pin an
-        // explicit ?page, open the page that actually contains the edited post so
-        // its re-opened edit form (with the rejected text) is on screen.
+        // Which page opens, in precedence order. An explicit ?page always wins —
+        // including ?page=1, which is the only way back to the top of a topic once
+        // the unread rule below exists.
+        //
+        //  1. ?page=N            the reader asked for it
+        //  2. edit_post_id       a failed inline edit re-renders the page that holds
+        //                        the edited post, so its re-opened form (with the
+        //                        rejected text) is on screen
+        //  3. first unread       land on the reply the reader has not seen, so
+        //                        "Since you last read" is not a panel of links that
+        //                        all point off this page
+        //  4. page 1
+        //
+        // (3) MUST be resolved here, above the markRead() call further down: that
+        // call advances the read position to the newest post on the page just
+        // rendered, so reading the position after it always resolves to the current
+        // page. It is gated on the same two flags that maintain the position at all
+        // — with both dark, last_read_post_id is stale and must not steer anything.
         $editPostId = (int) ($extra['edit_post_id'] ?? 0);
-        $page = $editPostId > 0 && $request->query('page') === null
-            ? min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage, $includeDeleted)))
-            : min($pages, max(1, $request->int('page', 1)));
+        if ($request->query('page') !== null) {
+            $page = min($pages, max(1, $request->int('page', 1)));
+        } elseif ($editPostId > 0) {
+            $page = min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage, $includeDeleted)));
+        } else {
+            $page = min($pages, max(1, $this->firstUnreadPage($thread, $user, $postRepo, $perPage, $includeDeleted)));
+        }
 
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage, $includeDeleted);
         $titleService = $this->container->get(TitleService::class);
@@ -504,5 +524,41 @@ final class ThreadController extends Controller
     private function loadReadableThread(int $id): array
     {
         return $this->container->get(ThreadReadService::class)->loadForUser($this->currentUser(), $id);
+    }
+
+    /**
+     * The page a topic opens on for a reader who has been here before: the one
+     * holding their first unread reply, or 1 when they are caught up, are a guest,
+     * or have never read it.
+     *
+     * Gated on engagement/automated_context because those are the flags under which
+     * ThreadUserRepository::markRead() maintains the position at all; with both
+     * dark the stored value is whatever it was when they were last on, and steering
+     * from it would drop a reader mid-topic for no reason they could see.
+     *
+     * @param array<string,mixed> $thread
+     */
+    private function firstUnreadPage(
+        array $thread,
+        ?User $user,
+        PostRepository $postRepo,
+        int $perPage,
+        bool $includeDeleted,
+    ): int {
+        if ($user === null) {
+            return 1;
+        }
+        $featureFlags = $this->container->get(FeatureFlags::class);
+        if (!$featureFlags->enabled('engagement') && !$featureFlags->enabled('automated_context')) {
+            return 1;
+        }
+        $state = $this->container->get(ThreadUserRepository::class)->find($user->id(), (int) $thread['id']);
+        $lastRead = (int) ($state['last_read_post_id'] ?? 0);
+        $firstUnread = $postRepo->firstUnreadPostId((int) $thread['id'], $lastRead);
+        if ($firstUnread === null) {
+            return 1;
+        }
+
+        return $postRepo->pageOfPost((int) $thread['id'], $firstUnread, $perPage, $includeDeleted);
     }
 }

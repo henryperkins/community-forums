@@ -225,6 +225,37 @@ final class PostRepository
     }
 
     /**
+     * The first post the reader has not seen, in thread render order
+     * (created_at ASC, id ASC) — or NULL when they are caught up.
+     *
+     * The unread PREDICATE is `id > last_read_post_id`, deliberately the same one
+     * {@see \App\Service\SinceLastReadContextService::forThread()} uses to build the
+     * catch-me-up list, so the page this resolves can never be a page that omits
+     * the first item that panel names. The ORDER is render order, not id order,
+     * because a merged topic carries posts whose ids and timestamps disagree.
+     *
+     * Deleted and pending rows are excluded whatever the viewer's stream is: a
+     * staff reader paginating the with-deleted stream should still be landed on
+     * live content, and {@see pageOfPost()} converts this id into a page number
+     * against their own stream afterwards.
+     */
+    public function firstUnreadPostId(int $threadId, int $lastReadPostId): ?int
+    {
+        if ($lastReadPostId <= 0) {
+            return null;
+        }
+        $id = $this->db->fetchValue(
+            'SELECT id FROM posts
+             WHERE thread_id = ? AND id > ? AND is_deleted = 0 AND is_pending = 0
+             ORDER BY created_at ASC, id ASC
+             LIMIT 1',
+            [$threadId, $lastReadPostId],
+        );
+
+        return $id === null || $id === false ? null : (int) $id;
+    }
+
+    /**
      * Approval queue (P3-05): pending non-OP replies, oldest first, with author +
      * thread + board context. Optionally scoped to a set of board ids (NULL = all,
      * for admins). OP holds are surfaced via the pending-threads query instead.

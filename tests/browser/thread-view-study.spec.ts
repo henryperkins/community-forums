@@ -26,7 +26,14 @@ echo json_encode($previous);
   return JSON.parse(previous) as boolean | null;
 }
 
-async function shot(page: Page, info: TestInfo, name: '80-thread-study' | '81-thread-tools'): Promise<void> {
+type ShotName =
+  | '80-thread-study'
+  | '81-thread-tools'
+  | '89-thread-standing-chips'
+  | '90-thread-star-pill'
+  | '91-thread-reaction-chip';
+
+async function shot(page: Page, info: TestInfo, name: ShotName): Promise<void> {
   await expect(page.locator('.error-card')).toHaveCount(0);
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
@@ -620,4 +627,210 @@ test('the staff badge flips register and clears AA in both', async ({ page }) =>
   // flipping: the chip stays light-register cream sitting on a twilight page.
   // The ratio alone cannot catch that, so assert the ground actually changes.
   expect(measured.dark.ground, JSON.stringify(measured)).not.toBe(measured.light.ground);
+});
+/**
+ * B1/B2 from the round-2 thread-view handoff. The standing chips used to be
+ * children of the <h1>, so the page heading announced itself as "Pinned Locked
+ * Solved Where should…", and the solved chip alone carried a check glyph while
+ * the Topic tools drawer stated the identical state as a bare word.
+ */
+test('standing chips sit above the title and state status as a word alone', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one pointer type is enough for a markup contract');
+  await login(page);
+  await openSeedTopic(page);
+
+  const heading = page.getByRole('heading', { level: 1 });
+  const title = (await heading.textContent())?.trim() ?? '';
+  expect(title.length).toBeGreaterThan(0);
+
+  const setStatus = async (value: string): Promise<void> => {
+    await page.getByRole('button', { name: 'Topic tools' }).click();
+    const tools = page.locator('[data-topic-tools]');
+    await tools.locator('[data-topic-tools-section="standing"] > summary').click();
+    await tools.locator('select[name="status"]').selectOption(value);
+    await tools.getByRole('button', { name: 'Update status' }).click();
+    await expect(page.locator('[data-thread-study]')).toBeVisible();
+  };
+
+  try {
+    await setStatus('solved');
+
+    const chip = page.locator('.thread-status-chip');
+    await expect(chip).toHaveCount(1);
+    // The word alone. Not the check glyph plus the word — the drawer states the
+    // same state glyph-less, and two labels for one status is the defect.
+    await expect(chip).toHaveText('Solved');
+    await expect(chip).toHaveAttribute('data-thread-status', 'solved');
+
+    // The chip is a sibling ABOVE the heading, never a descendant of it, so the
+    // heading's accessible name is the topic title and nothing else.
+    await expect(page.locator('.thread-study-chips')).toHaveCount(1);
+    expect(await chip.evaluate((el) => el.closest('h1') !== null)).toBe(false);
+    expect(await chip.evaluate((el) => {
+      const row = el.closest('.thread-study-chips');
+      const h1 = document.querySelector('.thread-study-title');
+      return !!row && !!h1 && row.nextElementSibling === h1;
+    })).toBe(true);
+    await expect(heading).toHaveAccessibleName(title);
+    expect(title).not.toContain('Solved');
+
+    await shot(page, info, '89-thread-standing-chips');
+  } finally {
+    await setStatus('open');
+  }
+});
+
+/**
+ * B3. One esteem glyph in the system — the four-point commend star that already
+ * marks regard and the accepted answer — and a facts row that does not break to
+ * a second line when "Star" grows into "Starred".
+ */
+test('the star pill uses the commend star and never wraps the facts row', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the wrap this guards against is a desktop-width failure');
+  await login(page);
+  await openSeedTopic(page);
+
+  const star = page.locator('.star-btn');
+  await expect(star).toHaveCount(1);
+  // The SVG is decorative, so the accessible name is exactly the label.
+  await expect(star).toHaveAccessibleName(/^Star(red)?$/);
+  await expect(star.locator('svg.icon-commend-star')).toHaveCount(1);
+  await expect(star.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  await expect(star.locator('svg path')).toHaveAttribute(
+    'd',
+    'M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z',
+  );
+  // No second star glyph anywhere in the head.
+  expect(await page.locator('.thread-study-head').innerText()).not.toMatch(/[★☆]/);
+
+  const rowHeight = async (): Promise<number> =>
+    page.locator('.thread-facts').evaluate((el) => el.getBoundingClientRect().height);
+  const before = await rowHeight();
+  const labelBefore = (await star.innerText()).trim();
+
+  // Toggle to the other label and prove the row is still one line. This is the
+  // layout half of B3: a wrapping flex container breaks its lines from content
+  // widths BEFORE flex-shrink applies, so a shrinkable byline on its own would
+  // not have saved it.
+  await expect(page.locator('.thread-facts')).toHaveCSS('flex-wrap', 'nowrap');
+  await star.click();
+  await expect(page.locator('.star-btn')).not.toHaveText(labelBefore);
+  const after = await rowHeight();
+  expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
+
+  await shot(page, info, '90-thread-star-pill');
+  await page.locator('.star-btn').click();
+});
+
+/**
+ * B4. `.reaction-n::before` puts a separator between a reaction's NAME and its
+ * count. Production reactions are raw emoji with no name, so the separator had
+ * nothing to separate and rendered as a stray dot before the number.
+ */
+test('a bare reaction chip drops the orphaned name separator', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the reaction picker differs only in placement by pointer type');
+  await login(page);
+  await openSeedTopic(page);
+
+  const post = page.locator('[data-post]').first();
+  await post.hover();
+  await post.locator('[data-post-toolbar] .reaction-add > summary').click();
+  await post.locator('.reaction-menu .reaction').first().click();
+  await expect(page.locator('[data-thread-study]')).toBeVisible();
+
+  const chip = post.locator('.reactions .reaction').first();
+  await expect(chip).toHaveClass(/reaction-bare/);
+  expect((await chip.innerText()).trim()).not.toContain('·');
+  // The rule has to WIN, not merely exist: the identical ::before ships inside
+  // @layer imladris.components, and app.css is unlayered.
+  const separator = await chip.locator('.reaction-n').evaluate(
+    (el) => getComputedStyle(el, '::before').content,
+  );
+  expect(separator).toBe('none');
+
+  await shot(page, info, '91-thread-reaction-chip');
+});
+
+/**
+ * Part D's no-JS pass. Every flow on this surface is server-rendered first; the
+ * enhancement only swaps which copy of a control is exposed.
+ */
+test('the Study reads and replies with JavaScript disabled', async ({ browser }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the no-JS contract is pointer-independent');
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  try {
+    await page.goto('/login');
+    await page.fill('input[name="email"]', 'alice@retro.test');
+    await page.fill('input[name="password"]', 'password123');
+    await page.click('button[type="submit"]');
+    await page.goto('/c/general');
+    await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
+    await expect(page.locator('[data-thread-study]')).toBeVisible();
+
+    // Nothing is enhanced, so the toolbar stands at full opacity with no pointer.
+    await expect(page.locator('[data-thread-study]')).not.toHaveAttribute('data-thread-enhanced', '1');
+    const toolbar = page.locator('[data-post-toolbar]').first();
+    await expect(toolbar).toBeVisible();
+    await expect(toolbar).toHaveCSS('opacity', '1');
+
+    // Edit / Report / Remove reach the reader through the in-flow native
+    // disclosures, which JS hides in favour of the menu copies.
+    await expect(page.locator('.post-native-disclosure > summary').first()).toBeVisible();
+
+    // Topic tools is a JS-only affordance and stays hidden rather than dead.
+    await expect(page.locator('[data-topic-tools-open]').first()).toBeHidden();
+
+    // The composer degrades to a plain Markdown textarea that still posts.
+    const composer = page.locator('form[data-thread-composer]');
+    await expect(composer).toHaveCount(1);
+    await expect(composer.locator('.wysiwyg-surface')).toHaveCount(0);
+    const body = composer.locator('textarea[name="body"]');
+    await expect(body).toBeVisible();
+    await body.fill('A reply written with JavaScript switched off.');
+    await composer.locator('button.composer-send').click();
+    // Scoped to the stream: the same words also land in the split/merge picker
+    // and the catch-me-up strip, which is itself proof the plain POST went
+    // through every downstream consumer.
+    await expect(
+      page.locator('[data-post] .post-body').filter({ hasText: 'A reply written with JavaScript switched off.' }),
+    ).toHaveCount(1);
+
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, info.project.name, '92-thread-no-js.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+  } finally {
+    await context.close();
+  }
+});
+
+/** Part D's keyboard pass: every post action reachable without a pointer. */
+test('post actions are reachable by keyboard alone', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'coarse pointers stand the toolbar permanently');
+  await login(page);
+  await openSeedTopic(page);
+
+  const post = page.locator('[data-post]').first();
+  const toolbar = post.locator('[data-post-toolbar]');
+  // At rest, with no pointer anywhere near it: present in the DOM but quiet.
+  await expect(toolbar).toHaveCount(1);
+  await expect(toolbar).toHaveCSS('opacity', '0');
+
+  // Focus alone reveals it — this is why the toolbar fades rather than
+  // unmounting or going `visibility: hidden`: a hidden control is not tabbable,
+  // and tabbing to it is the point.
+  const menu = post.locator('[data-post-menu] > summary');
+  await menu.focus();
+  await expect(toolbar).toHaveCSS('opacity', '1');
+  await expect(menu).toBeFocused();
+
+  await page.keyboard.press('Enter');
+  await expect(post.locator('[data-post-menu]')).toHaveAttribute('open', '');
+  await expect(post.locator('.post-menu-pop')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(post.locator('[data-post-menu]')).not.toHaveAttribute('open', '');
+  await expect(menu).toBeFocused();
 });
