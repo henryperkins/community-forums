@@ -320,6 +320,39 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringNotContainsString('action="/t/' . $seed['thread_id'] . '/summary', $guestHtml);
     }
 
+    public function test_curator_footer_has_one_primary_action_and_row_based_restore(): void
+    {
+        $seed = $this->seedThread(8, 'Curator footer structure');
+        $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $admin = $this->makeAdmin(['username' => 'footer-curator']);
+        $this->actingAs($admin);
+        $html = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug'])->body();
+
+        // The <select> is gone; restore is one form per version.
+        self::assertStringNotContainsString('id="summary-restore"', $html);
+        self::assertStringContainsString('name="summary_id"', $html);
+
+        // Refresh is the one filled button, not a btn-small.
+        self::assertMatchesRegularExpression(
+            '/<button class="btn"[^>]*type="submit"[^>]*>Refresh<\/button>/',
+            $html,
+        );
+
+        // More and the retire confirm are <details>, so they work without JS.
+        self::assertStringContainsString('class="lb-more"', $html);
+        self::assertStringContainsString('class="lb-confirm"', $html);
+
+        // Retire is behind a confirm step, not a bare one-click submit.
+        $retirePos = strpos($html, 'action="/t/' . $seed['thread_id'] . '/summary/retire"');
+        $confirmPos = strpos($html, 'class="lb-confirm"');
+        self::assertNotFalse($retirePos);
+        self::assertNotFalse($confirmPos);
+        self::assertLessThan($retirePos, $confirmPos);
+
+        // Pause is offered when automation is running.
+        self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/summary/automation/pause"', $html);
+    }
+
     private function rebuildAppWithProvider(): void
     {
         $items = $this->config->all();

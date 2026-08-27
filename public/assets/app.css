@@ -10137,8 +10137,7 @@ span.wf-btn {
     margin: 0 0 var(--space-5);
 }
 .living-brief,
-.related-topic-fallback,
-.memory-curator-tools {
+.related-topic-fallback {
     min-width: 0;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-lg);
@@ -10198,13 +10197,6 @@ span.wf-btn {
     align-items: baseline;
     gap: var(--space-2) var(--space-4);
     overflow-wrap: anywhere;
-}
-.memory-curator-tools > summary { cursor: pointer; }
-.memory-curator-tools-body {
-    display: grid;
-    gap: var(--space-3);
-    margin-top: var(--space-3);
-    min-width: 0;
 }
 
 @media (max-width: 760px) {
@@ -13772,7 +13764,9 @@ a.account-row-name:hover {
    width (AccountSettings.dc.html:457, :464). */
 .field-narrow-320 { max-width: 320px; }
 
-/* Living Brief — curator footer. */
+/* Living Brief — curator footer. Two rows: primary actions, then the disclosure.
+   The <details> panels cannot expand to the pane width from inside the flex row,
+   so `.lb-more` is a full-width row of its own with a right-aligned summary. */
 .living-brief-curator {
     display: grid;
     gap: var(--space-3);
@@ -13780,4 +13774,76 @@ a.account-row-name:hover {
     padding-top: var(--space-3);
     border-top: 1px solid var(--border-hair);
     min-width: 0;
+}
+.living-brief-curator-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+}
+.living-brief-curator-row .lb-amend[open] { flex: 1 1 100%; }
+.living-brief-curator-note { margin: 0; font-size: .87rem; }
+
+.lb-amend > summary,
+.lb-more > summary,
+.lb-confirm > summary { cursor: pointer; }
+.lb-more > summary { display: flex; justify-content: flex-end; }
+.lb-more[open] > summary .lb-more-shut,
+.lb-more:not([open]) > summary .lb-more-open { display: none; }
+
+.lb-more-body {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
+    min-width: 0;
+}
+.lb-more-title {
+    margin: 0;
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .78rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+}
+.lb-versions { list-style: none; margin: 0; padding: 0; display: grid; }
+.lb-version {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-hair);
+    min-width: 0;
+}
+.lb-version:last-child { border-bottom: 0; }
+.lb-version-v { color: var(--gold-ink); font-family: var(--font-mono); font-size: .78rem; }
+.lb-version-status,
+.lb-version-when { color: var(--text-muted); font-size: .78rem; }
+.lb-version form { margin-left: auto; }
+
+.lb-more-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border-hair);
+}
+.lb-more-foot .lb-confirm { margin-left: auto; }
+.lb-confirm-body {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+.lb-confirm-body p { margin: 0; font-size: .87rem; color: var(--text-muted); }
+
+@media (max-width: 760px) {
+    .lb-more > summary { justify-content: flex-start; }
+    .lb-version form,
+    .lb-more-foot .lb-confirm { margin-left: 0; }
 }
