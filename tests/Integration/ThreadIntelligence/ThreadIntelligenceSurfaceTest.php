@@ -353,6 +353,42 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/summary/automation/pause"', $html);
     }
 
+    public function test_paused_curator_footer_promotes_resume_and_states_the_pause_once(): void
+    {
+        $seed = $this->seedThread(8, 'Paused curator footer');
+        $this->insertAiBrief($seed['thread_id'], [$seed['post_ids'][0]], 'Rendered AI summary');
+        $this->queue()->setAutomationPaused($seed['thread_id'], true, null);
+        $admin = $this->makeAdmin(['username' => 'paused-curator']);
+        $this->actingAs($admin);
+        $html = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug'])->body();
+
+        // The brief's own member-visible line is the ONLY place the pause is stated.
+        // The eligibility denial reads "…paused for this thread" (Eligibility.php:147),
+        // so re-rendering the curator note shows up as a second hit on the shared prefix.
+        self::assertSame(1, substr_count($html, 'Automatic refresh is paused'));
+
+        // Resume takes the primary slot; the dead disabled Refresh is gone entirely.
+        self::assertMatchesRegularExpression(
+            '/<button class="btn" type="submit">Resume automatic refresh<\/button>/',
+            $html,
+        );
+        self::assertStringNotContainsString(
+            'action="/t/' . $seed['thread_id'] . '/summary/refresh"',
+            $html,
+        );
+
+        // Resume renders once — promoting it must not leave a copy in the More footer —
+        // and Pause is not offered on a topic that is already paused.
+        self::assertSame(1, substr_count(
+            $html,
+            'action="/t/' . $seed['thread_id'] . '/summary/automation/resume"',
+        ));
+        self::assertStringNotContainsString(
+            'action="/t/' . $seed['thread_id'] . '/summary/automation/pause"',
+            $html,
+        );
+    }
+
     private function rebuildAppWithProvider(): void
     {
         $items = $this->config->all();

@@ -8,11 +8,26 @@ $history = $memory_history ?? [];
 $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => 'Retired'];
 ?>
 <div class="living-brief-curator" id="living-brief-curator-<?= $threadId ?>">
+    <?php /* While automation is paused the brief itself already carries the paused line
+             (partials/living_brief.php), and refresh is denied, so a Refresh control here
+             would be a dead primary above a near-duplicate of that sentence. Resume takes
+             the primary slot instead — it is the only meaningful action in this state, and
+             it renders here rather than in the More footer so it appears exactly once.
+             Keyed on $paused, not $refresh['code']: the eligibility ladder reports only its
+             FIRST denial, so a paused topic that is also below the post threshold reports
+             `initial_post_threshold` while `automation_paused` on the job row stays true. */ ?>
     <div class="living-brief-curator-row">
-        <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/refresh">
-            <?= $this->csrfField() ?>
-            <button class="btn" type="submit"<?= empty($refresh['eligible']) ? ' disabled' : '' ?>>Refresh</button>
-        </form>
+        <?php if ($paused): ?>
+            <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/automation/resume">
+                <?= $this->csrfField() ?>
+                <button class="btn" type="submit">Resume automatic refresh</button>
+            </form>
+        <?php else: ?>
+            <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/refresh">
+                <?= $this->csrfField() ?>
+                <button class="btn" type="submit"<?= empty($refresh['eligible']) ? ' disabled' : '' ?>>Refresh</button>
+            </form>
+        <?php endif; ?>
         <details class="lb-amend">
             <summary class="linkbtn">Amend</summary>
             <form class="composer" method="post" action="/t/<?= $threadId ?>/summary">
@@ -26,7 +41,7 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
         </details>
     </div>
 
-    <?php if (empty($refresh['eligible'])): ?>
+    <?php if (!$paused && empty($refresh['eligible'])): ?>
         <p class="muted living-brief-curator-note">
             <?= $e($refresh['message'] ?? 'Refresh is not currently available.') ?>
             <?php if (!empty($refresh['next_eligible_at_utc'])): ?>
@@ -39,7 +54,10 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
         <summary class="linkbtn"><span class="lb-more-shut">More</span><span class="lb-more-open">Less</span></summary>
         <div class="lb-more-body">
             <?php if (!empty($history)): ?>
-                <p class="lb-more-title">Earlier versions</p>
+                <?php /* Every summary row, including the one currently published — the view
+                         service applies no status or version filter — so the heading must not
+                         promise "earlier". A re-restore of the live version stays reachable. */ ?>
+                <p class="lb-more-title">Version history</p>
                 <ul class="lb-versions">
                     <?php foreach ($history as $item): ?>
                         <li class="lb-version">
@@ -47,7 +65,7 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
                             <span class="lb-version-who"><?= $e($item['label']) ?></span>
                             <span class="lb-version-status"><?= $e($historyLabels[$item['status']] ?? ucfirst((string) $item['status'])) ?></span>
                             <?php if (!empty($item['published_at'])): ?>
-                                <time class="lb-version-when" datetime="<?= $e(gmdate('Y-m-d\TH:i:s\Z', strtotime((string) $item['published_at'] . ' UTC'))) ?>"><?= $e(human_datetime($item['published_at'])) ?></time>
+                                <time class="lb-version-when" datetime="<?= $e(iso_datetime($item['published_at'])) ?>"><?= $e(human_datetime($item['published_at'])) ?></time>
                             <?php endif; ?>
                             <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/restore">
                                 <?= $this->csrfField() ?>
@@ -69,12 +87,7 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
             </form>
 
             <div class="lb-more-foot">
-                <?php if ($paused): ?>
-                    <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/automation/resume">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn" type="submit">Resume automatic refresh</button>
-                    </form>
-                <?php else: ?>
+                <?php if (!$paused): ?>
                     <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/automation/pause">
                         <?= $this->csrfField() ?>
                         <button class="linkbtn muted" type="submit">Pause automatic refresh</button>
@@ -85,9 +98,13 @@ $historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => '
                         <summary class="linkbtn danger">Retire brief</summary>
                         <div class="lb-confirm-body">
                             <p>Retiring hides the brief from the topic and pauses automatic refresh. Curators can restore it from this panel.</p>
+                            <?php /* Distinct from the summary's "Retire brief" so the confirm step is
+                                     audible, not merely visual: a screen reader announcing the same name
+                                     twice one nesting level apart gives no signal that a second, real
+                                     commit follows the disclosure. */ ?>
                             <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/retire">
                                 <?= $this->csrfField() ?>
-                                <button class="btn danger" type="submit">Retire brief</button>
+                                <button class="btn danger" type="submit">Confirm retirement</button>
                             </form>
                         </div>
                     </details>
