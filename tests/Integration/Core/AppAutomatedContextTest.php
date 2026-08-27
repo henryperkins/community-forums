@@ -19,6 +19,46 @@ final class AppAutomatedContextTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
+    /**
+     * @return array{viewer:array<string,mixed>,thread:array<string,mixed>,reply_ids:list<int>}
+     */
+    private function seedPagedUnreadThread(
+        string $suffix,
+        bool $engagement = true,
+        bool $automatedContext = true,
+    ): array
+    {
+        $this->makeAdmin();
+        $this->setFlags([
+            'engagement' => $engagement,
+            'automated_context' => $automatedContext,
+        ]);
+        $author = $this->makeUser(['username' => 'unreadpageauthor' . $suffix]);
+        $viewer = $this->makeUser(['username' => 'unreadpageviewer' . $suffix]);
+        (new UserPreferenceRepository($this->db))->merge((int) $viewer['id'], ['posts_per_page' => 10]);
+        $board = $this->makeBoard(
+            $this->makeCategory('Unread Landing ' . $suffix),
+            ['slug' => 'unread-landing-' . $suffix],
+        );
+        $thread = $this->makeThread($board, $author, 'Unread landing topic ' . $suffix, 'Opening post.');
+
+        $replyIds = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $replyIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                $thread['thread_id'],
+                ['body' => 'Landing update ' . $i . '.'],
+            );
+        }
+        // OP + replies 1-9 fill page 1; replyIds[9] is the first post on page 2.
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], $thread['thread_id'], $replyIds[8]],
+        );
+
+        return ['viewer' => $viewer, 'thread' => $thread, 'reply_ids' => $replyIds];
+    }
+
     public function test_since_last_read_context_is_available_without_an_override(): void
     {
         $this->makeAdmin();
@@ -288,37 +328,50 @@ final class AppAutomatedContextTest extends TestCase
         );
     }
 
-    public function test_thread_opens_on_the_page_holding_the_first_unread_reply(): void
+    public function test_page_less_topic_permalink_stays_on_page_one_for_a_returning_reader(): void
     {
-        $this->makeAdmin();
-        $this->setFlags(['automated_context' => true]);
-        $author = $this->makeUser(['username' => 'unreadpageauthor']);
-        $viewer = $this->makeUser(['username' => 'unreadpageviewer']);
-        (new UserPreferenceRepository($this->db))->merge((int) $viewer['id'], ['posts_per_page' => 10]);
-        $board = $this->makeBoard($this->makeCategory('Unread Landing'), ['slug' => 'unread-landing']);
-        $thread = $this->makeThread($board, $author, 'Unread landing topic', 'Opening post.');
-
-        $replyIds = [];
-        for ($i = 1; $i <= 15; $i++) {
-            $replyIds[] = $this->posting()->reply(
-                $this->userEntity($author),
-                $thread['thread_id'],
-                ['body' => 'Landing update ' . $i . '.'],
-            );
-        }
-        // OP + replies 1-9 fill page 1; replyIds[9] is the first post on page 2.
-        $this->db->run(
-            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
-            [(int) $viewer['id'], $thread['thread_id'], $replyIds[8]],
-        );
+        ['viewer' => $viewer, 'thread' => $thread, 'reply_ids' => $replyIds] = $this->seedPagedUnreadThread('permalink');
 
         $this->actingAs($viewer);
         $url = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
         $landing = $this->get($url);
 
         $this->assertStatus(200, $landing);
-        self::assertStringContainsString('id="p' . $replyIds[9] . '"', $landing->body());
-        self::assertStringNotContainsString('id="p' . $replyIds[0] . '"', $landing->body());
+        self::assertStringContainsString('id="p' . $replyIds[0] . '"', $landing->body());
+        self::assertStringNotContainsString('id="p' . $replyIds[9] . '"', $landing->body());
+        self::assertSame($replyIds[8], (int) $this->db->fetchValue(
+            'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+            [(int) $viewer['id'], $thread['thread_id']],
+        ));
+    }
+
+    public function test_explicit_unread_intent_redirects_to_a_real_fragment_target(): void
+    {
+        ['viewer' => $viewer, 'thread' => $thread, 'reply_ids' => $replyIds] = $this->seedPagedUnreadThread('explicit');
+
+        $this->actingAs($viewer);
+        $url = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+        $landing = $this->get($url, ['unread' => '1']);
+
+        $this->assertRedirect($landing, $url . '?page=2#p' . $replyIds[9]);
+        self::assertSame($replyIds[8], (int) $this->db->fetchValue(
+            'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+            [(int) $viewer['id'], $thread['thread_id']],
+        ));
+
+        $second = $this->get($url, ['page' => '2']);
+        $this->assertStatus(200, $second);
+        self::assertStringContainsString('id="p' . $replyIds[9] . '"', $second->body());
+        self::assertMatchesRegularExpression(
+            '#data-first-unread="1"[^>]*id="p' . $replyIds[9] . '"|id="p' . $replyIds[9] . '"[^>]*data-first-unread="1"#',
+            $second->body(),
+        );
+        self::assertStringNotContainsString('id="p' . $replyIds[0] . '"', $second->body());
+
+        $reload = $this->get($url, ['page' => '2']);
+        $this->assertStatus(200, $reload);
+        self::assertStringContainsString('id="p' . $replyIds[9] . '"', $reload->body());
+        self::assertStringNotContainsString('id="p' . $replyIds[0] . '"', $reload->body());
 
         // An explicit ?page always wins — including ?page=1, which is the only way
         // back to the top of a topic once the unread rule exists.
@@ -330,6 +383,72 @@ final class AppAutomatedContextTest extends TestCase
         $this->assertStatus(200, $first);
         self::assertStringContainsString('id="p' . $replyIds[0] . '"', $first->body());
         self::assertStringNotContainsString('id="p' . $replyIds[9] . '"', $first->body());
+    }
+
+    public function test_explicit_unread_intent_obeys_all_flag_combinations(): void
+    {
+        $cases = [
+            'both-on' => [true, true, true],
+            'engagement-only' => [true, false, true],
+            'context-only' => [false, true, true],
+            'both-off' => [false, false, false],
+        ];
+
+        foreach ($cases as $suffix => [$engagement, $automatedContext, $shouldJump]) {
+            ['viewer' => $viewer, 'thread' => $thread, 'reply_ids' => $replyIds] = $this->seedPagedUnreadThread(
+                $suffix,
+                $engagement,
+                $automatedContext,
+            );
+            $this->actingAs($viewer);
+            $url = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+
+            $response = $this->get($url, ['unread' => '1']);
+
+            if ($shouldJump) {
+                $this->assertRedirect($response, $url . '?page=2#p' . $replyIds[9]);
+            } else {
+                $this->assertStatus(200, $response);
+                self::assertStringContainsString('id="p' . $replyIds[0] . '"', $response->body());
+                self::assertStringNotContainsString('data-first-unread="1"', $response->body());
+            }
+        }
+    }
+
+    public function test_unread_thread_rows_use_explicit_unread_intent(): void
+    {
+        ['viewer' => $viewer, 'thread' => $thread] = $this->seedPagedUnreadThread('row-link');
+        $this->actingAs($viewer);
+
+        $board = $this->get('/c/unread-landing-row-link');
+
+        $this->assertStatus(200, $board);
+        self::assertStringContainsString(
+            'href="/t/' . $thread['thread_id'] . '-' . $thread['slug'] . '?unread=1"',
+            $board->body(),
+        );
+    }
+
+    public function test_no_js_star_returns_to_the_exact_thread_page(): void
+    {
+        ['viewer' => $viewer, 'thread' => $thread] = $this->seedPagedUnreadThread('star');
+
+        $this->actingAs($viewer);
+        $url = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+        $first = $this->get($url, ['page' => '1']);
+
+        $this->assertStatus(200, $first);
+        self::assertSame(1, preg_match(
+            '#<form class="inline star-form"[^>]*>.*?<input type="hidden" name="return" value="([^"]+)"#s',
+            $first->body(),
+            $matches,
+        ));
+        $return = html_entity_decode((string) $matches[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        self::assertSame($url . '?page=1', $return);
+
+        $starred = $this->post('/t/' . $thread['thread_id'] . '/star', ['return' => $return]);
+
+        $this->assertRedirect($starred, $url . '?page=1');
     }
 
     public function test_a_caught_up_reader_opens_a_thread_on_page_one(): void

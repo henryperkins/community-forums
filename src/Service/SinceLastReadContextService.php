@@ -15,38 +15,44 @@ final class SinceLastReadContextService
     /** @return array<string,mixed>|null */
     public function forThread(int $userId, int $threadId, int $limit = 6): ?array
     {
-        $lastRead = $this->db->fetchValue(
-            'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+        $cursor = $this->db->fetch(
+            'SELECT cursor_post.id, cursor_post.created_at
+             FROM thread_user tu
+             JOIN posts cursor_post
+               ON cursor_post.id = tu.last_read_post_id
+              AND cursor_post.thread_id = tu.thread_id
+              AND cursor_post.is_deleted = 0
+              AND cursor_post.is_pending = 0
+             WHERE tu.user_id = ? AND tu.thread_id = ?',
             [$userId, $threadId],
         );
-        $fromPostId = $lastRead !== false && $lastRead !== null ? (int) $lastRead : 0;
-        if ($fromPostId <= 0) {
+        if ($cursor === null) {
             return null;
         }
+        $fromPostId = (int) $cursor['id'];
+        $fromCreatedAt = (string) $cursor['created_at'];
 
         $limit = max(1, min(20, $limit));
-        $window = $this->db->fetch(
-            'SELECT COUNT(*) AS post_count, MAX(id) AS to_post_id
-             FROM posts
-             WHERE thread_id = ? AND id > ? AND is_deleted = 0 AND is_pending = 0',
-            [$threadId, $fromPostId],
-        );
-        $postCount = (int) ($window['post_count'] ?? 0);
-        if ($postCount <= 0) {
-            return null;
-        }
-
         $posts = $this->db->fetchAll(
             'SELECT p.id, p.body, p.body_html, p.created_at, p.is_anonymous,
                     u.username AS author_username, u.display_name AS author_display_name,
-                    u.role AS author_role
+                    u.role AS author_role,
+                    COUNT(*) OVER () AS unread_post_count,
+                    FIRST_VALUE(p.id) OVER (ORDER BY p.created_at DESC, p.id DESC) AS unread_to_post_id
              FROM posts p
              JOIN users u ON u.id = p.user_id
-             WHERE p.thread_id = ? AND p.id > ? AND p.is_deleted = 0 AND p.is_pending = 0
+             WHERE p.thread_id = ?
+               AND p.is_deleted = 0
+               AND p.is_pending = 0
+               AND (p.created_at > ? OR (p.created_at = ? AND p.id > ?))
              ORDER BY p.created_at ASC, p.id ASC
              LIMIT ' . $limit,
-            [$threadId, $fromPostId],
+            [$threadId, $fromCreatedAt, $fromCreatedAt, $fromPostId],
         );
+        if ($posts === []) {
+            return null;
+        }
+        $postCount = (int) $posts[0]['unread_post_count'];
 
         $items = [];
         foreach ($posts as $post) {
@@ -65,7 +71,7 @@ final class SinceLastReadContextService
             ];
         }
 
-        $toPostId = (int) ($window['to_post_id'] ?? 0);
+        $toPostId = (int) $posts[0]['unread_to_post_id'];
         $contextText = implode("\n", array_map(
             static fn (array $item): string => ($item['author_is_anonymous'] ? '' : '@') . $item['author'] . ': ' . $item['excerpt'],
             $items,
@@ -76,6 +82,8 @@ final class SinceLastReadContextService
                 (user_id, thread_id, from_post_id, to_post_id, post_count, context_text, generated_at, expires_at)
              VALUES (?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 14 DAY))
              ON DUPLICATE KEY UPDATE
+                from_post_id = VALUES(from_post_id),
+                to_post_id = VALUES(to_post_id),
                 post_count = VALUES(post_count),
                 context_text = VALUES(context_text),
                 generated_at = UTC_TIMESTAMP(),

@@ -37,3 +37,4 @@ This directory is the **design-decision archive** for RetroBoards: the brainstor
 | 2026-07-12 | [`2026-07-12-thread-view-study.md`](plans/2026-07-12-thread-view-study.md) | Thread View — The Study Implementation Plan | spec in [`specs/`](specs/2026-07-12-thread-view-study-design.md) |
 | 2026-07-13 | [`2026-07-13-composer-slackify.md`](plans/2026-07-13-composer-slackify.md) | Composer Shell — "The Writing Desk" Implementation Plan | spec in [`specs/`](specs/2026-07-13-composer-slackify-design.md) |
 | 2026-07-18 | [`2026-07-18-pr44-safety-remediation.md`](plans/2026-07-18-pr44-safety-remediation.md) | PR #44 Safety Remediation — Implementation Plan | spec in [`specs/`](specs/2026-07-18-pr44-safety-remediation-design.md) |
+| 2026-08-27 | [`2026-08-27-thread-view-p0-p1-remediation.md`](plans/2026-08-27-thread-view-p0-p1-remediation.md) | Thread View P0/P1 Remediation Implementation Plan | spec in [`specs/`](specs/2026-08-27-thread-view-p0-p1-remediation-design.md) |

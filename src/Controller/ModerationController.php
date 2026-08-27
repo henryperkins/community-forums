@@ -56,6 +56,7 @@ final class ModerationController extends Controller
             return $this->rerenderThread($request, $threadId, [
                 'move_error' => $e->first(),
                 'move_selected' => $destBoardId,
+                'render_page' => max(1, $request->int('page', 1)),
             ]);
         }
 
@@ -80,6 +81,7 @@ final class ModerationController extends Controller
             return $this->rerenderThread($request, $threadId, [
                 'restructure_error' => $e->first(),
                 'restructure_context' => 'split',
+                'render_page' => max(1, $request->int('page', 1)),
                 'restructure_old' => [
                     'title' => $request->str('title'),
                     'post_ids' => $postIds,
@@ -106,6 +108,7 @@ final class ModerationController extends Controller
             return $this->rerenderThread($request, $threadId, [
                 'restructure_error' => $e->first(),
                 'restructure_context' => 'merge',
+                'render_page' => max(1, $request->int('page', 1)),
                 'restructure_old' => [
                     'target_thread_id' => $request->str('target_thread_id'),
                 ],

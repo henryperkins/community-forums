@@ -7,6 +7,7 @@ $this->section('route', 'thread');
 // private/hidden board are excluded from indexing (defence in depth — the read
 // gate already blocks crawlers).
 $this->section('canonical', '/t/' . (int) $thread['id'] . '-' . $thread['slug']);
+$threadPageUrl = '/t/' . (int) $thread['id'] . '-' . $thread['slug'] . '?page=' . max(1, (int) $page);
 $this->section('og_type', 'article');
 $this->section('description', mb_strimwidth(preg_replace('/\s+/', ' ', (string) $thread['title']) ?? '', 0, 160, '…'));
 if (($thread['board_visibility'] ?? 'public') !== 'public') {
@@ -66,14 +67,14 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
         }
         $byReplies = (int) ($thread['reply_count'] ?? 0);
         ?>
-        <?php /* Two groups, one line. The row is flex-wrap: nowrap deliberately — a
+        <?php /* Three groups, one line. The row is flex-wrap: nowrap deliberately — a
                  wrapping flex container breaks its lines from the items' CONTENT widths
                  BEFORE flex-shrink applies, so a shrinkable byline on its own changes
                  nothing and the Star pill widening to "Starred" (~20px) shoved the whole
-                 control group onto a second line. The identity side gives up the width to
-                 an ellipsis; the control side never shrinks. */ ?>
+                 control group onto a second line. The identity side gives up width to an
+                 ellipsis; operational state and controls remain readable. */ ?>
         <div class="thread-facts-identity">
-        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if (!empty($assignment)): ?> · Tended by @<?= $e($assignment['assigned_username']) ?><?php endif; ?><?php if (!empty($my_snooze)): ?> · Quiet until <?= $e(human_datetime($my_snooze)) ?><?php endif; ?></p>
+        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?></p>
         <?php foreach (($thread_tags ?? []) as $tag): ?><a class="tag" href="/tags/<?= $e($tag['slug']) ?>"><?= $e($tag['name']) ?></a><?php endforeach; ?>
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
@@ -89,11 +90,17 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
             </ul>
         <?php endif; ?>
         </div>
+        <?php if (!empty($assignment) || !empty($my_snooze)): ?>
+        <div class="thread-operational-facts" aria-label="Topic operations">
+            <?php if (!empty($assignment)): ?><span>Tended by @<?= $e($assignment['assigned_username']) ?></span><?php endif; ?>
+            <?php if (!empty($my_snooze)): ?><span>Quiet until <?= $e(human_datetime($my_snooze)) ?></span><?php endif; ?>
+        </div>
+        <?php endif; ?>
         <div class="thread-facts-actions">
         <?php if (($engagement ?? false) && $current_user !== null && !empty($can_write)): ?>
             <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
                 <?= $this->csrfField() ?>
-                <input type="hidden" name="return" value="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">
+                <input type="hidden" name="return" value="<?= $e($threadPageUrl) ?>">
                 <?php /* One esteem glyph in the system: the four-point commend star that
                          already marks regard and the accepted answer. ★/☆ beside ✦ was two
                          glyphs for one idea. The label keeps its own <span> so the button's
@@ -154,6 +161,7 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
         'restructure_error' => $restructure_error ?? '',
         'restructure_context' => $restructure_context ?? '',
         'restructure_old' => $restructure_old ?? [],
+        'page' => $page,
     ]) ?>
         <?php if (!empty($polls_on) && !empty($poll)): ?>
             <section class="poll-card poll-panel">
@@ -172,14 +180,19 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
                     <?php $pollTotal = max(1, array_sum(array_map(static fn ($option): int => (int) $option['vote_count'], $poll['options']))); ?>
                     <ul class="poll-results link-list">
                         <?php foreach ($poll['options'] as $option): ?>
-                            <?php $n = (int) $option['vote_count']; ?>
+                            <?php $n = (int) $option['vote_count']; $pollPercent = (int) round(($n / $pollTotal) * 100); ?>
                             <li class="poll-result<?= !empty($option['viewer_voted']) ? ' is-mine' : '' ?>">
                                 <span class="poll-result-row">
                                     <strong><?= $e($option['body']) ?></strong>
                                     <?php if (!empty($option['viewer_voted'])): ?><span class="poll-result-mine">Your vote</span><?php endif; ?>
                                     <span class="poll-result-count"><?= $n ?> vote<?= $n === 1 ? '' : 's' ?></span>
                                 </span>
-                                <span class="poll-result-bar"><meter min="0" max="<?= $pollTotal ?>" value="<?= $n ?>"><?= $n ?></meter></span>
+                                <span class="poll-result-bar" role="img" aria-label="<?= $pollPercent ?>% of votes">
+                                    <svg class="poll-result-progress" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                        <rect class="poll-result-track" x="0" y="0" width="100" height="8" rx="4" />
+                                        <rect class="poll-result-fill" x="0" y="0" width="<?= $pollPercent ?>" height="8" rx="4" />
+                                    </svg>
+                                </span>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -344,6 +357,7 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
                 'thread' => $thread,
                 'reply_errors' => $reply_errors,
                 'reply_old' => $reply_old,
+                'page' => $page,
                 'show_avatars' => $show_avatars ?? true,
             ]) ?>
         <?php elseif ($current_user === null): ?>

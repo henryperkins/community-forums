@@ -315,9 +315,9 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* A .field-grid cell binding a label to its error: .field-grid is a two-column
    grid, where a bare error sibling would claim its own cell and break the
    pairing. Same shape as .features-field-cell on the admin features page. */
-.field-cell { display: flex; flex-direction: column; min-width: 0; }
+.field-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .field-cell > .field { margin-bottom: 0; }
-.field-cell > .field-error { margin: 4px 0 0; }
+.field-cell > .field-error { margin: 0; }
 .field-group { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 16px; }
 .field-group legend { font-weight: 600; padding: 0 6px; }
 .inline-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -2688,7 +2688,13 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
    (0,2,0) specificity — source order is what settles a focused invalid field. */
 .input:user-invalid,
 .composer-input:user-invalid,
-.row-input:user-invalid {
+.row-input:user-invalid,
+.input.is-invalid,
+.composer-input.is-invalid,
+.row-input.is-invalid,
+.input[aria-invalid="true"],
+.composer-input[aria-invalid="true"],
+.row-input[aria-invalid="true"] {
     border-color: var(--danger);
 }
 /* .input-engraved has border:0 and draws its edge as eight background layers
@@ -2701,7 +2707,11 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
    This still wins over :focus on a focused invalid field — both match at (0,2,0)
    and, as the note above says, source order settles it. */
 .input-engraved:user-invalid,
-.textarea-engraved:user-invalid {
+.textarea-engraved:user-invalid,
+.input-engraved.is-invalid,
+.textarea-engraved.is-invalid,
+.input-engraved[aria-invalid="true"],
+.textarea-engraved[aria-invalid="true"] {
     box-shadow: var(--shadow-inset);
     background-image:
         linear-gradient(135deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
@@ -9787,10 +9797,14 @@ span.wf-btn {
     display: block;
     margin-top: 8px;
 }
-.poll-result-bar meter {
+.poll-result-progress {
+    display: block;
     width: 100%;
     height: 8px;
 }
+.poll-result-track { fill: var(--border-soft); }
+.poll-result-fill { fill: var(--accent-2); }
+.poll-result.is-mine .poll-result-fill { fill: var(--gold-600); }
 .poll-foot {
     display: flex;
     align-items: center;
@@ -10558,7 +10572,9 @@ span.wf-btn {
    the whole control group onto a second line. Identity shrinks to an ellipsis; the
    controls never do. The row wraps again below 768px, where two lines are right. */
 .thread-facts { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px 12px; margin-top: 10px; }
-.thread-facts-identity { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; flex: 1 1 auto; min-width: 0; }
+.thread-facts-identity { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px 12px; flex: 1 1 auto; min-width: 0; }
+.thread-operational-facts { display: flex; align-items: center; gap: 6px 12px; flex: 0 0 auto; white-space: nowrap; color: var(--text-muted); font-size: .82rem; }
+.thread-operational-facts > span + span::before { content: "·"; margin-right: 12px; color: var(--text-faint); }
 .thread-facts-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; margin-left: auto; }
 .thread-facts .thread-byline { margin: 0; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .thread-facts .thread-participants { margin-left: auto; }
@@ -10575,6 +10591,19 @@ span.wf-btn {
    the pill's own colour carries the state, as .star-on already does. */
 .star-btn .icon-commend-star { flex: 0 0 auto; width: 13px; height: 13px; color: var(--star); }
 .post-stream { gap: 0; }
+.first-unread-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 0;
+    color: var(--gold-ink);
+    font-family: var(--font-label);
+    font-size: .65rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.first-unread-divider::before,
+.first-unread-divider::after { content: ""; height: 1px; background: var(--gold-200); flex: 1 1 auto; }
 /* The Study stream is deliberately flat — no cards. That leaves NOTHING marking
    where one person stops and the next begins, so the padding and the hairline
    below have to do it: 18px of air on each side of the rule puts a post break
@@ -10796,7 +10825,8 @@ body.thread-restructure-open { overflow: hidden; }
     /* Two lines is the right answer on a phone: the identity group takes the first,
        the controls the second, and nothing is ellipsised away to reach one line. */
     .thread-facts { flex-wrap: wrap; }
-    .thread-facts-identity { flex: 1 1 100%; }
+    .thread-facts-identity { flex: 1 1 100%; flex-wrap: wrap; }
+    .thread-operational-facts { flex: 1 1 100%; flex-wrap: wrap; white-space: normal; }
     .thread-facts-actions { margin-left: 0; }
     .thread-facts .thread-byline { flex-basis: 100%; overflow: visible; white-space: normal; }
     .thread-facts .thread-participants-label { display: none; }

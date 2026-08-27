@@ -225,34 +225,70 @@ final class PostRepository
     }
 
     /**
-     * The first post the reader has not seen, in thread render order
-     * (created_at ASC, id ASC) — or NULL when they are caught up.
+     * The first unread live post and its 1-based rendered page, resolved by one
+     * query in the same (created_at, id) total order as {@see listByThread()}.
      *
-     * The unread PREDICATE is `id > last_read_post_id`, deliberately the same one
-     * {@see \App\Service\SinceLastReadContextService::forThread()} uses to build the
-     * catch-me-up list, so the page this resolves can never be a page that omits
-     * the first item that panel names. The ORDER is render order, not id order,
-     * because a merged topic carries posts whose ids and timestamps disagree.
+     * `thread_user.last_read_post_id` remains the locked cursor identity from
+     * DECISIONS §3. Joining that post supplies the ordering tuple; comparing ids
+     * alone breaks after a split, merge, or import where id order and time order
+     * differ. A missing, cross-thread, deleted, or pending cursor yields NULL so
+     * an invalid watermark never steers a reader into the middle of a topic.
      *
-     * Deleted and pending rows are excluded whatever the viewer's stream is: a
-     * staff reader paginating the with-deleted stream should still be landed on
-     * live content, and {@see pageOfPost()} converts this id into a page number
-     * against their own stream afterwards.
+     * The unread target is always live. Staff page rank may include deleted stubs
+     * because that is the stream they actually paginate.
+     *
+     * @return array{post_id:int,page:int}|null
      */
-    public function firstUnreadPostId(int $threadId, int $lastReadPostId): ?int
+    public function firstUnreadLocationForUser(
+        int $userId,
+        int $threadId,
+        int $perPage,
+        bool $includeDeleted = false,
+    ): ?array
     {
-        if ($lastReadPostId <= 0) {
-            return null;
-        }
-        $id = $this->db->fetchValue(
-            'SELECT id FROM posts
-             WHERE thread_id = ? AND id > ? AND is_deleted = 0 AND is_pending = 0
-             ORDER BY created_at ASC, id ASC
+        $perPage = max(1, $perPage);
+        $rankDeletedClause = $includeDeleted ? '' : ' AND ranked.is_deleted = 0';
+        $row = $this->db->fetch(
+            'SELECT unread.id AS post_id,
+                    (
+                        SELECT COUNT(*)
+                        FROM posts ranked
+                        WHERE ranked.thread_id = unread.thread_id'
+                            . $rankDeletedClause . '
+                          AND ranked.is_pending = 0
+                          AND (
+                              ranked.created_at < unread.created_at
+                              OR (ranked.created_at = unread.created_at AND ranked.id <= unread.id)
+                          )
+                    ) AS post_rank
+             FROM thread_user tu
+             JOIN posts cursor_post
+               ON cursor_post.id = tu.last_read_post_id
+              AND cursor_post.thread_id = tu.thread_id
+              AND cursor_post.is_deleted = 0
+              AND cursor_post.is_pending = 0
+             JOIN posts unread
+               ON unread.thread_id = tu.thread_id
+              AND unread.is_deleted = 0
+              AND unread.is_pending = 0
+              AND (
+                  unread.created_at > cursor_post.created_at
+                  OR (unread.created_at = cursor_post.created_at AND unread.id > cursor_post.id)
+              )
+             WHERE tu.user_id = :uid AND tu.thread_id = :tid
+             ORDER BY unread.created_at ASC, unread.id ASC
              LIMIT 1',
-            [$threadId, $lastReadPostId],
+            ['uid' => $userId, 'tid' => $threadId],
         );
 
-        return $id === null || $id === false ? null : (int) $id;
+        if ($row === null) {
+            return null;
+        }
+
+        return [
+            'post_id' => (int) $row['post_id'],
+            'page' => max(1, (int) ceil((int) $row['post_rank'] / $perPage)),
+        ];
     }
 
     /**

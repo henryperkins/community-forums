@@ -9,7 +9,7 @@
  * Optional: body_name, form_id, form_class, expanded, body_error,
  * body_error_focus, identity, allow_anonymous, anonymous_checked,
  * anonymous_disclosure, no_draft, no_wysiwyg, thread_composer, wrapper_slot,
- * header_slot, below_input_slot, before_submit_slot.
+ * header_slot, below_input_slot, before_submit_slot, hidden_fields.
  *
  * body_error_focus (default true) decides whether an errored body claims the
  * 422 re-render's autofocus. A mount whose wrapper/header carries its own
@@ -60,6 +60,7 @@ $shellWrapperSlot = ($wrapper_slot ?? null) instanceof \Closure ? $wrapper_slot 
 $shellHeaderSlot = ($header_slot ?? null) instanceof \Closure ? $header_slot : null;
 $shellBelowInputSlot = ($below_input_slot ?? null) instanceof \Closure ? $below_input_slot : null;
 $shellBeforeSubmitSlot = ($before_submit_slot ?? null) instanceof \Closure ? $before_submit_slot : null;
+$shellHiddenFields = is_array($hidden_fields ?? null) ? $hidden_fields : [];
 
 $shellClasses = 'composer composer-shell';
 if ($shellFormClass !== '') {
@@ -78,6 +79,9 @@ $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
 <form class="<?= $e($shellClasses) ?>" method="post" action="<?= $e($shellAction) ?>" data-composer-context="<?= $e($shellContext) ?>" data-composer-target-id="<?= $shellTargetId ?>" data-composer-instance="<?= $e($shellInstance) ?>"<?= $shellFormId !== '' ? ' id="' . $e($shellFormId) . '"' : '' ?><?= $shellNoDraft ? ' data-no-draft' : '' ?><?= $shellNoWysiwyg ? ' data-no-wysiwyg' : '' ?><?= $shellThreadComposer ? ' data-thread-composer' : '' ?>>
     <?= $this->csrfField() ?>
     <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
+    <?php foreach ($shellHiddenFields as $hiddenName => $hiddenValue): ?>
+        <input type="hidden" name="<?= $e((string) $hiddenName) ?>" value="<?= $e((string) $hiddenValue) ?>">
+    <?php endforeach; ?>
     <?php if ($shellWrapperSlot !== null): ?><?php $shellWrapperSlot(); ?><?php endif; ?>
     <div class="composer-box">
         <?php if ($shellHeaderSlot !== null): ?><div class="composer-header"><?php $shellHeaderSlot(); ?></div><?php endif; ?>

@@ -91,12 +91,14 @@ final class RepairService
         $this->db->run(
             'UPDATE threads t
              LEFT JOIN (
-                SELECT x.thread_id, x.id AS pid, x.user_id AS uid, x.created_at AS at
-                FROM posts x
-                JOIN (
-                    SELECT thread_id, MAX(id) AS max_id
-                    FROM posts WHERE is_deleted = 0 AND is_pending = 0 GROUP BY thread_id
-                ) m ON m.thread_id = x.thread_id AND m.max_id = x.id
+                SELECT ranked.thread_id, ranked.id AS pid, ranked.user_id AS uid, ranked.created_at AS at
+                FROM (
+                    SELECT p.*,
+                           ROW_NUMBER() OVER (PARTITION BY p.thread_id ORDER BY p.created_at DESC, p.id DESC) AS position
+                    FROM posts p
+                    WHERE p.is_deleted = 0 AND p.is_pending = 0
+                ) ranked
+                WHERE ranked.position = 1
              ) lp ON lp.thread_id = t.id
              SET t.last_post_id = lp.pid, t.last_post_user_id = lp.uid, t.last_post_at = lp.at',
         );
@@ -127,16 +129,16 @@ final class RepairService
         $this->db->run(
             'UPDATE boards b
              LEFT JOIN (
-                SELECT t.board_id, x.thread_id AS tid, x.created_at AS at
-                FROM posts x
-                JOIN threads t ON t.id = x.thread_id
-                JOIN (
-                    SELECT t2.board_id, MAX(p2.id) AS max_id
-                    FROM posts p2 JOIN threads t2 ON t2.id = p2.thread_id
-                    WHERE p2.is_deleted = 0 AND p2.is_pending = 0
-                      AND t2.is_deleted = 0 AND t2.is_pending = 0
-                    GROUP BY t2.board_id
-                ) m ON m.board_id = t.board_id AND m.max_id = x.id
+                SELECT ranked.board_id, ranked.thread_id AS tid, ranked.created_at AS at
+                FROM (
+                    SELECT t.board_id, p.thread_id, p.created_at, p.id,
+                           ROW_NUMBER() OVER (PARTITION BY t.board_id ORDER BY p.created_at DESC, p.id DESC) AS position
+                    FROM posts p
+                    JOIN threads t ON t.id = p.thread_id
+                    WHERE p.is_deleted = 0 AND p.is_pending = 0
+                      AND t.is_deleted = 0 AND t.is_pending = 0
+                ) ranked
+                WHERE ranked.position = 1
              ) lp ON lp.board_id = b.id
              SET b.last_thread_id = lp.tid, b.last_post_at = lp.at',
         );

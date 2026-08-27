@@ -6,6 +6,7 @@ $restructureError = (string) ($restructure_error ?? '');
 $restructureContext = (string) ($restructure_context ?? '');
 $restructureOld = is_array($restructure_old ?? null) ? $restructure_old : [];
 $oldPostIds = array_map('intval', (array) ($restructureOld['post_ids'] ?? []));
+$restructurePage = max(1, (int) ($page ?? 1));
 ?>
 <div class="thread-restructure-scrim" data-thread-restructure-scrim hidden></div>
 <details class="thread-restructure" data-thread-restructure<?= $restructureError !== '' ? ' open' : '' ?>>
@@ -17,6 +18,7 @@ $oldPostIds = array_map('intval', (array) ($restructureOld['post_ids'] ?? []));
         </header>
         <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/split">
             <?= $this->csrfField() ?>
+            <input type="hidden" name="page" value="<?= $restructurePage ?>">
             <h3>Split replies out</h3>
             <?php // Form-level, with no single field to blame: the message takes focus
                   // itself (the <details> is forced open above), because a role="alert"
@@ -33,6 +35,7 @@ $oldPostIds = array_map('intval', (array) ($restructureOld['post_ids'] ?? []));
         </form>
         <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/merge">
             <?= $this->csrfField() ?>
+            <input type="hidden" name="page" value="<?= $restructurePage ?>">
             <h3>Merge into another topic</h3>
             <?php if ($restructureContext === 'merge' && $restructureError !== ''): ?>
                 <p class="field-error" role="alert" tabindex="-1" autofocus><?= $e($restructureError) ?></p>

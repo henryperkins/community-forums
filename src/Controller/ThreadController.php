@@ -54,7 +54,12 @@ final class ThreadController extends Controller
         $expectedSlug = (string) $thread['slug'];
         $givenSlug = $params['slug'] ?? null;
         if ($givenSlug !== $expectedSlug) {
-            $query = $request->query('page') !== null ? '?page=' . (int) $request->int('page', 1) : '';
+            $query = '';
+            if ($request->query('page') !== null) {
+                $query = '?page=' . max(1, $request->int('page', 1));
+            } elseif ((string) $request->query('unread', '') === '1') {
+                $query = '?unread=1';
+            }
             return $this->redirect('/t/' . $id . '-' . $expectedSlug . $query, 301);
         }
 
@@ -92,31 +97,43 @@ final class ThreadController extends Controller
 
         $total = $postRepo->countByThread((int) $thread['id'], $includeDeleted);
         $pages = max(1, (int) ceil($total / $perPage));
-        // Which page opens, in precedence order. An explicit ?page always wins —
-        // including ?page=1, which is the only way back to the top of a topic once
-        // the unread rule below exists.
+        // Which page opens, in precedence order. Page-less topic permalinks always
+        // mean page 1; resuming at the first unread reply requires explicit
+        // ?unread=1 intent. Fragments never reach PHP, so a legacy /t/...#pID must
+        // remain a reliable page-one permalink.
         //
-        //  1. ?page=N            the reader asked for it
-        //  2. edit_post_id       a failed inline edit re-renders the page that holds
+        //  1. render_page         a failed POST re-renders its originating page
+        //  2. ?page=N            the reader asked for it
+        //  3. edit_post_id       a failed inline edit re-renders the page that holds
         //                        the edited post, so its re-opened form (with the
         //                        rejected text) is on screen
-        //  3. first unread       land on the reply the reader has not seen, so
-        //                        "Since you last read" is not a panel of links that
-        //                        all point off this page
         //  4. page 1
         //
-        // (3) MUST be resolved here, above the markRead() call further down: that
-        // call advances the read position to the newest post on the page just
-        // rendered, so reading the position after it always resolves to the current
-        // page. It is gated on the same two flags that maintain the position at all
-        // — with both dark, last_read_post_id is stale and must not steer anything.
+        // Resolve the unread location before markRead() even for an explicit page:
+        // it supplies the visible boundary marker as well as the redirect target.
         $editPostId = (int) ($extra['edit_post_id'] ?? 0);
-        if ($request->query('page') !== null) {
+        $renderPage = (int) ($extra['render_page'] ?? 0);
+        $firstUnread = $this->firstUnreadLocation($thread, $user, $postRepo, $perPage, $includeDeleted);
+        if (
+            $request->method() === 'GET'
+            && (string) $request->query('unread', '') === '1'
+            && $request->query('page') === null
+            && $firstUnread !== null
+        ) {
+            return $this->redirect(
+                '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
+                . '?page=' . $firstUnread['page'] . '#p' . $firstUnread['post_id'],
+            );
+        }
+
+        if ($renderPage > 0) {
+            $page = min($pages, max(1, $renderPage));
+        } elseif ($request->query('page') !== null) {
             $page = min($pages, max(1, $request->int('page', 1)));
         } elseif ($editPostId > 0) {
             $page = min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage, $includeDeleted)));
         } else {
-            $page = min($pages, max(1, $this->firstUnreadPage($thread, $user, $postRepo, $perPage, $includeDeleted)));
+            $page = 1;
         }
 
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage, $includeDeleted);
@@ -131,6 +148,8 @@ final class ThreadController extends Controller
                     isset($post['author_title']) ? (string) $post['author_title'] : null,
                     (int) ($post['author_reputation'] ?? 0),
                 );
+            $post['is_first_unread'] = $firstUnread !== null
+                && (int) $post['id'] === $firstUnread['post_id'];
         }
         unset($post);
 
@@ -213,8 +232,16 @@ final class ThreadController extends Controller
                 $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
                 $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
             }
-            if (($engagement || $automatedContext) && $postIds !== []) {
-                $tuRepo->markRead($user->id(), (int) $thread['id'], max($postIds));
+            if (($engagement || $automatedContext) && $request->method() === 'GET' && $posts !== []) {
+                $livePosts = array_values(array_filter(
+                    $posts,
+                    static fn (array $post): bool => (int) ($post['is_deleted'] ?? 0) === 0
+                        && (int) ($post['is_pending'] ?? 0) === 0,
+                ));
+                if ($livePosts !== []) {
+                    $lastVisiblePost = $livePosts[array_key_last($livePosts)];
+                    $tuRepo->markRead($user->id(), (int) $thread['id'], (int) $lastVisiblePost['id']);
+                }
             }
         }
 
@@ -527,9 +554,7 @@ final class ThreadController extends Controller
     }
 
     /**
-     * The page a topic opens on for a reader who has been here before: the one
-     * holding their first unread reply, or 1 when they are caught up, are a guest,
-     * or have never read it.
+     * Resolve the first unread post and its rendered page without mutating state.
      *
      * Gated on engagement/automated_context because those are the flags under which
      * ThreadUserRepository::markRead() maintains the position at all; with both
@@ -538,27 +563,25 @@ final class ThreadController extends Controller
      *
      * @param array<string,mixed> $thread
      */
-    private function firstUnreadPage(
+    private function firstUnreadLocation(
         array $thread,
         ?User $user,
         PostRepository $postRepo,
         int $perPage,
         bool $includeDeleted,
-    ): int {
+    ): ?array {
         if ($user === null) {
-            return 1;
+            return null;
         }
         $featureFlags = $this->container->get(FeatureFlags::class);
         if (!$featureFlags->enabled('engagement') && !$featureFlags->enabled('automated_context')) {
-            return 1;
+            return null;
         }
-        $state = $this->container->get(ThreadUserRepository::class)->find($user->id(), (int) $thread['id']);
-        $lastRead = (int) ($state['last_read_post_id'] ?? 0);
-        $firstUnread = $postRepo->firstUnreadPostId((int) $thread['id'], $lastRead);
-        if ($firstUnread === null) {
-            return 1;
-        }
-
-        return $postRepo->pageOfPost((int) $thread['id'], $firstUnread, $perPage, $includeDeleted);
+        return $postRepo->firstUnreadLocationForUser(
+            $user->id(),
+            (int) $thread['id'],
+            $perPage,
+            $includeDeleted,
+        );
     }
 }

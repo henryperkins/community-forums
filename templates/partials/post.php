@@ -18,7 +18,10 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
       // wiki posts are also left ungrouped so their role/Wiki badge is never hidden. ?>
 <?php $grouped = ($grouped ?? false) && !$accepted && (int) $p['is_op'] !== 1
     && (($p['author_role'] ?? 'user') === 'user') && empty($p['is_wiki']); ?>
-<article class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>" data-post>
+<?php if (!empty($p['is_first_unread'])): ?>
+    <div class="first-unread-divider" data-first-unread-boundary role="separator"><span>First unread</span></div>
+<?php endif; ?>
+<article class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>" data-post<?= !empty($p['is_first_unread']) ? ' data-first-unread="1"' : '' ?>>
     <?php if ($show_avatars ?? true): ?>
         <?php if ($grouped): ?><span class="post-avatar-spacer" aria-hidden="true"></span>
         <?php else: ?>

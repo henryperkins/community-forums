@@ -81,6 +81,7 @@ final class PostController extends Controller
             return (new ThreadController($this->container))->renderThread($request, $thread, [
                 'reply_errors' => $e->errors,
                 'reply_old' => $e->old,
+                'render_page' => max(1, $request->int('page', 1)),
             ])->withStatus(422);
         }
 

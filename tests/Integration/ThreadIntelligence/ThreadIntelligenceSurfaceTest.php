@@ -374,6 +374,55 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('action="/t/' . $seed['thread_id'] . '/summary/automation/pause"', $html);
     }
 
+    public function test_curator_amendment_keeps_every_living_brief_version_restorable_in_newest_first_order(): void
+    {
+        $seed = $this->seedThread(8, 'Living brief amendment history');
+        $admin = $this->makeAdmin(['username' => 'history-curator']);
+
+        $this->memory()->publishSummary(
+            $this->userEntity($admin),
+            $seed['thread_id'],
+            'Initial curated brief',
+            [$seed['post_ids'][0]],
+        );
+        $initialId = (int) $this->db->fetchValue(
+            'SELECT id FROM thread_summaries WHERE thread_id = ? AND version = 1',
+            [$seed['thread_id']],
+        );
+
+        $this->memory()->publishSummary(
+            $this->userEntity($admin),
+            $seed['thread_id'],
+            'Curator amendment',
+            [$seed['post_ids'][1]],
+        );
+        $amendmentId = (int) $this->db->fetchValue(
+            'SELECT id FROM thread_summaries WHERE thread_id = ? AND version = 2',
+            [$seed['thread_id']],
+        );
+
+        $versions = $this->db->fetchAll(
+            'SELECT id, version, status FROM thread_summaries WHERE thread_id = ? ORDER BY version DESC, id DESC',
+            [$seed['thread_id']],
+        );
+        self::assertSame([2, 1], array_map('intval', array_column($versions, 'version')));
+        self::assertSame(['published', 'retired'], array_column($versions, 'status'));
+
+        $this->actingAs($admin);
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+        $amendmentRestore = 'name="summary_id" value="' . $amendmentId . '"';
+        $initialRestore = 'name="summary_id" value="' . $initialId . '"';
+
+        self::assertStringContainsString('Version history', $html);
+        self::assertStringContainsString('v2', $html);
+        self::assertStringContainsString('v1', $html);
+        self::assertSame(1, substr_count($html, $amendmentRestore));
+        self::assertSame(1, substr_count($html, $initialRestore));
+        self::assertLessThan(strpos($html, $initialRestore), strpos($html, $amendmentRestore));
+    }
+
     public function test_paused_curator_footer_promotes_resume_and_states_the_pause_once(): void
     {
         $seed = $this->seedThread(8, 'Paused curator footer');

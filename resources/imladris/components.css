@@ -248,7 +248,8 @@
    sideways the moment the server rejects one value. */
 .field-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .field-cell > .field-error { margin: 0; }
-.field-hint { display: block; font-size: .82rem; line-height: 1.45; color: var(--text-muted); }
+.field > .field-hint,
+.dm-form > .field-hint { display: block; font-size: .82rem; line-height: 1.45; color: var(--text-muted); }
 .field > .field-label { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .82rem; color: var(--text-muted); margin-bottom: 5px; }
 
 /* ── Switch (toggle) — a set-gem knob on a beveled parchment track ───────────────────────── */
@@ -1306,9 +1307,10 @@ a.link-preview:hover .link-preview-title { color: var(--accent); }
    card rather than in a menu. Removal is sticky — it outlives an edit — which
    makes Restore the only way back and puts it in the same place. */
 .link-preview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
-.link-preview-action { padding: 0; border: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer; }
-.link-preview-action:hover { color: var(--accent); }
-.link-preview-action.is-danger:hover { color: var(--danger); }
+.link-preview-action { padding: 0; border: 0; background: transparent; }
+.link-preview-action .linkbtn { font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer; }
+.link-preview-action .linkbtn:hover { color: var(--accent); }
+.link-preview-action .linkbtn.is-danger:hover { color: var(--danger); }
 /* Removed. Rendered only for viewers who could act on it, so no one else can
    tell a card was ever there. */
 .link-preview.is-removed { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: transparent; border-style: dashed; }
