@@ -10,12 +10,15 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Domain\User;
+use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\Cap;
+use App\Security\WriteGate;
 use App\Service\BadgeService;
 use App\Service\ModerationService;
 use App\Service\PostingService;
@@ -29,6 +32,14 @@ use App\Service\ThreadReadService;
  */
 final class PostController extends Controller
 {
+    public function compose(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
+
+        return $this->view('compose', $this->composeViewModel($user, $request));
+    }
+
     /** @param array<string,string> $params */
     public function createThread(Request $request, array $params): Response
     {
@@ -39,14 +50,7 @@ final class PostController extends Controller
         try {
             $result = $posting->createThread($user, $request->allInput() + ['ip' => $request->ip()]);
         } catch (ValidationException $e) {
-            return $this->view('compose', [
-                'errors' => $e->errors,
-                'old' => $e->old,
-                'boards' => $this->postableBoards(),
-                'selected_board' => (int) $request->int('board_id', 0),
-                'show_avatars' => (bool) $this->container->get(PreferenceService::class)
-                    ->reading($user->id())['show_avatars'],
-            ], 422);
+            return $this->view('compose', $this->composeViewModel($user, $request, $e->errors, $e->old), 422);
         }
 
         $this->discardServerDraftFor($user, $request->path());
@@ -187,17 +191,51 @@ final class PostController extends Controller
         return '/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'];
     }
 
-    /** @return array<int,array<string,mixed>> boards the current user may post in */
-    private function postableBoards(): array
+    /**
+     * One view model for the first GET and every rejected POST. Policy-listed
+     * boards remain visible while can_post decides which destinations are live.
+     *
+     * @param array<string,string> $errors
+     * @param array<string,mixed> $old
+     * @return array<string,mixed>
+     */
+    private function composeViewModel(
+        User $user,
+        Request $request,
+        array $errors = [],
+        array $old = [],
+    ): array {
+        $boards = $this->composeBoards($user);
+        $requested = array_key_exists('board_id', $old)
+            ? $old['board_id']
+            : $request->input('board', $request->input('board_id'));
+        $selected = $this->resolveComposeBoard($boards, $requested);
+        if ($selected === null) {
+            throw new ForbiddenException('There are no boards you can post in.');
+        }
+
+        return [
+            'errors' => $errors,
+            'old' => $old,
+            'boards' => $boards,
+            'compose_boards' => $boards,
+            'selected_board' => (int) $selected['id'],
+            'selected_board_row' => $selected,
+            'show_avatars' => (bool) $this->container->get(PreferenceService::class)
+                ->reading($user->id())['show_avatars'],
+        ];
+    }
+
+    /** @return list<array<string,mixed>> policy-listed boards annotated with can_post */
+    private function composeBoards(User $user): array
     {
-        $user = $this->currentUser();
         $policy = $this->container->get(BoardPolicy::class);
         $gate = $this->container->get(AuthorityGate::class);
         $boards = $this->container->get(BoardRepository::class)->allOrdered();
-        $memberBoardIds = $user !== null
-            ? array_flip($this->container->get(\App\Repository\BoardMemberRepository::class)->boardIdsFor($user->id()))
-            : [];
-        if ($user !== null && $gate->mode() !== AuthorityGate::MODE_LEGACY) {
+        $memberBoardIds = array_flip(
+            $this->container->get(BoardMemberRepository::class)->boardIdsFor($user->id()),
+        );
+        if ($gate->mode() !== AuthorityGate::MODE_LEGACY) {
             // Everything the per-board decisions need is already in hand —
             // prime the resolver memos so shadow/enforce does not re-fetch
             // each board row and membership per board (the 422 re-render N+1).
@@ -209,17 +247,47 @@ final class PostController extends Controller
                 array_map(static fn (array $b): int => (int) $b['id'], $boards),
             );
         }
-        return array_values(array_filter(
-            $boards,
-            fn (array $b): bool => $user !== null
-                && $gate->allows(
-                    fn (): bool => $policy->canPost($b, $user, isset($memberBoardIds[(int) $b['id']])),
-                    $user,
-                    Cap::THREAD_CREATE,
-                    ['board_id' => (int) $b['id']],
-                    'PostController::postableBoards',
-                )
-                && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
-        ));
+
+        $listed = [];
+        foreach ($boards as $board) {
+            $isMember = isset($memberBoardIds[(int) $board['id']]);
+            if (!$policy->isListed($board, $user, $isMember)) {
+                continue;
+            }
+            $board['can_post'] = $gate->allows(
+                fn (): bool => $policy->canPost($board, $user, $isMember),
+                $user,
+                Cap::THREAD_CREATE,
+                ['board_id' => (int) $board['id']],
+                'PostController::composeBoards',
+            );
+            $board['post_block_reason'] = (int) ($board['is_archived'] ?? 0) === 1
+                ? 'This board is archived; new topics are closed.'
+                : ((string) ($board['post_min_role'] ?? 'user') === 'admin'
+                    ? 'Only wardens may open a topic here'
+                    : 'You do not have permission to open a topic here.');
+            $listed[] = $board;
+        }
+        return $listed;
+    }
+
+    /** @param list<array<string,mixed>> $boards @return array<string,mixed>|null */
+    private function resolveComposeBoard(array $boards, mixed $requested): ?array
+    {
+        $requestedString = is_string($requested) || is_int($requested) ? trim((string) $requested) : '';
+        if ($requestedString !== '') {
+            foreach ($boards as $board) {
+                if (!empty($board['can_post'])
+                    && ($requestedString === (string) $board['id'] || $requestedString === (string) $board['slug'])) {
+                    return $board;
+                }
+            }
+        }
+        foreach ($boards as $board) {
+            if (!empty($board['can_post'])) {
+                return $board;
+            }
+        }
+        return null;
     }
 }

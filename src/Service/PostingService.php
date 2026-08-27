@@ -845,8 +845,8 @@ final class PostingService
 
         if ($requireTitle) {
             $title ??= '';
-            if ($title === '') {
-                $errors['title'] = 'Enter a title.';
+            if (mb_strlen($title) < 3) {
+                $errors['title'] = 'Give the topic a title before you open it.';
             } elseif (mb_strlen($title) > (int) $this->config->get('limits.thread_title_max', 160)) {
                 $errors['title'] = 'Title is too long (max 160).';
             }

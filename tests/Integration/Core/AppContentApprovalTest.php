@@ -101,7 +101,7 @@ final class AppContentApprovalTest extends TestCase
         $author = $this->makeUser(['username' => 'blocked']);
         $this->actingAs($author);
 
-        $res = $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Hi', 'body' => 'buy spamword now']);
+        $res = $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Hello', 'body' => 'buy spamword now']);
         $this->assertStatus(422, $res);
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM threads WHERE user_id = ?', [(int) $author['id']]));
 

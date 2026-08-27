@@ -1,61 +1,71 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 $this->layout('layout');
-$this->section('title', 'New topic');
-$composeSelectedBoard = null;
-foreach ($boards as $composeBoard) {
-    if ((int) $composeBoard['id'] === (int) $selected_board) {
-        $composeSelectedBoard = $composeBoard;
-        break;
-    }
-}
-$composeSelectedSlug = (string) ($composeSelectedBoard['slug'] ?? 'board');
-$composeAllowsAnonymous = array_filter($boards, static fn (array $b): bool => !empty($b['allow_anonymous'])) !== [];
+$this->section('title', 'Open a topic');
+$this->section('route', 'compose');
+$composeSelectedBoard = $selected_board_row;
+$composeSelectedSlug = (string) $composeSelectedBoard['slug'];
+$composeSelectedName = (string) $composeSelectedBoard['name'];
+$composeAllowsAnonymous = !empty($composeSelectedBoard['allow_anonymous']);
 $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e): void {
     ?>
-    <p class="muted">Markdown supported — <strong>**bold**</strong>, <em>*italic*</em>, <code>`code`</code>, <code>||spoiler||</code>, and <code>![alt](image)</code> after uploading.</p>
-    <?php // field_error() emits a <p>, which cannot legally nest inside <label>,
-          // so each error stays a sibling after its label — as it already was. ?>
-    <label class="field">
+    <label class="field compose-title-field">
+        <span>Title</span>
+        <input type="text" name="title" class="input input-engraved compose-title-input" data-compose-title
+               maxlength="160" minlength="3" value="<?= $e($old['title'] ?? '') ?>"
+               placeholder="What should the council consider?"<?= field_attrs($errors, 'title') ?> required>
+    </label>
+    <?= field_error($errors, 'title') ?>
+
+    <label class="field compose-board-field">
         <span>Board</span>
-        <select name="board_id" class="input"<?= field_attrs($errors, 'board_id') ?>>
-            <?php foreach ($boards as $b): ?>
-                <option value="<?= (int) $b['id'] ?>" <?= (int) $b['id'] === (int) $selected_board ? 'selected' : '' ?>>#<?= $e($b['name']) ?></option>
+        <select name="board_id" class="input input-engraved compose-board-select" data-compose-board-select<?= field_attrs($errors, 'board_id') ?>>
+            <?php foreach ($boards as $board): ?>
+                <option value="<?= (int) $board['id'] ?>"
+                        data-board-slug="<?= $e($board['slug']) ?>"
+                        data-board-name="<?= $e($board['name']) ?>"
+                        data-board-anonymous="<?= !empty($board['allow_anonymous']) ? '1' : '0' ?>"
+                        <?= (int) $board['id'] === (int) $selected_board ? 'selected ' : '' ?><?= empty($board['can_post']) ? 'disabled' : '' ?>><?= $e($board['name']) ?></option>
             <?php endforeach; ?>
         </select>
     </label>
     <?= field_error($errors, 'board_id') ?>
-    <label class="field">
-        <span>Title</span>
-        <input type="text" name="title" class="input" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= field_attrs($errors, 'title') ?> required>
-    </label>
-    <?= field_error($errors, 'title') ?>
     <?php
 };
 ?>
-<div class="read-main read-pad compose-page">
-    <h1>New topic</h1>
-    <?= $this->partial('partials/composer_shell', [
-        'action' => '/threads',
-        'context' => 'new_thread',
-        'target_id' => (int) $selected_board,
-        'instance_id' => 'new-thread-page',
-        'placeholder' => 'Start a new topic in #' . $composeSelectedSlug . '…',
-        'maxlength' => 20000,
-        'body_value' => (string) ($old['body'] ?? ''),
-        'submit_label' => 'Create topic',
-        'form_class' => 'stacked',
-        'body_error' => (string) ($errors['body'] ?? ''),
-        // board_id/title own the focus when either errored first (field_attrs()' rule).
-        'body_error_focus' => array_key_first($errors) === 'body',
-        'identity' => [
-            'display_name' => $current_user->displayName(),
-            'username' => $current_user->username(),
-            'show_avatar' => $show_avatars ?? true,
-        ],
-        'allow_anonymous' => $composeAllowsAnonymous,
-        'anonymous_checked' => !empty($old['is_anonymous']),
-        'anonymous_disclosure' => 'Only takes effect on boards that allow it; your name stays visible to moderators.',
-        'wrapper_slot' => $composeWrapper,
-    ]) ?>
+<div class="compose-surface" data-compose data-compose-selected-board="<?= $e($composeSelectedSlug) ?>">
+    <div class="compose-column">
+        <p class="compose-eyebrow" data-compose-board-name>Posting to <?= $e($composeSelectedName) ?></p>
+        <h1>Open a topic</h1>
+        <p class="compose-lede">Say what you want the council to consider, and what would change your mind.</p>
+
+        <?= $this->partial('partials/composer_shell', [
+            'action' => '/threads',
+            'context' => 'new_thread',
+            'target_id' => (int) $selected_board,
+            'instance_id' => 'new-thread-page',
+            'placeholder' => 'Open with the strongest version of your question…',
+            'maxlength' => 20000,
+            'body_value' => (string) ($old['body'] ?? ''),
+            'submit_label' => 'Create topic',
+            'form_class' => 'compose-topic-form',
+            'expanded' => true,
+            'body_error' => (string) ($errors['body'] ?? ''),
+            'body_error_focus' => array_key_first($errors) === 'body',
+            'identity' => [
+                'display_name' => $current_user->displayName(),
+                'username' => $current_user->username(),
+                'show_avatar' => $show_avatars ?? true,
+            ],
+            'allow_anonymous' => $composeAllowsAnonymous,
+            'anonymous_checked' => !empty($old['is_anonymous']),
+            'anonymous_disclosure' => 'Only takes effect on boards that allow it; your name stays visible to moderators.',
+            'wrapper_slot' => $composeWrapper,
+        ]) ?>
+
+        <footer class="compose-footer">
+            <a href="/" class="compose-cancel">Cancel</a>
+            <span class="compose-draft-copy" data-compose-draft-copy hidden>Draft kept on this device.</span>
+        </footer>
+    </div>
 </div>

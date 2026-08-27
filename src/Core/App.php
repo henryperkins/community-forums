@@ -2148,6 +2148,7 @@ final class App
         $r->get('/inbox/preview/{id}', [InboxPreviewController::class, 'show']);
         $r->post('/inbox/bulk', [InboxBulkController::class, 'apply']);
         $r->get('/search', [SearchController::class, 'index']);
+        $r->get('/compose', [PostController::class, 'compose']);
         $r->get('/presence', [PresenceController::class, 'index']);
         $r->get('/users-online', [PresenceController::class, 'page']);
 

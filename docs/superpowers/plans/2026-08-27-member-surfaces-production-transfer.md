@@ -197,12 +197,12 @@
 - Adds a controller view model containing every policy-listed board plus `can_post`, selected board, anonymity support, and resolved reading preferences.
 - POST validation reuses the same view model and preserves title/body/board/anonymity.
 
-- [ ] Replace the old intentional-404 assertion with a failing GET contract for guest redirect, active member render, selected-board normalization, readable-but-disabled boards, private membership, archived board, authority mode parity, and suspended/banned/deactivated accounts.
-- [ ] Add failing 422 tests for a title shorter than three characters, invalid board, preserved draft text, board selection, error focus, CSRF, idempotency, anonymity, and exactly one shared composer instance.
-- [ ] Add failing markup tests for rail/select synchronization hooks, no New topic topbar action, Cancel, draft status copy, and no prototype toast replacing canonical navigation.
-- [ ] Implement the GET route and one shared `composeBoards()` view-model builder used by GET and 422.
-- [ ] Rebuild the Compose template around the production composer shell and re-run focused tests green.
-- [ ] Commit `feat: transfer the compose surface`.
+- [x] Replace the old intentional-404 assertion with a failing GET contract for guest redirect, active member render, selected-board normalization, readable-but-disabled boards, private membership, archived board, authority mode parity, and suspended/banned/deactivated accounts.
+- [x] Add failing 422 tests for a title shorter than three characters, invalid board, preserved draft text, board selection, error focus, CSRF, idempotency, anonymity, and exactly one shared composer instance.
+- [x] Add failing markup tests for rail/select synchronization hooks, no New topic topbar action, Cancel, draft status copy, and no prototype toast replacing canonical navigation.
+- [x] Implement the GET route and one shared `composeBoards()` view-model builder used by GET and 422.
+- [x] Rebuild the Compose template around the production composer shell and re-run focused tests green.
+- [x] Commit `feat: transfer the compose surface`.
 
 ---
 

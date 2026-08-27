@@ -60,7 +60,10 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
 <?php if ($variant === 'app'): ?>
     <div class="app-shell">
         <div class="nav-scrim" data-nav-scrim hidden></div>
-        <?= $this->partial('partials/sidebar') ?>
+        <?= $this->partial('partials/sidebar', [
+            'compose_boards' => $compose_boards ?? null,
+            'selected_board' => $selected_board ?? null,
+        ]) ?>
         <main class="main" id="main">
             <?= $this->partial('partials/flash') ?>
             <?= $content ?>
