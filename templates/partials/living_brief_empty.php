@@ -12,6 +12,12 @@ $code = (string) ($refresh['code'] ?? '');
 // (int — how many posts pass the brief's eligibility predicate) are one key
 // apart and mean different things. Never `empty()` the count: zero eligible
 // posts is a real answer, not a missing one.
+//
+// The two counts arrive null unless the denial is `initial_post_threshold` —
+// ThreadIntelligenceViewService::emptyModel() runs the COUNT only for the one
+// branch below that spends them, rather than on every topic view. Coalescing to
+// 0 here is safe only because that branch is the only reader; do not move either
+// value out from behind it without making the view model answer unconditionally.
 $refreshAllowed = !empty($refresh['eligible']);
 $eligiblePosts = (int) ($refresh['eligible_posts'] ?? 0);
 $threshold = (int) ($refresh['initial_post_threshold'] ?? 0);
@@ -26,7 +32,6 @@ $thresholdLabel = $thresholdWords[$threshold] ?? (string) $threshold;
 // archive has not drawn one" are false, and Restore — not authoring — is the
 // action the curator came for.
 $hasHistory = $history !== [];
-$historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => 'Retired'];
 // Retiring does two things in one transaction (CommunityMemoryService::
 // retireSummary): it retires the published row AND pauses automation. So the
 // ladder's first denial after a retirement is `automation_paused` — a
@@ -114,26 +119,15 @@ if ($ladderMessage === '') {
         <?php /* The design spec's required Restore affordance: the same version-row
                  component the brief's More panel uses, promoted to the surface because
                  with nothing published this IS the panel's primary action rather than
-                 a footnote two disclosures deep. The first row carries the filled
-                 `.btn` treatment Refresh uses; the rest stay quiet. */ ?>
-        <p class="lb-more-title">Restore a version</p>
-        <ul class="lb-versions">
-            <?php foreach ($history as $index => $item): ?>
-                <li class="lb-version">
-                    <span class="lb-version-v">v<?= (int) $item['version'] ?></span>
-                    <span class="lb-version-who"><?= $e($item['label']) ?></span>
-                    <span class="lb-version-status"><?= $e($historyLabels[$item['status']] ?? ucfirst((string) $item['status'])) ?></span>
-                    <?php if (!empty($item['published_at'])): ?>
-                        <time class="lb-version-when" datetime="<?= $e(iso_datetime($item['published_at'])) ?>"><?= $e(human_datetime($item['published_at'])) ?></time>
-                    <?php endif; ?>
-                    <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/restore">
-                        <?= $this->csrfField() ?>
-                        <input type="hidden" name="summary_id" value="<?= (int) $item['id'] ?>">
-                        <button class="<?= $index === 0 ? 'btn' : 'linkbtn' ?>" type="submit">Restore<span class="sr-only"> version <?= (int) $item['version'] ?></span></button>
-                    </form>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+                 a footnote two disclosures deep. The first row takes the panel's one
+                 filled `.btn`; the rest stay quiet, and the footer's leading control
+                 steps down beneath it ($restorePromoted in thread_memory_tools.php). */ ?>
+        <?= $this->partial('partials/living_brief_versions', [
+            'thread_id' => $threadId,
+            'history' => $history,
+            'title' => 'Restore a version',
+            'promote_first' => true,
+        ]) ?>
     <?php endif; ?>
     <?php /* The same curator footer the brief carries, with `living_brief` null so
              Retire stays out and the composer names a first — or a next — summary

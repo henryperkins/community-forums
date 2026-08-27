@@ -6,7 +6,6 @@ $paused = !empty($memory_automation_paused);
 $refresh = $memory_refresh ?? [];
 $history = $memory_history ?? [];
 $code = (string) ($refresh['code'] ?? '');
-$historyLabels = ['draft' => 'Draft', 'published' => 'Published', 'retired' => 'Retired'];
 // Two callers: partials/living_brief.php (a brief is published) and
 // partials/living_brief_empty.php (none is). The footer is the same set of
 // controls either way; only the copy that names a published brief changes.
@@ -18,11 +17,13 @@ $hasBrief = !empty($living_brief);
 $everPublished = $hasBrief || $history !== [];
 // With no brief showing, partials/living_brief_empty.php promotes the version
 // rows above this footer and gives the first one the filled `.btn`. That is the
-// one state where a filled Resume here would sit adjacent to a filled Restore
+// one state where a filled button here would sit adjacent to a filled Restore
 // with nothing arbitrating between them, against the design's one-primary rule.
-// Restore is the action that undoes the retirement; Resume only matters once a
-// brief exists again — restoring one does not resume automation — so Resume is
-// the one that steps down, and only here.
+// The step-down belongs to this leading SLOT, not to whichever control happens
+// to occupy it: Resume holds the slot while automation is paused, Refresh the
+// moment a curator resumes. Retire pauses automation, so Retire → Resume is a
+// two-click path out of any retirement into a still-brief-less panel — stepping
+// only Resume down would land a filled Refresh beside the filled Restore there.
 $restorePromoted = !$hasBrief && $history !== [];
 ?>
 <div class="living-brief-curator" id="living-brief-curator-<?= $threadId ?>">
@@ -43,7 +44,7 @@ $restorePromoted = !$hasBrief && $history !== [];
         <?php else: ?>
             <form class="inline-form" method="post" action="/t/<?= $threadId ?>/summary/refresh">
                 <?= $this->csrfField() ?>
-                <button class="btn" type="submit"<?= empty($refresh['eligible']) ? ' disabled' : '' ?>>Refresh</button>
+                <button class="<?= $restorePromoted ? 'linkbtn' : 'btn' ?>" type="submit"<?= empty($refresh['eligible']) ? ' disabled' : '' ?>>Refresh</button>
             </form>
         <?php endif; ?>
         <details class="lb-amend">
@@ -91,30 +92,14 @@ $restorePromoted = !$hasBrief && $history !== [];
                      rows above this footer rather than burying them two disclosures
                      deep. Rendering them here as well would duplicate every form. */ ?>
             <?php if ($hasBrief && !empty($history)): ?>
-                <?php /* Every summary row, including the one currently published — the view
-                         service applies no status or version filter — so the heading must not
-                         promise "earlier". A re-restore of the live version stays reachable. */ ?>
-                <p class="lb-more-title">Version history</p>
-                <ul class="lb-versions">
-                    <?php foreach ($history as $item): ?>
-                        <li class="lb-version">
-                            <span class="lb-version-v">v<?= (int) $item['version'] ?></span>
-                            <span class="lb-version-who"><?= $e($item['label']) ?></span>
-                            <span class="lb-version-status"><?= $e($historyLabels[$item['status']] ?? ucfirst((string) $item['status'])) ?></span>
-                            <?php if (!empty($item['published_at'])): ?>
-                                <time class="lb-version-when" datetime="<?= $e(iso_datetime($item['published_at'])) ?>"><?= $e(human_datetime($item['published_at'])) ?></time>
-                            <?php endif; ?>
-                            <form class="inline" method="post" action="/t/<?= $threadId ?>/summary/restore">
-                                <?= $this->csrfField() ?>
-                                <input type="hidden" name="summary_id" value="<?= (int) $item['id'] ?>">
-                                <button class="linkbtn" type="submit">Restore<span class="sr-only"> version <?= (int) $item['version'] ?></span></button>
-                            </form>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                <?= $this->partial('partials/living_brief_versions', [
+                    'thread_id' => $threadId,
+                    'history' => $history,
+                    'title' => 'Version history',
+                ]) ?>
             <?php endif; ?>
 
-            <form class="inline-form lb-more-related" method="post" action="/t/<?= $threadId ?>/related">
+            <form class="inline-form" method="post" action="/t/<?= $threadId ?>/related">
                 <?= $this->csrfField() ?>
                 <label class="sr-only" for="related-thread-<?= $threadId ?>">Related topic ID</label>
                 <input id="related-thread-<?= $threadId ?>" class="input input-small" type="number" name="related_thread_id" min="1" placeholder="Thread ID" required>

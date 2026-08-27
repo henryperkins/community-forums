@@ -178,6 +178,24 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringNotContainsString('living-brief-heading', $html);
         self::assertStringContainsString('aria-label="Living brief"', $html);
         self::assertStringContainsString('/privacy#thread-intelligence', $html);
+
+        // Dropping the <h2> outright left the section's own <h3>Sources</h3> directly
+        // under the topic <h1>, with nothing between them. The browser suite cannot
+        // see that: `heading-order` carries axe's `best-practice` tag, so
+        // withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']) excludes the rule
+        // outright, and its impact is `moderate`, below the serious/critical filter.
+        // So the outline is pinned here instead — a screen-reader-only <h2> keeps the
+        // topic title leading visually while the levels stay contiguous.
+        self::assertStringContainsString('<h2 class="sr-only">Living brief</h2>', $html);
+        preg_match_all('/<h([1-6])\b/', $html, $found);
+        $levels = array_map('intval', $found[1]);
+        $skips = [];
+        foreach ($levels as $index => $level) {
+            if ($index > 0 && $level > $levels[$index - 1] + 1) {
+                $skips[] = 'h' . $levels[$index - 1] . ' -> h' . $level;
+            }
+        }
+        self::assertSame([], $skips, 'the topic page outline skips a heading level');
     }
 
     public function test_living_brief_read_renders_a_missing_html_cache_without_writing_it(): void
@@ -709,6 +727,43 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('restore a version below', $ready);
         self::assertStringNotContainsString('the archive has not drawn one yet', $ready);
         self::assertStringNotContainsString('publish the first summary yourself', $ready);
+    }
+
+    /**
+     * Retire pauses automation, so the post-retire panel steps *Resume* down beside
+     * the promoted Restore rows. Resuming does not republish the retired brief, so
+     * the panel stays an empty state with versions behind it — but the footer's
+     * leading slot swaps from Resume to Refresh. The step-down belongs to the slot,
+     * not to whichever control happens to occupy it, or a two-click path from any
+     * retirement lands a filled Refresh beside a filled Restore with nothing
+     * arbitrating between them.
+     */
+    public function test_resumed_empty_state_keeps_one_primary_beside_the_promoted_restore(): void
+    {
+        $seed = $this->seedThread(8, 'Resumed after retirement');
+        $admin = $this->makeAdmin(['username' => 'resume-curator']);
+        $this->memory()->publishSummary($this->userEntity($admin), $seed['thread_id'], 'First curated brief', [$seed['post_ids'][0]]);
+        $this->memory()->retireSummary($this->userEntity($admin), $seed['thread_id']);
+        $this->memory()->resumeAutomation($this->userEntity($admin), $seed['thread_id']);
+        $this->rebuildAppWithProvider();
+
+        $this->actingAs($admin);
+        $html = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug'])->body();
+
+        // Still the empty state with versions behind it, and the ladder allows a
+        // refresh — the branch whose copy names both actions.
+        self::assertStringContainsString('living-brief-empty', $html);
+        self::assertStringContainsString('Restore a version', $html);
+        self::assertStringContainsString('restore a version below', $html);
+
+        // Restore keeps the one filled treatment; Refresh takes the step-down that
+        // Resume took while the topic was paused.
+        self::assertStringContainsString(
+            '<button class="btn" type="submit">Restore<span class="sr-only"> version 1</span></button>',
+            $html,
+        );
+        self::assertStringContainsString('<button class="linkbtn" type="submit">Refresh</button>', $html);
+        self::assertStringNotContainsString('<button class="btn" type="submit">Refresh</button>', $html);
     }
 
     public function test_empty_state_states_the_next_refresh_time_exactly_once(): void

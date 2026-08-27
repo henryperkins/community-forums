@@ -1,5 +1,13 @@
 <?php /** @var \App\Core\View $this */ ?>
 <section class="living-brief study-living-brief" data-living-brief aria-label="Living brief">
+    <?php // The topic title leads the region visually, so this heading is never seen —
+          // but the section still carries <h3>Sources</h3>, and dropping the level
+          // outright left that h3 hanging directly off the topic <h1>. The browser
+          // suite cannot catch that: axe tags `heading-order` `best-practice`, which
+          // the spec's wcag2a/2aa/21a/21aa filter excludes, and scores it `moderate`,
+          // below its serious/critical threshold. Kept out of `.living-brief-head` so
+          // the head stays headingless, as the redesign and its specs require. ?>
+    <h2 class="sr-only">Living brief</h2>
     <div class="living-brief-head">
         <p class="living-brief-label">
             <?php if (!empty($living_brief['has_ai_lineage'])): ?>
