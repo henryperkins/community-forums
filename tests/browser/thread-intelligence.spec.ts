@@ -480,9 +480,9 @@ test('the brief entrance and the More disclosure honour prefers-reduced-motion',
 
   const brief = page.locator('.living-brief');
   const more = brief.locator('.lb-more');
-  await expect(brief).toHaveCSS('animation-name', 'lbFade');
+  await expect(brief).toHaveCSS('animation-name', 'lb-fade');
   await openDisclosure(more);
-  await expect(more.locator('.lb-more-body')).toHaveCSS('animation-name', 'lbFade');
+  await expect(more.locator('.lb-more-body')).toHaveCSS('animation-name', 'lb-fade');
 
   // The global clamp only shortens durations; the per-component opt-out is what
   // removes the animation itself, and only this can prove it.
@@ -495,7 +495,7 @@ test('the brief entrance and the More disclosure honour prefers-reduced-motion',
   await visit(page, state.fallback.path);
   await expect(page.locator('.living-brief-empty')).toHaveCSS('animation-name', 'none');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect(page.locator('.living-brief-empty')).toHaveCSS('animation-name', 'lbFade');
+  await expect(page.locator('.living-brief-empty')).toHaveCSS('animation-name', 'lb-fade');
 });
 
 test('provider failure, budget exhaustion, and stale sources preserve or suppress the correct last-good content', async ({ page }, info) => {
