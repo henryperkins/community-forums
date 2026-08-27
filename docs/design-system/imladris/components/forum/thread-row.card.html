@@ -1,0 +1,94 @@
+<!-- @dsCard group="Components" viewport="1000x760" name="Thread row — index vs. queue" subtitle="One row, three densities. Which facts are canonical, which are the viewer's, and which belong to only one surface." -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thread row — the canonical index vs. the personal queue</title>
+<link rel="stylesheet" href="../tokens/styles.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-page); font-family: var(--font-body); }
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; align-items: start; }
+  .col > h2 { margin: 0 0 3px; font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.18rem; color: var(--text-strong); }
+  .route { font-family: var(--font-mono); font-size: .72rem; color: var(--gold-ink); }
+  .q { margin: 7px 0 14px; font-size: .9rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty; }
+  .lede { margin: 0 0 22px; max-width: 96ch; font-size: .98rem; line-height: 1.6; color: var(--text-body); text-wrap: pretty; }
+  .lede b { font-family: var(--font-label); font-weight: var(--weight-regular); color: var(--text-strong); }
+  .key { margin-top: 26px; border-top: 1px solid var(--border-hair); padding-top: 18px; }
+  .key h3 { margin: 0 0 12px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint); }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th { text-align: left; padding: 0 12px 8px 0; font-family: var(--font-label); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint); }
+  td { padding: 9px 12px 9px 0; border-top: 1px solid var(--border-hair); color: var(--text-body); vertical-align: top; line-height: 1.5; }
+  td b { font-family: var(--font-label); font-weight: var(--weight-regular); color: var(--text-strong); }
+  td code { font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<p class="lede">Both surfaces list topics and both link to the same <code>/t/{id}-{slug}</code>. What separates them is not the topic — it is <b>whose state is on show</b>. A board is the canonical index: one order, shared by everyone. An inbox is a working queue: assembled for one member, ordered by what needs them. The row is one structure with a <code>presentation</code> axis, exactly as the app's <code>partials/thread_row.php</code> has it.</p>
+
+<div class="wrap">
+  <div class="col">
+    <h2>The canonical index</h2>
+    <span class="route">/c/{slug} · presentation="board"</span>
+    <p class="q">“What is in this board, and what moved most recently?” Pinned first, then last post — a fixed order every member sees. Activity goes to a right-hand rail so the titles form one scannable column.</p>
+    <ul class="thread-list is-board" id="board"></ul>
+  </div>
+  <div class="col">
+    <h2>The personal queue</h2>
+    <span class="route">/inbox · presentation="default"</span>
+    <p class="q">“What needs me?” Membership and order are per-viewer, so the row leads with the reason it is here, keeps activity inline, and can afford a snippet — you are reading rows, not scanning a column.</p>
+    <ul class="thread-list" id="queue"></ul>
+  </div>
+</div>
+
+<div class="key">
+  <h3>Three classes of fact</h3>
+  <table>
+    <thead><tr><th style="width:20%">Class</th><th style="width:34%">Facts</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Topic-intrinsic</b></td>
+        <td>author · title · status chips · pinned · locked · reply count · last activity</td>
+        <td>Identical on both. These are properties of the topic, not of the person looking. If they read differently, the two surfaces are describing different objects.</td>
+      </tr>
+      <tr>
+        <td><b>Viewer-relative</b></td>
+        <td>unread dot · star · assigned to @ · snoozed until</td>
+        <td>Renders on <b>both</b> — a topic you starred must read as starred on its own board. But it is the <i>point</i> of the queue and only a marker on the index: loud on one, quiet on the other.</td>
+      </tr>
+      <tr>
+        <td><b>Surface-specific</b></td>
+        <td><code>board</code> label · snippet · queue reason</td>
+        <td>Only where it answers that surface's question. A board does not label itself. A snippet is a triage aid, not an index entry. A board needs no reason to list its own topics.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="../_ds_bundle.js"></script>
+<script>
+  const { ThreadRow } = window.ImladrisDesignSystem_c3e027;
+  const h = React.createElement;
+
+  /* The same four topics, seen from each surface. */
+  const TOPICS = [
+    { title: 'Where should ratified decisions live once the council has spoken?', author: 'Erestor', authorSeed: 'erestor', board: 'the-archive', status: 'decision_made', pinned: true, replies: 42, time: '2h', unread: true, starred: true, reason: 'mentioned you', snippet: 'Forty-two replies in and the decision is still only in the thread. Proposing we pin the brief and lock.' },
+    { title: 'Evaluations as ritual, not gate', author: 'Glorfindel', authorSeed: 'glorfindel', board: 'evaluations', status: 'needs_answer', replies: 17, time: '5h', unread: true, assignee: 'erestor', snippet: 'We keep treating the eval suite as a turnstile. What if it were a rite the whole council kept?' },
+    { title: 'Retention windows for anonymised IPs', author: 'Galadriel', authorSeed: 'galadriel', board: 'audit-trails', status: 'solved', replies: 12, time: '6h', starred: true, snippet: 'Ninety days, then the last octet goes. The audit trail keeps the event; it stops keeping the person.' },
+    { title: 'Amending a decision after it has been cited', author: 'Lindir', authorSeed: 'lindir', board: 'audit-trails', status: 'needs_answer', replies: 9, time: '4d', snoozedUntil: 'Monday', snippet: 'Once another topic cites a decision, editing it silently rewrites their argument too.' },
+  ];
+
+  ReactDOM.createRoot(document.getElementById('board')).render(
+    TOPICS.map((t, i) => h(ThreadRow, Object.assign({}, t, {
+      key: i, presentation: 'board', snippet: undefined, reason: undefined, showBoard: false,
+    })))
+  );
+  ReactDOM.createRoot(document.getElementById('queue')).render(
+    TOPICS.map((t, i) => h(ThreadRow, Object.assign({}, t, {
+      key: i, presentation: 'default', showBoard: true, boardName: t.board,
+    })))
+  );
+</script>
+</body>
+</html>

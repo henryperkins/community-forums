@@ -1,0 +1,116 @@
+<!-- @dsCard group="Guidelines" viewport="960x1020" name="App shell" subtitle="One global rail, a nested shell per route, one pane grammar" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../tokens/styles.css">
+<style>
+  body{margin:0;padding:20px 22px;background:var(--surface-page);font-family:var(--font-body);color:var(--text-body)}
+  .cap{font-family:var(--font-label);text-transform:uppercase;letter-spacing:.14em;font-size:10px;color:var(--gold-ink);margin:0 0 6px}
+  .lede{margin:0 0 13px;max-width:88ch;font-size:.87rem;line-height:1.55;color:var(--text-muted);text-wrap:pretty}
+  .lede code,.note code,.src{font-family:var(--font-mono);font-size:.85em;color:var(--gold-ink)}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  /* Tracks are the app's real 1280px layout expressed as ratios, so the flexible
+     content columns keep their true proportion at any card width. Literal token
+     values stay in the captions. */
+  .diagram{display:grid;min-height:62px;border:1px solid var(--border-hair);border-radius:var(--radius-md);overflow:hidden;background:var(--surface-raised)}
+  .base{grid-template-columns:272fr 1008fr}
+  .inbox{grid-template-columns:272fr 410fr 598fr}
+  .dm{grid-template-columns:272fr 320fr 368fr 320fr}
+  .col{display:flex;flex-direction:column;justify-content:center;gap:3px;padding:10px 13px;border-right:1px solid var(--border-hair);min-width:0}
+  .col:last-child{border-right:0}
+  .col.rail{background:var(--surface-sunken)}
+  .col.read{background:var(--surface-raised)}
+  .col.body{background:var(--surface-page)}
+  .n{font-family:var(--font-label);font-size:.8rem;letter-spacing:.02em;color:var(--text-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .v{font-family:var(--font-mono);font-size:.64rem;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .note{margin:7px 0 0;font-size:.8rem;line-height:1.5;color:var(--text-muted);text-wrap:pretty}
+  h3{margin:0;font-family:var(--font-display);font-weight:500;font-size:1.05rem;color:var(--text-strong)}
+  .row{display:flex;align-items:baseline;gap:11px;margin-bottom:6px;flex-wrap:nowrap;min-width:0}h3{flex:none}
+  .src{font-size:.66rem;color:var(--text-faint);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .foot{margin:12px 0 0;padding-top:11px;border-top:1px solid var(--border-hair);font-size:.8rem;line-height:1.5;color:var(--text-muted);text-wrap:pretty}
+  a{color:var(--accent)}a:hover{color:var(--gold-700)}
+  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border-hair);border:1px solid var(--border-hair);border-radius:var(--radius-md);overflow:hidden}
+  .role{background:var(--surface-raised);padding:10px 13px;min-width:0}
+  .role h4{margin:0 0 3px;font-family:var(--font-label);font-weight:400;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-ink)}
+  .role p{margin:0;font-size:.78rem;line-height:1.45;color:var(--text-muted);text-wrap:pretty}
+  .role b{color:var(--text-strong);font-weight:500}
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-hair);border:1px solid var(--border-hair);border-radius:var(--radius-md);overflow:hidden}
+  .vs>div{background:var(--surface-raised);padding:10px 13px;min-width:0}
+  .vs dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.78rem;line-height:1.4}
+  .vs dt{font-family:var(--font-label);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);white-space:nowrap}
+  .vs dd{margin:0;color:var(--text-body)}
+  .vs h4{margin:0 0 7px;font-family:var(--font-display);font-weight:500;font-size:1rem;color:var(--text-strong)}
+</style>
+</head>
+<body>
+<p class="cap">Layout</p>
+<p class="lede">The shell is factored once. <code>layout.php</code> renders <code>.app-shell</code> for every <code>variant: app</code> route, with a single rail partial. Routes needing a third column nest their own grid inside <code>.main</code> — never re-declaring the rail. All three are CSS Grid, sized from tokens. Columns below are drawn to the real 1280px proportions.</p>
+<div class="stack">
+  <section>
+    <div class="row"><h3>Base — every app route</h3><span class="src">.app-shell · layout.php</span></div>
+    <div class="diagram base">
+      <div class="col rail"><span class="n">Rail</span><span class="v">var(--sidebar-w) · 272px</span></div>
+      <div class="col body"><span class="n">Main</span><span class="v">1fr · capped at var(--maxw) 1280px</span></div>
+    </div>
+    <p class="note">Height <code>calc(100vh - var(--topbar-h))</code>. Board index, board page, search and compose stop here — <b>no third pane</b>. A board is a destination, not an item: there is nothing to preview that opening it would not show better.</p>
+  </section>
+  <section>
+    <div class="row"><h3>Inbox — reading pane</h3><span class="src">.inbox-shell · nested in .main</span></div>
+    <div class="diagram inbox">
+      <div class="col rail"><span class="n">Rail</span><span class="v">var(--sidebar-w)</span></div>
+      <div class="col body"><span class="n">Queue</span><span class="v">minmax(320px, var(--list-w))</span></div>
+      <div class="col read"><span class="n">Reading</span><span class="v">1fr — the widest column</span></div>
+    </div>
+    <p class="note">Queue capped at 410px; reading takes the remainder. Progressive enhancement — without JS each topic opens as its own page. The inbox is the <b>only list surface with a third pane</b>, because it is the only one whose rows are items you work through rather than places you go.</p>
+  </section>
+  <section>
+    <div class="row"><h3>Messages — details rail open</h3><span class="src">.dm-shell.has-rail · nested in .main</span></div>
+    <div class="diagram dm">
+      <div class="col rail"><span class="n">Rail</span><span class="v">var(--sidebar-w)</span></div>
+      <div class="col body"><span class="n">List</span><span class="v">minmax(--pane-min, --pane-w)</span></div>
+      <div class="col read"><span class="n">Conversation</span><span class="v">minmax(0, 1fr)</span></div>
+      <div class="col body"><span class="n">Details</span><span class="v">minmax(--pane-min, --pane-w)</span></div>
+    </div>
+    <p class="note">The only shell that animates: <code>transition: grid-template-columns 240ms var(--ease-calm)</code>. Closing details drops the fourth column; the conversation widens in place.</p>
+  </section>
+  <section>
+    <div class="row"><h3>What each pane is for</h3><span class="src">one grammar, every app route</span></div>
+    <div class="roles">
+      <div class="role"><h4>Rail · where</h4><p>The community's <b>boards</b>, in the community's order, plus the public roster. Identical on every surface — it is chrome, not content. Never a list of items, never a set of personal scopes, never reorderable by the reader.</p></div>
+      <div class="role"><h4>Centre · what</h4><p>The surface's own set, and the only pane that differs between routes. Its controls follow one grammar — <b>scope</b> (which) · <b>order</b> (in what sequence) · <b>peek</b> (how much of each row) — and each surface uses only the axes it has.</p></div>
+      <div class="role"><h4>Third · glance</h4><p>Reading an <b>item</b> without losing your place in the list. Earned only where rows are items with state; a place gets a handoff instead. Density is never a pane control: the account owns it and every list states what it inherited.</p></div>
+    </div>
+  </section>
+  <section>
+    <div class="row"><h3>Board index vs Forum inbox</h3><span class="src">/ · /inbox</span></div>
+    <div class="vs">
+      <div>
+        <h4>Board index — the place</h4>
+        <dl>
+          <dt>Object</dt><dd>The board</dd>
+          <dt>Asks</dt><dd>What does the council keep, and where do I go?</dd>
+          <dt>Axes</dt><dd>order · peek — no scope</dd>
+          <dt>Counts</dt><dd>Absolute: topics, posts, last activity</dd>
+          <dt>Reads</dt><dd>The same for every member</dd>
+          <dt>Ends in</dt><dd>A handoff to the board page</dd>
+        </dl>
+      </div>
+      <div>
+        <h4>Forum inbox — your attention</h4>
+        <dl>
+          <dt>Object</dt><dd>The topic</dd>
+          <dt>Asks</dt><dd>What wants me, and what can I clear?</dd>
+          <dt>Axes</dt><dd>scope · order — no peek</dd>
+          <dt>Counts</dt><dd>Relative to you: unread, assigned, snoozed</dd>
+          <dt>Reads</dt><dd>For one member only</dd>
+          <dt>Ends in</dt><dd>An emptier queue</dd>
+        </dl>
+      </div>
+    </div>
+    <p class="note">The line is <b>personalisation of reading</b>. Every signal that exists only in relation to a member — unread, mentions, replies to you, watching, assigned, snoozed, starred — lives in the inbox and nowhere else. The index carries no pinning, no muting and no unread on its rows; the one personal number it shows is the rail's unread pill, which belongs to the rail and therefore reads the same on both. Search and compose are neither place nor state, so they are their own surfaces rather than panes of the index; tags, notices and connections are light enough to stay panes of it.</p>
+  </section>
+</div>
+<p class="foot">Where a signed-in member lands is <b>configurable per community</b> — the index for a forum that wants to be browsed, the inbox for one whose members work a queue — so neither surface may assume it is the first thing seen: both carry the whole topbar and state their own job in the first line under the title. Three open corrections: the inbox and DM shells escape the outer chrome by different means (a <code>body[data-route]</code> override vs. negative margins) — they should share one <code>.app-shell.is-full</code> modifier; the inbox reading pane should take the column transition Messages already has; and between the 860px collapse and ~1280px the queue’s <code>minmax</code> cannot yield, because the reading pane has no floor — the templates now drop the reading pane at 1280px, and the same floor is worth adding to the app.</p>
+</body>
+</html>

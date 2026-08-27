@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Compose" description="/compose — opening a topic. Its own surface rather than a pane of the board index, because writing is a task with a draft, a destination and a guard against leaving: it takes the whole main pane and it must be reachable from anywhere, not only from the directory. Shared board rail on the left, doubling as the destination picker; no third pane." -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes cpRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes cpFade { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</helmet>
+
+<div data-screen-label="Compose" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <div style="flex: 0 0 var(--topbar-h); z-index: 20; display: flex; align-items: center; gap: 18px; padding: 0 22px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <nav aria-label="Primary" style="display: flex; align-items: center; gap: 4px;">
+      <a href="../board-index/BoardIndex.dc.html" style="padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Boards</a>
+      <a href="../forum-inbox/ForumInbox.dc.html" style="padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Inbox</a>
+      <a href="#" style="padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Messages</a>
+    </nav>
+    <a href="../search/Search.dc.html" style="flex: 0 1 300px; min-width: 180px; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: 999px; box-sizing: border-box; text-decoration: none;" style-hover="border-color: var(--border-soft);">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-faint); white-space: nowrap;">Search the council…</span>
+    </a>
+    <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 4px;">
+      <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleRail }}" aria-pressed="true" title="Hide the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"></rect></svg></button></sc-if>
+      <sc-if value="{{ railClosed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleRail }}" aria-pressed="false" title="Show the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg></button></sc-if>
+    </span>
+    <span aria-hidden="true" style="flex: none; width: 1px; height: 22px; background: var(--border-hair);"></span>
+    <span style="display: inline-flex; align-items: center; gap: 9px;"><span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .72rem;">ER</span><span style="font-family: var(--font-label); font-size: .8rem; color: var(--text-body);">Erestor</span></span>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex; align-items: stretch;">
+
+    <!-- The rail is the destination picker here — the one surface where clicking a
+         board sets where the draft lands instead of navigating away from it. -->
+    <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}">
+    <nav aria-label="Boards" style="flex: 0 0 var(--sidebar-w); display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 32px; overflow-y: auto; box-sizing: border-box; background: var(--surface-sunken); border-right: 1px solid var(--border-hair); animation: cpFade 160ms;">
+      <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="2">
+        <span style="display: block; padding: 16px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">{{ cat.name }}</span>
+        <sc-for list="{{ cat.boards }}" as="b" hint-placeholder-count="4">
+          <sc-if value="{{ b.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ b.pick }}" aria-pressed="true" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; box-sizing: border-box; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; cursor: pointer;"><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span><sc-if value="{{ b.hasUnread }}" hint-placeholder-val="{{ false }}"><span title="{{ b.unreadLabel }}" aria-label="{{ b.unreadLabel }}" style="flex: 0 0 auto; padding: 0 6px; text-align: center; font-family: var(--font-mono); font-size: .66rem; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink);">{{ b.unread }}</span></sc-if><span style="flex: none; font-family: var(--font-mono); font-size: .62rem;">posting here</span></button></sc-if>
+          <sc-if value="{{ b.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ b.pick }}" aria-pressed="false" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; box-sizing: border-box; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-page); color: var(--text-body);"><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span><sc-if value="{{ b.hasUnread }}" hint-placeholder-val="{{ false }}"><span title="{{ b.unreadLabel }}" aria-label="{{ b.unreadLabel }}" style="flex: 0 0 auto; padding: 0 6px; text-align: center; font-family: var(--font-mono); font-size: .66rem; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink);">{{ b.unread }}</span></sc-if></button></sc-if>
+          <sc-if value="{{ b.locked }}" hint-placeholder-val="{{ false }}"><span title="Only wardens may open a topic here" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; box-sizing: border-box; border-left: 2px solid transparent; color: var(--text-faint); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em;"><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span><sc-if value="{{ b.hasUnread }}" hint-placeholder-val="{{ false }}"><span title="{{ b.unreadLabel }}" aria-label="{{ b.unreadLabel }}" style="flex: 0 0 auto; padding: 0 6px; text-align: center; font-family: var(--font-mono); font-size: .66rem; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink);">{{ b.unread }}</span></sc-if><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 018 0v4"></path></svg></span></sc-if>
+        </sc-for>
+      </sc-for>
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-hair);">
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.PresenceList" people="{{ roster }}" count="{{ onlineCount }}" max="{{ rosterMax }}" layout="list" hint-size="100%,230px"></x-import>
+        <a href="../users-online/UsersOnline.dc.html" style="display: inline-block; margin: 10px 0 0 8px; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);">See everyone</a>
+      </div>
+    </nav>
+    </sc-if>
+
+    <div style="flex: 1 1 0; min-width: 0; overflow-y: auto; padding: 26px 40px 90px; box-sizing: border-box;">
+      <div style="max-width: 700px; margin: 0 auto; animation: cpRise 200ms ease-out;">
+
+        <p style="margin: 0; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Posting to {{ boardName }}</p>
+        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">Open a topic</h1>
+        <p style="margin: 11px 0 30px; max-width: 52ch; font-size: 1.02rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">Say what you want the council to consider, and what would change your mind.</p>
+
+        <label style="display: block; margin-bottom: 18px;"><span style="display: block; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-faint); margin-bottom: 7px;">Title</span><input onInput="{{ onTitle }}" value="{{ draftTitle }}" placeholder="What should the council consider?" maxlength="160" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1.05rem; font-family: var(--font-display); color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+
+        <label style="display: block; max-width: 280px; margin-bottom: 18px;"><span style="display: block; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-faint); margin-bottom: 7px;">Board</span><select onChange="{{ onBoard }}" value="{{ board }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-raised); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><sc-for list="{{ boardOptions }}" as="b" hint-placeholder-count="5"><option value="{{ b.slug }}">{{ b.name }}</option></sc-for></select></label>
+
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Composer" context="new_thread" submit-label="Post" placeholder="Open with the strongest version of your question…" identity="Erestor" identity-seed="erestor" toolbar-open="true" allow-anonymous="true" anonymous-disclosure="Your name is hidden from other members; moderators can still see it." max-length="{{ postLimit }}" value="{{ bodyDraft }}" onChange="{{ onBody }}" onSubmit="{{ postTopic }}" draft-saved="{{ bodyStarted }}" count="{{ bodyCount }}" count-over="{{ bodyOver }}" error="{{ composerError }}" hint-size="100%,270px"></x-import>
+
+        <div style="display: flex; align-items: center; gap: 16px; margin-top: 14px;">
+          <a href="../board-index/BoardIndex.dc.html" style="font-family: var(--font-label); font-size: .82rem; letter-spacing: .03em; color: var(--text-faint); text-decoration: none;" style-hover="color: var(--text-body);">Cancel</a>
+          <sc-if value="{{ bodyStarted }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-mono); font-size: .71rem; color: var(--text-faint);">Draft kept on this device.</span></sc-if>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <sc-if value="{{ posted }}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: fixed; left: 50%; bottom: 34px; z-index: 40; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px; padding: 11px 20px; border-radius: 999px; background: var(--green-800); color: var(--parchment-50); box-shadow: var(--shadow-lg); animation: cpRise 220ms ease-out;">
+      <svg width="12" height="12" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z" fill="var(--gold-400)"></path></svg>
+      <span style="font-family: var(--font-label); font-size: .85rem; letter-spacing: .03em;">Topic opened in {{ boardName }}.</span>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;board&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;introductions&quot;,&quot;the-archive&quot;,&quot;the-valley&quot;,&quot;interpretability&quot;,&quot;evaluations&quot;,&quot;audit-trails&quot;,&quot;capability-disclosure&quot;],&quot;default&quot;:&quot;the-valley&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Draft&quot;},&quot;showRail&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panels&quot;}}">
+/* The rail's board list. Chrome, not content: these eight boards and these four
+   unread counts must match templates/board-index/, templates/forum-inbox/ (where
+   they are derived from THREADS) and templates/search/. `locked` is this surface's
+   own concern — a board you may not post to — and does not change the list. */
+const BOARDS = [
+  { cat: 'The Commons', boards: [
+    { slug: 'announcements', name: 'announcements', unread: 0, locked: true },
+    { slug: 'introductions', name: 'introductions', unread: 0 },
+    { slug: 'the-archive', name: 'the-archive', unread: 1 },
+    { slug: 'the-valley', name: 'the-valley', unread: 0 },
+  ] },
+  { cat: 'Vilya · Expose', boards: [
+    { slug: 'interpretability', name: 'interpretability', unread: 1 },
+    { slug: 'evaluations', name: 'evaluations', unread: 2 },
+    { slug: 'audit-trails', name: 'audit-trails', unread: 2 },
+    { slug: 'capability-disclosure', name: 'capability-disclosure', unread: 0 },
+  ] },
+];
+
+/* Presence is public and says nothing about the reader, so it is rail furniture:
+   the same roster hangs under the same rail on every surface. Duplicated for the
+   same reason the board list is — keep it in step with the other three. */
+const ROSTER = [
+  { name: 'Erestor', username: 'erestor', where: 'the-archive', presence: 'online', gilt: true, staff: true },
+  { name: 'Galadriel', username: 'galadriel', where: 'evaluations', presence: 'online', gilt: true },
+  { name: 'Glorfindel', username: 'glorfindel', where: 'audit-trails', presence: 'online' },
+  { name: 'Arwen Undómiel', username: 'arwen', where: 'interpretability', presence: 'online' },
+  { name: 'Elrond', username: 'elrond', where: 'announcements', presence: 'away', gilt: true, staff: true },
+  { name: 'Lindir', username: 'lindir', title: 'Member', presence: 'away' },
+  { name: 'Círdan', username: 'cirdan', where: 'introductions', presence: 'online' },
+  { name: 'Elladan', username: 'elladan', where: 'the-valley', presence: 'away', staff: true },
+];
+
+// announcements is warden-only, so it is not a destination a member can pick.
+const OPEN = BOARDS.reduce((acc, c) => acc.concat(c.boards.filter((b) => !b.locked)), []);
+
+const POST_LIMIT = 20000;
+
+class Component extends DCLogic {
+  state = {
+    railOpen: (this.props || {}).showRail !== false,
+    board: (this.props || {}).board || 'the-valley',
+    draftTitle: '',
+    bodyDraft: '',
+    composerError: '',
+    posted: false,
+  };
+
+  componentDidMount() {
+    this._keys = (e) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (String(e.key).toLowerCase() === 'b') { e.preventDefault(); this.setState((s) => ({ railOpen: !s.railOpen })); }
+    };
+    window.addEventListener('keydown', this._keys);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._keys); clearTimeout(this._t); }
+
+  componentDidUpdate(prev) {
+    const p = this.props || {}, q = prev || {}, s = this.state;
+    const rail = p.showRail !== false;
+    if (q.showRail !== p.showRail && s.railOpen !== rail) this.setState({ railOpen: rail });
+    if (p.board && q.board !== p.board && s.board !== p.board) this.setState({ board: p.board });
+  }
+
+  counter(v, max) {
+    const n = (v || '').length;
+    return n >= max * 0.9 ? n.toLocaleString() + ' / ' + max.toLocaleString() : '';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const current = OPEN.find((b) => b.slug === s.board) || OPEN[0];
+
+    return {
+      railOpen: s.railOpen, railClosed: !s.railOpen,
+      toggleRail: () => this.setState((st) => ({ railOpen: !st.railOpen })),
+      roster: ROSTER, onlineCount: 34, rosterMax: 5,
+
+      // The rail shows all eight boards — it is chrome and must match the other
+      // surfaces. A board you may not post to is shown and not pickable, rather
+      // than quietly missing.
+      categories: BOARDS.map((c) => ({
+        name: c.cat,
+        boards: c.boards.map((b) => ({
+          name: b.name,
+          unread: String(b.unread), hasUnread: b.unread > 0,
+          unreadLabel: b.unread + ' unread in ' + b.name,
+          locked: !!b.locked,
+          on: !b.locked && s.board === b.slug,
+          off: !b.locked && s.board !== b.slug,
+          pick: () => this.setState({ board: b.slug }),
+        })),
+      })),
+
+      board: s.board,
+      boardName: current.name,
+      boardOptions: OPEN,
+      onBoard: (e) => this.setState({ board: e.target.value }),
+
+      draftTitle: s.draftTitle,
+      onTitle: (e) => this.setState({ draftTitle: e.target.value, composerError: '' }),
+      postLimit: POST_LIMIT,
+      bodyDraft: s.bodyDraft,
+      onBody: (e) => this.setState({ bodyDraft: e.target.value, composerError: '' }),
+      bodyStarted: s.bodyDraft.length > 0 || s.draftTitle.length > 0,
+      bodyCount: this.counter(s.bodyDraft, POST_LIMIT),
+      bodyOver: s.bodyDraft.length > POST_LIMIT,
+      composerError: s.composerError,
+      postTopic: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (s.draftTitle.trim().length < 3) { this.setState({ composerError: 'Give the topic a title before you open it.' }); return; }
+        this.setState({ draftTitle: '', bodyDraft: '', composerError: '', posted: true });
+        clearTimeout(this._t);
+        this._t = setTimeout(() => this.setState({ posted: false }), 2600);
+      },
+      posted: s.posted,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

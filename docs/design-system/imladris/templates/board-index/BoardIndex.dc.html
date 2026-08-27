@@ -7,479 +7,738 @@
 </head>
 <body>
 <x-dc>
-<!-- @template name="Board index" description="The council inbox as a three-pane app frame — board rail, thread list, reading pane — with each side panel collapsible (⌘B / ⌘J), so the same screen serves as a full inbox or a plain board page" -->
+<!-- @template name="Board index" description="/ — the directory of the place. Pane 1 is the shared board rail; pane 2 is the contents page of every board under a Viewing bar (order · peek), addressable in the URL. There is no third pane: a board is a destination, so the index hands off to Board page rather than previewing a topic. Strictly impersonal — the same order, the same rows, for every member; your own queue is the Forum inbox. Also frames the light account-adjacent panes that share this shell: Tags, Notices, Connections." -->
 <helmet>
 <script src="./ds-base.js"></script>
 <style>
   html { scrollbar-gutter: stable; }
   body { margin: 0; background: var(--surface-page); }
-  @keyframes biRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
-  @keyframes biFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rrRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes rrFade { from { opacity: 0; } to { opacity: 1; } }
+  /* Density is the one thing a row cannot carry inline: the same row markup
+     serves both registers, so BOTH registers' vertical padding lives here —
+     an inline shorthand on the row would outrank the compact rule. */
+  [data-brow] { padding-top: 14px; padding-bottom: 14px; }
+  [data-bpeek] { padding-top: 0; padding-bottom: 12px; }
+  [data-density="compact"] [data-brow] { padding-top: 7px; padding-bottom: 7px; }
+  [data-density="compact"] [data-bpeek] { padding-bottom: 8px; }
+  /* The Viewing bar has two builds: a ruled row on the desk, a summary button
+     and bottom sheet on a phone. Only one is ever in the layout. */
+  [data-viewbar="narrow"] { display: none; }
+  @media (max-width: 760px) {
+    [data-viewbar="wide"] { display: none; }
+    [data-viewbar="narrow"] { display: flex; }
+  }
 </style>
 </helmet>
 
-<div data-screen-label="Board index" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+<div data-screen-label="Board index" data-density="{{ densityAttr }}" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
 
-  <!-- ── Topbar ── -->
-  <div style="flex: 0 0 58px; z-index: 20; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+  <!-- ── Topbar — the product's surfaces. Since the rail is boards and nothing
+       else, cross-surface travel lives here, identically on every app route. ── -->
+  <div style="flex: 0 0 var(--topbar-h); z-index: 20; display: flex; align-items: center; gap: 18px; padding: 0 22px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
     <span style="display: inline-flex; align-items: center; gap: 10px;">
       <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
       <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
     </span>
-    <span style="flex: 0 1 320px; margin-left: 18px; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: 999px; box-sizing: border-box;">
+    <nav aria-label="Primary" style="display: flex; align-items: center; gap: 4px;">
+      <a href="#" aria-current="page" style="padding: 6px 12px; border-radius: var(--radius-md); background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;">Boards</a>
+      <a href="../forum-inbox/ForumInbox.dc.html" style="display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Inbox<sc-if value="{{ hasQueue }}" hint-placeholder-val="{{ true }}"><span style="padding: 0 6px; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .64rem;">{{ queueCount }}</span></sc-if></a>
+      <a href="#" style="padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Messages</a>
+    </nav>
+    <a href="../search/Search.dc.html" style="flex: 0 1 300px; min-width: 180px; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: 999px; box-sizing: border-box; text-decoration: none;" style-hover="border-color: var(--border-soft);">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
       <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-faint); white-space: nowrap;">Search the council…</span>
       <span style="margin-left: auto; font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint);">⌘K</span>
+    </a>
+    <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 4px;">
+      <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleRail }}" aria-pressed="true" title="Hide the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"></rect></svg></button></sc-if>
+      <sc-if value="{{ railClosed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleRail }}" aria-pressed="false" title="Show the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg></button></sc-if>
     </span>
-    <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 3px; padding-right: 9px; margin-right: 6px; border-right: 1px solid var(--border-hair);">
-        <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleRail }}" aria-pressed="true" title="Hide the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"></rect></svg></button></sc-if>
-        <sc-if value="{{ railClosed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleRail }}" aria-pressed="false" title="Show the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg></button></sc-if>
-        <sc-if value="{{ readingOpen }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleReading }}" aria-pressed="true" title="Hide the reading pane (⌘J)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="9.8" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"></rect></svg></button></sc-if>
-        <sc-if value="{{ readingClosed }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleReading }}" aria-pressed="false" title="Show the reading pane (⌘J)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg></button></sc-if>
-      </span>
-      <span style="display: inline-flex; align-items: center; gap: 10px;">
-      <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}">
-        <span style="display: inline-flex; align-items: center; gap: 9px;"><span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .72rem;">ER</span><span style="font-family: var(--font-label); font-size: .8rem; color: var(--text-body);">Erestor</span></span>
-      </sc-if>
-      <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
-        <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; padding: 8px 18px; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast);">Log in</span>
-      </sc-if>
+    <span aria-hidden="true" style="flex: none; width: 1px; height: 22px; background: var(--border-hair);"></span>
+    <span style="display: inline-flex; align-items: center; gap: 14px;">
+      <span style="flex: none; white-space: nowrap;"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" href="../compose/Compose.dc.html" hint-size="120px,32px">New topic</x-import></span>
+      <span style="display: inline-flex; align-items: center; gap: 9px;"><span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .72rem;">ER</span><span style="font-family: var(--font-label); font-size: .8rem; color: var(--text-body);">Erestor</span></span>
     </span>
   </div>
 
   <div style="flex: 1; min-height: 0; display: flex; align-items: stretch;">
 
-    <!-- ── Board rail ── -->
+    <!-- ── Board rail — the shared partial. Boards and nothing else, plus the
+         public roster. Identical here and in the inbox; the unread pill is a
+         property of the rail, not of either surface. ── -->
     <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}">
-    <nav aria-label="Boards" style="flex: 0 0 236px; display: flex; flex-direction: column; gap: 2px; padding: 18px 12px 28px; overflow-y: auto; box-sizing: border-box; background: var(--surface-sunken); border-right: 1px solid var(--border-hair); animation: biFade 160ms;">
-      <sc-if value="{{ atAll }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goAll }}" aria-current="page" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 12px; margin-bottom: 6px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .88rem; letter-spacing: .02em; cursor: pointer;">All topics</button></sc-if>
-      <sc-if value="{{ offAll }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goAll }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 12px; margin-bottom: 6px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .88rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">All topics</button></sc-if>
+    <nav aria-label="Boards" style="flex: 0 0 var(--sidebar-w); display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 32px; overflow-y: auto; box-sizing: border-box; background: var(--surface-sunken); border-right: 1px solid var(--border-hair); animation: rrFade 160ms;">
       <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="2">
-        <span style="display: block; padding: 12px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">{{ cat.name }}</span>
-        <sc-for list="{{ cat.boards }}" as="b" hint-placeholder-count="3">
-          <sc-if value="{{ b.isActive }}" hint-placeholder-val="{{ false }}"><button onClick="{{ b.open }}" aria-current="page" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; cursor: pointer;"><span style="color: var(--gold-600);">#</span><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span></button></sc-if>
-          <sc-if value="{{ b.notActive }}" hint-placeholder-val="{{ true }}"><button onClick="{{ b.open }}" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><span style="color: var(--text-faint);">#</span><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span><sc-if value="{{ b.hasUnread }}" hint-placeholder-val="{{ false }}"><span style="flex: 0 0 auto; font-family: var(--font-mono); font-size: .66rem; color: var(--gold-ink);">{{ b.unread }}</span></sc-if></button></sc-if>
+        <span style="display: block; padding: 16px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">{{ cat.name }}</span>
+        <sc-for list="{{ cat.boards }}" as="b" hint-placeholder-count="4">
+          <a href="../board-page/BoardPage.dc.html" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; box-sizing: border-box; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-page); color: var(--text-body);"><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span><sc-if value="{{ b.hasUnread }}" hint-placeholder-val="{{ false }}"><span title="{{ b.unreadLabel }}" aria-label="{{ b.unreadLabel }}" style="flex: 0 0 auto; padding: 0 6px; text-align: center; font-family: var(--font-mono); font-size: .66rem; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink);">{{ b.unread }}</span></sc-if></a>
         </sc-for>
       </sc-for>
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-hair);">
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.PresenceList" people="{{ roster }}" count="{{ onlineCount }}" max="{{ rosterMax }}" layout="list" hint-size="100%,230px"></x-import>
+        <a href="../users-online/UsersOnline.dc.html" style="display: inline-block; margin: 10px 0 0 8px; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);">See everyone</a>
+      </div>
     </nav>
     </sc-if>
 
-    <!-- ── List column ── -->
-    <div style="flex: 0.85 1 0; min-width: 0; overflow-y: auto; padding: 26px 30px 60px; box-sizing: border-box;">
-    <div style="max-width: 880px; margin: 0 auto;">
+    <!-- ── Main pane ── -->
+    <div style="flex: 1 1 0; min-width: 0; overflow-y: auto; padding: 26px 40px 90px; box-sizing: border-box;">
+      <div style="max-width: 760px; margin: 0 auto;">
 
-      <!-- Board head -->
-      <div style="margin-bottom: 20px;">
-        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">{{ eyebrow }}</span>
-        <div style="display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; margin-top: 7px;">
-          <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.15rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">{{ heading }}</h1>
-          <span style="flex: 1;"></span>
-          <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}">
-            <span style="display: inline-flex; gap: 10px;">
-              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" onClick="{{ toggleWatch }}" hint-size="110px,32px">{{ watchLabel }}</x-import>
-              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ openComposer }}" hint-size="120px,32px">New topic</x-import>
+        <!-- The panes of THIS surface. Boards is the surface; the other three are
+             light reads that need no shell of their own. They are not in the rail:
+             the rail is destinations in the community, this is one page's tabs. -->
+        <nav aria-label="Board index panes" style="display: flex; align-items: center; gap: 22px; margin-bottom: 30px; padding-bottom: 1px; border-bottom: 1px solid var(--border-hair);">
+          <sc-for list="{{ panes }}" as="p" hint-placeholder-count="4">
+            <sc-if value="{{ p.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ p.go }}" aria-current="page" style="padding: 0 0 9px; border: 0; border-bottom: 2px solid var(--gold-500); background: none; font-family: var(--font-label); font-size: .88rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">{{ p.label }}</button></sc-if>
+            <sc-if value="{{ p.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.go }}" style="display: inline-flex; align-items: center; gap: 7px; padding: 0 0 9px; border: 0; border-bottom: 2px solid transparent; background: none; font-family: var(--font-label); font-size: .88rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-body);">{{ p.label }}<sc-if value="{{ p.dot }}" hint-placeholder-val="{{ false }}"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--gold-500);"></span></sc-if></button></sc-if>
+          </sc-for>
+        </nav>
+
+        <!-- Boards — the contents page -->
+        <sc-if value="{{ atHome }}" hint-placeholder-val="{{ true }}">
+        <div style="animation: rrRise 200ms ease-out;">
+          <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: clamp(2rem, 4vw, 2.7rem); line-height: 1.06; letter-spacing: -0.015em; color: var(--text-strong);">Every board in the valley</h1>
+          <p style="margin: 12px 0 0; max-width: 50ch; font-size: 1.05rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">Browse the boards the council keeps and pick one to see its topics. Your own cross-board queue is the <a href="../forum-inbox/ForumInbox.dc.html" style="color: var(--accent); text-decoration: none;" style-hover="text-decoration: underline;">inbox</a>.</p>
+          <p style="display: flex; flex-wrap: wrap; gap: 16px; margin: 14px 0 0; font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ totals }}</p>
+
+          <!-- ── Viewing bar — the desk build. Order and peek only: there is no
+               scope here, because the index never narrows to a subset of you. ── -->
+          <div data-viewbar="wide" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 22px; margin-top: 30px; padding: 11px 0; border-top: 1px solid var(--border-hair); border-bottom: 1px solid var(--border-hair);">
+            <span style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; color: var(--text-faint);">Viewing</span>
+            <span role="group" aria-label="Order" style="display: flex; align-items: center; flex-wrap: wrap; gap: 3px;">
+              <sc-for list="{{ sortOptions }}" as="o" hint-placeholder-count="6">
+                <sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ o.pick }}" aria-pressed="true" style="padding: 5px 12px; border: 0; border-radius: 999px; background: var(--brand-subtle); box-shadow: var(--gilt); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; white-space: nowrap; cursor: pointer;">{{ o.label }}</button></sc-if>
+                <sc-if value="{{ o.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ o.pick }}" aria-pressed="false" style="padding: 5px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; white-space: nowrap; cursor: pointer; transition: background 140ms ease, color 140ms ease;" style-hover="background: var(--surface-sunken); color: var(--text-body);">{{ o.label }}</button></sc-if>
+              </sc-for>
             </span>
+            <span style="flex: 1; min-width: 12px;"></span>
+            <span role="group" aria-label="Peek" style="display: inline-flex; align-items: center; gap: 8px;">
+              <span style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; color: var(--text-faint);">Peek</span>
+              <span style="display: inline-flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--border-hair); border-radius: 999px; background: var(--surface-sunken);">
+                <sc-for list="{{ peekOptions }}" as="p" hint-placeholder-count="3">
+                  <sc-if value="{{ p.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ p.pick }}" aria-pressed="true" style="min-width: 34px; padding: 3px 9px; border: 0; border-radius: 999px; background: var(--surface-raised); box-shadow: var(--shadow-xs); color: var(--text-strong); font-family: var(--font-mono); font-size: .72rem; cursor: pointer;">{{ p.label }}</button></sc-if>
+                  <sc-if value="{{ p.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.pick }}" aria-pressed="false" style="min-width: 34px; padding: 3px 9px; border: 0; border-radius: 999px; background: transparent; color: var(--text-faint); font-family: var(--font-mono); font-size: .72rem; cursor: pointer;" style-hover="color: var(--text-body);">{{ p.label }}</button></sc-if>
+                </sc-for>
+              </span>
+            </span>
+            <!-- Density is not offered here: it is an account preference that rules
+                 every list in the product, so the bar states what it inherited and
+                 points at the one place that owns it. The inbox says the same. -->
+            <span style="display: inline-flex; align-items: baseline; gap: 7px; white-space: nowrap;">
+              <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .02em; color: var(--text-faint);">{{ densityWord }} rows</span>
+              <a href="../account-settings/AccountSettings.dc.html" title="Density lives in your appearance preferences" style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .02em; color: var(--accent); text-decoration: none;" style-hover="text-decoration: underline;">change</a>
+            </span>
+          </div>
+
+          <!-- ── Viewing bar — the phone build ── -->
+          <div data-viewbar="narrow" style="align-items: center; gap: 12px; margin-top: 26px; padding: 10px 0; border-top: 1px solid var(--border-hair); border-bottom: 1px solid var(--border-hair);">
+            <button onClick="{{ openSheet }}" style="flex: 1; display: flex; align-items: center; gap: 10px; padding: 4px 0; border: 0; background: none; text-align: left; cursor: pointer;">
+              <span style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; color: var(--text-faint);">Viewing</span>
+              <span style="flex: 1; min-width: 0; font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; color: var(--text-strong);">{{ viewSummary }}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </button>
+          </div>
+
+          <!-- The order note keeps the surface honest: this ranking is public. -->
+          <p style="margin: 11px 0 0; font-family: var(--font-mono); font-size: .72rem; line-height: 1.6; color: var(--text-faint); text-wrap: pretty;">{{ orderNote }} · the same order every member sees.</p>
+
+          <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 26px 0 0; padding: 12px 16px; border-left: 2px solid var(--rule-gold); background: var(--surface-sunken); font-size: .97rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Order and peek are yours to set as a guest. <a href="#" style="color: var(--accent); text-decoration: none;" style-hover="text-decoration: underline;">Log in</a> to have this view remembered, and to keep a queue of your own.</p>
           </sc-if>
-        </div>
-        <p style="margin: 7px 0 0; max-width: 66ch; font-size: .98rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">{{ blurb }}</p>
-        <p style="display: flex; align-items: center; gap: 14px; margin: 9px 0 0; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);"><span>{{ topicCount }} topics</span><span>·</span><span>{{ memberCount }} members</span><span>·</span><span>last post {{ lastPost }}</span></p>
-      </div>
 
-      <!-- Guest join bar -->
-      <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
-        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; padding: 14px 18px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-left: 3px solid var(--rule-gold); border-radius: var(--radius-lg);">
-          <p style="margin: 0; flex: 1; min-width: 260px; font-size: .96rem; color: var(--text-body);">You are reading as a guest. Take a seat at the council to open topics, star them, and be counted.</p>
-          <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" hint-size="130px,32px">Take a seat</x-import>
-        </div>
-      </sc-if>
-
-      <!-- Inline composer -->
-      <sc-if value="{{ composerOpen }}" hint-placeholder-val="{{ false }}">
-        <section style="margin-bottom: 18px; padding: 18px 20px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rule-gold); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); animation: biRise 200ms ease-out;">
-          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 14px;">New topic</span>
-          <label style="display: block; margin-bottom: 14px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Title</span><input onInput="{{ onTitle }}" placeholder="What should the council consider?" maxlength="160" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
-          <label style="display: block; max-width: 280px; margin-bottom: 16px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Board</span><select style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>#the-archive</option><option>#the-valley</option><option>#evaluations</option><option>#audit-trails</option><option>#interpretability</option><option>#introductions</option></select></label>
-          <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Composer" context="new_thread" submit-label="Post" placeholder="Open with the strongest version of your question…" identity="Erestor" identity-seed="erestor" toolbar-open="true" allow-anonymous="true" anonymous-disclosure="Your name is hidden from other members; moderators can still see it." max-length="{{ postLimit }}" value="{{ bodyDraft }}" onChange="{{ onBody }}" onSubmit="{{ postTopic }}" draft-saved="{{ bodyStarted }}" count="{{ bodyCount }}" count-over="{{ bodyOver }}" error="{{ composerError }}" hint-size="100%,250px"></x-import>
-          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
-            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="ghost" size="sm" onClick="{{ closeComposer }}" hint-size="90px,32px">Cancel</x-import>
-            <span style="flex: 1;"></span>
-            <span style="font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint);">Posting to {{ postingTo }}</span>
+          <!-- ── The directory — one loop, grouped or ranked by the order above.
+               No pin, no mute, no unread: every row reads the same for everyone. ── -->
+          <div style="margin-top: 34px; display: flex; flex-direction: column; gap: 36px;">
+            <sc-for list="{{ boardGroups }}" as="g" hint-placeholder-count="2">
+              <section>
+                <sc-if value="{{ g.showHeading }}" hint-placeholder-val="{{ true }}">
+                  <h2 style="display: flex; align-items: center; gap: 15px; margin: 0 0 4px; font-family: var(--font-label); font-weight: 400; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold-ink);"><span style="flex: none; white-space: nowrap;">{{ g.name }}</span><span style="flex: 1; height: 1px; background: var(--rule-gold); opacity: .45;"></span></h2>
+                </sc-if>
+                <sc-for list="{{ g.boards }}" as="b" hint-placeholder-count="4">
+                  <div style="position: relative; border-bottom: 1px solid var(--border-hair);">
+                    <div data-brow style="display: flex; flex-wrap: nowrap; align-items: baseline; gap: 12px; padding-left: 2px; padding-right: 2px;">
+                      <a href="../board-page/BoardPage.dc.html" style="flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: nowrap; align-items: baseline; gap: 16px; text-decoration: none; transition: padding-left 160ms ease;" style-hover="padding-left: 6px;">
+                        <span style="flex: 0 0 auto; font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; line-height: 1.1; color: var(--text-strong); white-space: nowrap;">{{ b.name }}</span>
+                        <sc-if value="{{ b.showDesc }}" hint-placeholder-val="{{ true }}"><span style="flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .92rem; color: var(--text-faint);">{{ b.desc }}</span></sc-if>
+                        <span style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: flex-end; gap: 10px; margin-left: auto;">
+                          <sc-if value="{{ b.showSignal }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--gold-ink); white-space: nowrap;">{{ b.signal }}</span></sc-if>
+                          <span style="font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint); white-space: nowrap;">{{ b.count }}</span>
+                        </span>
+                      </a>
+                    </div>
+                    <sc-if value="{{ b.showPeek }}" hint-placeholder-val="{{ false }}">
+                      <ul data-bpeek style="margin: 0; padding-left: 16px; padding-right: 0; list-style: none; display: flex; flex-direction: column;">
+                        <sc-for list="{{ b.peek }}" as="t" hint-placeholder-count="3">
+                          <li style="display: flex; align-items: baseline; gap: 14px; padding: 5px 0;">
+                            <span aria-hidden="true" style="flex: none; width: 4px; height: 4px; border-radius: 50%; background: var(--border-strong);"></span>
+                            <a href="../thread-view/ThreadView.dc.html" style="flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .99rem; color: var(--text-body); text-decoration: none;" style-hover="color: var(--accent);">{{ t.title }}</a>
+                            <span style="flex: none; font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint); white-space: nowrap;">{{ t.meta }}</span>
+                          </li>
+                        </sc-for>
+                        <sc-if value="{{ b.peekEmpty }}" hint-placeholder-val="{{ false }}">
+                          <li style="padding: 5px 0 5px 18px; font-size: .93rem; font-style: italic; color: var(--text-faint);">{{ b.emptyLabel }}</li>
+                        </sc-if>
+                      </ul>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </section>
+            </sc-for>
           </div>
-        </section>
-      </sc-if>
 
-      <!-- Toolbar -->
-      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--border-hair);">
-        <span style="display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-sunken); border-radius: var(--radius-md);">
-          <sc-if value="{{ dnHall }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setHall }}" aria-pressed="true" style="padding: 5px 14px; border: 0; border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; cursor: pointer; box-shadow: var(--shadow-xs);">Hall</button></sc-if>
-          <sc-if value="{{ dnHallOff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setHall }}" aria-pressed="false" style="padding: 5px 14px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-body);">Hall</button></sc-if>
-          <sc-if value="{{ dnWatch }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setWatchDensity }}" aria-pressed="true" style="padding: 5px 14px; border: 0; border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; cursor: pointer; box-shadow: var(--shadow-xs);">Watch</button></sc-if>
-          <sc-if value="{{ dnWatchOff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setWatchDensity }}" aria-pressed="false" style="padding: 5px 14px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-body);">Watch</button></sc-if>
-        </span>
-        <span style="width: 1px; height: 20px; background: var(--border-hair);"></span>
-        <sc-if value="{{ srActive }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortActive }}" style="padding: 5px 4px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; color: var(--text-strong); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; cursor: pointer;">Active</button></sc-if>
-        <sc-if value="{{ srActiveOff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ sortActive }}" style="padding: 5px 4px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; cursor: pointer;" style-hover="color: var(--text-body);">Active</button></sc-if>
-        <sc-if value="{{ srNewest }}" hint-placeholder-val="{{ false }}"><button onClick="{{ sortNewest }}" style="padding: 5px 4px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; color: var(--text-strong); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; cursor: pointer;">Newest</button></sc-if>
-        <sc-if value="{{ srNewestOff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortNewest }}" style="padding: 5px 4px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; cursor: pointer;" style-hover="color: var(--text-body);">Newest</button></sc-if>
-        <sc-if value="{{ srUnanswered }}" hint-placeholder-val="{{ false }}"><button onClick="{{ sortUnanswered }}" style="padding: 5px 4px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; color: var(--text-strong); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; cursor: pointer;">Unanswered</button></sc-if>
-        <sc-if value="{{ srUnansweredOff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortUnanswered }}" style="padding: 5px 4px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; cursor: pointer;" style-hover="color: var(--text-body);">Unanswered</button></sc-if>
-        <span style="flex: 1;"></span>
-        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
-          <sc-if value="{{ f.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ f.pick }}" aria-pressed="true" style="padding: 4px 13px; border: 1px solid var(--gold-200); border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;">{{ f.label }}</button></sc-if>
-          <sc-if value="{{ f.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ f.pick }}" aria-pressed="false" style="padding: 4px 13px; border: 1px solid var(--border-hair); border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">{{ f.label }}</button></sc-if>
-        </sc-for>
-      </div>
+          <!-- The phone sheet lives at the screen root, not here: an ancestor in
+               this column establishes a containing block, and a fixed sheet inside
+               it lands mid-document instead of over the viewport. -->
 
-      <!-- Thread list -->
-      <ul style="margin: 0; padding: 0; list-style: none;">
-        <sc-for list="{{ threads }}" as="t" hint-placeholder-count="6">
-          <li style="position: relative; display: flex; align-items: flex-start; gap: 13px; padding: 15px 14px 15px 12px; border-bottom: 1px solid var(--border-hair); border-radius: var(--radius-md); transition: background 140ms ease;" style-hover="background: var(--surface-raised);"><sc-if value="{{ t.isActive }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; inset: 0; border-left: 2px solid var(--gold-500); border-radius: var(--radius-md); background: var(--brand-subtle); pointer-events: none;"></span></sc-if>
-            <span style="position: relative; flex: 0 0 8px; display: inline-flex; justify-content: center; padding-top: 7px;"><sc-if value="{{ t.isUnread }}" hint-placeholder-val="{{ false }}"><span title="Unread" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gold-500);"></span></sc-if></span>
-            <sc-if value="{{ t.showAvatar }}" hint-placeholder-val="{{ true }}">
-              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ t.author }}" username="{{ t.authorSeed }}" gilt="{{ t.gilt }}" presence="{{ t.presence }}" style="position: relative;" hint-size="36px,36px"></x-import>
-            </sc-if>
-            <span style="position: relative; flex: 1; min-width: 0;">
-              <sc-if value="{{ t.showByline }}" hint-placeholder-val="{{ true }}">
-                <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px;">
-                  <a href="#" style="font-family: var(--font-label); font-size: .84rem; color: var(--text-body); text-decoration: none;" style-hover="color: var(--accent);">{{ t.author }}</a>
-                  <span style="padding: 1px 8px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase;">{{ t.tier }}</span>
-                  <span style="display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: .7rem; color: var(--star);"><svg viewBox="0 0 100 100" width="10" height="10" aria-hidden="true"><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ t.rep }}</span>
-                </span>
-              </sc-if>
-              <span style="display: flex; align-items: center; gap: 7px; flex-wrap: wrap;">
-                <sc-if value="{{ t.pinned }}" hint-placeholder-val="{{ false }}"><span style="padding: 2px 9px; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">Pinned</span></sc-if>
-                <sc-if value="{{ t.stSolved }}" hint-placeholder-val="{{ false }}"><span style="padding: 2px 9px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">✓ Solved</span></sc-if>
-                <sc-if value="{{ t.stNeeds }}" hint-placeholder-val="{{ false }}"><span style="padding: 2px 9px; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">Needs answer</span></sc-if>
-                <sc-if value="{{ t.stDecision }}" hint-placeholder-val="{{ false }}"><span style="padding: 2px 9px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">Decision</span></sc-if>
-                <sc-if value="{{ t.locked }}" hint-placeholder-val="{{ false }}"><span style="padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">Locked</span></sc-if>
-              </span>
-              <a href="#" onClick="{{ t.open }}" style="display: block; margin-top: 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.24rem; line-height: 1.25; letter-spacing: -0.005em; color: var(--text-strong); text-decoration: none; text-wrap: pretty;" style-hover="color: var(--accent);">{{ t.title }}</a>
-              <sc-if value="{{ t.showSnippet }}" hint-placeholder-val="{{ true }}">
-                <p style="margin: 5px 0 0; max-width: 74ch; font-size: .95rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ t.snippet }}</p>
-              </sc-if>
-              <span style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 7px; font-family: var(--font-mono); font-size: .73rem; color: var(--text-faint);">
-                <sc-if value="{{ t.showBoard }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ t.openBoard }}" style="color: var(--artifact-link); text-decoration: none;" style-hover="text-decoration: underline;"><span style="color: var(--gold-600);">#</span>{{ t.board }}</a></sc-if>
-                <sc-if value="{{ t.hideByline }}" hint-placeholder-val="{{ false }}"><span>{{ t.author }}</span></sc-if>
-                <span>{{ t.repliesLabel }}</span>
-                <span>{{ t.time }}</span>
-                <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--star);"><svg viewBox="0 0 100 100" width="10" height="10" aria-hidden="true"><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg><span style="color: var(--text-faint);">{{ t.commends }}</span></span>
-              </span>
+        </div>
+        </sc-if>
+
+        <!-- Tags -->
+        <sc-if value="{{ atTags }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: rrRise 200ms ease-out;">
+          <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">Tags</h1>
+          <p style="margin: 11px 0 0; max-width: 52ch; font-size: 1.02rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">A tag crosses boards; a board does not cross tags.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px;">
+            <sc-for list="{{ tags }}" as="t" hint-placeholder-count="8">
+              <button onClick="{{ t.open }}" style="display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 15px; border: 1px solid var(--border-hair); border-radius: 999px; background: none; cursor: pointer; transition: border-color 150ms ease, background 150ms ease;" style-hover="border-color: var(--gold-400); background: var(--gold-soft);"><span style="font-family: var(--font-label); font-size: .92rem; color: var(--text-body); white-space: nowrap;">{{ t.name }}</span><span style="font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint);">{{ t.count }}</span></button>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- One tag — the topics carrying it -->
+        <sc-if value="{{ atTagShow }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: rrRise 200ms ease-out;">
+          <button onClick="{{ goTags }}" style="display: inline-flex; align-items: center; gap: 7px; margin-bottom: 18px; padding: 0; border: 0; background: none; font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-body);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Tags</button>
+          <div style="display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap;">
+            <div style="flex: 1 1 320px; min-width: 0;">
+              <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">{{ tagName }}</h1>
+              <p style="margin: 10px 0 0; font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ tagShown }}</p>
+            </div>
+            <span style="display: inline-flex; align-items: center; gap: 12px;">
+              <sc-if value="{{ tagFollowed }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" onClick="{{ toggleTagFollow }}" hint-size="110px,32px">Unfollow tag</x-import></sc-if>
+              <sc-if value="{{ tagUnfollowed }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ toggleTagFollow }}" hint-size="110px,32px">Follow tag</x-import></sc-if>
+              <span style="font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-faint);">Feeds your inbox</span>
             </span>
-            <sc-if value="{{ t.starred }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.toggleStar }}" aria-pressed="true" title="Starred" style="position: relative; flex: 0 0 auto; padding: 3px 5px; border: 0; background: none; color: var(--gold-600); font-size: 1.05rem; line-height: 1; cursor: pointer;">★</button></sc-if>
-            <sc-if value="{{ t.notStarred }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.toggleStar }}" aria-pressed="false" title="Star this topic" style="position: relative; flex: 0 0 auto; padding: 3px 5px; border: 0; background: none; color: var(--text-faint); font-size: 1.05rem; line-height: 1; cursor: pointer;" style-hover="color: var(--gold-600);">☆</button></sc-if>
-          </li>
-        </sc-for>
-      </ul>
-
-      <!-- Empty state -->
-      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
-        <div style="padding: 60px 16px; text-align: center; animation: biFade 200ms;">
-          <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true" style="opacity: .35;"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z" fill="var(--gold-600)"></path></svg>
-          <p style="margin: 12px 0 4px; font-family: var(--font-display); font-size: 1.45rem; color: var(--text-strong);">Nothing here yet</p>
-          <p style="margin: 0 0 18px; font-size: .97rem; color: var(--text-muted);">No topics match this filter.</p>
-          <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" onClick="{{ clearFilter }}" hint-size="130px,32px">Clear filter</x-import>
-        </div>
-      </sc-if>
-
-      <!-- Footer -->
-      <sc-if value="{{ hasThreads }}" hint-placeholder-val="{{ true }}">
-        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 22px;">
-          <span style="font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ shownLabel }}</span>
-          <span style="flex: 1;"></span>
-          <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" onClick="{{ loadMore }}" disabled="{{ allLoaded }}" hint-size="140px,32px">{{ loadMoreLabel }}</x-import>
-        </div>
-      </sc-if>
-
-    </div>
-    </div>
-
-    <!-- ── Reading pane ── -->
-    <sc-if value="{{ readingOpen }}" hint-placeholder-val="{{ true }}">
-    <div style="flex: 1.15 1 0; min-width: 0; overflow-y: auto; box-sizing: border-box; background: var(--surface-raised); border-left: 1px solid var(--border-hair); animation: biFade 160ms;">
-      <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ true }}">
-        <div style="max-width: 720px; padding: 24px 34px 64px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <p style="display: flex; align-items: center; gap: 8px; margin: 0; flex: 1; min-width: 0; font-family: var(--font-mono); font-size: .74rem; color: var(--text-muted);"><a href="#" onClick="{{ openSelBoard }}" style="color: var(--artifact-link); text-decoration: none;" style-hover="text-decoration: underline;"><span style="color: var(--gold-600);">#</span>{{ selBoard }}</a><span style="color: var(--text-faint);">/</span><span>{{ selTime }}</span></p>
-            <button onClick="{{ toggleReading }}" title="Hide the reading pane (⌘J)" style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); font-size: .95rem; line-height: 1; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">✕</button>
           </div>
-          <h2 style="margin: 11px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 1.9rem; line-height: 1.16; letter-spacing: -0.01em; color: var(--text-strong); text-wrap: pretty;">{{ selTitle }}</h2>
-          <div style="display: flex; align-items: center; gap: 11px; flex-wrap: wrap; margin-top: 12px; padding-bottom: 15px; border-bottom: 1px solid var(--border-hair);">
-            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ selAuthor }}" username="{{ selSeed }}" size="sm" gilt="{{ selGilt }}" hint-size="28px,28px"></x-import>
-            <span style="font-family: var(--font-label); font-size: .86rem; color: var(--text-body);">{{ selAuthor }}</span>
-            <span style="padding: 1px 8px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase;">{{ selTier }}</span>
-            <span style="flex: 1;"></span>
-            <span style="font-family: var(--font-mono); font-size: .73rem; color: var(--text-faint);">{{ selReplies }}</span>
-          </div>
-          <p style="margin: 18px 0 0; font-size: 1.03rem; line-height: 1.68; color: var(--text-body); text-wrap: pretty;">{{ selSnippet }}</p>
-          <ul style="margin: 22px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 18px;">
-            <sc-for list="{{ selPosts }}" as="p" hint-placeholder-count="2">
-              <li style="display: flex; gap: 12px; padding-top: 18px; border-top: 1px solid var(--border-hair);">
-                <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ p.author }}" username="{{ p.seed }}" size="sm" hint-size="28px,28px"></x-import>
-                <span style="flex: 1; min-width: 0;">
-                  <span style="display: flex; align-items: center; gap: 9px; flex-wrap: wrap;"><span style="font-family: var(--font-label); font-size: .84rem; color: var(--text-body);">{{ p.author }}</span><span style="font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint);">{{ p.time }}</span><sc-if value="{{ p.accepted }}" hint-placeholder-val="{{ false }}"><span style="padding: 2px 9px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">✓ Accepted</span></sc-if></span>
-                  <p style="margin: 6px 0 0; font-size: .99rem; line-height: 1.64; color: var(--text-body); text-wrap: pretty;">{{ p.body }}</p>
-                </span>
-              </li>
+          <ul class="thread-list" style="margin: 26px 0 0; padding: 0; list-style: none;">
+            <sc-for list="{{ tagTopics }}" as="t" hint-placeholder-count="4">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.ThreadRow" title="{{ t.title }}" author="{{ t.author }}" author-seed="{{ t.seed }}" author-tier="{{ t.tier }}" author-rep="{{ t.rep }}" board="{{ t.board }}" board-name="{{ t.board }}" show-board="{{ true }}" replies="{{ t.replies }}" time="{{ t.time }}" commends="{{ t.commends }}" status="{{ t.status }}" snippet="{{ t.snippet }}" hint-size="100%,96px"></x-import>
             </sc-for>
           </ul>
-          <sc-if value="{{ canReply }}" hint-placeholder-val="{{ true }}">
-            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-hair);">
-              <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 10px;">Add your counsel</span>
-              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Composer" context="reply" submit-label="Reply" placeholder="Answer the strongest reading of the post…" identity="Erestor" identity-seed="erestor" toolbar-open="true" allow-anonymous="true" anonymous-disclosure="Your name is hidden from other members; moderators can still see it." max-length="{{ postLimit }}" value="{{ reply }}" onChange="{{ onReply }}" onSubmit="{{ sendReply }}" draft-saved="{{ replyStarted }}" count="{{ replyCount }}" count-over="{{ replyOver }}" hint-size="100%,230px"></x-import>
-            </div>
-          </sc-if>
-          <sc-if value="{{ lockedNotice }}" hint-placeholder-val="{{ false }}">
-            <p style="margin: 24px 0 0; padding: 13px 16px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-md); font-size: .93rem; color: var(--text-muted);">This topic is locked. The wardens closed it once the council had spoken; the record stays readable.</p>
+          <sc-if value="{{ noTagTopics }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 40px 0 0; font-size: 1rem; color: var(--text-muted);">No visible topics use this tag.</p>
           </sc-if>
         </div>
-      </sc-if>
-      <sc-if value="{{ noSelection }}" hint-placeholder-val="{{ false }}">
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 40px 24px; text-align: center;">
-          <svg width="26" height="26" viewBox="0 0 100 100" aria-hidden="true" style="opacity: .3;"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z" fill="var(--gold-600)"></path></svg>
-          <p style="margin: 12px 0 3px; font-family: var(--font-display); font-size: 1.3rem; color: var(--text-strong);">Nothing open</p>
-          <p style="margin: 0; font-size: .95rem; color: var(--text-muted);">Choose a topic from the list to read it here.</p>
+        </sc-if>
+
+        <!-- Notices — account-adjacent, not a reading queue: each line is a fact
+             about your account, and the topic it points at opens in the inbox. -->
+        <sc-if value="{{ atNotifications }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: rrRise 200ms ease-out;">
+          <div style="display: flex; align-items: baseline; gap: 16px;">
+            <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">Notices</h1>
+            <span style="flex: 1;"></span>
+            <button onClick="{{ markAll }}" disabled="{{ noUnread }}" style="border: 0; background: none; padding: 0; font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Mark all read</button>
+            <button onClick="{{ clearAll }}" style="border: 0; background: none; padding: 0; font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--danger);">Clear</button>
+          </div>
+          <p style="margin: 10px 0 0; max-width: 56ch; font-size: .98rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">What happened to your account. The topics themselves wait in the <a href="../forum-inbox/ForumInbox.dc.html" style="color: var(--accent); text-decoration: none;" style-hover="text-decoration: underline;">inbox</a>.</p>
+          <div style="margin-top: 22px;">
+            <sc-for list="{{ notifications }}" as="n" hint-placeholder-count="6">
+              <button onClick="{{ n.open }}" style="display: flex; align-items: baseline; gap: 14px; width: 100%; padding: 13px 2px; text-align: left; border: 0; border-bottom: 1px solid var(--border-hair); background: none; font: inherit; cursor: pointer;">
+                <sc-if value="{{ n.isUnread }}" hint-placeholder-val="{{ false }}"><span style="flex: 0 0 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-500);"></span></sc-if>
+                <sc-if value="{{ n.isRead }}" hint-placeholder-val="{{ true }}"><span style="flex: 0 0 6px;"></span></sc-if>
+                <span style="flex: 1; min-width: 0; font-size: .99rem; line-height: 1.5; color: var(--text-body); text-wrap: pretty;">{{ n.text }}</span>
+                <span style="flex: 0 0 auto; font-family: var(--font-mono); font-size: .71rem; color: var(--text-faint); white-space: nowrap;">{{ n.time }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ noNotifications }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 40px 0 0; font-size: 1rem; color: var(--text-muted);">All quiet. Nothing is waiting for you.</p>
+          </sc-if>
         </div>
-      </sc-if>
+        </sc-if>
+
+        <!-- Connections — followers and following -->
+        <sc-if value="{{ atConnections }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: rrRise 200ms ease-out;">
+          <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">Connections <span style="font-family: var(--font-mono); font-size: 1rem; color: var(--text-faint);">· <a href="#" style="color: var(--text-faint); text-decoration: none;" style-hover="color: var(--accent);">@erestor</a></span></h1>
+          <p style="margin: 11px 0 0; max-width: 52ch; font-size: 1.02rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">Following a member brings their new topics into your inbox. It tells them nothing you would not say aloud.</p>
+          <nav style="display: flex; align-items: center; gap: 22px; margin: 26px 0 4px; border-bottom: 1px solid var(--border-hair);">
+            <sc-if value="{{ atFollowers }}" hint-placeholder-val="{{ true }}"><button onClick="{{ showFollowers }}" aria-current="page" style="padding: 0 0 9px; border: 0; border-bottom: 2px solid var(--gold-500); background: none; font-family: var(--font-label); font-size: .88rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Followers {{ followerCount }}</button></sc-if>
+            <sc-if value="{{ offFollowers }}" hint-placeholder-val="{{ false }}"><button onClick="{{ showFollowers }}" style="padding: 0 0 9px; border: 0; border-bottom: 2px solid transparent; background: none; font-family: var(--font-label); font-size: .88rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-body);">Followers {{ followerCount }}</button></sc-if>
+            <sc-if value="{{ atFollowing }}" hint-placeholder-val="{{ false }}"><button onClick="{{ showFollowing }}" aria-current="page" style="padding: 0 0 9px; border: 0; border-bottom: 2px solid var(--gold-500); background: none; font-family: var(--font-label); font-size: .88rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Following {{ followingCount }}</button></sc-if>
+            <sc-if value="{{ offFollowing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ showFollowing }}" style="padding: 0 0 9px; border: 0; border-bottom: 2px solid transparent; background: none; font-family: var(--font-label); font-size: .88rem; letter-spacing: .03em; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-body);">Following {{ followingCount }}</button></sc-if>
+          </nav>
+          <div>
+            <sc-for list="{{ connections }}" as="p" hint-placeholder-count="5">
+              <div style="display: flex; align-items: center; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--border-hair);">
+                <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ p.name }}" username="{{ p.username }}" hint-size="38px,38px"></x-import>
+                <span style="flex: 1; min-width: 0;"><a href="#" style="display: block; font-family: var(--font-display); font-weight: 500; font-size: 1.14rem; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ p.name }}</a><span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .73rem; color: var(--text-faint);">@{{ p.username }} · {{ p.rep }} rep</span></span>
+                <sc-if value="{{ p.canRemove }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.remove }}" style="border: 0; background: none; padding: 0; font-family: var(--font-label); font-size: .82rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--danger);">Remove</button></sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ noConnections }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 40px 0 0; font-size: 1rem; color: var(--text-muted);">{{ emptyConnections }}</p>
+          </sc-if>
+        </div>
+        </sc-if>
+
+      </div>
     </div>
-    </sc-if>
+
   </div>
+
+  <!-- ── The phone sheet — the same two controls, stacked. It sits at the
+       screen root: the only place in this file where a fixed element is
+       measured against the viewport rather than the scroll column. ── -->
+  <sc-if value="{{ sheetVisible }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSheet }}" style="position: fixed; inset: 0; z-index: 50; background: rgba(27, 35, 29, .42); animation: rrFade 140ms;"></div>
+    <div role="dialog" aria-label="Viewing options" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; padding: 20px 20px 28px; box-sizing: border-box; background: var(--surface-raised); border-top: 1px solid var(--border-hair); border-radius: var(--radius-xl) var(--radius-xl) 0 0; box-shadow: var(--shadow-xl); animation: rrRise 220ms ease-out;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
+        <span style="flex: 1; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Viewing</span>
+        <button onClick="{{ closeSheet }}" aria-label="Close" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--surface-sunken); color: var(--text-muted); font-size: .9rem; line-height: 1; cursor: pointer;">✕</button>
+      </div>
+      <span style="display: block; font-family: var(--font-label); font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; color: var(--text-faint);">Order</span>
+      <div style="display: flex; flex-direction: column; margin-top: 4px;">
+        <sc-for list="{{ sortOptions }}" as="o" hint-placeholder-count="6">
+          <sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ o.pick }}" aria-pressed="true" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 11px 2px; border: 0; border-bottom: 1px solid var(--border-hair); background: none; text-align: left; font-family: var(--font-label); font-size: .95rem; color: var(--text-strong); cursor: pointer;"><span style="flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--gold-500);"></span>{{ o.label }}</button></sc-if>
+          <sc-if value="{{ o.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ o.pick }}" aria-pressed="false" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 11px 2px; border: 0; border-bottom: 1px solid var(--border-hair); background: none; text-align: left; font-family: var(--font-label); font-size: .95rem; color: var(--text-muted); cursor: pointer;"><span style="flex: none; width: 7px; height: 7px; border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1px var(--border-strong);"></span>{{ o.label }}</button></sc-if>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; margin-top: 20px;">
+        <span style="flex: none; font-family: var(--font-label); font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; color: var(--text-faint);">Peek</span>
+        <span style="display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border-hair); border-radius: 999px; background: var(--surface-sunken);">
+          <sc-for list="{{ peekOptions }}" as="p" hint-placeholder-count="3">
+            <sc-if value="{{ p.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ p.pick }}" aria-pressed="true" style="min-width: 46px; min-height: 44px; padding: 7px 12px; border: 0; border-radius: 999px; background: var(--surface-raised); box-shadow: var(--shadow-xs); color: var(--text-strong); font-family: var(--font-mono); font-size: .8rem; cursor: pointer;">{{ p.label }}</button></sc-if>
+            <sc-if value="{{ p.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.pick }}" aria-pressed="false" style="min-width: 46px; min-height: 44px; padding: 7px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--text-faint); font-family: var(--font-mono); font-size: .8rem; cursor: pointer;">{{ p.label }}</button></sc-if>
+          </sc-for>
+        </span>
+      </div>
+      <p style="display: flex; align-items: baseline; gap: 8px; margin: 16px 0 0; font-family: var(--font-label); font-size: .85rem; color: var(--text-muted);">{{ densityWord }} rows<a href="../account-settings/AccountSettings.dc.html" style="color: var(--accent); text-decoration: none;" style-hover="text-decoration: underline;">change in appearance</a></p>
+      <p style="margin: 16px 0 0; font-family: var(--font-mono); font-size: .71rem; line-height: 1.6; color: var(--text-faint);">{{ persistNote }}</p>
+    </div>
+  </sc-if>
+
 </div>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;board&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;announcements&quot;,&quot;introductions&quot;,&quot;the-archive&quot;,&quot;the-valley&quot;,&quot;interpretability&quot;,&quot;evaluations&quot;,&quot;audit-trails&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scope&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;hall&quot;,&quot;watch&quot;],&quot;default&quot;:&quot;watch&quot;,&quot;tsType&quot;:&quot;'hall' | 'watch'&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;showRail&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panels&quot;},&quot;showReading&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panels&quot;},&quot;signedIn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Viewer&quot;}}">
-const BOARDS = [
-  { cat: 'The Commons', boards: [
-    { slug: 'announcements', name: 'announcements', blurb: 'Word from the wardens. Read-mostly; posting is held to the council.' },
-    { slug: 'introductions', name: 'introductions', blurb: 'New to the valley? Say who you are and what you are here to read.' },
-    { slug: 'the-archive', name: 'the-archive', blurb: 'Ratified decisions and the arguments that produced them.' },
-    { slug: 'the-valley', name: 'the-valley', blurb: 'Everything else that belongs to Rivendell but not to a docket.' },
+<script type="text/x-dc" data-dc-script data-props="{&quot;pane&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;tags&quot;,&quot;tagshow&quot;,&quot;notifications&quot;,&quot;connections&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;'home' | 'tags' | 'tagshow' | 'notifications' | 'connections'&quot;,&quot;section&quot;:&quot;Pane&quot;},&quot;sort&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;category&quot;,&quot;active&quot;,&quot;newest&quot;,&quot;unanswered&quot;,&quot;top&quot;,&quot;solved&quot;],&quot;default&quot;:&quot;category&quot;,&quot;tsType&quot;:&quot;'category' | 'active' | 'newest' | 'unanswered' | 'top' | 'solved'&quot;,&quot;section&quot;:&quot;Viewing&quot;},&quot;peek&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:0,&quot;max&quot;:5,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Viewing&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;default&quot;:&quot;comfortable&quot;,&quot;tsType&quot;:&quot;'comfortable' | 'compact'&quot;,&quot;section&quot;:&quot;Viewing&quot;},&quot;signedIn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Viewing&quot;},&quot;showRail&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panels&quot;},&quot;showDescriptions&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panels&quot;}}">
+// Each topic carries the four signals the Viewing bar can order by: h = hours
+// since the last reply, oh = hours since it was opened, r = replies, c =
+// commends, st = workflow status. Every ordering on this page is derived from
+// these — nothing personal to the reader enters the ranking, which is what
+// keeps the index a public directory and not a second inbox. `unread` is the
+// one personal number on the page and it lives ONLY in the shared rail — the
+// rail is chrome, so these eight boards and these counts must match the list in
+// templates/forum-inbox/ (where the same numbers are derived from THREADS) and
+// in templates/search/. If you change a board here, change it there.
+const CATEGORIES = [
+  { name: 'The Commons', boards: [
+    { slug: 'announcements', name: 'announcements', desc: 'Word from the wardens', threads: 12, posts: 84, unread: 0, topics: [
+      { t: 'The hall reopens — read this first', by: 'Elrond', h: 72, oh: 80, r: 14, c: 26, st: 'open' },
+      { t: 'Council conduct, revised', by: 'Erestor', h: 168, oh: 200, r: 9, c: 12, st: 'decision' },
+      { t: 'Wardens for the coming season', by: 'Elrond', h: 336, oh: 360, r: 4, c: 8, st: 'solved' } ] },
+    { slug: 'introductions', name: 'introductions', desc: 'Newcomers finding their footing', threads: 41, posts: 213, unread: 0, topics: [
+      { t: 'Introduce yourself here', by: 'Lindir', h: 4, oh: 2400, r: 212, c: 31, st: 'open' },
+      { t: 'Newly arrived — keeper of songs', by: 'Lindir', h: 26, oh: 30, r: 9, c: 7, st: 'open' },
+      { t: 'Come from the Grey Havens', by: 'Círdan', h: 96, oh: 100, r: 0, c: 3, st: 'needs' } ] },
+    { slug: 'the-archive', name: 'the-archive', desc: 'Ratified decisions and their arguments', threads: 28, posts: 402, unread: 1, topics: [
+      { t: 'Where should ratified decisions live?', by: 'Erestor', h: 2, oh: 14, r: 18, c: 22, st: 'needs' },
+      { t: 'On the precedence of edits', by: 'Erestor', h: 48, oh: 60, r: 11, c: 9, st: 'decision' },
+      { t: 'What a brief must carry', by: 'Arwen', h: 120, oh: 130, r: 6, c: 14, st: 'solved' } ] },
+    { slug: 'the-valley', name: 'the-valley', desc: 'Everything that belongs to no docket', threads: 96, posts: 612, unread: 0, topics: [
+      { t: 'The valley in winter — photo thread', by: 'Arwen', h: 70, oh: 90, r: 34, c: 41, st: 'open' },
+      { t: 'Songs for the long evenings', by: 'Lindir', h: 144, oh: 150, r: 12, c: 18, st: 'open' },
+      { t: 'The falls froze again', by: 'Elladan', h: 170, oh: 175, r: 0, c: 2, st: 'needs' } ] },
   ] },
-  { cat: 'Vilya · Expose', boards: [
-    { slug: 'interpretability', name: 'interpretability', blurb: 'Reading the machine: probes, features, and what they license us to claim.' },
-    { slug: 'evaluations', name: 'evaluations', blurb: 'What we measure, how often, and what a failing score obliges us to do.' },
-    { slug: 'audit-trails', name: 'audit-trails', blurb: 'Provenance, edit history, and the shape of a record that survives a rewrite.' },
+  { name: 'Vilya · Expose', boards: [
+    { slug: 'interpretability', name: 'interpretability', desc: 'Reading the machine', threads: 54, posts: 388, unread: 1, topics: [
+      { t: 'Reading attention as a map, not a verdict', by: 'Arwen', h: 6, oh: 9, r: 22, c: 27, st: 'solved' },
+      { t: 'Findings from the Bruinen run', by: 'Arwen', h: 24, oh: 30, r: 13, c: 11, st: 'open' },
+      { t: 'Which probes survived ablation', by: 'Glorfindel', h: 96, oh: 110, r: 0, c: 4, st: 'needs' } ] },
+    { slug: 'evaluations', name: 'evaluations', desc: 'What we measure, and what failing obliges', threads: 73, posts: 547, unread: 2, topics: [
+      { t: 'Evaluations as ritual, not gate', by: 'Galadriel', h: 2, oh: 5, r: 23, c: 31, st: 'solved' },
+      { t: 'Which evals have ever blocked a release?', by: 'Glorfindel', h: 5, oh: 8, r: 7, c: 16, st: 'needs' },
+      { t: 'Scoring the scorers', by: 'Erestor', h: 72, oh: 80, r: 15, c: 9, st: 'open' },
+      { t: 'Retiring the turnstile metric', by: 'Glorfindel', h: 100, oh: 120, r: 7, c: 14, st: 'decision' } ] },
+    { slug: 'audit-trails', name: 'audit-trails', desc: 'Provenance and the record that survives', threads: 47, posts: 331, unread: 2, topics: [
+      { t: 'Who changed what — and can you prove the rollback?', by: 'Glorfindel', h: 5, oh: 12, r: 41, c: 54, st: 'open' },
+      { t: 'What must survive a rewrite?', by: 'Elladan', h: 26, oh: 34, r: 0, c: 6, st: 'needs' },
+      { t: 'Two wardens, one minute, one record', by: 'Erestor', h: 50, oh: 58, r: 16, c: 11, st: 'solved' } ] },
+    { slug: 'capability-disclosure', name: 'capability-disclosure', desc: 'What we publish, and when', threads: 19, posts: 164, unread: 0, topics: [
+      { t: 'On exposing capability before we are asked', by: 'Elrond', h: 26, oh: 30, r: 12, c: 22, st: 'decision' },
+      { t: 'Disclosure that trails the briefing', by: 'Galadriel', h: 120, oh: 130, r: 5, c: 9, st: 'open' },
+      { t: 'A schedule, not a scramble', by: 'Erestor', h: 168, oh: 180, r: 0, c: 3, st: 'needs' } ] },
   ] },
 ];
 
-const THREADS = [
-  { id: 't1', title: 'Where should ratified decisions live once the council has spoken?', author: 'Erestor', seed: 'erestor', tier: 'Loremaster', rep: '3,985', gilt: true, presence: 'online', board: 'the-archive', status: 'decision_made', pinned: true, locked: false, replies: 42, time: '2 hours ago', order: 2, commends: 18, unread: true, starred: false, snippet: 'We keep re-litigating settled questions because the record scatters. A proposal: every decision gets a canonical topic, locked, with the brief pinned to the head.' },
-  { id: 't2', title: 'Evaluations as ritual, not gate', author: 'Glorfindel', seed: 'glorfindel', tier: 'Legend', rep: '5,210', gilt: true, presence: 'online', board: 'evaluations', status: 'needs_answer', pinned: false, locked: false, replies: 17, time: '5 hours ago', order: 5, commends: 9, unread: true, starred: false, snippet: 'A gate you always pass is a ritual. I want to know which of our evals have ever actually blocked a release, and what we changed when they did.' },
-  { id: 't3', title: 'Interpretability findings from the Bruinen run', author: 'Arwen', seed: 'arwen', tier: 'Veteran', rep: '1,204', gilt: false, presence: 'away', board: 'interpretability', status: 'solved', pinned: false, locked: false, replies: 31, time: 'yesterday', order: 26, commends: 24, unread: false, starred: true, snippet: 'Three features survived ablation across every checkpoint. The accepted answer below has the probe configs and the null results, which matter more.' },
-  { id: 't4', title: 'Audit trails: what must survive a rewrite?', author: 'Elladan', seed: 'elladan', tier: 'Member', rep: '412', gilt: false, presence: 'offline', board: 'audit-trails', status: 'open', pinned: false, locked: false, replies: 0, time: 'yesterday', order: 30, commends: 3, unread: false, starred: false, snippet: 'Starting a list of the fields we can never drop when a record is amended. Please add the ones I have missed rather than arguing about the format.' },
-  { id: 't5', title: 'Council conduct — read before posting', author: 'Elrond', seed: 'elrond', tier: 'Loremaster', rep: '9,120', gilt: true, presence: 'offline', board: 'announcements', status: 'open', pinned: true, locked: true, replies: 0, time: '3 months ago', order: 2200, commends: 61, unread: false, starred: false, snippet: 'How we disagree here. Short version: argue with the strongest reading of the post, cite the record, and let the wardens close what is finished.' },
-  { id: 't6', title: 'Introduce yourself here', author: 'Lindir', seed: 'lindir', tier: 'Member', rep: '288', gilt: false, presence: 'online', board: 'introductions', status: 'open', pinned: false, locked: false, replies: 214, time: '4 hours ago', order: 4, commends: 12, unread: false, starred: false, snippet: 'The long-running welcome thread. One post each; tell us what you read and what you would like to be asked about.' },
-  { id: 't7', title: 'On the precedence of edits', author: 'Erestor', seed: 'erestor', tier: 'Loremaster', rep: '3,985', gilt: true, presence: 'online', board: 'audit-trails', status: 'needs_answer', pinned: false, locked: false, replies: 5, time: '2 days ago', order: 50, commends: 1, unread: true, starred: false, snippet: 'When two wardens amend the same record within the same minute, which version is the record? We have no rule and I have found three behaviours.' },
-  { id: 't8', title: 'The valley in winter — photo thread', author: 'Arwen', seed: 'arwen', tier: 'Veteran', rep: '1,204', gilt: false, presence: 'away', board: 'the-valley', status: 'open', pinned: false, locked: false, replies: 96, time: '3 days ago', order: 74, commends: 44, unread: false, starred: true, snippet: 'The falls froze for the first time in years. Post yours; no captions longer than a line.' },
+const SORTS = [
+  { id: 'category', label: 'By category' },
+  { id: 'active', label: 'Active' },
+  { id: 'newest', label: 'Newest' },
+  { id: 'unanswered', label: 'Unanswered' },
+  { id: 'top', label: 'Top' },
+  { id: 'solved', label: 'Solved' },
 ];
 
-const REPLIES = [
-  { author: 'Glorfindel', seed: 'glorfindel', time: '3 hours ago', accepted: false, body: 'The scattering is the symptom, not the disease. We have no rule about when a topic stops being a discussion and starts being a record, so nobody knows when to stop arguing in it.' },
-  { author: 'Arwen', seed: 'arwen', time: '1 hour ago', accepted: true, body: 'Then make the transition explicit: a warden marks the decision, the brief is pinned to the head, and the topic locks. Everything after that lives in a new topic that cites this one.' },
+const ORDER_NOTES = {
+  category: 'Grouped by category',
+  active: 'Ranked by last reply',
+  newest: 'Ranked by newest topic',
+  unanswered: 'Boards with the most unanswered topics first',
+  top: 'Ranked by most-commended topic',
+  solved: 'Boards with the most recently settled topics first',
+};
+
+const VIEW_KEY = 'imladris.board-index.view';
+
+const rel = (h) => h < 24 ? h + 'h' : (h < 168 ? Math.round(h / 24) + 'd' : Math.round(h / 168) + 'w');
+
+// One topic ordering per sort — the same comparator the board page would run.
+const pickTopics = (topics, sort) => {
+  const a = topics.slice();
+  if (sort === 'newest') return a.sort((x, y) => x.oh - y.oh);
+  if (sort === 'unanswered') return a.filter((t) => t.st === 'needs' || t.r === 0).sort((x, y) => x.oh - y.oh);
+  if (sort === 'top') return a.sort((x, y) => y.c - x.c);
+  if (sort === 'solved') return a.filter((t) => t.st === 'solved' || t.st === 'decision').sort((x, y) => x.h - y.h);
+  return a.sort((x, y) => x.h - y.h);
+};
+
+// Board rank key for the same sort. Count-based sorts put the fullest board
+// first; time-based sorts put the freshest first.
+const rankKey = (b, sort) => {
+  const hours = b.topics.map((t) => t.h);
+  const opened = b.topics.map((t) => t.oh);
+  if (sort === 'unanswered' || sort === 'solved') return -pickTopics(b.topics, sort).length;
+  if (sort === 'top') return -b.topics.reduce((m, t) => Math.max(m, t.c), 0);
+  if (sort === 'newest') return Math.min.apply(null, opened);
+  return Math.min.apply(null, hours);
+};
+
+const boardSignal = (b, sort) => {
+  const n = pickTopics(b.topics, sort).length;
+  if (sort === 'unanswered') return n === 0 ? '' : n + ' unanswered';
+  if (sort === 'solved') return n === 0 ? '' : n + ' settled';
+  if (sort === 'top') return b.topics.reduce((m, t) => Math.max(m, t.c), 0) + ' commends';
+  if (sort === 'newest') return 'opened ' + rel(Math.min.apply(null, b.topics.map((t) => t.oh))) + ' ago';
+  if (sort === 'active') return rel(Math.min.apply(null, b.topics.map((t) => t.h))) + ' ago';
+  return '';
+};
+
+const topicMeta = (t, sort) => {
+  if (sort === 'top') return t.by + ' · ' + t.c + ' commends';
+  if (sort === 'unanswered') return t.by + ' · opened ' + rel(t.oh) + ' ago · no answer';
+  if (sort === 'solved') return t.by + ' · ' + (t.st === 'decision' ? 'decision' : 'solved') + ' · ' + rel(t.h);
+  if (sort === 'newest') return t.by + ' · opened ' + rel(t.oh) + ' ago';
+  return t.by + ' · ' + rel(t.h);
+};
+
+const TAGS = [
+  { name: 'evaluations', count: '73' }, { name: 'audit-trails', count: '47' },
+  { name: 'interpretability', count: '54' }, { name: 'disclosure', count: '19' },
+  { name: 'governance', count: '31' }, { name: 'rollback', count: '12' },
+  { name: 'first-posts', count: '41' }, { name: 'precedent', count: '9' },
 ];
 
-const POST_LIMIT = 20000;
+const NOTIFS = [
+  { id: 9, text: 'Galadriel mentioned you in “Evaluations as ritual, not gate”', time: '8m', read: false },
+  { id: 8, text: 'Glorfindel replied to “Who changed what — and can you prove the rollback?”', time: '40m', read: false },
+  { id: 7, text: 'Arwen commended your reply', time: '1h', read: false },
+  { id: 6, text: 'Your answer was accepted in “Evaluations as ritual, not gate”', time: '2h', read: true },
+  { id: 5, text: 'Lindir followed you', time: '3h', read: true },
+  { id: 4, text: 'Elrond sent you a direct message', time: '5h', read: true },
+  { id: 3, text: 'You reached Loremaster — 3,985 regard', time: 'Yesterday', read: true },
+  { id: 2, text: 'Arwen opened “Reading attention as a map, not a verdict”', time: 'Yesterday', read: true },
+];
 
-const FILTERS = ['All', 'Unread', 'Starred', 'Mine'];
+// Topics per tag — a tag crosses boards, so each row carries its board.
+const TAG_TOPICS = {
+  evaluations: [
+    { title: 'Evaluations as ritual, not gate', author: 'Galadriel', seed: 'galadriel', tier: 'Loremaster', rep: '5.1k', board: 'evaluations', replies: 23, time: '2h', commends: 31, status: 'solved', snippet: 'We keep treating the eval suite as a turnstile. What if it were a rite the whole council kept?' },
+    { title: 'What a failed eval should oblige us to publish', author: 'Elrond', seed: 'elrond', tier: 'Legend', rep: '8.7k', board: 'capability-disclosure', replies: 12, time: '1d', commends: 18, status: 'needs_answer', snippet: 'A failure we do not write down is a failure we will repeat at a worse hour.' },
+    { title: 'Sampling: how many runs before we believe a number?', author: 'Arwen', seed: 'arwen', tier: 'Loremaster', rep: '1.9k', board: 'evaluations', replies: 31, time: '2d', commends: 9, status: 'open', snippet: 'Two runs is an anecdote. Twenty is a claim. The gap between them is where we argue.' },
+    { title: 'Retiring the turnstile metric', author: 'Glorfindel', seed: 'glorfindel', tier: 'Veteran', rep: '2.1k', board: 'evaluations', replies: 7, time: '4d', commends: 14, status: 'decision_made', snippet: 'A decision, recorded: the pass-rate headline stops being the gate on the 1st.' },
+  ],
+  'audit-trails': [
+    { title: 'Who changed what — and can you prove the rollback?', author: 'Erestor', seed: 'erestor', tier: 'Legend', rep: '3.9k', board: 'audit-trails', replies: 41, time: '5h', commends: 54, status: 'open', snippet: 'The diff is small; the audit trail must be whole. Here is the rollback drill we ran on Tuesday.' },
+    { title: 'Two actors, one setting, no precedence', author: 'Elladan', seed: 'elladan', tier: 'Veteran', rep: '867', board: 'audit-trails', replies: 16, time: '3d', commends: 11, status: 'needs_answer', snippet: 'Both edits were authorized. Neither record says which one won, and that is the whole problem.' },
+    { title: 'Keeping the ledger readable a year later', author: 'Lindir', seed: 'lindir', tier: 'Member', rep: '412', board: 'the-valley', replies: 5, time: '1w', commends: 6, status: 'open', snippet: 'An audit row nobody can read is a rumour with a timestamp.' },
+  ],
+  interpretability: [
+    { title: 'Reading attention as a map, not a verdict', author: 'Arwen', seed: 'arwen', tier: 'Loremaster', rep: '1.9k', board: 'interpretability', replies: 22, time: '6h', commends: 27, status: 'solved', snippet: 'The map is useful precisely because it is not the territory. Treat it as evidence, not proof.' },
+    { title: 'When a probe disagrees with the behaviour', author: 'Galadriel', seed: 'galadriel', tier: 'Loremaster', rep: '5.1k', board: 'interpretability', replies: 13, time: '2d', commends: 20, status: 'open', snippet: 'The probe is a witness, not a judge. Ask what it saw, not what it decided.' },
+  ],
+};
+
+const TAG_FALLBACK = [
+  { title: 'On exposing capability before we are asked', author: 'Elrond', seed: 'elrond', tier: 'Legend', rep: '8.7k', board: 'capability-disclosure', replies: 12, time: '1d', commends: 22, status: 'decision_made', snippet: 'A decision, recorded: we publish the capability notes the same day we brief the council.' },
+  { title: 'Newly arrived — keeper of songs, learner of evals', author: 'Lindir', seed: 'lindir', tier: 'Member', rep: '412', board: 'introductions', replies: 9, time: '1d', commends: 7, status: 'open', snippet: 'I know the songs better than the metrics. I would like that to change by winter.' },
+];
+
+const FOLLOWERS = [
+  { username: 'glorfindel', name: 'Glorfindel', rep: '2,140' },
+  { username: 'arwen', name: 'Arwen', rep: '1,908' },
+  { username: 'lindir', name: 'Lindir', rep: '412' },
+  { username: 'elladan', name: 'Elladan', rep: '867' },
+];
+
+const FOLLOWING = [
+  { username: 'galadriel', name: 'Galadriel', rep: '4,310' },
+  { username: 'elrond', name: 'Elrond', rep: '5,002' },
+  { username: 'glorfindel', name: 'Glorfindel', rep: '2,140' },
+];
+
+// The roster the rail shows. `where` is a board name — presence says where a
+// member is, never what they are reading. Public, so it is rail furniture and
+// not a personal signal.
+const ROSTER = [
+  { name: 'Erestor', username: 'erestor', where: 'the-archive', presence: 'online', gilt: true, staff: true },
+  { name: 'Galadriel', username: 'galadriel', where: 'evaluations', presence: 'online', gilt: true },
+  { name: 'Glorfindel', username: 'glorfindel', where: 'audit-trails', presence: 'online' },
+  { name: 'Arwen Undómiel', username: 'arwen', where: 'interpretability', presence: 'online' },
+  { name: 'Elrond', username: 'elrond', where: 'announcements', presence: 'away', gilt: true, staff: true },
+  { name: 'Lindir', username: 'lindir', title: 'Member', presence: 'away' },
+  { name: 'Círdan', username: 'cirdan', where: 'introductions', presence: 'online' },
+  { name: 'Elladan', username: 'elladan', where: 'the-valley', presence: 'away', staff: true },
+];
+
+const FLAT = CATEGORIES.reduce((acc, c) => acc.concat(c.boards), []);
 
 class Component extends DCLogic {
   state = {
-    board: (this.props || {}).board || '',
-    density: (this.props || {}).density === 'watch' ? 'watch' : 'hall',
-    sort: 'active',
-    filter: 'All',
-    watching: false,
-    composerOpen: false,
-    draftTitle: '',
-    bodyDraft: '',
-    composerError: '',
-    limit: 6,
+    pane: (this.props || {}).pane || 'home',
+    tag: 'evaluations',
+    tagCount: '73',
+    followedTags: ['audit-trails'],
+    connTab: 'followers',
+    followers: FOLLOWERS.slice(),
+    following: FOLLOWING.slice(),
     railOpen: (this.props || {}).showRail !== false,
-    readingOpen: (this.props || {}).showReading !== false,
-    selectedId: 't1',
-    reply: '',
-    threads: THREADS.map((t) => Object.assign({}, t)),
+    notifs: NOTIFS.map((n) => Object.assign({}, n)),
+    // The view: an order, and how many topics each board previews. Seeded from
+    // props, then owned by the reader. No scope: the index never subsets.
+    sort: (this.props || {}).sort || 'category',
+    peek: typeof (this.props || {}).peek === 'number' ? (this.props || {}).peek : 3,
+    density: (this.props || {}).density || 'comfortable',
+    sheetOpen: false,
   };
 
-  componentDidUpdate(prev) {
-    const p = this.props || {}, q = prev || {};
-    if (q.board !== p.board) this.setState({ board: p.board || '', limit: 6 });
-    if (q.density !== p.density && p.density) this.setState({ density: p.density === 'watch' ? 'watch' : 'hall' });
-    if (q.showRail !== p.showRail) this.setState({ railOpen: p.showRail !== false });
-    if (q.showReading !== p.showReading) this.setState({ readingOpen: p.showReading !== false });
-  }
-
   componentDidMount() {
+    this.restoreView();
     this._keys = (e) => {
       if (!(e.metaKey || e.ctrlKey)) return;
-      const k = String(e.key).toLowerCase();
-      if (k === 'b') { e.preventDefault(); this.setState((s) => ({ railOpen: !s.railOpen })); }
-      if (k === 'j') { e.preventDefault(); this.setState((s) => ({ readingOpen: !s.readingOpen })); }
+      if (String(e.key).toLowerCase() === 'b') { e.preventDefault(); this.setState((s) => ({ railOpen: !s.railOpen })); }
     };
     window.addEventListener('keydown', this._keys);
   }
 
   componentWillUnmount() { window.removeEventListener('keydown', this._keys); }
 
-  counter(v, max) {
-    const n = (v || '').length;
-    return n >= max * 0.9 ? n.toLocaleString() + ' / ' + max.toLocaleString() : '';
+  // The view is addressable first and remembered second: the address bar wins
+  // on arrival so a shared link opens as its sender saw it, and what the reader
+  // last chose fills in the rest. Both are view state, not reading state —
+  // nothing here changes what another member sees.
+  restoreView() {
+    const next = {};
+    let saved = null;
+    try { saved = JSON.parse(window.localStorage.getItem(VIEW_KEY) || 'null'); } catch (err) { saved = null; }
+    let params = null;
+    try { params = new URLSearchParams(window.location.search); } catch (err) { params = null; }
+    const read = (key) => {
+      const fromUrl = params ? params.get(key) : null;
+      if (fromUrl !== null && fromUrl !== '') return fromUrl;
+      return saved && saved[key] !== undefined ? saved[key] : null;
+    };
+    const sort = read('sort');
+    if (sort && SORTS.some((s) => s.id === sort)) next.sort = sort;
+    const peek = read('peek');
+    if (peek !== null && [0, 3, 5].indexOf(Number(peek)) !== -1) next.peek = Number(peek);
+    if (Object.keys(next).length) this.setState(next);
   }
 
-  visible() {
-    const s = this.state;
-    let list = s.threads.filter((t) => !s.board || t.board === s.board);
-    if (s.filter === 'Unread') list = list.filter((t) => t.unread);
-    if (s.filter === 'Starred') list = list.filter((t) => t.starred);
-    if (s.filter === 'Mine') list = list.filter((t) => t.seed === 'erestor');
-    if (s.sort === 'unanswered') list = list.filter((t) => t.replies === 0 || t.status === 'needs_answer');
-    const rank = (t) => (t.pinned ? 0 : 1);
-    if (s.sort === 'newest') list = list.slice().sort((a, b) => rank(a) - rank(b) || a.order - b.order);
-    else list = list.slice().sort((a, b) => rank(a) - rank(b) || a.order - b.order);
-    return list;
+  setView(patch) {
+    this.setState(patch, () => {
+      const s = this.state;
+      // Density is deliberately absent: the account owns it, so the page never
+      // writes it to the URL or remembers a per-page copy.
+      const view = { sort: s.sort, peek: s.peek };
+      if ((this.props || {}).signedIn !== false) {
+        try { window.localStorage.setItem(VIEW_KEY, JSON.stringify(view)); } catch (err) { /* private mode */ }
+      }
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', view.sort);
+        url.searchParams.set('peek', String(view.peek));
+        window.history.replaceState(null, '', url.toString());
+      } catch (err) { /* sandboxed preview */ }
+    });
   }
+
+  // Sync the tweakable props down into state. Each branch checks the prop
+  // CHANGED *and* that state does not already agree — the second half is what
+  // makes this terminate: without it, a prop whose value never equals the
+  // compared field re-fires setState on every update, and the component spins.
+  componentDidUpdate(prevProps) {
+    const p = this.props || {}, q = prevProps || {}, s = this.state;
+    if (p.pane && q.pane !== p.pane && s.pane !== p.pane) this.setState({ pane: p.pane });
+    const rail = p.showRail !== false;
+    if (q.showRail !== p.showRail && s.railOpen !== rail) this.setState({ railOpen: rail });
+    if (p.sort && q.sort !== p.sort && s.sort !== p.sort) this.setState({ sort: p.sort });
+    if (p.density && q.density !== p.density && s.density !== p.density) this.setState({ density: p.density });
+    if (typeof p.peek === 'number' && q.peek !== p.peek && s.peek !== p.peek) this.setState({ peek: p.peek });
+  }
+
+  go(r) { return () => this.setState({ pane: r }); }
 
   renderVals() {
     const s = this.state;
+    const r = s.pane;
     const props = this.props || {};
     const signedIn = props.signedIn !== false;
-    const all = this.visible();
-    const shown = all.slice(0, s.limit);
-    const compact = s.density === 'watch';
-    const flat = BOARDS.flatMap((c) => c.boards);
-    const current = flat.find((b) => b.slug === s.board);
-    const sel = s.threads.find((t) => t.id === s.selectedId) || null;
+    const sort = s.sort;
+    const isRanked = sort !== 'category';
+    const compact = s.density === 'compact';
+    const peekCount = s.peek;
+    // Compact is the triage register — the description is the first thing to go.
+    const withDesc = !compact && props.showDescriptions !== false;
+    const unread = s.notifs.filter((n) => !n.read).length;
+    const tagRows = TAG_TOPICS[s.tag] || TAG_FALLBACK;
+    const queue = signedIn ? FLAT.reduce((n, b) => n + b.unread, 0) : 0;
 
     return {
-      signedIn, isGuest: !signedIn,
+      railOpen: s.railOpen, railClosed: !s.railOpen,
+      toggleRail: () => this.setState((st) => ({ railOpen: !st.railOpen })),
+      hasQueue: queue > 0, queueCount: String(queue),
 
-      eyebrow: current ? '#' + current.slug : 'For you',
-      heading: current ? current.name : 'The Council Inbox',
-      blurb: current ? current.blurb : 'Every topic the council is holding open, newest counsel first. Filter to what is yours, or narrow to a board on the left.',
-      topicCount: all.length,
-      memberCount: current ? '1,140' : '4,208',
-      lastPost: '2 hours ago',
-      postingTo: current ? '#' + current.slug : '#the-valley',
+      panes: [
+        { label: 'Boards', on: r === 'home', off: r !== 'home', dot: false, go: this.go('home') },
+        { label: 'Tags', on: r === 'tags' || r === 'tagshow', off: !(r === 'tags' || r === 'tagshow'), dot: false, go: this.go('tags') },
+        { label: 'Notices', on: r === 'notifications', off: r !== 'notifications', dot: unread > 0, go: this.go('notifications') },
+        { label: 'Connections', on: r === 'connections', off: r !== 'connections', dot: false, go: this.go('connections') },
+      ],
 
-      categories: BOARDS.map((c) => ({
-        name: c.cat,
-        boards: c.boards.map((b) => {
-          const unread = s.threads.filter((t) => t.board === b.slug && t.unread).length;
+      // ── The rail: the shared partial. Categories and their boards, in the
+      // community's own order — no pinning, no muting, no reordering by the
+      // reader. The unread pill is the rail's, and the rail is global chrome:
+      // it reads the same on this surface and in the inbox. ──
+      categories: CATEGORIES.map((c) => ({
+        name: c.name,
+        boards: c.boards.map((b) => ({
+          name: b.name,
+          unread: String(b.unread),
+          unreadLabel: b.unread + ' unread in ' + b.name,
+          hasUnread: signedIn && b.unread > 0,
+        })),
+      })),
+
+      // ── The directory: category order keeps the sections; every other order
+      // dissolves them into one ranked list, because a ranking that restarts
+      // per category is not a ranking. ──
+      boardGroups: (isRanked
+        ? [{ name: ORDER_NOTES[sort], showHeading: false, boards: FLAT.slice().sort((x, y) => rankKey(x, sort) - rankKey(y, sort)) }]
+        : CATEGORIES.map((c) => ({ name: c.name, showHeading: true, boards: c.boards }))
+      ).map((g) => ({
+        name: g.name, showHeading: g.showHeading,
+        boards: g.boards.map((b) => {
+          const chosen = pickTopics(b.topics, sort);
+          const signal = boardSignal(b, sort);
           return {
-            name: b.name, unread, hasUnread: unread > 0,
-            isActive: s.board === b.slug, notActive: s.board !== b.slug,
-            open: () => this.setState({ board: b.slug, limit: 6 }),
+            name: b.name, desc: b.desc, showDesc: withDesc,
+            count: b.threads + ' topics · ' + b.posts + ' posts',
+            showSignal: isRanked && signal !== '', signal,
+            showPeek: peekCount > 0,
+            peek: chosen.slice(0, peekCount).map((t) => ({ title: t.t, meta: topicMeta(t, sort) })),
+            peekEmpty: peekCount > 0 && chosen.length === 0,
+            emptyLabel: sort === 'unanswered'
+              ? 'Every topic here has an answer.'
+              : (sort === 'solved' ? 'Nothing settled here yet.' : 'No topics yet.'),
           };
         }),
       })),
-      atAll: !s.board, offAll: !!s.board,
-      goAll: () => this.setState({ board: '', limit: 6 }),
 
-      dnHall: !compact, dnHallOff: compact,
-      dnWatch: compact, dnWatchOff: !compact,
-      setHall: () => this.setState({ density: 'hall' }),
-      setWatchDensity: () => this.setState({ density: 'watch' }),
+      // The forum's own totals — the impersonal counterpart to the inbox's
+      // unread badge. Same three numbers home.php prints.
+      totals: FLAT.length + ' boards · '
+        + FLAT.reduce((n, b) => n + b.threads, 0).toLocaleString() + ' topics · '
+        + FLAT.reduce((n, b) => n + b.posts, 0).toLocaleString() + ' posts',
 
-      srActive: s.sort === 'active', srActiveOff: s.sort !== 'active',
-      srNewest: s.sort === 'newest', srNewestOff: s.sort !== 'newest',
-      srUnanswered: s.sort === 'unanswered', srUnansweredOff: s.sort !== 'unanswered',
-      sortActive: () => this.setState({ sort: 'active', limit: 6 }),
-      sortNewest: () => this.setState({ sort: 'newest', limit: 6 }),
-      sortUnanswered: () => this.setState({ sort: 'unanswered', limit: 6 }),
-
-      filters: FILTERS.map((f) => ({
-        label: f, on: s.filter === f, off: s.filter !== f,
-        pick: () => this.setState({ filter: f, limit: 6 }),
+      sortOptions: SORTS.map((o) => ({
+        label: o.label, on: sort === o.id, off: sort !== o.id,
+        pick: () => this.setView({ sort: o.id }),
       })),
-      clearFilter: () => this.setState({ filter: 'All', sort: 'active', board: '', limit: 6 }),
+      peekOptions: [0, 3, 5].map((n) => ({
+        label: n === 0 ? 'Off' : String(n), on: peekCount === n, off: peekCount !== n,
+        pick: () => this.setView({ peek: n }),
+      })),
+      densityWord: compact ? 'Compact' : 'Comfortable',
+      densityAttr: s.density,
+      isRanked,
+      orderNote: ORDER_NOTES[sort] + ' · ' + FLAT.length + ' boards',
+      viewSummary: (SORTS.filter((o) => o.id === sort)[0] || SORTS[0]).label
+        + (peekCount > 0 ? ' · peek ' + peekCount : ' · no peek'),
+      persistNote: signedIn
+        ? 'Remembered for next time, and written into the address bar so the view can be shared.'
+        : 'Held in the address bar for this visit. Log in to have it remembered.',
+      isGuest: !signedIn,
 
-      watchLabel: s.watching ? 'Watching' : 'Watch board',
-      toggleWatch: () => this.setState((st) => ({ watching: !st.watching })),
+      // The sheet is rendered at the screen root, so it needs the pane in its
+      // own condition — leaving Boards must not leave a sheet floating.
+      sheetVisible: s.sheetOpen && r === 'home',
+      openSheet: () => this.setState({ sheetOpen: true }),
+      closeSheet: () => this.setState({ sheetOpen: false }),
 
-      composerOpen: s.composerOpen,
-      openComposer: () => this.setState({ composerOpen: true }),
-      closeComposer: () => this.setState({ composerOpen: false, draftTitle: '', bodyDraft: '', composerError: '' }),
-      postLimit: POST_LIMIT,
-      onBody: (e) => this.setState({ bodyDraft: e.target.value, composerError: '' }),
-      bodyDraft: s.bodyDraft,
-      bodyStarted: s.bodyDraft.length > 0 || s.draftTitle.length > 0,
-      bodyCount: this.counter(s.bodyDraft, POST_LIMIT),
-      bodyOver: s.bodyDraft.length > POST_LIMIT,
-      composerError: s.composerError,
-      onTitle: (e) => this.setState({ draftTitle: e.target.value }),
-      titleEmpty: s.draftTitle.trim().length < 3,
-      postTopic: (e) => {
-        if (e && e.preventDefault) e.preventDefault();
-        if (s.draftTitle.trim().length < 3) { this.setState({ composerError: 'Give the topic a title before you open it.' }); return; }
-        this.setState((st) => ({
-        composerOpen: false,
-        draftTitle: '',
-        bodyDraft: '',
-        composerError: '',
-        threads: [Object.assign({}, THREADS[3], {
-          id: 'new-' + Date.now(),
-          title: st.draftTitle.trim(),
-          author: 'Erestor', seed: 'erestor', tier: 'Loremaster', rep: '3,985', gilt: true, presence: 'online',
-          board: st.board || 'the-valley', status: 'open', pinned: false, locked: false,
-          replies: 0, time: 'just now', order: 0, commends: 0, unread: false, starred: false,
-          snippet: 'You opened this topic a moment ago. The council has not yet answered.',
-        })].concat(st.threads),
-      })); },
+      roster: ROSTER,
+      onlineCount: 34,
+      rosterMax: 5,
 
-      threads: shown.map((t) => ({
-        title: t.title, author: t.author, authorSeed: t.seed, tier: t.tier, rep: t.rep,
-        gilt: t.gilt, presence: t.presence, board: t.board, snippet: t.snippet,
-        time: t.time, commends: t.commends,
-        repliesLabel: t.replies + (t.replies === 1 ? ' reply' : ' replies'),
-        pinned: t.pinned, locked: t.locked,
-        stSolved: t.status === 'solved',
-        stNeeds: t.status === 'needs_answer',
-        stDecision: t.status === 'decision_made',
-        isUnread: t.unread,
-        starred: t.starred, notStarred: !t.starred,
-        showAvatar: !compact, showByline: !compact, hideByline: compact,
-        showSnippet: !compact && !!t.snippet,
-        showBoard: !s.board,
-        isActive: s.readingOpen && s.selectedId === t.id,
-        open: (e) => { e.preventDefault(); this.setState((st) => ({ selectedId: t.id, readingOpen: true, reply: '', threads: st.threads.map((x) => x.id === t.id ? Object.assign({}, x, { unread: false }) : x) })); },
-        openBoard: (e) => { e.preventDefault(); this.setState({ board: t.board, limit: 6 }); },
-        toggleStar: () => this.setState((st) => ({ threads: st.threads.map((x) => x.id === t.id ? Object.assign({}, x, { starred: !x.starred }) : x) })),
+      atHome: r === 'home',
+      atTags: r === 'tags',
+      atTagShow: r === 'tagshow',
+      atNotifications: r === 'notifications',
+      atConnections: r === 'connections',
+      goTags: this.go('tags'),
+
+      tags: TAGS.map((t) => Object.assign({}, t, {
+        open: () => this.setState({ pane: 'tagshow', tag: t.name, tagCount: t.count }),
+      })),
+      tagName: s.tag,
+      tagShown: 'Showing ' + tagRows.length + ' of ' + s.tagCount + ' topics',
+      tagTopics: tagRows,
+      noTagTopics: tagRows.length === 0,
+      tagFollowed: s.followedTags.indexOf(s.tag) !== -1,
+      tagUnfollowed: s.followedTags.indexOf(s.tag) === -1,
+      toggleTagFollow: () => this.setState((st) => ({
+        followedTags: st.followedTags.indexOf(st.tag) === -1
+          ? st.followedTags.concat([st.tag])
+          : st.followedTags.filter((x) => x !== st.tag),
       })),
 
-      isEmpty: all.length === 0,
-      hasThreads: all.length > 0,
-      shownLabel: 'Showing ' + shown.length + ' of ' + all.length + ' topics',
-      allLoaded: shown.length >= all.length,
-      loadMoreLabel: shown.length >= all.length ? 'All caught up' : 'Load more',
-      loadMore: () => this.setState((st) => ({ limit: st.limit + 6 })),
+      atFollowers: s.connTab === 'followers', offFollowers: s.connTab !== 'followers',
+      atFollowing: s.connTab === 'following', offFollowing: s.connTab !== 'following',
+      showFollowers: () => this.setState({ connTab: 'followers' }),
+      showFollowing: () => this.setState({ connTab: 'following' }),
+      followerCount: String(s.followers.length),
+      followingCount: String(s.following.length),
+      noConnections: (s.connTab === 'followers' ? s.followers : s.following).length === 0,
+      emptyConnections: s.connTab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.',
+      // connections.php only offers Remove, and only on your own followers list.
+      connections: (s.connTab === 'followers' ? s.followers : s.following).map((p) => Object.assign({}, p, {
+        canRemove: s.connTab === 'followers',
+        remove: () => this.setState((st) => ({ followers: st.followers.filter((x) => x.username !== p.username) })),
+      })),
 
-      railOpen: s.railOpen, railClosed: !s.railOpen,
-      readingOpen: s.readingOpen, readingClosed: !s.readingOpen,
-      toggleRail: () => this.setState((st) => ({ railOpen: !st.railOpen })),
-      toggleReading: () => this.setState((st) => ({ readingOpen: !st.readingOpen })),
-
-      hasSelection: !!sel, noSelection: !sel,
-      selTitle: sel ? sel.title : '',
-      selAuthor: sel ? sel.author : '',
-      selSeed: sel ? sel.seed : '',
-      selTier: sel ? sel.tier : '',
-      selGilt: sel ? sel.gilt : false,
-      selBoard: sel ? sel.board : '',
-      selTime: sel ? sel.time : '',
-      selSnippet: sel ? sel.snippet : '',
-      selReplies: sel ? (sel.replies + (sel.replies === 1 ? ' reply' : ' replies')) : '',
-      selPosts: sel ? REPLIES.slice(0, sel.replies === 0 ? 0 : 2).map((r) => Object.assign({}, r, { accepted: r.accepted && sel.status === 'solved' })) : [],
-      openSelBoard: (e) => { e.preventDefault(); if (sel) this.setState({ board: sel.board, limit: 6 }); },
-      canReply: signedIn && !!sel && !sel.locked,
-      lockedNotice: !!sel && sel.locked,
-      onReply: (e) => this.setState({ reply: e.target.value }),
-      replyEmpty: s.reply.trim().length < 2,
-      replyStarted: s.reply.length > 0,
-      replyCount: this.counter(s.reply, POST_LIMIT),
-      replyOver: s.reply.length > POST_LIMIT,
-      sendReply: (e) => { if (e && e.preventDefault) e.preventDefault(); if (!s.reply.trim()) return; this.setState((st) => ({
-        reply: '',
-        threads: st.threads.map((x) => x.id === st.selectedId ? Object.assign({}, x, { replies: x.replies + 1, time: 'just now' }) : x),
-      })); },
+      unreadCount: unread, hasUnread: unread > 0, noUnread: unread === 0,
+      notifications: s.notifs.map((n) => ({
+        text: n.text, time: n.time, isUnread: !n.read, isRead: n.read,
+        open: () => this.setState((st) => ({ notifs: st.notifs.map((x) => x.id === n.id ? Object.assign({}, x, { read: true }) : x) })),
+      })),
+      noNotifications: s.notifs.length === 0,
+      markAll: () => this.setState((st) => ({ notifs: st.notifs.map((x) => Object.assign({}, x, { read: true })) })),
+      clearAll: () => this.setState({ notifs: [] }),
     };
   }
 }
