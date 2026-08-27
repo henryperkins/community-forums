@@ -13896,14 +13896,14 @@ a.account-row-name:hover {
    involved. The global reduced-motion clamps near the top of this file already
    reach these, but the per-component opt-out is restated the way every other
    animated surface here restates it. */
-@keyframes lbFade {
+@keyframes lb-fade {
     from { opacity: 0; transform: translateY(5px); }
     to   { opacity: 1; transform: none; }
 }
 .living-brief,
 .related-topic-fallback,
-.living-brief-empty { animation: lbFade 240ms var(--ease-calm); }
-.lb-more[open] > .lb-more-body { animation: lbFade 180ms var(--ease-calm); }
+.living-brief-empty { animation: lb-fade 240ms var(--ease-calm); }
+.lb-more[open] > .lb-more-body { animation: lb-fade 180ms var(--ease-calm); }
 
 @media (prefers-reduced-motion: reduce) {
     .living-brief,
