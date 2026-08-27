@@ -1065,6 +1065,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(LinkPreviewService::class),
             $config,
+            $c->get(WriteGate::class),
         ));
         $c->bind(PollService::class, fn (Container $c) => new PollService(
             $c->get(Database::class),

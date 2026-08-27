@@ -768,6 +768,73 @@ final class AppLinkPreviewTest extends TestCase
         $this->previewService()->remove($this->userEntity($suspended), $id);
     }
 
+
+    /**
+     * Axis 2 of the three authorization axes (DECISIONS, and CLAUDE.md's "state beats
+     * role"): `WriteGate::assertCanWrite()` throws for banned/suspended on EVERY write
+     * path. `Controller::requireAdmin()` checks `isAdmin()` and nothing else, so the
+     * gate has to live in the service — which is what every sibling operator service
+     * does (`AdminService::assertAdmin()`, `AdminSettingsService`).
+     *
+     * The levers behind this console are the ones that decide what the server will
+     * fetch: the SSRF host allowlist and the kill switch. A suspended admin reaching
+     * them is the worst-placed instance of this gap, not the least.
+     *
+     * Reading is deliberately still allowed — that is what makes this axis 2 rather
+     * than a role check. A suspended operator can see the console; they cannot move it.
+     */
+    public function test_a_suspended_admin_keeps_reading_the_console_but_loses_every_write_on_it(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'previewsuspadmin']);
+        $admin = $this->makeAdmin(['username' => 'suspendedoperator']);
+        $this->actingAs($admin);
+
+        $settings = new SettingRepository($this->db);
+        $settings->set('link_preview_allowed_hosts', ['trusted.example.test']);
+        $settings->set('link_preview_kill_switch', false);
+        $previewId = $this->seedPreview('http://preview.example.test/suspadmin');
+
+        $this->db->run(
+            "UPDATE users SET status = 'suspended', suspended_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 DAY) WHERE id = ?",
+            [(int) $admin['id']],
+        );
+
+        // Reading survives: state closes writes, not the console.
+        $this->assertStatus(200, $this->get('/admin/link-previews'));
+
+        // 1. The SSRF allowlist and the kill switch.
+        $this->assertStatus(403, $this->post('/admin/link-previews/settings', [
+            'allowed_hosts' => 'attacker.example.test',
+            'kill_switch' => '1',
+        ]));
+        self::assertSame(
+            ['trusted.example.test'],
+            $settings->get('link_preview_allowed_hosts'),
+            'a suspended admin must not rewrite the host allowlist',
+        );
+        self::assertFalse((bool) $settings->get('link_preview_kill_switch'), 'nor the kill switch');
+
+        // 2. A board's opt-in — what the server is allowed to unfurl at all.
+        $this->assertStatus(403, $this->post('/admin/link-previews/boards/' . (int) $board['id'], ['enabled' => '1']));
+        self::assertSame(0, (int) $this->db->fetchValue(
+            'SELECT link_previews_enabled FROM boards WHERE id = ?',
+            [(int) $board['id']],
+        ), 'nor a board opt-in');
+
+        // 3 and 4. The per-row operator actions.
+        $this->assertStatus(403, $this->post('/admin/link-previews/' . $previewId . '/refresh'));
+        $this->assertStatus(403, $this->post('/admin/link-previews/' . $previewId . '/purge'));
+        self::assertSame('queued', (string) $this->db->fetchValue(
+            'SELECT status FROM link_previews WHERE id = ?',
+            [$previewId],
+        ), 'nor a preview row');
+
+        // A refused write is not an audited one.
+        self::assertSame(0, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE action LIKE 'link_preview_%'",
+        ));
+    }
     private function seedPreview(string $url, int $sourceId = 1): int
     {
         return $this->db->insert(
