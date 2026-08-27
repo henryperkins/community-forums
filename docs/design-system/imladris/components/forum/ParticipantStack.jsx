@@ -15,6 +15,11 @@ function initials(label) {
 /**
  * ParticipantStack — overlapping small avatars for a topic's participants, with
  * an optional "+N" overflow. Used in the conversation header.
+ *
+ * A member entry may carry `href` (the avatar becomes a link to where that
+ * person entered the conversation), `title` (the hover/AT description — their
+ * post count, whether they opened it or wrote the answer) and `gilt` (the gold
+ * ring that marks the opener). Bare names still work.
  */
 export function ParticipantStack({ members = [], max = 5, extra, className = '', ...rest }) {
   const shown = members.slice(0, max);
@@ -22,10 +27,14 @@ export function ParticipantStack({ members = [], max = 5, extra, className = '',
   return (
     <span className={['participant-stack', className].filter(Boolean).join(' ')} {...rest}>
       {shown.map((m, i) => {
-        const name = typeof m === 'string' ? m : m.name;
-        const seed = typeof m === 'string' ? m : (m.username || m.name);
+        const o = typeof m === 'string' ? { name: m } : m;
+        const seed = o.username || o.name;
+        const mono = (
+          <span className={['monogram', 'monogram-sm', monoClass(seed)].join(' ')} aria-hidden="true">{initials(o.name)}</span>
+        );
+        if (!o.href) return <React.Fragment key={i}>{mono}</React.Fragment>;
         return (
-          <span key={i} className={['monogram', 'monogram-sm', monoClass(seed)].join(' ')} aria-hidden="true">{initials(name)}</span>
+          <a key={i} className={o.gilt ? 'is-opener' : undefined} href={o.href} title={o.title || o.name} aria-label={o.title || o.name}>{mono}</a>
         );
       })}
       {overflow > 0 ? <span className="participant-more">+{overflow}</span> : null}

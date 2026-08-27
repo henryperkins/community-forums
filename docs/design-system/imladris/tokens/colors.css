@@ -92,12 +92,16 @@
     --warning: var(--amber);   --surface-review:  var(--gold-100);  --on-review:  #7E5F22;
     --pending: var(--ink-400); --surface-pending: var(--parchment-200); --on-pending: var(--ink-500);
     --info:    var(--river-500); --surface-info:  var(--river-100);  --on-info:    var(--river-700);
-    /* Staff is an authority mark rather than a status, but it takes the ledger's
-       shape so it flips register with everything else. The ink is one step darker
-       than --on-review so the badge never reads as the Needs answer chip. */
+    /* Staff — the one identity chip in the ledger. A semantic pair, never the
+       numbered ramp: gold-700 ink on gold-100 measures 3.55:1 (AA wants 4.5),
+       and the twilight block remaps only semantic tokens, so a numbered pairing
+       also renders a light chip on a dark page. This pair clears AA in both. */
     --surface-staff: var(--gold-100); --on-staff: var(--gold-800);
     --star:    var(--gold-600); /* the esteem star                              */
     --artifact-link: var(--river-500);
+    /* The scrim behind a drawer or modal. One value, so every overlay in the
+       system dims the page by the same amount. */
+    --scrim:         rgba(22,29,36,.42);
     --presence:      var(--leaf); /* the "online" leaf dot                      */
 
     /* ── Legacy aliases (kept so older rules recolour with the system) ────── */
@@ -155,6 +159,7 @@
     --info:    var(--river-400);  --surface-info:    rgba(63,110,137,.20); --on-info:    var(--river-200);
     --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --star:    var(--gold-400);
+    --scrim:   rgba(9,13,17,.58);
     --presence: var(--green-400);
     --focus-ring: rgba(210,176,98,.75);
 }

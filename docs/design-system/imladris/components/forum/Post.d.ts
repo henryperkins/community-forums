@@ -8,7 +8,13 @@ export interface PostProps extends React.HTMLAttributes<HTMLDivElement> {
   author: string;
   authorSeed?: string;
   authorHref?: string;
-  /** Author tier — renders a coloured tier pill beside the name. */
+  /**
+   * **DS extension** — renders a coloured tier pill beside the name. Production
+   * has no tier enum: `partials/post.php` prints one cosmetic
+   * `author_title_label` string in a single neutral chip. Use `authorTitle` for
+   * a production-faithful post and reserve `authorTier` for surfaces where the
+   * coloured ladder is the point (the board index, the leaderboard).
+   */
   authorTier?: 'Member' | 'Veteran' | 'Loremaster' | 'Legend';
   /** @handle for the signature line under the name. */
   handle?: string;
@@ -38,6 +44,17 @@ export interface PostProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * One message in a conversation.
+ * One message in a conversation — the compact post row: identity column, head
+ * row, body, reactions.
+ *
+ * **Scope.** This is the row for surfaces that quote or list a post: DM
+ * threads, search results, moderation queues, the design-system card. The
+ * thread-view template deliberately composes its own row from primitives
+ * instead, because a full reading surface needs things a post row should not
+ * grow: two byline placements (above the body / stacked in the gutter), an
+ * inline edit textarea, report and warden-removal panels docked under the
+ * body, per-post link and reference cards ordered after the prose, and a
+ * hover/focus action toolbar. Adding all of that here would make one component
+ * the whole page. Use `Post` for a post; compose for a thread.
  */
 export function Post(props: PostProps): JSX.Element;

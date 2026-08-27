@@ -228,3 +228,107 @@ lockstep, and they are here, both at `d39ee5a0…`. Refresh the baseline and sto
 resources/imladris/manifest.json"*. Refresh the baseline **and** re-run
 `composer build:imladris`, then commit both. Rehearsed on this branch: that sequence takes
 `check:imladris` to exit 0 and `verify:imladris` to 48/48 green.
+## 2026-08-27 — thread-view round-2 sync; four hunks held back, one taken back from us
+
+Imported from `CommunityForumDesignSystem.zip` (`design_handoff_thread_view/`), the
+round-2 thread-view handoff against project `c3e02753-607c-40b6-994c-9ba1a65bb367`. It
+ships `tokens/*.css`, `components.css`, the `templates/thread-view/` screen and its three
+runtime JS files, and seven components inlined as text in `components/SOURCE.md` (the
+bundle explains the inlining: loose `.jsx` in a design-system project is compiled and
+collides with the real components on the same window namespace).
+
+`config/imladris-design-baseline.json` is refreshed in the same commit as this sync:
+`d7f5e616…` → `3155990f…`. The screen's three `.js` files move it on their own —
+`design_surface` declares `"extensions": []`, which `ImladrisAssetBuilder::digestApplicationSurface()`
+reads as *every* file under `templates/` and `components/`, and only the binary
+`.thumbnail` previews are skipped by name. `config/imladris-runtime-baseline.json` is
+**not** touched: the application surface is byte-unchanged by this commit, which is why
+the sync had to land before the production slice at all (see the ordering note below).
+
+### One local correction retired into upstream
+
+`tokens/colors.css` — upstream has adopted the semantic `--surface-staff` / `--on-staff`
+pair raised on 2026-08-03 and now carries our reasoning verbatim in its own comment
+("gold-700 ink on gold-100 measures 3.55:1 … the twilight block remaps only semantic
+tokens"). The replacement comment is taken; the correction is now upstream's.
+
+### Four hunks held back
+
+- **`components.css` — the `.tier-legend` / `.tier-loremaster` / `.tier-veteran` revert.**
+  The loudest one. Upstream reverts all three tier chips from semantic pairs back to the
+  numbered ramps (`--gold-700` on `--gold-100`, `--green-800` on `--brand-subtle`,
+  `--river-700` on `--river-100`) and **deletes the eight-line comment explaining why they
+  were changed**. Re-verified against `tokens/colors.css` rather than taken on the mirror's
+  word: every numbered primitive in that set appears only inside `:root` and is never
+  redeclared in the `[data-theme="dark"]` block, while every semantic token we substituted
+  is declared in both. Taking it would put a light-register chip on a twilight page again,
+  and put dark ink on the dark brand wash. Held, and **raised upstream** — this is the
+  second time the same class of numbered-ramp pairing has come down from the authoring
+  bundle (cf. `.badge-staff` 2026-08-03, `.presence-staff` 2026-08-09).
+- **`tokens/colors.css` — the twilight `--surface-staff` / `--on-staff` re-tune**
+  (`rgba(194,154,68,.16)` → `.18`, `var(--gold-200)` → `#EBDAAC`). Upstream keeps the
+  semantic pair but de-tokenises the ink to an off-ramp literal that sits 1/1/4 from
+  `--gold-200`, i.e. visually identical, and every measured ratio drops: 8.28 → 8.07 over
+  `--surface-raised`, 9.34 → 9.09 over `--surface-page`, 7.03 → 6.88 over
+  `--surface-sunken`. The `8.3:1` this file pins above is that 8.28. Held; the `--scrim`
+  addition in the same hunk **is** taken.
+- **`components.css` — the AdminNav operator-cluster rewrite** (`.admin-bar-right`,
+  `-search`, `-bell`, `-bell-count`, `-user`, `-username`, `-signout`, plus reshaped
+  `-brand` / `-wordmark` / `-mode`). Held for the third sync running, on the grounds
+  recorded on 2026-08-09: upstream still drops `max-width: 100%` from `.admin-bar-brand`
+  and still deletes both media blocks that `3c5d096` added as ADR 0023 remediation, and
+  `app.css` styles neither `.admin-bar-id` nor `.admin-bar-wordmark`, so nothing
+  compensates. The `.admin-tier` scrollbar sliver in the same diff hunk (`--border-hair` →
+  `--border-soft`, twice) is **separable and taken**: it touches neither element and
+  `--border-soft` flips.
+- **`components.css` — removal of the `.presence-staff` local-correction comment.** Bound
+  to `.badge-staff` by the 2026-08-09 entry ("it stays until the `.badge-staff` hunk is
+  taken, so the two move together"). `.badge-staff`'s border → `color-mix(in srgb,
+  var(--on-staff) 30%, transparent)` is still a staff-chip repaint that belongs with a
+  review of the staff chip, and is inert anyway — `app.css:1631` declares the same
+  selector unlayered — so both stay held.
+
+Two further one-line hold-backs, both **inlining artifacts rather than upstream intent**:
+`components/identity/Monogram.d.ts:4` and `components/forum/Post.d.ts:4` lose their
+` * @startingPoint …` host directive in `SOURCE.md`'s text form, leaving an empty `/**` /
+`*/` docblock. `_ds_manifest.json` still carries the generated `startingPoints` entries
+with those exact `section` / `subtitle` / `viewport` strings, so taking the deletion would
+desynchronise the manifest from the file it is generated out of and drop both components
+from the gallery. Both lines restored; every other hunk in those two files taken.
+
+`components/identity/StarButton.{jsx,d.ts}` needed no sync at all — after CRLF
+normalisation the mirror was already byte-identical to the bundle, ✦ glyph and all. The
+handoff's B3 offender was never the component; it was the **screen**, which hand-rolled a
+`★` span, and taking `ThreadView.dc.html` is the whole of B3's mirror-side work. That file
+also clears a real collision: the mirror carried `@template name="Council topic"` twice,
+against `_ds_manifest.json`'s own `{"name": "Thread view"}` for this folder.
+
+### Ordering: the sync cannot ride with the production slice
+
+`build()` calls `expectedFiles()` on its first line, and `expectedFiles()` throws
+*"Production presentation changed after Imladris reconciliation"* the moment `templates/`
+or `public/assets/` drift from `config/imladris-runtime-baseline.json`. A slice branch may
+not contain a change to that baseline, so on any branch that edits both the mirror and the
+application, **`build:imladris` has to run before the application edits exist** — the
+handoff's Part C says "do this first" without saying that the builder enforces it. This
+commit is therefore the mirror sync alone, on a byte-clean application surface; the
+thread-view production slice lands on top of it.
+
+### Taken but currently inert, recorded so nobody hunts for the pixels
+
+The four genuinely new tokens have no consumer anywhere: `--text-fine`, `--scrim`,
+`--pane-w`, `--pane-min` are ledger additions, and `app.css` hard-codes the scrim colour in
+six places rather than reading a token. `--text-chip: 0.62rem → 0.7rem` is likewise a
+change to a **dead** custom property — `var(--text-chip)` has zero consumers in `app.css`,
+in the generated `imladris.css`, and in the mirror's own `components.css`, all three of
+which paint chips from a literal `.62rem`. Upstream's own `components.css:62` still says
+`.62rem` too, so the "scale floor" the handoff describes does not yet exist in either
+system. Moving it is a separate, deliberate slice against three literals — and note
+`app.css`'s `.tag` already sets `.6rem`, below the proposed floor. Do **not** sed
+`.62rem` → `.7rem`: `ImladrisRuntimeAssetTest` pins one of the eleven sites.
+
+One taken hunk does change pixels downstream and is worth knowing about before the next
+form slice: `.field-cell` gains `gap: 4px` from the layer, and `app.css:320` already gives
+`.field-cell > .field-error` a `margin: 4px 0 0` that the layer cannot override. Left as
+found here rather than widened into a form slice; it is 4px of extra air under a rejected
+field, not a break.

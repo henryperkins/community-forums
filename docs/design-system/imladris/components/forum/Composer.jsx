@@ -83,9 +83,14 @@ export function Composer({
   showAvatar = true,      // honors the user's show_avatars preference
   allowAnonymous = false,
   anonymousChecked = false,
+  onAnonymousChange,      // (checked) — without it the chip is decoration
   anonymousDisclosure = 'Your name is hidden from other members; moderators can still see it.',
   toolbarOpen = true,     // the Aa row state (production default: open)
   activeFormats,          // e.g. ['bold'] — aria-pressed specimens
+  onFormat,               // (key) — a toolbar press; keys are TOOLBAR_ORDER
+  onDiscard,              // the "Draft saved · Discard" action
+  onAttach,               // () — the attach ＋ ; omit and the button is a specimen
+  onEmoji,                // () — the emoji 😊 ; omit and the button is a specimen
   error,                  // field error shown inside the box, above the input
   uploads,                // [{ name, thumb, status, progress, failed, alt }]
   draftSaved = false,
@@ -105,13 +110,18 @@ export function Composer({
 }) {
   const [fmtOpen, setFmtOpen] = React.useState(!!toolbarOpen);
   const [moreOpen, setMoreOpen] = React.useState(false);
-  const [anon, setAnon] = React.useState(!!anonymousChecked);
+  const anonId = React.useId();
+  const anon = onAnonymousChange ? !!anonymousChecked : undefined;
+  const [anonLocal, setAnonLocal] = React.useState(!!anonymousChecked);
   const [showPreview, setShowPreview] = React.useState(!!previewOpen);
   const active = new Set(activeFormats || []);
   const cls = ['composer', 'composer-shell', submitting ? 'is-submitting' : '', className].filter(Boolean).join(' ');
   const seed = identitySeed || identity;
+  // noValidate: the composer renders its own .field-error in the lapidary
+  // register, so the browser's native "Please fill out this field." tooltip
+  // must not pre-empt onSubmit. Consumers can opt back in via rest.
   return (
-    <form className={cls} data-composer-context={context} aria-busy={submitting || undefined} onSubmit={onSubmit} {...rest}>
+    <form className={cls} data-composer-context={context} aria-busy={submitting || undefined} noValidate onSubmit={onSubmit} {...rest}>
       {header}
       <div className="composer-box">
         <div className="composer-format-slot">
@@ -124,7 +134,8 @@ export function Composer({
                   <button type="button" className={'composer-toolbar-action' + (ESSENTIAL[k] ? ' is-essential' : '')}
                     aria-label={a.label + sc} data-tip={a.label + (a.shortcut ? ' · Ctrl+' + a.shortcut : '')}
                     aria-keyshortcuts={a.shortcut ? 'Control+' + a.shortcut + ' Meta+' + a.shortcut : undefined}
-                    aria-pressed={active.has(k)} disabled={disabled}>
+                    aria-pressed={active.has(k)} disabled={disabled}
+                    onClick={onFormat ? () => onFormat(k) : undefined}>
                     <ActionIcon k={k} />
                   </button>
                   {GROUP_BREAKS[k] ? <span className="composer-toolbar-sep" aria-hidden="true"></span> : null}
@@ -140,7 +151,7 @@ export function Composer({
             <div className="composer-format-overflow" role="group" aria-label="More formatting">
               {OVERFLOW_ORDER.map((k) => (
                 <button type="button" key={k} className="composer-overflow-action" aria-pressed={active.has(k)}
-                  onClick={() => setMoreOpen(false)}>{TOOLBAR_ACTIONS[k].label}</button>
+                  onClick={() => { setMoreOpen(false); if (onFormat) onFormat(k); }}>{TOOLBAR_ACTIONS[k].label}</button>
               ))}
             </div>
           ) : null}
@@ -170,8 +181,8 @@ export function Composer({
           <div className="composer-actions-start">
             <button type="button" className="composer-format-toggle" aria-label="Formatting"
               aria-expanded={fmtOpen} onClick={() => setFmtOpen(!fmtOpen)} disabled={disabled}>Aa</button>
-            <button type="button" className="composer-attach-toggle" aria-label="Attach images" title="Attach images" disabled={disabled}>＋</button>
-            <button type="button" className="composer-emoji-toggle" aria-label="Emoji" aria-haspopup="dialog" disabled={disabled}>😊</button>
+            <button type="button" className="composer-attach-toggle" aria-label="Attach images" title="Attach images" disabled={disabled || !onAttach} onClick={onAttach}>＋</button>
+            <button type="button" className="composer-emoji-toggle" aria-label="Emoji" aria-haspopup="dialog" disabled={disabled || !onEmoji} onClick={onEmoji}>😊</button>
             {actionsStart}
             {identity ? (
               <span className="composer-identity" dir="auto">
@@ -181,8 +192,10 @@ export function Composer({
             ) : null}
             {allowAnonymous ? (
               <span className="composer-anonymous-chip">
-                <input type="checkbox" id="composer-anon" checked={anon} onChange={(e) => setAnon(e.target.checked)} disabled={disabled} />
-                <label htmlFor="composer-anon">Anonymous</label>
+                <input type="checkbox" id={anonId} checked={anon != null ? anon : anonLocal}
+                  onChange={(e) => (onAnonymousChange ? onAnonymousChange(e.target.checked) : setAnonLocal(e.target.checked))}
+                  disabled={disabled} />
+                <label htmlFor={anonId}>Anonymous</label>
               </span>
             ) : null}
           </div>
@@ -198,7 +211,7 @@ export function Composer({
       </div>
       <div className="composer-meta-row">
         <span className="composer-meta-draft">
-          {draftSaved ? <>Draft saved · <button type="button" className="linkbtn composer-discard" aria-label="Discard draft">Discard</button></> : null}
+          {draftSaved ? <>Draft saved · <button type="button" className="linkbtn composer-discard" aria-label="Discard draft" onClick={onDiscard}>Discard</button></> : null}
         </span>
         {allowAnonymous ? <span className="composer-anonymous-disclosure">{anonymousDisclosure}</span> : <span></span>}
         {count != null ? <span className={'composer-count' + (countOver ? ' over' : '')}>{count}</span> : null}
