@@ -299,11 +299,16 @@ final class ThreadRepository
                  FROM threads t
                  JOIN visible_boards vb ON vb.board_id = t.board_id
                  JOIN users u ON u.id = t.user_id
+                 -- Anonymity is a property of the OP that survives its
+                 -- moderation state, so this join matches the canonical one in
+                 -- listBoardRows and does NOT filter on is_deleted/is_pending.
+                 -- Filtering here made COALESCE fail OPEN: a thread whose OP
+                 -- was soft-deleted lost the row carrying is_anonymous = 1,
+                 -- defaulted to 0, and the peek printed the real author of a
+                 -- topic that was posted anonymously.
                  LEFT JOIN posts op
                    ON op.thread_id = t.id
                   AND op.is_op = 1
-                  AND op.is_deleted = 0
-                  AND op.is_pending = 0
                  LEFT JOIN reaction_counts rc ON rc.thread_id = t.id
                  WHERE t.is_deleted = 0 AND t.is_pending = 0
              ),

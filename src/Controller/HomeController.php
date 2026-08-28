@@ -98,12 +98,19 @@ final class HomeController extends Controller
             );
         }
 
+        // The Notices tab's dot exists so a member reading ANOTHER pane learns
+        // something is waiting (BoardIndex.dc.html:620). Computing the count
+        // only while on the Notices pane put it in the one place it can say
+        // nothing new, so the count is resolved for every pane and only the
+        // list itself is loaded on demand.
         $notifications = [];
         $notificationUnread = 0;
-        if ($pane === 'notices' && $user !== null) {
+        if ($user !== null && !empty($availablePanes['notices'])) {
             $notificationRepo = $this->container->get(NotificationRepository::class);
-            $notifications = $notificationRepo->recent($user->id(), 30);
             $notificationUnread = $notificationRepo->unreadCount($user->id());
+            if ($pane === 'notices') {
+                $notifications = $notificationRepo->recent($user->id(), 30);
+            }
         }
 
         $connectionMode = $request->query('connection') === 'following' ? 'following' : 'followers';

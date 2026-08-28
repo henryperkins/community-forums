@@ -270,12 +270,15 @@ final class AppForumIndexViewingTest extends TestCase
         $this->assertDirectoryPane($body, $pane);
         self::assertStringContainsString('data-directory-sort="' . $sort . '"', $body);
         self::assertStringContainsString('data-directory-peek="' . $peek . '"', $body);
+        // A member's controls are <button aria-pressed>; a guest's are <a>, which
+        // may not carry aria-pressed at all (ADR 0028), so the selected link
+        // states itself with aria-current instead. Either is the "on" state.
         self::assertMatchesRegularExpression(
-            '~data-directory-sort-option="' . preg_quote($sort, '~') . '"[^>]*aria-pressed="true"~',
+            '~data-directory-sort-option="' . preg_quote($sort, '~') . '"[^>]*aria-(?:pressed|current)="true"~',
             $body,
         );
         self::assertMatchesRegularExpression(
-            '~data-directory-peek-option="' . $peek . '"[^>]*aria-pressed="true"~',
+            '~data-directory-peek-option="' . $peek . '"[^>]*aria-(?:pressed|current)="true"~',
             $body,
         );
     }

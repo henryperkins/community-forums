@@ -2031,13 +2031,17 @@ body[data-route="inbox"] .main { overflow: hidden; }
     border-bottom-color: var(--gold-500);
     color: var(--text-strong);
 }
+/* --gold-ink, not --gold-500: the numbered gold is a single primitive the
+   twilight register never remaps, and at 6px this is a non-text cue that has to
+   clear 3:1 against the page in BOTH registers. --gold-ink is semantic and
+   flips with the register, so it clears the floor in each. */
 .directory-tab-dot {
     display: inline-block;
     width: 6px;
     height: 6px;
     margin-left: 5px;
     border-radius: 50%;
-    background: var(--gold-500);
+    background: var(--gold-ink);
     vertical-align: middle;
 }
 .forum-directory__hero { max-width: 680px; padding: 0; }
@@ -2136,7 +2140,9 @@ body[data-route="inbox"] .main { overflow: hidden; }
     text-decoration: none;
 }
 .directory-viewbar__choices [aria-pressed="true"],
+.directory-viewbar__choices [aria-current="true"],
 .directory-viewbar__peek [aria-pressed="true"],
+.directory-viewbar__peek [aria-current="true"],
 .search-scope-options a.is-active,
 .search-order-options a.is-active,
 .inbox-order a.is-active {
@@ -2158,7 +2164,8 @@ body[data-route="inbox"] .main { overflow: hidden; }
     letter-spacing: .12em;
     text-transform: uppercase;
 }
-.directory-viewbar__peek [aria-pressed="true"] {
+.directory-viewbar__peek [aria-pressed="true"],
+.directory-viewbar__peek [aria-current="true"] {
     background: var(--surface-raised);
     box-shadow: var(--shadow-xs);
     color: var(--text-strong);
@@ -2310,9 +2317,196 @@ body[data-route="inbox"] .main { overflow: hidden; }
     color: var(--text-faint);
     font-style: italic;
 }
+/* Compact is the triage register, so the description is the first thing to go
+   (BoardIndex.dc.html:607). The peek is NOT: it is the reader's own explicit
+   Peek choice from the Viewing bar, and hiding it here silently overrode a
+   control the bar still showed as On. Compact only tightens its padding. */
 [data-density="compact"] .forum-directory__board-row { padding: 7px 0; }
-[data-density="compact"] .forum-directory__board-description,
-[data-density="compact"] .forum-directory__peek { display: none; }
+[data-density="compact"] .forum-directory__board-description { display: none; }
+[data-density="compact"] .forum-directory__peek { padding-bottom: 8px; }
+
+/* Board index — the account-adjacent panes (Tags, Notices, Connections).
+   These share the board index's shell rather than a shell of their own
+   (BoardIndex.dc.html:89-91), so they get the surface's own type and rules
+   instead of a second visual language. Every colour here is a semantic token:
+   the register has to flip with the theme, which the numbered golds do not. */
+/* Notices puts its h1 inside .directory-pane-heading so the two actions can
+   share its baseline, so both positions get the same heading treatment — the
+   four panes must not drift apart on their own titles. */
+.directory-light-pane > h1,
+.directory-pane-heading > h1 {
+    margin: 0;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: var(--weight-medium);
+    letter-spacing: -.01em;
+    line-height: 1.08;
+}
+.directory-light-pane > h1 > span {
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: var(--weight-regular);
+}
+.directory-light-pane > h1 > span a { color: inherit; text-decoration: none; }
+.directory-light-pane > h1 > span a:hover { color: var(--accent); }
+.directory-light-pane > p {
+    max-width: 56ch;
+    margin: 11px 0 0;
+    color: var(--text-muted);
+    font-size: 1.02rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+}
+.directory-pane-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+}
+.directory-pane-heading h1 { flex: 1 1 auto; min-width: 0; }
+.directory-pane-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: baseline;
+    gap: 18px;
+}
+.directory-pane-actions form { display: contents; }
+.directory-signin-state { margin: 20px 0 0; color: var(--text-muted); }
+
+/* Tags — pills, because a tag is a thing you pick up, not a row you scan. */
+.directory-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.directory-tag-list a {
+    display: inline-flex;
+    min-height: 34px;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 15px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-pill);
+    color: var(--text-body);
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+}
+.directory-tag-list a:hover {
+    border-color: var(--border-soft);
+    background: var(--gold-soft);
+    color: var(--text-strong);
+    text-decoration: none;
+}
+.directory-tag-list a > span:first-child { font-family: var(--font-label); font-size: .92rem; }
+.directory-tag-list a > span + span { color: var(--text-faint); font-family: var(--font-mono); font-size: .7rem; }
+
+/* Notices — one fact about your account per line. */
+.directory-notice-list {
+    margin: 22px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.directory-notice-list li { border-bottom: 1px solid var(--border-hair); }
+.directory-notice-list form { display: contents; }
+.directory-notice-list button {
+    display: grid;
+    width: 100%;
+    min-height: 44px;
+    grid-template-columns: 6px minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 14px;
+    padding: 13px 2px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.directory-notice-list button:hover .directory-notice-text { color: var(--text-strong); }
+.directory-notice-mark {
+    width: 6px;
+    height: 6px;
+    align-self: center;
+    border-radius: 50%;
+    background: transparent;
+}
+.directory-notice-list li.is-unread .directory-notice-mark { background: var(--gold-ink); }
+.directory-notice-text {
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: .99rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.directory-notice-list li.is-unread .directory-notice-text { color: var(--text-body); }
+.directory-notice-list li.is-unread .directory-notice-topic { color: var(--text-strong); }
+.directory-notice-topic { font-style: italic; }
+.directory-notice-list time {
+    flex: 0 0 auto;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .71rem;
+    white-space: nowrap;
+}
+
+/* Connections — followers and following. */
+.directory-connection-tabs {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin: 26px 0 4px;
+    border-bottom: 1px solid var(--border-hair);
+}
+.directory-connection-tabs a {
+    padding: 0 0 9px;
+    border-bottom: 2px solid transparent;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .88rem;
+    letter-spacing: .03em;
+    text-decoration: none;
+}
+.directory-connection-tabs a:hover { color: var(--text-body); text-decoration: none; }
+.directory-connection-tabs a[aria-current="page"] {
+    border-bottom-color: var(--gold-ink);
+    color: var(--text-strong);
+}
+.directory-people-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.directory-people-list li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.directory-people-list li > .monogram { flex: 0 0 auto; width: 38px; height: 38px; }
+.directory-people-list li > span { flex: 1 1 auto; min-width: 0; }
+.directory-people-list li > span > a {
+    display: block;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.14rem;
+    font-weight: var(--weight-medium);
+    text-decoration: none;
+}
+.directory-people-list li > span > a:hover { color: var(--accent); text-decoration: none; }
+.directory-people-list li > span > span {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .73rem;
+}
+.directory-people-list form { flex: 0 0 auto; }
 
 /* Forum inbox */
 .inbox-shell {
@@ -2998,8 +3192,23 @@ body[data-route="inbox"] .main { overflow: hidden; }
     .topbar-inner { padding: 0 9px; gap: 5px; }
     .topbar-primary { min-width: 0; overflow-x: auto; gap: 1px; }
     .topbar-primary-link { min-height: 40px; padding: 6px 8px; font-size: .74rem; }
-    .topbar-search-entry,
     .topbar-panel-form { display: none; }
+    /* Search must stay reachable on a phone. The rail used to carry a
+       mobile-only Search link; the board-index rail rewrite dropped it, and
+       hiding the topbar entry here too left /search with no route into it at
+       any width below 861px. The entry collapses to its icon instead, the same
+       move New topic makes beside it. */
+    .topbar-search-entry {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        height: 40px;
+        flex: 0 0 auto;
+        justify-content: center;
+        padding: 0;
+    }
+    .topbar-search-copy,
+    .topbar-search-entry kbd { display: none; }
     .topbar-right { flex: 0 0 auto; gap: 2px; }
     .topbar-new-topic { width: 40px; min-width: 40px; height: 40px; padding: 0; justify-content: center; }
     .topbar-new-topic span { display: none; }
@@ -3061,6 +3270,20 @@ body[data-route="inbox"] .main { overflow: hidden; }
         inset: 0;
         background: color-mix(in srgb, var(--text-strong) 42%, transparent);
         content: "";
+    }
+    /* Without JavaScript a <details> can only be closed by its own <summary>,
+       so the summary must never sit under the scrim. It did — the scrim is a
+       child of this element and outranked it — which left the sheet with no
+       way back. Raising the open disclosure into its own stacking context and
+       lifting the summary above both scrim and panel restores the close path
+       and reads as a lit hole in the scrim. */
+    .directory-viewbar-mobile[open] { z-index: 70; }
+    .directory-viewbar-mobile[open] > summary {
+        position: relative;
+        z-index: 72;
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        background: var(--surface-raised);
+        color: var(--text-strong);
     }
     .directory-viewbar-mobile-panel {
         position: fixed;

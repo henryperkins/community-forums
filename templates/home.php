@@ -33,19 +33,26 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
     ], $changes));
 };
 $paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notices', 'connections' => 'Connections'];
+// The design's notice names the topic it is about — "Galadriel mentioned you in
+// 'Evaluations as ritual, not gate'" (BoardIndex.dc.html:448). recent() already
+// selects thread_title, so the verb and the topic are returned separately and
+// the topic is rendered in its own element rather than concatenated into one
+// string: only the topic is quoted, and only the topic changes weight when the
+// notice is unread.
 $notificationVerb = static function (array $notice): string {
     $actor = ($notice['actor_display_name'] ?? '') !== ''
         ? (string) $notice['actor_display_name']
         : (string) ($notice['actor_username'] ?? 'Someone');
+    $named = ($notice['thread_title'] ?? '') !== '';
     return match ((string) ($notice['type'] ?? '')) {
-        'reply' => $actor . ' replied',
-        'new_thread' => $actor . ' started a topic',
-        'new_post' => $actor . ' posted',
-        'mention' => $actor . ' mentioned you',
-        'reaction' => $actor . ' reacted to your post',
+        'reply' => $actor . ($named ? ' replied to' : ' replied'),
+        'new_thread' => $actor . ($named ? ' opened' : ' started a topic'),
+        'new_post' => $actor . ($named ? ' posted in' : ' posted'),
+        'mention' => $actor . ($named ? ' mentioned you in' : ' mentioned you'),
+        'reaction' => $actor . ' commended your post',
         'follow' => $actor . ' followed you',
         'badge' => 'You earned a badge',
-        'solved' => 'Your answer was accepted',
+        'solved' => 'Your answer was accepted' . ($named ? ' in' : ''),
         'dm' => $actor . ' sent you a message',
         'mod' => 'A moderator action affects you',
         'announcement' => 'A new announcement was published',
@@ -89,7 +96,7 @@ $notificationVerb = static function (array $notice): string {
                                 <button type="submit" data-directory-sort-option="<?= $e($sortKey) ?>" aria-pressed="<?= $sort === $sortKey ? 'true' : 'false' ?>"><?= $e($label) ?></button>
                             </form>
                         <?php else: ?>
-                            <a href="<?= $e($return) ?>" data-directory-sort-option="<?= $e($sortKey) ?>" aria-pressed="<?= $sort === $sortKey ? 'true' : 'false' ?>"><?= $e($label) ?></a>
+                            <a href="<?= $e($return) ?>" data-directory-sort-option="<?= $e($sortKey) ?>"<?= $sort === $sortKey ? ' aria-current="true"' : '' ?>><?= $e($label) ?></a>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
@@ -105,7 +112,7 @@ $notificationVerb = static function (array $notice): string {
                                 <button type="submit" data-directory-peek-option="<?= $peekValue ?>" aria-pressed="<?= $peek === $peekValue ? 'true' : 'false' ?>"><?= $peekValue === 0 ? 'Off' : $peekValue ?></button>
                             </form>
                         <?php else: ?>
-                            <a href="<?= $e($return) ?>" data-directory-peek-option="<?= $peekValue ?>" aria-pressed="<?= $peek === $peekValue ? 'true' : 'false' ?>"><?= $peekValue === 0 ? 'Off' : $peekValue ?></a>
+                            <a href="<?= $e($return) ?>" data-directory-peek-option="<?= $peekValue ?>"<?= $peek === $peekValue ? ' aria-current="true"' : '' ?>><?= $peekValue === 0 ? 'Off' : $peekValue ?></a>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
@@ -127,7 +134,7 @@ $notificationVerb = static function (array $notice): string {
                                     <button type="submit" data-directory-sort-option="<?= $e($sortKey) ?>" aria-pressed="<?= $sort === $sortKey ? 'true' : 'false' ?>"><?= $e($label) ?></button>
                                 </form>
                             <?php else: ?>
-                                <a href="<?= $e($return) ?>" data-directory-sort-option="<?= $e($sortKey) ?>" aria-pressed="<?= $sort === $sortKey ? 'true' : 'false' ?>"><?= $e($label) ?></a>
+                                <a href="<?= $e($return) ?>" data-directory-sort-option="<?= $e($sortKey) ?>"<?= $sort === $sortKey ? ' aria-current="true"' : '' ?>><?= $e($label) ?></a>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
@@ -143,7 +150,7 @@ $notificationVerb = static function (array $notice): string {
                                     <button type="submit" data-directory-peek-option="<?= $peekValue ?>" aria-pressed="<?= $peek === $peekValue ? 'true' : 'false' ?>"><?= $peekValue === 0 ? 'Off' : $peekValue ?></button>
                                 </form>
                             <?php else: ?>
-                                <a href="<?= $e($return) ?>" data-directory-peek-option="<?= $peekValue ?>" aria-pressed="<?= $peek === $peekValue ? 'true' : 'false' ?>"><?= $peekValue === 0 ? 'Off' : $peekValue ?></a>
+                                <a href="<?= $e($return) ?>" data-directory-peek-option="<?= $peekValue ?>"<?= $peek === $peekValue ? ' aria-current="true"' : '' ?>><?= $peekValue === 0 ? 'Off' : $peekValue ?></a>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
@@ -151,7 +158,7 @@ $notificationVerb = static function (array $notice): string {
                 </div>
             </details>
 
-            <p class="directory-order-note"><?= $e($orderNotes[$sort] ?? $orderNotes['category']) ?> · <?= (int) $totals['boards'] ?> boards · the same order every member sees.</p>
+            <p class="directory-order-note"><?= $e($orderNotes[$sort] ?? $orderNotes['category']) ?> · <?= (int) $totals['boards'] ?> board<?= (int) $totals['boards'] === 1 ? '' : 's' ?> · the same order every member sees.</p>
             <?php if ($current_user === null): ?>
                 <p class="directory-guest-note">Order and peek are yours to set as a guest. <a href="/login?next=%2F">Log in</a> to have this view remembered, and to keep a queue of your own.</p>
             <?php endif; ?>
@@ -199,9 +206,12 @@ $notificationVerb = static function (array $notice): string {
             <header class="directory-pane-heading">
                 <h1>Notices</h1>
                 <?php if ($current_user !== null && !empty($notifications)): ?>
+                    <?php /* The design disables Mark all read when nothing is
+                             unread (BoardIndex.dc.html:244) — offering it with
+                             nothing to mark states a queue that is not there. */ ?>
                     <div class="directory-pane-actions">
-                        <form method="post" action="/notifications/read-all"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Mark all read</button></form>
-                        <form method="post" action="/notifications/clear"><?= $this->csrfField() ?><button class="linkbtn danger" type="submit">Clear</button></form>
+                        <form method="post" action="/notifications/read-all"><?= $this->csrfField() ?><input type="hidden" name="return" value="/?pane=notices"><button class="linkbtn" type="submit"<?= (int) ($notification_unread ?? 0) === 0 ? ' disabled' : '' ?>>Mark all read</button></form>
+                        <form method="post" action="/notifications/clear"><?= $this->csrfField() ?><input type="hidden" name="return" value="/?pane=notices"><button class="linkbtn danger" type="submit">Clear</button></form>
                     </div>
                 <?php endif; ?>
             </header>
@@ -213,10 +223,17 @@ $notificationVerb = static function (array $notice): string {
             <?php else: ?>
                 <ul class="directory-notice-list">
                     <?php foreach ($notifications as $notice): ?>
-                        <li class="<?= (int) $notice['is_read'] === 0 ? 'is-unread' : 'is-read' ?>">
+                        <?php $unread = (int) $notice['is_read'] === 0; ?>
+                        <li class="<?= $unread ? 'is-unread' : 'is-read' ?>">
                             <form method="post" action="/notifications/<?= (int) $notice['id'] ?>/read">
                                 <?= $this->csrfField() ?>
-                                <button type="submit"><span><?= $e($notificationVerb($notice)) ?></span><time datetime="<?= $e(iso_datetime((string) $notice['created_at'])) ?>"><?= $e(relative_datetime((string) $notice['created_at'])) ?></time></button>
+                                <button type="submit">
+                                    <?php /* The mark carries its own text, so unread
+                                             never rests on colour alone. */ ?>
+                                    <span class="directory-notice-mark"><?php if ($unread): ?><span class="sr-only">Unread.</span><?php endif; ?></span>
+                                    <span class="directory-notice-text"><?= $e($notificationVerb($notice)) ?><?php if (($notice['thread_title'] ?? '') !== ''): ?> <span class="directory-notice-topic">“<?= $e((string) $notice['thread_title']) ?>”</span><?php endif; ?></span>
+                                    <time datetime="<?= $e(iso_datetime((string) $notice['created_at'])) ?>"><?= $e(relative_datetime((string) $notice['created_at'])) ?></time>
+                                </button>
                             </form>
                         </li>
                     <?php endforeach; ?>

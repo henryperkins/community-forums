@@ -73,14 +73,28 @@ final class NotificationController extends Controller
     {
         $user = $this->requireNotifications();
         $this->container->get(NotificationRepository::class)->markAllRead($user->id());
-        return $this->redirectWithFlash('/notifications', 'All notifications marked read.');
+        return $this->redirectWithFlash($this->returnTo($request), 'All notifications marked read.');
     }
 
     public function clear(Request $request): Response
     {
         $user = $this->requireNotifications();
         $this->container->get(NotificationRepository::class)->clear($user->id());
-        return $this->redirectWithFlash('/notifications', 'Notifications cleared.');
+        return $this->redirectWithFlash($this->returnTo($request), 'Notifications cleared.');
+    }
+
+    /**
+     * Notices is a pane of the board index as well as a standalone page, so a
+     * bulk action has to land back where it was invoked rather than always on
+     * /notifications — being thrown to a different surface reads as a
+     * navigation, not a mark. Same guard as SettingsController: a leading "/"
+     * not followed by "/" or "\", so an absolute or protocol-relative target
+     * can never be smuggled in.
+     */
+    private function returnTo(Request $request): string
+    {
+        $return = (string) $request->post('return', '');
+        return preg_match('#^/(?![/\\\\])#', $return) === 1 ? $return : '/notifications';
     }
 
     private function requireNotifications(): User
