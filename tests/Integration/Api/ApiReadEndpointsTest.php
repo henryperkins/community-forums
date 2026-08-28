@@ -103,7 +103,7 @@ final class ApiReadEndpointsTest extends TestCase
         $board = $this->makeBoard($this->makeCategory(), ['visibility' => 'public']);
         $author = $this->makeUser();
         for ($i = 0; $i < 25; $i++) {
-            $this->makeThread($board, $author, 'T' . $i, 'body');
+            $this->makeThread($board, $author, 'Topic ' . $i, 'body');
         }
         // read:boards but NOT read:threads → 403 on threads.
         self::assertSame(403, $this->apiGet('/api/v1/boards/' . $board['id'] . '/threads', $this->mintToken(['read:boards']))->status());

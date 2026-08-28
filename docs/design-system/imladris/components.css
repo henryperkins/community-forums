@@ -1792,6 +1792,13 @@ body[data-route="inbox"] .main { overflow: hidden; }
     font-family: var(--font-label);
     font-size: .74rem;
 }
+.board-index .forum-directory__hero > p a,
+.directory-viewbar__density a,
+.inbox-density a {
+    text-decoration: underline;
+    text-decoration-thickness: .06em;
+    text-underline-offset: .14em;
+}
 .directory-viewbar-mobile { display: none; }
 .directory-order-note,
 .search-result-count,

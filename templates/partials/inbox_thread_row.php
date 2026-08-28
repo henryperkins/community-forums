@@ -20,7 +20,7 @@ $replyCount = (int) ($t['reply_count'] ?? 0);
     <span class="inbox-row-select">
         <input id="inbox-select-<?= $threadId ?>" type="checkbox" name="thread_ids[]" value="<?= $threadId ?>" form="inbox-bulk-form" data-inbox-select aria-label="Select <?= $e($t['title']) ?>">
     </span>
-    <span class="unread-slot"><?php if ($unread): ?><span class="unread-dot" title="Unread" aria-label="Unread"></span><?php endif; ?></span>
+    <span class="unread-slot"><?php if ($unread): ?><span class="unread-dot" title="Unread" role="img" aria-label="Unread"></span><?php endif; ?></span>
     <?php if ($show_avatars ?? true): ?><?= $this->partial('partials/monogram', ['name' => $author['mono_name'], 'username' => $author['mono_seed']]) ?><?php endif; ?>
     <div class="inbox-row-main">
         <div class="inbox-row-heading">

@@ -715,7 +715,7 @@ final class AppFeatureFlagTest extends TestCase
         $this->makeUser(['username' => 'gdmcarol']);
         $this->makeUser(['username' => 'gdmdana']);
         // Give the owner a post so they clear the new-account DM anti-spam throttle.
-        $this->makeThread($this->makeBoard($this->makeCategory()), $owner, 'Hi', 'establishing a post.');
+        $this->makeThread($this->makeBoard($this->makeCategory()), $owner, 'Hello', 'establishing a post.');
         $this->actingAs($owner);
 
         // Available by default: a group create (extra recipient + title)

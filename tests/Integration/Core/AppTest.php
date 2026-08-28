@@ -108,7 +108,8 @@ final class AppTest extends TestCase
         $response = $this->get('/');
 
         $this->assertStatus(200, $response);
-        self::assertLessThanOrEqual(8, $this->db->metrics()['queries']);
+        // The shared rail now includes one bounded public-presence query.
+        self::assertLessThanOrEqual(9, $this->db->metrics()['queries']);
     }
 
     public function test_layout_versions_core_assets_for_edge_caching(): void

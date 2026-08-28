@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -16,10 +17,10 @@ const memberSurfaceReferences = path.join(
 );
 
 const visualSurfaces = [
-  { name: '01-board-index', route: '/?sort=unanswered&peek=3', width: 924 },
-  { name: '02-forum-inbox', route: '/inbox?scope=for_you&order=active', width: 924 },
-  { name: '03-search', route: '/search?q=keyboard&scope=all&order=relevance', width: 924 },
-  { name: '04-compose', route: '/compose?board=general', width: 909 },
+  { name: '01-board-index', route: '/?sort=unanswered&peek=3', width: 924, heading: 'Every board in the valley' },
+  { name: '02-forum-inbox', route: '/inbox?scope=for_you&order=active', width: 924, heading: 'Forum inbox' },
+  { name: '03-search', route: '/search?q=keyboard&scope=all&order=relevance', width: 924, heading: 'Search the council' },
+  { name: '04-compose', route: '/compose?board=general', width: 909, heading: 'Open a topic' },
 ] as const;
 
 function seedFixture(): void {
@@ -49,6 +50,29 @@ async function expectNoOverflow(page: Page): Promise<void> {
   expect(widths.scroll, JSON.stringify(widths)).toBeLessThanOrEqual(widths.client);
 }
 
+function captureBrowserMessages(page: Page): string[] {
+  const entries: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') entries.push(`${message.type()}: ${message.text()}`);
+  });
+  page.on('pageerror', (error) => entries.push(`pageerror: ${error.message}`));
+  page.on('response', (response) => {
+    if (response.status() >= 400) entries.push(`http ${response.status()}: ${response.url()}`);
+  });
+  return entries;
+}
+
+async function expectNoSeriousA11yViolations(page: Page): Promise<void> {
+  const result = await new AxeBuilder({ page })
+    .include('#main')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze();
+  expect(
+    result.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical'),
+    'serious/critical member-surface accessibility violations',
+  ).toEqual([]);
+}
+
 async function waitForVisualReady(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.evaluate(async () => {
@@ -61,6 +85,7 @@ async function captureComparison(page: Page, name: string, width: number): Promi
   const reference = fs.readFileSync(path.join(memberSurfaceReferences, `${name}.png`)).toString('base64');
   const production = fs.readFileSync(path.join(memberSurfaceEvidence, 'desktop', `${name}.png`)).toString('base64');
   const gap = 24;
+  await page.goto('about:blank');
   await page.setViewportSize({ width: (width * 2) + gap + 48, height: 680 });
   await page.setContent(`<!doctype html>
     <html lang="en"><head><meta charset="utf-8"><title>${name} comparison</title>
@@ -81,12 +106,16 @@ async function captureComparison(page: Page, name: string, width: number): Promi
   await page.screenshot({ path: output, fullPage: true, animations: 'disabled' });
 }
 
-async function newNoJsPage(browser: Browser, baseURL: string): Promise<Page> {
+async function newNoJsPage(
+  browser: Browser,
+  baseURL: string,
+  viewport: { width: number; height: number } = { width: 1280, height: 800 },
+): Promise<Page> {
   const context = await browser.newContext({
     baseURL,
     javaScriptEnabled: false,
     reducedMotion: 'reduce',
-    viewport: { width: 1280, height: 800 },
+    viewport,
   });
   const page = await context.newPage();
   await login(page);
@@ -315,7 +344,8 @@ test('member surfaces keep their no-JavaScript routes and forms', async ({ brows
   await nojs.context().close();
 });
 
-test('member surfaces produce same-state visual evidence at the handoff and mobile viewports', async ({ page }, info) => {
+test('member surfaces produce same-state visual evidence at the handoff and mobile viewports', async ({ page, browser, baseURL }, info) => {
+  const messages = captureBrowserMessages(page);
   await login(page);
   const project = info.project.name === 'mobile' ? 'mobile' : 'desktop';
   const outputDir = path.join(memberSurfaceEvidence, project);
@@ -328,12 +358,24 @@ test('member surfaces produce same-state visual evidence at the handoff and mobi
     const response = await page.goto(surface.route, { waitUntil: 'load' });
     expect(response).not.toBeNull();
     expect(response!.status()).toBeLessThan(400);
+    await expect(page.locator('.topbar')).toBeVisible();
+    await expect(page.locator('#main')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: surface.heading })).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
     await waitForVisualReady(page);
     await page.evaluate(() => window.scrollTo(0, 0));
     await expectNoOverflow(page);
+    await expectNoSeriousA11yViolations(page);
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+    await waitForVisualReady(page);
     await page.screenshot({
       path: path.join(outputDir, `${surface.name}.png`),
+      animations: 'disabled',
+    });
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await waitForVisualReady(page);
+    await page.screenshot({
+      path: path.join(outputDir, `${surface.name}-twilight.png`),
       animations: 'disabled',
     });
   }
@@ -343,4 +385,23 @@ test('member surfaces produce same-state visual evidence at the handoff and mobi
       await captureComparison(page, surface.name, surface.width);
     }
   }
+
+  const noJsViewport = project === 'desktop' ? { width: 924, height: 540 } : { width: 390, height: 844 };
+  const noJs = await newNoJsPage(browser, baseURL!, noJsViewport);
+  const noJsOutput = path.join(memberSurfaceEvidence, 'no-js', project);
+  fs.mkdirSync(noJsOutput, { recursive: true });
+  for (const surface of visualSurfaces) {
+    if (project === 'desktop') await noJs.setViewportSize({ width: surface.width, height: 540 });
+    const response = await noJs.goto(surface.route, { waitUntil: 'load' });
+    expect(response).not.toBeNull();
+    expect(response!.status()).toBeLessThan(400);
+    await expect(noJs.getByRole('heading', { level: 1, name: surface.heading })).toBeVisible();
+    await noJs.screenshot({
+      path: path.join(noJsOutput, `${surface.name}.png`),
+      fullPage: true,
+      animations: 'disabled',
+    });
+  }
+  await noJs.context().close();
+  expect(messages, 'unexpected browser warnings, errors, page errors, or failing responses').toEqual([]);
 });
