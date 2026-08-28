@@ -71,6 +71,56 @@ test('the peek list sits beneath its board row, not beside it', async ({ page })
   await page.screenshot({ path: shot('01-directory-desktop-light.png'), fullPage: false });
 });
 
+/**
+ * `.main > .read-main { margin: -24px }` cancels `.main`'s own 24px padding, but
+ * the boards route zeroes that padding — leaving the negative margin to drag the
+ * column left AND, as a shorthand at higher specificity, to override
+ * `.board-index { margin: 0 auto }`. The reading column could never centre.
+ */
+test('the reading column is centred in its pane', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await page.goto('/?sort=category&peek=3');
+
+  const gaps = await page.evaluate(() => {
+    const col = document.querySelector('.board-index') as HTMLElement;
+    const pane = col.parentElement as HTMLElement;
+    const c = col.getBoundingClientRect();
+    const p = pane.getBoundingClientRect();
+    return { left: Math.round(c.left - p.left), right: Math.round(p.right - c.right) };
+  });
+
+  expect(gaps.left).toBeGreaterThan(0);
+  expect(Math.abs(gaps.left - gaps.right)).toBeLessThanOrEqual(2);
+});
+
+/**
+ * The design sets the board name to its own width and lets the description
+ * follow 16px later. A `minmax(150px, .55fr)` grid track instead padded every
+ * short name out and pushed its description ~90px clear of it.
+ */
+test('a board description sits beside its name, not a column away', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await page.goto('/?sort=category&peek=3');
+
+  const row = page.locator('[data-directory-board]', {
+    has: page.locator('.forum-directory__board-description'),
+  }).first();
+  const name = row.locator('.forum-directory__board-name');
+  const desc = row.locator('.forum-directory__board-description');
+
+  const nameBox = (await name.boundingBox())!;
+  const descBox = (await desc.boundingBox())!;
+
+  const gap = descBox.x - (nameBox.x + nameBox.width);
+  expect(gap).toBeGreaterThanOrEqual(0);
+  expect(gap).toBeLessThanOrEqual(24);
+
+  // And the counts stay pinned to the row's right edge.
+  const facts = (await row.locator('.forum-directory__board-facts').boundingBox())!;
+  const anchor = (await row.locator('.forum-directory__board-row > a').boundingBox())!;
+  expect(Math.abs((anchor.x + anchor.width) - (facts.x + facts.width))).toBeLessThanOrEqual(2);
+});
+
 test('the directory reads correctly in twilight', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1400 });
   await signIn(page);

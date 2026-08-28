@@ -33,7 +33,7 @@ peek lists.
 
 | File | What it shows |
 |---|---|
-| `01-directory-desktop-light.png` | 1280×1400, guest, `?sort=active&peek=3`. **The P0 fix.** Each board's peek list sits *beneath* its row, indented, sharing the row's left edge — the superseded `.board-index .forum-directory__board` rule had made the `<article>` a two-column grid and put the whole peek list in column 2. Also shows the Viewing bar as one row of pills (nine `<form>`s laid out inline), the `Active` order selected, `Peek 3` selected in the segmented control, the mono totals strip, the order note, and the guest note. |
+| `01-directory-desktop-light.png` | 1280×1400, guest, `?sort=active&peek=3`. **The P0 fix.** Each board's peek list sits *beneath* its row, indented, sharing the row's left edge — the superseded `.board-index .forum-directory__board` rule had made the `<article>` a two-column grid and put the whole peek list in column 2. Also shows the centred reading column, the description sitting beside its board name, the Viewing bar as one row of pills (nine `<form>`s laid out inline), the `Active` order selected, `Peek 3` selected in the segmented control, the mono totals strip, the order note, and the guest note. |
 | `02-directory-desktop-twilight.png` | The same directory with `data-theme="dark"`, ordered by `Top`. Confirms the signal, the peek bullet, the order note and the tab dot all survive the register flip — the dot now paints `--gold-ink`, which twilight remaps, rather than the `--gold-500` primitive that never does. |
 | `03-directory-compact-keeps-peek.png` | `data-density="compact"`. The board **description** is gone — compact is the triage register — and the **peek list is still there**, tightened. Before the fix the same rule hid the peek too, which silently overrode the reader's own Peek choice while the Viewing bar still showed it as On. |
 | `04-pane-tags.png` | The Tags pane. Pills with a name and a topic count. |
@@ -47,6 +47,23 @@ Frames 04–06 render in twilight because the preceding test leaves the admin's
 theme set to dark. That is left as captured on purpose: it is the only evidence
 that the eleven newly-written pane classes flip with the register, which is what
 the audit found the transfer had never checked for any of them.
+
+## Measured against the design's own rendering
+
+The design was also rendered directly — `BoardIndex.html`, the offline export of
+the same artboard — and both pages measured in the browser at 1440×1200. Three
+numbers drove the layout corrections below:
+
+| | design | production, before | production, after |
+|---|---|---|---|
+| `h1` left edge | 469 | 361 | **469** |
+| reading column, gap left / right of its pane | centred | −24 / 192 | **centred** |
+| board name → description gap | 15px | ~90px | **16px** |
+| board row anchor | `flex` | `grid 218/397/121` | **`flex`** |
+
+The board-name gap is the one that read worst: a `minmax(150px, .55fr)` grid
+track padded every short board name out to 218px, so "Announcements" and "News
+and updates from the team." looked like two columns rather than one phrase.
 
 ## What the captures assert, not merely show
 
@@ -63,6 +80,11 @@ the audit found the transfer had never checked for any of them.
 - **The sheet can be closed.** `document.elementFromPoint()` at the centre of the
   open sheet's summary must resolve to that summary. It resolved to the scrim
   before the fix, which is what made the sheet a trap.
+- **The column is centred.** Its left and right gaps within its pane must agree
+  to within 2px, and both must be positive.
+- **The description is beside its name.** The gap between the name's right edge
+  and the description's left edge must be 0–24px, and the facts group must end
+  flush with the row's right edge.
 
 ## Automated results
 

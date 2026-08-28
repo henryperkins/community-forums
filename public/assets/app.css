@@ -14479,6 +14479,16 @@ body[data-route="inbox"] .main {
     overflow-y: auto;
 }
 body[data-route="inbox"] .main { overflow: hidden; }
+/* `.main > .read-main` carries `margin: -24px` to cancel `.main`'s own 24px
+   padding. The rule above zeroes that padding on these routes, which left the
+   negative margin uncompensated: it dragged the reading column 24px left and,
+   being a shorthand at higher specificity, also overrode `.board-index`'s own
+   `margin: 0 auto` — so the one member surface that asks to be centred never
+   could. Zero it wherever the padding it answers to has been zeroed. */
+body[data-route="boards"] .main > .read-main,
+body[data-route="search"] .main > .read-main,
+body[data-route="compose"] .main > .read-main,
+body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 
 .sidebar {
     position: sticky;
@@ -14774,6 +14784,15 @@ body[data-route="inbox"] .main { overflow: hidden; }
     font-family: var(--font-label);
     font-size: .74rem;
 }
+/* The design's bar reads VIEWING · orders · [spacer] · PEEK, and the density
+   statement simply wraps to the next line, where it starts at the left
+   (BoardIndex.dc.html:129-132). `margin-left: auto` instead pinned it to the
+   right edge of that second line, stranded far from the bar it qualifies. The
+   spacer role belongs to the Peek group, which is the thing that needs pushing
+   right. Scoped to the desk bar so the inbox and the phone sheet are untouched. */
+.directory-viewbar > .directory-viewbar__peek { margin-left: auto; }
+.directory-viewbar > .directory-viewbar__density { margin-left: 0; }
+
 .board-index .forum-directory__hero > p a,
 .directory-viewbar__density a,
 .inbox-density a {
@@ -14825,11 +14844,18 @@ body[data-route="inbox"] .main { overflow: hidden; }
 .forum-directory__boards { display: grid; }
 .forum-directory__board { border-bottom: 1px solid var(--border-hair); }
 .forum-directory__board-row { padding: 14px 0; }
+/* Flex, not a fixed track list. The design sets the name to its own width and
+   lets the description follow 16px later (BoardIndex.dc.html:162-165); a
+   `minmax(150px, .55fr)` name column instead padded every short board name out
+   to ~218px and pushed its description ~90px clear of it, so the two read as
+   separate columns rather than one phrase. The facts group is held right by
+   `margin-left: auto`, which also keeps it there when a board has no
+   description at all. */
 .forum-directory__board-row > a {
-    display: grid;
-    grid-template-columns: minmax(150px, .55fr) minmax(180px, 1fr) auto;
+    display: flex;
+    flex-wrap: nowrap;
     align-items: baseline;
-    gap: 12px;
+    gap: 16px;
     min-width: 0;
     color: var(--text-body);
     text-decoration: none;
@@ -14841,6 +14867,7 @@ body[data-route="inbox"] .main { overflow: hidden; }
     transform: translateX(6px);
 }
 .forum-directory__board-name {
+    flex: 0 0 auto;
     overflow: hidden;
     color: var(--text-strong);
     font-family: var(--font-display);
@@ -14851,6 +14878,7 @@ body[data-route="inbox"] .main { overflow: hidden; }
 }
 .forum-directory__board-row > a:hover .forum-directory__board-name { color: var(--accent); }
 .forum-directory__board-description {
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     color: var(--text-faint);
@@ -14860,6 +14888,8 @@ body[data-route="inbox"] .main { overflow: hidden; }
 }
 .forum-directory__board-facts {
     display: flex;
+    flex: 0 0 auto;
+    margin-left: auto;
     align-items: baseline;
     gap: 10px;
     color: var(--text-faint);
@@ -15907,7 +15937,9 @@ body[data-route="inbox"] .main { overflow: hidden; }
         justify-content: center;
     }
     .directory-viewbar-mobile-settings { min-height: 44px; padding: 11px 4px; font-family: var(--font-label); font-size: .78rem; }
-    .forum-directory__board-row > a { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+    .forum-directory__board-row > a { flex-wrap: wrap; gap: 3px; }
+    .forum-directory__board-description { flex-basis: 100%; }
+    .forum-directory__board-facts { margin-left: 0; }
     .forum-directory__board-description { white-space: normal; }
     .forum-directory__board-facts { flex-wrap: wrap; white-space: normal; }
     .forum-directory__peek li { grid-template-columns: 4px minmax(0, 1fr); }

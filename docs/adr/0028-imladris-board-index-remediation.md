@@ -74,6 +74,9 @@ touches the three panes.
 | 11 | Bulk notice actions return to the pane they were invoked from | Notices is a pane of this surface as well as a standalone page; `read-all` and `clear` always redirected to `/notifications`, throwing the member off the board index. The return target reuses `SettingsController`'s vetted guard (`#^/(?![/\\])#`), so it can never be pointed off-site. |
 | 12 | The order note pluralises its own board count | It read "1 boards" on a one-board directory. |
 | 13 | The Notices tab dot paints `--gold-ink`, not `--gold-500` | `--gold-500` is a single numbered primitive the twilight register never remaps; at 6px it is a non-text cue that must clear 3:1 against the page in both registers. `--gold-ink` flips (`#7E5F22` → `--gold-400`) and clears it in each. Same class of bug ADR 0027 found in four pills. |
+| 14 | The reading column centres in its pane | `.main > .read-main { margin: -24px }` exists to cancel `.main`'s own 24px padding. `body[data-route="boards"] .main { padding: 0 }` removed that padding but left the negative margin, which dragged the column 24px left and — as a `margin` shorthand at (0,2,0) — also overrode `.board-index { margin: 0 auto }` at (0,1,0), so the surface could never centre. Measured against the design's own render at 1440px: `h1` at x=361 against the design's 469. Now 469. |
+| 15 | The board row is **flex**, not a three-track grid | The design sets the name to its own width and lets the description follow 16px later. `grid-template-columns: minmax(150px, .55fr) minmax(180px, 1fr) auto` padded every short board name out to a 218px track and pushed its description ~90px clear of it, so name and description read as two columns instead of one phrase. Measured gap now 16px against the design's 15px. `margin-left: auto` on the facts group also fixes the case where a board has no description. |
+| 16 | The density statement wraps to the left of the second line | The design's bar is `VIEWING · orders · [spacer] · PEEK`, with the density statement simply wrapping. `margin-left: auto` pinned it to the right edge of that second line, stranded from the bar it qualifies. The spacer role moves to the Peek group; scoped to the desk bar so the inbox and the phone sheet keep theirs. |
 
 ### Kept against the design
 
@@ -122,6 +125,25 @@ None of these are fixed here. They are recorded so they are not lost.
    the first complete board row and nothing exercises the three panes. Captures
    should be re-taken at a height that includes at least two complete board rows
    with their peek lists, in both registers, plus one capture per pane.
+10. **The app shell is `max-width: 1280px` and centred; the design is
+    full-bleed.** In the design the rail is `flex: 0 0 var(--sidebar-w)` at x=0
+    against the viewport edge, and the panes fill the window. Production centres
+    the whole shell in `--maxw`, so at 1440px the rail begins at x=73 with dead
+    space either side. This is the one structural difference left between the
+    two renders, and it is **not** a board-index decision: `.app-shell` is the
+    frame for every member surface — thread view, board page, inbox, search,
+    compose — so changing it is a product-wide call that wants its own change
+    and its own evidence across all of them, not a side effect of this one.
+
+## A note on method
+
+The first pass of this work compared the design *source* to the implementation
+and concluded the surface already matched. It did not: rendering both and
+measuring them is what exposed items 14–16, and they were the differences a
+reader actually notices. Source parity is not visual parity. The comparison
+harness — render `BoardIndex.html`, render production, measure the same
+elements in both — is the check worth keeping, and its numbers are recorded in
+`docs/evidence/imladris-board-index-remediation/README.md`.
 
 ## Consequences
 
