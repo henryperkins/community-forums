@@ -66,7 +66,7 @@ $available = array_fill_keys($scopes, true);
                     <button type="submit">Mark all read</button>
                 </form>
             <?php endif; ?>
-            <span class="inbox-density">Rows follow your appearance preference · <a href="/settings/appearance">change</a></span>
+            <span class="inbox-density"><?= ($appearance['density'] ?? 'comfortable') === 'compact' ? 'Compact' : 'Comfortable' ?> rows <a href="/settings/appearance" title="Density lives in your appearance preferences">change</a></span>
             <span class="inbox-key-hint">Ordered by <?= $e($orderLabel['full']) ?> — j/k move · enter open · e read · s star · # snooze</span>
         </nav>
 
@@ -91,13 +91,14 @@ $available = array_fill_keys($scopes, true);
                     <?= $this->partial('partials/inbox_thread_row', [
                         't' => $thread,
                         'return_to' => $currentUrl,
+                        'order' => $order,
                         'workflow_enabled' => !empty($features['topic_workflow']),
                     ]) ?>
                 <?php endforeach; ?>
             </ul>
         <?php else: ?>
             <div class="inbox-empty-state">
-                <img src="/assets/elven-star.svg" alt="" width="30" height="30">
+                <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'inbox-empty-star']) ?>
                 <p class="inbox-empty-title"><?= $e($emptyTitle) ?></p>
                 <p class="muted">This is your <?= $e($scopeLabel) ?> scope — it fills as topics qualify. Order (<?= $e($orderLabel['full']) ?>) changes the sequence, never what is included.</p>
                 <?php if ($scope !== 'for_you'): ?><a class="btn btn-small" href="<?= $e(\App\Support\InboxView::query('for_you', $order)) ?>">Back to For You</a><?php endif; ?>
@@ -119,7 +120,7 @@ $available = array_fill_keys($scopes, true);
         </button>
         <div data-inbox-reading-content>
             <div class="inbox-empty">
-                <img class="inbox-empty-star" src="/assets/elven-star.svg" alt="" width="30" height="30">
+                <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'inbox-empty-star']) ?>
                 <p class="inbox-empty-title">Choose a topic</p>
                 <p class="muted">Select a topic on the left to read it here — your place in the list is kept. Without JavaScript, topics open as their own page.</p>
             </div>

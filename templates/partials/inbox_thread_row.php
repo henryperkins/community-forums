@@ -40,7 +40,7 @@ $replyCount = (int) ($t['reply_count'] ?? 0);
             <span>by <?= $e($author['label']) ?></span>
             <span><?= $replyCount ?> <?= $replyCount === 1 ? 'reply' : 'replies' ?></span>
             <time datetime="<?= $e(iso_datetime($activityAt)) ?>" title="<?= $e(human_datetime($activityAt)) ?>"><?= $e(relative_datetime($activityAt)) ?></time>
-            <?php if ((int) ($t['commend_count'] ?? 0) > 0): ?><span><?= (int) $t['commend_count'] ?> commended</span><?php endif; ?>
+            <?php if (($order ?? 'active') === 'commended' && (int) ($t['commend_count'] ?? 0) > 0): ?><span class="inbox-row-commends" title="Commends"><?= $this->partial('partials/icon', ['name' => 'commend-star']) ?><?= $e(number_format((int) $t['commend_count'])) ?></span><?php endif; ?>
             <?php if (!empty($t['assigned_username'])): ?><span>assigned to @<?= $e($t['assigned_username']) ?></span><?php endif; ?>
             <?php if (!empty($t['snoozed_until'])): ?><span>snoozed until <?= $e(human_date($t['snoozed_until'])) ?></span><?php endif; ?>
         </span>

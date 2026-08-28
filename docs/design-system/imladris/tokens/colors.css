@@ -157,6 +157,11 @@
     --warning: var(--gold-400);   --surface-review:  rgba(194,154,68,.16); --on-review:  #DCC68A;
     --pending: var(--ink-300);    --surface-pending: var(--twilight-700);  --on-pending: #AEB8B4;
     --info:    var(--river-400);  --surface-info:    rgba(63,110,137,.20); --on-info:    var(--river-200);
+    /* Bruinen has to climb in twilight the same way --info does. river-500 is
+       3.08:1 on the page and 2.74:1 on a raised surface; the forum inbox spends
+       this token on the board reference in every topic's meta line, which is
+       .7rem text and needs 4.5:1. river-200 clears both (10.8 / 9.6). */
+    --artifact-link: var(--river-200);
     --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --star:    var(--gold-400);
     --scrim:   rgba(9,13,17,.58);

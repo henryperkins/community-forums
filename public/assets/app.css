@@ -1716,39 +1716,24 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .joinbar-archived { background: var(--surface-sunken); border-color: var(--border-hair); }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Imladris — Phase 3: the true 3-pane Community Inbox (sidebar + list + reading).
-   The reading pane is a progressive enhancement — without JS each topic opens as
-   its own page (the thread-title links stay real).
-   ══════════════════════════════════════════════════════════════════════════ */
-body[data-route="inbox"] .app-shell { max-width: none; }
-body[data-route="inbox"] .main { padding: 0; }
-.inbox-shell {
-    display: grid;
-    grid-template-columns: minmax(320px, var(--list-w)) 1fr;
-    /* dvh tracks the mobile URL bar collapsing; vh is locked to the LARGE
-       viewport, so the shell overshoots by the bar's height while it shows.
-       Paired the same way as .thread-conversation below. */
-    height: calc(100vh - var(--topbar-h));
-    height: calc(100dvh - var(--topbar-h));
-    min-height: 520px;
-}
-.inbox-list {
-    border-right: 1px solid var(--border-hair);
-    background: var(--surface-page);
-    padding: 18px 18px 28px;
-    overflow-y: auto;
-    /* Independently scrolling pane: reserve the gutter so the list does not
-       shift sideways the moment it grows past the fold. */
-    scrollbar-gutter: stable;
-}
-.inbox-list-head { border-bottom: none; padding-bottom: 0; margin-bottom: 6px; }
-.inbox-list-head .eyebrow { margin: 0 0 4px; }
-.inbox-list-head h1 { font-size: 1.85rem; margin: 0; }
-.inbox-list .thread-list { margin-top: 12px; gap: 8px; }
+   What is left of Phase 3's Community Inbox. The surface itself was rewritten
+   against ForumInbox.dc.html and now lives in the member-surfaces block below
+   (search "Forum inbox"); everything that block owns has been removed from here.
 
-/* Filter tabs become horizontally-scrollable Marcellus pills in the narrow list. */
+   What was removed was either markup this route no longer emits or a rule its
+   own replacement had to outrank — including a 56px `.inbox-empty-star`, which
+   the replacement re-coloured but never resized, so the reading pane's quiet
+   mark printed at nearly twice the size the design asks for. A superseded
+   rule left upstream of its replacement is how a rewritten surface silently
+   keeps a slice of the surface it replaced.
+   ══════════════════════════════════════════════════════════════════════════ */
+/* The one shell decision this route still makes: the three panes are
+   full-bleed where every other member surface is capped and centred. */
+body[data-route="inbox"] .app-shell { max-width: none; }
+
+/* Marcellus pill tabs. The inbox's own filter tabs are retired — /feed and
+   /leaderboard still wear them, so the pills stay. */
 .inbox-tabs { display: flex; gap: 6px; margin: 12px 0 4px; }
-.inbox-list .inbox-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; border-bottom: 1px solid var(--border-hair); }
 .inbox-tab {
     flex: none; white-space: nowrap; border-radius: var(--radius-pill);
     padding: 6px 13px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
@@ -1757,17 +1742,11 @@ body[data-route="inbox"] .main { padding: 0; }
 .inbox-tab:hover { background: var(--surface-sunken); text-decoration: none; }
 .inbox-tab.is-active { background: var(--brand); color: var(--parchment-50); font-weight: var(--weight-medium); border-color: var(--brand); }
 
-.inbox-reading { background: var(--surface-raised); padding: 24px 30px 44px; overflow-y: auto; min-width: 0; scrollbar-gutter: stable; }
-.inbox-reading[aria-busy="true"] { opacity: .55; }
-.inbox-mobile-back { display: none; }
 .mobile-only { display: none; }
 .topbar-logout .icon { display: none; }
+/* A whole topic injected into the reading pane keeps the measure it gets on its
+   own page — the same 760px the pane's own content column uses. */
 .inbox-reading .thread-view, .inbox-reading .board-view { max-width: 760px; }
-.thread-row.is-active { background: var(--brand-subtle); }
-.thread-row.is-active::before { background: var(--leaf); }
-.inbox-empty { text-align: center; padding: 72px 24px; max-width: 46ch; margin: 0 auto; }
-.inbox-empty-star { width: 56px; height: 56px; color: var(--green-400); opacity: .6; }
-.inbox-empty-title { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.5rem; color: var(--text-strong); margin: 14px 0 6px; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    Imladris — Phase 4: mobile (off-canvas drawer, FAB, touch targets).
@@ -1835,23 +1814,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
         background: rgba(22, 29, 36, .5); z-index: 55;
     }
 
-    /* Inbox collapses to one column; JS swaps between list and reading states. */
-    body[data-route="inbox"] .main { padding: 0; }
-    .inbox-shell { grid-template-columns: 1fr; height: auto; min-height: 0; }
-    .inbox-list { border-right: none; height: auto; }
-    .inbox-reading { display: none; }
-    .inbox-reading.is-open { display: block; }
-    .inbox-list.is-hidden { display: none; }
-    .has-js .inbox-mobile-back {
-        position: sticky; top: 0; z-index: 5;
-        display: inline-flex; align-items: center; gap: 6px;
-        min-height: 44px; margin: -8px 0 12px; padding: 6px 4px;
-        border: 0; background: var(--surface-raised); color: var(--brand);
-        font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em;
-        cursor: pointer;
-    }
-    .inbox-mobile-back:hover { color: var(--brand-hover); }
-    .inbox-mobile-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    /* The inbox's own phone rules now collapse at 1279px, not 860 — where the
+       reading pane actually runs out of room — and live with the rest of the
+       surface in the member-surfaces block below. */
 
     /* Comfortable touch targets + room for the FAB. */
     .rail-filter, .nav-boards a, .sidebar-home, .inbox-tab { min-height: 44px; }
@@ -15184,38 +15149,60 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     background: var(--gold-soft);
     color: var(--gold-ink);
     font-size: .72rem;
+    /* `.badge` is the product's uppercase micro-label. Here it states a count in
+       words - "6 unread" - which the design sets in sentence case beside the h1
+       (ForumInbox.dc.html:90). Shouting it made the pill the loudest thing on a
+       queue whose whole job is ranking what matters. */
+    letter-spacing: .04em;
+    line-height: 1.6;
+    text-transform: none;
 }
 .inbox-list-head > p:last-child {
-    max-width: 66ch;
-    margin: 7px 0 0;
+    max-width: 68ch;
+    margin: 8px 0 0;
     color: var(--text-muted);
     font-size: .98rem;
-    line-height: 1.5;
+    line-height: 1.55;
+    text-wrap: pretty;
 }
+/* The design rules the bar along its bottom edge only (ForumInbox.dc.html:101):
+   the lede above it is already separated by its own whitespace, and a second
+   hairline turned the header into a boxed band. */
 .inbox-view-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 9px 14px;
-    padding: 10px 0;
-    border-top: 1px solid var(--border-hair);
+    gap: 8px 10px;
+    margin-bottom: 6px;
+    padding: 0 0 12px;
     border-bottom: 1px solid var(--border-hair);
 }
 .inbox-scope-menu { position: relative; }
+/* Scope and order are two axes, not two peers: scope decides WHICH topics and
+   wears the larger outlined control, order decides the sequence and wears the
+   smaller pills. Raising the scope button onto --surface-raised at the pills'
+   own .78rem flattened that (ForumInbox.dc.html:104). */
 .inbox-scope-menu > summary {
     display: inline-flex;
     min-height: 30px;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     padding: 5px 12px;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-pill);
-    background: var(--surface-raised);
-    color: var(--text-body);
+    background: transparent;
+    color: var(--text-strong);
     font-family: var(--font-label);
-    font-size: .78rem;
+    font-size: .84rem;
+    letter-spacing: .03em;
+    line-height: 1.2;
+    white-space: nowrap;
     list-style: none;
     cursor: pointer;
+}
+.inbox-scope-menu > summary:hover {
+    border-color: var(--border-soft);
+    background: var(--surface-sunken);
 }
 .inbox-scope-menu > summary::-webkit-details-marker { display: none; }
 .inbox-scope-menu > summary [data-inbox-current-count] {
@@ -15286,17 +15273,32 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .inbox-mark-all { margin-left: auto; }
 .inbox-mark-all button {
     min-height: 31px;
-    padding: 5px 12px;
+    padding: 5px 11px;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-md);
-    background: var(--surface-raised);
+    background: transparent;
     color: var(--text-muted);
     font-family: var(--font-label);
-    font-size: .74rem;
+    font-size: .76rem;
+    letter-spacing: .03em;
     cursor: pointer;
 }
-.inbox-density { flex: 1 1 100%; margin-left: 0; }
-.inbox-key-hint { flex: 1 1 100%; margin: 0; }
+.inbox-mark-all button:hover {
+    background: var(--surface-sunken);
+    color: var(--text-body);
+}
+/* The statement belongs to the bar, not to a line of its own: the design keeps
+   it inline and lets flex wrapping decide when it drops (ForumInbox.dc.html:135).
+   `flex: 1 1 100%` forced the break at every width. */
+.inbox-density {
+    display: inline-flex;
+    flex: none;
+    align-items: baseline;
+    gap: 7px;
+    margin-left: 0;
+    white-space: nowrap;
+}
+.inbox-key-hint { flex: 1 1 100%; margin: 0; font-size: .68rem; }
 .inbox-sweep {
     position: sticky;
     top: 0;
@@ -15325,20 +15327,25 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     font-size: .7rem;
     cursor: pointer;
 }
+/* Indented by the row's own 12px so the control lines up with the checkboxes it
+   commands, and 22px tall like the design's (ForumInbox.dc.html:157) rather than
+   opening a 38px band above the first topic. */
 .inbox-select-all {
-    display: inline-flex;
-    min-height: 38px;
+    display: flex;
+    min-height: 22px;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 0 12px 7px;
     color: var(--text-faint);
     font-family: var(--font-label);
-    font-size: .66rem;
-    letter-spacing: .08em;
+    font-size: .7rem;
+    letter-spacing: .1em;
     text-transform: uppercase;
 }
+/* Rows are separated by their own bottom hairline. A grid gap on top of it drew
+   a second, wider channel the design does not have. */
 .inbox-thread-list {
-    display: grid;
-    gap: 1px;
+    display: block;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -15390,8 +15397,8 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .inbox-row-heading {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 7px;
+    align-items: baseline;
+    gap: 2px 9px;
 }
 .inbox-row-title {
     order: 1;
@@ -15400,8 +15407,10 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     font-family: var(--font-display);
     font-size: 1.06rem;
     font-weight: var(--weight-medium);
-    line-height: 1.2;
+    letter-spacing: -0.005em;
+    line-height: 1.3;
     text-decoration: none;
+    text-wrap: pretty;
 }
 .inbox-row-title:hover { color: var(--accent); text-decoration: none; }
 .inbox-row-chips {
@@ -15415,7 +15424,27 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     font-size: .56rem;
     letter-spacing: .14em;
 }
+/* The inclusion cue is not a status. It answers "why am I being shown this?",
+   which the design says in gold, in sentence case, a shade larger and looser
+   than the uppercase status pills beside it (ForumInbox.dc.html:176). The class
+   had no rules at all, so it inherited the evergreen status pill and shouted a
+   sentence. */
+.inbox-row-chips .chip-reason {
+    border-color: var(--gold-200);
+    background: var(--gold-soft);
+    color: var(--gold-ink);
+    font-size: .6rem;
+    letter-spacing: .08em;
+    text-transform: none;
+}
 .inbox-row-chips .icon { width: 9px; height: 9px; }
+/* `.chip svg` paints every mark as a stroked Lucide glyph, and CSS outranks the
+   presentation attributes the filled brand stars carry — so the commend star
+   inside a chip was drawn hollow, at a stroke width of 2 in a 0-100 viewBox. */
+.badge .icon-commend-star,
+.chip .icon-commend-star,
+.badge .icon-eight-point-star,
+.chip .icon-eight-point-star { fill: currentColor; stroke: none; }
 .inbox-row-snippet {
     display: -webkit-box;
     margin: 3px 0 0;
@@ -15429,14 +15458,33 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .inbox-row-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px 9px;
+    align-items: center;
+    gap: 10px;
     margin-top: 3px;
     color: var(--text-faint);
     font-family: var(--font-mono);
     font-size: .7rem;
     line-height: 1.35;
+    white-space: nowrap;
 }
-.inbox-row-meta a { color: var(--accent); text-decoration: none; }
+/* A board reference in a topic's meta is a citation of the record, and the
+   design gives it Bruinen where every other link wears evergreen - the one
+   place --artifact-link is spent (ForumInbox.dc.html:187 and 268, the same
+   choice Search.dc.html:187 makes). */
+.inbox-row-meta a,
+.inbox-preview-kicker a { color: var(--artifact-link); text-decoration: none; }
+.inbox-row-meta a:hover,
+.inbox-preview-kicker a:hover { text-decoration: underline; }
+/* Commends are the Commended order's own column of numbers. Printed in every
+   order they were a fourth statistic competing with the reply count for the
+   same line, and the meta wrapped (ForumInbox.dc.html:190, showCommends). */
+.inbox-row-commends {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--gold-ink);
+}
+.inbox-row-commends .icon { width: 9px; height: 9px; }
 .inbox-row-star { margin: 0; }
 .inbox-row-star button,
 .inbox-row-menu > summary {
@@ -15485,7 +15533,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     cursor: pointer;
 }
 .inbox-row-menu-panel button:hover { background: var(--surface-sunken); }
-.inbox-shown-count { margin: 14px 0 0; }
+.inbox-shown-count { margin: 22px 0 0; font-size: .74rem; }
 
 [data-density="compact"] .inbox-thread-row { gap: 9px; padding-top: 4px; padding-bottom: 4px; }
 [data-density="compact"] .inbox-row-title { margin-top: 0; font-size: .99rem; }
@@ -15501,76 +15549,179 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     scrollbar-gutter: stable;
 }
 .inbox-reading[aria-busy="true"] { opacity: .55; }
+/* The reading column is 760px, not 840: it is a topic being read inside a list
+   surface, and it keeps the same measure the topic gets on its own page
+   (ForumInbox.dc.html:264). */
 .inbox-reading > [data-inbox-reading-content] {
-    width: min(100%, 840px);
+    display: flex;
+    max-width: 760px;
+    min-height: 100%;
+    flex-direction: column;
     margin: 0 auto;
     padding: 26px 40px 72px;
 }
+.inbox-reading > [data-inbox-reading-content] > * { min-width: 0; }
 .inbox-mobile-back { display: none; }
-.inbox-empty { padding: 96px 24px; }
+/* Nothing chosen yet is a quiet state in the middle of an empty pane, not a
+   headline stacked at the top of it (ForumInbox.dc.html:300). */
+.inbox-empty {
+    display: flex;
+    max-width: 46ch;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    padding: 40px 24px;
+    text-align: center;
+}
+.inbox-empty .muted { max-width: 42ch; margin: 0; line-height: 1.55; }
+.inbox-empty-title {
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-weight: var(--weight-medium);
+}
+.inbox-empty .inbox-empty-title { margin: 12px 0 3px; font-size: 1.3rem; }
+/* The queue's own empty state had no rules at all: an unstyled div under a
+   strict CSP is a left-aligned star, a heading and a paragraph stacked against
+   the gutter. The design centres it and gives the scope's own name back to the
+   reader with a way out (ForumInbox.dc.html:234). */
+.inbox-empty-state {
+    padding: 58px 16px;
+    text-align: center;
+}
+.inbox-empty-state .inbox-empty-title { margin: 12px 0 4px; font-size: 1.45rem; }
+.inbox-empty-state .muted {
+    margin: 0 0 18px;
+    color: var(--text-muted);
+    font-size: .97rem;
+}
+/* Both empty states drew the eight-pointed house mark as an <img>, which cannot
+   take currentColor: the `color` beside this rule was inert and the mark
+   rendered in the SVG's own stroke. The design uses the quiet four-point star,
+   filled, at 30px (ForumInbox.dc.html:236, 302) - already in the icon map as
+   `eight-point-star`, and inline, so the colour lands. A 56px rule left over
+   from the pre-Imladris inbox had also been sizing it. */
+.inbox-empty-star.icon {
+    width: 30px;
+    height: 30px;
+}
 .inbox-empty-star,
 .search-state-icon { color: var(--gold-ink); opacity: .45; }
-.inbox-preview-header {
-    position: relative;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-hair);
-}
-.inbox-preview-kicker,
-.inbox-preview-count {
-    color: var(--text-faint);
+/* The reading pane states who is speaking before it prints what they said: the
+   kicker locates the topic, the title names it, and one ruled line carries the
+   author, their standing and the size of the conversation (ForumInbox.dc.html:
+   268-276). The transfer dropped that line entirely, so a topic could be read
+   here without ever learning whose it was. */
+.inbox-preview-header { position: relative; }
+.inbox-preview-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--text-muted);
     font-family: var(--font-mono);
-    font-size: .7rem;
+    font-size: .74rem;
 }
-.inbox-preview-kicker { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 8px; }
-.inbox-preview-kicker a { color: var(--accent); text-decoration: none; }
+.inbox-preview-kicker > span { color: var(--text-faint); }
 .inbox-preview-header h2 {
-    max-width: 24ch;
-    margin: 0 0 7px;
+    margin: 11px 0 0;
     color: var(--text-strong);
     font-family: var(--font-display);
     font-size: 1.9rem;
     font-weight: var(--weight-medium);
-    line-height: 1.12;
+    letter-spacing: -0.01em;
+    line-height: 1.16;
+    text-wrap: pretty;
 }
-.inbox-preview-count { margin: 0; }
+.inbox-preview-attribution {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 11px;
+    margin-top: 12px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-hair);
+}
+.inbox-preview-attribution .monogram { width: 28px; height: 28px; flex: 0 0 auto; font-size: .66rem; }
+.inbox-preview-author { color: var(--text-body); font-family: var(--font-label); font-size: .86rem; }
+.inbox-preview-tier {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .6rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.inbox-preview-count {
+    margin: 0 0 0 auto;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .73rem;
+}
 .inbox-preview-open {
-    display: inline-block;
-    margin-top: 10px;
     color: var(--accent);
     font-family: var(--font-label);
     font-size: .76rem;
 }
+/* The opening post is the topic, not the first of its replies: it is set as the
+   lede directly beneath the byline, and the counsel that answers it follows. */
+.inbox-preview-lede {
+    margin: 18px 0 0;
+    color: var(--text-body);
+    font-size: 1.03rem;
+    line-height: 1.68;
+    text-wrap: pretty;
+}
 .inbox-preview-posts {
-    margin: 0;
+    display: flex;
+    margin: 22px 0 0;
+    flex-direction: column;
+    gap: 18px;
     padding: 0;
     list-style: none;
 }
 .inbox-preview-posts > li {
     display: flex;
-    gap: 14px;
-    padding: 20px 0;
-    border-bottom: 1px solid var(--border-hair);
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-hair);
 }
-.inbox-preview-posts .monogram { width: 34px; height: 34px; flex: 0 0 auto; font-size: .76rem; }
+.inbox-preview-posts .monogram { width: 28px; height: 28px; flex: 0 0 auto; font-size: .66rem; }
 .inbox-preview-posts > li > div { min-width: 0; flex: 1; }
 .inbox-preview-byline {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 10px;
-    margin: 0 0 8px;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
     color: var(--text-faint);
-    font-family: var(--font-label);
-    font-size: .76rem;
+    font-family: var(--font-mono);
+    font-size: .72rem;
 }
-.inbox-preview-byline > span:first-child { color: var(--text-strong); }
-.inbox-preview-posts .formatted-content { color: var(--text-body); font-size: 1.03rem; line-height: 1.68; }
-.inbox-preview-bounded { margin: 18px 0; }
-.inbox-preview-reply { margin-top: 28px; }
+.inbox-preview-byline > span:first-child {
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .84rem;
+}
+.inbox-preview-posts .formatted-content {
+    margin-top: 6px;
+    color: var(--text-body);
+    font-size: .99rem;
+    line-height: 1.64;
+    text-wrap: pretty;
+}
+.inbox-preview-bounded { margin: 18px 0 0; font-family: var(--font-mono); font-size: .73rem; }
+.inbox-preview-reply { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-hair); }
 .inbox-preview-reply > .eyebrow {
+    display: block;
+    margin-bottom: 10px;
     color: var(--gold-ink);
     font-family: var(--font-label);
     font-size: .66rem;
-    letter-spacing: .18em;
+    letter-spacing: .16em;
     text-transform: uppercase;
 }
 
@@ -15812,8 +15963,12 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
         background: var(--surface-raised);
         color: var(--accent);
         font-family: var(--font-label);
+        font-size: .82rem;
+        letter-spacing: .02em;
         cursor: pointer;
     }
+    .inbox-mobile-back:hover { color: var(--brand-hover); }
+    .inbox-mobile-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 @media (max-width: 860px) {
     .topbar-inner { padding: 0 9px; gap: 5px; }
@@ -15965,7 +16120,9 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .forum-directory__stats { gap: 4px 10px; }
     .forum-directory__stats span + span::before { margin-right: 7px; }
     .inbox-row-select { width: 18px; flex-basis: 18px; }
-    .inbox-thread-row .unread-slot { display: none; }
+    /* The dot stays. It is the queue's primary signal and the only unread cue a
+       row carries - .is-unread styles nothing - so hiding it to buy 17px left an
+       unread-triage surface with no way to see what is unread on a phone. */
     .inbox-row-chips { flex-basis: 100%; }
     .compose-topic-form .composer-actions-bar { flex-wrap: wrap; }
     .compose-topic-form .composer-actions-start {

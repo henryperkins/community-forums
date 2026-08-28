@@ -264,7 +264,15 @@ final class AppInboxMemberSurfaceTest extends TestCase
         self::assertStringNotContainsString('Visible Real Name', $response->body());
         self::assertStringContainsString('href="/t/' . (int) $thread['thread_id'] . '-' . $thread['slug'] . '"', $response->body());
         self::assertStringContainsString('action="/t/' . (int) $thread['thread_id'] . '/reply"', $response->body());
-        self::assertSame(4, substr_count($response->body(), 'data-inbox-preview-post'));
+        // The opening post is the topic's lede and its author is the pane's
+        // byline; the reply list holds the rest of the same bounded page. The
+        // bound is still four posts — one lede plus three counsels — and the
+        // masked opener must not leak a rank beside the mask.
+        self::assertStringContainsString('class="inbox-preview-lede', $response->body());
+        self::assertStringContainsString('Secret starter identity.', $response->body());
+        self::assertSame(1, substr_count($response->body(), 'inbox-preview-author'));
+        self::assertStringNotContainsString('inbox-preview-tier', $response->body());
+        self::assertSame(3, substr_count($response->body(), 'data-inbox-preview-post'));
         self::assertStringNotContainsString('Preview reply 4', $response->body());
         self::assertStringNotContainsString('<html', $response->body());
         self::assertStringNotContainsString('/status', $response->body());
