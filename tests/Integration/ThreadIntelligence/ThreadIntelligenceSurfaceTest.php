@@ -120,18 +120,27 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
         $this->assertStatus(200, $page);
         $html = $page->body();
+        // ADR 0030: the brief belongs to the OPENING post — it summarises the
+        // question that post asked (ThreadView.dc.html:463) — so it renders inside
+        // the stream, after the opening row, not above the stream where a reader
+        // met an AI-written summary before a word of the topic.
         $headerEnd = strpos($html, '</header>');
         $brief = strpos($html, 'data-living-brief');
         $postStream = strpos($html, 'class="post-stream"');
+        $openingPostEnd = strpos($html, '</article>', (int) $postStream);
         self::assertNotFalse($headerEnd);
         self::assertNotFalse($brief);
         self::assertNotFalse($postStream);
+        self::assertNotFalse($openingPostEnd);
         self::assertLessThan($brief, $headerEnd);
-        self::assertLessThan($postStream, $brief);
+        self::assertLessThan($brief, $postStream);
+        self::assertLessThan($brief, $openingPostEnd);
         self::assertSame(1, substr_count($html, 'class="living-brief study-living-brief"'));
         self::assertStringContainsString('/privacy#thread-intelligence', $html);
         self::assertStringContainsString('Updated automatically', $html);
-        self::assertMatchesRegularExpression('/<time datetime="[^"]+Z">/', $html);
+        // The machine-readable UTC stamp survives; the element also carries the
+        // absolute value as its title now, so the attribute is not the last one.
+        self::assertMatchesRegularExpression('/<time datetime="[^"]+Z"/', $html);
         // The curator surface must stay out of the TOPIC head. Scope the slice from
         // `data-thread-study` to the next `</header>`: the first `</header>` in the
         // document belongs to the shell topbar (`partials/topbar.php:60`), so slicing
@@ -665,7 +674,10 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         $fallbackTarget = $this->seedThread(1, 'Empty state fallback target');
         $this->insertRelated($seed['thread_id'], $fallbackTarget['thread_id'], 'tag', null);
         $withFallback = $this->get($url)->body();
-        self::assertStringContainsString('related-topic-fallback', $withFallback);
+        // ADR 0030: the deterministic fallback and the brief's own overlay are one
+        // Related row after the stream, not two objects in two places.
+        self::assertStringContainsString('class="thread-related"', $withFallback);
+        self::assertStringContainsString('Empty state fallback target', $withFallback);
         self::assertStringContainsString('living-brief-empty', $withFallback);
         self::assertStringContainsString('eight eligible posts', $withFallback);
 

@@ -98,7 +98,7 @@ async function openTopicComposer(page: Page): Promise<void> {
 }
 
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
-  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  const trigger = page.getByRole('button', { name: /^Topic tools/ });
   await trigger.click();
   const tools = page.locator('[data-topic-tools]');
   await expect(tools).toBeVisible();

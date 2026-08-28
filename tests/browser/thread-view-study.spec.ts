@@ -188,7 +188,7 @@ test('desktop Topic tools accords, traps focus, and restores each opener', async
   await login(page);
   await openSeedTopic(page);
 
-  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  const trigger = page.getByRole('button', { name: /^Topic tools/ });
   const tools = page.locator('[data-topic-tools]');
   const closeTools = page.getByRole('button', { name: 'Close Topic tools' });
 
@@ -226,7 +226,7 @@ test('split or merge closes by every dismissal path and restores focus', async (
   await login(page);
   await openSeedTopic(page);
 
-  const topicTrigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  const topicTrigger = page.getByRole('button', { name: /^Topic tools/ });
   const dialog = page.locator('.thread-restructure-dialog');
   const closeRestructure = dialog.getByRole('button', { name: 'Close split or merge' });
 
@@ -417,13 +417,23 @@ test('Inbox-inserted topics get idempotent drawer, quote, and keyboard enhanceme
   const previous = setWysiwygComposer(false);
   try {
     await login(page);
+    // PRE-EXISTING FAILURE, unrelated to ADR 0030 and left as found. This test
+    // asserts that the inbox's reading pane injects a `[data-thread-study]` and
+    // that app.js enhances it idempotently. Since the inbox remediation (ADR 0029,
+    // commit 12d9d10b) the pane renders `partials/inbox_preview.php` instead — an
+    // `.inbox-preview`, never a thread view — so the mechanism this guards no
+    // longer exists to guard. Its row locator is stale on top of that: the queue's
+    // row is `.inbox-thread-row`/`.inbox-row-title` now, and the seed's 26 Thread
+    // Intelligence topics push the named topic off the first page besides.
+    // Deciding whether the reading pane should inject the full thread view again
+    // is a product question, not a fidelity fix; ADR 0030 records it.
     const shortcutRow = page.locator('[data-inbox-list] .thread-row', { hasText: 'Share your favourite keyboard shortcuts' });
     await shortcutRow.locator('a.thread-title').click();
 
     const reading = page.locator('[data-inbox-reading]');
     const root = reading.locator('[data-thread-study]');
     await expect(root).toHaveAttribute('data-thread-enhanced', '1');
-    await reading.getByRole('button', { name: 'Topic tools', exact: true }).click();
+    await reading.getByRole('button', { name: /^Topic tools/ }).click();
     await expect(reading.locator('[data-topic-tools]')).toBeVisible();
     await reading.getByRole('button', { name: 'Close Topic tools' }).click();
 
@@ -432,8 +442,8 @@ test('Inbox-inserted topics get idempotent drawer, quote, and keyboard enhanceme
     await shortcutRow.locator('a.thread-title').click();
     await expect(root).toHaveAttribute('data-thread-enhanced', '1');
     await expect(reading.locator('[data-topic-tools]')).toHaveCount(1);
-    await expect(reading.getByRole('button', { name: 'Topic tools', exact: true })).toHaveCount(1);
-    await reading.getByRole('button', { name: 'Topic tools', exact: true }).click();
+    await expect(reading.getByRole('button', { name: /^Topic tools/ })).toHaveCount(1);
+    await reading.getByRole('button', { name: /^Topic tools/ }).click();
     await expect(reading.locator('[data-topic-tools]')).toBeVisible();
     await reading.getByRole('button', { name: 'Close Topic tools' }).click();
 
@@ -457,10 +467,13 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
   await openSeedTopic(page);
 
   const thread = page.locator('[data-thread-study]');
-  await expect(thread).toHaveCSS('width', info.project.name === 'desktop' ? '860px' : '362px');
+  // ADR 0030 #2: the column IS the measure the design declares once, 646px, and
+  // the scroll gutter hangs outside it. It was 860px with the prose capped
+  // separately at 70ch inside, so the byline ran 200px past its own sentence.
+  await expect(thread).toHaveCSS('width', info.project.name === 'desktop' ? '646px' : '362px');
   const box = await thread.boundingBox();
   expect(box).not.toBeNull();
-  expect(box!.width).toBeLessThanOrEqual(860);
+  expect(box!.width).toBeLessThanOrEqual(646);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   await expect(thread.locator('.thread-facts')).toHaveCSS('flex-wrap', info.project.name === 'desktop' ? 'nowrap' : 'wrap');
   await expect(thread.locator('.thread-facts-identity')).toHaveCSS('flex-wrap', info.project.name === 'desktop' ? 'nowrap' : 'wrap');
@@ -473,7 +486,7 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
     await page.setViewportSize({ width: 1280, height: 800 });
   }
 
-  await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
+  await page.getByRole('button', { name: /^Topic tools/ }).click();
   const tools = page.locator('[data-topic-tools]');
   await tools.evaluate(async (element) => {
     await Promise.all(element.getAnimations().map((animation) => animation.finished));
@@ -685,7 +698,7 @@ test('reduced motion removes Study animations', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await login(page);
   await openSeedTopic(page);
-  await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
+  await page.getByRole('button', { name: /^Topic tools/ }).click();
   const duration = await page.locator('[data-topic-tools]').evaluate((element) => getComputedStyle(element).animationDuration);
   expect(duration).toBe('0s');
 });
@@ -726,7 +739,7 @@ test('light and dark Study surfaces retain readable semantic colors', async ({ p
     });
     expect(semanticContrast.title).toBeGreaterThanOrEqual(4.5);
     expect(semanticContrast.chip).toBeGreaterThanOrEqual(4.5);
-    const toolsContrast = await page.getByRole('button', { name: 'Topic tools', exact: true }).evaluate((element) => {
+    const toolsContrast = await page.getByRole('button', { name: /^Topic tools/ }).evaluate((element) => {
       const style = getComputedStyle(element);
       const channels = (value: string) => (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
       const luminance = (value: string) => {
@@ -823,7 +836,7 @@ test('standing chips sit above the title and state status as a word alone', asyn
   expect(title.length).toBeGreaterThan(0);
 
   const setStatus = async (value: string): Promise<void> => {
-    await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
+    await page.getByRole('button', { name: /^Topic tools/ }).click();
     const tools = page.locator('[data-topic-tools]');
     await tools.locator('[data-topic-tools-section="standing"] > summary').click();
     await tools.locator('select[name="status"]').selectOption(value);
@@ -1028,6 +1041,10 @@ test('post actions are reachable by keyboard alone', async ({ page }, info) => {
   const post = posts.first();
   const toolbar = post.locator('[data-post-toolbar]');
   // At rest, with no pointer anywhere near it: present in the DOM but quiet.
+  // Park the pointer first — Playwright leaves it wherever the last click was,
+  // and openSeedTopic's own click lands inside the reading column, so "at rest"
+  // was a claim this test never actually established.
+  await page.mouse.move(0, 0);
   await expect(toolbar).toHaveCount(1);
   await expect(toolbar).toHaveCSS('opacity', '0');
 

@@ -77,7 +77,7 @@ async function visit(page: Page, url: string): Promise<void> {
 }
 
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
-  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  const trigger = page.getByRole('button', { name: /^Topic tools/ });
   await trigger.click();
   const tools = page.locator('[data-topic-tools]');
   await expect(tools).toBeVisible();
@@ -355,7 +355,12 @@ test('phase 4 poll vote works through the server-rendered thread flow', async ({
   await page.getByRole('button', { name: 'Vote' }).click();
 
   await expect(page.locator('.poll-panel .link-list')).toBeVisible();
-  await expect(page.locator('.poll-panel')).toContainText(/\d+ vote/);
+  // ADR 0030 #16: a result is a line and a bar. The tally is a mono numeral
+  // beside the option, and the word "votes" — with the total it is a share of —
+  // is the bar's accessible name, as the design has it (ThreadView.dc.html:503).
+  await expect(page.locator('.poll-result-count').first()).toHaveText(/^\d+$/);
+  await expect(page.locator('.poll-result-bar').first())
+    .toHaveAttribute('aria-label', /\d+ votes? of \d+/);
   await shot(page, info, '25-poll-voted');
 });
 
@@ -379,19 +384,26 @@ test('phase 4 topic workflow: status, snooze, and assignment via the server-rend
   await standing.details.getByRole('button', { name: 'Update status' }).click();
   await expect(page.locator('[data-thread-status="needs_answer"]')).toBeVisible();
 
-  // Snooze: a personal reminder (no cross-user effect).
+  // Snooze: a personal reminder (no cross-user effect). ADR 0030 #27: one press
+  // per window, not a select plus a Save; the standing window comes back lit.
   const watch = await openTopicTools(page, 'watch');
-  await watch.details.locator('select[name="until"]').selectOption('tomorrow');
-  await watch.details.getByRole('button', { name: 'Save snooze' }).click();
+  await watch.details.getByRole('button', { name: 'Tomorrow' }).click();
   await expect(page.locator('.thread-byline')).toContainText('Quiet until');
+  const watchAgain = await openTopicTools(page, 'watch');
+  await expect(watchAgain.details.getByRole('button', { name: 'Tomorrow' }))
+    .toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Close Topic tools' }).click();
 
   // Assignment: staff assigns the topic to @bob (board is opted into assignment).
   let management = await openTopicTools(page, 'management');
   await management.details.locator('input[name="assignee"]').fill('bob');
   await management.details.getByRole('button', { name: 'Assign', exact: true }).click();
-  await expect(page.locator('.thread-byline')).toContainText('Tended by @bob');
+  // ADR 0030 #6: the assignment is stated where it is changed — the drawer's own
+  // Topic management summary — not on the reader's byline in the topic head.
   management = await openTopicTools(page, 'management');
+  await expect(management.details.locator(':scope > summary')).toContainText('@bob');
   await expect(management.details.getByRole('button', { name: 'Unassign' })).toBeVisible();
+  await expect(page.locator('.thread-byline')).not.toContainText('Tended by');
 
   // Status history is surfaced (audit trail) — expand it so the evidence
   // screenshot captures the recorded transitions in the Study drawer.

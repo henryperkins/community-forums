@@ -1695,7 +1695,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
    every block-element rule come from the shared .formatted-content contract so
    a post, a live preview and a bio can't drift apart. Do not restate type here. */
 .post-body { max-width: 66ch; }
-.post-signature { border-top: 1px dashed var(--border-hair); font-family: var(--font-body); }
+.post-signature { border-top: 1px solid var(--border-hair); font-family: var(--font-body); }
 
 /* Composer card + serif inputs with a gold focus ring. */
 .composer-input, textarea.input {
@@ -8122,32 +8122,9 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     font-size: .68rem;
     color: var(--text-muted);
 }
-/* Link previews: the card plus the author's remove/restore control. The item is
-   the flex child of .reference-cards; the card keeps its own geometry so an
-   unfurl and a reference card still read as the same object. */
-.link-preview-item {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.link-preview-item > .reference-card {
-    flex: 1 1 auto;
-}
-.link-preview-item.is-removed {
-    border: 1px dashed var(--border-hair);
-    border-radius: var(--radius-sm);
-    padding: 7px 12px;
-    gap: 2px;
-}
-.link-preview-action {
-    align-self: flex-start;
-}
-/* Size de-emphasises this control; colour must not. --text-muted is the same
-   #AEB8B4 in both themes and drops under 4.5:1 on the light post surface at this
-   size, so the button keeps the standard .linkbtn accent (WCAG 1.4.1). */
-.link-preview-action .linkbtn {
-    font-size: .72rem;
-}
+/* Link previews now use the design system's own `.link-preview` component; its
+   rules live with the thread stream's cards further down. The block that used to
+   sit here dressed a `.reference-card` and had no markup left to match. */
 /* Per-message report — opened from the hover ···, floats as a small card. */
 .dm-report {
     position: static;
@@ -9609,148 +9586,145 @@ span.wf-btn {
     color: var(--text-muted);
 }
 
+/* The poll is a sunken panel, not a raised card with a gold rule down its edge
+   (ThreadView.dc.html:453). Raised-on-raised put it at the same elevation as the
+   post above it, and the rule spent the surface's one --rule-gold on a ballot. */
 .poll-card {
-    margin-top: 18px;
-    padding: 18px;
+    margin: 14px 0 6px;
+    padding: 15px 17px;
     border: 1px solid var(--border-hair);
-    border-left: 3px solid var(--rule-gold);
-    border-radius: var(--radius-lg);
-    background: var(--surface-raised);
-    box-shadow: var(--shadow-xs);
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
 }
-.poll-head,
 .builder-head {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 12px;
 }
-.poll-icon {
-    display: inline-grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-md);
-    background: var(--gold-soft);
-    color: var(--star);
-}
-.poll-head-text,
-.poll-head span:nth-child(2) {
-    display: flex;
-    flex-direction: column;
-}
+/* One eyebrow line carries the whole state. It used to be three objects: a gold
+   ✦ tile, a two-line Poll / Choose-one label beside it, and an OPEN pill on the
+   far right — three announcements of a control the question below them names. */
 .poll-eyebrow {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 6px;
     font-family: var(--font-label);
-    font-size: .68rem;
-    letter-spacing: .12em;
+    font-size: var(--text-chip);
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--gold-ink);
+    color: var(--text-faint);
 }
-.poll-sub,
+.poll-eyebrow-mode { letter-spacing: .12em; }
 .builder-hint {
     display: block;
     color: var(--text-muted);
     font-size: .9rem;
 }
-.poll-status {
-    margin-left: auto;
-    padding: 4px 10px;
-    border: 1px solid var(--green-200);
-    border-radius: var(--radius-pill);
-    background: var(--surface-done);
-    color: var(--on-done);
-    font-family: var(--font-label);
-    font-size: .68rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-.poll-status.is-closed {
-    border-color: var(--border-hair);
-    background: var(--surface-sunken);
-    color: var(--text-muted);
-}
 .poll-question {
-    margin: 0 0 14px;
+    margin: 0 0 11px;
     font-family: var(--font-display);
-    font-size: 1.35rem;
-    font-weight: 500;
+    font-size: var(--text-size-body);
+    font-weight: var(--weight-semibold);
+    line-height: 1.35;
     color: var(--text-strong);
+    text-wrap: pretty;
 }
 .poll-options {
     display: flex;
     flex-direction: column;
-    gap: 9px;
+    gap: 6px;
 }
+/* An unchosen option is RAISED on the sunken panel — sunken-on-sunken made three
+   ballot rows read as one field of tan. Chosen fills --brand-subtle and takes
+   the evergreen edge, which is how every other selected state in the system
+   states itself. */
 .poll-option {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 10px 13px;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-md);
-    background: var(--surface-sunken);
+    background: var(--surface-raised);
     color: var(--text-body);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    cursor: pointer;
+}
+.poll-option:hover { border-color: var(--green-200); background: var(--brand-subtle); }
+.poll-option:has(input:checked) {
+    border-color: var(--green-200);
+    background: var(--brand-subtle);
+    color: var(--text-strong);
 }
 .poll-option input {
-    accent-color: var(--accent-2);
+    accent-color: var(--accent);
 }
 .poll-results {
-    gap: 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
 }
+/* A result is a line and a bar, not a card: three bordered boxes inside a
+   bordered panel drew four nested edges for one question. */
 .poll-result {
     display: block;
-    padding: 10px 12px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-md);
-    background: var(--surface-sunken);
-}
-.poll-result.is-mine {
-    border-color: var(--gold-400);
-    background: var(--gold-soft);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
 }
 .poll-result-row {
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 8px;
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    color: var(--text-body);
 }
+.poll-result-row > strong { font-weight: 400; min-width: 0; }
+.poll-result.is-mine .poll-result-row > strong { color: var(--text-strong); }
 .poll-result-count {
+    flex: 0 0 auto;
     margin-left: auto;
-    color: var(--text-muted);
+    color: var(--text-faint);
     font-family: var(--font-mono);
-    font-size: .82rem;
+    font-size: var(--text-eyebrow);
+    font-variant-numeric: tabular-nums;
 }
-.poll-result-mine {
-    padding: 2px 8px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-raised);
-    color: var(--gold-ink);
-    font-family: var(--font-label);
-    font-size: .64rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
+.poll-result-mine { flex: 0 0 auto; display: inline-flex; color: var(--star); }
+.poll-result-mine .icon-commend-star { width: 12px; height: 12px; }
 .poll-result-bar {
     display: block;
-    margin-top: 8px;
+    width: 100%;
+    height: 8px;
+    margin-top: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-pill);
+    background: var(--surface-raised);
 }
 .poll-result-progress {
     display: block;
     width: 100%;
-    height: 8px;
+    height: 100%;
 }
-.poll-result-track { fill: var(--border-soft); }
-.poll-result-fill { fill: var(--accent-2); }
-.poll-result.is-mine .poll-result-fill { fill: var(--gold-600); }
+.poll-result-track { fill: transparent; }
+.poll-result-fill { fill: var(--rule-gold); }
+.poll-result.is-mine .poll-result-fill { fill: var(--rule-gold); }
 .poll-foot {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-top: 12px;
+    margin-top: 11px;
 }
 .poll-meta {
-    color: var(--text-muted);
-    font-style: italic;
+    font-family: var(--font-label);
+    font-size: var(--text-eyebrow);
+    letter-spacing: .03em;
+    color: var(--text-faint);
 }
 .poll-foot .btn {
     margin-left: auto;
@@ -10374,8 +10348,7 @@ span.wf-btn {
     min-width: 0;
     margin: 0 0 var(--space-5);
 }
-.living-brief,
-.related-topic-fallback {
+.living-brief {
     min-width: 0;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-lg);
@@ -10383,64 +10356,71 @@ span.wf-btn {
     box-shadow: var(--shadow-xs);
     padding: var(--space-4);
 }
-.living-brief-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-4);
-    min-width: 0;
-}
-.related-topic-fallback h2 { margin: 0; }
 .living-brief-label {
-    margin: 0 0 var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 9px;
     color: var(--gold-ink);
     font-family: var(--font-label);
-    font-size: .78rem;
-    letter-spacing: var(--tracking-caps);
+    font-size: var(--text-chip);
+    letter-spacing: .16em;
     text-transform: uppercase;
 }
-.living-brief-meta {
+.living-brief-label a { color: inherit; }
+.living-brief-mark { display: inline-flex; color: var(--star); }
+.living-brief-mark .icon-commend-star { width: 12px; height: 12px; }
+/* Provenance, one disclosure away (ThreadView.dc.html:520-543). */
+.living-brief-provenance { margin-top: 10px; }
+.living-brief-provenance > summary {
+    display: inline-flex;
+    align-items: center;
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: var(--text-meta);
+    letter-spacing: .03em;
+    color: var(--accent);
+}
+.living-brief-provenance > summary::-webkit-details-marker { display: none; }
+.living-brief-provenance > summary::marker { content: ""; }
+.living-brief-provenance > summary:hover { text-decoration: underline; }
+.living-brief-provenance .living-brief-provenance-close,
+.living-brief-provenance[open] .living-brief-provenance-open { display: none; }
+.living-brief-provenance[open] .living-brief-provenance-close { display: inline; }
+.living-brief-provenance-body { padding-top: 2px; }
+.living-brief-eyebrow {
+    margin: 12px 0 4px;
+    font-family: var(--font-label);
+    font-size: var(--text-chip);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.living-brief-sources {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: var(--space-1) var(--space-3);
-    margin: 0;
-    color: var(--text-muted);
-    font-size: .88rem;
-}
-.living-brief-related {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-3);
-    margin-top: var(--space-4);
-}
-.living-brief-related-card {
-    display: grid;
-    gap: var(--space-1);
-    min-width: 0;
-    padding: var(--space-3);
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius-md);
-    background: var(--surface-sunken);
-    overflow-wrap: anywhere;
-}
-.living-brief-related-card span { color: var(--text-muted); }
-.living-brief-sources { margin-top: var(--space-4); }
-.living-brief-sources h3 { margin-bottom: var(--space-2); }
-.living-brief-sources ul { margin: 0; padding-left: 1.2rem; }
-.living-brief-sources a { text-decoration: underline; }
-.related-topic-fallback {
-    display: flex;
-    flex-wrap: wrap;
     align-items: baseline;
-    gap: var(--space-2) var(--space-4);
-    overflow-wrap: anywhere;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    font-family: var(--font-label);
+    font-size: var(--text-meta);
+    line-height: 1.6;
+    letter-spacing: .02em;
+    color: var(--text-muted);
 }
-
+.living-brief-source { display: inline-flex; align-items: baseline; gap: 5px; }
+/* --artifact-link, the token this system spends on a pointer INTO the record —
+   the same choice Search.dc.html and the inbox's board reference make. */
+.living-brief-sources a { color: var(--artifact-link); }
+.living-brief-meta {
+    margin: 9px 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-chip);
+    color: var(--text-faint);
+}
 @media (max-width: 760px) {
-    .living-brief-head { flex-direction: column; }
-    .living-brief-meta { justify-content: flex-start; }
-    .living-brief-related { grid-template-columns: minmax(0, 1fr); }
+    .living-brief-sources { gap: 4px 8px; }
 }
 
 /* Living Brief — one status line. Only ever one renders. */
@@ -10466,9 +10446,29 @@ span.wf-btn {
 /* ══ Thread View — The Study ═════════════════════════════════════════════ */
 :root { --keyboard-inset: 0px; }
 
-.thread-study { width: min(100%, 860px); margin-inline: auto; }
+/* One column, and the column IS the measure — declared ONCE, as a custom
+   property, exactly as the design declares it (ThreadView.dc.html:56). The
+   surface used to be 860px wide with the prose capped at 70ch inside it, so a
+   post byline ran 743px while the sentence under it ran 539px, and every card
+   the topic carries — poll, brief, catch-up strip, composer — sat ~200px wider
+   than the prose they exist to stand beside. */
+.thread-study { --measure: 646px; width: min(100%, var(--measure)); margin-inline: auto; }
+/* The scroll gutter is chrome, not measure. Where app.js turns .thread-scroll
+   into the column's own scroll container it reserves a stable scrollbar track
+   plus this surface's 8px inset — 23px in Chromium — and that came straight out
+   of the 646px the design gives the reading column, which is exactly the width
+   the header byline was short of stating its own reply count. The gutter hangs
+   outside the column instead, so the stream and the composer dock below it share
+   one measure. Only above the shell's own breakpoint, where the surface has room
+   beside it; at 860px and below the column is the pane and there is none. */
+@media (min-width: 861px) {
+    [data-thread-enhanced="1"] > .thread-scroll { margin-right: -23px; }
+}
 .thread-study-head { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--border-hair); }
-.thread-study-title { max-width: 28ch; margin: 12px 0 0; font-size: 2.15rem; line-height: 1.14; text-wrap: balance; }
+/* The display token, not a literal: 2.15rem was 1.6px shy of --text-display-lg
+   for no reason anything records, and 28ch broke the title eight characters
+   before the design's own 36ch. */
+.thread-study-title { max-width: 36ch; margin: 12px 0 0; font-size: var(--text-display-lg); line-height: 1.14; text-wrap: balance; }
 /* The standing chips are a row above the title, not children of the <h1>, so the
    heading's accessible name is the title alone. The 12px base margin on the title
    stays as the no-chips fallback; the row takes it over when it renders. */
@@ -10481,7 +10481,9 @@ span.wf-btn {
     padding: 3px 10px;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-pill);
-    font: 400 .6rem/1.2 var(--font-label);
+    /* --text-chip, the size the design sets every standing chip on this surface
+       at (ThreadView.dc.html:148). .6rem rendered them at 9.6px against 11.2px. */
+    font: 400 var(--text-chip)/1.2 var(--font-label);
     letter-spacing: .14em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -10498,13 +10500,28 @@ span.wf-btn {
    gets the chance to give up its width — the Star pill widening to "Starred" pushed
    the whole control group onto a second line. Identity shrinks to an ellipsis; the
    controls never do. The row wraps again below 768px, where two lines are right. */
-.thread-facts { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px 12px; margin-top: 10px; }
-.thread-facts-identity { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px 12px; flex: 1 1 auto; min-width: 0; }
-.thread-operational-facts { display: flex; align-items: center; gap: 6px 12px; flex: 0 0 auto; white-space: nowrap; color: var(--text-muted); font-size: .82rem; }
-.thread-operational-facts > span + span::before { content: "·"; margin-right: 12px; color: var(--text-faint); }
+.thread-facts { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px 16px; margin-top: 10px; }
+.thread-facts-identity { display: flex; align-items: center; flex-wrap: nowrap; gap: 12px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .thread-facts-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; margin-left: auto; }
-.thread-facts .thread-byline { margin: 0; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.thread-facts .thread-participants { margin-left: auto; }
+/* display: block, against imladris.css's `.thread-byline { display: flex }` —
+   a flex container has no text-overflow, so the byline broke onto a second line
+   at the first flex item (the opened-date <time>) instead of eliding. */
+.thread-facts .thread-byline { display: block; margin: 0; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.thread-facts .thread-byline time { display: inline; }
+/* The roster is ruled off from the byline rather than pushed to the far edge: at
+   the design's measure `margin-left: auto` put four monograms against the Star
+   pill with the byline's ellipsis stranded in between. */
+.thread-facts .thread-participants-rule {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    padding-left: 10px;
+    border-left: 1px solid var(--border-hair);
+}
+.thread-facts .thread-participants { margin: 0; }
+/* Tags keep the head, one line below the facts row — see templates/thread.php. */
+.thread-study-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.topic-tools-watch { font-family: var(--font-mono); font-size: var(--text-chip); color: var(--text-faint); }
 .topic-tools-open,
 .star-btn {
     min-height: 32px;
@@ -10522,15 +10539,19 @@ span.wf-btn {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin: 12px 0 0;
+    margin: 20px 2px 10px;
     color: var(--gold-ink);
     font-family: var(--font-label);
-    font-size: .65rem;
-    letter-spacing: .12em;
+    font-size: var(--text-chip);
+    letter-spacing: .16em;
     text-transform: uppercase;
 }
-.first-unread-divider::before,
+/* Asymmetric, as the design draws it: a 14px stub on the left and the long rule
+   on the right, so the label reads as the head of what follows rather than as a
+   caption centred over nothing. */
+.first-unread-divider::before { content: ""; height: 1px; background: var(--gold-200); flex: 0 0 14px; }
 .first-unread-divider::after { content: ""; height: 1px; background: var(--gold-200); flex: 1 1 auto; }
+.first-unread-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--gold-500); }
 /* The Study stream is deliberately flat — no cards. That leaves NOTHING marking
    where one person stops and the next begins, so the padding and the hairline
    below have to do it: 18px of air on each side of the rule puts a post break
@@ -10587,7 +10608,12 @@ span.wf-btn {
    (ThreadView.dc.html:240-241). Mono is ~25% wider per character, which is what
    pushes an already-long stamp onto its own line on a narrow screen. */
 .post-head .post-time,
-.post-head .post-edited { font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; }
+.post-head .post-edited { font-family: var(--font-label); font-size: var(--text-eyebrow); letter-spacing: .04em; }
+/* The stamp belongs to the byline it dates (ThreadView.dc.html:281). A general
+   `margin-left: auto` inherited from the pre-Imladris post-bit sent it to the
+   trailing edge of the head, which on this surface is 456px from the name it
+   qualifies — two facts about one post reading as two unrelated columns. */
+.post-head .post-time { margin-left: 0; }
 /* Reference value (ThreadView.dc.html:222). The local layer had drifted to
    .53rem, which renders "Commends" wider than the 48px rail it sits in — on
    desktop the page gutter absorbs the spill, on mobile it reached the card edge. */
@@ -10595,8 +10621,269 @@ span.wf-btn {
 .post-day-divider { display: flex; align-items: center; gap: 14px; margin: 26px 0 12px; }
 .post-day-divider span { flex: 1; height: 1px; background: var(--border-hair); }
 .post-day-divider time { color: var(--text-faint); font: .66rem var(--font-label); letter-spacing: .18em; text-transform: uppercase; }
-.study-living-brief { border-left: 3px solid var(--rule-gold); }
-.poll-card { padding: 15px 18px 13px; border-left-width: 1px; }
+/* The brief is a gold-EDGED panel, not a hairline card with a gold rule down one
+   side (ThreadView.dc.html:509). --border-hair made it a second post; the gold
+   edge is how this system marks the one region a topic did not write itself. */
+.study-living-brief {
+    margin: 14px 0 6px;
+    padding: 15px 17px;
+    border: 1px solid var(--gold-200);
+    border-radius: var(--radius-md);
+    box-shadow: none;
+}
+/* Nothing left to correct here: the base rule is now the design's own panel. */
+/* ── Reference and link cards in the post stream ──────────────────────────
+   Scoped to .post-stream: the DM reading room and the brief keep the compact
+   shared card, and this is the topic's own register. */
+.post-stream .reference-cards { gap: 8px; margin: 13px 0 0; }
+.post-stream .reference-card {
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--border-hair);
+    border-left: 3px solid var(--gold-500);
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
+    transition: border-color var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm);
+}
+.post-stream .reference-card .ref-mark {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    font-family: var(--font-display);
+    font-size: var(--text-thread);
+    line-height: .8;
+    color: var(--gold-ink);
+}
+.post-stream .reference-card .ref-body { flex: 1; min-width: 0; }
+.post-stream .reference-card .ref-type {
+    display: block;
+    font-family: var(--font-label);
+    font-size: var(--text-chip);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+}
+.post-stream .reference-card strong {
+    display: block;
+    margin: 3px 0 2px;
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-size-body);
+    line-height: 1.2;
+    color: var(--text-strong);
+}
+.post-stream .reference-card .ref-snippet {
+    display: block;
+    font-style: italic;
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+/* The design system's own unfurl (components.css:1293) — production had no
+   consumer for it and hand-rolled a badge-headed card instead. */
+.link-preview-cards { display: flex; flex-direction: column; gap: 8px; margin: 13px 0 0; }
+.link-preview-item { display: flex; flex-direction: column; gap: 0; }
+.link-preview {
+    display: block;
+    padding: 11px 13px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+}
+a.link-preview:hover { border-color: var(--gold-200); background: var(--surface-raised); }
+.link-preview-host {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-chip);
+    letter-spacing: .02em;
+    color: var(--text-faint);
+}
+.link-preview-host > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-preview-mark {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--accent-contrast);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-chip);
+}
+.link-preview-title {
+    display: block;
+    margin: 5px 0 0;
+    font-family: var(--font-display);
+    font-weight: var(--weight-medium);
+    font-size: var(--text-size-body);
+    line-height: 1.3;
+    color: var(--text-strong);
+}
+a.link-preview:hover .link-preview-title { color: var(--accent); }
+.link-preview-desc {
+    display: block;
+    margin: 4px 0 0;
+    font-size: var(--text-fine);
+    line-height: 1.5;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.link-preview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
+.link-preview-action { align-self: flex-start; padding: 0; border: 0; background: transparent; }
+/* Size de-emphasises this control; colour must not — --text-muted drops under
+   4.5:1 on the post surface at this size, so it keeps the accent (WCAG 1.4.1). */
+.link-preview-action .linkbtn { font-family: var(--font-label); font-size: var(--text-eyebrow); letter-spacing: .03em; }
+.link-preview-action .linkbtn.is-danger:hover { color: var(--danger); }
+.link-preview-hint {
+    font-family: var(--font-label);
+    font-size: var(--text-eyebrow);
+    letter-spacing: .03em;
+    color: var(--text-faint);
+}
+.link-preview.is-removed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border-style: dashed;
+}
+.link-preview-note { flex: 1 1 12ch; min-width: 0; font-size: var(--text-fine); line-height: 1.45; color: var(--text-muted); }
+
+/* ── Catch me up ──────────────────────────────────────────────────────────
+   The since-you-last-read strip (ThreadView.dc.html:196-215): one line until it
+   is asked to open. It replaced `.memory-panel.since-last-read`, a full panel —
+   heading, count paragraph, bulleted excerpt list — printed above the topic on
+   every visit that had anything unread at all. */
+.catch-up {
+    margin: 0 0 2px;
+    border: 1px solid var(--border-hair);
+    border-left: 3px solid var(--rule-gold);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-xs);
+}
+.catch-up-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 13px;
+    list-style: none;
+    cursor: pointer;
+}
+.catch-up-summary::-webkit-details-marker { display: none; }
+.catch-up-summary::marker { content: ""; }
+.catch-up-mark { flex: 0 0 auto; display: inline-flex; color: var(--gold-ink); }
+.catch-up-mark .icon { width: 14px; height: 14px; }
+.catch-up-label {
+    flex: 0 0 auto;
+    font-family: var(--font-label);
+    font-size: var(--text-meta);
+    letter-spacing: .03em;
+    color: var(--text-strong);
+    white-space: nowrap;
+}
+/* The summary line gives up its width first: it is the one item here whose
+   value survives an ellipsis. */
+.catch-up-line {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-fine);
+    color: var(--text-muted);
+}
+.catch-up-toggle {
+    flex: 0 0 auto;
+    font-family: var(--font-label);
+    font-size: var(--text-eyebrow);
+    letter-spacing: .04em;
+    color: var(--accent);
+}
+.catch-up .catch-up-toggle-close,
+.catch-up[open] .catch-up-toggle-open { display: none; }
+.catch-up[open] .catch-up-toggle-close { display: inline; }
+.catch-up-points {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 0;
+    padding: 0 15px 14px 34px;
+    list-style: none;
+}
+.catch-up-points > li {
+    position: relative;
+    font-size: var(--text-sm);
+    line-height: 1.52;
+    color: var(--text-body);
+    text-wrap: pretty;
+}
+.catch-up-points > li::before {
+    content: "";
+    position: absolute;
+    left: -16px;
+    top: 9px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold-500);
+}
+.catch-up-points > li > a {
+    font-weight: var(--weight-semibold);
+    color: var(--text-strong);
+    text-decoration: none;
+}
+.catch-up-points > li > a:hover { text-decoration: underline; }
+
+/* ── Related ──────────────────────────────────────────────────────────────
+   One row of chips after the stream (ThreadView.dc.html:659). */
+.thread-related {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin: 20px 0 0;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-hair);
+}
+.thread-related-label {
+    font-family: var(--font-label);
+    font-size: var(--text-chip);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.thread-related-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 4px 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    font-size: var(--text-fine);
+    color: var(--text-body);
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+}
+.thread-related-chip::before { content: "#"; color: var(--gold-ink); }
+.thread-related-chip:hover { border-color: var(--green-200); background: var(--brand-subtle); }
+
 .thread-dock { background: linear-gradient(to top, var(--surface-page) 82%, transparent); padding-top: 14px; }
 .thread-composer-identity { display: flex; align-items: center; gap: 9px; padding-bottom: 8px; border-bottom: 1px solid var(--border-hair); }
 .thread-composer-identity .monogram { width: 24px; height: 24px; font-size: .58rem; }
@@ -10666,6 +10953,142 @@ body.thread-restructure-open { overflow: hidden; }
     cursor: pointer;
 }
 .topic-tools-body > details > summary span:last-child { margin-left: auto; color: var(--text-faint); font: .64rem var(--font-mono); }
+/* Topic tools — the drawer's own controls (ThreadView.dc.html:760-922). The
+   section body is a grid, so a <form> holding one link-button stretched to the
+   full 364px and centred its label: five management actions rendered as five
+   centred paragraphs. Rows are left-aligned and only the controls that mean to
+   fill the width do. */
+/* A named action is a row, not a stretched paragraph: the section body is a grid
+   and a <form> holding one control filled its 364px track, so five management
+   actions read as five centred lines of body prose. */
+.topic-tools-section-body .linkbtn,
+.topic-tools-section-body [data-thread-restructure-open] {
+    display: block;
+    width: 100%;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: var(--text-meta);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.topic-tools-section-body .linkbtn:hover,
+.topic-tools-section-body [data-thread-restructure-open]:hover { background: var(--surface-sunken); text-decoration: none; }
+.topic-tools-section-body .linkbtn.danger { color: var(--rust); }
+/* The committing controls stay buttons, and stay their own width. */
+.topic-tools-section-body .btn { justify-self: start; }
+.topic-tools-eyebrow {
+    margin: 0;
+    font-family: var(--font-label);
+    font-size: var(--text-chip);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.topic-tools-note,
+.topic-tools-foot {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-chip);
+    color: var(--text-faint);
+}
+.topic-tools-foot { margin: 14px 4px 0; }
+/* Watch: one segmented control, one click per choice. */
+.watch-segmented {
+    display: flex;
+    overflow: hidden;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+}
+.watch-segmented > form { flex: 1; display: flex; }
+.watch-choice {
+    flex: 1;
+    padding: 7px 0;
+    border: 0;
+    background: var(--surface-raised);
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: var(--text-eyebrow);
+    letter-spacing: .04em;
+    cursor: pointer;
+}
+.watch-choice:hover { background: var(--surface-sunken); }
+.watch-choice.is-on { background: var(--accent); color: var(--accent-contrast); }
+.watch-choice.is-on:hover { background: var(--accent); }
+/* Snooze: three windows as pills, the standing one lit in gold. */
+.snooze-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.snooze-label {
+    margin-right: 2px;
+    font-family: var(--font-label);
+    font-size: var(--text-eyebrow);
+    letter-spacing: .04em;
+    color: var(--text-muted);
+}
+.snooze-choice {
+    padding: 3px 10px;
+    white-space: nowrap;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: var(--text-eyebrow);
+    letter-spacing: .03em;
+    cursor: pointer;
+}
+.snooze-choice:hover { border-color: var(--gold-200); color: var(--gold-ink); }
+.snooze-choice.is-on { border-color: var(--gold-200); background: var(--gold-100); color: var(--gold-ink); }
+/* Pin and lock, as switches that state what is true. */
+.topic-tools-switches { display: flex; flex-direction: column; gap: 4px; }
+.tool-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: var(--text-meta);
+    text-align: left;
+    cursor: pointer;
+}
+.tool-switch:hover { background: var(--surface-sunken); }
+.tool-switch-track {
+    flex: 0 0 auto;
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 19px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    box-shadow: var(--shadow-inset);
+    transition: background var(--dur-base) var(--ease-calm), border-color var(--dur-base) var(--ease-calm);
+}
+.tool-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 13px;
+    height: 13px;
+    border: 1px solid var(--gold-200);
+    border-radius: 50%;
+    background: var(--surface-raised);
+    transition: transform var(--dur-base) var(--ease-calm), background var(--dur-base) var(--ease-calm);
+}
+.tool-switch.is-on .tool-switch-track { border-color: var(--accent); background: var(--accent); }
+.tool-switch.is-on .tool-switch-knob { transform: translateX(15px); border-color: var(--gold-500); background: var(--gold-200); }
+@media (prefers-reduced-motion: reduce) {
+    .tool-switch-track,
+    .tool-switch-knob { transition: none; }
+}
 .topic-tools-section-body { display: grid; gap: 10px; padding: 2px 4px 14px; }
 .topic-tools-section-body form { display: grid; gap: 7px; margin: 0; }
 .post-toolbar {
@@ -10806,12 +11229,10 @@ body.thread-restructure-open { overflow: hidden; }
     /* Two lines is the right answer on a phone: the identity group takes the first,
        the controls the second, and nothing is ellipsised away to reach one line. */
     .thread-facts { flex-wrap: wrap; }
-    .thread-facts-identity { flex: 1 1 100%; flex-wrap: wrap; }
-    .thread-operational-facts { flex: 1 1 100%; flex-wrap: wrap; white-space: normal; }
+    .thread-facts-identity { flex: 1 1 100%; flex-wrap: wrap; overflow: visible; }
     .thread-facts-actions { margin-left: 0; }
     .thread-facts .thread-byline { flex-basis: 100%; overflow: visible; white-space: normal; }
-    .thread-facts .thread-participants-label { display: none; }
-    .thread-facts .thread-participants { margin-left: 0; }
+    .thread-facts .thread-participants-rule { padding-left: 0; border-left: 0; }
     [data-thread-enhanced="1"] .topic-tools:not([hidden]) {
         inset: auto 0 0 0;
         width: 100%;
@@ -14229,29 +14650,24 @@ a.account-row-name:hover {
    top margin would double that gap inside this tighter panel. */
 .living-brief-empty .living-brief-curator { margin-top: var(--space-2); }
 
-/* Living Brief - entrance motion. The memory slot holds the published brief OR
-   the pair below it: templates/thread.php renders `.related-topic-fallback` and
-   `.living-brief-empty` together whenever a brief-less topic carries
-   deterministic related rows and its viewer can curate, so the slot can hold two
-   cards, not one. The fade therefore belongs to the slot's arrival rather than to
-   which variant filled it, and all three of its children take it — animating a
-   subset would leave one card fading while its neighbour snapped. The More
-   disclosure is a native <details>, so its body fades on [open] with no JS
-   involved. The global reduced-motion clamps near the top of this file already
-   reach these, but the per-component opt-out is restated the way every other
-   animated surface here restates it. */
+/* Living Brief - entrance motion. The memory slot holds exactly one of the two
+   panels — the published brief, or the curator's empty state (ADR 0030 moved the
+   deterministic related rows out of the slot and into the one Related row after
+   the stream), so the fade belongs to the slot's arrival and both variants take
+   it. The More disclosure is a native <details>, so its body fades on [open]
+   with no JS involved. The global reduced-motion clamps near the top of this
+   file already reach these, but the per-component opt-out is restated the way
+   every other animated surface here restates it. */
 @keyframes lb-fade {
     from { opacity: 0; transform: translateY(5px); }
     to   { opacity: 1; transform: none; }
 }
 .living-brief,
-.related-topic-fallback,
 .living-brief-empty { animation: lb-fade 240ms var(--ease-calm); }
 .lb-more[open] > .lb-more-body { animation: lb-fade 180ms var(--ease-calm); }
 
 @media (prefers-reduced-motion: reduce) {
     .living-brief,
-    .related-topic-fallback,
     .living-brief-empty,
     .lb-more[open] > .lb-more-body { animation: none; }
 }

@@ -38,6 +38,18 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
 // rather than tested with :empty, because the row's markup carries whitespace
 // even when every chip is conditional-false and :empty would never match.
 $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked'] === 1 || $status !== null;
+// The reader's own watch, stated on the Topic tools pill rather than only inside
+// the drawer (ThreadView.dc.html:187 `watchLabel`): the control that opens the
+// drawer says what the drawer would tell you about the one setting a reader
+// changes most. Absent for a guest, who has no watch to state.
+$watchLabels = ['instant' => 'every reply', 'daily' => 'daily digest', 'off' => 'only when named'];
+$watchLabel = ($notifications_on ?? false) && $current_user !== null
+    ? ($watchLabels[(string) ($subscription['frequency'] ?? '')] ?? null)
+    : null;
+// Related topics are ONE row, after the stream, whether they came from the
+// brief's own overlay or the deterministic fallback — the design has a single
+// `Related` rail and no cards inside the brief (ThreadView.dc.html:659).
+$relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($related_fallback ?? []);
 ?>
 <article class="thread thread-conversation thread-study" data-thread-study>
     <div class="thread-scroll">
@@ -67,19 +79,29 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
         }
         $byReplies = (int) ($thread['reply_count'] ?? 0);
         ?>
-        <?php /* Three groups, one line. The row is flex-wrap: nowrap deliberately — a
+        <?php /* Two groups, one line. The row is flex-wrap: nowrap deliberately — a
                  wrapping flex container breaks its lines from the items' CONTENT widths
                  BEFORE flex-shrink applies, so a shrinkable byline on its own changes
                  nothing and the Star pill widening to "Starred" (~20px) shoved the whole
                  control group onto a second line. The identity side gives up width to an
-                 ellipsis; operational state and controls remain readable. */ ?>
+                 ellipsis; the controls never do.
+
+                 The identity side carries the byline and the roster and NOTHING else
+                 (ThreadView.dc.html:164-181). It used to carry the tag chips, a visible
+                 "In council" label and a Tended-by/Quiet-until group as well; with five
+                 competing items on a nowrap row the one shrinkable item gave up all of
+                 its width, and the topic's own byline rendered as "Opened by Erestor ·
+                 5 repl". The tags moved to their own row below, the roster's label is
+                 the stack's accessible name, the assignment is stated where it is
+                 changed (the drawer's Topic management summary), and the snooze — which
+                 is the reader's own, like the reply count beside it — folds into the
+                 byline exactly as the design's `bylineTail` does. */ ?>
         <div class="thread-facts-identity">
-        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?></p>
-        <?php foreach (($thread_tags ?? []) as $tag): ?><a class="tag" href="/tags/<?= $e($tag['slug']) ?>"><?= $e($tag['name']) ?></a><?php endforeach; ?>
+        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?php if (($thread['created_at'] ?? '') !== ''): ?><time datetime="<?= $e(iso_datetime($thread['created_at'])) ?>" title="<?= $e(human_datetime($thread['created_at'])) ?>"><?= $e(gmdate('M j', strtotime((string) $thread['created_at'] . ' UTC') ?: 0)) ?></time> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if (!empty($my_snooze)): ?> · Quiet until <?= $e(human_datetime($my_snooze)) ?><?php endif; ?></p>
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
-            <span class="thread-participants-label">In council</span>
-            <ul class="thread-participants" aria-label="Participants">
+            <span class="thread-participants-rule">
+            <ul class="thread-participants" aria-label="In council">
                 <?php foreach ($participants as $pp): ?>
                     <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false); ?>
                     <li class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed']]) ?></li>
@@ -88,14 +110,9 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
                     <li class="participant-more">+<?= (int) $participant_count - $shownParticipants ?></li>
                 <?php endif; ?>
             </ul>
+            </span>
         <?php endif; ?>
         </div>
-        <?php if (!empty($assignment) || !empty($my_snooze)): ?>
-        <div class="thread-operational-facts" aria-label="Topic operations">
-            <?php if (!empty($assignment)): ?><span>Tended by @<?= $e($assignment['assigned_username']) ?></span><?php endif; ?>
-            <?php if (!empty($my_snooze)): ?><span>Quiet until <?= $e(human_datetime($my_snooze)) ?></span><?php endif; ?>
-        </div>
-        <?php endif; ?>
         <div class="thread-facts-actions">
         <?php if (($engagement ?? false) && $current_user !== null && !empty($can_write)): ?>
             <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
@@ -109,10 +126,19 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
             </form>
         <?php endif; ?>
         <?php if ($hasTopicTools): ?>
-            <button type="button" class="topic-tools-open" data-topic-tools-open hidden aria-controls="topic-tools-<?= (int) $thread['id'] ?>" aria-expanded="false"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span></button>
+            <button type="button" class="topic-tools-open" data-topic-tools-open hidden aria-controls="topic-tools-<?= (int) $thread['id'] ?>" aria-expanded="false"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></button>
         <?php endif; ?>
         </div>
         </div>
+        <?php /* Tags are a row of their own, not passengers on the facts line. The
+                 design keeps them out of the header entirely and reads them in the
+                 drawer, but the drawer is signed-in only — a guest would lose every
+                 route from a topic into /tags/{slug}, and those links are how a
+                 forum's cross-board taxonomy is crawled at all. They keep the head,
+                 one line lower, where nothing has to give up width for them. */ ?>
+        <?php if (!empty($thread_tags)): ?>
+        <div class="thread-study-tags"><?php foreach ($thread_tags as $tag): ?><a class="tag" href="/tags/<?= $e($tag['slug']) ?>"><?= $e($tag['name']) ?></a><?php endforeach; ?></div>
+        <?php endif; ?>
         <?php if ($current_user === null): ?><?= $this->partial('partials/thread_status_history', compact('status_history', 'status_labels')) ?><?php endif; ?>
     </header>
     <?php
@@ -129,6 +155,8 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
         'subscription' => $subscription,
         'notifications_on' => $notifications_on,
         'workflow_on' => $workflow_on,
+        'my_snooze' => $my_snooze,
+        'is_staff' => !empty($can_pin) || !empty($can_lock) || !empty($can_split_merge) || !empty($can_move),
         'can_write' => $can_write,
         'can_change_statuses' => $can_change_statuses,
         'status_labels' => $status_labels,
@@ -163,116 +191,48 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
         'restructure_old' => $restructure_old ?? [],
         'page' => $page,
     ]) ?>
-        <?php if (!empty($polls_on) && !empty($poll)): ?>
-            <section class="poll-card poll-panel">
-                <div class="poll-head">
-                    <span class="poll-icon" aria-hidden="true">✦</span>
-                    <span>
-                        <span class="poll-eyebrow">Poll</span>
-                        <span class="poll-sub"><?= $poll['mode'] === 'multiple' ? 'Choose any' : 'Choose one' ?></span>
-                    </span>
-                    <span class="poll-status<?= (string) ($poll['status'] ?? '') === 'closed' ? ' is-closed' : '' ?>">
-                        <?= (string) ($poll['status'] ?? '') === 'closed' ? 'Closed' : 'Open' ?>
-                    </span>
-                </div>
-                <h2 class="poll-question"><?= $e($poll['question']) ?></h2>
-                <?php if (!empty($poll['results_visible'])): ?>
-                    <?php $pollTotal = max(1, array_sum(array_map(static fn ($option): int => (int) $option['vote_count'], $poll['options']))); ?>
-                    <ul class="poll-results link-list">
-                        <?php foreach ($poll['options'] as $option): ?>
-                            <?php $n = (int) $option['vote_count']; $pollPercent = (int) round(($n / $pollTotal) * 100); ?>
-                            <li class="poll-result<?= !empty($option['viewer_voted']) ? ' is-mine' : '' ?>">
-                                <span class="poll-result-row">
-                                    <strong><?= $e($option['body']) ?></strong>
-                                    <?php if (!empty($option['viewer_voted'])): ?><span class="poll-result-mine">Your vote</span><?php endif; ?>
-                                    <span class="poll-result-count"><?= $n ?> vote<?= $n === 1 ? '' : 's' ?></span>
-                                </span>
-                                <span class="poll-result-bar" role="img" aria-label="<?= $pollPercent ?>% of votes">
-                                    <svg class="poll-result-progress" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                                        <rect class="poll-result-track" x="0" y="0" width="100" height="8" rx="4" />
-                                        <rect class="poll-result-fill" x="0" y="0" width="<?= $pollPercent ?>" height="8" rx="4" />
-                                    </svg>
-                                </span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php elseif (!empty($poll['can_vote'])): ?>
-                    <form method="post" action="/polls/<?= (int) $poll['id'] ?>/vote" class="poll-options">
-                        <?= $this->csrfField() ?>
-                        <?php foreach ($poll['options'] as $option): ?>
-                            <label class="poll-option">
-                                <input type="<?= $poll['mode'] === 'multiple' ? 'checkbox' : 'radio' ?>" name="option_ids[]" value="<?= (int) $option['id'] ?>">
-                                <span class="poll-option-mark" aria-hidden="true"></span>
-                                <?= $e($option['body']) ?>
-                            </label>
-                        <?php endforeach; ?>
-                        <div class="poll-foot">
-                            <span class="poll-meta">Open to the council</span>
-                            <button class="btn btn-small" type="submit">Vote</button>
-                        </div>
-                    </form>
-                <?php else: ?>
-                    <p class="muted">Results are visible after voting or after the poll closes.</p>
-                <?php endif; ?>
-            </section>
-        <?php endif; ?>
-    <?php // $canCurateMemory is $topicToolSections['memory'] itself (hoisted above),
-          // so the drawer's "Go to the brief's curator tools" anchor always has a
-          // target: with a brief the footer rides inside it, without one the empty
-          // state carries the same footer. ?>
-    <?php if ($living_brief !== null || $related_fallback !== [] || $canCurateMemory): ?>
-    <div class="thread-memory-slot">
-        <?php if ($living_brief !== null): ?>
-            <?= $this->partial('partials/living_brief', [
-                'thread' => $thread,
-                'living_brief' => $living_brief,
-                'living_brief_sources' => $living_brief_sources,
-                'living_brief_related' => $living_brief_related,
-                'can_curate_memory' => $canCurateMemory,
-                'memory_automation_paused' => $memory_automation_paused,
-                'memory_history' => $memory_history,
-                'memory_refresh' => $memory_refresh,
-            ]) ?>
-        <?php else: ?>
-            <?php // The fallback and the empty state are independent: a brief-less
-                  // topic that happens to carry deterministic related rows would
-                  // otherwise strand its curator behind them. ?>
-            <?php if ($related_fallback !== []): ?>
-                <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
-                    <h2 id="related-topic-fallback-heading">Related topics</h2>
-                    <?php foreach ($related_fallback as $related): ?>
-                        <a href="<?= $e($related['url']) ?>"><?= $e($related['title']) ?></a>
-                    <?php endforeach; ?>
-                </section>
-            <?php endif; ?>
-            <?php if ($canCurateMemory): ?>
-                <?= $this->partial('partials/living_brief_empty', [
-                    'thread' => $thread,
-                    'can_curate_memory' => $canCurateMemory,
-                    'memory_automation_paused' => $memory_automation_paused,
-                    'memory_history' => $memory_history,
-                    'memory_refresh' => $memory_refresh,
-                ]) ?>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
+    <?php
+    /* The poll and the living brief belong to the OPENING post: the opening post
+       asked the question the poll puts to a vote, and the brief summarises that
+       same question (ThreadView.dc.html:459-465 — `pollAfter`/`briefRegion` are
+       both `raw.op`). They used to render above the stream, so every reader met a
+       ballot and an AI-written summary before a single word of the topic. Both are
+       built here, once, and echoed inside the stream after the opening post's row.
+
+       A page that does not carry the opening post still gets them, at the head of
+       its own stream. The design's stream is four posts long and its brief simply
+       vanishes on page 2; on a topic with a hundred replies that would hide the one
+       artifact written to spare a reader the backlog, from exactly the reader who
+       is deepest in it. */
+    $afterOpeningPost = '';
+    if (!empty($polls_on) && !empty($poll)) {
+        $afterOpeningPost .= $this->partial('partials/poll', ['poll' => $poll]);
+    }
+    $afterOpeningPost .= $this->partial('partials/thread_memory_slot', [
+        'thread' => $thread,
+        'living_brief' => $living_brief,
+        'living_brief_sources' => $living_brief_sources,
+        'can_curate_memory' => $canCurateMemory,
+        'memory_automation_paused' => $memory_automation_paused,
+        'memory_history' => $memory_history,
+        'memory_refresh' => $memory_refresh,
+    ]);
+    $openingPostOnThisPage = false;
+    foreach (($posts ?? []) as $streamPost) {
+        if ((int) ($streamPost['is_op'] ?? 0) === 1) {
+            $openingPostOnThisPage = true;
+            break;
+        }
+    }
+    ?>
+
+    <?php // Catch me up leads the stream — it is the answer to the question a
+          // returning reader arrives with, and it costs one line until asked. ?>
+    <?php if (!empty($since_last_read_context)): ?>
+        <?= $this->partial('partials/catch_up', ['since_last_read_context' => $since_last_read_context]) ?>
     <?php endif; ?>
 
-    <?php if (!empty($since_last_read_context)): ?>
-        <section class="memory-panel since-last-read">
-            <h2>Since you last read</h2>
-            <p class="muted"><?= (int) $since_last_read_context['post_count'] ?> new post<?= (int) $since_last_read_context['post_count'] === 1 ? '' : 's' ?></p>
-            <ul class="link-list">
-                <?php foreach (($since_last_read_context['items'] ?? []) as $item): ?>
-                    <li>
-                        <a href="<?= $e($item['url'] ?? ('#p' . (int) $item['post_id'])) ?>">#<?= (int) $item['post_id'] ?></a>
-                        <strong><?= empty($item['author_is_anonymous']) ? '@' : '' ?><?= $e($item['author']) ?></strong>
-                        <span class="muted"><?= $e($item['excerpt']) ?></span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        </section>
-    <?php endif; ?>
+    <?php if (!$openingPostOnThisPage): ?><?= $afterOpeningPost ?><?php $afterOpeningPost = ''; endif; ?>
 
     <?php if (empty($posts)): ?>
         <p class="muted empty">This thread has no visible posts.</p>
@@ -294,6 +254,10 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
                         'p' => $p,
                         'can_restore_posts' => $can_restore_posts ?? false,
                     ]) ?>
+                    <?php // A soft-deleted opening post still opens the topic, so the poll
+                          // and the brief still follow it — a warden reading the staff
+                          // variant sees them where every other reader does. ?>
+                    <?php if ((int) $p['is_op'] === 1): ?><?= $afterOpeningPost ?><?php $afterOpeningPost = ''; endif; ?>
                     <?php continue; ?>
                 <?php endif; ?>
                 <?php
@@ -337,7 +301,9 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
                     'edit_post_id' => $edit_post_id ?? 0,
                     'edit_old' => $edit_old ?? '',
                     'edit_error' => $edit_error ?? '',
+                    'unread_count' => (int) ($since_last_read_context['post_count'] ?? 0),
                 ]) ?>
+                <?php if ((int) $p['is_op'] === 1): ?><?= $afterOpeningPost ?><?php $afterOpeningPost = ''; endif; ?>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
@@ -347,6 +313,23 @@ $hasStandingChips = (int) $thread['is_pinned'] === 1 || (int) $thread['is_locked
         'pages' => $pages,
         'base_url' => '/t/' . (int) $thread['id'] . '-' . $thread['slug'] . '?',
     ]) ?>
+
+    <?php /* One Related row, after the stream (ThreadView.dc.html:659): where a
+             reader who has finished the topic is, rather than in front of one who
+             has not started it. It used to be two mutually exclusive blocks — a
+             three-card grid inside the brief when there was one, a headed
+             "Related topics" section above the stream when there was not — so the
+             same idea arrived in two shapes at two ends of the page depending on a
+             state the reader cannot see. The overlay's `reason` keeps its place as
+             the chip's title; the label is the topic. */ ?>
+    <?php if (!empty($relatedTopics)): ?>
+        <nav class="thread-related" aria-label="Related topics">
+            <span class="thread-related-label">Related</span>
+            <?php foreach ($relatedTopics as $related): ?>
+                <a class="thread-related-chip" href="<?= $e($related['url']) ?>"<?= ($related['reason'] ?? '') !== '' ? ' title="' . $e($related['reason']) . '"' : '' ?>><?= $e($related['title']) ?></a>
+            <?php endforeach; ?>
+        </nav>
+    <?php endif; ?>
     </div>
 
     <div class="thread-dock">

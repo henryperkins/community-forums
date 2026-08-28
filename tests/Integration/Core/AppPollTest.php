@@ -109,7 +109,12 @@ final class AppPollTest extends TestCase
         $before = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $before);
         self::assertStringContainsString('class="poll-card poll-panel"', $before->body());
-        self::assertStringContainsString('poll-head', $before->body());
+        // ADR 0030: one eyebrow line carries the whole state. `.poll-head` was a
+        // gold ✦ tile, a two-line Poll / Choose-one label and an OPEN pill on the
+        // far right — three announcements of a control the question below names.
+        self::assertStringNotContainsString('poll-head', $before->body());
+        self::assertStringNotContainsString('poll-status', $before->body());
+        self::assertStringContainsString('<p class="poll-eyebrow">Poll<span class="poll-eyebrow-mode">· choose one</span></p>', $before->body());
         self::assertStringContainsString('poll-option', $before->body());
         self::assertStringContainsString('Open to the council', $before->body());
 

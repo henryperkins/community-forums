@@ -46,7 +46,10 @@ final class AppThreadViewStudyTest extends TestCase
         $body = $page->body();
 
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('<ul class="thread-participants" aria-label="Participants">', $body);
+        // The stack's accessible name IS its label now (ADR 0030 #7): the visible
+        // "In council" eyebrow beside it wrapped to two lines inside the
+        // deliberately nowrap identity group and helped truncate the byline.
+        self::assertStringContainsString('<ul class="thread-participants" aria-label="In council">', $body);
         self::assertSame(2, substr_count($body, '<li class="participant"'));
         self::assertStringNotContainsString('<div class="thread-participants"', $body);
     }

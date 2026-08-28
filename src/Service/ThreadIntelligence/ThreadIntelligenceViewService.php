@@ -293,6 +293,11 @@ final class ThreadIntelligenceViewService
             'has_ai_lineage' => $hasAiAncestor,
             'published_at' => $time->format('Y-m-d H:i:s') . ' UTC',
             'published_at_utc' => $time->format('Y-m-d\TH:i:s\Z'),
+            // The stored value, unformatted, so a reading surface can stamp it in
+            // the same compact register as every post byline (post_datetime()).
+            // 'published_at' stays the full absolute value the <time> title and the
+            // operator console want.
+            'published_at_raw' => $time->format('Y-m-d H:i:s'),
         ];
     }
 

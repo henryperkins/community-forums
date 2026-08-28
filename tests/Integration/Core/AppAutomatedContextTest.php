@@ -78,7 +78,10 @@ final class AppAutomatedContextTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('Since you last read', $page->body());
+        // ADR 0030: the panel became the one-line "Catch me up" strip; the
+        // excerpts it used to print unconditionally are inside its disclosure.
+        self::assertStringContainsString('class="catch-up"', $page->body());
+        self::assertStringContainsString('Catch me up', $page->body());
         self::assertStringContainsString('Unread default-on reply.', $page->body());
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM since_last_read_context'));
     }
@@ -103,7 +106,7 @@ final class AppAutomatedContextTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
-        self::assertStringNotContainsString('Since you last read', $page->body());
+        self::assertStringNotContainsString('class="catch-up"', $page->body());
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM since_last_read_context'));
     }
 
@@ -128,7 +131,7 @@ final class AppAutomatedContextTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('Since you last read', $page->body());
+        self::assertStringContainsString('class="catch-up"', $page->body());
         self::assertStringContainsString('First unread update with useful context.', $page->body());
         self::assertStringContainsString('Second unread update with more detail.', $page->body());
 
@@ -180,7 +183,13 @@ final class AppAutomatedContextTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('<strong>Anonymous</strong>', $page->body());
+        // The strip names the author the way mask_author() does — the constant
+        // identity, never the real one, in the summary line and in the point.
+        self::assertMatchesRegularExpression(
+            '/<a href="#p\d+">Anonymous<\/a>/',
+            $page->body(),
+        );
+        self::assertStringContainsString('1 reply — Anonymous', $page->body());
         self::assertStringNotContainsString('@Anonymous', $page->body());
         self::assertStringNotContainsString('context-secret-identity', $page->body());
         self::assertStringNotContainsString('Context Secret Name', $page->body());
@@ -273,7 +282,7 @@ final class AppAutomatedContextTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('Since you last read', $page->body());
+        self::assertStringContainsString('class="catch-up"', $page->body());
         self::assertSame($latestReply, (int) $this->db->fetchValue(
             'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
             [(int) $viewer['id'], $thread['thread_id']],

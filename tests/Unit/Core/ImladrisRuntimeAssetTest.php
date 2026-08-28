@@ -174,11 +174,23 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertMatchesRegularExpression('/\.field-cell\s*>\s*\.field-error\s*\{[^}]*margin:\s*0/s', $app);
         self::assertStringContainsString('.first-unread-divider', $app);
         self::assertMatchesRegularExpression('/\.thread-facts-identity\s*\{[^}]*flex-wrap:\s*nowrap/s', $app);
-        self::assertMatchesRegularExpression('/\.thread-operational-facts\s*\{[^}]*white-space:\s*nowrap/s', $app);
+        // `.thread-operational-facts` is retired (ADR 0030): the snooze folded
+        // into the byline and the assignment moved to the drawer, so the row is
+        // the design's two groups and the byline is the only shrinkable item on
+        // it. What has to stay true is that the byline can still ellipsise and
+        // that the roster is ruled off rather than pushed to the far edge.
+        self::assertStringNotContainsString('.thread-operational-facts', $app);
         self::assertMatchesRegularExpression(
-            '/@media \(max-width:\s*768px\).*\.thread-operational-facts\s*\{[^}]*flex:\s*1 1 100%/s',
+            '/\.thread-facts \.thread-byline\s*\{[^}]*text-overflow:\s*ellipsis/s',
             $app,
         );
+        self::assertMatchesRegularExpression(
+            '/\.thread-facts \.thread-participants-rule\s*\{[^}]*border-left:\s*1px solid var\(--border-hair\)/s',
+            $app,
+        );
+        // The measure is declared once, as a custom property, so the regions on
+        // this surface cannot drift apart (ThreadView.dc.html:56).
+        self::assertMatchesRegularExpression('/\.thread-study\s*\{[^}]*--measure:\s*646px/s', $app);
 
         self::assertStringContainsString('.field > .field-hint', $design);
         self::assertDoesNotMatchRegularExpression('/(^|})\s*\.field-hint\s*\{/m', $design);

@@ -9,6 +9,17 @@ $hasTools = in_array(true, $topic_tool_sections, true);
 $moveBoards = is_array($move_boards ?? null) ? $move_boards : [];
 $moveError = (string) ($move_error ?? '');
 $moveSelected = (int) ($move_selected ?? 0);
+// Which snooze window is standing. The column stores the instant, not the choice
+// that produced it (ThreadWorkflowController::parseSnooze writes now + 4h / 24h /
+// 7d), so the pill is read back by bucketing what is left — the same three
+// windows, inverted. A snooze already past shows none of them lit.
+$snoozeChoice = '';
+if (!empty($my_snooze)) {
+    $remaining = (strtotime((string) $my_snooze . ' UTC') ?: 0) - time();
+    if ($remaining > 0) {
+        $snoozeChoice = $remaining <= 6 * 3600 ? 'later_today' : ($remaining <= 30 * 3600 ? 'tomorrow' : 'week');
+    }
+}
 ?>
 <?php if ($hasTools): ?>
 <div class="topic-tools-scrim" data-topic-tools-scrim hidden></div>
@@ -22,31 +33,47 @@ $moveSelected = (int) ($move_selected ?? 0);
         <?php if ($showWatch): ?>
         <details data-topic-tools-section="watch" open>
             <summary><span>Your watch</span><span><?= $e($subscription['frequency'] ?? 'off') ?></span></summary>
+            <?php /* One click per choice, not a select and a Save
+                     (ThreadView.dc.html:769-786). Three forms, each posting one
+                     value, so the segmented control and the snooze pills work with
+                     JavaScript off exactly as they do with it — the picker-plus-
+                     commit shape charged two interactions and a page load for a
+                     setting whose whole value is that it is quick to change. */ ?>
             <div class="topic-tools-section-body">
                 <?php if (($notifications_on ?? false)): ?>
-                    <form method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
-                        <?= $this->csrfField() ?>
-                        <label for="study-sub-freq-<?= (int) $thread['id'] ?>">Frequency</label>
-                        <select id="study-sub-freq-<?= (int) $thread['id'] ?>" class="input" name="frequency">
-                            <?php $frequency = $subscription['frequency'] ?? 'off'; ?>
-                            <?php foreach (['instant' => 'Instant', 'daily' => 'Daily', 'off' => 'Off'] as $value => $label): ?>
-                                <option value="<?= $e($value) ?>"<?= $frequency === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <input type="hidden" name="in_app" value="1"><input type="hidden" name="email" value="1">
-                        <button class="btn btn-small" type="submit">Save watch</button>
-                    </form>
+                    <?php $frequency = (string) ($subscription['frequency'] ?? 'off'); ?>
+                    <div class="watch-segmented" role="group" aria-label="Watch this topic">
+                        <?php foreach ([
+                            'instant' => ['Instant', 'Every reply, as it lands'],
+                            'daily' => ['Daily', 'One evening summary'],
+                            'off' => ['Off', 'Only when named'],
+                        ] as $value => [$label, $hint]): ?>
+                            <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="frequency" value="<?= $e($value) ?>">
+                                <input type="hidden" name="in_app" value="1"><input type="hidden" name="email" value="1">
+                                <button type="submit" class="watch-choice<?= $frequency === $value ? ' is-on' : '' ?>" title="<?= $e($hint) ?>" aria-pressed="<?= $frequency === $value ? 'true' : 'false' ?>"><?= $e($label) ?></button>
+                            </form>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
                 <?php if (($workflow_on ?? false)): ?>
-                    <form method="post" action="/t/<?= (int) $thread['id'] ?>/snooze">
-                        <?= $this->csrfField() ?>
-                        <label for="study-snooze-<?= (int) $thread['id'] ?>">Quiet until</label>
-                        <select id="study-snooze-<?= (int) $thread['id'] ?>" class="input" name="until">
-                            <option value="">Clear snooze</option><option value="later_today">Later today</option><option value="tomorrow">Tomorrow</option><option value="week">Next week</option>
-                        </select>
-                        <button class="btn btn-small" type="submit">Save snooze</button>
-                    </form>
+                    <?php // The active pill clears the snooze when pressed again, which is
+                          // the only way back the design gives it — a "Clear snooze" option
+                          // in a list of three futures is a fourth choice that is not one. ?>
+                    <div class="snooze-row" role="group" aria-label="Quiet until">
+                        <span class="snooze-label">Quiet until</span>
+                        <?php foreach (['later_today' => 'Later today', 'tomorrow' => 'Tomorrow', 'week' => 'Next week'] as $value => $label): ?>
+                            <?php $snoozeOn = $snoozeChoice === $value; ?>
+                            <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/snooze">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="until" value="<?= $snoozeOn ? '' : $e($value) ?>">
+                                <button type="submit" class="snooze-choice<?= $snoozeOn ? ' is-on' : '' ?>" aria-pressed="<?= $snoozeOn ? 'true' : 'false' ?>"><?= $e($label) ?></button>
+                            </form>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
+                <p class="topic-tools-note">Watching and snooze are yours alone.</p>
             </div>
         </details>
         <?php endif; ?>
@@ -111,6 +138,7 @@ $moveSelected = (int) ($move_selected ?? 0);
             <summary><span>Topic management</span><span><?= !empty($assignment) ? '@' . $e($assignment['assigned_username']) : 'unassigned' ?></span></summary>
             <div class="topic-tools-section-body">
                 <?php if (!empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)): ?>
+                    <p class="topic-tools-eyebrow">Tended by</p>
                     <form method="post" action="/t/<?= (int) $thread['id'] ?>/assign">
                         <?= $this->csrfField() ?>
                         <?php if (!empty($can_staff_assign)): ?>
@@ -143,11 +171,29 @@ $moveSelected = (int) ($move_selected ?? 0);
                 <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
                     <form method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Clear accepted answer</button></form>
                 <?php endif; ?>
-                <?php if (!empty($can_pin)): ?>
-                    <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin"><?= $this->csrfField() ?><button class="linkbtn" type="submit"><?= (int) $thread['is_pinned'] === 1 ? 'Unpin' : 'Pin' ?></button></form>
-                <?php endif; ?>
-                <?php if (!empty($can_lock)): ?>
-                    <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock"><?= $this->csrfField() ?><button class="linkbtn danger" type="submit"><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></button></form>
+                <?php /* Two states, stated (ThreadView.dc.html:906-909). "Pin" / "Unpin"
+                         names the act and leaves the reader to infer the state from the
+                         verb's tense; the design's switch says what is true and lets the
+                         control carry the change. role="switch" because that is what a
+                         submit button standing in for a checkbox has to announce — the
+                         write is still one POST, so it works with JavaScript off. */ ?>
+                <?php if (!empty($can_pin) || !empty($can_lock)): ?>
+                    <div class="topic-tools-switches">
+                        <?php if (!empty($can_pin)): ?>
+                            <?php $isPinned = (int) $thread['is_pinned'] === 1; ?>
+                            <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
+                                <?= $this->csrfField() ?>
+                                <button type="submit" class="tool-switch<?= $isPinned ? ' is-on' : '' ?>" role="switch" aria-checked="<?= $isPinned ? 'true' : 'false' ?>"><span class="tool-switch-track" aria-hidden="true"><span class="tool-switch-knob"></span></span><span>Pinned above the board</span></button>
+                            </form>
+                        <?php endif; ?>
+                        <?php if (!empty($can_lock)): ?>
+                            <?php $isLocked = (int) $thread['is_locked'] === 1; ?>
+                            <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock">
+                                <?= $this->csrfField() ?>
+                                <button type="submit" class="tool-switch<?= $isLocked ? ' is-on' : '' ?>" role="switch" aria-checked="<?= $isLocked ? 'true' : 'false' ?>"><span class="tool-switch-track" aria-hidden="true"><span class="tool-switch-knob"></span></span><span>Locked to replies</span></button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
                 <?php if (!empty($poll['can_close'])): ?>
                     <form method="post" action="/polls/<?= (int) $poll['id'] ?>/close"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Close poll</button></form>
@@ -169,6 +215,12 @@ $moveSelected = (int) ($move_selected ?? 0);
             </div>
         </details>
         <?php endif; ?>
+        <?php /* The drawer says how to leave it and what its acts cost
+                 (ThreadView.dc.html:920). A modal with a scrim and no stated exit
+                 is one a keyboard reader has to guess at. */ ?>
+        <p class="topic-tools-foot"><?= !empty($is_staff)
+            ? 'Esc closes. Warden acts are recorded in the ledger.'
+            : 'Esc closes. Your watch and your snooze are yours alone.' ?></p>
     </div>
 </aside>
 <?php endif; ?>

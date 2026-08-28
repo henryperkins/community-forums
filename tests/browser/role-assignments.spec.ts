@@ -64,7 +64,7 @@ async function openTopicComposer(page: Page): Promise<void> {
 }
 
 async function openTopicManagement(page: Page) {
-  await page.getByRole('button', { name: 'Topic tools', exact: true }).click();
+  await page.getByRole('button', { name: /^Topic tools/ }).click();
   const tools = page.locator('[data-topic-tools]');
   await expect(tools).toBeVisible();
   await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
@@ -173,8 +173,11 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then 
   await page.getByRole('link', { name: 'Mobile layout looks great' }).click();
   await page.waitForURL(/\/t\//);
   const management = await openTopicManagement(page);
-  await expect(management.getByRole('button', { name: 'Lock' })).toBeVisible();
-  await expect(management.getByRole('button', { name: 'Pin' })).toHaveCount(0);
+  // ADR 0030 #28: pin and lock are switches that state the state — "Locked to
+  // replies", "Pinned above the board" — rather than buttons naming the act.
+  // The per-capability point is unchanged: only the granted one renders.
+  await expect(management.getByRole('switch', { name: 'Locked to replies' })).toBeVisible();
+  await expect(management.getByRole('switch', { name: 'Pinned above the board' })).toHaveCount(0);
   await shot(page, info, '64-deputy-sees-lock-control');
 
   // --- Back to admin: revoke, and confirm the surface reflects it ----------

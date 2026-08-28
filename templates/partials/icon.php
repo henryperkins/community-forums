@@ -52,6 +52,9 @@ $iconStroke = [
     'monitor'         => '<rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M8 21h8M12 17v4"/>',
     'archive'         => '<path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>',
     'pause'           => '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+    // The clock-rewind the Imladris thread view marks "Catch me up" with
+    // (ThreadView.dc.html:197): a dial turned back, not a plain clock.
+    'history'         => '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
 ];
 $iconFilled = [
     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',

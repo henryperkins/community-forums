@@ -668,14 +668,23 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertStatus(200, $res);
         $this->assertSeeText($res, 'thread-facts');
         self::assertSame(1, preg_match('/<p class="thread-byline">(?<byline>.*?)<\/p>/s', $res->body(), $match));
+        // The snooze is the reader's own, like the reply count beside it, so it
+        // rides in the byline's tail exactly as the design's `bylineTail` does
+        // (ThreadView.dc.html:1568). The assignment does not: it is not the
+        // reader's, and the header is the reader's line — it is stated where it
+        // is changed, on the drawer's Topic management summary. Before ADR 0030
+        // both lived in a third group on the same nowrap row, and with five
+        // items competing the byline gave up all of its width to an ellipsis.
         self::assertStringNotContainsString('Tended by', $match['byline']);
-        self::assertStringNotContainsString('Quiet until', $match['byline']);
-        self::assertStringContainsString('class="thread-operational-facts"', $res->body());
-        self::assertStringContainsString('Tended by @thread_tender', $res->body());
-        self::assertStringContainsString('Quiet until', $res->body());
+        self::assertStringContainsString('Quiet until', $match['byline']);
+        self::assertStringNotContainsString('class="thread-operational-facts"', $res->body());
+        self::assertStringContainsString('@thread_tender', $res->body());
         $this->assertSeeText($res, 'star-btn');
         $this->assertSeeText($res, 'data-topic-tools-section="watch"');
-        self::assertSame(1, substr_count($res->body(), 'action="/t/' . (int) $thread['thread_id'] . '/subscribe"'));
+        // Three one-click forms, one per frequency (ADR 0030): the select and
+        // its Save button charged two interactions for one setting.
+        self::assertSame(3, substr_count($res->body(), 'action="/t/' . (int) $thread['thread_id'] . '/subscribe"'));
+        self::assertStringContainsString('class="watch-segmented"', $res->body());
     }
 
     public function test_profile_tabs_render_and_posts_tab_lists_activity(): void

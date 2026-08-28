@@ -140,7 +140,8 @@ final class AppFeatureFlagTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
-        self::assertStringNotContainsString('Since you last read', $page->body());
+        // ADR 0030: the strip is the whole surface for this context now.
+        self::assertStringNotContainsString('class="catch-up"', $page->body());
         self::assertSame(0, (int) $this->db->fetchValue(
             'SELECT COUNT(*) FROM since_last_read_context WHERE user_id = ? AND thread_id = ?',
             [(int) $viewer['id'], $thread['thread_id']],

@@ -44,11 +44,15 @@ final class AppCouncilTopicFidelityTest extends TestCase
         $resp = $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']);
 
         $this->assertStatus(200, $resp);
-        // The regard plinth renders, carrying the author's real reputation and the
-        // "Commends" lapidary label.
+        // The regard plinth renders, carrying the author's real reputation. The
+        // unit is the plinth's accessible name, not a printed caption under every
+        // avatar in the stream (ADR 0030 #10; ThreadView.dc.html:246): 48px of
+        // rail cannot hold the word, which is why an earlier slice had already
+        // shrunk it to .5rem.
         $this->assertSeeText($resp, 'regard-block');
         $this->assertSeeText($resp, '4,242');
-        $this->assertSeeText($resp, 'Commends');
+        $this->assertSeeText($resp, 'title="4,242 commends"');
+        self::assertStringNotContainsString('regard-label', $resp->body());
     }
 
     public function test_anonymous_post_does_not_leak_the_author_regard(): void

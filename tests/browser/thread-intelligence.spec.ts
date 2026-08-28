@@ -135,7 +135,7 @@ async function visit(page: Page, url: string): Promise<void> {
 }
 
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
-  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  const trigger = page.getByRole('button', { name: /^Topic tools/ });
   await trigger.click();
   const tools = page.locator('[data-topic-tools]');
   await expect(tools).toBeVisible();
@@ -307,10 +307,13 @@ test('fallback, curator empty state, and generated Living Brief render safely wi
   // A member without curator authority sees the deterministic fallback and
   // nothing else: the empty panel is curator-only markup and must not leak.
   await visit(page, state.fallback.path);
-  await expect(page.locator('.related-topic-fallback')).toBeVisible();
+  // ADR 0030: related topics are ONE row, after the stream, whether they came
+  // from the brief's own overlay or the deterministic fallback. The two used to
+  // be different objects in different places — a card grid inside the brief, a
+  // headed section above the stream — depending on a state the reader cannot see.
+  await expect(page.locator('.thread-related')).toBeVisible();
   await expect(page.locator('.living-brief')).toHaveCount(0);
   await expect(page.locator('.living-brief-empty')).toHaveCount(0);
-  await expect(page.locator('.thread-memory-slot')).not.toBeEmpty();
 
   await visit(page, state.brief.path);
   const brief = page.locator('.living-brief');
@@ -318,33 +321,41 @@ test('fallback, curator empty state, and generated Living Brief render safely wi
   // The section's only heading was replaced by an accessible name on the
   // section itself, so the label is now an attribute rather than an <h2>.
   await expect(brief).toHaveAttribute('aria-label', 'Living brief');
-  await expect(brief.locator('.living-brief-head h2')).toHaveCount(0);
   await expect(brief).toContainText('AI-generated living brief');
+  await expect(brief.getByRole('link', { name: 'AI-generated living brief' })).toHaveAttribute('href', '/privacy#thread-intelligence');
+  // ADR 0030: the summary always shows and its provenance is one disclosure
+  // away, so the version, the stamp and the source list live inside it.
+  // `toContainText` reads textContent, which a closed <details> still has, so
+  // the closed state is asked of the layout engine instead.
+  await expect(brief.locator('.living-brief-meta')).toBeHidden();
+  await brief.locator('.living-brief-provenance > summary').click();
+  await expect(brief.locator('.living-brief-meta')).toBeVisible();
   await expect(brief).toContainText('Version 1');
   await expect(brief.locator('time')).toHaveAttribute('datetime', /Z$/);
-  await expect(brief.getByRole('link', { name: 'AI-generated living brief' })).toHaveAttribute('href', '/privacy#thread-intelligence');
   await expect(brief.locator('.living-brief-sources a')).toHaveCount(8);
-  await expect(brief.locator('.living-brief-related-card')).toHaveCount(1);
+  await expect(page.locator('.thread-related-chip')).toHaveCount(1);
   // A reader with no curator authority gets the brief and none of its tools.
   await expect(brief.locator('.living-brief-curator')).toHaveCount(0);
 
   await brief.locator('.living-brief-sources a').first().click();
   await expect(page).toHaveURL(new RegExp(`#p${state.brief.source_id}$`));
   await page.goBack();
-  await brief.locator('.living-brief-related-card').click();
+  await page.locator('.thread-related-chip').click();
   await expect(page).toHaveURL(new RegExp(state.brief.related_path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
   await page.goBack();
 
   await expectNoHorizontalOverflow(page, '.living-brief');
-  await expectNoHorizontalOverflow(page, '.living-brief-related-card');
-  await expectNoHorizontalOverflow(page, '.living-brief-sources li');
+  await expectNoHorizontalOverflow(page, '.thread-related');
+  await expectNoHorizontalOverflow(page, '.living-brief-source');
   if (info.project.name === 'mobile') {
-    const cards = await page.locator('.living-brief-related-card').evaluateAll((nodes) => nodes.map((node) => ({
+    // The chips wrap inside the reading measure rather than stacking as cards.
+    const chip = await page.locator('.thread-related-chip').first().evaluate((node) => ({
       left: Math.round(node.getBoundingClientRect().left),
-      width: Math.round(node.getBoundingClientRect().width),
-    })));
-    expect(new Set(cards.map((card) => card.left)).size).toBe(1);
-    expect(cards[0].width).toBeGreaterThan(250);
+      right: Math.round(node.getBoundingClientRect().right),
+    }));
+    const row = await page.locator('.thread-related').evaluate((node) => Math.round(node.getBoundingClientRect().right));
+    expect(chip.right).toBeLessThanOrEqual(row);
+    expect(chip.left).toBeGreaterThan(0);
   }
   await shot(page, info, '76-living-brief', '.living-brief');
 
@@ -352,7 +363,7 @@ test('fallback, curator empty state, and generated Living Brief render safely wi
   // beside the fallback and explains the eligibility ladder's actual denial.
   await login(page, 'alice@retro.test');
   await visit(page, state.fallback.path);
-  await expect(page.locator('.related-topic-fallback')).toBeVisible();
+  await expect(page.locator('.thread-related')).toBeVisible();
   const empty = page.locator('.living-brief-empty');
   await expect(empty).toBeVisible();
   await expect(empty).toHaveAttribute('aria-label', 'No living brief yet');
@@ -504,6 +515,7 @@ test('provider failure, budget exhaustion, and stale sources preserve or suppres
     await login(page, 'alice@retro.test');
     await visit(page, state.last_good.path);
     await expect(page.locator('.living-brief')).toContainText('Last good brief remains published');
+    await page.locator('.living-brief-provenance > summary').click();
     await expect(page.locator('.living-brief')).toContainText('Version 1');
     // The denial explains itself under the curator's own primary action, which
     // is disabled rather than absent, instead of inside the topic-tools drawer.
@@ -517,8 +529,7 @@ test('provider failure, budget exhaustion, and stale sources preserve or suppres
     try {
       await visit(page, state.source_invalid.path);
       await expect(page.locator('.living-brief')).toHaveCount(0);
-      await expect(page.locator('.related-topic-fallback')).toBeVisible();
-      await expect(page.locator('.living-brief-related-card')).toHaveCount(0);
+      await expect(page.locator('.thread-related')).toBeVisible();
       // Suppressed-as-stale leaves the version rows behind, so the curator panel
       // says "no brief showing" rather than pretending none was ever drawn.
       await expect(page.locator('.living-brief-empty'))
@@ -679,10 +690,12 @@ test('no-JS: Living Brief navigation, every disclosure, and all five curator for
     await visit(page, state.brief.path);
     await expect(page.locator('.living-brief')).toBeVisible();
 
+    // The provenance disclosure is a <details>, so it opens with no JS at all.
+    await page.locator('.living-brief-provenance > summary').click();
     await page.locator('.living-brief-sources a').first().click();
     await expect(page).toHaveURL(new RegExp(`#p${state.brief.source_id}$`));
     await page.goBack();
-    const related = page.locator('.living-brief-related-card');
+    const related = page.locator('.thread-related-chip');
     await related.focus();
     await expect(related).toBeFocused();
     await related.press('Enter');
@@ -794,7 +807,7 @@ test('no-JS: Thread Intelligence recovery controls remain native POST forms', as
 test('axe: Living Brief, provenance, curator footer, empty state, fallback, and admin surfaces have no serious findings', async ({ page }, info) => {
   const state = fixture('reset-admin', info);
   // Same reason as the no-JS test: scan a brief whose own generation still owns
-  // the related row, so `.living-brief-related` is present to be scanned.
+  // the related row, so `.thread-related` is present to be scanned.
   fixture('run-refresh', info);
   await login(page, 'admin@retro.test');
   const themeSafeModeChanged = await enterThemeSafeMode(page);
@@ -807,10 +820,10 @@ test('axe: Living Brief, provenance, curator footer, empty state, fallback, and 
     // The section lost its heading in the redesign and names itself instead, so
     // the swap is scanned rather than assumed.
     await expect(page.locator('.living-brief')).toHaveAttribute('aria-label', 'Living brief');
-    await expect(page.locator('.living-brief-head h2')).toHaveCount(0);
+    await page.locator('.living-brief-provenance > summary').click();
     await expectNoSeriousA11yViolations(page, info, '.living-brief');
     await expectNoSeriousA11yViolations(page, info, '.living-brief-sources');
-    await expectNoSeriousA11yViolations(page, info, '.living-brief-related');
+    await expectNoSeriousA11yViolations(page, info, '.thread-related');
 
     // Every curator control, including the ones a disclosure hides by default.
     const curator = page.locator('.living-brief .living-brief-curator');
@@ -823,7 +836,7 @@ test('axe: Living Brief, provenance, curator footer, empty state, fallback, and 
     await expectNoSeriousA11yViolations(page, info, '[data-topic-tools]');
 
     await visit(page, state.fallback.path);
-    await expectNoSeriousA11yViolations(page, info, '.related-topic-fallback');
+    await expectNoSeriousA11yViolations(page, info, '.thread-related');
     await expect(page.locator('.living-brief-empty')).toBeVisible();
     await openDisclosure(page.locator('.living-brief-empty .lb-amend'));
     await openDisclosure(page.locator('.living-brief-empty .lb-more'));

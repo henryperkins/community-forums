@@ -104,8 +104,16 @@ final class AppImladrisFidelityHighImpactTest extends TestCase
 
         $res = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $res);
-        self::assertStringContainsString('thread-participants-label', $res->body());
-        self::assertStringContainsString('In council', $res->body());
+        // The stack keeps its name; the name stopped taking a line for itself
+        // (ADR 0030). A visible "IN COUNCIL" eyebrow inside the deliberately
+        // nowrap identity group wrapped to two lines at the design's measure and
+        // helped truncate the byline beside it, so it is the stack's accessible
+        // name now — which is what the design gives it (ThreadView.dc.html:174).
+        self::assertStringNotContainsString('thread-participants-label', $res->body());
+        self::assertMatchesRegularExpression(
+            '/<ul class="thread-participants" aria-label="In council">/',
+            $res->body(),
+        );
     }
 
     // ── #2 notification icon + body + unread dot ──────────────────────────────
