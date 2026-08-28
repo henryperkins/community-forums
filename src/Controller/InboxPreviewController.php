@@ -11,6 +11,7 @@ use App\Core\Response;
 use App\Core\View;
 use App\Repository\BoardMemberRepository;
 use App\Repository\PostRepository;
+use App\Repository\ThreadUserRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\Cap;
@@ -57,6 +58,10 @@ final class InboxPreviewController extends Controller
             'total_posts' => $totalPosts,
             'can_reply' => $canReply,
         ]);
+        $lastPostId = (int) ($thread['last_post_id'] ?? 0);
+        if ($lastPostId > 0) {
+            $this->container->get(ThreadUserRepository::class)->markRead($user->id(), $threadId, $lastPostId);
+        }
         return Response::html($html);
     }
 }

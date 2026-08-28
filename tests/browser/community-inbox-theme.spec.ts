@@ -28,29 +28,6 @@ echo json_encode($previous);
   }).toString().trim()) as boolean | null;
 }
 
-function setWysiwygComposer(enabled: boolean | null): boolean | null {
-  const mutation = enabled === null
-    ? "unset($features['wysiwyg_composer']);"
-    : `$features['wysiwyg_composer'] = ${enabled ? 'true' : 'false'};`;
-  const php = `
-require 'vendor/autoload.php';
-\\App\\Core\\Env::load(getcwd() . '/.env');
-$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
-$db = new \\App\\Core\\Database($config->get('db'));
-$settings = new \\App\\Repository\\SettingRepository($db);
-$features = $settings->get('features', []);
-if (!is_array($features)) { $features = []; }
-$previous = array_key_exists('wysiwyg_composer', $features) ? (bool) $features['wysiwyg_composer'] : null;
-${mutation}
-$settings->set('features', $features);
-echo json_encode($previous);
-`;
-  return JSON.parse(execFileSync('php', ['-r', php], {
-    cwd: repoRoot,
-    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
-  }).toString().trim()) as boolean | null;
-}
-
 function markInboxTopicUnreadForAlice(title: string, promoteInActiveList = false): void {
   const php = `
 require 'vendor/autoload.php';
@@ -118,25 +95,15 @@ async function login(page: Page): Promise<void> {
 }
 
 async function openShortcutInboxTopic(page: Page) {
-  const link = page.locator('[data-inbox-list] .thread-row')
+  const link = page.locator('[data-inbox-list] [data-inbox-row]')
     .filter({ hasText: 'Share your favourite keyboard shortcuts' })
-    .locator('a.thread-title');
+    .locator('.inbox-row-title');
   await expect(link).toHaveCount(1);
   await link.click();
   const reading = page.locator('[data-inbox-reading]');
-  await expect(reading.locator('[data-thread-study]')).toBeVisible();
-  return { link, reading, form: reading.locator('#reply') };
-}
-
-async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
-  const trigger = page.getByRole('button', { name: /^Topic tools/ });
-  await trigger.click();
-  const tools = page.locator('[data-topic-tools]');
-  await expect(tools).toBeVisible();
-  await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
-  const details = tools.locator(`[data-topic-tools-section="${section}"]`);
-  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) await details.locator(':scope > summary').click();
-  return { tools, details };
+  const preview = reading.locator('[data-inbox-preview]');
+  await expect(preview).toBeVisible();
+  return { link, reading, preview, form: preview.locator('#reply') };
 }
 
 async function expectNoSeriousA11yViolations(page: Page, include: string): Promise<void> {
@@ -156,43 +123,28 @@ test('responsive Inbox opens a topic in place and mobile Back restores its link'
   const inbox = page.locator('[data-inbox]');
   const list = inbox.locator('[data-inbox-list]');
   const reading = inbox.locator('[data-inbox-reading]');
-  const topic = list.locator('a.thread-title').first();
+  const topic = list.locator('.inbox-row-title').first();
   const topicHref = await topic.getAttribute('href');
   expect(topicHref).toMatch(/^\/t\/\d+/);
 
   await topic.click();
   await expect(page).toHaveURL(/\/inbox\?.*t=\d+/);
-  await expect(reading.locator('.thread')).toBeVisible();
-  await expect(reading.locator('h1').first()).toBeFocused();
+  const preview = reading.locator('[data-inbox-preview]');
+  await expect(preview).toBeVisible();
+  await expect(preview.locator('h2').first()).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 
-  const topicTools = await openTopicTools(page, 'watch');
-  await expect(topicTools.details).toBeVisible();
-  await reading.getByRole('button', { name: 'Close Topic tools' }).click();
-  await expect(topicTools.tools).toBeHidden();
-
-  const posts = reading.locator('article[data-post]');
-  expect(await posts.count()).toBeGreaterThan(0);
-  const post = posts.first();
-  const toolbar = post.locator('[data-post-toolbar]');
-  await post.hover();
-  await expect(toolbar).toBeVisible();
-  const moreActions = post.locator('[data-post-menu] > summary');
-  await moreActions.focus();
-  await expect(moreActions).toBeFocused();
-  await expect(toolbar).toBeVisible();
-
-  const dockContainment = await reading.evaluate((element) => {
+  await expect(reading.locator('[data-thread-study], [data-topic-tools], article[data-post], .thread-dock')).toHaveCount(0);
+  const previewContainment = await reading.evaluate((element) => {
     const readingBox = element.getBoundingClientRect();
-    const dockBox = element.querySelector('.thread-dock')!.getBoundingClientRect();
+    const previewBox = element.querySelector('[data-inbox-preview]')!.getBoundingClientRect();
     return {
-      left: dockBox.left >= readingBox.left - 1,
-      right: dockBox.right <= readingBox.right + 1,
-      top: dockBox.top >= readingBox.top - 1,
-      bottom: dockBox.bottom <= readingBox.bottom + 1,
+      left: previewBox.left >= readingBox.left - 1,
+      right: previewBox.right <= readingBox.right + 1,
+      top: previewBox.top >= readingBox.top - 1,
     };
   });
-  expect(dockContainment).toEqual({ left: true, right: true, top: true, bottom: true });
+  expect(previewContainment).toEqual({ left: true, right: true, top: true });
 
   if (info.project.name === 'mobile') {
     await expect(list).toBeHidden();
@@ -206,8 +158,8 @@ test('responsive Inbox opens a topic in place and mobile Back restores its link'
     await page.goForward();
     await expect(page).toHaveURL(/\/inbox\?.*t=\d+/);
     await expect(list).toBeHidden();
-    await expect(reading.locator('.thread')).toBeVisible();
-    await expect(reading.locator('h1').first()).toBeFocused();
+    await expect(reading.locator('[data-inbox-preview]')).toBeVisible();
+    await expect(reading.locator('[data-inbox-preview] h2').first()).toBeFocused();
   } else {
     await expect(list).toBeVisible();
     await expect(reading).toBeVisible();
@@ -218,26 +170,30 @@ test('Inbox preserves the latest selection when an older topic fetch finishes la
   test.skip(info.project.name !== 'desktop', 'request ordering is verified once');
   await login(page);
 
-  const links = page.locator('[data-inbox-list] a.thread-title');
+  const links = page.locator('[data-inbox-list] .inbox-row-title');
   const first = links.nth(0);
   const second = links.nth(1);
   const firstHref = await first.getAttribute('href');
+  const firstEndpoint = await first.getAttribute('data-inbox-preview-url');
   const secondHref = await second.getAttribute('href');
+  const secondEndpoint = await second.getAttribute('data-inbox-preview-url');
   const secondTitle = (await second.textContent())?.trim();
   const secondId = secondHref?.match(/^\/t\/(\d+)/)?.[1];
   expect(firstHref).toMatch(/^\/t\/\d+/);
+  expect(firstEndpoint).toMatch(/^\/inbox\/preview\/\d+$/);
   expect(secondHref).toMatch(/^\/t\/\d+/);
+  expect(secondEndpoint).toMatch(/^\/inbox\/preview\/\d+$/);
   expect(secondTitle).toBeTruthy();
   expect(secondId).toBeTruthy();
 
   let firstRequestHeld = false;
   let firstResponseReleased = false;
   let releaseFirst: (() => void) | undefined;
-  await page.route('**/t/**', async (route) => {
+  await page.route('**/inbox/preview/*', async (route) => {
     const request = route.request();
     if (
       request.headers()['x-requested-with'] === 'XMLHttpRequest'
-      && new URL(request.url()).pathname === firstHref
+      && new URL(request.url()).pathname === firstEndpoint
       && !firstRequestHeld
     ) {
       const response = await route.fetch();
@@ -253,13 +209,13 @@ test('Inbox preserves the latest selection when an older topic fetch finishes la
   await first.click();
   await expect.poll(() => firstRequestHeld).toBe(true);
   await second.click();
-  await expect(page.locator('[data-inbox-reading] h1').filter({ hasText: secondTitle! }).first()).toBeVisible();
+  await expect(page.locator('[data-inbox-preview] h2').filter({ hasText: secondTitle! }).first()).toBeVisible();
   expect(new URL(page.url()).searchParams.get('t')).toBe(secondId);
 
   releaseFirst?.();
   await expect.poll(() => firstResponseReleased).toBe(true);
   await page.waitForTimeout(100);
-  await expect(page.locator('[data-inbox-reading] h1').filter({ hasText: secondTitle! }).first()).toBeVisible();
+  await expect(page.locator('[data-inbox-preview] h2').filter({ hasText: secondTitle! }).first()).toBeVisible();
   await expect.poll(() => new URL(page.url()).searchParams.get('t')).toBe(secondId);
 });
 
@@ -268,18 +224,19 @@ test('Inbox opening reconciles an unread row and its count', async ({ page }, in
   const title = 'Share your favourite keyboard shortcuts';
   markInboxTopicUnreadForAlice(title);
   await login(page);
-  await page.goto('/inbox?filter=unread');
+  await page.goto('/inbox?scope=unread&order=active');
 
-  const row = page.locator('[data-inbox-list] .thread-row').filter({ hasText: title });
-  const badge = page.locator('[data-inbox-unread-count]');
+  const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
+  const badge = page.locator('[data-inbox] [data-inbox-unread-count]');
   await expect(row).toHaveCount(1);
-  await expect(row).toHaveClass(/\bthread-unread\b/);
+  await expect(row).toHaveClass(/\bis-unread\b/);
+  await expect(row).toHaveAttribute('data-inbox-unread', '1');
   await expect(row.locator('.unread-dot')).toHaveCount(1);
   const before = Number(await badge.getAttribute('data-inbox-unread-count'));
   expect(before).toBeGreaterThan(0);
 
-  await row.locator('a.thread-title').click();
-  await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
+  await row.locator('.inbox-row-title').click();
+  await expect(page.locator('[data-inbox-preview]')).toBeVisible();
   await expect(row).toHaveCount(0);
   if (before === 1) {
     await expect(badge).toHaveCount(0);
@@ -297,19 +254,19 @@ test('Inbox opening a muted unread row leaves the queue badge unchanged', async 
 
   try {
     await login(page);
-    await page.goto('/inbox?filter=active');
+    await page.goto('/inbox?scope=for_you&order=active');
 
-    const row = page.locator('[data-inbox-list] .thread-row').filter({ hasText: title });
-    const badge = page.locator('[data-inbox-unread-count]');
+    const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
+    const badge = page.locator('[data-inbox] [data-inbox-unread-count]');
     await expect(row).toHaveCount(1);
-    await expect(row).toHaveClass(/\bthread-unread\b/);
+    await expect(row).toHaveClass(/\bis-unread\b/);
     await expect(row).not.toHaveAttribute('data-inbox-unread', '1');
     const before = Number(await badge.getAttribute('data-inbox-unread-count'));
     expect(before).toBeGreaterThan(0);
 
-    await row.locator('a.thread-title').click();
-    await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
-    await expect(row).not.toHaveClass(/\bthread-unread\b/);
+    await row.locator('.inbox-row-title').click();
+    await expect(page.locator('[data-inbox-preview]')).toBeVisible();
+    await expect(row).not.toHaveClass(/\bis-unread\b/);
     await expect(row.locator('.unread-dot')).toHaveCount(0);
     await expect(badge).toHaveAttribute('data-inbox-unread-count', String(before));
   } finally {
@@ -322,23 +279,23 @@ test('Inbox Forward reloads a read queue topic in the reading pane', async ({ pa
   const title = 'Share your favourite keyboard shortcuts';
   markInboxTopicUnreadForAlice(title);
   await login(page);
-  await page.goto('/inbox?filter=unread');
+  await page.goto('/inbox?scope=unread&order=active');
 
-  const row = page.locator('[data-inbox-list] .thread-row').filter({ hasText: title });
+  const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
   await expect(row).toHaveCount(1);
-  await row.locator('a.thread-title').click();
-  await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
+  await row.locator('.inbox-row-title').click();
+  await expect(page.locator('[data-inbox-preview]')).toBeVisible();
   await expect(row).toHaveCount(0);
 
   await page.goBack();
-  await expect(page).toHaveURL(/\/inbox\?filter=unread$/);
+  await expect(page).toHaveURL(/\/inbox\?scope=unread&order=active$/);
   await expect(page.locator('[data-inbox-list]')).toBeVisible();
 
   await page.goForward();
-  await expect(page).toHaveURL(/\/inbox\?filter=unread&t=\d+$/);
+  await expect(page).toHaveURL(/\/inbox\?scope=unread&order=active&t=\d+$/);
   const reading = page.locator('[data-inbox-reading]');
-  await expect(reading.locator('.thread')).toBeVisible();
-  await expect(reading.locator('h1').first()).toBeFocused();
+  await expect(reading.locator('[data-inbox-preview]')).toBeVisible();
+  await expect(reading.locator('[data-inbox-preview] h2').first()).toBeFocused();
 });
 
 test('Inbox fragments receive one complete composer enhancement', async ({ page }) => {
@@ -364,7 +321,7 @@ test('Inbox fragments receive one complete composer enhancement', async ({ page 
 
   await editor.fill(`Inbox draft ${Date.now()}`);
   await expect(form.locator('[data-composer-draft-slot]')).toContainText('Draft saved', { timeout: 5000 });
-  await expectNoSeriousA11yViolations(page, '[data-inbox-reading] .thread-dock');
+  await expectNoSeriousA11yViolations(page, '[data-inbox-preview] form.reply-composer');
   const discard = form.getByRole('button', { name: 'Discard draft' });
   await expect(discard).toBeVisible();
   await discard.click();
@@ -412,50 +369,15 @@ test('Inbox replacement destroys the previous composer lifecycle before enhancin
     }
   });
 
-  const nextTopic = page.locator('[data-inbox-list] .thread-row:not(.is-active) a.thread-title').first();
+  const nextTopic = page.locator('[data-inbox-list] [data-inbox-row]:not(.is-active) .inbox-row-title').first();
   await expect(nextTopic).toBeVisible();
   const previousUrl = page.url();
   await nextTopic.click();
   await page.waitForURL((url) => url.toString() !== previousUrl && url.searchParams.has('t'));
-  await expect(page.locator('[data-inbox-reading] form.reply-composer textarea.composer-input')).toHaveAttribute('data-rb-enhanced', '1');
+  await expect(page.locator('[data-inbox-preview] form.reply-composer textarea.composer-input')).toHaveAttribute('data-rb-enhanced', '1');
   expect(await page.evaluate(() => (window as Window & {
     __rbComposerLifecycle?: { destroyWithin: number; adapterDestroy: number };
   }).__rbComposerLifecycle)).toEqual({ destroyWithin: 1, adapterDestroy: 1 });
-});
-
-test('Inbox Study Quote inserts exactly once through source and rich adapters', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop', 'source and rich adapter quote paths are verified once');
-  const previous = setWysiwygComposer(true);
-  try {
-    await login(page);
-    const { reading, form } = await openShortcutInboxTopic(page);
-    await expect(form.getByRole('button', { name: 'Source' })).toBeVisible();
-    await form.getByRole('button', { name: 'Source' }).click();
-    const textarea = form.locator('textarea[name="body"]');
-    await textarea.fill('');
-    const post = reading.locator('article[data-post]').nth(1);
-    await post.hover();
-    await post.getByRole('button', { name: 'Quote in your reply' }).click();
-    expect((await textarea.inputValue()).match(/^> /gm) ?? []).toHaveLength(1);
-
-    await textarea.fill('');
-    await form.getByRole('button', { name: 'Rich text' }).click();
-    const editor = form.locator('.wysiwyg-composer .ProseMirror');
-    await editor.fill('');
-    await post.hover();
-    await post.getByRole('button', { name: 'Quote in your reply' }).click();
-    await expect.poll(async () => form.evaluate((element) => {
-      const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { getMarkdown?: () => string } })._rbComposerAdapter;
-      return adapter?.getMarkdown?.() ?? '';
-    })).toMatch(/^> [^\n]+\n*$/);
-    const richMarkdown = await form.evaluate((element) => {
-      const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { getMarkdown?: () => string } })._rbComposerAdapter;
-      return adapter?.getMarkdown?.() ?? '';
-    });
-    expect(richMarkdown.match(/^> /gm) ?? []).toHaveLength(1);
-  } finally {
-    setWysiwygComposer(previous);
-  }
 });
 
 test('Inbox Enter submission navigates to the canonical posted reply', async ({ page }, info) => {
@@ -490,7 +412,7 @@ test('rich composer off keeps Inbox loading in pane with a plain shell', async (
   }
 });
 
-test('mobile top bar stays one row and Search remains reachable in the rail', async ({ page }, info) => {
+test('mobile top bar stays one row and Search remains reachable', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile chrome contract');
   await login(page);
 
@@ -499,33 +421,41 @@ test('mobile top bar stays one row and Search remains reachable in the rail', as
   expect(topbarBox).not.toBeNull();
   expect(topbarBox!.height).toBeLessThanOrEqual(64);
   await expect(page.locator('.topbar-search')).toBeHidden();
+  const search = page.locator('.topbar-search-entry');
+  await expect(search).toBeVisible();
+  await expect(search).toHaveAttribute('href', '/search');
+  const searchBox = await search.boundingBox();
+  expect(searchBox).not.toBeNull();
+  expect(searchBox!.width).toBeGreaterThanOrEqual(40);
+  expect(searchBox!.height).toBeGreaterThanOrEqual(40);
 
   const viewportFits = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
   expect(viewportFits).toBe(true);
 
-  const navigation = page.getByRole('button', { name: 'Open navigation' });
+  const navigation = page.getByRole('button', { name: 'Open board rail' });
   const navigationBox = await navigation.boundingBox();
   expect(navigationBox).not.toBeNull();
   expect(navigationBox!.width).toBeGreaterThanOrEqual(44);
   expect(navigationBox!.height).toBeGreaterThanOrEqual(44);
   await navigation.click();
   await expect(page.locator('[data-sidebar]')).toBeVisible();
-  await expect(page.locator('[data-sidebar]').getByRole('link', { name: 'Search' })).toBeVisible();
 });
 
-test('mobile conversation keeps the reply dock visible and expands it on focus', async ({ page }, info) => {
-  test.skip(info.project.name !== 'mobile', 'mobile reply dock contract');
+test('mobile preview keeps its reply composer contained and expands it on focus', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile preview composer contract');
   await login(page);
 
-  await page.locator('[data-inbox-list] a.thread-title').first().click();
-  const dock = page.locator('[data-inbox-reading] .thread-dock');
-  const composer = dock.locator('.reply-composer');
-  await expect(dock).toBeVisible();
+  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
+  const preview = page.locator('[data-inbox-preview]');
+  const composer = preview.locator('.reply-composer');
+  await expect(preview).toBeVisible();
   await expect(composer).toBeVisible();
 
-  const dockBox = await dock.boundingBox();
-  expect(dockBox).not.toBeNull();
-  expect(dockBox!.y + dockBox!.height).toBeLessThanOrEqual(844);
+  expect(await preview.evaluate((element) => {
+    const previewBox = element.getBoundingClientRect();
+    const composerBox = element.querySelector('.reply-composer')!.getBoundingClientRect();
+    return composerBox.left >= previewBox.left - 1 && composerBox.right <= previewBox.right + 1;
+  })).toBe(true);
   await expect(composer).not.toHaveClass(/\bis-expanded\b/);
 
   await composer.locator('textarea[name="body"]').focus();
@@ -536,22 +466,22 @@ test('direct mobile Inbox URLs open the conversation state', async ({ page }, in
   test.skip(info.project.name !== 'mobile', 'mobile direct-link contract');
   await login(page);
 
-  const topic = page.locator('[data-inbox-list] a.thread-title').first();
+  const topic = page.locator('[data-inbox-list] .inbox-row-title').first();
   const href = await topic.getAttribute('href');
   const id = href?.match(/^\/t\/(\d+)/)?.[1];
   expect(id).toBeTruthy();
 
   await page.goto(`/inbox?t=${id}`);
   await expect(page.locator('[data-inbox-list]')).toBeHidden();
-  await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
-  await expect(page.locator('[data-inbox-reading] h1').first()).toBeFocused();
+  await expect(page.locator('[data-inbox-preview]')).toBeVisible();
+  await expect(page.locator('[data-inbox-preview] h2').first()).toBeFocused();
   await expect(page.getByRole('button', { name: 'Back to topics' })).toBeVisible();
 });
 
 test('failed Inbox fetches fall back to the canonical topic route', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile fetch-fallback contract');
   await login(page);
-  await page.route('**/t/**', async (route) => {
+  await page.route('**/inbox/preview/*', async (route) => {
     if (route.request().headers()['x-requested-with'] === 'XMLHttpRequest') {
       await route.fulfill({ status: 500, contentType: 'text/plain', body: 'forced fetch failure' });
       return;
@@ -559,7 +489,7 @@ test('failed Inbox fetches fall back to the canonical topic route', async ({ pag
     await route.continue();
   });
 
-  await page.locator('[data-inbox-list] a.thread-title').first().click();
+  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
   await expect(page).toHaveURL(/\/t\/\d+/);
   await expect(page.locator('.thread-conversation')).toBeVisible();
 });
@@ -568,9 +498,9 @@ test('canonical mobile composer keeps formatting and anonymous controls containe
   test.skip(info.project.name !== 'mobile', 'mobile composer containment contract');
   await login(page);
 
-  const generalTopic = page.locator('[data-inbox-list] .thread-row')
+  const generalTopic = page.locator('[data-inbox-list] [data-inbox-row]')
     .filter({ hasText: 'Share your favourite keyboard shortcuts' })
-    .locator('a.thread-title');
+    .locator('.inbox-row-title');
   await expect(generalTopic).toHaveCount(1);
   await page.goto((await generalTopic.getAttribute('href'))!);
 
@@ -609,17 +539,18 @@ test('canonical mobile composer keeps formatting and anonymous controls containe
 
 test('parchment and twilight preserve the Inbox layout', async ({ page }) => {
   await login(page);
-  await page.locator('[data-inbox-list] a.thread-title').first().click();
-  await expect(page.locator('.thread-dock')).toBeVisible();
+  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
+  await expect(page.locator('[data-inbox-preview]')).toBeVisible();
 
   const measure = async (theme: 'light' | 'dark') => {
     await page.locator('html').evaluate((element, value) => element.setAttribute('data-theme', value), theme);
     return page.evaluate(() => {
       const reading = document.querySelector('[data-inbox-reading]')!.getBoundingClientRect();
-      const dock = document.querySelector('.thread-dock')!.getBoundingClientRect();
+      const preview = document.querySelector('[data-inbox-preview]')!.getBoundingClientRect();
       return {
         readingWidth: reading.width,
-        dockWidth: dock.width,
+        previewWidth: preview.width,
+        previewContained: preview.left >= reading.left - 1 && preview.right <= reading.right + 1,
         overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         surface: getComputedStyle(document.documentElement).getPropertyValue('--surface-raised').trim(),
       };
@@ -631,16 +562,18 @@ test('parchment and twilight preserve the Inbox layout', async ({ page }) => {
   expect(parchment.surface).not.toBe(twilight.surface);
   expect(parchment.overflow).toBe(false);
   expect(twilight.overflow).toBe(false);
+  expect(parchment.previewContained).toBe(true);
+  expect(twilight.previewContained).toBe(true);
   expect(Math.abs(parchment.readingWidth - twilight.readingWidth)).toBeLessThanOrEqual(1);
-  expect(Math.abs(parchment.dockWidth - twilight.dockWidth)).toBeLessThanOrEqual(1);
+  expect(Math.abs(parchment.previewWidth - twilight.previewWidth)).toBeLessThanOrEqual(1);
 });
 
-test('Inbox and reply dock have no serious or critical axe violations', async ({ page }) => {
+test('Inbox and preview composer have no serious or critical axe violations', async ({ page }) => {
   await login(page);
   await expectNoSeriousA11yViolations(page, '[data-inbox]');
-  await page.locator('[data-inbox-list] a.thread-title').first().click();
-  await expect(page.locator('.thread-dock')).toBeVisible();
-  await expectNoSeriousA11yViolations(page, '.thread-dock');
+  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
+  await expect(page.locator('[data-inbox-preview]')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, '[data-inbox-preview]');
 });
 
 test('the no-JavaScript 390px journey keeps disclosure and submits the server reply form', async ({ browser, baseURL }, info) => {
@@ -658,9 +591,9 @@ test('the no-JavaScript 390px journey keeps disclosure and submits the server re
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL(/\/inbox(?:\?|$)/);
 
-    const topic = page.locator('[data-inbox-list] .thread-row')
+    const topic = page.locator('[data-inbox-list] [data-inbox-row]')
       .filter({ hasText: 'Share your favourite keyboard shortcuts' })
-      .locator('a.thread-title');
+      .locator('.inbox-row-title');
     const href = await topic.getAttribute('href');
     await topic.click();
     await expect(page).toHaveURL(new RegExp(`${href!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));

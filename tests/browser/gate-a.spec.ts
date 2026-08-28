@@ -386,7 +386,18 @@ test('phase 4 topic workflow: status, snooze, and assignment via the server-rend
 
   // Snooze: a personal reminder (no cross-user effect). ADR 0030 #27: one press
   // per window, not a select plus a Save; the standing window comes back lit.
-  const watch = await openTopicTools(page, 'watch');
+  let watch = await openTopicTools(page, 'watch');
+  // The desktop and mobile projects intentionally share one prepared database.
+  // If the earlier project left a window standing, pressing that lit pill again
+  // clears it by design. Normalize through the same UI so this journey proves
+  // both halves of the toggle and does not depend on project order.
+  const standingSnooze = watch.details.locator('.snooze-choice[aria-pressed="true"]');
+  if (await standingSnooze.count()) {
+    await expect(page.locator('.thread-byline')).toContainText('Quiet until');
+    await standingSnooze.click();
+    await expect(page.locator('.thread-byline')).not.toContainText('Quiet until');
+    watch = await openTopicTools(page, 'watch');
+  }
   await watch.details.getByRole('button', { name: 'Tomorrow' }).click();
   await expect(page.locator('.thread-byline')).toContainText('Quiet until');
   const watchAgain = await openTopicTools(page, 'watch');

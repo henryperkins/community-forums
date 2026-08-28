@@ -1909,9 +1909,8 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     height: calc(100dvh - var(--topbar-h) - 48px);
 }
 .thread-scroll { overscroll-behavior: contain; padding: 0 8px 12px 0; scrollbar-gutter: stable; }
-/* No route prefix: the Community Inbox injects this same markup under
-   data-route="inbox" and app.js re-enhances it, and .thread-scroll is the only
-   scroll surface there (.inbox-reading.is-open is overflow:hidden). */
+/* The canonical thread owns this enhanced scroll surface. The Community Inbox
+   now injects a bounded .inbox-preview instead of the complete thread markup. */
 [data-thread-enhanced="1"] > .thread-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .thread-dock {
     position: relative; z-index: 2; flex: 0 0 auto; min-width: 0;
@@ -10289,7 +10288,10 @@ span.wf-btn {
         width: min(340px, 92vw);
         z-index: 55;
         box-shadow: var(--shadow-xl);
-        transform: translateX(101%);
+        /* Fixed descendants are positioned against .main's padded containing
+           block here. Clear both the drawer width and that outer gutter so a
+           closed rail cannot leave an actionable sliver in the viewport. */
+        transform: translateX(calc(100% + 24px));
     }
     /* :target is the SINGLE source of truth for narrow-width visibility — both
        the no-JS anchor and app.js (via history.replaceState, never a class)
@@ -11197,6 +11199,7 @@ body.thread-restructure-open { overflow: hidden; }
 .post-menu-touch { display: none; }
 .post-menu-reactions { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 6px 6px; }
 [data-thread-enhanced="1"] .post-native-disclosure > summary { display: none; }
+[data-thread-enhanced="1"] .post-native-disclosure:not([open]) { display: none; }
 .post-disclosure-close { min-width: 44px; margin: 0 0 8px auto; }
 .thread-restructure-scrim:not([hidden]) {
     position: fixed;
@@ -16388,7 +16391,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 }
 @media (max-width: 860px) {
     .topbar-inner { padding: 0 9px; gap: 5px; }
-    .topbar-primary { min-width: 0; overflow-x: auto; gap: 1px; }
+    .topbar-primary { min-width: 0; flex: 1 1 auto; overflow-x: auto; gap: 1px; }
     .topbar-primary-link { min-height: 40px; padding: 6px 8px; font-size: .74rem; }
     .topbar-panel-form { display: none; }
     /* Search must stay reachable on a phone. The rail used to carry a

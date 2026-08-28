@@ -49,7 +49,7 @@ $this->section('title', $title);
                             <input type="hidden" name="muted" value="<?= !empty($muted) ? '0' : '1' ?>">
                             <button class="dm-menu-item" type="submit"><?= $this->partial('partials/icon', ['name' => 'bell-off']) ?><span><?= !empty($muted) ? 'Unmute conversation' : 'Mute conversation' ?></span></button>
                         </form>
-                        <a class="dm-menu-item" href="#dm-rail" data-rail-open><?= $this->partial('partials/icon', ['name' => $railIcon]) ?><span><?= $e($railLabel) ?></span></a>
+                        <a class="dm-menu-item" href="#dm-rail" data-dm-rail-open><?= $this->partial('partials/icon', ['name' => $railIcon]) ?><span><?= $e($railLabel) ?></span></a>
                         <?php if (empty($is_group) && $other !== null): ?>
                             <a class="dm-menu-item" href="/u/<?= $e($other['username']) ?>"><?= $this->partial('partials/icon', ['name' => 'user']) ?><span>View profile</span></a>
                             <div class="dm-menu-sep"></div>

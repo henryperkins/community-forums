@@ -6,6 +6,7 @@ namespace Tests\Integration\Core;
 
 use App\Repository\BoardMemberRepository;
 use App\Repository\ThreadUserRepository;
+use App\Repository\UserBoardPrefRepository;
 use Tests\Support\TestCase;
 
 final class AppInboxMemberSurfaceTest extends TestCase
@@ -292,6 +293,51 @@ final class AppInboxMemberSurfaceTest extends TestCase
         $this->assertStatus(404, $this->get('/inbox/preview/' . (int) $thread['thread_id']));
         $this->db->run('UPDATE threads SET is_pending = 0, is_deleted = 1 WHERE id = ?', [(int) $thread['thread_id']]);
         $this->assertStatus(404, $this->get('/inbox/preview/' . (int) $thread['thread_id']));
+    }
+
+    public function test_muted_unread_row_keeps_visual_state_without_claiming_unread_queue_membership(): void
+    {
+        $viewer = $this->makeUser();
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Muted but unread', 'Opening.');
+        $threadId = (int) $thread['thread_id'];
+
+        $this->threadUsers()->markUnread((int) $viewer['id'], $threadId);
+        $this->threadUsers()->setStar((int) $viewer['id'], $threadId, true);
+        (new UserBoardPrefRepository($this->db))->setMuted((int) $viewer['id'], (int) $board['id'], true);
+        $this->actingAs($viewer);
+
+        $response = $this->get('/inbox', ['scope' => 'starred', 'order' => 'active']);
+
+        $this->assertStatus(200, $response);
+        self::assertMatchesRegularExpression(
+            '/<li class="[^"]*\bis-unread\b[^"]*" data-inbox-row data-thread-id="' . $threadId . '" data-inbox-unread="0"/',
+            $response->body(),
+        );
+    }
+
+    public function test_opening_a_bounded_preview_persists_the_topic_as_read(): void
+    {
+        $viewer = $this->makeUser();
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Read through the preview', 'Opening.');
+        $threadId = (int) $thread['thread_id'];
+        for ($i = 1; $i <= 5; $i++) {
+            $this->posting()->reply($this->userEntity($author), $threadId, ['body' => 'Reply ' . $i]);
+        }
+        $latestPostId = (int) $this->db->fetchValue('SELECT last_post_id FROM threads WHERE id = ?', [$threadId]);
+        $this->threadUsers()->markUnread((int) $viewer['id'], $threadId);
+        $this->actingAs($viewer);
+
+        $response = $this->get('/inbox/preview/' . $threadId);
+
+        $this->assertStatus(200, $response);
+        $readerState = $this->threadUsers()->find((int) $viewer['id'], $threadId);
+        self::assertNotNull($readerState);
+        self::assertSame($latestPostId, (int) $readerState['last_read_post_id']);
+        self::assertNull($this->threadUsers()->find((int) $author['id'], $threadId));
     }
 
     public function test_bulk_actions_are_current_view_scoped_atomic_and_preserve_read_only_suspension(): void

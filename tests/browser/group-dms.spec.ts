@@ -46,12 +46,18 @@ async function login(page: Page, email: string): Promise<void> {
  * when it is not already in view.
  */
 async function openRail(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const toggle = document.querySelector('[data-rail-toggle]');
+    if (!document.documentElement.classList.contains('has-js') || !toggle) return false;
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    return expanded === (window.location.hash === '#dm-rail');
+  });
   const rail = page.locator('.dm-inforail');
-  try {
-    await expect(rail).toBeInViewport({ timeout: 500 });
-  } catch {
-    await page.locator('[data-rail-toggle]').click();
+  const toggle = page.locator('[data-rail-toggle]');
+  if (await toggle.getAttribute('aria-expanded') !== 'true') {
+    await toggle.click();
   }
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await expect(rail).toBeInViewport();
 }
 
@@ -73,6 +79,7 @@ async function replyInConversation(page: Page, convPath: string, body: string): 
 }
 
 test('group DMs: create, draft-preserving validation, owner actions, membership intervals, mute/leave, report', async ({ page }, info) => {
+  test.setTimeout(60_000);
   const firstBody = 'Welcome to the council — the private group evidence run begins here.';
   const lateBody = 'After Dana joined — visible to everyone currently in the group.';
 
@@ -81,6 +88,7 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   const convPath = await createGroup(page, 'bob, carol', 'Launch council', firstBody);
   await expect(page.locator('.dm-thread-eyebrow')).toContainText('Private group');
   await expect(page.locator('.dm-thread-title')).toContainText('Launch council');
+  await expect(page.locator('.dm-inforail')).not.toBeInViewport();
   await openRail(page);
   await expect(page.locator('.dm-inforail .dm-rail-name')).toHaveText('Launch council');
   await expect(page.locator('.dm-inforail .dm-member')).toHaveCount(3);

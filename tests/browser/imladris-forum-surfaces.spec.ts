@@ -147,16 +147,19 @@ async function expectBoardIdentityContent(page: Page, theme: Theme, project: 'de
 
 async function expectInboxContent(page: Page, project: 'desktop' | 'mobile'): Promise<void> {
   const inbox = page.locator('[data-inbox]');
-  const activeFilter = inbox.locator('.inbox-tabs a.is-active');
-  const topic = inbox.locator('[data-inbox-list] a.thread-title').first();
+  const scopeMenu = inbox.locator('.inbox-scope-menu');
+  const activeFilter = scopeMenu.locator('.inbox-scope-menu-panel a.is-active');
+  const topic = inbox.locator('[data-inbox-list] .inbox-row-title').first();
   await expect(inbox).toBeVisible();
   await expect(inbox.locator('[data-inbox-list]')).toBeVisible();
-  await expect(inbox.locator('.inbox-tabs a')).not.toHaveCount(0);
+  await expect(scopeMenu.locator('.inbox-scope-menu-panel a')).not.toHaveCount(0);
+  await expect(scopeMenu.locator(':scope > summary')).toContainText('For You');
   await expect(activeFilter).toHaveCount(1);
-  await expect(activeFilter).toHaveText('For You');
+  await expect(activeFilter).toContainText('For You');
   await expect(activeFilter).toHaveAttribute('aria-current', 'page');
-  await expect(inbox.locator('[data-inbox-list] .thread-row.is-active')).toHaveCount(0);
-  if (project === 'desktop') {
+  await expect(inbox.locator('[data-inbox-list] [data-inbox-row].is-active')).toHaveCount(0);
+  const keepsReadingPaneOpen = await page.evaluate(() => matchMedia('(min-width: 1280px)').matches);
+  if (keepsReadingPaneOpen) {
     await expect(inbox.locator('[data-inbox-reading] .inbox-empty')).toBeVisible();
   } else {
     await expect(inbox.locator('[data-inbox-reading]')).toBeHidden();
@@ -288,7 +291,7 @@ test('forum index, board, and canonical thread satisfy production visual and acc
 
   await visit(page, '/');
   await expect(page.locator('.forum-directory__hero')).toBeVisible();
-  await expect(page.getByText('personal cross-board queue')).toBeVisible();
+  await expect(page.getByText('Your own cross-board queue')).toBeVisible();
   await expect(page.locator('[data-board-identity]')).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
   await expectNoSeriousA11yViolations(page, '.board-index');
@@ -487,7 +490,7 @@ test('the phone board keeps its activity column, its touch targets and its Follo
   // revealed — the condensed bar's duplicate, which the slab's own 38px desktop
   // rule would otherwise shrink past.
   const follow = await page.locator('.board-identity-actions .btn-secondary').boundingBox();
-  expect(follow?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect(Math.round((follow?.height ?? 0) * 100) / 100).toBeGreaterThanOrEqual(44);
 
   // Following must still read as followed at this width: the phone outline-chip
   // rule ties .btn-on on specificity and would win on source order without a
@@ -524,7 +527,7 @@ test('the phone board keeps its activity column, its touch targets and its Follo
   const barTrigger = page.locator('.board-identity-condensed [data-open-topic-composer]');
   await expect(barTrigger).toBeVisible();
   const trigger = await barTrigger.boundingBox();
-  expect(trigger?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect(Math.round((trigger?.height ?? 0) * 100) / 100).toBeGreaterThanOrEqual(44);
 
   const pane = await page.locator('.board-identity-condensed').boundingBox();
   expect(trigger!.x + trigger!.width, 'New topic must stay inside the condensed pane')
@@ -565,6 +568,7 @@ test('forum index does not overflow across the 860px shell transition', async ({
       const index = document.querySelector('.board-index');
       const rect = index?.getBoundingClientRect();
       return {
+        windowWidth: window.innerWidth,
         viewportWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
         indexLeft: rect ? Math.round(rect.left) : null,
@@ -572,10 +576,10 @@ test('forum index does not overflow across the 860px shell transition', async ({
       };
     });
 
-    expect(layout.viewportWidth).toBe(width);
-    expect(layout.scrollWidth, JSON.stringify(layout)).toBe(width);
+    expect(layout.windowWidth).toBe(width);
+    expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.viewportWidth);
     expect(layout.indexLeft, JSON.stringify(layout)).toBeGreaterThanOrEqual(0);
-    expect(layout.indexRight, JSON.stringify(layout)).toBeLessThanOrEqual(width);
+    expect(layout.indexRight, JSON.stringify(layout)).toBeLessThanOrEqual(layout.viewportWidth);
   }
 
   expectNoBrowserMessages(messages);

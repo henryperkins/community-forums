@@ -796,28 +796,30 @@
         var canonicalFallback = function (href) { window.location.href = href; };
         var reconcileReadRow = function (sourceLink) {
             var row = sourceLink && sourceLink.closest ? sourceLink.closest('[data-inbox-row]') : null;
-            if (!row || row.getAttribute('data-inbox-unread') !== '1') { return; }
+            if (!row || !row.classList.contains('is-unread')) { return; }
+            var queueUnread = row.getAttribute('data-inbox-unread') === '1';
             row.setAttribute('data-inbox-unread', '0');
             row.classList.remove('is-unread');
             var dot = row.querySelector('.unread-dot');
             if (dot) { dot.remove(); }
-            Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-unread-count]'), function (badge) {
-                var count = parseInt(badge.getAttribute('data-inbox-unread-count') || '', 10);
-                if (isNaN(count) || count < 1) { return; }
-                count--;
-                if (count === 0) { badge.remove(); return; }
-                badge.setAttribute('data-inbox-unread-count', String(count));
-                badge.textContent = badge.classList.contains('topbar-count') ? String(count) : count + ' unread';
-            });
-            if (inbox.getAttribute('data-inbox-scope') === 'unread') {
+            if (queueUnread) {
+                Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-unread-count]'), function (badge) {
+                    var count = parseInt(badge.getAttribute('data-inbox-unread-count') || '', 10);
+                    if (isNaN(count) || count < 1) { return; }
+                    count--;
+                    if (count === 0) { badge.remove(); return; }
+                    badge.setAttribute('data-inbox-unread-count', String(count));
+                    badge.textContent = badge.classList.contains('topbar-count') ? String(count) : count + ' unread';
+                });
+            }
+            if (queueUnread && inbox.getAttribute('data-inbox-scope') === 'unread') {
                 row.remove();
                 if (cursorRow === row) { cursorRow = null; }
             }
         };
-        var loadThread = function (link, push, focus) {
-            if (!link) { return; }
-            var canonical = link.getAttribute('href');
-            var endpoint = link.getAttribute('data-inbox-preview-url');
+        var loadThread = function (link, push, focus, historyTarget) {
+            var canonical = link ? link.getAttribute('href') : historyTarget && historyTarget.href;
+            var endpoint = link ? link.getAttribute('data-inbox-preview-url') : historyTarget && historyTarget.endpoint;
             if (!canonical || !endpoint) { canonicalFallback(canonical || '/inbox'); return; }
             var generation = cancelInboxRequest();
             var request = window.AbortController ? new window.AbortController() : null;
@@ -849,7 +851,7 @@
                 if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.enhanceWithin === 'function') {
                     window.RetroBoardsComposer.enhanceWithin(readingContent);
                 }
-                selectedLink = link;
+                selectedLink = link || null;
                 reconcileReadRow(link);
                 markActive(link);
                 setMobileReading(true);
@@ -859,7 +861,7 @@
                     var id = idOf(canonical);
                     var url = new URL(window.location.href);
                     if (id) { url.searchParams.set('t', id); }
-                    history.pushState({ rbInboxTopic: true, href: canonical }, '', url.toString());
+                    history.pushState({ rbInboxTopic: true, href: canonical, endpoint: endpoint }, '', url.toString());
                 }
                 if (focus) {
                     var heading = readingContent.querySelector('h2, h1');
@@ -972,7 +974,18 @@
                 var row = rowForId(id);
                 var link = linkIn(row);
                 if (link) { setCursor(row, false); loadThread(link, false, true); }
-                else { canonicalFallback('/t/' + encodeURIComponent(id)); }
+                else {
+                    var state = history.state || {};
+                    if (
+                        state.rbInboxTopic
+                        && typeof state.href === 'string'
+                        && typeof state.endpoint === 'string'
+                    ) {
+                        loadThread(null, false, true, state);
+                    } else {
+                        canonicalFallback('/t/' + encodeURIComponent(id));
+                    }
+                }
             });
             var initialId = initialUrl.searchParams.get('t');
             if (initialId) {
@@ -1291,7 +1304,7 @@
         // The header menu's "Members & details" item shares the #dm-rail anchor
         // with the no-JS fallback; with JS, open the rail directly and close the
         // menu instead of navigating.
-        var railOpeners = document.querySelectorAll('[data-rail-open]');
+        var railOpeners = document.querySelectorAll('[data-dm-rail-open]');
         for (var ri = 0; ri < railOpeners.length; ri++) {
             (function (opener) {
                 opener.addEventListener('click', function (e) {

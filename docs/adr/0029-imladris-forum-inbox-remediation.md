@@ -103,6 +103,16 @@ Recorded so they are not lost. None is fixed here.
    snooze windows only, so assignment is reachable from the thread page alone
    even though the queue filters and labels by it.
 
+### Follow-up resolution — 2026-08-28
+
+Deferred item 2 is resolved. `imladris-forum-surfaces.spec.ts` now follows the
+scope menu, `.inbox-row-title`, `[data-inbox-row]`, and the bounded preview that
+ADR 0029 actually shipped. Its initial reading-pane assertion is derived from
+the production `1280px` breakpoint rather than the Playwright project name, and
+its width check distinguishes the configured viewport from Chromium's usable
+client width when a stable scrollbar gutter is present. The desktop and mobile
+owners pass against a freshly prepared evidence database.
+
 ## A note on method
 
 ADR 0028 records that source parity is not visual parity. This surface adds the

@@ -106,6 +106,58 @@ different one.**
 | D8 | `composer-shell.spec.ts`'s *reduced motion* test is red, and was before this work | It waits on `.composer-send > span` inside the **new-thread** composer on a board page. Nothing here touches the composer shell, the board template or the composer's stylesheet; confirmed pre-existing by running it against `HEAD`'s `public/assets/app.css`. `field-error-a11y.spec.ts`'s `:user-invalid` test and one `a11y.spec.ts` admin/DM pair are red on `main` for the same reason and are likewise untouched. |
 | D9 | Guests still see no `Topic tools` | Correct in both, but production also gives a guest no route to the tag list on a topic — see #8, which is why the tags stayed in the head. |
 
+### Follow-up resolution — 2026-08-28
+
+The four browser deferrals that made up the reported 17 reds are resolved:
+
+- **D5:** the obsolete assertion that the Inbox injects a complete thread view
+  is removed. Quote idempotence remains covered on the canonical `/t` surface
+  through both the WYSIWYG and source adapters, which are the consumers that
+  still exist.
+- **D6:** the Inbox suite now targets the scope menu, inbox rows, and bounded
+  preview. The migration exposed two real defects beneath the stale selectors:
+  a muted-but-unread row serialized visual unread state as queue membership, and
+  browser Forward lost a topic after opening it removed the row from the Unread
+  scope. Production now keeps those states separate and stores the bounded
+  preview endpoint in history. Opening a successful preview also persists the
+  latest visible post as read.
+- **D7:** the shared-surface suite uses the current Inbox selectors and compares
+  layout with the usable client width, not the outer viewport across a stable
+  scrollbar gutter. Touch-floor measurements are normalized to hundredth-pixel
+  precision so Chromium's `43.999996px` representation still enforces `44px`.
+- **D8:** reduced motion now inspects the current send icon. A widened mobile
+  run also found that the composer's `195px` containment assertion was measuring
+  a global topbar overflow; it now measures the composer named by the test.
+
+The separate `field-error-a11y.spec.ts` and `a11y.spec.ts` baselines mentioned
+in D8 were not part of the reported 17 and remain separate follow-up work.
+
+The widened evidence run then exposed three independent failures outside that
+17-test deferral set, all now resolved:
+
+- The Group DM menu used `[data-rail-open]`, which also names the application
+  shell's board-rail state on `<body>`. The resulting body-level click handler
+  cancelled Add, Rename, Mute, and Leave actions, while the closed fixed drawer
+  left an actionable sliver inside the viewport. The DM opener now has its own
+  `data-dm-rail-open` hook and the closed drawer clears its containing gutter.
+- At `320px`, the mobile topbar's primary group retained its non-shrinking flex
+  basis, and an enhanced but closed post-edit disclosure still laid out its rich
+  toolbar. The primary group can now shrink and scroll internally, and a closed
+  enhanced disclosure is removed from layout until opened.
+- The desktop and mobile Gate A projects share one prepared database. Desktop
+  left the Tomorrow snooze active, so mobile's second press correctly cleared
+  it while the test expected a fresh set. The journey now normalizes an existing
+  snooze through the same UI before asserting the one-press set state.
+
+Finally, `npm run evidence` could not reach the enforced-capabilities segment on
+Windows because its inline Unix environment assignment launched the Playwright
+shell shim under WSL, where `node` was unavailable. A small Node launcher now
+sets `CAPABILITIES_MODE=enforce`, invokes Playwright with the current Node binary,
+and returns the child status portably. The complete command exits zero: thread
+view desktop `22/2 skipped`, thread view mobile `12/12 skipped`, aggregate
+`146/26 skipped`, role assignments `6`, and admin remediation/dashboard
+`26/22 skipped`.
+
 ### Superseded by this ADR
 
 `docs/superpowers/specs/2026-07-12-thread-view-study-design.md` was written from

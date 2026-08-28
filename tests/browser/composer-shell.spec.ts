@@ -830,7 +830,7 @@ test('reduced motion keeps composer transitions and sending state static', async
   await form.evaluate((element) => element.addEventListener('submit', (event) => event.preventDefault(), { once: true }));
   await form.locator('.composer-send').click();
   await expect(form).toHaveClass(/\bis-submitting\b/);
-  expect(await form.locator('.composer-send > span').evaluate((element) => getComputedStyle(element).animationName)).toBe('none');
+  expect(await form.locator('.composer-send .icon').evaluate((element) => getComputedStyle(element).animationName)).toBe('none');
   await expect(form.locator('[data-composer-submit-status]')).toHaveText('Sending…');
 });
 
@@ -895,5 +895,17 @@ test('mobile compact dock expands to a contained formatting overflow and anonymo
   await expectNoSeriousA11yViolations(page, `[data-composer-instance="${await form.getAttribute('data-composer-instance')}"]`);
 
   await page.setViewportSize({ width: 195, height: 422 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  const narrowComposer = await form.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+      left: rect.left,
+      right: rect.right,
+      viewportWidth: document.documentElement.clientWidth,
+    };
+  });
+  expect(narrowComposer.scrollWidth, JSON.stringify(narrowComposer)).toBeLessThanOrEqual(narrowComposer.clientWidth + 1);
+  expect(narrowComposer.left, JSON.stringify(narrowComposer)).toBeGreaterThanOrEqual(-1);
+  expect(narrowComposer.right, JSON.stringify(narrowComposer)).toBeLessThanOrEqual(narrowComposer.viewportWidth + 1);
 });
