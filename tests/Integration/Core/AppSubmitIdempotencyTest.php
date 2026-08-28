@@ -181,8 +181,8 @@ final class AppSubmitIdempotencyTest extends TestCase
         $author = $this->makeUser(['username' => 'nokey']);
         $this->actingAs($author);
 
-        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'A', 'body' => 'first']);
-        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'B', 'body' => 'second']);
+        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'First topic', 'body' => 'first']);
+        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Second topic', 'body' => 'second']);
         self::assertSame(2, (int) $this->db->fetchValue('SELECT COUNT(*) FROM threads WHERE user_id = ?', [(int) $author['id']]));
     }
 

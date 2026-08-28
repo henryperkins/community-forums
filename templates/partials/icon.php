@@ -18,6 +18,7 @@ $iconExtra = isset($class) && is_string($class) && $class !== '' ? ' ' . $class 
 $iconStroke = [
     'plus'            => '<path d="M12 5v14M5 12h14"/>',
     'search'          => '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+    'panel-left'      => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
     'panel-right'     => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',
     'users'           => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     'user'            => '<path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/>',
@@ -38,6 +39,7 @@ $iconStroke = [
     'chevron-left'    => '<path d="M15 18l-6-6 6-6"/>',
     'chevron-down'    => '<path d="M6 9l6 6 6-6"/>',
     'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
+    'star'            => '<path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/>',
     // Copied from the Imladris user-profile moderator strip.
     'shield'          => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     'eye'             => '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7z"/><circle cx="12" cy="12" r="3"/>',
@@ -57,6 +59,7 @@ $iconFilled = [
     // renders it, a stroked pin turns to mush. Taken from the Imladris
     // board-page template.
     'pin'             => '<path d="M14 2l8 8-3 1-2 6-4-4-6 6-1-1 6-6-4-4 6-2z"/>',
+    'star-filled'     => '<path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/>',
 ];
 $iconCustomFilled = [
     'eight-point-star' => '<path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"/>',

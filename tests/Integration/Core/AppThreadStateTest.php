@@ -100,7 +100,7 @@ final class AppThreadStateTest extends TestCase
 
         $this->tu()->setStar((int) $me['id'], $t1['thread_id'], true);
 
-        $rows = $this->tu()->inbox((int) $me['id'], 'starred', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        $rows = $this->tu()->inbox((int) $me['id'], 'starred', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
         $titles = array_column($rows, 'title');
         self::assertContains('Starred one', $titles);
         self::assertNotContains('Not starred', $titles);
@@ -116,13 +116,13 @@ final class AppThreadStateTest extends TestCase
         $this->makeThread($privateBoard, $admin, 'Secret topic', 'y');
 
         // Non-admin "active" inbox excludes the private board.
-        $rows = $this->tu()->inbox((int) $member['id'], 'active', false, ThreadUserRepository::NO_CUTOVER, 50, 0);
+        $rows = $this->tu()->inbox((int) $member['id'], 'unread', 'active', false, '2000-01-01 00:00:00', 50, 0);
         $titles = array_column($rows, 'title');
         self::assertContains('Public topic', $titles);
         self::assertNotContains('Secret topic', $titles, 'private board thread is never listed for a non-member');
 
         // Admin sees both.
-        $adminRows = $this->tu()->inbox((int) $admin['id'], 'active', true, ThreadUserRepository::NO_CUTOVER, 50, 0);
+        $adminRows = $this->tu()->inbox((int) $admin['id'], 'unread', 'active', true, '2000-01-01 00:00:00', 50, 0);
         self::assertContains('Secret topic', array_column($adminRows, 'title'));
     }
 
@@ -155,13 +155,14 @@ final class AppThreadStateTest extends TestCase
         $this->tu()->setSnooze((int) $me['id'], (int) $snoozed['thread_id'], '2999-01-01 00:00:00');
         (new UserBoardPrefRepository($this->db))->setMuted((int) $me['id'], (int) $mutedBoard['id'], true);
 
-        $rows = $this->tu()->inbox((int) $me['id'], 'unread', false, $cutover, 20, 0);
+        $rows = $this->tu()->inbox((int) $me['id'], 'unread', 'active', false, $cutover, 20, 0);
         self::assertSame([], array_column($rows, 'title'));
         self::assertSame(0, $this->tu()->unreadCount((int) $me['id'], false, $cutover));
 
         // A muted row remains available in non-Unread Inbox views, but its raw
         // unread decoration must not claim a place in the queue/badge.
-        $active = $this->tu()->inbox((int) $me['id'], 'active', false, $cutover, 20, 0);
+        $this->tu()->setStar((int) $me['id'], (int) $muted['thread_id'], true);
+        $active = $this->tu()->inbox((int) $me['id'], 'starred', 'active', false, $cutover, 20, 0);
         $mutedRow = array_values(array_filter(
             $active,
             static fn (array $row): bool => $row['title'] === 'Muted unread',
@@ -193,11 +194,11 @@ final class AppThreadStateTest extends TestCase
             'post_id' => $postId,
         ]);
 
-        $mentions = $this->tu()->inbox((int) $me['id'], 'mentions', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        $mentions = $this->tu()->inbox((int) $me['id'], 'mentions', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
         self::assertContains('Canonical delivered mention', array_column($mentions, 'title'));
         self::assertNotContains('Prefix is not a mention', array_column($mentions, 'title'));
 
-        $forYou = $this->tu()->inbox((int) $me['id'], 'for_you', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        $forYou = $this->tu()->inbox((int) $me['id'], 'for_you', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
         $rows = array_values(array_filter($forYou, static fn (array $row): bool => $row['title'] === 'Canonical delivered mention'));
         self::assertCount(1, $rows);
         self::assertSame('Mentioned you', $rows[0]['for_you_reason']);
@@ -214,7 +215,7 @@ final class AppThreadStateTest extends TestCase
         $this->posting()->reply($this->userEntity($me), $threadId, ['body' => 'My own clarification.']);
         self::assertNotContains(
             'Reply delivery is canonical',
-            array_column($this->tu()->inbox((int) $me['id'], 'replies', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
+            array_column($this->tu()->inbox((int) $me['id'], 'replies', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
             'A member must not receive a reply cue for their own post.',
         );
 
@@ -227,9 +228,9 @@ final class AppThreadStateTest extends TestCase
             'post_id' => $postId,
         ]);
 
-        $replies = $this->tu()->inbox((int) $me['id'], 'replies', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        $replies = $this->tu()->inbox((int) $me['id'], 'replies', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
         self::assertContains('Reply delivery is canonical', array_column($replies, 'title'));
-        $forYou = $this->tu()->inbox((int) $me['id'], 'for_you', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        $forYou = $this->tu()->inbox((int) $me['id'], 'for_you', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
         $rows = array_values(array_filter($forYou, static fn (array $row): bool => $row['title'] === 'Reply delivery is canonical'));
         self::assertCount(1, $rows);
         self::assertSame('Replies to your topic', $rows[0]['for_you_reason']);
@@ -249,11 +250,11 @@ final class AppThreadStateTest extends TestCase
 
         self::assertNotContains(
             'Thread override is off',
-            array_column($this->tu()->inbox((int) $me['id'], 'watching', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
+            array_column($this->tu()->inbox((int) $me['id'], 'watching', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
         );
         self::assertNotContains(
             'Thread override is off',
-            array_column($this->tu()->inbox((int) $me['id'], 'for_you', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
+            array_column($this->tu()->inbox((int) $me['id'], 'for_you', 'active', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
         );
     }
 
@@ -283,9 +284,11 @@ final class AppThreadStateTest extends TestCase
         $author = $this->makeUser();
         $board = $this->makeBoard($this->makeCategory());
         $this->makeThread($board, $author, 'Some topic', 'x');
+        $topicId = (int) $this->db->fetchValue('SELECT id FROM threads WHERE board_id = ? ORDER BY id DESC LIMIT 1', [(int) $board['id']]);
+        $this->tu()->setStar((int) $me['id'], $topicId, true);
 
         $this->actingAs($me);
-        $r = $this->get('/inbox', ['filter' => 'active']);
+        $r = $this->get('/inbox', ['scope' => 'starred', 'order' => 'active']);
         $this->assertStatus(200, $r);
         $this->assertSeeText($r, 'Inbox');
         $this->assertSeeText($r, 'Unread');               // filter tab
@@ -293,6 +296,6 @@ final class AppThreadStateTest extends TestCase
         self::assertStringContainsString('data-inbox-reading', $r->body());
         self::assertStringContainsString('data-inbox-back', $r->body());
         self::assertStringContainsString('data-inbox-reading-content', $r->body());
-        self::assertStringContainsString('class="rail-filter mobile-only mobile-search-link" href="/search"', $r->body());
+        self::assertStringContainsString('class="topbar-action topbar-search-entry" href="/search"', $r->body());
     }
 }

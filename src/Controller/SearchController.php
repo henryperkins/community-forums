@@ -8,6 +8,7 @@ use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Search\SearchQuery;
 use App\Search\SearchService;
 
 /**
@@ -23,18 +24,30 @@ final class SearchController extends Controller
             throw new NotFoundException('Not found.');
         }
 
-        $query = trim((string) $request->query('q', ''));
+        $rawQuery = $request->query('q');
+        $rawScope = $request->query('scope', 'everything');
+        $rawOrder = $request->query('order', 'relevance');
+        $searchQuery = new SearchQuery(
+            is_string($rawQuery) ? $rawQuery : '',
+            is_string($rawScope) ? $rawScope : 'everything',
+            is_string($rawOrder) ? $rawOrder : 'relevance',
+            20,
+        );
+        $submitted = $rawQuery !== null;
+        $error = $submitted ? $searchQuery->validationError() : null;
         $results = [];
-        $searched = false;
-        if ($query !== '') {
-            $searched = true;
-            $results = $this->container->get(SearchService::class)->search($query, $this->currentUser(), 20);
+        if ($submitted && $error === null) {
+            $results = $this->container->get(SearchService::class)->search($searchQuery, $this->currentUser());
         }
 
         return $this->view('search', [
-            'query' => $query,
+            'query' => $searchQuery->query,
+            'search_query' => $searchQuery,
+            'scope' => $searchQuery->scope,
+            'order' => $searchQuery->order,
             'results' => $results,
-            'searched' => $searched,
+            'submitted' => $submitted,
+            'error' => $error,
         ]);
     }
 }

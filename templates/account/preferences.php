@@ -8,6 +8,8 @@ $ppp = (int) ($prefs['posts_per_page'] ?? 20);
 $sig = !empty($prefs['show_signatures']);
 $av = !empty($prefs['show_avatars']);
 $rx = !empty($prefs['show_reactions']);
+$railOpen = !empty($prefs['rail_open']);
+$readingOpen = !empty($prefs['inbox_reading_open']);
 $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
 ?>
 <div class="settings-screen">
@@ -49,6 +51,19 @@ $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
             <label class="switchline"><input class="switch" type="checkbox" role="switch" name="show_reactions" value="1"<?= $rx ? ' checked' : '' ?>><span class="switch-text">Show reactions</span></label>
         </div>
         <button class="btn" type="submit">Save reading preferences</button>
+    </form>
+    <form method="post" action="/settings/member-surfaces" class="stacked scribe-panel member-surface-settings">
+        <h2 class="scribe-panel-head">Member surface panes</h2>
+        <p class="muted">These choices are rendered by the server before the page appears, so your board rail and Inbox reading pane do not flash between states.</p>
+        <?= $this->csrfField() ?>
+        <input type="hidden" name="return" value="/settings/preferences">
+        <div class="switch-stack switch-stack-tight">
+            <input type="hidden" name="rail_open" value="0">
+            <label class="switchline"><input class="switch" type="checkbox" role="switch" name="rail_open" value="1"<?= $railOpen ? ' checked' : '' ?>><span class="switch-text">Show the board rail</span></label>
+            <input type="hidden" name="inbox_reading_open" value="0">
+            <label class="switchline"><input class="switch" type="checkbox" role="switch" name="inbox_reading_open" value="1"<?= $readingOpen ? ' checked' : '' ?>><span class="switch-text">Show the Inbox reading pane</span></label>
+        </div>
+        <button class="btn" type="submit">Save pane preferences</button>
     </form>
         </div>
     </div>

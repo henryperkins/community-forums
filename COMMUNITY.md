@@ -130,7 +130,13 @@ A clear split keeps the product coherent:
 - **Inbox** (PRODUCT_DESIGN.md) = *triage of what concerns you* — replies to you, mentions, watched/assigned topics.
 - **Following feed** (this layer) = *discovery from who you follow* — a reverse-chronological stream of new threads and notable posts from the users (and P2: tags/boards) you follow. Each item is **topic-anchored**: it links straight to the durable thread, so the feed feeds the forum rather than competing with it.
 
-The left rail carries both entry points ("Inbox" and "Following"). A feed item shows who + what (started a thread in `#board` / replied in {thread}), a snippet, time, and reactions; it respects blocks and profile privacy.
+The board rail carries neither entry point: it is stable place chrome containing
+only the community's boards and public presence. **Inbox** is a primary topbar
+destination. **Following** remains its own `/feed` personalized discovery
+surface and is available from the signed-in identity/secondary menu. It must not
+return as a pane or row set on the non-personalized Board Index. A feed item
+shows who + what (started a thread in `#board` / replied in {thread}), a snippet,
+time, and reactions; it respects blocks and profile privacy.
 
 **Profile activity** (finalising the USER.md §5.1 stub): a member's own profile has Overview / Threads / Posts / Reactions tabs — their recent activity.
 
@@ -299,6 +305,7 @@ acceptance boundary.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.4 | 2026-08-27 | Settled the shared-shell placement of the retained Following feed: `/feed` remains a separate personalized discovery surface in identity/secondary navigation; Inbox is topbar-primary; the board rail contains only boards plus public presence. |
 | v0.3 | 2026-07-12 | Added §1.1 and reconciled the Living Brief member and curator workflows, processor boundary, provenance, retention, last-good behavior, and joint default-on graduation with independent rollback pins. |
 | v0.2 | 2026-06-26 | Consistency pass: relabeled §14.1 "P1/P2" with their delivery phases (P1 priority → Phase 2, P2 priority → Phase 4+) to remove the priority-vs-phase ambiguity; marked §14.2 rows 2 (titles) and 3 (who marks "solved") **Resolved**, matching §8 and the Phase 2 build (DECISIONS §8 updated to match). |
 | v0.1 | 2026-06-19 | Initial community-layer design — **lightweight / Twitter-like** (no Discourse trust-level gating). Reputation (Σ reactions received, resolves PRODUCT_DESIGN.md Q15); reactions/likes; following/followers + activity feed (vs the inbox); a minimal fixed badge set; light opt-out leaderboards; cosmetic titles (resolves the rank stub); notifications integration; anti-abuse & humane-design wellbeing rules; data model (`follows`, `badges`, `user_badges`, `reputation_events`, `threads.accepted_answer_post_id`); explicit no-trust-gating stance; phasing & open questions. |

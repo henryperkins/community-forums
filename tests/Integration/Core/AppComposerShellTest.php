@@ -27,14 +27,8 @@ final class AppComposerShellTest extends TestCase
         $threadPage = $this->get('/t/' . $fixture['thread']['thread_id'] . '-' . $fixture['thread']['slug']);
         $this->assertStatus(200, $threadPage);
 
-        // There is intentionally no GET /compose route. The dedicated composer
-        // is the anti-draft-loss view used by a rejected POST /threads request.
-        $composePage = $this->post('/threads', [
-            'board_id' => (int) $fixture['board']['id'],
-            'title' => '',
-            'body' => '',
-        ]);
-        $this->assertStatus(422, $composePage);
+        $composePage = $this->get('/compose', ['board' => $fixture['board']['slug']]);
+        $this->assertStatus(200, $composePage);
 
         $dmNewPage = $this->get('/messages/new', ['to' => $fixture['recipient']['username']]);
         $this->assertStatus(200, $dmNewPage);
@@ -79,7 +73,7 @@ final class AppComposerShellTest extends TestCase
                 'target' => $boardId,
                 'maxlength' => 20000,
                 'label' => 'Create topic',
-                'placeholder' => 'Start a new topic in #' . $fixture['board']['slug'] . '…',
+                'placeholder' => 'Open with the strongest version of your question…',
             ],
             [
                 'page' => $dmThreadPage->body(),

@@ -85,6 +85,38 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertStringNotContainsString("'_ds_bundle.js',", $builder);
     }
 
+    public function test_approved_member_surface_handoff_has_a_stable_source_map(): void
+    {
+        $mirror = self::ROOT . '/docs/design-system/imladris';
+        $required = [
+            'templates/member-surfaces/README.md',
+            'templates/board-index/BoardIndex.dc.html',
+            'templates/forum-inbox/ForumInbox.dc.html',
+            'templates/search/Search.dc.html',
+            'templates/compose/Compose.dc.html',
+            'components/forum/app-shell.card.html',
+            'components/forum/thread-row.card.html',
+            'templates/member-surfaces/screenshots/01-board-index.png',
+            'templates/member-surfaces/screenshots/02-forum-inbox.png',
+            'templates/member-surfaces/screenshots/03-search.png',
+            'templates/member-surfaces/screenshots/04-compose.png',
+            'templates/member-surfaces/screenshots/05-pane-doctrine.png',
+            'templates/member-surfaces/screenshots/06-pane-doctrine-detail.png',
+        ];
+
+        foreach ($required as $relative) {
+            self::assertFileExists($mirror . '/' . $relative, $relative . ' is missing from the reviewed mirror.');
+        }
+
+        $readme = (string) file_get_contents($mirror . '/templates/member-surfaces/README.md');
+        self::assertStringContainsString(
+            '8683122937E85111F76E8A29579D284A314845DD4E33956DE0E9BA10054090EC',
+            $readme,
+        );
+        self::assertStringContainsString('reference only', strtolower($readme));
+        self::assertStringContainsString('must not ship', strtolower($readme));
+    }
+
     public function test_reviewed_application_baseline_covers_forum_presentation_and_composer_contracts(): void
     {
         $path = self::ROOT . '/config/imladris-runtime-baseline.json';

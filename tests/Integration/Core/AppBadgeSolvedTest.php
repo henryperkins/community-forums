@@ -128,7 +128,7 @@ final class AppBadgeSolvedTest extends TestCase
         $board = $this->makeBoard($cat, ['slug' => 'qa2']);
         $asker = $this->makeUser(['username' => 'q']);
         $answerer = $this->makeUser(['username' => 'a']);
-        $t = $this->makeThread($board, $asker, 'Q');
+        $t = $this->makeThread($board, $asker, 'Question');
         $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'A']);
 
         $this->actingAs($asker);
@@ -161,7 +161,7 @@ final class AppBadgeSolvedTest extends TestCase
         $board = $this->makeBoard($cat, ['slug' => 'qa4']);
         $asker = $this->makeUser(['username' => 'q4']);
         $answerer = $this->makeUser(['username' => 'a4']);
-        $t = $this->makeThread($board, $asker, 'Q4');
+        $t = $this->makeThread($board, $asker, 'Question 4');
         $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'A4']);
 
         $this->actingAs($asker);
@@ -183,7 +183,7 @@ final class AppBadgeSolvedTest extends TestCase
         $asker = $this->makeUser(['username' => 'q5']);
         $answerer = $this->makeUser(['username' => 'a5']);
         $stranger = $this->makeUser(['username' => 'nosy']);
-        $t = $this->makeThread($board, $asker, 'Q5');
+        $t = $this->makeThread($board, $asker, 'Question 5');
         $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'A5']);
 
         $this->actingAs($stranger);
@@ -201,7 +201,7 @@ final class AppBadgeSolvedTest extends TestCase
         $mod = $this->makeUser(['username' => 'mod6']);
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $mod['id']);
 
-        $t = $this->makeThread($board, $asker, 'Q6');
+        $t = $this->makeThread($board, $asker, 'Question 6');
         $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'A6']);
 
         $this->actingAs($mod);
@@ -214,7 +214,7 @@ final class AppBadgeSolvedTest extends TestCase
         $cat = $this->makeCategory();
         $board = $this->makeBoard($cat, ['slug' => 'qa7']);
         $op = $this->makeUser(['username' => 'q7']);
-        $t = $this->makeThread($board, $op, 'Q7');
+        $t = $this->makeThread($board, $op, 'Question 7');
         $opPostId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$t['thread_id']]);
 
         $this->actingAs($op);
@@ -228,7 +228,7 @@ final class AppBadgeSolvedTest extends TestCase
         $board = $this->makeBoard($cat, ['slug' => 'qa9']);
         $asker = $this->makeUser(['username' => 'q9']);
         $answerer = $this->makeUser(['username' => 'a9']);
-        $t = $this->makeThread($board, $asker, 'Q9');
+        $t = $this->makeThread($board, $asker, 'Question 9');
         $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'A9']);
 
         $this->actingAs($asker);
@@ -271,7 +271,7 @@ final class AppBadgeSolvedTest extends TestCase
         $board = $this->makeBoard($cat, ['slug' => 'qa8']);
         $asker = $this->makeUser(['username' => 'q8']);
         $answerer = $this->makeUser(['username' => 'a8']);
-        $t = $this->makeThread($board, $asker, 'Q8');
+        $t = $this->makeThread($board, $asker, 'Question 8');
         $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'A8']);
 
         $this->actingAs($asker);

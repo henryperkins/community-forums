@@ -7,7 +7,7 @@
  * body_value, submit_label.
  *
  * Optional: body_name, form_id, form_class, expanded, body_error,
- * body_error_focus, identity, allow_anonymous, anonymous_checked,
+ * body_error_focus, identity, allow_anonymous, anonymous_hidden, anonymous_checked,
  * anonymous_disclosure, no_draft, no_wysiwyg, thread_composer, wrapper_slot,
  * header_slot, below_input_slot, before_submit_slot, hidden_fields.
  *
@@ -51,6 +51,7 @@ $shellBodyError = trim((string) ($body_error ?? ''));
 $shellBodyErrorFocus = (bool) ($body_error_focus ?? true);
 $shellIdentity = is_array($identity ?? null) ? $identity : null;
 $shellAllowAnonymous = !empty($allow_anonymous);
+$shellAnonymousHidden = !empty($anonymous_hidden);
 $shellAnonymousChecked = !empty($anonymous_checked);
 $shellAnonymousDisclosure = (string) ($anonymous_disclosure ?? '');
 $shellNoDraft = !empty($no_draft);
@@ -115,8 +116,8 @@ $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
                     </span>
                 <?php endif; ?>
                 <?php if ($shellAllowAnonymous): ?>
-                    <span class="composer-anonymous-chip">
-                        <input type="checkbox" id="<?= $e($shellAnonymousId) ?>" name="is_anonymous" value="1" aria-describedby="<?= $e($shellAnonymousDisclosureId) ?>"<?= $shellAnonymousChecked ? ' checked' : '' ?>>
+                    <span class="composer-anonymous-chip" data-compose-anonymous<?= $shellAnonymousHidden ? ' hidden' : '' ?>>
+                        <input type="checkbox" id="<?= $e($shellAnonymousId) ?>" name="is_anonymous" value="1" aria-describedby="<?= $e($shellAnonymousDisclosureId) ?>"<?= $shellAnonymousChecked ? ' checked' : '' ?><?= $shellAnonymousHidden ? ' disabled' : '' ?>>
                         <label for="<?= $e($shellAnonymousId) ?>">Anonymous</label>
                     </span>
                 <?php endif; ?>
@@ -125,14 +126,14 @@ $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
                 <span data-composer-actions-end-slot></span>
                 <?php if ($shellBeforeSubmitSlot !== null): ?><?php $shellBeforeSubmitSlot(); ?><?php endif; ?>
                 <button type="submit" class="btn composer-send" aria-label="<?= $e($shellSubmitLabel) ?>">
-                    <span aria-hidden="true">✒</span>
+                    <?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?>
                 </button>
             </div>
         </div>
     </div>
     <div class="composer-meta-row">
         <span class="composer-meta-draft" data-composer-draft-slot></span>
-        <?php if ($shellAllowAnonymous): ?><span class="composer-anonymous-disclosure" id="<?= $e($shellAnonymousDisclosureId) ?>"><?= $e($shellAnonymousDisclosure) ?></span><?php endif; ?>
+        <?php if ($shellAllowAnonymous): ?><span class="composer-anonymous-disclosure" id="<?= $e($shellAnonymousDisclosureId) ?>" data-compose-anonymous<?= $shellAnonymousHidden ? ' hidden' : '' ?>><?= $e($shellAnonymousDisclosure) ?></span><?php endif; ?>
         <span class="composer-meta-count" data-composer-counter-slot></span>
     </div>
     <div data-composer-after-box></div>

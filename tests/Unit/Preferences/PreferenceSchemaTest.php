@@ -37,10 +37,42 @@ final class PreferenceSchemaTest extends TestCase
 
     public function test_retired_thread_sort_is_preserved_as_legacy_unknown_data(): void
     {
-        self::assertSame(3, PreferenceSchema::VERSION);
+        self::assertSame(4, PreferenceSchema::VERSION);
         self::assertArrayNotHasKey('thread_sort', PreferenceSchema::fields('reading'));
         $legacy = PreferenceSchema::resolve(['__v' => 2, 'thread_sort' => 'replies']);
         self::assertSame('replies', $legacy['thread_sort']);
+    }
+
+    public function test_member_surface_preferences_are_versioned_and_validated(): void
+    {
+        $defaults = PreferenceSchema::defaults();
+        self::assertTrue($defaults['rail_open']);
+        self::assertTrue($defaults['inbox_reading_open']);
+        self::assertSame('category', $defaults['directory_sort']);
+        self::assertSame(3, $defaults['directory_peek']);
+        self::assertSame(
+            ['rail_open', 'inbox_reading_open', 'directory_sort', 'directory_peek'],
+            array_keys(PreferenceSchema::fields('surfaces')),
+        );
+
+        $resolved = PreferenceSchema::resolve([
+            '__v' => 3,
+            'rail_open' => '0',
+            'inbox_reading_open' => false,
+            'directory_sort' => 'top',
+            'directory_peek' => '5',
+        ]);
+        self::assertFalse($resolved['rail_open']);
+        self::assertFalse($resolved['inbox_reading_open']);
+        self::assertSame('top', $resolved['directory_sort']);
+        self::assertSame(5, $resolved['directory_peek']);
+        self::assertSame(PreferenceSchema::VERSION, $resolved['__v']);
+
+        $partial = PreferenceSchema::validatePartial('surfaces', [
+            'rail_open' => '0',
+            'directory_sort' => 'not-a-sort',
+        ]);
+        self::assertSame(['rail_open' => false], $partial);
     }
 
     public function test_resolve_drops_invalid_enum_and_falls_back_to_default(): void

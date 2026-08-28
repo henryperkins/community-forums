@@ -10,40 +10,11 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadUserRepository;
+use App\Support\InboxView;
 
-/**
- * The personal Community Inbox. Phase 4 extends the Phase 2 filters with
- * deterministic For You, workflow status, assignment, watching, mentions,
- * replies, and snooze views, all under the same board read gate.
- */
+/** The personal Community Inbox, with independent scope and order axes. */
 final class InboxController extends Controller
 {
-    private const FILTERS = [
-        'for_you',
-        'unread',
-        'mentions',
-        'replies',
-        'watching',
-        'needs_answer',
-        'assigned',
-        'decisions',
-        'solved',
-        'snoozed',
-        'starred',
-        'mine',
-        'active',
-        'newest',
-        'unanswered',
-    ];
-
-    private const WORKFLOW_FILTERS = [
-        'needs_answer',
-        'assigned',
-        'decisions',
-        'solved',
-        'snoozed',
-    ];
-
     public function index(Request $request): Response
     {
         $flags = $this->container->get(FeatureFlags::class);
@@ -53,16 +24,9 @@ final class InboxController extends Controller
         $user = $this->requireUser();
         $workflowEnabled = $flags->enabled('topic_workflow');
         $mentionsEnabled = $flags->enabled('mentions');
-        $filters = self::FILTERS;
-        if (!$workflowEnabled) {
-            $filters = array_values(array_diff($filters, self::WORKFLOW_FILTERS));
-        }
-        if (!$mentionsEnabled) {
-            $filters = array_values(array_diff($filters, ['mentions']));
-        }
-        $filter = (string) $request->query('filter', 'for_you');
-        if (!in_array($filter, $filters, true)) {
-            $filter = 'unread';
+        $state = InboxView::resolve($request, $workflowEnabled, $mentionsEnabled);
+        if ($state['legacy']) {
+            return $this->redirect(InboxView::query($state['scope'], $state['order'], $state['page']));
         }
 
         $repo = $this->container->get(ThreadUserRepository::class);
@@ -70,13 +34,22 @@ final class InboxController extends Controller
         $isAdmin = $user->isAdmin();
 
         $perPage = (int) $this->config()->get('pagination.threads_per_page', 20);
-        $total = $repo->countInbox($user->id(), $filter, $isAdmin, $cutover, $workflowEnabled, $mentionsEnabled);
+        $total = $repo->countInbox(
+            $user->id(),
+            $state['scope'],
+            $state['order'],
+            $isAdmin,
+            $cutover,
+            $workflowEnabled,
+            $mentionsEnabled,
+        );
         $pages = max(1, (int) ceil(max(1, $total) / $perPage));
-        $page = min($pages, max(1, $request->int('page', 1)));
+        $page = min($pages, $state['page']);
 
         $threads = $repo->inbox(
             $user->id(),
-            $filter,
+            $state['scope'],
+            $state['order'],
             $isAdmin,
             $cutover,
             $perPage,
@@ -85,10 +58,19 @@ final class InboxController extends Controller
             $mentionsEnabled,
         );
         $unreadCount = $repo->unreadCount($user->id(), $isAdmin, $cutover, $workflowEnabled);
+        $scopeCounts = $repo->countInboxScopes(
+            $user->id(),
+            $isAdmin,
+            $cutover,
+            $workflowEnabled,
+            $mentionsEnabled,
+        );
 
         return $this->view('inbox', [
-            'filter' => $filter,
-            'filters' => $filters,
+            'scope' => $state['scope'],
+            'order' => $state['order'],
+            'scopes' => $state['scopes'],
+            'scope_counts' => $scopeCounts,
             'threads' => $threads,
             'total' => $total,
             'page' => $page,

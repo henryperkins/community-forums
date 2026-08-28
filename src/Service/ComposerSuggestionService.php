@@ -13,6 +13,7 @@ use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Search\SearchService;
+use App\Search\SearchQuery;
 use App\Security\BoardPolicy;
 use App\Support\EmojiCatalog;
 
@@ -136,7 +137,7 @@ final class ComposerSuggestionService
         }
 
         if (mb_strlen($query) >= 3) {
-            foreach ($this->search->search($query, $viewer, 20) as $result) {
+            foreach ($this->search->search(new SearchQuery($query), $viewer) as $result) {
                 $out[] = $this->fromSearchResult($result);
             }
         }

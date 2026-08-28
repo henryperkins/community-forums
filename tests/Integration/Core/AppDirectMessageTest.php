@@ -64,7 +64,7 @@ final class AppDirectMessageTest extends TestCase
     {
         $u = $this->makeUser($attrs);
         $board = $this->makeBoard($this->makeCategory());
-        $this->makeThread($board, $u, 'Hi', 'establishing a post.');
+        $this->makeThread($board, $u, 'Hello', 'establishing a post.');
         return $this->users()->find((int) $u['id']);
     }
 

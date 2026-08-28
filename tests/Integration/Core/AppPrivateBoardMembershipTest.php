@@ -27,11 +27,12 @@ final class AppPrivateBoardMembershipTest extends TestCase
         $this->member = $this->makeUser(['username' => 'memberx']);
         $this->board = $this->makeBoard($this->makeCategory(), ['slug' => 'secret', 'visibility' => 'private']);
         $this->thread = $this->makeThread($this->board, $this->admin, 'Secret topic', 'classified');
+        (new ThreadUserRepository($this->db))->setStar((int) $this->member['id'], (int) $this->thread['thread_id'], true);
     }
 
     private function inboxTitles(): array
     {
-        $rows = (new ThreadUserRepository($this->db))->inbox((int) $this->member['id'], 'active', false, ThreadUserRepository::NO_CUTOVER, 50, 0);
+        $rows = (new ThreadUserRepository($this->db))->inbox((int) $this->member['id'], 'starred', 'active', false, ThreadUserRepository::NO_CUTOVER, 50, 0);
         return array_column($rows, 'title');
     }
 

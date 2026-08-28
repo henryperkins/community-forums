@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Core\Database;
+use App\Support\InboxView;
 
 /**
  * Per-user thread state (P2-01): read position + star, plus unread derivation
@@ -258,6 +259,50 @@ final class ThreadUserRepository
     }
 
     /**
+     * One bulk unread aggregate for the shared board rail. It deliberately uses
+     * the exact Inbox-unread predicate, including active snoozes and board mute,
+     * so the topbar total equals the sum of rendered rail pills.
+     *
+     * @return array<int,int> board_id => unread count (zero rows omitted)
+     */
+    public function unreadCountsByBoard(
+        int $userId,
+        bool $isAdmin,
+        string $cutover,
+        bool $workflowEnabled = true,
+    ): array {
+        [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
+        $rows = $this->db->fetchAll(
+            "SELECT t.board_id, COUNT(*) AS unread_count
+             FROM threads t
+             JOIN boards b ON b.id = t.board_id
+             LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
+             LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
+             WHERE t.is_deleted = 0
+               AND t.is_pending = 0
+               AND ($visSql)
+               " . $this->unreadQueueFragment($workflowEnabled) . '
+             GROUP BY t.board_id
+             ORDER BY t.board_id',
+            array_merge([$userId, $userId], $visParams, [$cutover]),
+        );
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $count = (int) $row['unread_count'];
+            if ($count > 0) {
+                $counts[(int) $row['board_id']] = $count;
+            }
+        }
+        return $counts;
+    }
+
+    /**
      * One page of the personal Inbox. Phase 4 adds workflow filters while
      * preserving the same board-visibility gate. Normal filters exclude active
      * snoozes; the snoozed filter is the explicit personal recovery view.
@@ -266,7 +311,8 @@ final class ThreadUserRepository
      */
     public function inbox(
         int $userId,
-        string $filter,
+        string $scope,
+        string $order,
         bool $isAdmin,
         string $cutover,
         int $limit,
@@ -275,6 +321,8 @@ final class ThreadUserRepository
         bool $mentionsEnabled = true,
     ): array
     {
+        $scope = in_array($scope, InboxView::SCOPES, true) ? $scope : 'for_you';
+        $order = in_array($order, InboxView::ORDERS, true) ? $order : 'active';
         $limit = max(1, $limit);
         $offset = max(0, $offset);
         // Param order follows SQL text order: SELECT unread cases (two cutovers),
@@ -285,8 +333,8 @@ final class ThreadUserRepository
         foreach ($visParams as $p) {
             $params[] = $p;
         }
-        [$where, $order] = $this->filterFragment(
-            $filter,
+        [$where] = $this->filterFragment(
+            $scope,
             $userId,
             $cutover,
             $params,
@@ -297,7 +345,12 @@ final class ThreadUserRepository
         $rows = $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
                     au.username AS author_username, au.display_name AS author_display_name,
+                    au.role AS author_role,
                     COALESCE(op.is_anonymous, 0) AS op_is_anonymous,
+                    op.body AS excerpt_body, op.body_html AS excerpt_html,
+                    (SELECT COUNT(*) FROM reactions commend
+                       WHERE commend.post_id = op.id
+                         AND commend.user_id <> op.user_id) AS commend_count,
                     COALESCE(tu.is_starred, 0) AS is_starred,
                     tu.snoozed_until AS snoozed_until,
                     ta.assigned_user_id,
@@ -308,7 +361,11 @@ final class ThreadUserRepository
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              JOIN users au ON au.id = t.user_id
-             LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
+             LEFT JOIN posts op
+               ON op.thread_id = t.id
+              AND op.is_op = 1
+              AND op.is_deleted = 0
+              AND op.is_pending = 0
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              LEFT JOIN posts read_post
                ON read_post.id = tu.last_read_post_id
@@ -322,7 +379,7 @@ final class ThreadUserRepository
                AND t.is_pending = 0
                AND ($visSql)
                $where
-             ORDER BY $order
+             ORDER BY " . $this->orderFragment($order) . "
              LIMIT " . $limit . ' OFFSET ' . $offset,
             $params,
         );
@@ -341,7 +398,7 @@ final class ThreadUserRepository
             unset($row);
         }
 
-        if ($filter === 'for_you') {
+        if ($scope === 'for_you') {
             $rows = $this->annotateForYouReasons($userId, $rows, $workflowEnabled, $mentionsEnabled);
         }
 
@@ -350,20 +407,23 @@ final class ThreadUserRepository
 
     public function countInbox(
         int $userId,
-        string $filter,
+        string $scope,
+        string $order,
         bool $isAdmin,
         string $cutover,
         bool $workflowEnabled = true,
         bool $mentionsEnabled = true,
     ): int
     {
+        $scope = in_array($scope, InboxView::SCOPES, true) ? $scope : 'for_you';
+        $order = in_array($order, InboxView::ORDERS, true) ? $order : 'active';
         $params = [$userId, $userId]; // thread-state + board-preference JOINs
         [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
         foreach ($visParams as $p) {
             $params[] = $p;
         }
         [$where] = $this->filterFragment(
-            $filter,
+            $scope,
             $userId,
             $cutover,
             $params,
@@ -390,8 +450,75 @@ final class ThreadUserRepository
     }
 
     /**
-     * WHERE fragment + ORDER BY for a filter, appending any bound params (in SQL
-     * text order) to $params by reference.
+     * All scope counts in one read-gated aggregate. The scope menu carries a
+     * count beside every available lens; issuing the complex Inbox predicate a
+     * dozen times would turn one page view into a dozen table walks.
+     *
+     * @return array<string,int>
+     */
+    public function countInboxScopes(
+        int $userId,
+        bool $isAdmin,
+        string $cutover,
+        bool $workflowEnabled = true,
+        bool $mentionsEnabled = true,
+    ): array {
+        $selects = [];
+        $params = [];
+        foreach (InboxView::SCOPES as $scope) {
+            $scopeParams = [];
+            [$where] = $this->filterFragment(
+                $scope,
+                $userId,
+                $cutover,
+                $scopeParams,
+                $workflowEnabled,
+                $mentionsEnabled,
+            );
+            $selects[] = "SUM(CASE WHEN (1 = 1 $where) THEN 1 ELSE 0 END) AS $scope";
+            array_push($params, ...$scopeParams);
+        }
+
+        [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
+        array_push($params, $userId, $userId, ...$visParams);
+        $row = $this->db->fetch(
+            'SELECT ' . implode(",\n                    ", $selects) . '
+             FROM threads t
+             JOIN boards b ON b.id = t.board_id
+             LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN posts read_post
+               ON read_post.id = tu.last_read_post_id
+              AND read_post.thread_id = t.id
+              AND read_post.is_deleted = 0
+              AND read_post.is_pending = 0
+             LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
+             WHERE t.is_deleted = 0
+               AND t.is_pending = 0
+               AND (' . $visSql . ')',
+            $params,
+        ) ?? [];
+
+        $counts = [];
+        foreach (InboxView::SCOPES as $scope) {
+            $counts[$scope] = (int) ($row[$scope] ?? 0);
+        }
+        return $counts;
+    }
+
+    /** Every order keeps pinned topics first, then applies its independent axis. */
+    private function orderFragment(string $order): string
+    {
+        return match ($order) {
+            'newest' => 't.is_pinned DESC, t.created_at DESC, t.id DESC',
+            'commended' => 't.is_pinned DESC, commend_count DESC, t.last_post_at DESC, t.id DESC',
+            default => 't.is_pinned DESC, t.last_post_at DESC, t.id DESC',
+        };
+    }
+
+    /**
+     * Scope predicate and its legacy order hint, appending any bound params (in
+     * SQL text order) to $params by reference. Canonical Inbox callers apply
+     * their independent order through orderFragment().
      *
      * @param list<mixed> $params
      * @return array{0:string,1:string}

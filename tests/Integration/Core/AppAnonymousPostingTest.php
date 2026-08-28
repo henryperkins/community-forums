@@ -105,7 +105,7 @@ final class AppAnonymousPostingTest extends TestCase
 
         // Anon board honours the opt-in (thread + reply).
         $ta = $this->posting()->createThread($this->userEntity($u), [
-            'board_id' => (int) $anon['id'], 'title' => 'A', 'body' => 'a', 'is_anonymous' => '1',
+            'board_id' => (int) $anon['id'], 'title' => 'Anonymous topic', 'body' => 'a', 'is_anonymous' => '1',
         ]);
         self::assertSame(1, (int) $this->db->fetchValue('SELECT is_anonymous FROM posts WHERE id = ?', [$this->opPostId($ta['thread_id'])]));
         $ra = $this->posting()->reply($this->userEntity($u), $ta['thread_id'], ['body' => 'r', 'is_anonymous' => '1']);
@@ -113,7 +113,7 @@ final class AppAnonymousPostingTest extends TestCase
 
         // Normal board forces is_anonymous=0 even when requested.
         $tn = $this->posting()->createThread($this->userEntity($u), [
-            'board_id' => (int) $normal['id'], 'title' => 'B', 'body' => 'b', 'is_anonymous' => '1',
+            'board_id' => (int) $normal['id'], 'title' => 'Named topic', 'body' => 'b', 'is_anonymous' => '1',
         ]);
         self::assertSame(0, (int) $this->db->fetchValue('SELECT is_anonymous FROM posts WHERE id = ?', [$this->opPostId($tn['thread_id'])]));
         $rn = $this->posting()->reply($this->userEntity($u), $tn['thread_id'], ['body' => 'r2', 'is_anonymous' => '1']);
@@ -228,7 +228,7 @@ final class AppAnonymousPostingTest extends TestCase
         $resp = $this->get('/notifications');
         $this->assertStatus(200, $resp);
         $this->assertSeeText($resp, 'Anonymous started a thread');
-        $this->assertDontSeeText($resp, 'Alice Real');
+        self::assertStringNotContainsString('Alice Real', $this->notificationList($resp->body()));
     }
 
     public function test_notification_actor_is_masked_for_an_anonymous_mention(): void
@@ -258,7 +258,7 @@ final class AppAnonymousPostingTest extends TestCase
         $resp = $this->get('/notifications');
         $this->assertStatus(200, $resp);
         $this->assertSeeText($resp, 'Anonymous mentioned you');
-        $this->assertDontSeeText($resp, 'Bob Real');
+        self::assertStringNotContainsString('Bob Real', $this->notificationList($resp->body()));
     }
 
     // ---- reputation / totals ----------------------------------------------
@@ -313,7 +313,7 @@ final class AppAnonymousPostingTest extends TestCase
         $resp = $this->get('/notifications');
         $this->assertStatus(200, $resp);
         $this->assertSeeText($resp, 'Anonymous replied');
-        $this->assertDontSeeText($resp, 'Bob Real');
+        self::assertStringNotContainsString('Bob Real', $this->notificationList($resp->body()));
     }
 
     // ---- moderator reveal --------------------------------------------------
@@ -396,5 +396,11 @@ final class AppAnonymousPostingTest extends TestCase
             'category_id' => $this->cat, 'name' => 'Toggle Me', 'slug' => 'toggleme', 'visibility' => 'public',
         ]));
         self::assertSame(0, (int) $this->db->fetchValue('SELECT allow_anonymous FROM boards WHERE id = ?', [(int) $board['id']]));
+    }
+
+    private function notificationList(string $html): string
+    {
+        self::assertSame(1, preg_match('/<ul class="notif-list">.*?<\/ul>/s', $html, $matches));
+        return $matches[0];
     }
 }

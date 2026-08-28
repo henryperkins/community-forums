@@ -27,19 +27,25 @@ final class AppForumIndexDesignTest extends TestCase
 
         $this->assertStatus(200, $response);
         self::assertStringContainsString('class="forum-directory__hero"', $body);
-        self::assertStringContainsString('>Forum index<', $body);
-        self::assertStringContainsString('Forum inbox', $body);
-        self::assertStringContainsString('personal cross-board queue', $body);
+        self::assertStringContainsString('data-directory-pane="boards"', $body);
+        self::assertStringContainsString('>Every board in the valley<', $body);
+        self::assertStringContainsString('Your own cross-board queue is the', $body);
+        self::assertStringContainsString('href="/inbox"', $body);
+        self::assertStringContainsString('href="/?pane=boards"', $body);
+        self::assertStringContainsString('href="/?pane=tags"', $body);
+        self::assertStringContainsString('href="/?pane=notices"', $body);
+        self::assertStringContainsString('href="/?pane=connections"', $body);
         self::assertStringContainsString('data-forum-total="boards">1 board', $body);
         self::assertStringContainsString('data-forum-total="topics">7 topics', $body);
         self::assertStringContainsString('data-forum-total="posts">42 posts', $body);
         self::assertStringContainsString('href="/c/public-design-board"', $body);
+        self::assertStringContainsString('data-directory-board="public-design-board"', $body);
         self::assertStringNotContainsString('hidden-design-board', $body);
         self::assertStringNotContainsString('data-inbox-list', $body);
         self::assertStringNotContainsString('composer-details', $body);
     }
 
-    public function test_signed_in_shared_navigation_explains_and_marks_each_route(): void
+    public function test_signed_in_shared_navigation_places_and_marks_each_primary_route(): void
     {
         $this->actingAs($this->makeUser(['username' => 'route_reader']));
 
@@ -51,12 +57,9 @@ final class AppForumIndexDesignTest extends TestCase
         $this->assertStatus(200, $inbox);
         $this->assertStatus(200, $messages);
 
-        self::assertStringContainsString('>Forum index<', $home->body());
-        self::assertStringContainsString('>Browse boards<', $home->body());
-        self::assertStringContainsString('>Forum inbox<', $inbox->body());
-        self::assertStringContainsString('>Your personal queue<', $inbox->body());
-        self::assertStringContainsString('>Messages<', $messages->body());
-        self::assertStringContainsString('>Private conversations<', $messages->body());
+        self::assertStringContainsString('data-primary-route="boards"', $home->body());
+        self::assertStringContainsString('data-primary-route="inbox"', $inbox->body());
+        self::assertStringContainsString('data-primary-route="messages"', $messages->body());
 
         $this->assertActiveRoute($home->body(), '/');
         $this->assertActiveRoute($inbox->body(), '/inbox');

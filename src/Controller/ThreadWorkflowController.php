@@ -57,7 +57,10 @@ final class ThreadWorkflowController extends Controller
         $this->container->get(ThreadUserRepository::class)->setSnooze($user->id(), $threadId, $until);
 
         $message = $until === null ? 'Snooze cleared.' : 'Topic snoozed.';
-        return $this->redirectWithFlash('/t/' . $threadId . '-' . (string) $thread['slug'], $message);
+        return $this->redirectWithFlash(
+            $this->safeReturn($request, '/t/' . $threadId . '-' . (string) $thread['slug']),
+            $message,
+        );
     }
 
     /** @param array<string,string> $params */
@@ -80,7 +83,7 @@ final class ThreadWorkflowController extends Controller
             return $this->redirectWithFlash($url, $e->first());
         }
 
-        return $this->redirectWithFlash($url, 'Assignment updated.');
+        return $this->redirectWithFlash($this->safeReturn($request, $url), 'Assignment updated.');
     }
 
     private function requireWorkflow(): void
@@ -117,9 +120,16 @@ final class ThreadWorkflowController extends Controller
         return match ($value) {
             'later_today' => gmdate('Y-m-d H:i:s', time() + 4 * 3600),
             'tomorrow' => gmdate('Y-m-d H:i:s', time() + 24 * 3600),
+            'monday' => gmdate('Y-m-d H:i:s', (int) strtotime('next monday 09:00 UTC')),
             'week' => gmdate('Y-m-d H:i:s', time() + 7 * 24 * 3600),
             default => null,
         };
+    }
+
+    private function safeReturn(Request $request, string $default): string
+    {
+        $return = (string) $request->post('return', '');
+        return $return !== '' && preg_match('#^/(?![/\\\\])#', $return) === 1 ? $return : $default;
     }
 
     private function resolveAssignee(Request $request): int

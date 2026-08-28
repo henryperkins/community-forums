@@ -125,9 +125,14 @@ final class AppThreadViewStudyTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $page);
         self::assertSame(1, substr_count($page->body(), 'data-thread-status-history'));
-        self::assertStringContainsString('Anonymous ·', $page->body());
-        self::assertStringNotContainsString('study_hidden_status_actor', $page->body());
-        self::assertStringNotContainsString('Hidden Status Actor', $page->body());
+        self::assertSame(1, preg_match(
+            '/<details class="thread-status-history".*?<\/details>/s',
+            $page->body(),
+            $history,
+        ));
+        self::assertStringContainsString('Anonymous ·', $history[0]);
+        self::assertStringNotContainsString('study_hidden_status_actor', $history[0]);
+        self::assertStringNotContainsString('Hidden Status Actor', $history[0]);
     }
 
     public function test_member_gets_basic_topic_tools_but_no_moderation_forms(): void

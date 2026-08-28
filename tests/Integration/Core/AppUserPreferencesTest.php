@@ -65,7 +65,7 @@ final class AppUserPreferencesTest extends TestCase
         $this->assertSeeText($this->get($url), 'page=2');
     }
 
-    public function test_board_mute_hides_from_sidebar(): void
+    public function test_board_mute_keeps_the_place_in_the_shared_board_rail(): void
     {
         $cat = $this->makeCategory();
         $board = $this->makeBoard($cat, ['slug' => 'muteme', 'name' => 'MuteMe']);
@@ -80,7 +80,7 @@ final class AppUserPreferencesTest extends TestCase
         $this->post('/settings/boards/toggle', ['board_id' => (int) $board['id'], 'pref' => 'mute']);
         self::assertSame(1, (int) (new UserBoardPrefRepository($this->db))->forUser((int) $user['id'])[(int) $board['id']]['is_muted']);
 
-        $this->assertDontSeeText($this->get('/c/elsewhere'), '/c/muteme');
+        $this->assertSeeText($this->get('/c/elsewhere'), '/c/muteme');
     }
 
     public function test_board_favorite_persists(): void
@@ -222,6 +222,8 @@ final class AppUserPreferencesTest extends TestCase
         self::assertSame('dark', $data['preferences']['appearance']['theme']);
         self::assertSame('compact', $data['preferences']['appearance']['density']);
         self::assertTrue($data['preferences']['appearance']['reduced_motion']);
+        self::assertTrue($data['preferences']['surfaces']['rail_open']);
+        self::assertSame('category', $data['preferences']['surfaces']['directory_sort']);
         self::assertArrayNotHasKey('thread_sort', $data['preferences']['reading']);
         self::assertArrayHasKey('composing', $data['preferences']);
         // Non-schema blob keys are not leaked into the export.

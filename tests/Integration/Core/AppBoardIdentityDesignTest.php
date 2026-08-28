@@ -55,7 +55,14 @@ final class AppBoardIdentityDesignTest extends TestCase
         self::assertSame(1, substr_count($body, '0 replies'));
         self::assertSame(1, substr_count($body, 'details class="composer-details"'));
         self::assertSame(1, substr_count($body, 'action="/threads"'));
-        $this->assertOrder($body, ['Follow board', 'New topic']);
+        // Scope the order assertion to this board's identity slab. The shared
+        // member shell now has its own earlier New topic destination, which is
+        // intentionally independent from the board-local Follow/New controls.
+        $identityStart = strpos($body, '<header class="board-identity"');
+        self::assertNotFalse($identityStart);
+        $identityEnd = strpos($body, '</header>', $identityStart);
+        self::assertNotFalse($identityEnd);
+        $this->assertOrder(substr($body, $identityStart, $identityEnd - $identityStart), ['Follow board', 'New topic']);
     }
 
     public function test_board_rows_keep_one_left_edge_and_lead_with_the_title(): void

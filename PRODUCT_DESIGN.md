@@ -119,14 +119,15 @@ Roles are cumulative in capability (Admin ⊇ Moderator ⊇ User ⊇ Guest). Mod
 
 ### 5.2 Layout (the hybrid shell)
 
-A single, full-height application screen with three columns, plus a top bar:
+A single, full-height application screen uses one route-aware top bar and one
+board rail. The centre and optional reading pane belong to the current route:
 
-- **Top bar** — brand, global search, help, notifications bell, and the identity area (see §6.6).
-- **Pane 1 — Sidebar (channels):** workspace header, quick filters (Threads, Mentions, Starred, Drafts), categories of boards with unread badges, and a Direct Messages section with presence dots. Sections collapse.
-- **Pane 2 — Directory / topic list:** `/` is the Forum Index directory; `/inbox` is the personalized thread inbox, with its member filters; and `/c/{slug}` is one board's fixed-order topic list. Topic rows remain scannable (avatar, subject, snippet, reply count, time, unread/star); a board list has its New Topic button, while **Newest** and **Unanswered** are Inbox filters.
-- **Pane 3 — Conversation:** navigating to the canonical `/t/{id}-{slug}` renders that thread as a message stream with a composer (or a guest join-bar) at the bottom.
+- **Top bar** — operator brand; primary Boards, Inbox, and Messages links; the Search entry; persisted rail/reading-pane controls; New topic; notification state; and the identity disclosure (see §6.6). Cross-surface routes live here, not in the board rail.
+- **Pane 1 — board rail:** one policy-filtered, operator-ordered category/board query on every app route, with per-board unread pills and a public privacy-respecting presence roster. The rail answers *where*. It never contains Inbox scopes, Messages, Drafts, Following, leaderboards, or other route links. Muted boards stay visible but contribute no attention count.
+- **Pane 2 — current surface:** `/` is the non-personalized Board Index directory; `/inbox` is the member's personal queue; `/search` is scoped/ordered results; `/compose` is the focused new-topic editor; `/c/{slug}` is one board's fixed-order topic list. Each route owns its own scope/order/peek axes and server-rendered URL state.
+- **Pane 3 — bounded glance:** only `/inbox` may show a third pane, and it renders a bounded, read-gated topic preview. `/t/{id}-{slug}` alone owns the full thread stream, tools, and composer.
 
-On screens ≤ 860px the layout collapses to one column: the sidebar becomes a slide-in drawer, and a canonical conversation supplies a back link to its originating Inbox or board topic list.
+Below 1280px the Inbox split-pane preview yields to the queue. On screens ≤860px the board rail becomes a slide-in drawer and the active surface becomes one column. Canonical links and forms remain complete with JavaScript disabled.
 
 ### 5.3 URL structure (server-rendered, SEO-friendly)
 
@@ -134,13 +135,15 @@ Even though the UI feels like a single-page app, every view has a real, shareabl
 
 ```
 /                          Forum Index directory
-/inbox                     Personalized thread inbox
+/inbox?scope=...&order=... Personalized thread inbox
 /c/{slug}                  One board's topic list          e.g. /c/playstation-2
 /c/{slug}?page=2           Pagination
 /t/{id}-{slug}             Canonical conversation          e.g. /t/1042-vice-city-impressions
 /u/{username}              A user profile
 /dm/{conversation-id}      A direct-message conversation (auth only)
-/search?q=...              Search results
+/feed                      Personalized Following feed
+/search?q=...&scope=...&order=...  Search results
+/compose?board=...         Top-level new-topic task (auth only)
 /login  /register  /logout Auth
 /settings                  Account & preferences (auth only)
 /mod/...                   Moderation tools (mod/admin only)
@@ -158,8 +161,8 @@ Legend: **Priority** = P0 / P1 / P2 / P3 (MoSCoW tiers, not delivery phases — 
 
 | Feature | Priority | Status | Notes |
 |---|---|---|---|
-| Three-pane hybrid shell | P0 | Planned | Sidebar · inbox · conversation. |
-| Top bar (brand, search, bell, identity) | P0 | Planned | Search & bell are visual-only in mockup. |
+| Route-aware hybrid shell | P0 | Planned | One board rail; route-owned centre; bounded Inbox preview only. |
+| Top bar (brand, primary routes, search, pane toggles, New topic, bell, identity) | P0 | Planned | Cross-surface travel lives here; identity owns secondary destinations. |
 | Responsive single-column mode | P0 | Planned | Drawer sidebar + list/thread slide on mobile. |
 | Mobile rail as drawer (swipe-to-close) | P1 | Planned | `<md`: sidebar becomes a sheet/drawer with a sticky top bar (community name + close); `≥md` keeps the fixed rail. A header hamburger opens it; the current board name shows as the title. |
 | Mobile "New thread" FAB | P1 | Planned | Bottom-of-screen floating button on mobile only; the inline button stays on desktop. |
@@ -171,10 +174,10 @@ Legend: **Priority** = P0 / P1 / P2 / P3 (MoSCoW tiers, not delivery phases — 
 
 | Feature | Priority | Status | Notes |
 |---|---|---|---|
-| Categories with collapsible sections | P0 | Planned | Ordered; collapse state remembered per user (P1). |
+| Categories with collapsible sections | P0 | Planned | One operator-ordered board query and partial on every app route. |
 | Boards as `#channels` | P0 | Planned | Slug, name, description. |
-| Unread badges per board | P1 | Planned | Needs real read-state tracking (§8). |
-| Direct Messages list + presence dots | P1 | Planned | Persistence is Planned. |
+| Unread badges per board | P1 | Planned | One bulk member-relative query; muted boards stay visible with zero attention. |
+| Public presence roster | P1 | Planned | Privacy/block filtered rail furniture; Messages remain a topbar route. |
 | Admin: create/edit/reorder categories & boards | P0 | Planned | Runtime management, not hard-coded. |
 | Per-board permissions (who can post) | P1 | Planned | e.g. announcement boards are staff-post-only. |
 
@@ -759,10 +762,11 @@ The hybrid prototype (once the Phase 0 mockup is built — §13) maps one-to-one
 
 | Mockup region | Server template/partial | Data it needs |
 |---|---|---|
-| Top bar + identity | `layout.php` / `partials/topbar.php` | current user (or guest) |
-| Sidebar | `partials/sidebar.php` | categories → boards, unread counts, DMs |
-| Thread inbox | `partials/thread-list.php` | threads for board + per-user read/star state |
-| Conversation | `partials/conversation.php` | thread + posts + authors + reactions |
+| Top bar + identity | `layout.php` / `partials/topbar.php` | route, current user (or guest), unread total, pane preferences |
+| Board rail | `partials/sidebar.php` | policy-listed categories → boards, bulk unread counts, public presence |
+| Board Index / Inbox / Search / Compose | `home.php` / `inbox.php` / `search.php` / `compose.php` | each route's server-owned query state and view model |
+| Inbox preview | `partials/inbox_preview.php` | bounded read-gated topic sample + canonical link |
+| Canonical conversation | `thread.php` + thread partials | thread + posts + authors + reactions |
 | One message | `partials/post.php` | post + author + reactions |
 | Composer / join-bar | `partials/composer.php` | auth state, target thread |
 
@@ -972,6 +976,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.17 | 2026-08-27 | Adopted the approved member-surface ownership model: `/` is place, `/inbox` is attention, Search and Compose are top-level routes, cross-surface travel moved to the topbar, and the shared rail now owns only boards plus public presence. Preserved `/feed` as a separate personalized Following surface in secondary identity navigation and bounded the Inbox preview beneath canonical topics. |
 | v0.16 | 2026-08-02 | Clarified the shell and URL roles for the Forum Index, personalized Inbox, board topic list, and canonical conversation. Board topic lists now have a fixed pinned-then-activity order; Newest and Unanswered are Inbox filters. |
 | v0.15 | 2026-07-14 | Adopted the imported Imladris system as a generated, allowlisted runtime foundation beneath the application compatibility layer; documented preview/runtime exclusions, cascade ownership, self-hosted fonts, and the production-baseline drift gate that prevents newer forum/composer surfaces from silently outrunning design parity. |
 | v0.14 | 2026-07-14 | Unified post, DM, preview, revision, and living-brief rendering around canonical Markdown plus a shared responsive presentation contract; documented safe semantic attributes, read-time fallback for missing derived HTML, and the idempotent render-cache repair path. Corrected spoiler syntax to the shipped `||spoiler||` form. |
