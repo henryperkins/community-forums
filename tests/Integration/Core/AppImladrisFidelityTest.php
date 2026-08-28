@@ -368,7 +368,7 @@ final class AppImladrisFidelityTest extends TestCase
         }
     }
 
-    public function test_reading_surfaces_render_inside_the_reading_rooms_shell(): void
+    public function test_reading_surfaces_keep_the_reading_shell_while_search_owns_its_top_level_surface(): void
     {
         $board = $this->makeBoard($this->makeCategory(), ['name' => 'Audit trails', 'slug' => 'audit-trails']);
         $user = $this->makeUser(['username' => 'reader']);
@@ -384,8 +384,8 @@ final class AppImladrisFidelityTest extends TestCase
 
         $search = $this->get('/search', ['q' => 'audit']);
         $this->assertStatus(200, $search);
-        $this->assertSeeText($search, 'read-main');
-        $this->assertSeeText($search, 'read-pad');
+        self::assertStringNotContainsString('class="read-main', $search->body());
+        self::assertStringContainsString('class="search-surface"', $search->body());
         $this->assertSeeText($search, 'search-form');
     }
 
@@ -698,5 +698,47 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertDontSeeText($posts, 'aria-current="page" href="/u/tabbed">Overview');
         // …and the Posts tab lists the user's activity.
         $this->assertSeeText($posts, 'Tabbed topic');
+    }
+
+    public function test_member_surface_presentation_is_semantic_source_owned_and_runtime_complete(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $source = (string) file_get_contents($root . '/docs/design-system/imladris/components.css');
+        $runtime = (string) file_get_contents($root . '/public/assets/imladris.css');
+        $spacing = (string) file_get_contents($root . '/docs/design-system/imladris/tokens/spacing.css');
+        $application = (string) file_get_contents($root . '/public/assets/app.css');
+
+        self::assertMatchesRegularExpression('/--topbar-h\s*:\s*62px/', $spacing);
+        self::assertMatchesRegularExpression('/--sidebar-w\s*:\s*272px/', $spacing);
+        self::assertSame(
+            1,
+            preg_match(
+                '#/\* ══ Member surfaces — production transfer \(2026-08-27\) ══ \*/(?<css>.*?)/\* ══ End member surfaces production transfer ══ \*/#s',
+                $source,
+                $match,
+            ),
+            'The reviewed member-surface closure must have one bounded Imladris source section.',
+        );
+
+        $memberCss = $match['css'];
+        foreach ([
+            '.topbar-primary',
+            '.forum-directory__tabs',
+            '.inbox-scope-menu',
+            '.search-query-well',
+            '.compose-board-picker',
+            '@media (min-width: 1280px)',
+            '@media (prefers-reduced-motion: reduce)',
+            'box-shadow: 0 0 0 3px var(--focus-ring)',
+        ] as $contract) {
+            self::assertStringContainsString($contract, $memberCss, $contract);
+            self::assertStringContainsString($contract, $runtime, 'Generated runtime missing ' . $contract);
+        }
+        self::assertDoesNotMatchRegularExpression('/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i', $memberCss);
+        self::assertStringContainsString(
+            '/* Generated compatibility bridge: member-surfaces-production */',
+            $application,
+        );
+        self::assertStringContainsString(trim($memberCss), $application);
     }
 }

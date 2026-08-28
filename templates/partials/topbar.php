@@ -42,7 +42,9 @@ $inboxCount = (int) ($inbox_unread_count ?? 0);
         <div class="topbar-right">
             <?php if (!empty($features['search']) && $path !== '/search'): ?>
                 <a class="topbar-action topbar-search-entry" href="/search" aria-label="Search">
-                    <?= $this->partial('partials/icon', ['name' => 'search']) ?><span>Search</span>
+                    <?= $this->partial('partials/icon', ['name' => 'search']) ?>
+                    <span class="topbar-search-copy">Search the council…</span>
+                    <kbd>⌘K</kbd>
                 </a>
             <?php endif; ?>
 
@@ -51,8 +53,8 @@ $inboxCount = (int) ($inbox_unread_count ?? 0);
                     <?= $this->csrfField() ?>
                     <input type="hidden" name="rail_open" value="<?= !empty($surfaces['rail_open']) ? '0' : '1' ?>">
                     <input type="hidden" name="return" value="<?= $e($path) ?>">
-                    <button class="topbar-action" type="submit" aria-controls="sidebar-nav" aria-expanded="<?= !empty($surfaces['rail_open']) ? 'true' : 'false' ?>" aria-label="<?= !empty($surfaces['rail_open']) ? 'Hide' : 'Show' ?> board rail">
-                        <?= $this->partial('partials/icon', ['name' => 'menu']) ?><span>Boards</span>
+                    <button class="topbar-action" type="submit" aria-controls="sidebar-nav" aria-expanded="<?= !empty($surfaces['rail_open']) ? 'true' : 'false' ?>" aria-pressed="<?= !empty($surfaces['rail_open']) ? 'true' : 'false' ?>" aria-label="<?= !empty($surfaces['rail_open']) ? 'Hide' : 'Show' ?> board rail" title="<?= !empty($surfaces['rail_open']) ? 'Hide' : 'Show' ?> the board rail (⌘B)">
+                        <?= $this->partial('partials/icon', ['name' => 'panel-left']) ?><span>Boards</span>
                     </button>
                 </form>
 
@@ -61,7 +63,7 @@ $inboxCount = (int) ($inbox_unread_count ?? 0);
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="inbox_reading_open" value="<?= !empty($surfaces['inbox_reading_open']) ? '0' : '1' ?>">
                         <input type="hidden" name="return" value="<?= $e($path) ?>">
-                        <button class="topbar-action" type="submit" aria-controls="inbox-reading-pane" aria-expanded="<?= !empty($surfaces['inbox_reading_open']) ? 'true' : 'false' ?>" aria-label="<?= !empty($surfaces['inbox_reading_open']) ? 'Hide' : 'Show' ?> reading pane">
+                        <button class="topbar-action" type="submit" aria-controls="inbox-reading-pane" aria-expanded="<?= !empty($surfaces['inbox_reading_open']) ? 'true' : 'false' ?>" aria-pressed="<?= !empty($surfaces['inbox_reading_open']) ? 'true' : 'false' ?>" aria-label="<?= !empty($surfaces['inbox_reading_open']) ? 'Hide' : 'Show' ?> reading pane" title="<?= !empty($surfaces['inbox_reading_open']) ? 'Hide' : 'Show' ?> the reading pane (⌘J)">
                             <?= $this->partial('partials/icon', ['name' => 'panel-right']) ?><span>Reading</span>
                         </button>
                     </form>

@@ -7,6 +7,13 @@ $composeSelectedBoard = $selected_board_row;
 $composeSelectedSlug = (string) $composeSelectedBoard['slug'];
 $composeSelectedName = (string) $composeSelectedBoard['name'];
 $composeAllowsAnonymous = !empty($composeSelectedBoard['allow_anonymous']);
+$composeOffersAnonymous = false;
+foreach ($boards as $composeBoardOption) {
+    if (!empty($composeBoardOption['can_post']) && !empty($composeBoardOption['allow_anonymous'])) {
+        $composeOffersAnonymous = true;
+        break;
+    }
+}
 $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e): void {
     ?>
     <label class="field compose-title-field">
@@ -19,15 +26,18 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
 
     <label class="field compose-board-field">
         <span>Board</span>
-        <select name="board_id" class="input input-engraved compose-board-select" data-compose-board-select<?= field_attrs($errors, 'board_id') ?>>
-            <?php foreach ($boards as $board): ?>
-                <option value="<?= (int) $board['id'] ?>"
-                        data-board-slug="<?= $e($board['slug']) ?>"
-                        data-board-name="<?= $e($board['name']) ?>"
-                        data-board-anonymous="<?= !empty($board['allow_anonymous']) ? '1' : '0' ?>"
-                        <?= (int) $board['id'] === (int) $selected_board ? 'selected ' : '' ?><?= empty($board['can_post']) ? 'disabled' : '' ?>><?= $e($board['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
+        <span class="compose-board-select-wrap">
+            <select name="board_id" class="input input-engraved compose-board-select" data-compose-board-select<?= field_attrs($errors, 'board_id') ?>>
+                <?php foreach ($boards as $board): ?>
+                    <option value="<?= (int) $board['id'] ?>"
+                            data-board-slug="<?= $e($board['slug']) ?>"
+                            data-board-name="<?= $e($board['name']) ?>"
+                            data-board-anonymous="<?= !empty($board['allow_anonymous']) ? '1' : '0' ?>"
+                            <?= (int) $board['id'] === (int) $selected_board ? 'selected ' : '' ?><?= empty($board['can_post']) ? 'disabled' : '' ?>><?= $e($board['name']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
+        </span>
     </label>
     <?= field_error($errors, 'board_id') ?>
     <?php
@@ -57,8 +67,9 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
                 'username' => $current_user->username(),
                 'show_avatar' => $show_avatars ?? true,
             ],
-            'allow_anonymous' => $composeAllowsAnonymous,
-            'anonymous_checked' => !empty($old['is_anonymous']),
+            'allow_anonymous' => $composeOffersAnonymous,
+            'anonymous_hidden' => !$composeAllowsAnonymous,
+            'anonymous_checked' => $composeAllowsAnonymous && !empty($old['is_anonymous']),
             'anonymous_disclosure' => 'Only takes effect on boards that allow it; your name stays visible to moderators.',
             'wrapper_slot' => $composeWrapper,
         ]) ?>

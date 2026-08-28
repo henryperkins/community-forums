@@ -218,4 +218,30 @@ final class AppImladrisFidelityHighImpactTest extends TestCase
         $this->assertStatus(200, $res);
         self::assertStringContainsString('monogram-gilt', $res->body());
     }
+
+    public function test_member_surfaces_use_real_assets_library_icons_and_external_code_only(): void
+    {
+        $this->makeAdmin();
+        $member = $this->makeUser(['username' => 'member_surface_assets']);
+        $this->makeBoard($this->makeCategory('Member surface assets'), [
+            'slug' => 'member-surface-assets',
+            'name' => 'Member Surface Assets',
+        ]);
+        $this->actingAs($member);
+
+        foreach (['/', '/inbox', '/search', '/compose'] as $path) {
+            $response = $this->get($path);
+            $this->assertStatus(200, $response);
+            $html = $response->body();
+            self::assertDoesNotMatchRegularExpression('/<script(?![^>]*\bsrc=)[^>]*>/i', $html, $path);
+            self::assertDoesNotMatchRegularExpression('/\sstyle\s*=/i', $html, $path);
+            self::assertStringNotContainsString('/assets/commend-star.svg', $html, $path);
+            self::assertStringNotContainsString('✒', $html, $path);
+        }
+
+        $compose = $this->get('/compose')->body();
+        self::assertStringContainsString('icon-arrow-up', $compose);
+        $search = $this->get('/search')->body();
+        self::assertStringContainsString('icon-commend-star', $search);
+    }
 }

@@ -108,6 +108,30 @@ final class AppComposeMemberSurfaceTest extends TestCase
         }
     }
 
+    public function test_anonymity_control_is_rendered_dormant_when_another_postable_board_allows_it(): void
+    {
+        $member = $this->makeUser(['username' => 'composeanonymousswitch']);
+        $category = $this->makeCategory('Anonymity destinations');
+        $plain = $this->makeBoard($category, [
+            'slug' => 'plain-destination',
+            'name' => 'Plain Destination',
+            'allow_anonymous' => 0,
+        ]);
+        $this->makeBoard($category, [
+            'slug' => 'anonymous-destination',
+            'name' => 'Anonymous Destination',
+            'allow_anonymous' => 1,
+        ]);
+        $this->actingAs($member);
+
+        $page = $this->get('/compose', ['board' => (string) $plain['id']]);
+
+        $this->assertStatus(200, $page);
+        self::assertMatchesRegularExpression('/<span class="composer-anonymous-chip"[^>]*data-compose-anonymous[^>]*hidden>/', $page->body());
+        self::assertMatchesRegularExpression('/<input\b[^>]*name="is_anonymous"[^>]*disabled/', $page->body());
+        self::assertMatchesRegularExpression('/<span class="composer-anonymous-disclosure"[^>]*data-compose-anonymous[^>]*hidden>/', $page->body());
+    }
+
     public function test_validation_preserves_the_draft_board_anonymity_and_shared_composer_contract(): void
     {
         $member = $this->makeUser(['username' => 'draftkeeper']);

@@ -12,8 +12,9 @@ $emptyTitle = match ($scope) {
 $available = array_fill_keys($scopes, true);
 ?>
 <div class="inbox-shell" data-inbox data-inbox-scope="<?= $e($scope) ?>" data-inbox-order="<?= $e($order) ?>">
-    <section class="inbox-list" data-inbox-list aria-label="Topics">
+    <section class="inbox-list" data-inbox-list tabindex="-1" aria-label="Topics">
         <header class="board-header inbox-list-head">
+            <p class="inbox-kicker">Your personal forum view</p>
             <div class="inbox-title-line">
                 <h1>Forum inbox</h1>
                 <?php if ((int) $unread_count > 0): ?>

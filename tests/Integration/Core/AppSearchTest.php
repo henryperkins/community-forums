@@ -261,7 +261,7 @@ final class AppSearchTest extends TestCase
         $empty = $this->get('/search', ['q' => 'Nothingmatchingthisphrase', 'scope' => 'replies']);
         $this->assertSeeText($empty, 'Nothing matches that.');
         $this->assertSeeText($empty, 'Try a shorter phrase, or widen the scope above.');
-        self::assertStringContainsString('/assets/commend-star.svg', $empty->body());
+        self::assertStringContainsString('icon-commend-star', $empty->body());
 
         $initial = $this->get('/search');
         $this->assertStatus(200, $initial);

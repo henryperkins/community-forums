@@ -62,14 +62,14 @@ $orderCopy = $order === 'newest' ? 'newest first' : 'by relevance';
                 </ol>
             <?php else: ?>
                 <div class="search-empty-state">
-                    <img src="/assets/commend-star.svg" alt="" width="26" height="26">
+                    <?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'search-state-icon']) ?>
                     <p class="search-empty-title">Nothing matches that.</p>
                     <p class="muted">Try a shorter phrase, or widen the scope above.</p>
                 </div>
             <?php endif; ?>
         <?php elseif (!$submitted): ?>
             <div class="search-initial-state" id="search-query-initial">
-                <img src="/assets/commend-star.svg" alt="" width="26" height="26">
+                <?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'search-state-icon']) ?>
                 <p>Search topic titles and replies across every board you can read.</p>
                 <p class="muted">Results always honor board visibility and membership.</p>
             </div>

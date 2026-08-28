@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', $site_name);
+$this->section('route', 'boards');
 $pane = (string) ($pane ?? 'boards');
 $sort = (string) ($directory_sort ?? 'category');
 $peek = (int) ($directory_peek ?? 3);
@@ -113,7 +114,41 @@ $notificationVerb = static function (array $notice): string {
 
             <details class="directory-viewbar-mobile" data-viewbar="narrow">
                 <summary>Viewing <strong><?= $e($sortLabels[$sort] ?? $sortLabels['category']) ?></strong><?= $peek > 0 ? ' · peek ' . $peek : ' · no peek' ?></summary>
-                <p>Use the full viewing controls above to change this public directory order.</p>
+                <div class="directory-viewbar-mobile-panel">
+                    <span class="directory-viewbar__label">Order</span>
+                    <div class="directory-viewbar__choices" role="group" aria-label="Order">
+                        <?php foreach ($sortLabels as $sortKey => $label): ?>
+                            <?php $return = $viewUrl(['sort' => $sortKey]); ?>
+                            <?php if ($current_user !== null): ?>
+                                <form method="post" action="/settings/member-surfaces">
+                                    <?= $this->csrfField() ?>
+                                    <input type="hidden" name="directory_sort" value="<?= $e($sortKey) ?>">
+                                    <input type="hidden" name="return" value="<?= $e($return) ?>">
+                                    <button type="submit" data-directory-sort-option="<?= $e($sortKey) ?>" aria-pressed="<?= $sort === $sortKey ? 'true' : 'false' ?>"><?= $e($label) ?></button>
+                                </form>
+                            <?php else: ?>
+                                <a href="<?= $e($return) ?>" data-directory-sort-option="<?= $e($sortKey) ?>" aria-pressed="<?= $sort === $sortKey ? 'true' : 'false' ?>"><?= $e($label) ?></a>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                    <span class="directory-viewbar__label">Peek</span>
+                    <div class="directory-viewbar__peek" role="group" aria-label="Peek">
+                        <?php foreach ([0, 3, 5] as $peekValue): ?>
+                            <?php $return = $viewUrl(['peek' => $peekValue]); ?>
+                            <?php if ($current_user !== null): ?>
+                                <form method="post" action="/settings/member-surfaces">
+                                    <?= $this->csrfField() ?>
+                                    <input type="hidden" name="directory_peek" value="<?= $peekValue ?>">
+                                    <input type="hidden" name="return" value="<?= $e($return) ?>">
+                                    <button type="submit" data-directory-peek-option="<?= $peekValue ?>" aria-pressed="<?= $peek === $peekValue ? 'true' : 'false' ?>"><?= $peekValue === 0 ? 'Off' : $peekValue ?></button>
+                                </form>
+                            <?php else: ?>
+                                <a href="<?= $e($return) ?>" data-directory-peek-option="<?= $peekValue ?>" aria-pressed="<?= $peek === $peekValue ? 'true' : 'false' ?>"><?= $peekValue === 0 ? 'Off' : $peekValue ?></a>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                    <a class="directory-viewbar-mobile-settings" href="/settings/appearance">Row appearance settings</a>
+                </div>
             </details>
 
             <p class="directory-order-note"><?= $e($orderNotes[$sort] ?? $orderNotes['category']) ?> · <?= (int) $totals['boards'] ?> boards · the same order every member sees.</p>

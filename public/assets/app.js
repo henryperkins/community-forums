@@ -552,45 +552,233 @@
         port.scrollTop = target.offsetTop - port.offsetTop;
     })();
 
-    // Community Inbox — load a topic into the reading pane (enhancement only; with
-    // JS off, the thread-title links open each topic as its own page). Short-fetch
-    // the thread HTML, lift its #main content into the reading pane, and keep the
-    // URL shareable via ?t=<id> + history. Reactions/edit forms inside keep working
-    // because their handlers are delegated on document.
+    // Member-surface panels. The POST forms remain canonical; JavaScript applies
+    // the state immediately and saves the same fields in the background. The
+    // keyboard contract is suppressed in editors so writing never toggles chrome.
+    var panelForms = {};
+    var editableTarget = function (target) {
+        return !!(target && target.closest && target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]'));
+    };
+    var panelField = function (kind) { return kind === 'reading' ? 'inbox_reading_open' : 'rail_open'; };
+    var panelIsOpen = function (kind) { return document.body.classList.contains(kind === 'reading' ? 'is-reading-open' : 'is-rail-open'); };
+    var renderPanelState = function (kind, open) {
+        var openClass = kind === 'reading' ? 'is-reading-open' : 'is-rail-open';
+        var closedClass = kind === 'reading' ? 'is-reading-closed' : 'is-rail-closed';
+        var attribute = kind === 'reading' ? 'data-inbox-reading-open' : 'data-rail-open';
+        document.body.classList.toggle(openClass, open);
+        document.body.classList.toggle(closedClass, !open);
+        document.body.setAttribute(attribute, open ? '1' : '0');
+        var form = panelForms[kind];
+        if (!form) { return; }
+        var field = form.querySelector('input[name="' + panelField(kind) + '"]');
+        var button = form.querySelector('button[type="submit"]');
+        if (field) { field.value = open ? '0' : '1'; }
+        if (button) {
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+            button.setAttribute('aria-pressed', open ? 'true' : 'false');
+            button.setAttribute('aria-label', (open ? 'Hide ' : 'Show ') + (kind === 'reading' ? 'reading pane' : 'board rail'));
+        }
+    };
+    var persistPanelState = function (kind, open) {
+        var form = panelForms[kind];
+        if (!form || !window.fetch || !window.FormData) { return; }
+        var fieldName = panelField(kind);
+        var data = new FormData(form);
+        data.set(fieldName, open ? '1' : '0');
+        fetch(form.action, {
+            method: 'POST', body: data, credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (response) {
+            if (response.ok) { return; }
+            var field = form.querySelector('input[name="' + fieldName + '"]');
+            if (field) { field.value = open ? '1' : '0'; }
+            form.submit();
+        }).catch(function () {
+            var field = form.querySelector('input[name="' + fieldName + '"]');
+            if (field) { field.value = open ? '1' : '0'; }
+            form.submit();
+        });
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-panel-form]'), function (form) {
+        var kind = form.getAttribute('data-panel-form');
+        if (kind !== 'rail' && kind !== 'reading') { return; }
+        panelForms[kind] = form;
+        form.addEventListener('submit', function (event) {
+            if (!window.fetch || !window.FormData) { return; }
+            event.preventDefault();
+            var desired = !panelIsOpen(kind);
+            renderPanelState(kind, desired);
+            persistPanelState(kind, desired);
+        });
+    });
+    document.addEventListener('keydown', function (event) {
+        if (!(event.ctrlKey || event.metaKey) || event.altKey || editableTarget(event.target)) { return; }
+        var key = String(event.key || '').toLowerCase();
+        if (key === 'b' && panelForms.rail) {
+            event.preventDefault();
+            var railOpen = !panelIsOpen('rail');
+            renderPanelState('rail', railOpen);
+            persistPanelState('rail', railOpen);
+        } else if (key === 'j' && panelForms.reading) {
+            event.preventDefault();
+            var readingOpen = !panelIsOpen('reading');
+            renderPanelState('reading', readingOpen);
+            persistPanelState('reading', readingOpen);
+        } else if (key === 'k') {
+            event.preventDefault();
+            var search = document.querySelector('.search-query-well');
+            if (search) { search.focus(); search.select(); }
+            else { window.location.href = '/search'; }
+        }
+    });
+
+    // The directory controls remain native POST forms. With JavaScript they save
+    // through the same endpoint, follow its canonical redirect, then replace only
+    // the board pane so changing the view does not add a document navigation to
+    // the member's history.
+    var directoryPane = document.querySelector('[data-directory-pane]');
+    if (directoryPane && window.fetch && window.FormData && window.history) {
+        var directoryRequest = null;
+        document.addEventListener('submit', function (event) {
+            var form = event.target && event.target.closest
+                ? event.target.closest('[data-directory-pane] form[action="/settings/member-surfaces"]')
+                : null;
+            if (!form || (!form.querySelector('input[name="directory_sort"]') && !form.querySelector('input[name="directory_peek"]'))) { return; }
+            event.preventDefault();
+            if (directoryRequest && typeof directoryRequest.abort === 'function') { directoryRequest.abort(); }
+            var request = window.AbortController ? new window.AbortController() : null;
+            directoryRequest = request;
+            directoryPane.setAttribute('aria-busy', 'true');
+            var options = {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            };
+            if (request) { options.signal = request.signal; }
+            fetch(form.action, options).then(function (response) {
+                if (!response.ok) { throw new Error('Directory preference save failed.'); }
+                return response.text().then(function (html) { return { html: html, url: response.url }; });
+            }).then(function (result) {
+                if (directoryRequest !== request) { return; }
+                var probe = document.createElement('template');
+                probe.innerHTML = result.html;
+                var nextPane = probe.content.querySelector('[data-directory-pane]');
+                if (!nextPane) { throw new Error('Directory response did not contain the board pane.'); }
+                directoryPane.replaceWith(nextPane);
+                directoryPane = nextPane;
+                var nextUrl = new URL(result.url, window.location.href);
+                history.replaceState(history.state, '', nextUrl.pathname + nextUrl.search + nextUrl.hash);
+                directoryRequest = null;
+            }).catch(function (error) {
+                if (error && error.name === 'AbortError') { return; }
+                directoryRequest = null;
+                form.submit();
+            });
+        });
+    }
+
+    // Community Inbox — the bounded preview endpoint decorates canonical topic
+    // links. Selection, cursor movement and actions all resolve back to native
+    // forms/links, so the queue remains fully usable without this block.
     var inbox = document.querySelector('[data-inbox]');
-    if (inbox && window.fetch && window.history && window.DOMParser) {
+    if (inbox && window.fetch && window.history) {
         var reading = inbox.querySelector('[data-inbox-reading]');
         var readingContent = inbox.querySelector('[data-inbox-reading-content]');
         var inboxList = inbox.querySelector('[data-inbox-list]');
+        var threadList = inbox.querySelector('[data-inbox-thread-list]');
         var inboxBack = inbox.querySelector('[data-inbox-back]');
         var emptyHtml = readingContent ? readingContent.innerHTML : '';
         var selectedLink = null;
+        var cursorRow = null;
         var inboxRequest = null;
         var inboxRequestGeneration = 0;
-        var idOf = function (href) { var m = href && href.match(/\/t\/(\d+)/); return m ? m[1] : null; };
+        var idOf = function (href) { var match = href && href.match(/\/t\/(\d+)/); return match ? match[1] : null; };
         var cancelInboxRequest = function () {
             inboxRequestGeneration++;
-            if (inboxRequest && typeof inboxRequest.abort === 'function') {
-                inboxRequest.abort();
-            }
+            if (inboxRequest && typeof inboxRequest.abort === 'function') { inboxRequest.abort(); }
             inboxRequest = null;
             return inboxRequestGeneration;
         };
         var clearInboxRequest = function (generation, request) {
-            if (generation === inboxRequestGeneration && inboxRequest === request) {
-                inboxRequest = null;
-            }
+            if (generation === inboxRequestGeneration && inboxRequest === request) { inboxRequest = null; }
         };
-        var markActive = function (href) {
-            var rows = inboxList.querySelectorAll('.thread-row');
-            for (var i = 0; i < rows.length; i++) {
-                var a = rows[i].querySelector('a.thread-title');
-                rows[i].classList.toggle('is-active', !!a && a.getAttribute('href') === href);
-            }
+        var allRows = function () { return inboxList.querySelectorAll('[data-inbox-row]'); };
+        var linkIn = function (row) { return row ? row.querySelector('.inbox-row-title') : null; };
+        var rowForId = function (id) { return /^\d+$/.test(String(id || '')) ? inboxList.querySelector('[data-thread-id="' + id + '"]') : null; };
+        var clearInboxMenuPosition = function (menu) {
+            var panel = menu.querySelector('.inbox-scope-menu-panel, .inbox-row-menu-panel');
+            menu.removeAttribute('data-inbox-menu-positioned');
+            if (!panel) { return; }
+            panel.style.removeProperty('left');
+            panel.style.removeProperty('top');
         };
-        var setReadingOpen = function (open) {
+        var positionInboxMenu = function (menu) {
+            var trigger = menu.querySelector(':scope > summary');
+            var panel = menu.querySelector('.inbox-scope-menu-panel, .inbox-row-menu-panel');
+            if (!menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
+            var margin = 8;
+            var gap = menu.matches('[data-inbox-scope-menu]') ? 7 : 4;
+            var triggerRect = trigger.getBoundingClientRect();
+            var panelRect = panel.getBoundingClientRect();
+            var left = menu.matches('[data-inbox-row-menu]') ? triggerRect.right - panelRect.width : triggerRect.left;
+            var top = triggerRect.bottom + gap;
+            left = Math.max(margin, Math.min(left, window.innerWidth - panelRect.width - margin));
+            if (top + panelRect.height > window.innerHeight - margin) {
+                top = triggerRect.top - panelRect.height - gap;
+            }
+            top = Math.max(margin, Math.min(top, window.innerHeight - panelRect.height - margin));
+            panel.style.left = Math.round(left) + 'px';
+            panel.style.top = Math.round(top) + 'px';
+            menu.setAttribute('data-inbox-menu-positioned', '1');
+        };
+        var closeInboxMenus = function (restoreFocus) {
+            Array.prototype.forEach.call(inbox.querySelectorAll('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]'), function (menu) {
+                menu.removeAttribute('open');
+                clearInboxMenuPosition(menu);
+                if (restoreFocus) {
+                    var summary = menu.querySelector(':scope > summary');
+                    if (summary) { summary.focus(); }
+                }
+            });
+        };
+
+        inbox.addEventListener('toggle', function (event) {
+            var menu = event.target;
+            if (!menu.matches || !menu.matches('[data-inbox-scope-menu], [data-inbox-row-menu]')) { return; }
+            if (!menu.open) { clearInboxMenuPosition(menu); return; }
+            Array.prototype.forEach.call(inbox.querySelectorAll('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]'), function (other) {
+                if (other !== menu) {
+                    other.removeAttribute('open');
+                    clearInboxMenuPosition(other);
+                }
+            });
+            positionInboxMenu(menu);
+        }, true);
+        window.addEventListener('resize', function () {
+            var openMenu = inbox.querySelector('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]');
+            if (openMenu) { positionInboxMenu(openMenu); }
+        });
+        var markActive = function (link) {
+            Array.prototype.forEach.call(allRows(), function (row) {
+                row.classList.toggle('is-active', !!link && linkIn(row) === link);
+            });
+        };
+        var setCursor = function (row, follow) {
+            Array.prototype.forEach.call(allRows(), function (candidate) {
+                candidate.classList.toggle('is-cursor', candidate === row);
+            });
+            cursorRow = row;
+            if (!row) { return; }
+            var link = linkIn(row);
+            if (link) { selectedLink = link; }
+            row.scrollIntoView({ block: 'nearest' });
+            if (follow && link) { loadThread(link, false, false); }
+        };
+        var setMobileReading = function (open) {
             inboxList.classList.toggle('is-hidden', open);
             reading.classList.toggle('is-open', open);
+            if (open && !panelIsOpen('reading')) { renderPanelState('reading', true); }
         };
         var showEmpty = function (restoreFocus) {
             cancelInboxRequest();
@@ -600,156 +788,261 @@
             readingContent.innerHTML = emptyHtml;
             reading.removeAttribute('aria-busy');
             reading.scrollTop = 0;
-            markActive('');
-            setReadingOpen(false);
-            if (restoreFocus && selectedLink && document.documentElement.contains(selectedLink)) {
-                selectedLink.focus();
-            } else if (restoreFocus) {
-                var fallbackLink = inboxList.querySelector('a.thread-title');
-                if (fallbackLink) { fallbackLink.focus(); }
-                else { inboxList.setAttribute('tabindex', '-1'); inboxList.focus(); }
-            }
+            markActive(null);
+            setMobileReading(false);
+            if (restoreFocus && selectedLink && document.documentElement.contains(selectedLink)) { selectedLink.focus(); }
+            else if (restoreFocus) { inboxList.focus(); }
         };
         var canonicalFallback = function (href) { window.location.href = href; };
         var reconcileReadRow = function (sourceLink) {
-            var row = sourceLink && sourceLink.closest ? sourceLink.closest('.thread-row') : null;
-            if (!row || !row.classList.contains('thread-unread')) { return; }
-            var queueUnread = row.getAttribute('data-inbox-unread') === '1';
-
-            row.classList.remove('thread-unread');
-            row.removeAttribute('data-inbox-unread');
+            var row = sourceLink && sourceLink.closest ? sourceLink.closest('[data-inbox-row]') : null;
+            if (!row || row.getAttribute('data-inbox-unread') !== '1') { return; }
+            row.setAttribute('data-inbox-unread', '0');
+            row.classList.remove('is-unread');
             var dot = row.querySelector('.unread-dot');
             if (dot) { dot.remove(); }
-
-            var badge = inbox.querySelector('[data-inbox-unread-count]');
-            if (queueUnread && badge) {
+            Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-unread-count]'), function (badge) {
                 var count = parseInt(badge.getAttribute('data-inbox-unread-count') || '', 10);
-                if (!isNaN(count) && count > 0) {
-                    count--;
-                    if (count === 0) { badge.remove(); }
-                    else {
-                        badge.setAttribute('data-inbox-unread-count', String(count));
-                        badge.textContent = count + ' unread';
-                    }
-                }
-            }
-
-            if (queueUnread && new URL(window.location.href).searchParams.get('filter') === 'unread') {
+                if (isNaN(count) || count < 1) { return; }
+                count--;
+                if (count === 0) { badge.remove(); return; }
+                badge.setAttribute('data-inbox-unread-count', String(count));
+                badge.textContent = badge.classList.contains('topbar-count') ? String(count) : count + ' unread';
+            });
+            if (inbox.getAttribute('data-inbox-scope') === 'unread') {
                 row.remove();
-                if (selectedLink === sourceLink) {
-                    selectedLink = inboxList.querySelector('a.thread-title');
-                }
+                if (cursorRow === row) { cursorRow = null; }
             }
         };
-        var loadThread = function (href, push, focus, sourceLink) {
+        var loadThread = function (link, push, focus) {
+            if (!link) { return; }
+            var canonical = link.getAttribute('href');
+            var endpoint = link.getAttribute('data-inbox-preview-url');
+            if (!canonical || !endpoint) { canonicalFallback(canonical || '/inbox'); return; }
             var generation = cancelInboxRequest();
             var request = window.AbortController ? new window.AbortController() : null;
             inboxRequest = request;
             reading.setAttribute('aria-busy', 'true');
             var options = { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' };
             if (request) { options.signal = request.signal; }
-            fetch(href, options)
-                .then(function (r) {
-                    if (generation !== inboxRequestGeneration) { return null; }
-                    if (r.redirected) { clearInboxRequest(generation, request); canonicalFallback(r.url); return null; }
-                    if (!r.ok) { clearInboxRequest(generation, request); canonicalFallback(href); return null; }
-                    return r.text();
-                })
-                .then(function (html) {
-                    if (generation !== inboxRequestGeneration || html === null) { return; }
-                    var doc = new DOMParser().parseFromString(html, 'text/html');
-                    var main = doc.querySelector('#main');
-                    if (!main || !main.querySelector('.thread-view, .post-stream, .thread-head')) {
-                        clearInboxRequest(generation, request); canonicalFallback(href); return;
-                    }
-                    if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
-                        window.RetroBoardsComposer.destroyWithin(readingContent);
-                    }
-                    readingContent.innerHTML = main.innerHTML;
-                    enhanceThreadViews(readingContent);
-                    if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.enhanceWithin === 'function') {
-                        window.RetroBoardsComposer.enhanceWithin(readingContent);
-                    }
-                    reading.removeAttribute('aria-busy');
-                    reading.scrollTop = 0;
-                    selectedLink = sourceLink || inboxList.querySelector(rowSelector(idOf(href)));
-                    reconcileReadRow(selectedLink);
-                    markActive(href);
-                    setReadingOpen(true);
-                    if (push) {
-                        var id = idOf(href);
-                        var url = new URL(window.location.href);
-                        if (id) { url.searchParams.set('t', id); }
-                        history.pushState({ rbInboxTopic: true, href: href }, '', url.toString());
-                    }
-                    if (focus) {                                  // move focus, don't announce the whole thread
-                        var h = readingContent.querySelector('h1, h2');
-                        if (!h) { h = readingContent.querySelector('.thread-head'); }
-                        if (h) { h.setAttribute('tabindex', '-1'); h.focus(); }
-                        else { reading.focus(); }
-                    }
+            fetch(endpoint, options).then(function (response) {
+                if (generation !== inboxRequestGeneration) { return null; }
+                if (response.redirected || !response.ok) {
                     clearInboxRequest(generation, request);
-                }).catch(function (error) {
-                    if (generation !== inboxRequestGeneration || (error && error.name === 'AbortError')) { return; }
+                    canonicalFallback(canonical);
+                    return null;
+                }
+                return response.text();
+            }).then(function (html) {
+                if (generation !== inboxRequestGeneration || html === null) { return; }
+                var probe = document.createElement('template');
+                probe.innerHTML = html;
+                if (!probe.content.querySelector('[data-inbox-preview]')) {
                     clearInboxRequest(generation, request);
-                    canonicalFallback(href);
-                });
+                    canonicalFallback(canonical);
+                    return;
+                }
+                if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
+                    window.RetroBoardsComposer.destroyWithin(readingContent);
+                }
+                readingContent.innerHTML = html;
+                if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.enhanceWithin === 'function') {
+                    window.RetroBoardsComposer.enhanceWithin(readingContent);
+                }
+                selectedLink = link;
+                reconcileReadRow(link);
+                markActive(link);
+                setMobileReading(true);
+                reading.removeAttribute('aria-busy');
+                reading.scrollTop = 0;
+                if (push) {
+                    var id = idOf(canonical);
+                    var url = new URL(window.location.href);
+                    if (id) { url.searchParams.set('t', id); }
+                    history.pushState({ rbInboxTopic: true, href: canonical }, '', url.toString());
+                }
+                if (focus) {
+                    var heading = readingContent.querySelector('h2, h1');
+                    if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus(); }
+                    else { reading.focus(); }
+                }
+                clearInboxRequest(generation, request);
+            }).catch(function (error) {
+                if (generation !== inboxRequestGeneration || (error && error.name === 'AbortError')) { return; }
+                clearInboxRequest(generation, request);
+                canonicalFallback(canonical);
+            });
         };
-        var rowSelector = function (id) {
-            return 'a.thread-title[href^="/t/' + id + '-"], a.thread-title[href="/t/' + id + '"]';
-        };
+
         if (reading && readingContent && inboxList) {
             var initialUrl = new URL(window.location.href);
-            try {
-                history.replaceState(initialUrl.searchParams.has('t') ? { rbInboxDirect: true } : { rbInboxList: true }, '', initialUrl.toString());
-            } catch (e) { /* ignore */ }
-            inboxList.addEventListener('click', function (e) {
-                var a = e.target.closest ? e.target.closest('a.thread-title') : null;
-                if (!a || !inboxList.contains(a)) { return; }
-                if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
-                e.preventDefault();
-                selectedLink = a;
-                loadThread(a.getAttribute('href'), true, true, a);
+            try { history.replaceState(initialUrl.searchParams.has('t') ? { rbInboxDirect: true } : { rbInboxList: true }, '', initialUrl.toString()); }
+            catch (error) { /* History can be unavailable in privacy modes. */ }
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && inbox.querySelector('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]')) {
+                    event.preventDefault();
+                    closeInboxMenus(true);
+                    return;
+                }
+                if (event.ctrlKey || event.metaKey || event.altKey || editableTarget(event.target)) { return; }
+                var rows = Array.prototype.slice.call(allRows());
+                if (!rows.length) { return; }
+                var index = cursorRow ? rows.indexOf(cursorRow) : -1;
+                if (event.key === 'j' || event.key === 'k') {
+                    event.preventDefault();
+                    index = event.key === 'j' ? Math.min(rows.length - 1, index + 1) : Math.max(0, index < 0 ? 0 : index - 1);
+                    setCursor(rows[index], true);
+                    return;
+                }
+                var activeRow = cursorRow || rows[0];
+                var activeLink = linkIn(activeRow);
+                if (event.key === 'Enter' || event.key.toLowerCase() === 'o') {
+                    event.preventDefault();
+                    setCursor(activeRow, false);
+                    loadThread(activeLink, true, true);
+                } else if (event.key.toLowerCase() === 'e') {
+                    var readForm = activeRow.querySelector('[data-inbox-action="read"]');
+                    if (readForm) { event.preventDefault(); readForm.requestSubmit(); }
+                } else if (event.key.toLowerCase() === 's') {
+                    var starForm = activeRow.querySelector('[data-inbox-action="star"]');
+                    if (starForm) { event.preventDefault(); starForm.requestSubmit(); }
+                } else if (event.key === '#') {
+                    var snoozeForm = activeRow.querySelector('[data-inbox-action="snooze"][data-inbox-snooze="monday"]');
+                    if (snoozeForm) { event.preventDefault(); snoozeForm.requestSubmit(); }
+                }
             });
+
+            document.addEventListener('scroll', function () { closeInboxMenus(false); }, { capture: true, passive: true });
+            inboxList.addEventListener('click', function (event) {
+                var link = event.target.closest ? event.target.closest('.inbox-row-title') : null;
+                if (!link || !inboxList.contains(link)) { return; }
+                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return; }
+                event.preventDefault();
+                setCursor(link.closest('[data-inbox-row]'), false);
+                loadThread(link, true, true);
+            });
+
+            var selections = Array.prototype.slice.call(inbox.querySelectorAll('[data-inbox-select]'));
+            var selectAll = inbox.querySelector('[data-inbox-select-all]');
+            var sweep = inbox.querySelector('[data-inbox-sweep]');
+            var selectionLabel = inbox.querySelector('[data-inbox-selection-label]');
+            var selectionAnchor = -1;
+            var syncSelection = function () {
+                var count = selections.filter(function (box) { return box.checked; }).length;
+                if (sweep) { sweep.classList.toggle('is-active', count > 0); }
+                if (selectionLabel) { selectionLabel.textContent = count ? count + ' selected' : 'Selected topics'; }
+                if (selectAll) {
+                    selectAll.checked = selections.length > 0 && count === selections.length;
+                    selectAll.indeterminate = count > 0 && count < selections.length;
+                }
+            };
+            selections.forEach(function (box, index) {
+                box.addEventListener('click', function (event) {
+                    if (event.shiftKey && selectionAnchor >= 0) {
+                        var start = Math.min(index, selectionAnchor);
+                        var end = Math.max(index, selectionAnchor);
+                        for (var offset = start; offset <= end; offset++) { selections[offset].checked = box.checked; }
+                    }
+                    selectionAnchor = index;
+                    syncSelection();
+                });
+                box.addEventListener('change', syncSelection);
+            });
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    selections.forEach(function (box) { box.checked = selectAll.checked; });
+                    syncSelection();
+                });
+            }
+            syncSelection();
+
             if (inboxBack) {
                 inboxBack.addEventListener('click', function () {
-                    if (history.state && history.state.rbInboxTopic) {
-                        cancelInboxRequest();
-                        history.back();
-                        return;
-                    }
+                    if (history.state && history.state.rbInboxTopic) { cancelInboxRequest(); history.back(); return; }
                     var url = new URL(window.location.href);
                     url.searchParams.delete('t');
-                    try { history.replaceState({ rbInboxList: true }, '', url.toString()); } catch (e) { /* ignore */ }
+                    try { history.replaceState({ rbInboxList: true }, '', url.toString()); } catch (error) { /* ignore */ }
                     showEmpty(true);
                 });
             }
             window.addEventListener('popstate', function () {
                 var id = new URL(window.location.href).searchParams.get('t');
                 if (!id) { showEmpty(true); return; }
-                var a = inboxList.querySelector(rowSelector(id));
-                var state = history.state || {};
-                var href = a ? a.getAttribute('href') : (
-                    state.rbInboxTopic && typeof state.href === 'string' ? state.href : null
-                );
-                if (href) {
-                    selectedLink = a || null;
-                    loadThread(href, false, true, a);
-                } else {
-                    canonicalFallback('/t/' + encodeURIComponent(id));
-                }
+                var row = rowForId(id);
+                var link = linkIn(row);
+                if (link) { setCursor(row, false); loadThread(link, false, true); }
+                else { canonicalFallback('/t/' + encodeURIComponent(id)); }
             });
-            var initId = initialUrl.searchParams.get('t');
-            if (initId) {
-                var initA = inboxList.querySelector(rowSelector(initId));
-                if (initA) {
-                    selectedLink = initA;
-                    loadThread(initA.getAttribute('href'), false, true, initA);
-                } else {
-                    canonicalFallback('/t/' + encodeURIComponent(initId));
-                }
+            var initialId = initialUrl.searchParams.get('t');
+            if (initialId) {
+                var initialRow = rowForId(initialId);
+                var initialLink = linkIn(initialRow);
+                if (initialLink) { setCursor(initialRow, false); loadThread(initialLink, false, true); }
+                else { canonicalFallback('/t/' + encodeURIComponent(initialId)); }
             }
         }
+    }
+
+    // Compose destination rail/select parity. Both controls remain real GET/select
+    // affordances; this keeps the visible destination, URL and form target aligned.
+    var composeSurface = document.querySelector('[data-compose]');
+    if (composeSurface && window.history) {
+        var composeSelect = composeSurface.querySelector('[data-compose-board-select]');
+        var composeForm = composeSurface.querySelector('[data-composer-context="new_thread"]');
+        var composeName = composeSurface.querySelector('[data-compose-board-name]');
+        var composeTitle = composeSurface.querySelector('[data-compose-title]');
+        var composeBody = composeSurface.querySelector('.composer-input');
+        var composeDraft = composeSurface.querySelector('[data-compose-draft-copy]');
+        var composePickers = document.querySelectorAll('[data-compose-board-picker]');
+        var optionBySlug = function (slug) {
+            if (!composeSelect) { return null; }
+            for (var i = 0; i < composeSelect.options.length; i++) {
+                if (composeSelect.options[i].getAttribute('data-board-slug') === slug) { return composeSelect.options[i]; }
+            }
+            return null;
+        };
+        var syncCompose = function (option, replaceUrl) {
+            if (!option || option.disabled) { return; }
+            var slug = option.getAttribute('data-board-slug') || '';
+            var name = option.getAttribute('data-board-name') || option.textContent || '';
+            composeSelect.value = option.value;
+            composeSurface.setAttribute('data-compose-selected-board', slug);
+            if (composeForm) { composeForm.setAttribute('data-composer-target-id', option.value); }
+            if (composeName) { composeName.textContent = 'Posting to ' + name; }
+            Array.prototype.forEach.call(composePickers, function (picker) {
+                var active = picker.getAttribute('data-compose-board-picker') === slug;
+                picker.classList.toggle('is-active', active);
+                picker.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            var anonymousAllowed = option.getAttribute('data-board-anonymous') === '1';
+            Array.prototype.forEach.call(composeSurface.querySelectorAll('[data-compose-anonymous]'), function (control) {
+                control.hidden = !anonymousAllowed;
+                var checkbox = control.querySelector('input[type="checkbox"]');
+                if (checkbox) { checkbox.disabled = !anonymousAllowed; if (!anonymousAllowed) { checkbox.checked = false; } }
+            });
+            if (replaceUrl && slug) { history.replaceState(history.state, '', '/compose?board=' + encodeURIComponent(slug)); }
+        };
+        if (composeSelect) {
+            composeSelect.addEventListener('change', function () { syncCompose(composeSelect.options[composeSelect.selectedIndex], true); });
+            syncCompose(composeSelect.options[composeSelect.selectedIndex], false);
+        }
+        Array.prototype.forEach.call(composePickers, function (picker) {
+            picker.addEventListener('click', function (event) {
+                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return; }
+                var option = optionBySlug(picker.getAttribute('data-compose-board-picker'));
+                if (!option || option.disabled) { return; }
+                event.preventDefault();
+                syncCompose(option, true);
+            });
+        });
+        var syncComposeDraft = function () {
+            if (!composeDraft) { return; }
+            composeDraft.hidden = !((composeTitle && composeTitle.value.trim()) || (composeBody && composeBody.value.trim()));
+        };
+        composeSurface.addEventListener('input', syncComposeDraft);
+        composeSurface.addEventListener('change', syncComposeDraft);
+        syncComposeDraft();
     }
 
     // The reply dock's expand/minimize state lives in composer.js: deciding
