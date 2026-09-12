@@ -57,6 +57,7 @@ Thumbs.db
 
 # agent tooling installed into the checkout, not part of the repo
 .superpowers/
+.claude/worktrees/
 
 # wrangler local state (the deployment worktree writes this on every deploy)
 .wrangler/

@@ -64,13 +64,14 @@ Focused acceptance specs that do not write numbered screenshots:
 
 - `wysiwyg-composer.spec.ts` gates the WYSIWYG layer (graduated to default-on 2026-07-02; the seed pins it off so gate-a keeps the textarea baseline): strict CSP asset load with no features override (proving the GA default mounts), textarea fallback, new-topic submit, source-mode round trip, no-op edit preservation, server-preview parity, rich reference chips, internal URL paste normalization, and mobile smoke.
 - `composer-shell.spec.ts` is part of the standard `evidence` command and covers contained anatomy, source/rich Enter semantics, in-flight submission, inline axe scans, preview/counter/drafts, non-reflowing suggestions, emoji, visible attach/chips, reduced motion, and the mobile overflow dock. `community-inbox-theme.spec.ts` adds the JavaScript-disabled reply journey and the `rich_composer=false` in-pane Inbox kill-switch regression.
+- `composer-toolbar-hardening.spec.ts` is part of the standard `evidence` command and covers rich/source active-state reflection, compact overflow dismissal, the persistent format-row tooltip, stable upload-card geometry, and bounded in-place rich-editor image previews.
 - `rich-content.spec.ts` is part of the standard `evidence` command and verifies the shared formatted-content contract at desktop/mobile widths, serious/critical axe results, horizontal table keyboard access, image/custom-emoji geometry, and a narrow JavaScript-disabled thread render.
 - `thread-content-presentation.spec.ts` seeds isolated grouped and soft-deleted reply states, then measures their final cascade, contrast, overflow, and accessibility at desktop/mobile widths.
 
 ## Run it locally
 
 Prerequisites: PHP 8 + the `rb-mariadb` dev container (see the repo root README),
-Node 20+, and Chromium for Playwright (`npx playwright install --with-deps chromium`).
+Node 24 (the LTS CI pins), and Chromium for Playwright (`npx playwright install --with-deps chromium`).
 
 ```bash
 cd tests/browser
