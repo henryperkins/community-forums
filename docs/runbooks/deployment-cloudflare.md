@@ -596,7 +596,7 @@ delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
 
-### PlanetScale account cutover — PREPARED 2026-09-12, deploy pending
+### PlanetScale account cutover — EXECUTED 2026-09-12, verified 07:40 UTC
 
 The database target moved to the PlanetScale account authenticated in the
 `pscale` CLI: org **`perkinism`**, database **`imladris-boards`**, branch
@@ -651,8 +651,20 @@ pre-2026-08-06 numbers in §14. The fix is the same as last time — create a
 branch in `gcp-us-east4`, promote it, and repoint `DB_HOST` at
 `gcp-us-east4.connect.psdb.cloud`.
 
-The bullets below describe the **previous** deployment and are retained until
-the cutover is verified.
+**Verified state after the fix deploy (`4158fcab`, container application
+version 4, image rolled out 07:39 UTC):**
+
+- `https://forum.candidary.online/healthz` → `200 {"status":"ok","database":"ok"}`
+- `schema_migrations` on `imladris-boards`/`main`: **82** applied through
+  `0082_posts_read_order_index`; 116 tables
+- `/` → `302 /setup`, `/setup` → `200`: the database is fresh, first-run setup
+  is pending (nothing was copied from the previous account's `imladris-db`)
+- Secrets unchanged except `DB_PASSWORD` (now the `production-app` password on
+  `imladris-boards`/`main`)
+
+The bullets below describe the **previous** (`imladris-db`/`production-east`)
+deployment and are retained for the history of the ENAM/us-east4 placement;
+where they conflict with the section above, the section above wins.
 
 
 As of 2026-08-06 the deployment serves traffic:
