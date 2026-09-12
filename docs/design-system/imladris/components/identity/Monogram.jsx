@@ -73,8 +73,8 @@ export function Monogram({
   );
 
   if (presence) {
-    const dotColor = presence === 'away' ? 'var(--amber)'
-      : presence === 'offline' ? 'var(--ink-300)'
+    const dotColor = presence === 'away' ? 'var(--presence-away)'
+      : presence === 'offline' ? 'var(--presence-offline)'
       : 'var(--presence)';
     return (
       <span className="avatar-wrap">

@@ -130,7 +130,7 @@ final class AppImladrisFidelityTest extends TestCase
 
         $this->assertStatus(200, $res);
         self::assertStringContainsString(
-            '<a class="brand" href="/" aria-label="Rivendell &amp; Sons">',
+            '<a class="forum-bar-brand" href="/" aria-label="Rivendell &amp; Sons">',
             $res->body(),
         );
     }
@@ -709,6 +709,34 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($posts, 'Tabbed topic');
     }
 
+    /**
+     * ADR 0032: the topbar and the rail are the design system's ForumNav and
+     * BoardRail, rendered in their own class vocabulary and styled by the layer;
+     * app.css restates none of the retired transfer chrome.
+     */
+    public function test_member_chrome_wears_the_design_systems_vocabulary_and_app_css_restates_none_of_it(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $runtime = (string) file_get_contents($root . '/public/assets/imladris.css');
+        $application = (string) file_get_contents($root . '/public/assets/app.css');
+
+        foreach (['.forum-bar {', '.forum-bar-surface {', '.forum-bar-search {', '.forum-bar-railtoggle {', '.board-rail {', '.board-rail-item {', '.board-rail-foot {', '.presence-widget {'] as $rule) {
+            self::assertStringContainsString($rule, $runtime, 'Generated runtime missing ' . $rule);
+        }
+        foreach (['.topbar-primary', '.topbar-search-entry', '.topbar-inner', '.nav-boards', '.nav-cat', '.sidebar {', '.sidebar-home', '.presence-list a {'] as $retired) {
+            self::assertStringNotContainsString($retired, $application, $retired . ' was retired with the transfer chrome (ADR 0032)');
+        }
+
+        $this->actingAs($this->makeUser(['username' => 'chrome_reader']));
+        $html = $this->get('/')->body();
+        self::assertStringContainsString('<header class="forum-bar">', $html);
+        self::assertStringContainsString('<nav class="forum-bar-surfaces" aria-label="Primary">', $html);
+        self::assertStringContainsString('class="forum-bar-search" href="/search"', $html);
+        self::assertStringContainsString('<summary class="forum-bar-user"', $html);
+        self::assertStringContainsString('<nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards">', $html);
+        self::assertStringContainsString('<div class="board-rail-foot">', $html);
+    }
+
     public function test_member_surface_presentation_is_semantic_source_owned_and_runtime_complete(): void
     {
         $root = dirname(__DIR__, 3);
@@ -731,11 +759,9 @@ final class AppImladrisFidelityTest extends TestCase
 
         $memberCss = $match['css'];
         foreach ([
-            '.topbar-primary',
             '.forum-directory__tabs',
             '.inbox-scope-menu',
             '.search-query-well',
-            '.compose-board-picker',
             '@media (min-width: 1280px)',
             '@media (prefers-reduced-motion: reduce)',
             'box-shadow: 0 0 0 3px var(--focus-ring)',

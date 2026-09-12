@@ -105,3 +105,8 @@ fails with the real author's name rendered into the peek row
 whose opening post a moderator had soft-deleted. The join was then restored and
 the test passes. A test that passes against the broken code proves nothing; this
 one does not.
+
+## Recaptured 2026-09-12
+
+Frames regenerated after ADR 0032 (the design system's ForumNav / BoardRail chrome around
+the index). The spec's search-reachability check now targets `.forum-bar-search`.

@@ -147,6 +147,12 @@
        system dims the page by the same amount. */
     --scrim:         rgba(22,29,36,.42);
     --presence:      var(--leaf); /* the "online" leaf dot                      */
+    /* Away is gold, not --amber: --amber is a light-register primitive with no
+       twilight remap, so an away dot painted with it stays light amber on a dark
+       page. --gold-700/--gold-400 flips the way --warning does. */
+    --presence-away: var(--gold-700);
+    /* Off the roll, but drawn — only in lists that carry absent members. */
+    --presence-offline: var(--ink-300);
 
     /* ── Legacy aliases (kept so older rules recolour with the system) ────── */
     --surface:   var(--parchment-50);
@@ -210,6 +216,8 @@
     --star:    var(--gold-400);
     --scrim:   rgba(9,13,17,.58);
     --presence: var(--green-400);
+    --presence-away: var(--gold-400);
+    --presence-offline: var(--ink-300);
     --focus-ring: rgba(210,176,98,.75);
 }
 
@@ -263,6 +271,26 @@
                                      Tracked caps below ~11px stop being read
                                      and start being texture, so nothing in the
                                      system is allowed to set type smaller. */
+
+    /* Measure — how wide text is allowed to get before it stops being readable.
+       Governed here because it was not governed anywhere: the README asked for
+       ≈64ch and the application had invented 60, 62, 64, 66 and 68ch across
+       25+ declarations, including two different values for the two most-read
+       blocks in the product (FIDELITY-AUDIT §8).
+
+       The prose three are in `ch` because they cap a *line of text*, and a line
+       is measured in characters — they must follow the reader's font size. */
+    --measure-prose:   64ch;      /* posts, briefs, long-form body            */
+    --measure-narrow:  56ch;      /* standfirsts, helper lines, notes, asides */
+    --measure-wide:    72ch;      /* wide tables, code, data-dense listings   */
+
+    /* The column is in `px` on purpose, and is the one exception. It is not a
+       line cap: it is the width a reading surface and its own top bar have to
+       agree on — `[data-topbar]` pads by `(100% - var(--measure-column)) / 2`,
+       so a `ch` value would drift the two apart the moment the reader changed
+       font size, which is the exact defect ADR 0030 #2 fixed upstream (a byline
+       at 743px over a sentence at 539px). Adopted in production at this value. */
+    --measure-column:  646px;     /* the thread reading column               */
 }
 
 /* ── Base element styles ─────────────────────────────────────────────────── */
@@ -508,6 +536,19 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     border-radius: 50%; background: var(--presence);
     box-shadow: 0 0 0 2px var(--surface-raised);
 }
+/* The state modifiers. The dot is decorative everywhere — aria-hidden, with the
+   state carried as text in .presence-sub — so these are colour only. */
+.presence-dot.is-away { background: var(--presence-away); }
+.presence-dot.is-off  { background: var(--presence-offline); }
+/* No avatar (the reader turned avatars off): the dot stands alone and must not
+   vanish with the picture — it is what the row is for. position: static because
+   every other .presence-dot rule is descendant-scoped to an avatar wrapper and
+   absolute; without a box of its own the dot measured 0×0. */
+.presence-dot-bare {
+    position: static; flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--presence); box-shadow: none;
+}
+.presence-dot-bare.is-away { background: var(--presence-away); }
 
 /* ── Star button (pill) + esteem star marker ──────────────────────────────── */
 .star-btn {
@@ -933,6 +974,100 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 
 @media (max-width: 860px) {
     .admin-bar-id { flex-wrap: wrap; }
+}
+
+/* ── Member chrome — the forum topbar and the board rail ─────────────────────
+   The counterpart to .admin-bar on the community side, and the reason it
+   exists: the member templates each hand-rolled this bar and drifted apart on
+   every axis at once — 62px against 58px, the house mark in --accent against
+   --green-700, three surface pills against two against none, a working search
+   link against a dead <span> against a palette, the Monogram component against
+   a hand-rolled initials circle. A member moving index → board → topic found
+   nothing where they left it. One component, one copy of the click targets.
+
+   Sticky AND flex-none: the shell templates mount this as the first child of a
+   100vh flex column, Thread view in ordinary flow. It has to hold its height in
+   the first and stay put in the second. */
+.forum-bar { position: sticky; top: 0; z-index: 20; flex: 0 0 var(--topbar-h); display: flex; align-items: center; gap: 18px; height: var(--topbar-h); padding: 0 22px; box-sizing: border-box; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); }
+.forum-bar-brand { flex: none; display: inline-flex; align-items: center; gap: 10px; color: var(--accent); text-decoration: none; }
+.forum-bar-brand > svg { flex: none; }
+.forum-bar-wordmark { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em; white-space: nowrap; }
+.forum-bar-surfaces { flex: none; display: flex; align-items: center; gap: 4px; }
+.forum-bar-surface { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none; white-space: nowrap; }
+.forum-bar-surface:hover { background: var(--surface-sunken); color: var(--text-body); }
+.forum-bar-surface.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
+/* No template behind it yet — legible, but plainly not a destination. */
+.forum-bar-surface.is-inert { color: var(--text-faint); cursor: default; }
+.forum-bar-surface.is-inert:hover { background: transparent; color: var(--text-faint); }
+.forum-bar-count { padding: 0 6px; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .64rem; }
+/* The search control is one element in two builds — a button when the surface
+   owns a palette, a link when it hands off to /search. Identical either way:
+   the member is reaching for the same 34px pill in the same place. */
+.forum-bar-searchwrap { position: relative; flex: 0 1 300px; min-width: 180px; display: inline-flex; }
+.forum-bar-search { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; box-sizing: border-box; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: 999px; color: var(--text-faint); text-align: left; text-decoration: none; cursor: pointer; font: inherit; }
+.forum-bar-search:hover { border-color: var(--border-soft); }
+.forum-bar-search-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-label); font-size: .76rem; color: var(--text-faint); }
+.forum-bar-kbd { margin-left: auto; font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint); }
+.forum-bar-right { margin-left: auto; min-width: 0; display: inline-flex; align-items: center; gap: 14px; }
+.forum-bar-railtoggle { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); cursor: pointer; }
+.forum-bar-railtoggle.is-on { background: var(--brand-subtle); color: var(--on-brand-subtle); }
+.forum-bar-railtoggle:hover { background: var(--surface-sunken); color: var(--text-body); }
+.forum-bar-divider { flex: none; width: 1px; height: 22px; background: var(--border-hair); }
+.forum-bar-compose { flex: none; white-space: nowrap; }
+/* Account names share the remaining bar width. Only the label clips: the
+   avatar, presence dot and any account disclosure must remain visible. */
+.forum-bar-user { flex: 0 1 auto; min-width: 0; max-width: 100%; display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text-body); }
+.forum-bar-user > .avatar-wrap, .forum-bar-user > .monogram { flex: none; }
+.forum-bar-user:hover { color: var(--accent); }
+.forum-bar-username { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-label); font-size: .8rem; white-space: nowrap; }
+.forum-bar-signin { flex: none; padding: 7px 16px; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; text-decoration: none; white-space: nowrap; }
+/* Same discipline as the admin bar: shed labels before the row wraps. The
+   wordmark goes first (the mark still identifies the house), then the surface
+   labels compact, then search. */
+@media (max-width: 1080px) {
+    .forum-bar { gap: 12px; padding: 0 16px; }
+    .forum-bar-username { display: none; }
+    .forum-bar-right { flex-shrink: 0; }
+}
+@media (max-width: 900px) {
+    .forum-bar-wordmark, .forum-bar-search-label, .forum-bar-kbd { display: none; }
+    .forum-bar-searchwrap { flex: 0 0 44px; min-width: 44px; }
+    .forum-bar-search { justify-content: center; padding: 0; }
+}
+@media (max-width: 720px) {
+    .forum-bar-compose, .forum-bar-divider { display: none; }
+    .forum-bar-surface { min-height: 44px; padding: 0 10px; }
+    .forum-bar-railtoggle { width: 44px; height: 44px; }
+}
+
+/* The rail — the member's fixed point. Boards and nothing else, at one width,
+   with the active board marked the same way on every surface that has one.
+   --sidebar-w, not a per-template number: Leaderboard had picked 232px, which
+   is a 40px jump the moment you arrive there from anywhere else. */
+.board-rail { flex: 0 0 var(--sidebar-w); display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 32px; overflow-y: auto; box-sizing: border-box; background: var(--surface-sunken); border-right: 1px solid var(--border-hair); }
+.board-rail-routes { display: flex; flex-direction: column; gap: 2px; }
+.board-rail-route { display: flex; align-items: center; gap: 9px; padding: 8px 12px; box-sizing: border-box; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; color: var(--text-muted); text-decoration: none; }
+.board-rail-route:hover { background: var(--surface-page); color: var(--text-body); }
+.board-rail-route.is-active { border-left-color: var(--gold-500); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
+.board-rail-route > svg { flex: none; }
+.board-rail-route-text { display: grid; gap: 1px; min-width: 0; }
+.board-rail-route-label { font-family: var(--font-label); font-size: .88rem; letter-spacing: .02em; }
+.board-rail-route-sub { font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint); }
+.board-rail-route.is-active .board-rail-route-sub { color: inherit; opacity: .7; }
+.board-rail-cat { display: block; padding: 16px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint); }
+.board-rail-item { display: flex; align-items: center; gap: 8px; padding: 7px 12px; box-sizing: border-box; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; text-decoration: none; }
+.board-rail-item:hover { background: var(--surface-page); color: var(--text-body); }
+.board-rail-item.is-active { border-left-color: var(--gold-500); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
+.board-rail-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-rail-unread { flex: none; padding: 0 6px; text-align: center; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .66rem; }
+.board-rail-item.is-locked { color: var(--text-faint); cursor: default; }
+.board-rail-lock { flex: none; }
+.board-rail-note { flex: none; font-family: var(--font-mono); font-size: .62rem; }
+.board-rail-tag { flex: none; padding: 1px 7px; border: 1px solid var(--border-hair); border-radius: 999px; font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+.board-rail-foot { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-hair); }
+@media (max-width: 900px) {
+    .board-rail { flex-basis: 208px; padding: 14px 8px 24px; }
+    .board-rail-item { min-height: 44px; }
 }
 
 /* ── Identity decorations — tier pill, regard stat, author byline ─────────────
@@ -1579,6 +1714,16 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* ── Presence widget ("Online") ───────────────────────────────────────────── */
 .presence-widget { display: block; }
+/* display:block beat the user-agent [hidden] rule, so the attribute was
+   decorative and a "hidden" widget went on painting its roster. The widget
+   itself is never hidden any more (it holds the shell's only route to the roll),
+   but the rows and affordances the poller toggles genuinely rely on it.
+   Local form (LOCAL_RECONCILIATION.md, 2026-09-12): the authoring bundle marks
+   this rule important (the `!` flag), but ImladrisAssetBuilder refuses that flag
+   anywhere in a layered source, and inside the layer the attribute selector
+   already outranks the block rule above — the flag would add nothing but a
+   failed build. */
+.presence-widget[hidden], .presence-row[hidden], .presence-more[hidden], .presence-empty[hidden] { display: none; }
 .presence-title {
     display: flex; align-items: center; gap: 8px; margin: 0 0 8px;
     font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em;
@@ -1596,9 +1741,18 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     border-radius: var(--radius-md); color: var(--text-body); text-decoration: none;
     transition: background var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm);
 }
-a.presence-person:hover { background: var(--surface-sunken); color: var(--text-strong); }
-.presence-person .monogram-sm { width: 24px; height: 24px; font-size: .62rem; }
+a.presence-person:hover { background: var(--surface-sunken); color: var(--text-strong); text-decoration: none; }
+/* .monogram, not .monogram-sm: the app's monogram partial emits `monogram mono-N`
+   with no size class, so the size rule has to bind to the base class to hold. */
+.presence-person .monogram { width: 24px; height: 24px; font-size: .62rem; }
 .presence-person .avatar-wrap .presence-dot { width: 8px; height: 8px; right: -1px; bottom: -1px; }
+/* The rail sits on --surface-sunken, so the ring the dot is punched out of has
+   to match that ground; the base rule paints --surface-raised. */
+.board-rail .presence-person .avatar-wrap .presence-dot, .sidebar .presence-person .avatar-wrap .presence-dot { box-shadow: 0 0 0 2px var(--surface-sunken); }
+/* Compact density shrinks every other avatar in the shell; the presence row
+   would otherwise be the tallest thing in the rail. */
+[data-density="compact"] .presence-person { padding: 3px 8px; }
+[data-density="compact"] .presence-person .monogram { width: 21px; height: 21px; }
 .presence-person-id { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .presence-name {
     display: flex; align-items: center; gap: 6px; min-width: 0;
@@ -1615,17 +1769,30 @@ a.presence-person:hover { background: var(--surface-sunken); color: var(--text-s
     background: var(--surface-staff); color: var(--on-staff);
     font-family: var(--font-label); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase;
 }
+/* The viewer is on their own roster, so both counts can be honest. An outline,
+   not a --surface-sunken fill: that IS the rail's ground, so a filled chip read
+   as plain text there while looking like a chip on the roll. */
+.presence-you {
+    flex: 0 0 auto; padding: 0 5px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft); color: var(--text-faint);
+    font-family: var(--font-label); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase;
+}
 .presence-sub {
     font-family: var(--font-label); font-size: .7rem; letter-spacing: .02em; color: var(--text-faint);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.presence-where::before { content: '#'; color: var(--gold-ink); }
+/* No '#' prefix: the place reads as a name, not a tag. */
+.presence-where { color: var(--gold-ink); }
 .presence-empty, .presence-more {
     margin: 6px 0 0; padding: 0 8px;
     font-size: .78rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;
 }
 .presence-more { font-family: var(--font-label); letter-spacing: .03em; }
 .presence-foot { margin-top: 10px; padding: 0 8px; }
+/* The widget's one route to the roll. It is never hidden, JS or no JS: on an
+   empty roster it is the only way left to go and look. */
+.presence-all { font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none; }
+.presence-all:hover { color: var(--accent); }
 .presence-row.is-loading .presence-person { pointer-events: none; }
 .presence-skeleton-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-sunken); animation: presencePulse 1.6s var(--ease-calm) infinite; }
 .presence-skeleton-bar { height: 9px; border-radius: 999px; background: var(--surface-sunken); animation: presencePulse 1.6s var(--ease-calm) infinite; }
@@ -1701,175 +1868,10 @@ a.link-preview:hover .link-preview-title { color: var(--accent); }
 .link-preview-note code { font-family: var(--font-mono); font-size: .78rem; overflow-wrap: anywhere; }
 
 /* ══ Member surfaces — production transfer (2026-08-27) ══ */
-/* Shared shell */
-.topbar {
-    height: var(--topbar-h);
-    min-height: var(--topbar-h);
-    background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
-    border-bottom: 1px solid var(--border-hair);
-    backdrop-filter: blur(10px);
-}
-.topbar-inner {
-    width: 100%;
-    height: var(--topbar-h);
-    min-height: var(--topbar-h);
-    max-width: var(--maxw);
-    padding: 0 22px;
-    gap: 18px;
-}
-.brand {
-    flex: 0 0 auto;
-    gap: 10px;
-    color: var(--text-strong);
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    font-weight: var(--weight-semibold);
-    letter-spacing: .01em;
-    text-decoration: none;
-}
-.brand-star { width: 24px; height: 24px; }
-.topbar-primary {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 4px;
-}
-.topbar-primary-link {
-    display: inline-flex;
-    min-height: 34px;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: var(--radius-md);
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .82rem;
-    letter-spacing: .02em;
-    text-decoration: none;
-}
-.topbar-primary-link:hover {
-    background: var(--surface-sunken);
-    color: var(--text-body);
-    text-decoration: none;
-}
-.topbar-primary-link.is-active {
-    background: var(--brand-subtle);
-    color: var(--on-brand-subtle);
-}
-.topbar-count,
-.board-unread-count {
-    display: inline-flex;
-    min-width: 18px;
-    align-items: center;
-    justify-content: center;
-    padding: 0 6px;
-    border-radius: var(--radius-pill);
-    background: var(--gold-soft);
-    color: var(--gold-ink);
-    font-family: var(--font-mono);
-    font-size: .64rem;
-    line-height: 1.55;
-}
-.topbar-right {
-    min-width: 0;
-    flex: 1 1 auto;
-    justify-content: flex-end;
-    gap: 9px;
-}
-.topbar-search-entry {
-    display: flex;
-    min-width: 180px;
-    max-width: 300px;
-    height: 34px;
-    flex: 0 1 300px;
-    align-items: center;
-    gap: 8px;
-    padding: 0 14px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-pill);
-    background: var(--surface-sunken);
-    color: var(--text-faint);
-    text-decoration: none;
-}
-.topbar-search-entry:hover {
-    border-color: var(--border-soft);
-    color: var(--text-body);
-    text-decoration: none;
-}
-.topbar-search-entry .icon { width: 13px; height: 13px; flex: 0 0 auto; }
-.topbar-search-copy {
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
-    font-family: var(--font-label);
-    font-size: .76rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.topbar-search-entry kbd {
-    flex: 0 0 auto;
-    border: 0;
-    background: transparent;
-    color: var(--text-faint);
-    font-size: .64rem;
-}
-.topbar-panel-form { margin: 0; }
-.topbar-panel-form .topbar-action {
-    display: inline-flex;
-    width: 30px;
-    height: 30px;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-faint);
-    cursor: pointer;
-}
-.topbar-panel-form .topbar-action > span { display: none; }
-.topbar-panel-form .topbar-action[aria-expanded="true"] {
-    background: var(--brand-subtle);
-    color: var(--on-brand-subtle);
-}
-.topbar-action .icon { width: 16px; height: 16px; }
-.topbar-new-topic { white-space: nowrap; }
-.identity-menu { position: relative; }
-.identity-menu > summary { list-style: none; cursor: pointer; }
-.identity-menu > summary::-webkit-details-marker { display: none; }
-.identity-menu-panel {
-    position: absolute;
-    z-index: 45;
-    top: calc(100% + 9px);
-    right: 0;
-    display: grid;
-    min-width: 220px;
-    padding: 6px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-lg);
-    background: var(--surface-raised);
-    box-shadow: var(--shadow-lg);
-}
-.identity-menu-panel a,
-.identity-menu-panel button {
-    display: flex;
-    width: 100%;
-    min-height: 36px;
-    align-items: center;
-    gap: 9px;
-    padding: 7px 9px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-body);
-    font: inherit;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-}
-.identity-menu-panel a:hover,
-.identity-menu-panel button:hover { background: var(--surface-sunken); text-decoration: none; }
-
+/* Shared shell — the route-scoped layout the member surfaces ask of the
+   application shell. The chrome itself (topbar, rail, presence widget) is
+   the design system's ForumNav / BoardRail / PresenceList, styled by the
+   layer; its transfer copies were retired on 2026-09-12 (ADR 0032). */
 body[data-route="boards"] .app-shell,
 body[data-route="search"] .app-shell,
 body[data-route="compose"] .app-shell,
@@ -1897,125 +1899,6 @@ body[data-route="boards"] .main > .read-main,
 body[data-route="search"] .main > .read-main,
 body[data-route="compose"] .main > .read-main,
 body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
-
-.sidebar {
-    position: sticky;
-    top: 0;
-    min-width: 0;
-    max-height: calc(100vh - var(--topbar-h));
-    max-height: calc(100dvh - var(--topbar-h));
-    padding: 20px 12px 32px;
-    overflow-y: auto;
-    border-right: 1px solid var(--border-hair);
-    background: var(--surface-sunken);
-    scrollbar-gutter: stable;
-}
-.sidebar-heading { display: none; }
-.nav-cat { margin: 0; }
-.nav-cat + .nav-cat { margin-top: 2px; }
-.nav-cat-name {
-    display: block;
-    padding: 16px 0 6px 12px;
-    color: var(--text-faint);
-    font-family: var(--font-label);
-    font-size: .62rem;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-}
-.nav-boards {
-    display: grid;
-    gap: 1px;
-}
-.nav-boards a,
-.compose-board-picker,
-.compose-board-disabled {
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    min-height: 34px;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 12px;
-    border: 0;
-    border-left: 2px solid transparent;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .84rem;
-    letter-spacing: .02em;
-    line-height: 1.25;
-    text-align: left;
-    text-decoration: none;
-}
-.nav-boards a:hover,
-.compose-board-picker:hover {
-    background: var(--surface-page);
-    color: var(--text-body);
-    text-decoration: none;
-}
-.sidebar .hash { display: none; }
-.board-rail-name {
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.board-unread-count { margin-left: auto; font-size: .66rem; }
-.compose-board-picker { cursor: pointer; }
-.compose-board-picker.is-active {
-    border-left-color: var(--gold-500);
-    background: var(--brand-subtle);
-    color: var(--on-brand-subtle);
-}
-.compose-posting-here {
-    margin-left: auto;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: .62rem;
-    white-space: nowrap;
-}
-.compose-board-disabled { color: var(--text-faint); cursor: not-allowed; }
-.compose-board-disabled .icon { width: 11px; height: 11px; flex: 0 0 auto; }
-.presence-widget {
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-hair);
-}
-.presence-title {
-    margin: 0 8px 8px;
-    color: var(--text-faint);
-    font-family: var(--font-label);
-    font-size: .62rem;
-    font-weight: var(--weight-regular);
-    letter-spacing: .18em;
-    text-transform: uppercase;
-}
-.presence-title a { color: inherit; text-decoration: none; }
-.presence-count { font-size: .66rem; }
-.presence-list { display: grid; gap: 1px; }
-.presence-list a {
-    display: flex;
-    min-width: 0;
-    min-height: 32px;
-    align-items: center;
-    gap: 9px;
-    padding: 5px 8px;
-    border-radius: var(--radius-md);
-    color: var(--text-body);
-    font-size: .86rem;
-    text-decoration: none;
-}
-.presence-list a:hover { background: var(--surface-page); text-decoration: none; }
-.presence-list .dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--presence); }
-.presence-all {
-    display: inline-block;
-    margin: 9px 8px 0;
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .74rem;
-}
 
 /* Board index */
 .board-index {
@@ -2678,8 +2561,8 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     left: 0;
     visibility: hidden;
 }
-.has-js [data-inbox-menu-positioned="1"] > .inbox-scope-menu-panel,
-.has-js [data-inbox-menu-positioned="1"] > .inbox-row-menu-panel { visibility: visible; }
+.has-js .inbox-scope-menu[data-inbox-menu-positioned="1"] > .inbox-scope-menu-panel,
+.has-js .inbox-row-menu[data-inbox-menu-positioned="1"] > .inbox-row-menu-panel { visibility: visible; }
 .inbox-scope-group-label {
     padding: 9px 10px 4px;
     color: var(--text-faint);
@@ -3361,9 +3244,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 [data-compose-anonymous][hidden] { display: none; }
 
 /* Focus, responsive floors, and motion */
-.topbar-primary-link:focus-visible,
-.topbar-search-entry:focus-visible,
-.topbar-panel-form .topbar-action:focus-visible,
 .forum-directory__tabs a:focus-visible,
 .directory-viewbar a:focus-visible,
 .directory-viewbar button:focus-visible,
@@ -3371,17 +3251,12 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .inbox-row-star button:focus-visible,
 .inbox-row-menu > summary:focus-visible,
 .inbox-scope-menu > summary:focus-visible,
-.search-view-bar a:focus-visible,
-.compose-board-picker:focus-visible {
+.search-view-bar a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-@media (min-width: 861px) {
-    body.is-rail-closed .app-shell { grid-template-columns: minmax(0, 1fr); }
-    body.is-rail-closed .sidebar { display: none; }
-}
 @media (min-width: 1280px) {
     body.is-reading-open .inbox-shell { grid-template-columns: minmax(430px, 660px) minmax(0, 1fr); }
     body.is-reading-open .inbox-list { border-right: 1px solid var(--border-hair); }
@@ -3414,44 +3289,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .inbox-mobile-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 @media (max-width: 860px) {
-    .topbar-inner { padding: 0 9px; gap: 5px; }
-    .topbar-primary { min-width: 0; overflow-x: auto; gap: 1px; }
-    .topbar-primary-link { min-height: 40px; padding: 6px 8px; font-size: .74rem; }
-    .topbar-panel-form { display: none; }
-    /* Search must stay reachable on a phone. The rail used to carry a
-       mobile-only Search link; the board-index rail rewrite dropped it, and
-       hiding the topbar entry here too left /search with no route into it at
-       any width below 861px. The entry collapses to its icon instead, the same
-       move New topic makes beside it. */
-    .topbar-search-entry {
-        width: 40px;
-        min-width: 40px;
-        max-width: 40px;
-        height: 40px;
-        flex: 0 0 auto;
-        justify-content: center;
-        padding: 0;
-    }
-    .topbar-search-copy,
-    .topbar-search-entry kbd { display: none; }
-    .topbar-right { flex: 0 0 auto; gap: 2px; }
-    .topbar-new-topic { width: 40px; min-width: 40px; height: 40px; padding: 0; justify-content: center; }
-    .topbar-new-topic span { display: none; }
-    .topbar-user { width: 40px; min-width: 40px; height: 40px; justify-content: center; padding: 0; }
-    .topbar-name,
-    .topbar-user > .icon { display: none; }
-    .brand { min-width: 40px; min-height: 40px; }
-    .has-js .app-shell { height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
-    .has-js .sidebar {
-        position: fixed;
-        top: var(--topbar-h);
-        bottom: 0;
-        left: 0;
-        display: flex;
-        width: 322px;
-        max-width: 86vw;
-        max-height: none;
-    }
     body[data-route="boards"] .main,
     body[data-route="search"] .main,
     body[data-route="compose"] .main { padding: 0; }
@@ -3465,7 +3302,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .inbox-row-snippet { display: none; }
 }
 @media (max-width: 760px) {
-    .brand-name { display: none; }
     .forum-directory__hero h1 { font-size: 2.1rem; }
     .directory-viewbar { display: none; }
     .directory-viewbar-mobile {
@@ -3557,7 +3393,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .compose-lede { margin-bottom: 22px; }
 }
 @media (max-width: 520px) {
-    .topbar-primary-link[data-primary-route="messages"] { display: none; }
     .forum-directory__tabs { gap: 16px; }
     .forum-directory__tabs a { font-size: .78rem; }
     .forum-directory__stats { gap: 4px 10px; }
@@ -3583,8 +3418,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 @media (prefers-reduced-motion: reduce) {
     .forum-directory__board-row > a,
     .inbox-thread-row,
-    .composer-box,
-    .sidebar { transition: none; }
+    .composer-box { transition: none; }
     .composer-shell.is-submitting .composer-send .icon { animation: none; }
 }
 /* ══ End member surfaces production transfer ══ */

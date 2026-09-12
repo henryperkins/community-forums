@@ -35,11 +35,7 @@
       <div style="padding: 40px 34px; text-align: center; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2"></rect><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"></path></svg>
         <h1 style="margin: 14px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 1.8rem; color: var(--text-strong);">This seat is kept private</h1>
-        <p style="margin: 9px auto 0; max-width: 44ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">{{ memberName }} has asked that their activity be shown only to members they have accepted. You can still send them a message.</p>
-        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 22px;">
-          <button style="padding: 8px 18px; border-radius: var(--radius-md); border: 0; background: var(--brand); color: var(--accent-contrast); font-family: var(--font-label); font-size: .82rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Send a message</button>
-          <button style="padding: 8px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Request access</button>
-        </div>
+        <p style="margin: 9px auto 0; max-width: 44ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">{{ memberName }} has asked that their activity be shown only to members they have accepted. Their topics, counsel, and marks of esteem stay hidden until then.</p>
       </div>
     </div>
   </sc-if>
@@ -48,55 +44,58 @@
   <div style="max-width: 1000px; margin: 0 auto; padding: 26px 28px 120px;">
 
     <!-- ── Identity cover ── -->
-    <header style="position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: start; padding: 26px 28px 24px; background: linear-gradient(160deg, var(--parchment-100) 0%, var(--surface-raised) 62%); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+    <header style="position: relative; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 22px; align-items: start; margin: 2px 0 0; padding: 26px 28px 24px; background: var(--twilight-800); color: var(--parchment-50); border: 1px solid color-mix(in srgb, var(--gold-500) 16%, transparent); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
       <svg viewBox="0 0 100 100" width="230" height="230" fill="none" aria-hidden="true" style="position: absolute; right: -46px; top: -58px; color: var(--gold-500); opacity: .11; pointer-events: none;"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"></circle></g></svg>
 
       <span style="position: relative; display: inline-flex;">
         <span style="display: inline-flex; align-items: center; justify-content: center; width: 84px; height: 84px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: 1.9rem; box-shadow: var(--gilt);">{{ initials }}</span>
-        <sc-if value="{{ isOnline }}" hint-placeholder-val="{{ true }}"><span title="Active recently" aria-label="Online" style="position: absolute; right: 3px; bottom: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--presence); box-shadow: 0 0 0 3px var(--surface-raised);"></span></sc-if>
+        <!-- The one presence dot that keeps an accessible name: this row has no
+             sub-line to carry the state as text. role="img" is what exposes the
+             label — an aria-label on a bare span is not exposed at all. -->
+        <sc-if value="{{ isOnline }}" hint-placeholder-val="{{ true }}"><span role="img" title="Here now" aria-label="Here now" style="position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--presence); box-shadow: 0 0 0 3px var(--twilight-800);"></span></sc-if>
+        <sc-if value="{{ isAway }}" hint-placeholder-val="{{ false }}"><span role="img" title="Stepped away" aria-label="Stepped away" style="position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--presence-away); box-shadow: 0 0 0 3px var(--twilight-800);"></span></sc-if>
       </span>
 
       <div style="min-width: 0; position: relative;">
-        <h1 style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin: 2px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.25rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">
+        <h1 style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin: 2px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.25rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--parchment-50);">
           {{ memberName }}
-          <span title="Cosmetic rank" style="padding: 2px 9px; border-radius: 999px; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;">Loremaster</span>
+          <span title="Cosmetic rank" style="padding: 3px 10px; border-radius: var(--radius-pill); background: var(--gold-100); border: 1px solid var(--gold-200); color: var(--gold-800); font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;">Loremaster</span>
         </h1>
-        <p style="margin: 6px 0 0; font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted);">@{{ handle }} · she / her</p>
-        <p style="margin: 5px 0 0; font-size: .92rem; color: var(--text-faint);">Member since March 2019 · Lothlórien</p>
-        <p style="margin: 4px 0 0; font-size: .92rem;"><a href="#" style="color: var(--artifact-link);">galadriel.lothlorien.example</a></p>
+        <p style="margin: 7px 0 0; font-family: var(--font-mono); font-size: .82rem; color: var(--mist-200);">@{{ handle }} · she / her</p>
+        <p style="margin: 4px 0 0; font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--mist-200); opacity: .85;">Member since March 2019 · Lothlórien</p>
+        <p style="margin: 4px 0 0; font-size: .92rem;"><a href="#" style="color: var(--gold-400);">galadriel.lothlorien.example</a></p>
         <dl style="display: flex; flex-wrap: wrap; gap: 22px; margin: 16px 0 0;">
-          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Posts</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">1,284</dd></div>
-          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Followers</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">312</dd></div>
-          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Following</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">96</dd></div>
-          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Solved</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">47</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mist-200);">Posts</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; color: var(--parchment-50);">1,284</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mist-200);">Followers</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; color: var(--parchment-50);">312</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mist-200);">Following</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; color: var(--parchment-50);">96</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mist-200);">Solved</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; color: var(--parchment-50);">47</dd></div>
         </dl>
       </div>
 
-      <div style="position: relative; display: flex; flex-direction: column; align-items: flex-end; gap: 14px;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 18px; background: var(--surface-raised); border: 1px solid var(--gold-200); border-radius: var(--radius-lg);">
-          <span style="display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-mono); font-size: 1.35rem; color: var(--text-strong);"><svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true" style="align-self: center;"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>5,140</span>
-          <span style="font-family: var(--font-label); font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Regard</span>
+      <div style="position: relative; display: flex; flex-direction: column; align-items: flex-end; gap: 12px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 18px; background: var(--gold-100); border: 1px solid var(--gold-200); border-radius: var(--radius-lg);">
+          <span style="display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-mono); font-size: 1.35rem; font-weight: var(--weight-medium); line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink-900);"><svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true" style="align-self: center;"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>5,140</span>
+          <span style="font-family: var(--font-label); font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-800);">Regard</span>
         </div>
 
         <sc-if value="{{ viewerIsSelf }}" hint-placeholder-val="{{ false }}">
-          <a href="#" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; text-decoration: none;" style-hover="background: var(--surface-sunken);">Edit profile</a>
+          <a href="#" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid rgba(220,227,221,.34); background: transparent; color: var(--mist-200); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; text-decoration: none;" style-hover="background: rgba(250,246,236,.08);">Edit profile</a>
         </sc-if>
         <sc-if value="{{ viewerIsGuest }}" hint-placeholder-val="{{ false }}">
           <p style="max-width: 21ch; margin: 0; text-align: right; font-size: .84rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;">Join the council to follow {{ firstName }} or send a message.</p>
         </sc-if>
         <sc-if value="{{ viewerCanAct }}" hint-placeholder-val="{{ true }}">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <sc-if value="{{ isFollowing }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleFollow }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--green-200); background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="border-color: var(--rust); color: var(--rust);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Following</button></sc-if>
-            <sc-if value="{{ notFollowing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleFollow }}" style="padding: 7px 16px; border-radius: var(--radius-md); border: 0; background: var(--brand); color: var(--accent-contrast); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Follow</button></sc-if>
-            <a href="#" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; text-decoration: none;" style-hover="background: var(--surface-sunken);">Message</a>
-            <button onClick="{{ toggleMenu }}" aria-label="More actions" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
+            <sc-if value="{{ isFollowing }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleFollow }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--green-200); background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="border-color: var(--danger); color: var(--danger);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Following</button></sc-if>
+            <sc-if value="{{ notFollowing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleFollow }}" style="padding: 7px 16px; border-radius: var(--radius-md); border: 0; background: var(--gold-500); color: var(--green-900); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--gold-400);">Follow</button></sc-if>
+            <a href="#" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid rgba(220,227,221,.34); background: transparent; color: var(--mist-200); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; text-decoration: none;" style-hover="background: rgba(250,246,236,.08);">Message</a>
+            <button onClick="{{ toggleMenu }}" aria-label="More actions" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-md); border: 1.5px solid rgba(220,227,221,.34); background: transparent; color: var(--mist-200); cursor: pointer;" style-hover="background: rgba(250,246,236,.08); color: var(--parchment-50);"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
           </div>
         </sc-if>
         <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
-          <div role="menu" style="position: absolute; top: 100%; right: 0; z-index: 30; min-width: 186px; margin-top: 6px; padding: 5px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-md); box-shadow: var(--shadow-md); animation: upRise 160ms var(--ease-calm) both;">
-            <button style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; font-family: var(--font-body); font-size: .88rem; color: var(--text-body); cursor: pointer;" style-hover="background: var(--surface-sunken);">Copy link to profile</button>
-            <button style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; font-family: var(--font-body); font-size: .88rem; color: var(--text-body); cursor: pointer;" style-hover="background: var(--surface-sunken);">Report to the wardens</button>
-            <button onClick="{{ toggleBlock }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; font-family: var(--font-body); font-size: .88rem; color: var(--rust); cursor: pointer;" style-hover="background: var(--surface-sunken);">{{ blockLabel }}</button>
+          <div role="menu" style="position: absolute; top: calc(100% + 6px); right: 0; z-index: 50; display: flex; flex-direction: column; min-width: 214px; padding: 6px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); animation: upRise 160ms var(--ease-calm) both;">
+            <button style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: var(--radius-sm); background: none; text-align: left; font-family: var(--font-body); font-size: .92rem; color: var(--text-body); cursor: pointer;" style-hover="background: var(--surface-sunken);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto;"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg>Copy link</button>
+            <button onClick="{{ toggleBlock }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: var(--radius-sm); background: none; text-align: left; font-family: var(--font-body); font-size: .92rem; color: var(--danger); cursor: pointer;" style-hover="background: var(--surface-sunken);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" style="flex: 0 0 auto;"><circle cx="12" cy="12" r="9"></circle><path d="M5.6 5.6l12.8 12.8"></path></svg>{{ blockLabel }}</button>
           </div>
         </sc-if>
       </div>
@@ -104,10 +103,13 @@
 
     <!-- ── Moderator strip ── -->
     <sc-if value="{{ viewerIsMod }}" hint-placeholder-val="{{ false }}">
-      <div style="display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 11px 16px; background: var(--surface-info); border: 1px solid var(--river-200); border-left: 3px solid var(--info); border-radius: var(--radius-md);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-info)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-        <span style="flex: 1; font-size: .9rem; color: var(--on-info);">You are seeing this seat as a warden. Two resolved reports, no active sanctions.</span>
-        <a href="#" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-info);">Open the member record</a>
+      <div style="display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 11px 16px; background: var(--surface-info); border: 1px solid var(--river-200); border-left: 3px solid var(--info); border-radius: var(--radius-md); color: var(--on-info);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <div style="flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: .9rem;">
+          <strong style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; font-weight: var(--weight-semibold);">Moderator context</strong>
+          <span>{{ modStatus }}</span>
+        </div>
+        <a href="#" style="flex: 0 0 auto; font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-info);">Open member record</a>
       </div>
     </sc-if>
 
@@ -123,16 +125,16 @@
 
     <!-- ── Activity tabs ── -->
     <nav aria-label="Profile activity" style="display: flex; gap: 2px; margin: 26px 0 0; border-bottom: 1px solid var(--border-hair);">
-      <sc-if value="{{ atOverview }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goOverview }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Overview</button></sc-if>
-      <sc-if value="{{ offOverview }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goOverview }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Overview</button></sc-if>
-      <sc-if value="{{ atTopics }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goTopics }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Topics</button></sc-if>
-      <sc-if value="{{ offTopics }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goTopics }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Topics</button></sc-if>
-      <sc-if value="{{ atPosts }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goPosts }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Posts</button></sc-if>
-      <sc-if value="{{ offPosts }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goPosts }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Posts</button></sc-if>
-      <sc-if value="{{ atCommends }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goCommends }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Commends</button></sc-if>
-      <sc-if value="{{ offCommends }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goCommends }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Commends</button></sc-if>
-      <sc-if value="{{ atConnections }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goConnections }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Connections</button></sc-if>
-      <sc-if value="{{ offConnections }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goConnections }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Connections</button></sc-if>
+      <sc-if value="{{ atOverview }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goOverview }}" aria-current="page" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Overview</button></sc-if>
+      <sc-if value="{{ offOverview }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goOverview }}" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Overview</button></sc-if>
+      <sc-if value="{{ atTopics }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goTopics }}" aria-current="page" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Topics</button></sc-if>
+      <sc-if value="{{ offTopics }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goTopics }}" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Topics</button></sc-if>
+      <sc-if value="{{ atPosts }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goPosts }}" aria-current="page" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Posts</button></sc-if>
+      <sc-if value="{{ offPosts }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goPosts }}" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Posts</button></sc-if>
+      <sc-if value="{{ atCommends }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goCommends }}" aria-current="page" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Commends</button></sc-if>
+      <sc-if value="{{ offCommends }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goCommends }}" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Commends</button></sc-if>
+      <sc-if value="{{ atConnections }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goConnections }}" aria-current="page" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Connections</button></sc-if>
+      <sc-if value="{{ offConnections }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goConnections }}" style="flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Connections</button></sc-if>
     </nav>
 
     <!-- ── Loading ── -->
@@ -147,7 +149,7 @@
 
     <!-- ── Error ── -->
     <sc-if value="{{ panelError }}" hint-placeholder-val="{{ false }}">
-      <div style="margin-top: 26px; padding: 30px 26px; text-align: center; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg);">
+      <div style="margin-top: 26px; padding: 30px 26px; text-align: center; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--danger); border-radius: var(--radius-lg);">
         <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">This record could not be read</h2>
         <p style="margin: 7px auto 0; max-width: 46ch; font-size: .95rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">The archive did not answer in time. Nothing has been lost — try again in a moment.</p>
         <button onClick="{{ retry }}" style="margin-top: 18px; padding: 8px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Try again</button>
@@ -156,23 +158,23 @@
 
     <!-- ── Overview ── -->
     <sc-if value="{{ showOverview }}" hint-placeholder-val="{{ true }}">
-      <div style="display: grid; grid-template-columns: 1fr 292px; gap: 30px; align-items: start; padding-top: 26px;">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 30px; align-items: start; padding-top: 26px;">
         <div style="display: flex; flex-direction: column; gap: 28px; min-width: 0;">
           <sc-if value="{{ hasBio }}" hint-placeholder-val="{{ true }}">
             <section>
-              <h2 style="margin: 0 0 9px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">About</h2>
-              <p style="margin: 0; font-size: 1.02rem; line-height: 1.62; color: var(--text-body); text-wrap: pretty;">Keeper of the eval suite and an unreasonable number of half-finished rollback drills. I care most about the boring parts — the audit trail, the migration you can undo, the note someone leaves for whoever reads it next.</p>
-              <p style="margin: 12px 0 0; font-size: 1.02rem; line-height: 1.62; color: var(--text-body); text-wrap: pretty;">If I have asked you for evidence, it is not suspicion. It is how we keep the record whole.</p>
+              <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);">About</h2>
+              <p style="margin: 0; max-width: 66ch; font-size: 1.02rem; line-height: 1.62; color: var(--text-body); text-wrap: pretty;">Keeper of the eval suite and an unreasonable number of half-finished rollback drills. I care most about the boring parts — the audit trail, the migration you can undo, the note someone leaves for whoever reads it next.</p>
+              <p style="margin: 12px 0 0; max-width: 66ch; font-size: 1.02rem; line-height: 1.62; color: var(--text-body); text-wrap: pretty;">If I have asked you for evidence, it is not suspicion. It is how we keep the record whole.</p>
             </section>
           </sc-if>
           <sc-if value="{{ hasTopics }}" hint-placeholder-val="{{ true }}">
             <section>
-              <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Recent topics</h2>
+              <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);">Recent topics</h2>
               <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
                 <sc-for list="{{ recentTopics }}" as="t" hint-placeholder-count="4">
                   <li style="padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
                     <a href="#" style="font-size: 1rem; line-height: 1.4; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ t.title }}</a>
-                    <p style="display: flex; flex-wrap: wrap; gap: 12px; margin: 5px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);"><span>#{{ t.board }}</span><span>{{ t.replies }} replies</span><span>{{ t.time }}</span></p>
+                    <p style="display: flex; flex-wrap: wrap; gap: 12px; margin: 5px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);"><span>{{ t.board }}</span><span>{{ t.replies }} replies</span><span>{{ t.time }}</span></p>
                   </li>
                 </sc-for>
               </ul>
@@ -180,7 +182,7 @@
           </sc-if>
           <sc-if value="{{ hasPosts }}" hint-placeholder-val="{{ true }}">
             <section>
-              <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Recent posts</h2>
+              <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);">Recent posts</h2>
               <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
                 <sc-for list="{{ recentPosts }}" as="p" hint-placeholder-count="3">
                   <li style="padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
@@ -202,7 +204,7 @@
 
         <aside style="display: flex; flex-direction: column; gap: 18px; padding: 18px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
           <div>
-            <h2 style="margin: 0 0 10px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Profile details</h2>
+            <h2 style="margin: 0 0 10px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);">Profile details</h2>
             <dl style="display: flex; flex-direction: column; gap: 10px; margin: 0;">
               <sc-for list="{{ customFields }}" as="f" hint-placeholder-count="4">
                 <div><dt style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .06em; color: var(--text-faint);">{{ f.label }}</dt><dd style="margin: 2px 0 0; font-size: .93rem; color: var(--text-body);">{{ f.value }}</dd></div>
@@ -211,10 +213,10 @@
           </div>
           <div style="height: 1px; background: var(--border-hair);"></div>
           <div>
-            <h2 style="margin: 0 0 10px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Most active in</h2>
+            <h2 style="margin: 0 0 10px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);">Most active in</h2>
             <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px;">
               <sc-for list="{{ activeBoards }}" as="b" hint-placeholder-count="3">
-                <li style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;"><a href="#" style="font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="color: var(--accent);"><span style="color: var(--gold-ink);">#</span>{{ b.slug }}</a><span style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ b.count }}</span></li>
+                <li style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;"><a href="#" style="font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="color: var(--accent);">{{ b.slug }}</a><span style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ b.count }}</span></li>
               </sc-for>
             </ul>
           </div>
@@ -245,7 +247,7 @@
               <div style="flex: 1; min-width: 0;">
                 <a href="#" style="font-size: 1.02rem; line-height: 1.35; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ row.title }}</a>
                 <p style="margin: 5px 0 0; font-size: .92rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">{{ row.excerpt }}</p>
-                <p style="display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);"><span>#{{ row.board }}</span><span>{{ row.time }}</span><span>{{ row.replies }} replies</span></p>
+                <p style="display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);"><span>{{ row.board }}</span><span>{{ row.time }}</span></p>
               </div>
               <span style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);"><svg width="11" height="11" viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ row.commends }}</span>
             </li>
@@ -272,19 +274,19 @@
 
     <!-- ── Commends ── -->
     <sc-if value="{{ showCommends }}" hint-placeholder-val="{{ false }}">
-      <div style="display: grid; grid-template-columns: 320px 1fr; gap: 30px; align-items: start; padding-top: 26px;">
+      <div style="display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 30px; align-items: start; padding-top: 26px;">
         <div style="padding: 24px; text-align: center; background: linear-gradient(160deg, var(--gold-100) 0%, var(--surface-raised) 70%); border: 1px solid var(--gold-200); border-radius: var(--radius-lg);">
           <span style="display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 2rem; color: var(--text-strong);"><svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>5,140</span>
-          <p style="margin: 4px 0 0; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Regard</p>
-          <p style="margin: 14px 0 0; font-size: .93rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Regard is the sum of the reactions {{ firstName }}'s posts have received, with a small bonus for accepted answers. It recognises contribution — it grants no powers.</p>
+          <p style="margin: 4px 0 0; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-800);">Regard</p>
+          <p style="margin: 14px 0 0; font-size: .93rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Regard is the sum of the commends {{ firstName }}'s posts have received. It recognises contribution; it grants no powers.</p>
         </div>
         <div>
-          <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Most commended</h2>
+          <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);">Most commended</h2>
           <ul style="list-style: none; margin: 0; padding: 0;">
             <sc-for list="{{ topCommended }}" as="c" hint-placeholder-count="5">
               <li style="display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border-hair);">
                 <span style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; min-width: 58px; font-family: var(--font-mono); font-size: .9rem; color: var(--gold-700);"><svg width="11" height="11" viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ c.commends }}</span>
-                <div style="min-width: 0;"><a href="#" style="font-size: 1rem; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ c.title }}</a><p style="margin: 4px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);">#{{ c.board }} · {{ c.time }}</p></div>
+                <div style="min-width: 0;"><a href="#" style="font-size: 1rem; color: var(--text-strong); text-decoration: none; overflow-wrap: anywhere;" style-hover="color: var(--accent);">{{ c.title }}</a></div>
               </li>
             </sc-for>
           </ul>
@@ -315,14 +317,14 @@
                 <a href="#" style="display: block; font-size: .96rem; color: var(--text-strong); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" style-hover="color: var(--accent);">{{ m.name }}</a>
                 <p style="margin: 2px 0 0; font-family: var(--font-label); font-size: .7rem; letter-spacing: .03em; color: var(--text-faint);">{{ m.meta }}</p>
               </div>
-              <button style="flex: 0 0 auto; padding: 5px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Follow</button>
+              <sc-if value="{{ canRemoveFollowers }}" hint-placeholder-val="{{ false }}"><button style="flex: 0 0 auto; padding: 5px 0; border: 0; background: none; color: var(--danger); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; text-decoration: underline; text-underline-offset: 2px; cursor: pointer;" style-hover="text-decoration: none;">Remove follower</button></sc-if>
             </li>
           </sc-for>
         </ul>
         <sc-if value="{{ noConnections }}" hint-placeholder-val="{{ false }}">
           <div style="padding: 44px 26px; text-align: center;">
             <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">No one here yet</h2>
-            <p style="margin: 7px 0 0; font-size: .95rem; color: var(--text-muted);">When members follow {{ firstName }}, they will be listed here.</p>
+            <p style="margin: 7px auto 0; max-width: 42ch; font-size: .95rem; color: var(--text-muted);">{{ emptyConnCopy }}</p>
           </div>
         </sc-if>
       </div>
@@ -332,7 +334,7 @@
   </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900},&quot;viewer&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;guest&quot;,&quot;member&quot;,&quot;self&quot;,&quot;moderator&quot;],&quot;default&quot;:&quot;member&quot;,&quot;tsType&quot;:&quot;'guest' | 'member' | 'self' | 'moderator'&quot;,&quot;section&quot;:&quot;Who is looking&quot;},&quot;gated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Who is looking&quot;},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'loading' | 'error' | 'empty'&quot;,&quot;section&quot;:&quot;Panel state&quot;},&quot;showBadges&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panel state&quot;},&quot;online&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panel state&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900},&quot;viewer&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;guest&quot;,&quot;member&quot;,&quot;self&quot;,&quot;moderator&quot;],&quot;default&quot;:&quot;member&quot;,&quot;tsType&quot;:&quot;'guest' | 'member' | 'self' | 'moderator'&quot;,&quot;section&quot;:&quot;Who is looking&quot;},&quot;gated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Who is looking&quot;},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'loading' | 'error' | 'empty'&quot;,&quot;section&quot;:&quot;Panel state&quot;},&quot;showBadges&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panel state&quot;},&quot;presence&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;online&quot;,&quot;away&quot;,&quot;offline&quot;],&quot;default&quot;:&quot;online&quot;,&quot;tsType&quot;:&quot;'online' | 'away' | 'offline'&quot;,&quot;section&quot;:&quot;Panel state&quot;}}">
 const TOPICS = [
   { title: 'Evaluations as ritual, not gate', board: 'counsel', time: '2h', replies: 23, commends: 31, excerpt: 'We keep treating the eval suite as a turnstile. What if it were a rite the whole council kept?' },
   { title: 'A rollback drill you can actually run on a Tuesday', board: 'practice', time: '5h', replies: 41, commends: 54, excerpt: 'Fifteen minutes, one migration, and a written record at the end. Here is the script we use.' },
@@ -360,24 +362,24 @@ const POSTS = [
 ];
 
 const FOLLOWERS = [
-  { name: 'Elrond', meta: 'Legend · followed you 2 years ago' },
-  { name: 'Erestor', meta: 'Legend · followed you 18 months ago' },
-  { name: 'Glorfindel', meta: 'Loremaster · followed you 1 year ago' },
-  { name: 'Arwen Undómiel', meta: 'Veteran · followed you 11 months ago' },
-  { name: 'Lindir', meta: 'Veteran · followed you 8 months ago' },
-  { name: 'Bilbo Baggins', meta: 'Member · followed you 6 months ago' },
-  { name: 'Gildor Inglorion', meta: 'Member · followed you 4 months ago' },
-  { name: 'Melian', meta: 'Loremaster · followed you 2 months ago' },
-  { name: 'Círdan', meta: 'Legend · followed you 5 weeks ago' },
+  { name: 'Elrond', handle: 'elrond', regard: 18420 },
+  { name: 'Erestor', handle: 'erestor', regard: 9310 },
+  { name: 'Glorfindel', handle: 'glorfindel', regard: 7640 },
+  { name: 'Arwen Undómiel', handle: 'arwen', regard: 4180 },
+  { name: 'Lindir', handle: 'lindir', regard: 2260 },
+  { name: 'Bilbo Baggins', handle: 'bilbo', regard: 1875 },
+  { name: 'Gildor Inglorion', handle: 'gildor', regard: 940 },
+  { name: 'Melian', handle: 'melian', regard: 6120 },
+  { name: 'Círdan', handle: 'cirdan', regard: 15300 },
 ];
 
 const FOLLOWING = [
-  { name: 'Elrond', meta: 'Legend · since 2019' },
-  { name: 'Círdan', meta: 'Legend · since 2020' },
-  { name: 'Melian', meta: 'Loremaster · since 2021' },
-  { name: 'Lindir', meta: 'Veteran · since 2023' },
-  { name: 'Nimrodel', meta: 'Member · since 2024' },
-  { name: 'Haldir', meta: 'Veteran · since 2024' },
+  { name: 'Elrond', handle: 'elrond', regard: 18420 },
+  { name: 'Círdan', handle: 'cirdan', regard: 15300 },
+  { name: 'Melian', handle: 'melian', regard: 6120 },
+  { name: 'Lindir', handle: 'lindir', regard: 2260 },
+  { name: 'Nimrodel', handle: 'nimrodel', regard: 1130 },
+  { name: 'Haldir', handle: 'haldir', regard: 3405 },
 ];
 
 function initialsOf(label) {
@@ -429,8 +431,12 @@ class Component extends DCLogic {
     const connSource = s.conn === 'following' ? FOLLOWING : FOLLOWERS;
     const cq = s.connQuery.trim().toLowerCase();
     const connList = (isEmpty ? [] : connSource)
-      .filter((m) => !cq || m.name.toLowerCase().includes(cq))
-      .map((m) => ({ ...m, initials: initialsOf(m.name) }));
+      .filter((m) => !cq || m.name.toLowerCase().includes(cq) || m.handle.includes(cq))
+      .map((m) => ({
+        ...m,
+        initials: initialsOf(m.name),
+        meta: '@' + m.handle + ' · ' + m.regard.toLocaleString('en-US') + ' regard',
+      }));
 
     const isList = s.tab === 'topics' || s.tab === 'posts';
     const ready = dataState === 'live' || dataState === 'empty';
@@ -441,17 +447,22 @@ class Component extends DCLogic {
       memberName, firstName, handle: 'galadriel', initials: 'GA',
       isGated: !!p.gated,
       isOpen: !p.gated,
-      isOnline: p.online !== false,
+      // One ladder decides this upstream (flag → status → toggle → visibility →
+      // recency → blocks); the template only draws the answer. `online: false`
+      // is the old boolean, kept so a saved tweak still reads as offline.
+      isOnline: p.online !== false && (p.presence || 'online') === 'online',
+      isAway: p.online !== false && p.presence === 'away',
       showBadgeRow: p.showBadges !== false && !isEmpty,
 
       viewerIsSelf: viewer === 'self',
       viewerIsGuest: viewer === 'guest',
       viewerIsMod: viewer === 'moderator',
+      modStatus: 'No active sanctions.',
       viewerCanAct: viewer === 'member' || viewer === 'moderator',
       isFollowing: s.following,
       notFollowing: !s.following,
       menuOpen: s.menuOpen,
-      blockLabel: s.blocked ? 'Unblock this member' : 'Block this member',
+      blockLabel: s.blocked ? 'Unblock' : 'Block',
       toggleFollow: () => this.setState((st) => ({ following: !st.following })),
       toggleBlock: () => this.setState((st) => ({ blocked: !st.blocked, menuOpen: false })),
       toggleMenu: () => this.setState((st) => ({ menuOpen: !st.menuOpen })),
@@ -523,7 +534,11 @@ class Component extends DCLogic {
       connQuery: s.connQuery,
       onConnSearch: (e) => this.setState({ connQuery: e.target.value }),
       connList,
+      canRemoveFollowers: viewer === 'self' && s.conn === 'followers',
       noConnections: connList.length === 0,
+      emptyConnCopy: s.conn === 'following'
+        ? firstName + ' is not following anyone yet.'
+        : 'When members follow ' + firstName + ', they will be listed here.',
     };
   }
 }

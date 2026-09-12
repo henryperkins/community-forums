@@ -312,13 +312,13 @@ final class AppForumIndexRemediationTest extends TestCase
         self::assertIsString($css);
 
         self::assertStringNotContainsString(
-            ".topbar-search-entry,\n    .topbar-panel-form { display: none; }",
+            ".forum-bar-search,\n    .forum-bar-panel-form { display: none; }",
             $css,
         );
 
         $this->actingAs($this->makeUser(['username' => 'phone_reader']));
         $home = $this->get('/')->body();
         self::assertStringContainsString('href="/search"', $home);
-        self::assertStringContainsString('topbar-search-entry', $home);
+        self::assertStringContainsString('forum-bar-search', $home);
     }
 }

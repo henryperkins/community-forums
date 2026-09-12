@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-12 — Presence handoff synced; the member chrome adopted verbatim
+
+- Long account names now shrink and ellipsize inside ForumNav while the avatar and account menu remain visible; the PHP disclosure retains the full name in its accessible label. Browser coverage exercises the reported 1100px overflow, the 64-character limit, keyboard access, and phone focus-ring clearance.
+- `templates/users-online/` replaced by the handoff's roll in the shared shell (ForumNav + BoardRail + PresenceList; `ds-base.js` idempotent on re-mount); `templates/user-profile/UserProfile.dc.html` taken whole — the `role="img"` dot with its away state, and the 2026-08-03 cover this mirror had never received.
+- New `components/presence/` (PresenceList, PresenceRow, the legend card), `components/forum/ForumNav`, `BoardRail`, `chrome.card.html`; `Monogram.jsx` paints offline with `--presence-offline`.
+- `tokens/colors.css` gains `--presence-away` / `--presence-offline` in both registers; `tokens/typography.css` the `--measure-*` family; `components/doc.css` reads it.
+- `components.css`: the presence block (dot modifiers, the bare dot, the `[hidden]` guard — without the bundle's `!important`, which the runtime builder refuses — the `.monogram` binding, the rail ring, compact density, the "you" chip, `.presence-all`) and the member chrome (`.forum-bar*`, `.board-rail*`). Seven upstream hunks held and the bundle's deletion of the production-transfer section refused: `LOCAL_RECONCILIATION.md`, 2026-09-12.
+- The production-transfer section loses its "Shared shell" and presence-widget copies: production renders ForumNav, BoardRail and PresenceList in their own vocabulary (ADR 0032), so the bridge carries only the surfaces.
+- Handoff archived as `_archive/design_handoff_presence/README.md`.
+
 ## 2026-08-27 — Stale preview bundle retired
 
 - Removed `_ds_bundle.js`: its embedded source hashes and compiled components had drifted from the checked-in JSX, and this repository has no compiler capable of reproducing it.

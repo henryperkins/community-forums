@@ -416,12 +416,12 @@ test('mobile top bar stays one row and Search remains reachable', async ({ page 
   test.skip(info.project.name !== 'mobile', 'mobile chrome contract');
   await login(page);
 
-  const topbar = page.locator('.topbar');
+  const topbar = page.locator('.forum-bar');
   const topbarBox = await topbar.boundingBox();
   expect(topbarBox).not.toBeNull();
   expect(topbarBox!.height).toBeLessThanOrEqual(64);
   await expect(page.locator('.topbar-search')).toBeHidden();
-  const search = page.locator('.topbar-search-entry');
+  const search = page.locator('.forum-bar-search');
   await expect(search).toBeVisible();
   await expect(search).toHaveAttribute('href', '/search');
   const searchBox = await search.boundingBox();

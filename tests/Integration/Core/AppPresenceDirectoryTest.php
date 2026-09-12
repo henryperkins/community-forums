@@ -149,7 +149,7 @@ final class AppPresenceDirectoryTest extends TestCase
     /** The account-menu avatar cell only — not the rail, not the roll. */
     private function topbar(Response $response): string
     {
-        return $this->region($response->body(), 'topbar-avatar', 'topbar-name');
+        return $this->region($response->body(), 'forum-bar-user', 'forum-bar-username');
     }
 
     // ── The members-only leak (the defect the review itself missed) ──────────

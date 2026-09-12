@@ -314,3 +314,27 @@ JS-rebuilt row (neutral palette, see below) is asserted nowhere.
   `docs/evidence/imladris-users-online-remediation/{desktop,mobile}/`, written
   per project, because a single path let the mobile run overwrite the desktop
   frames with 390px-wide ones filed under the desktop name.
+
+## Follow-up — 2026-09-12
+
+The design system took this remediation's decisions back (handoff archived at
+`docs/design-system/imladris/_archive/design_handoff_presence/README.md`): the
+roll's shape, the copy, the away colour as `--gold-700` / `--gold-400`, the cap,
+the viewer on their own roster, the `role="img"` dot on `/u/{name}`, the seat's
+leaf honouring the toggle, and the eight CSS corrections this ADR's `app.css`
+block had raised. The mirror was synced per hunk (`LOCAL_RECONCILIATION.md`,
+same date), the runtime layer regenerated, and the block pruned to what the
+layer cannot win: the system-dark register, `.presence-dot.is-away` for the
+profile avatar's unlayered dot, and the `.monogram` sizes. `/users-online` was
+then ported verbatim from the design's template — the 860px column, the roll as
+a card, the empty card, the pager, the magnifier, the focus ring, the auto-fit
+guidance grid — and the member chrome adopted in the design's vocabulary (ADR
+0032), which retired the bridge's `.presence-list a` / `.presence-all` copies and
+with them the two drifts this ADR could not fix: the rail row's hover ground
+and the footer link's hover accent. Deferrals 1–8 stand unchanged, D8 included.
+
+One evidence note: the roll now enters with the design's 200ms `uoRise`, and
+Playwright's click waits for its target to hold still across frames — a check
+that never settles under JavaScript-disabled emulation while an ancestor is
+animating. The no-JS journey in `users-online-remediation.spec.ts` therefore
+waits for the animation to finish before its first click.

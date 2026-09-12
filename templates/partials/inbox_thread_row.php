@@ -17,7 +17,7 @@ $excerpt = trim(preg_replace('/\s+/', ' ', strip_tags((string) ($t['excerpt_html
 $excerpt = mb_strimwidth($excerpt, 0, 180, '…');
 $replyCount = (int) ($t['reply_count'] ?? 0);
 ?>
-<li class="inbox-thread-row<?= $unread ? ' is-unread' : '' ?><?= $status !== 'open' ? ' thread-status-' . $e($statusClass) : '' ?><?= !empty($t['is_pinned']) ? ' is-pinned' : '' ?><?= !empty($t['is_locked']) ? ' is-locked' : '' ?>" data-inbox-row data-thread-id="<?= $threadId ?>" data-inbox-unread="<?= $inboxUnread ? '1' : '0' ?>" data-inbox-starred="<?= $starred ? '1' : '0' ?>">
+<li class="inbox-thread-row<?= $unread ? ' is-unread' : '' ?><?= $status !== 'open' ? ' thread-status-' . $e($statusClass) : '' ?><?= !empty($t['is_pinned']) ? ' is-pinned' : '' ?><?= !empty($t['is_locked']) ? ' is-locked' : '' ?>" data-inbox-row data-thread-id="<?= $threadId ?>" data-inbox-unread="<?= $inboxUnread ? '1' : '0' ?>" data-inbox-starred="<?= $starred ? '1' : '0' ?>" data-board-slug="<?= $e($t['board_slug']) ?>">
     <span class="inbox-row-select">
         <input id="inbox-select-<?= $threadId ?>" type="checkbox" name="thread_ids[]" value="<?= $threadId ?>" form="inbox-bulk-form" data-inbox-select aria-label="Select <?= $e($t['title']) ?>">
     </span>

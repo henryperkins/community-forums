@@ -48,3 +48,13 @@ page. These assert geometry and computed style instead:
 - a members-only profile is absent for a guest and present for a member — the
   row marker, not the handle, because the page legitimately echoes a search term
   back into its own input.
+
+## Recaptured 2026-09-12
+
+The frames were regenerated after the presence handoff sync and the verbatim port of the
+page from the design's template (the 860px column, the roll as a card, the empty card, the
+pager's own buttons, the magnifier and focus ring in the search field, the auto-fit guidance
+grid) and after the member chrome became the design system's ForumNav / BoardRail (ADR
+0032). The spec's measurements are unchanged; `unified-chrome.spec.ts` adds the cascade
+cases this spec never covered (the seat's leaf, the profile dot, the bare dot, the hover
+states).

@@ -759,9 +759,12 @@
         var button = form.querySelector('button[type="submit"]');
         if (field) { field.value = open ? '0' : '1'; }
         if (button) {
+            // The design's toggle: `.is-on` fills the glyph's band while the pane is shown.
+            button.classList.toggle('is-on', open);
             button.setAttribute('aria-expanded', open ? 'true' : 'false');
             button.setAttribute('aria-pressed', open ? 'true' : 'false');
-            button.setAttribute('aria-label', (open ? 'Hide ' : 'Show ') + (kind === 'reading' ? 'reading pane' : 'board rail'));
+            button.setAttribute('aria-label', (open ? 'Hide the ' : 'Show the ') + (kind === 'reading' ? 'reading pane' : 'board rail'));
+            button.setAttribute('title', (open ? 'Hide the ' : 'Show the ') + (kind === 'reading' ? 'reading pane (⌘J)' : 'board rail (⌘B)'));
         }
     };
     var persistPanelState = function (kind, open) {
@@ -979,6 +982,17 @@
             else if (restoreFocus) { inboxList.focus(); }
         };
         var canonicalFallback = function (href) { window.location.href = href; };
+        var decrementUnreadBadge = function (badge, attribute, capped) {
+            var count = parseInt(badge.getAttribute(attribute) || '', 10);
+            if (isNaN(count) || count < 1) { return; }
+            count--;
+            if (count === 0) { badge.remove(); return; }
+            var label = count + ' unread topic' + (count === 1 ? '' : 's');
+            badge.setAttribute(attribute, String(count));
+            badge.textContent = capped ? (count > 99 ? '99+' : String(count)) : count + ' unread';
+            if (badge.hasAttribute('aria-label')) { badge.setAttribute('aria-label', label); }
+            if (badge.hasAttribute('title')) { badge.setAttribute('title', label); }
+        };
         var reconcileReadRow = function (sourceLink) {
             var row = sourceLink && sourceLink.closest ? sourceLink.closest('[data-inbox-row]') : null;
             if (!row || !row.classList.contains('is-unread')) { return; }
@@ -989,15 +1003,20 @@
             if (dot) { dot.remove(); }
             if (queueUnread) {
                 Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-unread-count]'), function (badge) {
-                    var count = parseInt(badge.getAttribute('data-inbox-unread-count') || '', 10);
-                    if (isNaN(count) || count < 1) { return; }
-                    count--;
-                    if (count === 0) { badge.remove(); return; }
-                    badge.setAttribute('data-inbox-unread-count', String(count));
-                    badge.textContent = badge.classList.contains('topbar-count') ? String(count) : count + ' unread';
+                    decrementUnreadBadge(badge, 'data-inbox-unread-count', badge.classList.contains('forum-bar-count'));
+                });
+                // The rail and topbar count the same queue. Keep both in step
+                // after a preview marks a topic read, including accessible names.
+                Array.prototype.forEach.call(document.querySelectorAll('.board-rail-item[data-board-slug]'), function (board) {
+                    if (board.getAttribute('data-board-slug') !== row.getAttribute('data-board-slug')) { return; }
+                    var badge = board.querySelector('[data-board-unread-count]');
+                    if (badge) { decrementUnreadBadge(badge, 'data-board-unread-count', true); }
                 });
             }
             if (queueUnread && inbox.getAttribute('data-inbox-scope') === 'unread') {
+                var scopeCount = inbox.querySelector('[data-inbox-current-count]');
+                var remaining = scopeCount ? parseInt(scopeCount.textContent || '', 10) : NaN;
+                if (!isNaN(remaining)) { scopeCount.textContent = String(Math.max(0, remaining - 1)); }
                 row.remove();
                 if (cursorRow === row) { cursorRow = null; }
             }
@@ -1212,6 +1231,17 @@
                 var active = picker.getAttribute('data-compose-board-picker') === slug;
                 picker.classList.toggle('is-active', active);
                 picker.setAttribute('aria-pressed', active ? 'true' : 'false');
+                // Keep the destination note beside the board that receives the
+                // topic after either the select or the rail changes it.
+                var note = picker.querySelector('.board-rail-note');
+                if (active && !note) {
+                    note = document.createElement('span');
+                    note.className = 'board-rail-note';
+                    note.textContent = 'posting here';
+                    picker.appendChild(note);
+                } else if (!active && note) {
+                    note.remove();
+                }
             });
             var anonymousAllowed = option.getAttribute('data-board-anonymous') === '1';
             Array.prototype.forEach.call(composeSurface.querySelectorAll('[data-compose-anonymous]'), function (control) {
@@ -1258,8 +1288,11 @@
         var setNav = function (open) {
             document.body.classList.toggle('nav-open', open);
             navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            navToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+            navToggle.setAttribute('aria-label', open ? 'Close board rail' : 'Open board rail');
             if (navScrim) { navScrim.hidden = !open; }
+            if (!open && sidebar && sidebar.contains(document.activeElement)) {
+                navToggle.focus();
+            }
         };
         navToggle.addEventListener('click', function () {
             setNav(!document.body.classList.contains('nav-open'));

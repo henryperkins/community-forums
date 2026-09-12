@@ -185,7 +185,7 @@ final class AppComposeMemberSurfaceTest extends TestCase
         self::assertStringContainsString('href="/" class="compose-cancel"', $get->body());
         self::assertStringContainsString('data-composer-draft-slot', $get->body());
         self::assertStringContainsString('Draft kept on this device.', $get->body());
-        self::assertStringNotContainsString('topbar-new-topic', $get->body());
+        self::assertStringNotContainsString('forum-bar-compose', $get->body());
         self::assertStringNotContainsString('Topic opened in', $get->body());
 
         $success = $this->post('/threads', [

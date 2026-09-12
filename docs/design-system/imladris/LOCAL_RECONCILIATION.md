@@ -332,3 +332,156 @@ form slice: `.field-cell` gains `gap: 4px` from the layer, and `app.css:320` alr
 `.field-cell > .field-error` a `margin: 4px 0 0` that the layer cannot override. Left as
 found here rather than widened into a form slice; it is 4px of extra air under a rejected
 field, not a break.
+
+## 2026-09-12 — presence handoff synced per hunk; the member chrome adopted, the bridge's shell section retired (ADR 0032)
+
+Initial bundle `imladrisdesignsystem.zip` (`design_handoff_presence`), SHA-256
+`e3abeeab808344186e2d38094b81c3468a4a0573323b78dca2a9c308d1dbce57`, authored against
+`966a5b1c`. The design digest was refreshed in the same change,
+`db7e73d6` → `548996ef`. The README asks
+for a path-for-path copy of `design/`; the bundle's `components.css` is 1529 lines against
+this mirror's 3207, so a copy would have deleted the production-transfer section and every
+local correction below. It was reconciled hunk by hunk instead.
+
+The current handoff is **`CommunitySystem.zip`**, SHA-256
+`3f7636a701f447bbdc04f7d8fea29d9aab00d9445e3da783ebaa6e5cfde43c0e`.
+Comparing both archives confirms that all 21 files under `design/` are byte-identical;
+the current archive adds six reference screenshots and expands the README with their
+descriptions and capture caveat. `_archive/design_handoff_presence/README.md` now
+preserves that current README byte for byte, including the screenshot guidance. The
+initial archive remains the provenance for the existing source reconciliation; the
+current archive is the reference for this review. The supplied screenshots are design
+references retained under `_archive/design_handoff_presence/screenshots/`,
+not evidence of the PHP implementation.
+
+The current mirror comparison accounts for every bundled design file: nineteen match
+byte for byte after dropping the documented `.txt` suffix; only `components.css` and
+`tokens/colors.css` retain the local differences itemized below. The mirror remains
+source-only: prototype tags, React, and the bundled `support.js` are not application
+runtime code. Shared chrome is rendered through PHP partials and external CSS/JS;
+runtime adapters and the presence deferrals are recorded in ADR 0032 and ADR 0031.
+
+### Taken
+
+- **`tokens/colors.css`** — `--presence-away` (`--gold-700` / `--gold-400`) and
+  `--presence-offline` (`--ink-300`), both registers: the point of the bundle. The app's own
+  declarations were retired with them except the system-dark register, which only `app.css`
+  answers — `tokens/colors.css` flips under `[data-theme="dark"]` alone, and the `system`
+  preference stamps that word on `<html>` and leaves `prefers-color-scheme` to the app.
+- **`tokens/typography.css`** whole: the `--measure-{prose,narrow,wide,column}` family is
+  additive and has no consumer in `app.css`. **`components/doc.css`** whole (reads it with
+  fallbacks; not a runtime source).
+- **`components.css`** — the dot modifiers, `.presence-dot-bare` (+ `.is-away`),
+  `a.presence-person:hover { text-decoration: none }`, the `.monogram` (not `.monogram-sm`)
+  binding, the rail ring on `.board-rail` / `.sidebar`, compact density, `.presence-you`,
+  `.presence-where` without its `#`, `.presence-all` with its hover, and the member chrome
+  (`.forum-bar*`, `.board-rail*`) — the chrome inserted after this mirror's own admin media
+  blocks, which upstream's held AdminNav rewrite would otherwise replace.
+- **`templates/users-online/*`** whole (the roll in the shared shell; `ds-base.js` is now
+  idempotent on re-mount). **`templates/user-profile/UserProfile.dc.html`** whole — the
+  handoff says only the dot changed, but this mirror's copy predated upstream's 2026-08-03
+  profile (the twilight cover, `--gold-800` labels, Copy link / Block, Remove follower, the
+  empty-connections copy), all of which `github.md` already records as corrected against
+  production; taking the file brings the mirror current and adds `role="img"` with the away
+  state.
+- New **`components/presence/{PresenceList.jsx,.d.ts,.prompt.md,presence.card.html}`**,
+  **`components/forum/{ForumNav,BoardRail}.{jsx,d.ts}`**, **`chrome.card.html`**;
+  **`components/identity/Monogram.jsx`** (offline → `--presence-offline`). The `.txt`
+  suffix dropped, as the README instructs.
+
+### Taken in a local form
+
+- The `[hidden]` guard (`.presence-widget[hidden], .presence-row[hidden],
+  .presence-more[hidden], .presence-empty[hidden]`) lands **without the bundle's
+  `!important`**: `ImladrisAssetBuilder::runtimeCss()` refuses the flag anywhere in a
+  runtime source — a comment included — and inside the layer the attribute selector already
+  outranks `.presence-widget { display: block }`. `users-online-remediation.spec.ts` measures
+  that `[hidden]` computes `display: none`.
+
+### Held back — upstream regresses a local correction, or the change is owed its own evidence
+
+- **`tokens/colors.css`** twilight `--surface-staff: rgba(194,154,68,.18); --on-staff: #EBDAAC`
+  — the re-tune held on 2026-08-27, same grounds. Upstream's deletion of the twilight
+  `--artifact-link: var(--river-200)` remap is ours from the forum-inbox remediation
+  (`12d9d10b`): the inbox's `.7rem` board references need 4.5:1 and `river-500` measures
+  3.08:1 on the page.
+- **`components.css` `.badge-staff`** border → `color-mix(--on-staff 30%)` — held on
+  2026-08-27 as a staff-chip repaint; inert anyway (`app.css` declares the selector
+  unlayered).
+- **`.field > .field-hint, .dm-form > .field-hint` → `.field-hint`** — ours, from `428f3cb7`;
+  production emits `.field-hint` outside both scopes (`admin/link_previews.php`) and would
+  newly pick the rule up.
+- **The AdminNav operator-cluster rewrite** — fourth sync running. Upstream now carries its
+  own media blocks, but `templates/admin/_console.php` already renders `.admin-bar-right` /
+  `-search` / `-mode` under app-owned rules; taking the layered versions is an admin-console
+  change with no evidence run behind it.
+- **`.tier-legend` / `.tier-loremaster` / `.tier-veteran`** back to numbered ramps — refused
+  on the grounds of 2026-08-09 and 2026-08-27.
+- **The thread-row block** (`.thread-list.is-ruled`, `:is([data-density="compact"]
+  .thread-list:not(.is-board), …)`, `.thread-star` on `--star`, `.thread-board .hash`
+  removed) — upstream's FIDELITY-AUDIT §1/§2 stream. It would newly apply seventeen
+  compact-density rules to production's `.thread-list` under `[data-density="compact"]`: a
+  visible change on its own surface, so its own slice and its own evidence.
+- **`.hash { color: var(--gold-ink); … }`** removed from shared bits — load-bearing: seven
+  templates emit `<span class="hash">#</span>` and `app.css` has no rule for it.
+- **`.link-preview-action`** restructure (`.linkbtn` descendant → the element itself) — ours,
+  from `428f3cb7`; `partials/post.php` emits `<form class="inline link-preview-action">` with
+  a `.linkbtn` inside.
+- **The bundle's `@@ -1307,1901 +1519,11 @@`** — the 1901 lines after the link-preview block
+  are this mirror's production-transfer section, which upstream never had. Refused; the
+  fidelity test pins it.
+- The composer region (mirror lines 832–1271) diffs as a 440-line hunk only because the
+  bundle's file carries CRLF endings there; byte-identical after normalisation, which the
+  builder performs anyway.
+
+### The bridge's shell section (ADR 0032)
+
+The implementation renders the member chrome in the design's vocabulary.
+The "Shared shell" and presence-widget parts of the 2026-08-27 transfer section were
+removed from this file **and** from `app.css`'s bridge — the two are pinned byte-for-byte by
+`AppImladrisFidelityTest` — leaving the route-scoped `.app-shell` / `.main` rules and the
+surfaces. They are superseded by upstream's own `.forum-bar*`, `.board-rail*` and
+`.presence-*` rules, which the runtime now styles the shell with. The fidelity test's
+contract list drops `.topbar-primary` and `.compose-board-picker` (the picker's `<button>`
+reset is app-owned now) and gains a test that `app.css` restates none of the retired
+vocabulary.
+
+### Account-name overflow follow-up
+
+At 1100px on Inbox, the valid display name “Elrond Peredhel Keeper of the Last
+House” pushed the account control beyond the viewport. ForumNav's right cluster
+and account control now permit flex shrinking, and only `.forum-bar-username`
+clips with an ellipsis. The avatar keeps its size; the account control and its
+focus ring remain unclipped. These rules live in the shared `components.css`,
+so the design component and generated runtime receive the same correction.
+
+Production's native `.identity-menu` wrapper also needs `min-width: 0`. Its
+absolutely positioned panel stays outside the clipped label, and the summary's
+accessible name includes the complete display name. On phones, where the name
+already hides, the icon cluster does not shrink: the primary route group takes
+the remaining space, preserving the account control's focus-ring gutter.
+`unified-chrome.spec.ts` checks saved 40- and 64-character names around the
+1080px breakpoint, at 1280px, and on a phone in both themes, including keyboard
+navigation and restoration of the original display name after every test.
+
+### Completion-review corrections
+
+The name-hidden bar at 901–1024px exposed a second flex case: the account
+control could shrink to zero width while the search field still had room.
+Within the existing 1080px breakpoint, `.forum-bar-right` now has
+`flex-shrink: 0`; the search field yields that space. The desktop geometry and
+the 1080/900/720 breakpoints remain the handoff's. The earlier duplicate phone
+shrink rule in `app.css` is retired into this shared correction.
+
+In the retained production transfer block, the positioned Inbox scope and row
+menus were still hidden: the visible selector had one fewer class than the
+open-state hiding selector. Naming `.inbox-scope-menu` / `.inbox-row-menu` in
+the visible selector restores equal specificity, so the later rule wins. This
+correction is identical in `components.css` and `app.css`, preserving the
+byte-for-byte transfer contract. Browser checks now assert actual visibility
+before measuring menu bounds.
+
+The bundled `components/presence/PresenceList.prompt.md` is preserved exactly,
+including its older location/loading examples. The bundle README's explicit
+deferrals and ADR 0031 supersede those examples for production; the discrepancy
+is recorded in ADR 0032 rather than silently shipping the sample behavior.

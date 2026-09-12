@@ -5,7 +5,7 @@
   "scripts": {
     "prepare-db": "bash prepare.sh",
     "evidence:thread-view": "bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts thread-content-presentation.spec.ts --project=desktop && bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts thread-content-presentation.spec.ts --project=mobile",
-    "evidence": "npm run evidence:thread-view && bash prepare.sh && playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts group-dms.spec.ts api-tokens.spec.ts providers.spec.ts invitations.spec.ts thread-intelligence.spec.ts composer-shell.spec.ts composer-expansion.spec.ts composer-toolbar-hardening.spec.ts admin-features.spec.ts link-previews.spec.ts && bash prepare.sh && npm run evidence:roles && bash prepare.sh && playwright test admin-remediation.spec.ts admin-dashboard.spec.ts",
+    "evidence": "npm run evidence:thread-view && bash prepare.sh && playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts group-dms.spec.ts api-tokens.spec.ts providers.spec.ts invitations.spec.ts thread-intelligence.spec.ts composer-shell.spec.ts composer-expansion.spec.ts composer-toolbar-hardening.spec.ts admin-features.spec.ts link-previews.spec.ts unified-chrome.spec.ts && bash prepare.sh && npm run evidence:roles && bash prepare.sh && playwright test admin-remediation.spec.ts admin-dashboard.spec.ts",
     "evidence:roles": "node run-role-assignments.cjs",
     "evidence:passkeys": "bash prepare.sh && playwright test passkeys.spec.ts totp.spec.ts",
     "evidence:dark": "RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && playwright test server-drafts.spec.ts",
@@ -16,6 +16,7 @@
     "evidence:profiles": "bash prepare.sh && playwright test profile-surface.spec.ts",
     "evidence:inbox": "bash prepare.sh && playwright test forum-inbox-remediation.spec.ts --project=desktop",
     "evidence:presence": "bash prepare.sh && playwright test users-online-remediation.spec.ts",
+    "evidence:chrome": "bash prepare.sh && playwright test unified-chrome.spec.ts",
     "evidence:integrations": "RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && RB_BROWSER_DARK_SURFACES=1 playwright test package-integrations.spec.ts api-tokens.spec.ts webhooks.spec.ts package-security.spec.ts",
     "prepare-db:prodlike": "bash prepare-prodlike.sh",
     "evidence:prodlike": "npm run prepare-db:prodlike && bash prodlike-env.sh playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts",

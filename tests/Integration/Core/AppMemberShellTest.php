@@ -30,7 +30,7 @@ final class AppMemberShellTest extends TestCase
             $response = $this->get($path);
             $this->assertStatus(200, $response);
             $html = $response->body();
-            self::assertStringContainsString('<nav class="topbar-primary" aria-label="Primary">', $html);
+            self::assertStringContainsString('<nav class="forum-bar-surfaces" aria-label="Primary">', $html);
             self::assertStringContainsString('data-primary-route="boards"', $html);
             self::assertStringContainsString('data-primary-route="inbox"', $html);
             self::assertStringContainsString('data-primary-route="messages"', $html);
@@ -61,6 +61,25 @@ final class AppMemberShellTest extends TestCase
             self::assertStringContainsString('href="' . $route . '"', $topbar);
         }
         self::assertStringContainsString('href="/compose"', $topbar);
+    }
+
+    public function test_thread_rail_marks_its_authorized_parent_board(): void
+    {
+        $category = $this->makeCategory('Thread places');
+        $board = $this->makeBoard($category, ['slug' => 'thread-home', 'name' => 'Thread home']);
+        $this->makeBoard($category, ['slug' => 'other-place']);
+        $author = $this->makeUser(['username' => 'rail_author']);
+        $thread = $this->makeThread($board, $author, 'A place to return to');
+
+        $response = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $response);
+        $rail = $this->boardRail($response->body());
+        self::assertMatchesRegularExpression(
+            '/class="board-rail-item is-active"[^>]*href="\/c\/thread-home"[^>]*aria-current="page"/',
+            $rail,
+        );
+        self::assertSame(1, substr_count($rail, 'aria-current="page"'));
+        self::assertStringNotContainsString('aria-current="page"', $this->boardRail($this->get('/')->body()));
     }
 
     public function test_rail_unread_pills_sum_to_inbox_and_muted_places_remain_without_attention(): void
@@ -183,13 +202,13 @@ final class AppMemberShellTest extends TestCase
 
     private function topbar(string $html): string
     {
-        self::assertSame(1, preg_match('#<header class="topbar">.*?</header>#s', $html, $match));
+        self::assertSame(1, preg_match('#<header class="forum-bar">.*?</header>#s', $html, $match));
         return $match[0];
     }
 
     private function boardRail(string $html): string
     {
-        self::assertSame(1, preg_match('#<aside class="sidebar".*?</aside>#s', $html, $match));
+        self::assertSame(1, preg_match('#<nav class="board-rail".*?</nav>#s', $html, $match));
         return $match[0];
     }
 }

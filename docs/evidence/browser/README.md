@@ -66,3 +66,8 @@ pane clips is never painted. The capture helper sizes the viewport from the
 scroller's own `clientHeight` and then asserts the surface is contained by it,
 so a clipped frame fails the run instead of shipping. See
 `tests/browser/README.md`.
+
+## Recaptured 2026-09-12
+
+Gate A frames regenerated after ADR 0032: the topbar and the rail are the design system's
+ForumNav and BoardRail, rendered in their own vocabulary (`.forum-bar*`, `.board-rail*`).

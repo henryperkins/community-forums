@@ -1,0 +1,100 @@
+<!-- @dsCard group="Components" viewport="1180x880" name="Member chrome — ForumNav & BoardRail" subtitle="The one topbar and the one rail every member-facing template mounts, and the drift they replaced" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; background: var(--surface-page); }
+  .cap { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: 10px; color: var(--gold-ink); padding: 22px 26px 8px; }
+  .frame { border: 1px solid var(--border-hair); border-radius: var(--radius-lg); overflow: hidden; margin: 0 26px 4px; background: var(--surface-page); }
+  .shell { display: flex; align-items: stretch; height: 232px; }
+  .body { flex: 1; min-width: 0; padding: 20px 26px; }
+  h1 { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.7rem; line-height: 1.1; color: var(--text-strong); }
+  .lede { max-width: 46ch; margin: 8px 0 0; font-size: .95rem; line-height: 1.55; color: var(--text-muted); }
+  .note { max-width: 74ch; margin: 10px 0 0; padding: 0 26px 6px; font-size: .95rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty; }
+  .drift { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 4px 26px 26px; }
+  .drift div { padding: 12px 14px; border: 1px solid var(--border-hair); border-left: 2px solid var(--rule-gold); border-radius: var(--radius-md); background: var(--surface-sunken); }
+  .drift b { display: block; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-strong); }
+  .drift span { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: .68rem; line-height: 1.6; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../_card-guard.js"></script>
+<script type="text/babel">
+const { ForumNav, BoardRail } = window.ImladrisDesignSystem_c3e027;
+
+const CATS = [
+  { key: 'commons', name: 'The Commons', boards: [
+    { key: 'announcements', name: 'announcements' },
+    { key: 'introductions', name: 'introductions' },
+    { key: 'the-archive', name: 'the-archive', unread: 1, unreadLabel: '1 unread in the-archive' },
+    { key: 'the-valley', name: 'the-valley' },
+  ] },
+  { key: 'vilya', name: 'Vilya · Expose', boards: [
+    { key: 'interpretability', name: 'interpretability', unread: 1 },
+    { key: 'evaluations', name: 'evaluations', unread: 2 },
+    { key: 'audit-trails', name: 'audit-trails', unread: 2 },
+    { key: 'capability-disclosure', name: 'capability-disclosure', locked: true, lockedTitle: 'Only wardens may open a topic here' },
+  ] },
+];
+
+const viewer = { name: 'Erestor', username: 'erestor' };
+
+function Demo() {
+  const [rail, setRail] = React.useState(true);
+  const [board, setBoard] = React.useState('audit-trails');
+  return (
+    <div>
+      <div className="cap">The chrome in place — bar, rail, and the page inside them</div>
+      <div className="frame">
+        <ForumNav surface="boards" inboxCount={4} viewer={viewer}
+          railOpen={rail} onToggleRail={() => setRail((v) => !v)} />
+        <div className="shell">
+          <BoardRail categories={CATS} activeBoard={board} open={rail}
+            onNavigate={(k) => setBoard(k)} />
+          <div className="body">
+            <h1>audit-trails</h1>
+            <p className="lede">Click a board: the rail marks it, and the bar above it does not move. That is the whole point — the member's click targets stay put between screens.</p>
+          </div>
+        </div>
+      </div>
+      <p className="note">One component each. <code>surface</code> marks the active pill; <code>onToggleRail</code> renders the toggle and binds ⌘B; <code>onSearch</code> turns the search pill into a button and binds ⌘K to your own palette, which passes as children and anchors to the field. Omit a prop and the control is simply absent — Compose drops <code>showCompose</code>, Search drops <code>showSearch</code>, Thread view passes its palette.</p>
+
+      <div className="cap">What it replaced — seven hand-rolled copies, no two alike</div>
+      <div className="drift">
+        <div><b>Height &amp; gutter</b><span>62px / 22px on the index and inbox · 58px / 26px on the board page and leaderboard · 58px with measure-tracking gutters on the thread</span></div>
+        <div><b>House mark</b><span>--accent on five surfaces · --green-700 with a --green-900 wordmark on the thread</span></div>
+        <div><b>Surface pills</b><span>Boards · Inbox · Messages · — or Forum inbox · Messages, all href="#" — or none at all</span></div>
+        <div><b>Search</b><span>a real link on three · an inert &lt;span&gt; on two · a working ⌘K palette on one</span></div>
+        <div><b>The seat</b><span>a hand-rolled "ER" circle on six · the Monogram component on one</span></div>
+        <div><b>The rail</b><span>272px at 20px padding · 272px at 18px with an extra inbox row · 232px with a route block · absent entirely</span></div>
+      </div>
+
+      <div className="cap">Rail variants — a picker, and a rail that owns routes</div>
+      <div className="frame">
+        <div className="shell">
+          <BoardRail categories={CATS} activeBoard="the-valley" activeNote="posting here" onNavigate={() => {}} />
+          <BoardRail categories={[CATS[0]]} routes={[
+            { key: 'index', icon: 'home', label: 'Forum index', sub: 'Browse boards' },
+            { key: 'inbox', icon: 'inbox', label: 'Forum inbox', sub: 'Your personal queue' },
+            { key: 'top', icon: 'trophy', label: 'Top contributors', active: true },
+          ]} />
+          <div className="body">
+            <h1>Same rail, two jobs</h1>
+            <p className="lede">Compose picks a destination instead of navigating, so it passes <code>onNavigate</code> and an <code>activeNote</code>; a locked board stays visible rather than quietly missing. Leaderboard's rail genuinely owns a route list, so it passes <code>routes</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

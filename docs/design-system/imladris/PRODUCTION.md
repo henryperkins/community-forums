@@ -33,7 +33,7 @@ Classification: **core** (unflagged) · **GA** (flag default-on) · **dark** (im
 
 | Surface | Routes / templates | Class | DS representation |
 |---|---|---|---|
-| Shell: topbar, rail, inbox panes | `home`, `inbox`, `layout`, partials `topbar` `sidebar` | core | `components/forum/*`, `templates/forum-inbox` + thread-view template; `ui_kits/retroboards` is a survey only |
+| Shell: topbar, rail, inbox panes | `home`, `inbox`, `layout`, partials `topbar` `sidebar` | core | `components/forum/ForumNav` + `BoardRail` and `components/presence/PresenceList`, rendered verbatim by `partials/topbar` / `sidebar` in the design's vocabulary (ADR 0032); `templates/forum-inbox` + thread-view template; `ui_kits/retroboards` is a survey only |
 | Boards, folders, saved feeds, bookmark folders | `board`, `feed`; `board_folders` `saved_feeds` `expanded_feeds` `bookmark_folders` | GA | `feature-ui/rail/` (one spec per flag) + `feature-ui/organize/` (the gathered surface). **No template owns this surface** — see `REDUNDANCY-AUDIT.md` §3 |
 | Topic / posts / post toolbar | `thread`, partials `post` `post_toolbar` `thread_row` | core | `Post` + `ThreadRow` (one row, `presentation="default" \| "board"`, mirroring the partial), thread-view template |
 | Composer (all 4 mounts) | partials `composer_shell` `composer` `new_thread_form` `dm_compose_fields` | core + `rich_composer` `wysiwyg_composer` `drafts` `server_drafts` `uploads` `custom_emoji` `slash_giphy` GA | `Composer` component + `components.css` shell block (verbatim CSS); states: toolbar/overflow, uploads, draft+conflict, preview, anonymous, error, submitting, locked |

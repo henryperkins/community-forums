@@ -102,6 +102,19 @@ async function signIn(page: Page, email = 'elrond@retro.test') {
   }
 }
 
+/**
+ * The roll enters with the design's 200ms `uoRise` (translateY + opacity on the
+ * column). Playwright's click waits for the target to hold still across frames,
+ * and with JavaScript disabled that check never settles while the ancestor is
+ * animating — so the no-JS journey waits for the animation to finish first.
+ */
+async function settled(page: Page) {
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  if (!(await page.locator('.users-online-column').count())) return;
+  await page.locator('.users-online-column').evaluate((el) =>
+    Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)).then(() => undefined));
+}
+
 /** Force the short-poll to fire now instead of waiting out its 60s cadence. */
 async function pollNow(page: Page) {
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
@@ -123,6 +136,7 @@ test('the directory is a styled grid, not a default bulleted list', async ({ pag
   const marker = await grid.evaluate((el) => getComputedStyle(el).listStyleType);
   expect(marker).toBe('none');
 
+  await settled(page);
   await page.screenshot({ path: shot('01-directory.png', testInfo.project.name), fullPage: true });
 });
 
@@ -183,6 +197,7 @@ test('away members render a different dot from here-now members, in both registe
   // is exactly what an eyeball check of the dark capture cannot settle.
   expect(darkAway).not.toBe(darkHere);
 
+  await settled(page);
   await page.screenshot({ path: shot('02-directory-dark.png', testInfo.project.name), fullPage: true });
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
 });
@@ -241,6 +256,7 @@ test('the rail does not reflow when the poll lands', async ({ page }, testInfo) 
   expect(rowsAfter).toBe(rowsBefore);
   expect(Math.abs(boxAfter.height - boxBefore.height)).toBeLessThan(2);
 
+  await settled(page);
   await page.screenshot({ path: shot('03-rail-after-poll.png', testInfo.project.name), fullPage: false });
 });
 
@@ -303,6 +319,7 @@ test('a member whose state changes replaces their row instead of duplicating it'
 
 test('the rail states how many members it is not showing', async ({ page }) => {
   await page.goto('/users-online');
+  await openRailIfOffCanvas(page);
 
   const more = page.locator('[data-presence-more]');
   // Server-rendered, so it is right with JavaScript off — where the badge used
@@ -319,6 +336,7 @@ test.describe('with JavaScript disabled', () => {
   test('the roll filters, searches and pages as plain links and a GET form', async ({ page }, testInfo) => {
     await page.goto('/users-online');
     await expect(page.locator('[data-presence-row]').first()).toBeVisible();
+    await settled(page);
 
     await page.screenshot({ path: shot('04-directory-nojs.png', testInfo.project.name), fullPage: true });
 
@@ -333,6 +351,7 @@ test.describe('with JavaScript disabled', () => {
 
     // Search is a GET form, so the result is linkable and nothing mutates.
     await page.goto('/users-online');
+    await settled(page);
     await page.fill('#presence-q', 'Galadriel');
     await page.getByRole('button', { name: 'Search' }).click();
     await page.waitForURL(/[?&]q=Galadriel/);
@@ -373,6 +392,7 @@ test('a signed-in member counts themselves, and is marked as such', async ({ pag
   await expect(self.locator('.presence-you')).toHaveText('you');
   expect(guest).toBeTruthy();
 
+  await settled(page);
   await page.screenshot({ path: shot('05-directory-signed-in.png', testInfo.project.name), fullPage: true });
 });
 

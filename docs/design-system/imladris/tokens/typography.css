@@ -44,6 +44,26 @@
                                      Tracked caps below ~11px stop being read
                                      and start being texture, so nothing in the
                                      system is allowed to set type smaller. */
+
+    /* Measure — how wide text is allowed to get before it stops being readable.
+       Governed here because it was not governed anywhere: the README asked for
+       ≈64ch and the application had invented 60, 62, 64, 66 and 68ch across
+       25+ declarations, including two different values for the two most-read
+       blocks in the product (FIDELITY-AUDIT §8).
+
+       The prose three are in `ch` because they cap a *line of text*, and a line
+       is measured in characters — they must follow the reader's font size. */
+    --measure-prose:   64ch;      /* posts, briefs, long-form body            */
+    --measure-narrow:  56ch;      /* standfirsts, helper lines, notes, asides */
+    --measure-wide:    72ch;      /* wide tables, code, data-dense listings   */
+
+    /* The column is in `px` on purpose, and is the one exception. It is not a
+       line cap: it is the width a reading surface and its own top bar have to
+       agree on — `[data-topbar]` pads by `(100% - var(--measure-column)) / 2`,
+       so a `ch` value would drift the two apart the moment the reader changed
+       font size, which is the exact defect ADR 0030 #2 fixed upstream (a byline
+       at 743px over a sentence at 539px). Adopted in production at this value. */
+    --measure-column:  646px;     /* the thread reading column               */
 }
 
 /* ── Base element styles ─────────────────────────────────────────────────── */

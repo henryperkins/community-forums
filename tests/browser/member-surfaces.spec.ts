@@ -129,8 +129,8 @@ test('member shell shortcuts persist panels and suppress while typing', async ({
   await page.goto('/compose?board=general');
 
   if (info.project.name === 'desktop') {
-    await expect(page.locator('.topbar')).toHaveCSS('height', '62px');
-    await expect(page.locator('.sidebar')).toHaveCSS('width', '272px');
+    await expect(page.locator('.forum-bar')).toHaveCSS('height', '62px');
+    await expect(page.locator('.board-rail')).toHaveCSS('width', '272px');
 
     const body = page.locator('body');
     await expect(body).toHaveClass(/is-rail-open/);
@@ -155,7 +155,7 @@ test('member shell shortcuts persist panels and suppress while typing', async ({
     await page.reload();
     await expect(body).toHaveClass(/is-reading-closed/);
   } else {
-    await expect(page.locator('.topbar')).toHaveCSS('height', '62px');
+    await expect(page.locator('.forum-bar')).toHaveCSS('height', '62px');
     await expectNoOverflow(page);
   }
 });
@@ -169,6 +169,7 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
   await summary.click();
   await expect(scope).toHaveAttribute('open', '');
   const scopePanel = scope.locator('.inbox-scope-menu-panel');
+  await expect(scopePanel).toBeVisible();
   await expect(scopePanel).toHaveCSS('position', 'fixed');
   const scopeBox = await scopePanel.boundingBox();
   expect(scopeBox).not.toBeNull();
@@ -194,6 +195,7 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
   const lastRowMenu = page.locator('[data-inbox-row-menu]').last();
   await lastRowMenu.locator('summary').click();
   const rowMenuPanel = lastRowMenu.locator('.inbox-row-menu-panel');
+  await expect(rowMenuPanel).toBeVisible();
   await expect(rowMenuPanel).toHaveCSS('position', 'fixed');
   const rowMenuBox = await rowMenuPanel.boundingBox();
   expect(rowMenuBox).not.toBeNull();
@@ -235,7 +237,7 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
 test('compose destination picker, select, anonymity, and draft status stay synchronized', async ({ page }, info) => {
   await login(page);
   await page.goto('/compose?board=general');
-  await expect(page.locator('.topbar')).toBeInViewport();
+  await expect(page.locator('.forum-bar')).toBeInViewport();
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   const richEditor = page.locator('.wysiwyg-composer .ProseMirror');
   if (await richEditor.count()) {
@@ -254,10 +256,16 @@ test('compose destination picker, select, anonymity, and draft status stay synch
   await expect(page.locator('[data-compose-board-select] option:checked')).toHaveText('Feedback');
   await expect(page.locator('[data-compose-board-name]')).toHaveText('Posting to Feedback');
   await expect(page.locator('[data-compose-board-picker="feedback"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-compose-board-picker="feedback"] .board-rail-note')).toHaveText('posting here');
+  await expect(page.locator('[data-compose-board-picker="general"] .board-rail-note')).toHaveCount(0);
+  await expect(page.locator('[data-compose-board-picker] .board-rail-note')).toHaveCount(1);
 
   await page.locator('[data-compose-board-select]').selectOption({ label: 'General' });
   await expect(page).toHaveURL(/\/compose\?board=general$/);
   await expect(page.locator('[data-compose-board-picker="general"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-compose-board-picker="general"] .board-rail-note')).toHaveText('posting here');
+  await expect(page.locator('[data-compose-board-picker="feedback"] .board-rail-note')).toHaveCount(0);
+  await expect(page.locator('[data-compose-board-picker] .board-rail-note')).toHaveCount(1);
   await expect(page.locator('.composer-anonymous-chip')).toBeVisible();
 
   await page.locator('[data-compose-title]').fill('A draft title');
@@ -358,7 +366,7 @@ test('member surfaces produce same-state visual evidence at the handoff and mobi
     const response = await page.goto(surface.route, { waitUntil: 'load' });
     expect(response).not.toBeNull();
     expect(response!.status()).toBeLessThan(400);
-    await expect(page.locator('.topbar')).toBeVisible();
+    await expect(page.locator('.forum-bar')).toBeVisible();
     await expect(page.locator('#main')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: surface.heading })).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));

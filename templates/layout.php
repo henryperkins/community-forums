@@ -63,6 +63,8 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
         <?= $this->partial('partials/sidebar', [
             'compose_boards' => $compose_boards ?? null,
             'selected_board' => $selected_board ?? null,
+            'active_thread_board_id' => str_starts_with((string) ($request_path ?? ''), '/t/')
+                ? (int) ($thread['board_id'] ?? 0) : 0,
         ]) ?>
         <main class="main" id="main">
             <?= $this->partial('partials/flash') ?>

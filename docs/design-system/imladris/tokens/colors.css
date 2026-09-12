@@ -103,6 +103,12 @@
        system dims the page by the same amount. */
     --scrim:         rgba(22,29,36,.42);
     --presence:      var(--leaf); /* the "online" leaf dot                      */
+    /* Away is gold, not --amber: --amber is a light-register primitive with no
+       twilight remap, so an away dot painted with it stays light amber on a dark
+       page. --gold-700/--gold-400 flips the way --warning does. */
+    --presence-away: var(--gold-700);
+    /* Off the roll, but drawn — only in lists that carry absent members. */
+    --presence-offline: var(--ink-300);
 
     /* ── Legacy aliases (kept so older rules recolour with the system) ────── */
     --surface:   var(--parchment-50);
@@ -166,5 +172,7 @@
     --star:    var(--gold-400);
     --scrim:   rgba(9,13,17,.58);
     --presence: var(--green-400);
+    --presence-away: var(--gold-400);
+    --presence-offline: var(--ink-300);
     --focus-ring: rgba(210,176,98,.75);
 }

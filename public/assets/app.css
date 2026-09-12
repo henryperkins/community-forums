@@ -9,7 +9,7 @@
 html {
     -webkit-text-size-adjust: 100%;
     scrollbar-gutter: stable;
-    /* .topbar is position:sticky, so an unpadded #post-N permalink scrolls the
+    /* .forum-bar is position:sticky, so an unpadded #post-N permalink scrolls the
        post to y=0 — underneath the bar. Pad the scroll port by the bar itself. */
     scroll-padding-block-start: calc(var(--topbar-h) + 12px);
 }
@@ -80,28 +80,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 
 /* Top bar */
-.topbar {
-    min-height: var(--topbar-h);
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 20;
-}
-.topbar-inner {
-    max-width: var(--maxw);
-    margin: 0 auto;
-    min-height: var(--topbar-h);
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.brand { font-weight: 700; font-size: 1.15rem; color: var(--text); }
-.topbar-right { display: flex; align-items: center; gap: 14px; }
-.topbar-link { color: var(--text-muted); }
-.topbar-user { display: inline-flex; align-items: center; gap: 8px; color: var(--text); }
-.topbar-name { font-weight: 600; }
 .pill {
     background: var(--surface-3);
     color: var(--text-muted);
@@ -121,30 +99,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     min-height: calc(100vh - var(--topbar-h));
     min-height: calc(100dvh - var(--topbar-h));
 }
-.sidebar {
-    border-right: 1px solid var(--border);
-    background: var(--surface);
-    padding: 16px 12px;
-}
-.sidebar-home { display: block; font-weight: 600; color: var(--text); padding: 6px 8px; border-radius: 6px; }
-.sidebar a.active { background: var(--surface-3); }
-.nav-cat { margin-top: 16px; }
-.nav-cat-name {
-    display: block;
-    font-size: .72rem;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--text-muted);
-    padding: 0 8px 4px;
-}
-.nav-boards { list-style: none; margin: 0; padding: 0; }
-.nav-boards a {
-    display: block;
-    padding: 5px 8px;
-    border-radius: 6px;
-    color: var(--text);
-}
-.nav-boards a:hover { background: var(--surface-3); text-decoration: none; }
 .hash { color: var(--text-muted); }
 
 .main, .container { min-inline-size: 0; padding: 24px; }
@@ -353,7 +307,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 .monogram-gilt { box-shadow: var(--gilt); }   /* "precious" avatars (OP, accepted, profile) */
 .monogram.avatar-img { object-fit: cover; background: var(--surface); }
-.topbar .monogram { width: 28px; height: 28px; font-size: .72rem; }
 /* Parchment-toned monogram swatches: a tinted ground + legible dark ink,
    rotating through green / river / gold / mist (no neon, per the register). */
 .mono-0 { background: var(--green-100);     color: var(--green-800); }
@@ -650,11 +603,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* Responsive: one column ≤ 860px */
 @media (max-width: 860px) {
     .app-shell { grid-template-columns: 1fr; }
-    .sidebar {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-    }
-    .topbar-name { display: none; }
 }
 
 /* ── Phase 2: engagement (reactions, stars, unread, inbox) ── */
@@ -790,10 +738,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 
 @media (max-width: 860px) {
     /* Comfortable touch targets on small screens (≥44px). */
-    .btn, .linkbtn, .topbar-link, .reaction, .nav-boards a, .subnav a, .subnav .subnav-action, .inbox-tab { min-height: 44px; display: inline-flex; align-items: center; }
-    .topbar-inner { flex-wrap: wrap; align-items: flex-start; row-gap: 6px; padding-top: 8px; padding-bottom: 8px; }
-    .topbar-right { flex: 1 1 100%; flex-wrap: wrap; gap: 4px 12px; }
-    .topbar-search { order: 3; flex-basis: 100%; }
+    .btn, .linkbtn, .topbar-link, .reaction, .subnav a, .subnav .subnav-action, .inbox-tab { min-height: 44px; display: inline-flex; align-items: center; }
     .profile-stats { gap: 14px; }
     .profile-stats dd { font-size: 1.05rem; }
     .feed-meta { font-size: .8rem; }
@@ -1528,99 +1473,20 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* Top bar — parchment at ~90% with a candlelit blur. */
-.topbar {
-    background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-hair);
-}
-.topbar-inner { gap: 18px; }
-.brand {
-    display: inline-flex; align-items: center; gap: 11px;
-    font-family: var(--font-display); font-weight: var(--weight-medium);
-    font-size: 1.4rem; color: var(--text-strong); letter-spacing: .005em;
-}
-.brand:hover { text-decoration: none; }
-.brand-star { width: 26px; height: 26px; color: var(--brand); flex: 0 0 auto; }
-.brand-name { line-height: 1; }
-.brand-logo { display: block; }
-
 .topbar-link {
     color: var(--text-muted); font-family: var(--font-label);
     letter-spacing: .03em; font-size: .85rem;
 }
 .topbar-link:hover { color: var(--brand); text-decoration: none; }
 
-.topbar-search { flex: 1; display: flex; justify-content: center; }
-.topbar-search .input {
-    min-width: 0; width: 100%; max-width: 420px;
-    border-radius: var(--radius-pill); background: var(--surface-page);
-    border: 1px solid var(--border-hair); padding: 8px 15px;
-    box-shadow: var(--shadow-inset);
-}
-.topbar-search .input:focus { border-color: var(--gold-400); }
-
 .bell { position: relative; display: inline-flex; align-items: center; color: var(--text-muted); }
 .bell:hover { color: var(--brand); }
 .bell-ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
 .bell-count { background: var(--accent-2); color: var(--ink-900); }
 
-.topbar-user { display: inline-flex; align-items: center; gap: 9px; color: var(--text-strong); }
-.topbar-user:hover { text-decoration: none; }
-.topbar-name { font-family: var(--font-body); font-weight: var(--weight-medium); font-size: .95rem; }
 
 .pill { font-family: var(--font-label); letter-spacing: .04em; text-transform: uppercase; font-size: .72rem; }
 
-/* Sidebar rail — parchment-sunken ground, gold-ruled active rows. */
-.sidebar {
-    border-right: 1px solid var(--border-hair);
-    background: var(--surface-sunken);
-    padding: 14px 11px;
-    display: flex; flex-direction: column; gap: 2px;
-}
-.sidebar-home {
-    display: flex; align-items: center; gap: 9px;
-    font-family: var(--font-body); font-weight: var(--weight-medium);
-    color: var(--text-body); padding: 7px 11px; border-radius: var(--radius-sm);
-}
-.sidebar-home:hover { background: var(--surface-page); text-decoration: none; }
-
-.rail-filters-nav { margin: 0; }
-.rail-filters { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
-.rail-filter {
-    display: flex; align-items: center; gap: 9px;
-    padding: 7px 11px; border-radius: var(--radius-sm);
-    color: var(--text-body); font-family: var(--font-body); font-size: .95rem;
-}
-.rail-filter:hover { background: var(--surface-page); text-decoration: none; }
-.rail-route-copy { display: grid; min-width: 0; gap: 1px; }
-.rail-route-label { display: block; }
-.rail-route-detail { display: block; color: var(--text-faint); font-family: var(--font-mono); font-size: .64rem; font-weight: var(--weight-regular); line-height: 1.25; }
-.rail-ic {
-    width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.75;
-    stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; color: var(--text-faint);
-}
-
-/* Active rail row: brand-subtle wash + an inset gold rule (the Imladris marker). */
-.sidebar a.active,
-.sidebar-home.active,
-.rail-filter.active {
-    background: var(--brand-subtle);
-    box-shadow: inset 3px 0 0 var(--accent-2);
-    color: var(--on-brand-subtle);
-    font-weight: var(--weight-semibold);
-}
-.sidebar-home.active .rail-ic,
-.rail-filter.active .rail-ic { color: var(--brand); }
-.sidebar a.active .rail-route-detail { color: currentColor; opacity: .72; }
-
-.nav-cat { margin-top: 14px; }
-.nav-cat-name {
-    font-family: var(--font-label); font-size: .7rem; text-transform: uppercase;
-    letter-spacing: var(--tracking-caps); color: var(--gold-ink); padding: 0 11px 5px;
-}
-.nav-boards a { display: flex; align-items: center; gap: 8px; padding: 6px 11px; border-radius: var(--radius-sm); color: var(--text-body); }
-.nav-boards a:hover { background: var(--surface-page); text-decoration: none; }
 .hash { color: var(--gold-ink); font-weight: var(--weight-medium); width: 11px; text-align: center; display: inline-block; }
 
 .presence-title { font-family: var(--font-label); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-muted); }
@@ -1766,7 +1632,6 @@ body[data-route="inbox"] .app-shell { max-width: none; }
 .inbox-tab.is-active { background: var(--brand); color: var(--parchment-50); font-weight: var(--weight-medium); border-color: var(--brand); }
 
 .mobile-only { display: none; }
-.topbar-logout .icon { display: none; }
 /* A whole topic injected into the reading pane keeps the measure it gets on its
    own page — the same 760px the pane's own content column uses. */
 .inbox-reading .thread-view, .inbox-reading .board-view { max-width: 760px; }
@@ -1778,6 +1643,7 @@ body[data-route="inbox"] .app-shell { max-width: none; }
    ══════════════════════════════════════════════════════════════════════════ */
 .nav-toggle {
     display: none; align-items: center; justify-content: center;
+    flex: none;
     width: 44px; height: 44px; margin-right: 2px;
     background: transparent; border: 1.5px solid transparent; border-radius: var(--radius-md);
     color: var(--text-body); cursor: pointer;
@@ -1797,40 +1663,23 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .fab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 860px) {
-    .topbar { height: var(--topbar-h); min-height: var(--topbar-h); }
-    .topbar-inner {
-        height: 100%; min-height: 0; padding: 0 8px;
-        flex-wrap: nowrap; align-items: center; row-gap: 0; gap: 4px;
-    }
-    .topbar-search { display: none; }
-    .brand { min-width: 44px; min-height: 44px; justify-content: center; gap: 0; }
-    .brand-name, .topbar-name, .topbar-action-label { display: none; }
-    .topbar-right {
-        flex: 0 1 auto; min-width: 0; margin-left: auto;
-        flex-wrap: nowrap; justify-content: flex-end; gap: 2px;
-    }
-    .topbar-link, .topbar-user, .topbar-logout .linkbtn {
-        width: 44px; min-width: 44px; height: 44px; min-height: 44px;
-        padding: 0; justify-content: center;
-    }
-    .topbar-right .inline { margin: 0; }
-    .topbar-logout .linkbtn { display: inline-flex; align-items: center; gap: 0; }
-    .topbar-logout .icon { display: block; width: 18px; height: 18px; }
-    .topbar-moderation { width: auto; padding: 0 8px; }
-    .mobile-search-link { display: flex; }
     .has-js .nav-toggle { display: inline-flex; }
     .fab { display: inline-flex; }
 
-    /* Off-canvas drawer — JS only. */
-    .has-js .app-shell { display: block; }
-    .has-js .sidebar {
+    /* Off-canvas drawer — JS only. The layer's .board-rail is a column in a
+       fixed-height flex shell; on a phone it becomes this fixed drawer, which
+       undoes the sticky desktop geometry the "Member chrome" block gives it. */
+    .has-js .app-shell { display: block; height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
+    .has-js .board-rail {
         position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
-        width: 322px; max-width: 86vw; z-index: 60;
+        display: flex; width: 322px; max-width: 86vw; max-height: none; z-index: 60;
         transform: translateX(-100%);
+        /* A translated rail still participates in keyboard navigation. */
+        visibility: hidden;
         transition: transform var(--dur-base) var(--ease-calm);
         box-shadow: var(--shadow-xl); overflow-y: auto;
     }
-    .has-js body.nav-open .sidebar { transform: none; }
+    .has-js body.nav-open .board-rail { transform: none; visibility: visible; }
     .has-js .main { width: 100%; }
     .nav-scrim:not([hidden]) {
         position: fixed; inset: 0; top: var(--topbar-h);
@@ -1842,7 +1691,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
        surface in the member-surfaces block below. */
 
     /* Comfortable touch targets + room for the FAB. */
-    .rail-filter, .nav-boards a, .sidebar-home, .inbox-tab { min-height: 44px; }
+    .inbox-tab { min-height: 44px; }
     .main { padding: 16px 14px 88px; }
     .thread-title { font-size: 1.1rem; }
 }
@@ -1878,18 +1727,6 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
    Imladris — Engineering-Handoff fidelity pass.
    Visual-only; hooks existing markup/tokens. Strict CSP (classes, no inline).
    ══════════════════════════════════════════════════════════════════════════ */
-
-/* — Top bar: identity presence dot + gear icon (§5.3) — */
-.topbar-avatar { position: relative; display: inline-flex; }
-.topbar-avatar .presence-dot {
-    position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px;
-    border-radius: 50%; background: var(--presence);
-    box-shadow: 0 0 0 2px var(--surface-raised);
-}
-.topbar-ic {
-    width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8;
-    stroke-linecap: round; stroke-linejoin: round; display: block;
-}
 
 /* — Compact "Watch" density: one scannable line per topic, status on the left rule (§4) — */
 [data-density="compact"] .thread-list { gap: 0; }
@@ -14700,175 +14537,10 @@ a.account-row-name:hover {
 
 /* Generated compatibility bridge: member-surfaces-production */
 /* ══ Member surfaces — production transfer (2026-08-27) ══ */
-/* Shared shell */
-.topbar {
-    height: var(--topbar-h);
-    min-height: var(--topbar-h);
-    background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
-    border-bottom: 1px solid var(--border-hair);
-    backdrop-filter: blur(10px);
-}
-.topbar-inner {
-    width: 100%;
-    height: var(--topbar-h);
-    min-height: var(--topbar-h);
-    max-width: var(--maxw);
-    padding: 0 22px;
-    gap: 18px;
-}
-.brand {
-    flex: 0 0 auto;
-    gap: 10px;
-    color: var(--text-strong);
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    font-weight: var(--weight-semibold);
-    letter-spacing: .01em;
-    text-decoration: none;
-}
-.brand-star { width: 24px; height: 24px; }
-.topbar-primary {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 4px;
-}
-.topbar-primary-link {
-    display: inline-flex;
-    min-height: 34px;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: var(--radius-md);
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .82rem;
-    letter-spacing: .02em;
-    text-decoration: none;
-}
-.topbar-primary-link:hover {
-    background: var(--surface-sunken);
-    color: var(--text-body);
-    text-decoration: none;
-}
-.topbar-primary-link.is-active {
-    background: var(--brand-subtle);
-    color: var(--on-brand-subtle);
-}
-.topbar-count,
-.board-unread-count {
-    display: inline-flex;
-    min-width: 18px;
-    align-items: center;
-    justify-content: center;
-    padding: 0 6px;
-    border-radius: var(--radius-pill);
-    background: var(--gold-soft);
-    color: var(--gold-ink);
-    font-family: var(--font-mono);
-    font-size: .64rem;
-    line-height: 1.55;
-}
-.topbar-right {
-    min-width: 0;
-    flex: 1 1 auto;
-    justify-content: flex-end;
-    gap: 9px;
-}
-.topbar-search-entry {
-    display: flex;
-    min-width: 180px;
-    max-width: 300px;
-    height: 34px;
-    flex: 0 1 300px;
-    align-items: center;
-    gap: 8px;
-    padding: 0 14px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-pill);
-    background: var(--surface-sunken);
-    color: var(--text-faint);
-    text-decoration: none;
-}
-.topbar-search-entry:hover {
-    border-color: var(--border-soft);
-    color: var(--text-body);
-    text-decoration: none;
-}
-.topbar-search-entry .icon { width: 13px; height: 13px; flex: 0 0 auto; }
-.topbar-search-copy {
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
-    font-family: var(--font-label);
-    font-size: .76rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.topbar-search-entry kbd {
-    flex: 0 0 auto;
-    border: 0;
-    background: transparent;
-    color: var(--text-faint);
-    font-size: .64rem;
-}
-.topbar-panel-form { margin: 0; }
-.topbar-panel-form .topbar-action {
-    display: inline-flex;
-    width: 30px;
-    height: 30px;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-faint);
-    cursor: pointer;
-}
-.topbar-panel-form .topbar-action > span { display: none; }
-.topbar-panel-form .topbar-action[aria-expanded="true"] {
-    background: var(--brand-subtle);
-    color: var(--on-brand-subtle);
-}
-.topbar-action .icon { width: 16px; height: 16px; }
-.topbar-new-topic { white-space: nowrap; }
-.identity-menu { position: relative; }
-.identity-menu > summary { list-style: none; cursor: pointer; }
-.identity-menu > summary::-webkit-details-marker { display: none; }
-.identity-menu-panel {
-    position: absolute;
-    z-index: 45;
-    top: calc(100% + 9px);
-    right: 0;
-    display: grid;
-    min-width: 220px;
-    padding: 6px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-lg);
-    background: var(--surface-raised);
-    box-shadow: var(--shadow-lg);
-}
-.identity-menu-panel a,
-.identity-menu-panel button {
-    display: flex;
-    width: 100%;
-    min-height: 36px;
-    align-items: center;
-    gap: 9px;
-    padding: 7px 9px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-body);
-    font: inherit;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-}
-.identity-menu-panel a:hover,
-.identity-menu-panel button:hover { background: var(--surface-sunken); text-decoration: none; }
-
+/* Shared shell — the route-scoped layout the member surfaces ask of the
+   application shell. The chrome itself (topbar, rail, presence widget) is
+   the design system's ForumNav / BoardRail / PresenceList, styled by the
+   layer; its transfer copies were retired on 2026-09-12 (ADR 0032). */
 body[data-route="boards"] .app-shell,
 body[data-route="search"] .app-shell,
 body[data-route="compose"] .app-shell,
@@ -14896,125 +14568,6 @@ body[data-route="boards"] .main > .read-main,
 body[data-route="search"] .main > .read-main,
 body[data-route="compose"] .main > .read-main,
 body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
-
-.sidebar {
-    position: sticky;
-    top: 0;
-    min-width: 0;
-    max-height: calc(100vh - var(--topbar-h));
-    max-height: calc(100dvh - var(--topbar-h));
-    padding: 20px 12px 32px;
-    overflow-y: auto;
-    border-right: 1px solid var(--border-hair);
-    background: var(--surface-sunken);
-    scrollbar-gutter: stable;
-}
-.sidebar-heading { display: none; }
-.nav-cat { margin: 0; }
-.nav-cat + .nav-cat { margin-top: 2px; }
-.nav-cat-name {
-    display: block;
-    padding: 16px 0 6px 12px;
-    color: var(--text-faint);
-    font-family: var(--font-label);
-    font-size: .62rem;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-}
-.nav-boards {
-    display: grid;
-    gap: 1px;
-}
-.nav-boards a,
-.compose-board-picker,
-.compose-board-disabled {
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    min-height: 34px;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 12px;
-    border: 0;
-    border-left: 2px solid transparent;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .84rem;
-    letter-spacing: .02em;
-    line-height: 1.25;
-    text-align: left;
-    text-decoration: none;
-}
-.nav-boards a:hover,
-.compose-board-picker:hover {
-    background: var(--surface-page);
-    color: var(--text-body);
-    text-decoration: none;
-}
-.sidebar .hash { display: none; }
-.board-rail-name {
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.board-unread-count { margin-left: auto; font-size: .66rem; }
-.compose-board-picker { cursor: pointer; }
-.compose-board-picker.is-active {
-    border-left-color: var(--gold-500);
-    background: var(--brand-subtle);
-    color: var(--on-brand-subtle);
-}
-.compose-posting-here {
-    margin-left: auto;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: .62rem;
-    white-space: nowrap;
-}
-.compose-board-disabled { color: var(--text-faint); cursor: not-allowed; }
-.compose-board-disabled .icon { width: 11px; height: 11px; flex: 0 0 auto; }
-.presence-widget {
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-hair);
-}
-.presence-title {
-    margin: 0 8px 8px;
-    color: var(--text-faint);
-    font-family: var(--font-label);
-    font-size: .62rem;
-    font-weight: var(--weight-regular);
-    letter-spacing: .18em;
-    text-transform: uppercase;
-}
-.presence-title a { color: inherit; text-decoration: none; }
-.presence-count { font-size: .66rem; }
-.presence-list { display: grid; gap: 1px; }
-.presence-list a {
-    display: flex;
-    min-width: 0;
-    min-height: 32px;
-    align-items: center;
-    gap: 9px;
-    padding: 5px 8px;
-    border-radius: var(--radius-md);
-    color: var(--text-body);
-    font-size: .86rem;
-    text-decoration: none;
-}
-.presence-list a:hover { background: var(--surface-page); text-decoration: none; }
-.presence-list .dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--presence); }
-.presence-all {
-    display: inline-block;
-    margin: 9px 8px 0;
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .74rem;
-}
 
 /* Board index */
 .board-index {
@@ -15677,8 +15230,8 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     left: 0;
     visibility: hidden;
 }
-.has-js [data-inbox-menu-positioned="1"] > .inbox-scope-menu-panel,
-.has-js [data-inbox-menu-positioned="1"] > .inbox-row-menu-panel { visibility: visible; }
+.has-js .inbox-scope-menu[data-inbox-menu-positioned="1"] > .inbox-scope-menu-panel,
+.has-js .inbox-row-menu[data-inbox-menu-positioned="1"] > .inbox-row-menu-panel { visibility: visible; }
 .inbox-scope-group-label {
     padding: 9px 10px 4px;
     color: var(--text-faint);
@@ -16360,9 +15913,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 [data-compose-anonymous][hidden] { display: none; }
 
 /* Focus, responsive floors, and motion */
-.topbar-primary-link:focus-visible,
-.topbar-search-entry:focus-visible,
-.topbar-panel-form .topbar-action:focus-visible,
 .forum-directory__tabs a:focus-visible,
 .directory-viewbar a:focus-visible,
 .directory-viewbar button:focus-visible,
@@ -16370,17 +15920,12 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .inbox-row-star button:focus-visible,
 .inbox-row-menu > summary:focus-visible,
 .inbox-scope-menu > summary:focus-visible,
-.search-view-bar a:focus-visible,
-.compose-board-picker:focus-visible {
+.search-view-bar a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-@media (min-width: 861px) {
-    body.is-rail-closed .app-shell { grid-template-columns: minmax(0, 1fr); }
-    body.is-rail-closed .sidebar { display: none; }
-}
 @media (min-width: 1280px) {
     body.is-reading-open .inbox-shell { grid-template-columns: minmax(430px, 660px) minmax(0, 1fr); }
     body.is-reading-open .inbox-list { border-right: 1px solid var(--border-hair); }
@@ -16413,44 +15958,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .inbox-mobile-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 @media (max-width: 860px) {
-    .topbar-inner { padding: 0 9px; gap: 5px; }
-    .topbar-primary { min-width: 0; overflow-x: auto; gap: 1px; }
-    .topbar-primary-link { min-height: 40px; padding: 6px 8px; font-size: .74rem; }
-    .topbar-panel-form { display: none; }
-    /* Search must stay reachable on a phone. The rail used to carry a
-       mobile-only Search link; the board-index rail rewrite dropped it, and
-       hiding the topbar entry here too left /search with no route into it at
-       any width below 861px. The entry collapses to its icon instead, the same
-       move New topic makes beside it. */
-    .topbar-search-entry {
-        width: 40px;
-        min-width: 40px;
-        max-width: 40px;
-        height: 40px;
-        flex: 0 0 auto;
-        justify-content: center;
-        padding: 0;
-    }
-    .topbar-search-copy,
-    .topbar-search-entry kbd { display: none; }
-    .topbar-right { flex: 0 0 auto; gap: 2px; }
-    .topbar-new-topic { width: 40px; min-width: 40px; height: 40px; padding: 0; justify-content: center; }
-    .topbar-new-topic span { display: none; }
-    .topbar-user { width: 40px; min-width: 40px; height: 40px; justify-content: center; padding: 0; }
-    .topbar-name,
-    .topbar-user > .icon { display: none; }
-    .brand { min-width: 40px; min-height: 40px; }
-    .has-js .app-shell { height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
-    .has-js .sidebar {
-        position: fixed;
-        top: var(--topbar-h);
-        bottom: 0;
-        left: 0;
-        display: flex;
-        width: 322px;
-        max-width: 86vw;
-        max-height: none;
-    }
     body[data-route="boards"] .main,
     body[data-route="search"] .main,
     body[data-route="compose"] .main { padding: 0; }
@@ -16464,7 +15971,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .inbox-row-snippet { display: none; }
 }
 @media (max-width: 760px) {
-    .brand-name { display: none; }
     .forum-directory__hero h1 { font-size: 2.1rem; }
     .directory-viewbar { display: none; }
     .directory-viewbar-mobile {
@@ -16556,7 +16062,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .compose-lede { margin-bottom: 22px; }
 }
 @media (max-width: 520px) {
-    .topbar-primary-link[data-primary-route="messages"] { display: none; }
     .forum-directory__tabs { gap: 16px; }
     .forum-directory__tabs a { font-size: .78rem; }
     .forum-directory__stats { gap: 4px 10px; }
@@ -16582,107 +16087,228 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 @media (prefers-reduced-motion: reduce) {
     .forum-directory__board-row > a,
     .inbox-thread-row,
-    .composer-box,
-    .sidebar { transition: none; }
+    .composer-box { transition: none; }
     .composer-shell.is-submitting .composer-send .icon { animation: none; }
 }
 /* ══ End member surfaces production transfer ══ */
 
-/* ══ Presence: rail rows, the /users-online directory, dots ══════════════════
-   ADR 0031. These rules live in the application layer, not the generated
-   /assets/imladris.css, which is built from the design mirror and carries the
-   note "do not edit this file directly". The mirror already ships the row
-   component (.presence-person, .presence-name, .presence-sub, .presence-grid,
-   .presence-skeleton-*) — it was simply emitted by no template and no script,
-   so it had never rendered once. What follows is only what the mirror does NOT
-   have: the away/offline states, the directory shell, and the corrections.     */
+/* ══ Member chrome — what the layer cannot express ═══════════════════════════
+   ADR 0032. The topbar and the rail are the design system's ForumNav and
+   BoardRail (docs/design-system/imladris/components/forum/), rendered by
+   partials/topbar.php and partials/sidebar.php in the design's own class
+   vocabulary and styled by the layered /assets/imladris.css; the presence
+   widget in the rail's footer is its PresenceList. The 2026-08-27 transfer
+   copies of that chrome (.topbar*, .sidebar, .nav-*, .presence-list a) are gone
+   from the bridge above. What follows is only what the layer does not carry:
+   the --maxw centring, the sticky desktop rail and the phone drawer, the
+   persisted rail-closed state, the account menu, the operator's logo, the
+   seat's monogram size, the touch floors, and the two controls production
+   keeps where the design draws none.                                          */
 
-/* Away and offline dots. The design paints "stepped away" with --amber, which
-   is a light-register primitive with no twilight remap — an amber dot would stay
-   light-register amber on a dark page, which is the exact class of bug this
-   remediation exists to fix — the same class of bug LOCAL_RECONCILIATION.md
-   already records for the staff badge chip. The
-   gold pair flips the way --warning does and clears contrast in both registers.
-   --presence itself is declared only in the DARK blocks of this file; its light
-   value comes from the layered imladris.css, so an unlayered --presence-away
-   MUST be declared on bare :root or it is undefined in light mode. */
-:root {
-    --presence-away: var(--gold-700);
-    --presence-offline: var(--ink-300);
+/* The bar spans the viewport, as the design's does; its contents sit inside the
+   --maxw column the shell below is centred on. The design's 22px gutter is the
+   floor, and its own 1080px step (16px) is kept. */
+.forum-bar { padding-inline: max(22px, calc((100% - var(--maxw)) / 2)); }
+/* The operator's uploaded logo replaces the lockup (Administration → Branding). */
+.brand-logo { display: block; height: 28px; width: auto; }
+/* The design's Monogram sizes itself (30px on the seat); the monogram partial
+   emits the base class, which this file sizes at 36px. */
+.forum-bar-user .monogram { width: 30px; height: 30px; font-size: .74rem; }
+/* The seat opens the account menu — a <details> the design's bare profile link
+   does not have. The chevron is its cue. */
+.forum-bar-user > .icon { width: 14px; height: 14px; flex: 0 0 auto; color: var(--text-faint); }
+/* Let the native disclosure shrink with ForumNav's account name, while its
+   absolutely positioned menu and the summary's focus ring remain unclipped. */
+.identity-menu { position: relative; min-width: 0; }
+.identity-menu > summary { list-style: none; cursor: pointer; }
+.identity-menu > summary::-webkit-details-marker { display: none; }
+.identity-menu-panel {
+    position: absolute;
+    z-index: 45;
+    top: calc(100% + 9px);
+    right: 0;
+    display: grid;
+    min-width: 220px;
+    padding: 6px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-lg);
 }
-[data-theme="dark"] {
-    --presence-away: var(--gold-400);
-    --presence-offline: var(--ink-300);
+.identity-menu-panel a,
+.identity-menu-panel button {
+    display: flex;
+    width: 100%;
+    min-height: 36px;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-body);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
 }
+.identity-menu-panel a:hover,
+.identity-menu-panel button:hover { background: var(--surface-sunken); text-decoration: none; }
+/* A guest gets "Sign up" beside the design's Log in pill. */
+.forum-bar-signup { flex: none; font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
+.forum-bar-signup:hover { color: var(--accent); text-decoration: none; }
+/* The pane toggles are POST forms so the state persists without JavaScript;
+   the form is invisible chrome. The glyph's filled band is the pressed state,
+   drawn only while the pane is shown — the design renders it conditionally. */
+.forum-bar-panel-form { margin: 0; }
+.forum-bar-railtoggle:not(.is-on) .forum-bar-toggle-band { display: none; }
+/* New topic carries a glyph the design's button lacks: on a phone the label
+   goes and the glyph stays, because only a board page has a floating compose. */
+.forum-bar-compose .icon { display: none; }
+/* Colour and type. This file styles bare elements unlayered — `a { color:
+   var(--accent) }`, the display rule on `h2` — and an unlayered declaration
+   beats the layer's no matter its specificity, so the chrome's links went
+   evergreen and the roster's heading went to 1.75rem display type.
+   `revert-layer` hands exactly those properties back to the layer, which is
+   where the chrome's values live. */
+.forum-bar-brand, .forum-bar-surface, .forum-bar-search, .forum-bar-signin,
+.board-rail-item, a.presence-person, .presence-title a, .presence-all { color: revert-layer; }
+h2.presence-title {
+    font-family: revert-layer; font-weight: revert-layer; font-size: revert-layer; color: revert-layer;
+    letter-spacing: revert-layer; line-height: revert-layer; text-wrap: revert-layer;
+}
+/* Hover. This file's own unlayered `a:hover { text-decoration: underline }`
+   reaches every link in the chrome and beats the layer's rules regardless of
+   specificity, so a pill, a rail row and a roster row would underline in gold
+   on hover. The design's own base `a:hover` does the same in its specimens —
+   an oversight on a control, raised upstream — and the transfer suppressed it
+   explicitly; it stays suppressed. */
+.forum-bar a:hover,
+.board-rail a:hover,
+a.presence-person:hover { text-decoration: none; }
+/* Focus — the ring every other member-surface control wears (bridge above). */
+.forum-bar-surface:focus-visible,
+.forum-bar-search:focus-visible,
+.forum-bar-railtoggle:focus-visible,
+.forum-bar-user:focus-visible,
+.forum-bar-signin:focus-visible,
+.forum-bar-signup:focus-visible,
+.board-rail-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* The rail. The design's shell is a fixed-height flex column that scrolls the
+   rail inside itself; ours scrolls the document, so the rail is sticky and
+   capped at the viewport instead. */
+.board-rail {
+    position: sticky;
+    top: 0;
+    min-width: 0;
+    max-height: calc(100vh - var(--topbar-h));
+    max-height: calc(100dvh - var(--topbar-h));
+    scrollbar-gutter: stable;
+}
+.board-rail-empty { margin: 0; padding: 8px 12px; font-size: .9rem; }
+/* Compose's picker is a <button> in a rail row the design draws as a link; the
+   user-agent's button border, width and alignment are reset here. */
+.compose-board-picker { width: 100%; border-width: 0 0 0 2px; text-align: left; line-height: 1.25; cursor: pointer; }
+/* The persisted rail-closed state (⌘B) on desktop: the design renders no rail. */
+@media (min-width: 861px) {
+    body.is-rail-closed .app-shell { grid-template-columns: minmax(0, 1fr); }
+    body.is-rail-closed .board-rail { display: none; }
+}
+@media (max-width: 1080px) {
+    .forum-bar { padding-inline: 16px; }
+    .forum-bar-user > .icon { display: none; }
+}
+@media (max-width: 860px) {
+    /* The phone bar. The design's phone steps (1080 / 900 / 720) assume a bar
+       with no hamburger, no compose and no account seat; ours carries all
+       three, so at the drawer breakpoint the row is packed the way the
+       2026-08-27 transfer packed it, or a 390px viewport scrolls sideways. */
+    .forum-bar { gap: 5px; padding-inline: 9px; }
+    .forum-bar-brand { min-width: 40px; min-height: 40px; justify-content: center; gap: 0; }
+    /* Keep every primary route reachable; shrink and scroll the group on phones. */
+    .forum-bar-surfaces { flex: 0 1 auto; min-width: 0; gap: 1px; overflow-x: auto; }
+    .forum-bar-surface { min-height: 40px; padding: 6px 8px; font-size: .74rem; }
+    .forum-bar-searchwrap { flex: 0 0 40px; min-width: 40px; }
+    .forum-bar-search { width: 40px; height: 40px; padding: 0; justify-content: center; }
+    /* This cluster is icons only on phones; the scrollable route group takes
+       the remaining width so the account control retains its focus-ring gutter. */
+    .forum-bar-right { gap: 2px; }
+    /* The drawer replaces the persisted toggle on a phone. */
+    .forum-bar-panel-form { display: none; }
+    .forum-bar-user { min-width: 40px; min-height: 40px; justify-content: center; }
+}
+@media (max-width: 720px) {
+    /* The design drops New topic here; a board page has a floating compose, the
+       other surfaces do not, so the control stays as its glyph. */
+    .forum-bar-compose { display: inline-flex; }
+    .forum-bar-compose .btn { display: inline-flex; width: 40px; min-width: 40px; height: 40px; padding: 0; align-items: center; justify-content: center; }
+    .forum-bar-compose .icon { display: block; width: 16px; height: 16px; }
+    .forum-bar-compose .btn > span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .board-rail { transition: none; }
+}
+
+/* ══ Presence: rail rows, the /users-online directory, dots ══════════════════
+   ADR 0031, pruned on 2026-09-12 against the presence handoff (design mirror,
+   `_archive/design_handoff_presence/README.md`). The design system took the
+   remediation's decisions back, and the regenerated /assets/imladris.css now
+   carries the away/offline tokens in both registers, the dot modifiers, the
+   bare dot, the list reset, the [hidden] guard, the rail's ring, the "you" chip
+   and the `.monogram` binding — so those restatements are gone from here. ADR
+   0032 then retired the bridge's own presence-widget transfer rules, so the
+   rail widget is the layer's PresenceList outright.
+
+   What remains is only what the LAYER CANNOT WIN. imladris.css sits inside
+   @layer, and an unlayered rule in this file beats a layered one regardless of
+   specificity; wherever this file already paints the same property on the same
+   element, the correction has to be restated here or it never lands. Each rule
+   below names the unlayered rule it is answering. The /users-online shell, the
+   guidance strip and `.btn.is-disabled` are application classes and stay.      */
+
+/* The system-dark register. tokens/colors.css flips its tokens only under an
+   explicit [data-theme="dark"]; the `system` preference stamps that word on
+   <html> and leaves the OS to decide, and it is this file — not the layer — that
+   answers `prefers-color-scheme` for every semantic token (see --presence in the
+   twilight blocks near the top of this file). Light and explicit-dark values now
+   come from the layer; this is the one register it does not cover. */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
         --presence-away: var(--gold-400);
         --presence-offline: var(--ink-300);
     }
 }
+/* The profile dot is painted --presence by this file's own unlayered
+   `.profile-avatar .presence-dot`, which the layer's `.presence-dot.is-away` can
+   never outrank. Same specificity, later in the file: away wins there too. (The
+   seat's leaf lost its unlayered rule with the transfer chrome; the layer's
+   `.avatar-wrap .presence-dot` paints it now.) */
 .presence-dot.is-away { background: var(--presence-away); }
-/* Standalone dot, for a reader who turned avatars off: every other .presence-dot
-   rule is descendant-scoped to an avatar wrapper, so without this it is 0x0 —
-   the same defect that made the directory's own dot invisible. */
-.presence-dot-bare {
-    position: static; flex: 0 0 auto; width: 8px; height: 8px;
-    border-radius: 50%; background: var(--presence); box-shadow: none;
-}
 
-/* The list reset. It used to live in the legacy pre-Imladris presence block
-   further up this file, which this work removed as dead — every other rule in it
-   was superseded by the member-surfaces transfer, but the transfer's
-   `.presence-list { display: grid; gap: 1px }` never restated the reset, so
-   dropping it alone would have restored the UA's bullets and inline padding.
-   Declared here rather than edited into the transfer block above: that block is
-   a verbatim bridge from the design mirror and is asserted character-for-character
-   by AppImladrisFidelityTest. */
-.presence-list { list-style: none; margin: 0; padding: 0; }
-
-/* THE [hidden] FIX. `.presence-widget { display: block }` (imladris.css) beats
-   the user-agent [hidden] rule, so setting the attribute changed nothing: the
-   element reported hidden=true and went on painting 90px of roster. Eight other
-   components in this stylesheet already carry an explicit guard; this one was
-   missed. Nothing hides the widget itself any more — it holds the shell's only
-   link to /users-online — but the attribute must stop lying, and the rows and
-   affordances below genuinely rely on it. */
-.presence-widget[hidden],
-.presence-row[hidden],
-.presence-more[hidden],
-.presence-empty[hidden],
+/* `.users-online-empty` is an application class; the layer guards only its own
+   four (.presence-widget, -row, -more, -empty). Nothing toggles this one today,
+   but a hidden roll-page empty state must not be painted either. */
 .users-online-empty[hidden] { display: none !important; }
 
-/* The rail's own row sizing. The mirror sizes `.monogram-sm`, but the monogram
-   partial emits `monogram mono-N`, so this is load-bearing, not a restatement. */
+/* The rail's own row sizing. `.monogram` in this file sets 36px unlayered, so the
+   layer's 24px / 21px on `.presence-person .monogram` never lands. */
 .presence-person .monogram { width: 24px; height: 24px; font-size: .62rem; }
-/* The rail sits on --surface-sunken, so the dot's ring has to match the ground it
-   is actually punched out of; the layered base paints --surface-raised. */
-.sidebar .presence-person .avatar-wrap .presence-dot { box-shadow: 0 0 0 2px var(--surface-sunken); }
-/* `a:hover { text-decoration: underline }` (app.css, unlayered) beats the
-   design's layered `a.presence-person:hover { text-decoration: none }`. The rail
-   previously had an unlayered counter of its own — `.presence-list a:hover` —
-   which this work deleted along with the ad-hoc row it styled, so without this
-   the whole row (name, chips and sub-line) underlines on hover. */
-a.presence-person:hover { text-decoration: none; }
-/* --surface-sunken IS the rail's own ground, so a chip painted with it read as
-   plain text there while looking like a chip on /users-online. An outline reads
-   as a chip on both grounds without inventing a colour. */
-.presence-you {
-    flex: 0 0 auto; padding: 0 5px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border-soft); color: var(--text-faint);
-    font-family: var(--font-label); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase;
-}
-/* Compact density shrinks every other avatar in the shell; the presence row is
-   about to be the tallest thing in the rail, so it follows the same rule. */
-[data-density="compact"] .presence-person { padding: 3px 8px; }
 [data-density="compact"] .presence-person .monogram { width: 21px; height: 21px; }
 
-/* ── /users-online ─────────────────────────────────────────────────────────
-   The page previously used five classes that existed in no stylesheet at all,
-   so it rendered as a default bulleted list with the name and handle collided
-   ("Elrond Peredhel@elrond") and an invisible 0x0 dot. */
-.users-online { width: min(100%, 960px); margin: 0 auto; }
-.users-online-hero { margin-bottom: 22px; }
+/* ── /users-online — the roll, verbatim from the design ────────────────────
+   templates/users-online/UsersOnline.dc.html (2026-09-12 handoff). The page's
+   own classes live here; the row, the grid and the widget are the layer's.
+   Every value is the design's; the two places production adds something are
+   noted where they sit. */
+@keyframes uoRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.users-online { max-width: none; padding: 26px 40px 90px; }
+.users-online-column { max-width: 860px; margin: 0 auto; animation: uoRise 200ms ease-out; }
+.users-online-hero .eyebrow { display: block; margin: 0; font-size: .68rem; letter-spacing: .18em; color: var(--gold-ink); }
 .users-online-hero h1 {
     margin: 7px 0 0; font-family: var(--font-display); font-weight: var(--weight-medium);
     font-size: 2.2rem; line-height: 1.12; letter-spacing: -0.01em; color: var(--text-strong);
@@ -16691,73 +16317,66 @@ a.presence-person:hover { text-decoration: none; }
     margin: 8px 0 0; max-width: 62ch; font-size: 1rem; line-height: 1.55;
     color: var(--text-muted); text-wrap: pretty;
 }
-.users-online-controls {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px;
-}
+.users-online-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0 6px; }
 .users-online-filters {
     display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px;
     background: var(--surface-sunken); border-radius: 999px;
 }
 .users-online-filter {
-    display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 14px; border-radius: 999px;
     color: var(--text-muted); font-family: var(--font-label); font-size: .76rem;
     letter-spacing: .03em; text-decoration: none;
 }
 .users-online-filter:hover { color: var(--text-strong); text-decoration: none; }
-.users-online-filter.is-active {
-    background: var(--surface-raised); color: var(--text-strong); box-shadow: var(--shadow-sm);
-}
-.users-online-filter-count { font-family: var(--font-mono); font-size: .68rem; color: var(--text-faint); }
+.users-online-filter.is-active { background: var(--surface-raised); color: var(--text-strong); box-shadow: var(--shadow-sm); }
+.users-online-filter-count { font-family: var(--font-mono); font-size: .68rem; letter-spacing: 0; color: var(--text-faint); }
 .users-online-filter.is-active .users-online-filter-count { color: var(--text-muted); }
-.users-online-search {
-    display: inline-flex; align-items: center; gap: 8px;
-    flex: 1 1 210px; min-width: 0; max-width: 380px;
-}
+/* The GET form. The design filters as you type and draws no submit control; the
+   Search button is production's, for the no-JavaScript path. */
+.users-online-search { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; max-width: 340px; margin: 0; }
+.users-online-field { position: relative; flex: 1; display: block; min-width: 0; }
+.users-online-field-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-faint); pointer-events: none; }
 .users-online-search input[type="search"] {
-    flex: 1 1 auto; min-width: 0; padding: 8px 14px; box-sizing: border-box;
+    width: 100%; padding: 8px 12px 8px 33px; box-sizing: border-box;
     border: 1px solid var(--border-soft); border-radius: 999px; background: var(--surface-raised);
     font-family: var(--font-body); font-size: .93rem; color: var(--text-body);
 }
-.users-online-clear { font-family: var(--font-label); font-size: .74rem; color: var(--text-muted); }
-.users-online-result {
-    margin: 0; margin-inline-start: auto;
-    font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);
-}
-.users-online .presence-grid {
-    padding: 12px 10px; background: var(--surface-raised);
+.users-online-search input[type="search"]:focus { outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+.users-online-clear { font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none; }
+.users-online-clear:hover { color: var(--accent); text-decoration: none; }
+.users-online-result { margin: 0; margin-inline-start: auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint); }
+.users-online-roll {
+    margin-top: 14px; padding: 12px 10px; background: var(--surface-raised);
     border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
 }
-.users-online-empty { margin: 14px 0 0; }
-.users-online-pager {
-    display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px;
-}
-.users-online-page-label {
-    font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint);
-}
-.btn.is-disabled { opacity: .45; pointer-events: none; }
-
-.presence-guidance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 30px; }
-.presence-guidance-card {
-    padding: 15px 16px; background: var(--surface-raised);
+.users-online-empty {
+    margin: 22px 0 0; padding: 26px 20px; text-align: center; background: var(--surface-raised);
     border: 1px solid var(--border-hair); border-radius: var(--radius-lg);
+    font-size: .95rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;
 }
-.presence-guidance-card p {
-    margin: 6px 0 0; font-size: .88rem; line-height: 1.45; color: var(--text-muted); text-wrap: pretty;
+.users-online-pager { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; }
+.users-online-page {
+    padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft);
+    background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem;
+    letter-spacing: .04em; text-decoration: none;
 }
-.presence-guidance-label {
-    display: inline-flex; align-items: center; gap: 7px;
-    font-family: var(--font-label); font-size: .72rem; letter-spacing: .06em; color: var(--text-strong);
-}
-/* A standalone dot. Every .presence-dot rule in the app is descendant-scoped to
-   .avatar-wrap / .topbar-avatar / .profile-avatar, which is why the page's own
-   dot measured 0x0 — it had no width, height or background anywhere. */
+a.users-online-page:hover { background: var(--surface-sunken); text-decoration: none; }
+.users-online-page.is-disabled { opacity: .45; }
+.users-online-page-label { font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint); }
+.presence-guidance { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 30px; }
+.presence-guidance-card { padding: 15px 16px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); }
+.presence-guidance-card p { margin: 6px 0 0; font-size: .88rem; line-height: 1.45; color: var(--text-muted); text-wrap: pretty; }
+.presence-guidance-label { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .06em; color: var(--text-strong); }
 .presence-guidance-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--presence); }
 .presence-guidance-dot.is-away { background: var(--presence-away); }
 .presence-guidance-dot.is-off { background: var(--presence-offline); }
-.users-online-privacy { max-width: 66ch; }
-
+.users-online-privacy { margin: 22px 0 0; max-width: 66ch; font-size: .84rem; line-height: 1.5; color: var(--text-faint); text-wrap: pretty; }
+.users-online-privacy a { color: var(--text-muted); text-decoration: underline; text-decoration-color: var(--border-soft); text-underline-offset: 2px; }
+.users-online-privacy a:hover { color: var(--accent); }
+/* Production's phone gutter — the sibling surfaces' — where the design draws
+   the roll at desktop width only. */
 @media (max-width: 860px) {
-    .presence-guidance { grid-template-columns: 1fr; }
+    .users-online { padding: 22px 18px 76px; }
     .users-online-result { margin-inline-start: 0; }
     .users-online-search { max-width: none; }
 }

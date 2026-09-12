@@ -296,6 +296,6 @@ final class AppThreadStateTest extends TestCase
         self::assertStringContainsString('data-inbox-reading', $r->body());
         self::assertStringContainsString('data-inbox-back', $r->body());
         self::assertStringContainsString('data-inbox-reading-content', $r->body());
-        self::assertStringContainsString('class="topbar-action topbar-search-entry" href="/search"', $r->body());
+        self::assertStringContainsString('class="forum-bar-search" href="/search"', $r->body());
     }
 }

@@ -1,0 +1,111 @@
+<!-- @dsCard group="Components" viewport="760x680" name="Presence — who's online" subtitle="One row anatomy for the rail, the roll and anything a poller rebuilds; here-now against the whole roll; the dot vocabulary, and the states a live list has to survive" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;padding:22px;background:var(--surface-page)}
+  .top{display:grid;grid-template-columns:264px minmax(0,1fr);gap:20px;align-items:start}
+  .panel{background:var(--surface-raised);border:1px solid var(--border-hair);border-radius:var(--radius-lg);padding:14px;box-shadow:var(--shadow-sm)}
+  .cap{display:flex;align-items:baseline;gap:8px;font-family:var(--font-label);text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--gold-ink);margin-bottom:8px}
+  .cap i{font-family:var(--font-body);font-size:11.5px;letter-spacing:0;text-transform:none;font-style:italic;color:var(--text-faint)}
+  .legend{display:grid;grid-template-columns:minmax(0,214px) minmax(0,1fr);gap:2px 14px;align-items:center}
+  .legend ul{margin:0}
+  .note{font-family:var(--font-body);font-size:12.5px;line-height:1.45;color:var(--text-muted);text-wrap:pretty}
+  .note code{font-family:var(--font-mono);font-size:11px;color:var(--text-strong)}
+  .pair{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:18px}
+  .wide{margin-top:18px}
+  .rule{margin:16px 0 0;padding:11px 14px;border-left:2px solid var(--rule-gold);background:var(--surface-sunken);font-family:var(--font-body);font-size:12.5px;line-height:1.5;color:var(--text-body)}
+  .rule b{font-family:var(--font-label);font-weight:400;color:var(--text-strong)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../_card-guard.js"></script>
+<script type="text/babel">
+const { PresenceList, PresenceRow } = window.ImladrisDesignSystem_c3e027;
+
+// where is a place in the product — a board — never an activity.
+const roster = [
+  { name: 'Erestor', username: 'erestor', where: 'the-archive', gilt: true, staff: true, href: '#' },
+  { name: 'Galadriel', username: 'galadriel', where: 'evaluations', gilt: true, href: '#' },
+  { name: 'Glorfindel', username: 'glorfindel', where: 'audit-trails', href: '#' },
+  { name: 'Arwen Undómiel', username: 'arwen', where: 'interpretability', href: '#' },
+  { name: 'Elrond', username: 'elrond', where: 'announcements', presence: 'away', gilt: true, staff: true, href: '#' },
+  { name: 'Lindir', username: 'lindir', title: 'Veteran', presence: 'away', href: '#' },
+  { name: 'Círdan', username: 'cirdan', where: 'introductions', href: '#' },
+];
+
+const directory = roster.concat([
+  { name: 'Elladan', username: 'elladan', where: 'the-valley', staff: true, href: '#' },
+  { name: 'Melian', username: 'melian', where: 'evaluations', href: '#' },
+  { name: 'Haldir', username: 'haldir', title: 'Veteran', presence: 'away', href: '#' },
+  { name: 'Bilbo Baggins', username: 'bilbo', title: 'Member', presence: 'offline', href: '#' },
+  { name: 'Nimrodel', username: 'nimrodel', where: 'introductions', href: '#' },
+]);
+
+const LEGEND = [
+  [{ name: 'Galadriel', username: 'galadriel', where: 'evaluations', href: '#' },
+   <span><code>presence: 'online'</code> — the leaf. Seen in the last few minutes, and the only mark presence gets.</span>],
+  [{ name: 'Lindir', username: 'lindir', where: 'introductions', presence: 'away', href: '#' },
+   <span><code>'away'</code> — <code>--presence-away</code>, gold that flips with the register (not <code>--amber</code>, which has no twilight remap). Seen inside the fifteen-minute band, but not the last few minutes.</span>],
+  [{ name: 'Bilbo Baggins', username: 'bilbo', title: 'Member', presence: 'offline', href: '#' },
+   <span><code>'offline'</code> — grey. Only for lists that carry absent members, like a directory; the roll itself never shows one.</span>],
+  [{ name: 'Erestor', username: 'erestor', where: 'the-archive', gilt: true, staff: true, self: true, href: '#' },
+   <span><code>gilt</code> rings the avatar (staff, high regard, or the viewer); <code>staff</code> adds the mark; <code>self</code> adds <b>you</b> — the viewer is on their own roll, so both counts are honest.</span>],
+  [{ name: 'Haldir', username: 'haldir', title: 'Veteran', href: '#', avatar: false },
+   <span><code>avatar={'{false}'}</code> — the reader turned avatars off. The dot stands alone rather than going with the picture; it is what the row is for.</span>],
+];
+
+function Demo() {
+  return (
+    <div>
+      <div className="top">
+        <div>
+          <div className="cap">In the sidebar <i>where it belongs</i></div>
+          <div className="panel">
+            <PresenceList people={roster} here={34} total={42} max={5}
+              footer={<a href="#" className="presence-all">See everyone online</a>} />
+          </div>
+          <p className="rule"><b>here</b> is the badge — members here <i>now</i>, never the away. <b>total</b> is the whole roll: it decides emptiness and folds what <b>max</b> hides into <b>+n more</b>. A rail holding five away members and nobody here is not empty.</p>
+        </div>
+        <div>
+          <div className="cap">The row, and what each mark means</div>
+          <div className="panel legend">
+            {LEGEND.map(([person, note], i) => [
+              <ul className="presence-list" key={'r' + i}><PresenceRow {...person} /></ul>,
+              <p className="note" key={'n' + i}>{note}</p>,
+            ])}
+          </div>
+        </div>
+      </div>
+
+      <div className="pair">
+        <div>
+          <div className="cap">Fetching <i>never an empty box</i></div>
+          <div className="panel"><PresenceList loading /></div>
+        </div>
+        <div>
+          <div className="cap">No one about</div>
+          <div className="panel"><PresenceList people={[]} /></div>
+        </div>
+      </div>
+
+      <div className="wide">
+        <div className="cap">layout=&quot;grid&quot; <i>the same rows, laid wide for a directory</i></div>
+        <div className="panel">
+          <PresenceList layout="grid" title="At the council" people={directory} max={0} here={34} total={42} />
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

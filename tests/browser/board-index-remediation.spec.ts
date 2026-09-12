@@ -215,7 +215,7 @@ test('search stays reachable from the shell on a phone', async ({ page }) => {
   await signIn(page);
   await page.goto('/');
 
-  const entry = page.locator('.topbar-search-entry');
+  const entry = page.locator('.forum-bar-search');
   await expect(entry).toBeVisible();
   await entry.click();
   await page.waitForURL(/\/search/);

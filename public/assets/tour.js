@@ -19,12 +19,12 @@
 
     // Steps target final Gate-A DOM nodes; any missing target is skipped.
     var STEPS = [
-        { sel: '.brand', title: 'Welcome', text: 'This is your community home. Click the name any time to come back here.' },
-        { sel: '.topbar-search', title: 'Search', text: 'Find topics and people from the search box up top.' },
+        { sel: '.forum-bar-brand', title: 'Welcome', text: 'This is your community home. Click the name any time to come back here.' },
+        { sel: '.forum-bar-search', title: 'Search', text: 'Find topics and people from the search box up top.' },
         { sel: '[data-bell]', title: 'Notifications', text: 'Replies, mentions, and reactions show up under the bell.' },
-        { sel: '.sidebar, .app-shell', title: 'Boards', text: 'Browse boards in the sidebar and jump into any conversation.' },
+        { sel: '.board-rail, .app-shell', title: 'Boards', text: 'Browse boards in the sidebar and jump into any conversation.' },
         { sel: 'form.composer, .composer-details', title: 'Compose', text: 'Write in Markdown — bold, lists, code, spoilers, and image uploads all work in the same editor.' },
-        { sel: '.topbar-user', title: 'Your account', text: 'Tune appearance, reading, and composing under Settings whenever you like.' }
+        { sel: '.forum-bar-user', title: 'Your account', text: 'Tune appearance, reading, and composing under Settings whenever you like.' }
     ];
 
     function run() {

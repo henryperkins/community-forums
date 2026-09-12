@@ -90,3 +90,8 @@ Production applies what those rules **say**, which is why a like-for-like
 measurement of the row shows differences. `the compact density applies the
 register the design states` asserts each of the four values directly, so the
 intent is pinned even though the design's own render disagrees with it.
+
+## Recaptured 2026-09-12
+
+Frames regenerated after ADR 0032 (the design system's ForumNav / BoardRail chrome around
+the inbox).
