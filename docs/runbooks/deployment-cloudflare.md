@@ -578,6 +578,53 @@ delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
 
+### PlanetScale account cutover — PREPARED 2026-09-12, deploy pending
+
+The database target moved to the PlanetScale account authenticated in the
+`pscale` CLI: org **`perkinism`**, database **`imladris-boards`**, branch
+**`main`** (production, safe migrations **off**, region `gcp-us-central1`).
+The previous `imladris-db`/`production-east` database lives in a different
+account and is **not** visible from this one; nothing was copied across, so
+the new branch starts empty and the entrypoint's `RUN_MIGRATIONS=true` builds
+the schema on first boot.
+
+Done from the CLI (`pscale … --org perkinism --format json`):
+
+- `database update imladris-boards --allow-foreign-key-constraints=true` —
+  the database was created with foreign keys **off**, which would have failed
+  the first migration that adds a constraint.
+- `password create imladris-boards main production-app --role admin` —
+  admin because migrations run DDL on boot.
+- Verified from a workstation with PDO over TLS against the distro CA bundle:
+  `8.4.11-Vitess`, orphan insert rejected with error 1452 (FK enforced),
+  InnoDB `FULLTEXT` index creation succeeds. Region-scoped host
+  `gcp-us-central1.connect.psdb.cloud` measured ~61ms/query vs ~202ms/query on
+  the anycast `gcp.connect.psdb.cloud` from the same workstation — keep the
+  region-scoped host.
+
+`wrangler.jsonc` `vars` now carry the new `DB_HOST`, `DB_DATABASE`,
+`DB_USERNAME`. **Still required before the change is live**, in this order:
+
+1. `npx wrangler secret put DB_PASSWORD` with the `production-app` plaintext
+   (shown once at creation; re-create the password if it was not captured).
+   Setting the secret alone does not switch the database — the vars only
+   change on deploy — but the running Worker would hand a mismatched password
+   to the container on its next restart, so do the deploy promptly after.
+2. Merge to `main` (Workers Builds deploys) or `npx wrangler deploy`.
+3. Watch the first boot: migrations run against the empty branch; confirm
+   `/healthz` → `200 {"status":"ok","database":"ok"}` and `/setup` is offered
+   again (fresh database ⇒ first-run setup).
+
+Known regression to plan for: the container stays pinned to `ENAM` while the
+new branch is in `gcp-us-central1`, so per-query latency returns to roughly the
+pre-2026-08-06 numbers in §14. The fix is the same as last time — create a
+branch in `gcp-us-east4`, promote it, and repoint `DB_HOST` at
+`gcp-us-east4.connect.psdb.cloud`.
+
+The bullets below describe the **previous** deployment and are retained until
+the cutover is verified.
+
+
 As of 2026-08-06 the deployment serves traffic:
 
 - `https://forum.candidary.online/healthz` → `200 {"status":"ok","database":"ok"}`
