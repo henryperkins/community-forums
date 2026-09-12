@@ -79,7 +79,21 @@ $inboxCount = (int) ($inbox_unread_count ?? 0);
                     <summary class="topbar-user" aria-label="Open account menu">
                         <span class="topbar-avatar">
                             <?= $this->partial('partials/monogram', ['name' => $current_user->displayName(), 'username' => $current_user->username()]) ?>
-                            <span class="presence-dot" aria-hidden="true"></span>
+                            <?php
+                            // This leaf used to be unconditional, so a member who
+                            // switched presence OFF still saw one beside their own
+                            // name — contradicting the control that says "A leaf
+                            // marks your presence beside your name" — and it stayed
+                            // lit with the whole subsystem rolled back. Decorative
+                            // (aria-hidden): it is the viewer's own avatar, and the
+                            // account menu states presence in words.
+                            $selfState = is_callable($presence_snapshot ?? null)
+                                ? (string) (($presence_snapshot)()['self_state'] ?? 'offline')
+                                : 'offline';
+                            ?>
+                            <?php if ($selfState === 'online' || $selfState === 'away'): ?>
+                                <span class="presence-dot<?= $selfState === 'away' ? ' is-away' : '' ?>" aria-hidden="true"></span>
+                            <?php endif; ?>
                         </span>
                         <span class="topbar-name"><?= $e($current_user->displayName()) ?></span>
                         <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>

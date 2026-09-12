@@ -77,6 +77,11 @@ final class SeoController extends Controller
             'Disallow: /reset',
             'Disallow: /verify',
             'Disallow: /invite', // token-bearing invitation landing URLs (P5-13)
+            // Presence is a live roll of member names and handles, now paginated
+            // and searchable. Nothing about it is worth indexing, and an indexed
+            // copy would outlive the member's own presence toggle (ADR 0031).
+            'Disallow: /users-online',
+            'Disallow: /presence',
             'Allow: /',
         ];
         // Only advertise the sitemap when the SEO subsystem is enabled (else it 404s).

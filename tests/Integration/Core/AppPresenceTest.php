@@ -9,8 +9,12 @@ use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
 /**
- * Privacy-respecting presence (P2-11): heartbeat recording, and a roster that
- * never exposes a hidden user, a stale user, the viewer, or a blocked member.
+ * Privacy-respecting presence (P2-11, ADR 0031): heartbeat recording, and a
+ * roster that never exposes a hidden user, a stale user, a banned user, a
+ * members-only profile to a guest, or a blocked member.
+ *
+ * The viewer IS on their own roster as of ADR 0031 — excluding them meant a
+ * signed-in member read "Online 15" at the same instant a guest read 16.
  */
 final class AppPresenceTest extends TestCase
 {
@@ -88,8 +92,12 @@ final class AppPresenceTest extends TestCase
         $this->assertDontSeeText($res, 'hiddenkate');   // show_presence = 0
         self::assertStringNotContainsString('stalemax', $serverRoster);
         $this->assertDontSeeText($res, 'stalemax');     // not seen recently
-        self::assertStringNotContainsString('rosterviewer', $serverRoster);
-        $this->assertDontSeeText($res, 'rosterviewer'); // self excluded
+        // The viewer counts themselves (ADR 0031), and is marked so the row can
+        // say "you" — the count a member sees now matches the one a guest sees.
+        self::assertStringContainsString('rosterviewer', $serverRoster);
+        self::assertStringContainsString('data-presence-self', $serverRoster);
+        $this->assertSeeText($res, 'rosterviewer');
+        $this->assertSeeText($res, '"is_self":true');
     }
 
     public function test_blocked_member_is_excluded_from_roster(): void
@@ -123,7 +131,10 @@ final class AppPresenceTest extends TestCase
 
     private function presenceMarkup(string $html): string
     {
-        self::assertSame(1, preg_match('#<section class="presence-widget".*?</section>#s', $html, $match));
+        // Attribute-agnostic: the section grew data-presence-limit, and pinning
+        // class= as its only attribute made this helper break on markup changes
+        // that had nothing to do with what the tests actually assert.
+        self::assertSame(1, preg_match('#<section class="presence-widget"[^>]*>.*?</section>#s', $html, $match));
         return $match[0];
     }
 }

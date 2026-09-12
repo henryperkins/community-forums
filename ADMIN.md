@@ -267,7 +267,8 @@ Each automated decision writes an audit entry tagged `actor = system` so automat
 
 - **Direct messages:** DMs are private but not unmoderatable — a participant can **report** a DM, which surfaces only the reported messages to an Admin (never the whole conversation); handled like any report (§3.2). Mods do not browse DMs.
 - **Reputation:** reputation is **derived** from reactions, so it self-corrects when a post or reaction is removed — there is no manual "set reputation". Coordinated reaction abuse (vote-rings) is an anti-abuse signal (§3.8).
-- **Presence / who's-online:** staff see real presence, but a user hidden via their privacy setting never appears online to anyone — including the who's-online list and moderators.
+- **Presence / who's-online:** a member hidden via their privacy setting never appears online to **anyone**, moderators and admins included — the rail, `/users-online`, the `/presence` feed and the profile dot all read one rule (ADR 0031). Staff do not get a privileged view of *presence*. What staff do keep is the **last-seen** column on `/admin/users`, the single-member record and `/mod/u/{id}`: that is moderation evidence about account activity, not a presence indicator, it is never exposed on a public surface, and it is unaffected by the member's presence toggle. The two were previously described as one thing, which read as a contradiction.
+  - **Rolling the `presence` flag back has a cost here.** The heartbeat is gated by that flag and is the only writer of `users.last_seen_at`, so with presence off those last-seen values freeze at their last write and the dashboard's Active-members tile falls to zero. Nothing is lost, but nothing updates either; see `.env.example` and `docs/runbooks/operations.md`.
 - **Notifications:** the suppression list + per-recipient idempotency (§7.5) are the abuse controls; system-sent notifications are audited like any action.
 
 ### 3.10 Thread Intelligence operations

@@ -355,13 +355,14 @@ presence.{online, away, offline}
 
 | Feature | Priority | Status | Notes |
 |---|---|---|---|
-| Online users count | P1 | Planned | The stat line already shows "Users Online: N". |
-| Who's-online list | P1 | Planned | A roster of currently-online members (sidebar section or popover): avatars + names. |
-| Presence tracking | P1 | Planned | Derived from `users.last_seen_at`, refreshed by a lightweight heartbeat on activity; "online" = seen within N minutes (configurable). No separate table. |
-| Presence dots | P1 | Planned | Green / away / offline dots on avatars (sidebar DMs, profiles). |
-| Respect privacy | P1 | Planned | Honours the per-user **Show online presence** toggle (USER.md §4.7); hidden users never appear online. |
+| Online users count | P1 | Live | The rail badge counts **here-now** members; away members are carried separately in `total` so the badge cannot overstate who is actually about (ADR 0031). |
+| Who's-online list | P1 | Live | Board-rail roster (capped at `presence.rail_limit`, with "+N more") plus the `/users-online` roll: filters (Here now / Away), member search, and pagination. |
+| Presence tracking | P1 | Live | Derived from `users.last_seen_at`, refreshed by a heartbeat throttled to `presence.heartbeat_seconds`. No separate table. Validated by `PresenceConfig`, which rejects a heartbeat longer than the online window. |
+| Presence dots | P1 | Live | Here-now (leaf) and stepped-away (gold) dots on the rail, the roll, the profile and the top bar. Offline is the absence of a dot, not a third dot. |
+| Respect privacy | P1 | Live | One rule ladder in `PresenceService::state()` for every surface: flag → status → **Show online presence** (USER.md §4.7) → **profile visibility** → recency → blocks both ways. |
+| Member directory | P3 | Deferred | The design's Everyone / Wardens / New this week filters would make `/users-online` a public roll of every member, presence-opted-in or not. Deferred with its reasoning in ADR 0031. |
 
-Presence updates push via the same realtime mechanism as the bell (**short-polling** in v1; SSE later — §9.6, DECISIONS §3 #4).
+Presence updates push via the same realtime mechanism as the bell (**short-polling** in v1; SSE later — §9.6, DECISIONS §3 #4). Both pollers share one lifecycle: paused while the tab is hidden, backing off on failure, and stopping permanently on a 404 so a viewer whose operator rolled the feature back mid-session does not poll a dead route forever.
 
 ### 6.16 Reputation (simple, Twitter-like)
 
@@ -976,6 +977,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.18 | 2026-09-12 | §6.15 presence marked Live and corrected: the four shipped rows were still listed "Planned", the roster is split into here-now and stepped-away against two configured windows, the rail badge counts here-now only, and one rule ladder (flag → status → presence toggle → profile visibility → recency → blocks) now serves the rail, the roll, the JSON feed and the profile dot. Added the deferred member-directory row. See ADR 0031. |
 | v0.17 | 2026-08-27 | Adopted the approved member-surface ownership model: `/` is place, `/inbox` is attention, Search and Compose are top-level routes, cross-surface travel moved to the topbar, and the shared rail now owns only boards plus public presence. Preserved `/feed` as a separate personalized Following surface in secondary identity navigation and bounded the Inbox preview beneath canonical topics. |
 | v0.16 | 2026-08-02 | Clarified the shell and URL roles for the Forum Index, personalized Inbox, board topic list, and canonical conversation. Board topic lists now have a fixed pinned-then-activity order; Newest and Unanswered are Inbox filters. |
 | v0.15 | 2026-07-14 | Adopted the imported Imladris system as a generated, allowlisted runtime foundation beneath the application compatibility layer; documented preview/runtime exclusions, cascade ownership, self-hosted fonts, and the production-baseline drift gate that prevents newer forum/composer surfaces from silently outrunning design parity. |

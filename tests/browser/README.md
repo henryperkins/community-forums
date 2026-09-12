@@ -77,12 +77,32 @@ cd tests/browser
 npm install
 npm run evidence       # prepare.sh resets+seeds retroboards_e2e, then runs Playwright
 npm run evidence:dark  # legacy focused server-draft regression run with dark fixtures enabled
+npm run evidence:presence  # /users-online + the rail roster, desktop and mobile (ADR 0031)
 npm run a11y           # prepare.sh resets+seeds retroboards_e2e, then runs axe checks
 npx playwright test wysiwyg-composer.spec.ts
 npm run prepare-db
 npx playwright test thread-intelligence.spec.ts
 npx playwright test thread-intelligence.spec.ts --grep 'no-JS|axe'
 ```
+
+`npm run evidence:presence` is a dedicated script rather than a line in
+`npm run evidence`, matching `evidence:inbox` and the other remediation runs. Note
+that `seed.php` now writes `last_seen_at` and `show_presence` for a deliberate
+cast of members: before ADR 0031 it wrote neither, and the roster excluded the
+viewer, so **every** evidence run captured an empty presence rail and no
+`/users-online` frame existed at all — which is how that page shipped with no CSS.
+If you add a surface that renders presence, seed it or you are photographing a
+blank.
+
+Two things about that fixture are worth knowing before you re-run the spec by
+hand. It writes `last_seen_at` **relative to seed time**, so the whole cast ages
+out of the 900s away window about fifteen minutes after seeding. And `/presence`
+and `/users-online` share one rate-limit bucket, which a couple of back-to-back
+spec runs will exhaust. `prepare.sh` resets both (it re-seeds and clears
+`storage/ratelimit-e2e`), which is why `npm run evidence:presence` never hits
+either — but a bare `npx playwright test users-online-remediation.spec.ts` will,
+and the spec's `beforeAll` names which one you have hit rather than letting it
+surface as sixteen unrelated assertion failures.
 
 `prepare.sh` drops and recreates the dedicated `retroboards_e2e` database (never
 touching `retroboards` dev or `retroboards_test`), migrates it, and seeds a small

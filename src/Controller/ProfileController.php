@@ -16,6 +16,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\UserProfileFieldRepository;
 use App\Repository\UserRepository;
 use App\Repository\UsernameHistoryRepository;
+use App\Service\PresenceService;
 use App\Service\TitleService;
 use App\Service\UserModerationService;
 use App\Support\Markdown;
@@ -156,7 +157,11 @@ final class ProfileController extends Controller
             'can_block' => $viewer !== null && !$isSelf,
             'viewer_blocks_profile' => $viewerBlocksProfile,
             'blocked_either' => $blockedEither,
-            'presence_online' => $this->presenceOnline($profile, $isSelf),
+            // One rule set, shared with the rail and the JSON. $blockedEither is
+            // already resolved above for the messaging/follow affordances, so
+            // honouring blocks here costs no extra query.
+            'presence_state' => $this->container->get(PresenceService::class)
+                ->state($viewer, $profile, $isSelf ? false : $blockedEither),
             'can_view_member_record' => $canViewMemberRecord,
             'profile_status' => (string) ($profile['status'] ?? 'active'),
             'profile_suspended_until' => $profile['suspended_until'] ?? null,
@@ -230,18 +235,4 @@ final class ProfileController extends Controller
         throw new NotFoundException('That member could not be found.');
     }
 
-    /** @param array<string,mixed> $profile */
-    private function presenceOnline(array $profile, bool $isSelf): bool
-    {
-        if (!$isSelf && (int) ($profile['show_presence'] ?? 1) !== 1) {
-            return false;
-        }
-        $lastSeen = $profile['last_seen_at'] ?? null;
-        if (!is_string($lastSeen) || $lastSeen === '') {
-            return false;
-        }
-        $ts = strtotime($lastSeen . ' UTC');
-        $window = (int) $this->config()->get('presence.online_window_seconds', 300);
-        return $ts !== false && $ts >= time() - $window;
-    }
 }

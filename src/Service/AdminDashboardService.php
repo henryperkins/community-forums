@@ -22,6 +22,7 @@ final class AdminDashboardService
         private EmailDomainVerifier $emailDomainVerifier,
         private ?ThreadIntelligenceAdminService $threadIntelligence = null,
         private ?AuditQueryService $auditQuery = null,
+        private ?PresenceConfig $presence = null,
     ) {
     }
 
@@ -40,7 +41,16 @@ final class AdminDashboardService
             'pending_threads' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM threads WHERE is_pending = 1'),
             'pending_replies' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE is_pending = 1 AND is_op = 0'),
             'new_users_today' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM users WHERE created_at >= UTC_DATE()'),
-            'active_users' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM users WHERE last_seen_at >= UTC_TIMESTAMP() - INTERVAL 15 MINUTE'),
+            // "Active" was hardcoded to 15 minutes here while presence used 5,
+            // so the tile and the roster counted different populations and no
+            // setting explained the gap. The WINDOW is now the one operators
+            // configure; the POPULATION stays deliberately different — this is an
+            // operator metric over every member, presence-opted-in or not, so it
+            // must not be narrowed by show_presence, blocks or the flag (ADR 0031).
+            'active_users' => (int) $this->db->fetchValue(
+                'SELECT COUNT(*) FROM users WHERE last_seen_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? SECOND)',
+                [$this->activeWindowSeconds()],
+            ),
             'failed_emails' => (int) (($this->emailDeliveries->statusCounts())['failed'] ?? 0),
             'open_appeals' => (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_appeals WHERE status = 'open'"),
         ];
@@ -160,6 +170,9 @@ final class AdminDashboardService
         if ($emailEnabled && $sendBlocked) {
             $attention[] = ['label' => 'Email sending is blocked until SPF and DKIM pass.', 'href' => '/admin/email'];
         }
+        foreach ($this->presence?->warnings() ?? [] as $presenceWarning) {
+            $attention[] = ['label' => 'Presence config: ' . $presenceWarning, 'href' => null];
+        }
         if ($threadIntelligence !== null && (int) $threadIntelligence['warning_count'] > 0) {
             $tiWarnings = (int) $threadIntelligence['warning_count'];
             $attention[] = [
@@ -180,7 +193,11 @@ final class AdminDashboardService
                 [
                     'title' => 'Active now',
                     'count' => $counts['active_users'],
-                    'detail' => 'Seen in the last 15 minutes',
+                    // Derived, not hardcoded: the window became operator-settable
+                    // in the same change, so a fixed "15 minutes" would caption a
+                    // 60-minute count the moment anyone tuned it.
+                    'detail' => 'Seen in the last '
+                        . str_replace('about ', '', human_duration($this->activeWindowSeconds())),
                     'href' => '/admin/users',
                 ],
             ],
@@ -188,4 +205,16 @@ final class AdminDashboardService
             'audit' => $audit,
         ];
     }
+
+    /**
+     * Operator-visible "active in the last N minutes". Defaults to the presence
+     * away window so the dashboard and the roster agree on how long a member
+     * counts as around; falls back to that window's own default when presence
+     * config was not injected.
+     */
+    private function activeWindowSeconds(): int
+    {
+        return $this->presence?->awayWindowSeconds() ?? PresenceConfig::DEFAULT_AWAY_WINDOW_SECONDS;
+    }
+
 }

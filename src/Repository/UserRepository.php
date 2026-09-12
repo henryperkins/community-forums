@@ -450,27 +450,90 @@ final class UserRepository
     }
 
     /**
-     * Members visible in the presence roster: opted-in (show_presence = 1) and
-     * seen since $since (UTC 'Y-m-d H:i:s'). Block filtering is applied by the caller.
+     * Members eligible for the presence roster: opted in (show_presence = 1),
+     * not banned, and seen since $since — which is the AWAY window's floor, not
+     * the online window's. Splitting that band into "here now" and "stepped
+     * away" is PresenceService's job, from one request-scoped clock; this method
+     * deliberately does not classify, so the two windows cannot disagree.
      *
-     * @return array<int,array{id:int,username:string,display_name:?string,last_seen_at:string}>
+     * $guestViewer drops members whose profile_visibility is 'members'. That
+     * mirrors ProfileController::show(), which 404s such a profile for a signed-
+     * out reader: without it the rail and the unauthenticated /presence JSON
+     * would publish the name, handle and profile link of someone who explicitly
+     * restricted their profile to signed-in members (ADR 0031).
+     *
+     * $search matches username or display_name. It runs HERE rather than over
+     * the returned page because the roster is capped: filtering in PHP would
+     * make a member beyond the cap unfindable by name. It is built by the same
+     * private WHERE builder as the privacy predicates, so a search can never
+     * reach a row the roster itself would not.
+     *
+     * $limit is clamped and concatenated, never bound — EMULATE_PREPARES is off.
+     * Ask for one more row than you intend to show to detect capping.
+     *
+     * @return list<array{id:int,username:string,display_name:?string,role:string,status:string,show_presence:int,profile_visibility:string,last_seen_at:string}>
      */
-    public function onlineSince(string $since): array
+    public function presenceRoster(string $since, int $limit, bool $guestViewer, ?string $search = null): array
     {
+        [$where, $params] = $this->presenceWhere($since, $guestViewer, $search);
+        // 5001, not 5000: callers ask for roster_max + 1 to detect capping, and
+        // PresenceConfig's own ceiling for roster_max is 5000 — clamping to 5000
+        // would swallow the probe row at exactly that setting and silently
+        // disable the "N+" affordance where it matters most.
+        $limit = max(1, min(5001, $limit));
+
         $rows = $this->db->fetchAll(
-            "SELECT id, username, display_name, last_seen_at
+            'SELECT id, username, display_name, role, status, show_presence, profile_visibility, last_seen_at
              FROM users
-             WHERE show_presence = 1 AND status <> 'banned'
-               AND last_seen_at IS NOT NULL AND last_seen_at >= ?
-             ORDER BY last_seen_at DESC",
-            [$since],
+             WHERE ' . $where . '
+             ORDER BY last_seen_at DESC, id ASC
+             LIMIT ' . $limit,
+            $params,
         );
+
         return array_map(static fn (array $r): array => [
             'id' => (int) $r['id'],
             'username' => (string) $r['username'],
             'display_name' => $r['display_name'] !== null ? (string) $r['display_name'] : null,
+            'role' => (string) $r['role'],
+            'status' => (string) $r['status'],
+            'show_presence' => (int) $r['show_presence'],
+            'profile_visibility' => (string) $r['profile_visibility'],
             'last_seen_at' => (string) $r['last_seen_at'],
         ], $rows);
+    }
+
+    /**
+     * The single source of the roster's visibility predicate. Every presence
+     * read — rail, JSON, directory, search — goes through here, so there is one
+     * place to change and one place to audit.
+     *
+     * @return array{0:string,1:list<mixed>}
+     */
+    private function presenceWhere(string $since, bool $guestViewer, ?string $search): array
+    {
+        $sql = "show_presence = 1 AND status <> 'banned'
+                AND last_seen_at IS NOT NULL AND last_seen_at >= ?";
+        $params = [$since];
+
+        if ($guestViewer) {
+            $sql .= " AND profile_visibility = 'public'";
+        }
+
+        $needle = $search === null ? '' : trim($search);
+        if ($needle !== '') {
+            // Bounded before escaping: a 10KB needle is never a real search, and
+            // LIKE over an unbounded pattern is a cheap way to burn the box.
+            $needle = mb_substr($needle, 0, 64);
+            // '!' as the escape character rather than a backslash: it survives
+            // NO_BACKSLASH_ESCAPES and needs no doubling through PHP's parser.
+            $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $needle);
+            $sql .= " AND (username LIKE ? ESCAPE '!' OR display_name LIKE ? ESCAPE '!')";
+            $params[] = '%' . $escaped . '%';
+            $params[] = '%' . $escaped . '%';
+        }
+
+        return [$sql, $params];
     }
 
     /**

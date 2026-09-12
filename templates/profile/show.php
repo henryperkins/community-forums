@@ -10,7 +10,16 @@ $profileUrl = '/u/' . $profile['username'];
         <svg class="profile-cover-star" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
         <span class="profile-avatar">
             <?= $this->partial('partials/monogram', ['name' => $display, 'username' => $profile['username'], 'avatar_path' => $profile['avatar_path'] ?? null, 'gilt' => true]) ?>
-            <?php if (!empty($presence_online)): ?><span class="presence-dot" title="Active recently" role="img" aria-label="Online"></span><?php endif; ?>
+            <?php
+            // The one place a presence dot keeps an accessible name: this row has
+            // no sub-line to carry the state as text. role="img" is required —
+            // aria-label on a bare <span> is not exposed to assistive tech.
+            $pState = (string) ($presence_state ?? 'offline');
+            ?>
+            <?php if ($pState === 'online' || $pState === 'away'): ?>
+                <?php $pLabel = $pState === 'away' ? 'Stepped away' : 'Here now'; ?>
+                <span class="presence-dot<?= $pState === 'away' ? ' is-away' : '' ?>" title="<?= $e($pLabel) ?>" role="img" aria-label="<?= $e($pLabel) ?>"></span>
+            <?php endif; ?>
         </span>
         <div class="profile-id">
             <h1 class="profile-name">

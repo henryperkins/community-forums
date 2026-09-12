@@ -194,6 +194,78 @@ $ensureLinkPreviewFixture = static function () use ($db, $settings, $users): boo
 
     return true;
 };
+/**
+ * Presence fixture (ADR 0031).
+ *
+ * This seed never wrote `last_seen_at` or `show_presence`, and the roster used
+ * to exclude the viewer — so every evidence run captured an EMPTY rail, and
+ * docs/evidence/browser/ never held a /users-online capture at all. That is the
+ * whole reason a completely unstyled page shipped: under PRODUCT_DESIGN §13 this
+ * surface's UI had never once been looked at.
+ *
+ * The spread is deliberate, so one capture proves several things at once:
+ *   · more members here-now than the rail's cap, to exercise "+N more";
+ *   · a band of away members, to exercise the amber dot and the Away filter;
+ *   · an admin, for the Staff chip;
+ *   · one opted-OUT member who must appear nowhere;
+ *   · one members-only profile, which a guest must never be shown;
+ *   · enough rows in total to force a second page at 12 per page.
+ *
+ * Idempotent: re-running only rewrites timestamps.
+ */
+$ensurePresenceFixture = static function () use ($db, $users, &$hasher): bool {
+    $hasher ??= new PasswordHasher();
+    $cast = [
+        // [username, display, role, seconds-ago, show_presence, profile_visibility]
+        ['elrond', 'Elrond Peredhel', 'admin', 40, 1, 'public'],
+        ['galadriel', 'Galadriel', 'user', 65, 1, 'public'],
+        ['glorfindel', 'Glorfindel', 'user', 90, 1, 'public'],
+        ['arwen', 'Arwen Undómiel', 'user', 120, 1, 'public'],
+        ['cirdan', 'Círdan', 'user', 150, 1, 'public'],
+        ['melian', 'Melian', 'user', 180, 1, 'public'],
+        ['nimrodel', 'Nimrodel', 'user', 210, 1, 'public'],
+        ['orophin', 'Orophin', 'user', 240, 1, 'public'],
+        ['idril', 'Idril', 'user', 270, 1, 'public'],
+        ['ecthelion', 'Ecthelion', 'user', 290, 1, 'public'],
+        // Outside the 300s online window, inside the 900s away window.
+        ['erestor', 'Erestor', 'user', 420, 1, 'public'],
+        ['lindir', 'Lindir', 'user', 500, 1, 'public'],
+        ['haldir', 'Haldir', 'user', 620, 1, 'public'],
+        ['rumil', 'Rúmil', 'user', 740, 1, 'public'],
+        ['finduilas', 'Finduilas', 'user', 860, 1, 'public'],
+        // Must never be listed: presence switched off.
+        ['gildor', 'Gildor Inglorion', 'user', 50, 0, 'public'],
+        // Must never be listed TO A GUEST: members-only profile.
+        ['celebrian', 'Celebrían', 'user', 55, 1, 'members'],
+        // Outside both windows: off the roll entirely.
+        ['voronwe', 'Voronwë', 'user', 4000, 1, 'public'],
+    ];
+
+    foreach ($cast as [$username, $display, $role, $ago, $showPresence, $visibility]) {
+        $row = $users->findByUsername($username);
+        if ($row === null) {
+            $id = $users->create([
+                'username' => $username,
+                'email' => $username . '@retro.test',
+                'password_hash' => $hasher->hash('password123'),
+                'display_name' => $display,
+                'role' => $role,
+                'status' => 'active',
+            ]);
+            $users->markEmailVerified($id);
+        } else {
+            $id = (int) $row['id'];
+        }
+        // gmdate: the app compares these against UTC_TIMESTAMP()/gmdate() only.
+        $db->run(
+            'UPDATE users SET last_seen_at = ?, show_presence = ?, profile_visibility = ? WHERE id = ?',
+            [gmdate('Y-m-d H:i:s', time() - $ago), $showPresence, $visibility, $id],
+        );
+    }
+
+    return true;
+};
+
 $ensureNewSurfaceFixtures = static function () use ($db, $users): bool {
     $admin = $users->findByUsername('admin');
     $bob = $users->findByUsername('bob');
@@ -549,6 +621,7 @@ if ($users->adminCount() > 0) {
     $pollReady = $ensureShortcutPoll();
     $registryReady = $ensureRegistryFixtures();
     $ensureAppealFixture();
+    $ensurePresenceFixture();
     // A false return means alice, #general or her first post is missing, which
     // would let the seed report success and then fail link-previews.spec.ts with
     // "no preview card" three steps later. Fail here instead.
@@ -692,6 +765,7 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
 
 $ensureRegistryFixtures();
 $ensureAppealFixture();
+$ensurePresenceFixture();
 if (!$ensureLinkPreviewFixture()) {
     throw new RuntimeException('Link preview fixture could not be seeded (missing alice, #general, or a source post).');
 }

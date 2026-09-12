@@ -202,3 +202,59 @@ the schema is complete, and the app boots). Evidence:
 5. Enable mentions, search, DMs, and reports/moderation in separate flag changes.
 6. Accept Gate A, then enable follows/feed, badges/solved, OAuth, and presence
    incrementally for Gate B.
+
+## 9. Presence (ADR 0031)
+
+### Tuning
+
+Six env values, all validated at boot by `PresenceConfig`. An invalid or
+out-of-range value is **replaced with its default**, not clamped, and the
+substitution appears as a warning on the admin dashboard naming the setting (the
+value itself is never echoed, so a mis-pasted secret cannot leak through a
+warning). Defaults and meanings are in `.env.example`.
+
+Two relationships are enforced, because neither value is wrong on its own:
+
+- `PRESENCE_HEARTBEAT_SECONDS` must be `<=` `PRESENCE_ONLINE_WINDOW_SECONDS`.
+  A longer heartbeat lets a browsing member's row go staler than the window that
+  reads it, so they flicker out of the roster between writes.
+- `PRESENCE_AWAY_WINDOW_SECONDS` must be `>=` `PRESENCE_ONLINE_WINDOW_SECONDS`,
+  or the away band is empty.
+
+`PRESENCE_AWAY_WINDOW_SECONDS` is also the window behind the dashboard's
+**Active members** tile. The tile deliberately counts a different *population* —
+every member, presence-opted-in or not — because it is an operator metric, not a
+public roster. Only the window is shared.
+
+### Rolling it back
+
+`features.presence = false` removes `/presence`, `/users-online`, the rail widget
+and every presence dot, and is safe at any time. **One non-obvious cost:** the
+heartbeat is gated by the same flag and is the only writer of
+`users.last_seen_at`. With presence off:
+
+- "Last seen" on `/admin/users`, the single-member record and `/mod/u/{id}`
+  freezes at its last written value;
+- the dashboard's **Active members** tile falls to zero;
+- the member directory's last-seen sort and filter stop reflecting reality.
+
+Nothing is lost and nothing needs repair — re-enabling the flag resumes writes on
+the next authenticated request — but do not read those surfaces as current while
+presence is off. There is no backfill: the gap stays a gap.
+
+A viewer with a page already open will stop polling on their next cycle; the
+client treats a 404 from `/presence` as permanent rather than retrying forever.
+
+### If the roster looks wrong
+
+- **Empty for everyone** — check `features.presence`, then the dashboard for a
+  `Presence config:` warning, then that the heartbeat is running at all
+  (`SELECT MAX(last_seen_at) FROM users`).
+- **A member is missing** — one of five deliberate gates, applied by
+  `PresenceService::state()` in exactly this order: they are banned; they are
+  opted out (`show_presence = 0`); their profile is Members-only and the viewer
+  is signed out; they are outside the away window; or they are in a block
+  relationship with the viewer. The order is load-bearing — blocks are consulted
+  last because they can only downgrade an already-visible member.
+- **The count reads `N+`** — the roster hit `PRESENCE_ROSTER_MAX`. Raise it if
+  your community is genuinely that busy; the counts are a floor until you do.

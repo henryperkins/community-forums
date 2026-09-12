@@ -52,60 +52,245 @@
         }).catch(function () { form.submit(); });
     });
 
-    // Notification bell: short-poll the unread count (DECISIONS §2: short-polling,
-    // no WebSockets). The bell is a plain link without JS, so this only decorates.
-    var bell = document.querySelector('[data-bell]');
-    if (bell && window.fetch) {
-        var countEl = bell.querySelector('[data-bell-count]');
-        var poll = function () {
-            fetch('/notifications/bell?format=json', {
+    /**
+     * Shared short-poll lifecycle for the bell and the presence roster
+     * (DECISIONS §2: short-polling, no WebSockets).
+     *
+     * Both pollers used to be a bare setInterval that ran forever: a tab left
+     * open in a background window kept asking for data nobody could see, and a
+     * route that had started 404ing — because an operator rolled the feature
+     * back mid-session — was asked again every interval until the tab closed.
+     *
+     *   · Pauses on visibilitychange and fetches once immediately on return, so
+     *     a resumed tab is correct at once rather than up to a minute stale.
+     *   · Backs off exponentially on failure, and resets on the next success.
+     *   · 404 stops it permanently. It is the one status that means "gone" and
+     *     not "later" — the feature is off, and no amount of waiting fixes it.
+     */
+    function shortPoll(url, interval, apply) {
+        if (!window.fetch) { return; }
+        var timer = null;
+        var backoff = 0;
+        var stopped = false;
+
+        function schedule(delay) {
+            if (stopped || timer !== null) { return; }
+            timer = window.setTimeout(run, delay);
+        }
+        function clear() {
+            if (timer !== null) { window.clearTimeout(timer); timer = null; }
+        }
+        function run() {
+            timer = null;
+            if (stopped || document.hidden) { return; }
+            fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin'
-            }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
-                if (!data || !countEl) { return; }
-                if (data.unread > 0) {
-                    countEl.textContent = data.unread > 99 ? '99+' : data.unread;
-                    countEl.hidden = false;
-                } else {
-                    countEl.hidden = true;
-                }
-            }).catch(function () {});
-        };
-        poll();
-        setInterval(poll, 60000); // once a minute is plenty for a forum bell
+            }).then(function (r) {
+                if (r.status === 404) { stopped = true; clear(); return null; }
+                if (r.status === 429) { throw new Error('throttled'); }
+                return r.ok ? r.json() : null;
+            }).then(function (data) {
+                if (stopped) { return; }
+                backoff = 0;
+                if (data) { apply(data); }
+                schedule(interval);
+            }).catch(function () {
+                if (stopped) { return; }
+                backoff = backoff === 0 ? interval : Math.min(backoff * 2, 15 * 60000);
+                schedule(backoff);
+            });
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) { clear(); return; }
+            clear();
+            run();
+        });
+        run();
     }
 
-    // Presence roster: short-poll who's online (P2-11). The server already
-    // excludes hidden users, the viewer, and blocked members — the client just
-    // renders. The widget stays hidden (no-JS) until there's someone to show.
+    // Notification bell. The bell is a plain link without JS, so this only decorates.
+    var bell = document.querySelector('[data-bell]');
+    if (bell) {
+        var countEl = bell.querySelector('[data-bell-count]');
+        shortPoll('/notifications/bell?format=json', 60000, function (data) {
+            if (!countEl) { return; }
+            if (data.unread > 0) {
+                countEl.textContent = data.unread > 99 ? '99+' : data.unread;
+                countEl.hidden = false;
+            } else {
+                countEl.hidden = true;
+            }
+        });
+    }
+
+    // Presence roster (P2-11, ADR 0031). The server owns the whole visibility
+    // ladder — feature flag, banned, show_presence, profile_visibility, the
+    // window, blocks both ways — so the client only renders what it is handed.
+    //
+    // Two rules this used to break. It rendered TWENTY rows where the server
+    // rendered six, so the rail silently reflowed from 264px to 595px about a
+    // second after load; the cap is now the server's own, read off the element.
+    // And it replaced the list's innerHTML wholesale every cycle inside an
+    // aria-live region, so a screen reader re-read the entire roster once a
+    // minute whether or not anything had changed; rows now carry a signature and
+    // an unchanged row is left alone, with a short summary as the only live text.
     var presence = document.querySelector('[data-presence]');
-    if (presence && window.fetch) {
+    if (presence) {
         var pList = presence.querySelector('[data-presence-list]');
         var pCount = presence.querySelector('[data-presence-count]');
-        var pollPresence = function () {
-            fetch('/presence?format=json', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin'
-            }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
-                if (!data || !pList) { return; }
-                if (pCount) { pCount.textContent = data.count; }
-                pList.innerHTML = '';
-                (data.online || []).slice(0, 20).forEach(function (u) {
-                    var li = document.createElement('li');
-                    var a = document.createElement('a');
-                    a.href = '/u/' + encodeURIComponent(u.username);
-                    var dot = document.createElement('span');
-                    dot.className = 'dot';
-                    a.appendChild(dot);
-                    a.appendChild(document.createTextNode(u.display_name || u.username));
-                    li.appendChild(a);
-                    pList.appendChild(li);
-                });
-                presence.hidden = (data.count || 0) === 0;
-            }).catch(function () {});
-        };
-        pollPresence();
-        setInterval(pollPresence, 45000);
+        var pSummary = presence.querySelector('[data-presence-summary]');
+        var pEmpty = presence.querySelector('[data-presence-empty]');
+        var pMore = presence.querySelector('[data-presence-more]');
+        var pLimit = parseInt(presence.getAttribute('data-presence-limit'), 10) || 5;
+
+        function presenceRow(u) {
+            var state = u.state === 'away' ? 'away' : 'online';
+            var name = u.display_name || u.username;
+
+            var li = document.createElement('li');
+            li.className = 'presence-row';
+            li.setAttribute('data-presence-row', u.username);
+            li.setAttribute(
+                'data-presence-sig',
+                u.username + ':' + state + ':' + (u.is_staff ? 's' : '-') + ':' + (u.is_self ? 'y' : '-')
+            );
+
+            var a = document.createElement('a');
+            a.className = 'presence-person';
+            a.href = '/u/' + encodeURIComponent(u.username);
+            a.setAttribute('data-presence-state', state);
+            if (u.is_self) { a.setAttribute('data-presence-self', '1'); }
+
+            var wrap = document.createElement('span');
+            wrap.className = 'avatar-wrap';
+            var mono = document.createElement('span');
+            // monogram_class()/monogram_initials() are server-side; the poll
+            // cannot reproduce the palette hash, so a refreshed row uses the
+            // neutral variant rather than guessing at a different colour.
+            mono.className = 'monogram';
+            mono.setAttribute('aria-hidden', 'true');
+            // Mirror Str::initials(): up to two initials, splitting on the same
+            // separators, one CODE POINT each (Array.from, so an astral first
+            // character is not sliced into half a surrogate pair). The palette
+            // class is a server-side md5 hash and genuinely cannot be reproduced
+            // here, so a row rebuilt by the poll is the neutral variant — that
+            // half is a recorded deferral; the initials had no such excuse.
+            mono.textContent = (function (raw) {
+                var parts = raw.trim().split(/[\s_\-.]+/);
+                var letters = [];
+                for (var p = 0; p < parts.length && letters.length < 2; p++) {
+                    var first = Array.from(parts[p])[0];
+                    if (first) { letters.push(first); }
+                }
+                return letters.length ? letters.join('').toUpperCase() : '?';
+            })(name);
+            var dot = document.createElement('span');
+            dot.className = 'presence-dot' + (state === 'away' ? ' is-away' : '');
+            dot.setAttribute('aria-hidden', 'true');
+            wrap.appendChild(mono);
+            wrap.appendChild(dot);
+
+            var id = document.createElement('span');
+            id.className = 'presence-person-id';
+            var nameEl = document.createElement('span');
+            nameEl.className = 'presence-name';
+            nameEl.appendChild(document.createTextNode(name));
+            if (u.is_self) {
+                var you = document.createElement('span');
+                you.className = 'presence-you';
+                you.textContent = 'you';
+                nameEl.appendChild(you);
+            }
+            if (u.is_staff) {
+                var staff = document.createElement('span');
+                staff.className = 'presence-staff';
+                staff.textContent = 'Staff';
+                nameEl.appendChild(staff);
+            }
+            var sub = document.createElement('span');
+            sub.className = 'presence-sub';
+            sub.textContent = '@' + u.username + ' · ' + (state === 'away' ? 'Away' : 'Here now');
+            id.appendChild(nameEl);
+            id.appendChild(sub);
+
+            a.appendChild(wrap);
+            a.appendChild(id);
+            li.appendChild(a);
+            return li;
+        }
+
+        shortPoll('/presence?format=json', 60000, function (data) {
+            if (!pList) { return; }
+            var members = (data.online || []).slice(0, pLimit);
+            var here = typeof data.here === 'number' ? data.here : (data.count || 0);
+            var total = typeof data.total === 'number' ? data.total : members.length;
+            var suffix = data.capped ? '+' : '';
+
+            // Reconcile by signature: an unchanged row keeps its node, so the
+            // server-rendered monogram palette survives and nothing reflows.
+            // Object.create(null) because "constructor", "toString" and
+            // "valueOf" are all legal usernames.
+            var existing = Object.create(null);
+            var i;
+            var rows = pList.querySelectorAll('[data-presence-row]');
+            for (i = 0; i < rows.length; i++) {
+                existing[rows[i].getAttribute('data-presence-row')] = rows[i];
+            }
+            var wanted = [];
+            for (i = 0; i < members.length; i++) {
+                var m = members[i];
+                var sig = m.username + ':' + (m.state === 'away' ? 'away' : 'online')
+                    + ':' + (m.is_staff ? 's' : '-') + ':' + (m.is_self ? 'y' : '-');
+                var node = existing[m.username];
+                if (node && node.getAttribute('data-presence-sig') === sig) {
+                    delete existing[m.username];
+                } else {
+                    // The superseded node has to leave the DOM, not just the map.
+                    // The removal loop below only visits what is still in
+                    // `existing`, and insertBefore puts the fresh node BESIDE the
+                    // stale one rather than replacing it — so merely deleting the
+                    // map entry left both in the list, and the rail grew by one
+                    // row per changed member per poll, forever.
+                    if (node) { node.remove(); delete existing[m.username]; }
+                    node = presenceRow(m);
+                }
+                wanted.push(node);
+            }
+            for (var gone in existing) { existing[gone].remove(); }
+            for (i = 0; i < wanted.length; i++) {
+                if (pList.children[i] !== wanted[i]) {
+                    pList.insertBefore(wanted[i], pList.children[i] || null);
+                }
+            }
+            // Belt and braces: nothing should be left past the wanted list, and
+            // an unbounded list is the one failure mode worth spending three
+            // lines to make structurally impossible.
+            // A second, independent guard against the same failure: nothing may
+            // survive past the wanted list. Either this or the node.remove()
+            // above is sufficient on its own (verified by reverting each), and
+            // both are kept deliberately — an unbounded, compounding list is the
+            // one failure mode here worth making structurally impossible.
+            while (pList.children.length > wanted.length) {
+                pList.removeChild(pList.lastChild);
+            }
+
+            if (pCount) { pCount.textContent = here + suffix; }
+            if (pSummary) {
+                pSummary.textContent = here + ' member' + (here === 1 ? '' : 's') + ' here now'
+                    + (total > here ? ', ' + (total - here) + ' away' : '') + '.';
+            }
+            if (pEmpty) { pEmpty.hidden = total !== 0; }
+            if (pMore) {
+                var more = Math.max(0, total - members.length);
+                pMore.textContent = more > 0 ? '+' + more + ' more' : '';
+                pMore.hidden = more === 0;
+            }
+            // Deliberately NOT hidden when empty: this widget carries the shell's
+            // only link to /users-online, and with JS off it is never hidden, so
+            // hiding it here would be a progressive-enhancement divergence.
+        });
     }
 
     // Operator branding preview (P3-07). The saved /brand.css remains the source

@@ -270,6 +270,31 @@ Plus: **email digest cadence** (off / daily), **quiet hours**, **per-thread mute
 | Discoverable by email | On · Off |
 | **Block list** | Blocked users can't DM or @mention you, and their notifications to you are suppressed; optionally hide their posts behind a "blocked" stub. |
 
+**What "Show online presence" covers (ADR 0031).** Off means you appear on no
+presence surface at all — not the board rail, not `/users-online`, not the
+`/presence` feed, and not as a dot on your own profile or beside your own name in
+the top bar. It is one switch across every surface, and it applies to you too:
+turning presence off and still seeing your own leaf would make the control lie to
+the person who set it.
+
+With it **on**, other members see only a state — *here now* or *stepped away* —
+never a timestamp. "Here now" means seen in the last few minutes; "stepped away"
+means seen within the last fifteen. Nothing publishes when you were last active.
+
+Two interactions worth knowing:
+
+- **Members-only profiles are respected.** If your profile visibility is
+  Members-only, signed-out visitors never see you on a presence surface either,
+  because they cannot open the profile the roster would link them to.
+- **Presence and leaderboards are separate switches.** "Hide me from
+  leaderboards" does not remove you from `/users-online`, and turning presence
+  off does not hide you from the leaderboard. Set both if you want both.
+
+You appear on your own roster, counted like anyone else, so the number you see
+matches the number a signed-out visitor sees at the same moment. Blocks still
+apply in both directions: someone in a block relationship with you never appears
+on your roll, and you never appear on theirs.
+
 ### 4.8 Storage & application
 
 Preferences live in `user_preferences` (§7) with defaults inherited from site settings. Client-only prefs (theme, density, font) apply immediately in the browser; server-side prefs (pagination, privacy, DMs, blocks) are enforced server-side so they hold across devices and can't be bypassed.

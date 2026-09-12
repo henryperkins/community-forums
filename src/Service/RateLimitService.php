@@ -78,6 +78,21 @@ final class RateLimitService
         $this->limiter->clear($this->key($policy, $request, $user, $subject));
     }
 
+    /**
+     * Seconds until $policy's window resets for this caller, without consuming
+     * an attempt. A polled JSON endpoint needs this to answer 429 with a
+     * Retry-After the client can obey — the kernel's HTML error page is no use
+     * to a fetch() loop, which otherwise keeps hammering at its normal cadence.
+     * Returns 0 for an unknown policy (which is a no-op) or an idle window.
+     */
+    public function retryAfter(string $policy, Request $request, ?User $user = null): int
+    {
+        if ($this->policy($policy) === null) {
+            return 0;
+        }
+        return max(0, $this->limiter->availableIn($this->key($policy, $request, $user, null)));
+    }
+
     /** @return array{0:int,1:int}|null [max, decaySeconds] */
     private function policy(string $policy): ?array
     {

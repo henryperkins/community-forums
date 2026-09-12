@@ -244,6 +244,7 @@ use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
 use App\Service\PermissionSimulatorService;
 use App\Service\PreferenceService;
+use App\Service\PresenceConfig;
 use App\Service\PresenceService;
 use App\Service\ProfileMediaService;
 use App\Service\RateLimitService;
@@ -486,7 +487,7 @@ final class App
                 return;
             }
             $lastSeen = $user->toArray()['last_seen_at'] ?? null;
-            $window = (int) $this->config->get('presence.heartbeat_seconds', 60);
+            $window = $container->get(PresenceConfig::class)->heartbeatSeconds();
             $stale = true;
             if (is_string($lastSeen) && $lastSeen !== '') {
                 $ts = strtotime($lastSeen . ' UTC');
@@ -614,14 +615,60 @@ final class App
             $inboxUnreadCount = 0;
         }
 
-        $presenceRoster = [];
-        try {
-            if (!empty($features['presence'])) {
-                $presenceRoster = $container->get(PresenceService::class)->roster($session->user());
-            }
-        } catch (Throwable) {
-            $presenceRoster = [];
+        // Presence is shared as a CLOSURE, not an array. Building the roster
+        // eagerly meant every request paid for it — including variant=plain pages
+        // that have no rail at all, every admin and auth page, and every JSON
+        // endpoint: /notifications/bell polls this once a minute per open tab,
+        // and /composer/preview and /upload each did it too. Only two consumers
+        // exist (this share entry and the rail partial), so deferring the work to
+        // the templates that actually render it is a two-site change.
+        //
+        // The closure carries its own try/catch: View::renderTemplate rethrows,
+        // so a failure inside a template would not be caught by the guard that
+        // wraps this method's eager lookups, and shareViewGlobals must survive an
+        // un-migrated or unreachable database.
+        // rail_limit carries the real default, not 0: the rail publishes it as
+        // data-presence-limit and the poller latches that number for the life of
+        // the page, so a 0 here (clamped to 1 by the template) would pin a
+        // one-row rail for the rest of the visit after a single failed lookup.
+        $presenceOff = [
+            'members' => [], 'here' => 0, 'away' => 0, 'total' => 0, 'capped' => false,
+            'self_state' => PresenceService::OFFLINE,
+            'rail_limit' => PresenceConfig::DEFAULT_RAIL_LIMIT,
+        ];
+        $presenceSnapshot = static fn (): array => $presenceOff;
+        if (!empty($features['presence'])) {
+            $presenceSnapshot = static function () use ($container, $session, $presenceOff): array {
+                try {
+                    $presence = $container->get(PresenceService::class);
+                    return $presence->snapshot($session->user()) + [
+                        'rail_limit' => $presence->railLimit(),
+                        // Off the viewer's own row, not the capped roster slice.
+                        'self_state' => $presence->selfState($session->user()),
+                    ];
+                } catch (Throwable) {
+                    return $presenceOff;
+                }
+            };
         }
+
+        // "Show avatars" is a reading preference the member sets once, and the
+        // board rail is part of the shell on every route — so once the presence
+        // roster started rendering monograms it needed the preference too, and
+        // the per-controller `show_avatars` never reached a shared partial.
+        // Shared lazily for the same reason the roster is: a closure costs
+        // nothing on the pages that never ask.
+        $railAvatars = static function () use ($container, $session): bool {
+            try {
+                $user = $session->user();
+                if ($user === null) {
+                    return true;
+                }
+                return (bool) $container->get(PreferenceService::class)->reading($user->id())['show_avatars'];
+            } catch (Throwable) {
+                return true;
+            }
+        };
 
         // Appearance prefs stamp the document root (no theme flash; no-JS themes).
         // Guests use the site default; a signed-in user's resolved prefs win.
@@ -789,7 +836,8 @@ final class App
             'request_path' => $request->path(),
             'nav' => $nav,
             'inbox_unread_count' => $inboxUnreadCount,
-            'presence_roster' => $presenceRoster,
+            'presence_snapshot' => $presenceSnapshot,
+            'rail_avatars' => $railAvatars,
             'features' => $features,
             'oauth_providers' => $oauthProviders,
             'passkeys_usable' => $passkeysUsable,
@@ -1065,10 +1113,14 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(ThreadRepository::class),
         ));
+        $c->bind(PresenceConfig::class, fn (Container $c) => PresenceConfig::fromArray(
+            is_array($config->get('presence')) ? $config->get('presence') : [],
+        ));
         $c->bind(PresenceService::class, fn (Container $c) => new PresenceService(
             $c->get(UserRepository::class),
             $c->get(BlockRepository::class),
-            (int) $config->get('presence.online_window_seconds', 300),
+            $c->get(FeatureFlags::class),
+            $c->get(PresenceConfig::class),
         ));
         $c->bind(UserProfileFieldRepository::class, fn (Container $c) => new UserProfileFieldRepository($c->get(Database::class)));
         $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
@@ -2112,6 +2164,7 @@ final class App
             $c->get(EmailDomainVerifier::class),
             $c->get(ThreadIntelligenceAdminService::class),
             $c->get(AuditQueryService::class),
+            $c->get(PresenceConfig::class),
         ));
         $c->bind(AdminSettingsService::class, fn (Container $c) => new AdminSettingsService(
             $c->get(Database::class),

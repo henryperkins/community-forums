@@ -132,11 +132,19 @@ return [
         'leaderboard_size' => 50,
     ],
 
-    // Presence (P2-11): only refresh last_seen_at at most once per this interval
-    // per request to keep writes cheap; the roster shows users seen within the window.
+    // Presence (P2-11, ADR 0031). last_seen_at is refreshed at most once per
+    // heartbeat_seconds per member to keep writes cheap; the roster reads the
+    // away window and splits it at the online window into "here now" / "stepped
+    // away". Values are NOT cast here on purpose — PresenceConfig validates them
+    // and reports a named warning, where a bare (int) would turn 'banana' into a
+    // silent 0 and empty the roster with nothing to explain it.
     'presence' => [
-        'heartbeat_seconds' => (int) Env::get('PRESENCE_HEARTBEAT_SECONDS', '60'),
-        'online_window_seconds' => (int) Env::get('PRESENCE_ONLINE_WINDOW_SECONDS', '300'),
+        'heartbeat_seconds' => Env::get('PRESENCE_HEARTBEAT_SECONDS', '60'),
+        'online_window_seconds' => Env::get('PRESENCE_ONLINE_WINDOW_SECONDS', '300'),
+        'away_window_seconds' => Env::get('PRESENCE_AWAY_WINDOW_SECONDS', '900'),
+        'roster_max' => Env::get('PRESENCE_ROSTER_MAX', '200'),
+        'rail_limit' => Env::get('PRESENCE_RAIL_LIMIT', '5'),
+        'page_size' => Env::get('PRESENCE_PAGE_SIZE', '12'),
     ],
 
     // OAuth providers (P2-10). Each provider is "configured" only when it has a
@@ -234,6 +242,11 @@ return [
         'register' => [5, 3600],
         'invite_create' => [30, 3600],   // admin invitation issuance burst guard (P5-13, TM-IN-07)
         'invite_redeem' => [30, 900],    // invite token probing/redemption per client (P5-13, TM-IN-01)
+        // Presence is the only polled endpoint open to guests (ADR 0031). One
+        // visible tab spends 6 requests per 300s at the 60s cadence, and
+        // /users-online shares the bucket, so 120 leaves ~20x headroom for a
+        // member with several tabs while still bounding roster enumeration.
+        'presence' => [120, 300],
         'post' => [30, 600],
         'dm' => [20, 600],
         'dm_report' => [10, 600],
