@@ -144,10 +144,28 @@ needed — point `DB_SSL_CA` at the image's distro bundle
 > `CREATE TABLE` is unaffected; so are `ALTER`s on tables created within the same
 > run. Only pre-existing, schema-cached tables are exposed.
 >
-> If this starts biting, the fix is a schema-convergence wait in
-> `src/Core/Migrator.php`: after each DDL statement, poll `information_schema`
-> until the change is visible before running dependent DML. On a non-Vitess
-> MySQL the race does not exist and no such change is needed.
+> **It bit for real on 2026-09-12** (fresh `imladris-boards` branch): `0048`
+> applied its two `ALTER`s, died on the `UPDATE`, recorded nothing, and every
+> container boot after that re-issued the `ALTER` and failed on
+> `Duplicate column name 'status'` — a crash loop that the Worker only reports
+> as "Container crashed while checking for ports".
+>
+> **Fixed the same day, two layers:**
+>
+> 1. `bin/console migrate*` now connects through `Database::migrationPdo()`,
+>    a `MigrationPdo` whose `exec()`/`query()`/`prepare()`/`execute()` run
+>    under `SchemaRaceRetry`: a statement rejected at planning time with
+>    `column … not found` / `symbol … not found` / `Unknown column` is re-sent
+>    every 250ms for up to 15s. Planning failures execute nothing, so the
+>    replay is safe; `ALTER`s never fail this way, so nothing non-idempotent is
+>    replayed. The policy is inert unless `SELECT VERSION()` says Vitess.
+> 2. `0048`'s two `ALTER`s are guarded by `information_schema` (pattern of
+>    `0079`/`0080`), so a database left half-way by an earlier run converges
+>    instead of looping. **Any new migration that `ALTER`s a pre-existing table
+>    should guard the same way** — the retry covers the DML, the guard covers
+>    the replay.
+>
+> On a non-Vitess MySQL the race does not exist and both layers are no-ops.
 
 Restrict source addresses if the provider supports it, and keep the database in
 a region close to where the container will run.
@@ -614,6 +632,18 @@ Done from the CLI (`pscale … --org perkinism --format json`):
 3. Watch the first boot: migrations run against the empty branch; confirm
    `/healthz` → `200 {"status":"ok","database":"ok"}` and `/setup` is offered
    again (fresh database ⇒ first-run setup).
+
+**What actually happened on the first deploy (07:16 UTC):** the container
+crash-looped. `0048` hit the Vitess schema-propagation race (§3), left
+`threads`/`posts` altered with no ledger row, and every boot after that died on
+`Duplicate column name 'status'`. Diagnosed by running `php bin/console migrate`
+from a workstation against the branch (same error, instantly) — the Worker log
+only says "Container crashed while checking for ports". Fixed by the
+`MigrationPdo` retry + `0048` guards described in §3; the follow-up deploy let
+the container's own boot-time migrate converge. Do **not** run migrations
+against the production branch from a workstation while the container is
+crash-looping: each boot attempt is another migrator, and two migrators on one
+ledger is exactly the half-applied state this incident started from.
 
 Known regression to plan for: the container stays pinned to `ENAM` while the
 new branch is in `gcp-us-central1`, so per-query latency returns to roughly the

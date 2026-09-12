@@ -15,20 +15,33 @@ declare(strict_types=1);
 return new class {
     public function up(\PDO $pdo): void
     {
-        $pdo->exec(<<<'SQL'
-            ALTER TABLE threads
-              ADD COLUMN status ENUM('open','needs_answer','solved','decision_made','archived') NOT NULL DEFAULT 'open' AFTER is_deleted,
-              ADD COLUMN status_changed_at DATETIME NULL AFTER status,
-              ADD COLUMN status_changed_by BIGINT UNSIGNED NULL AFTER status_changed_at,
-              ADD KEY idx_threads_status (status, is_deleted, is_pending, last_post_at),
-              ADD CONSTRAINT fk_threads_status_user FOREIGN KEY (status_changed_by) REFERENCES users(id) ON DELETE SET NULL
-        SQL);
+        // Both ALTERs are guarded by information_schema. On Vitess the ALTER
+        // lands on the tablet before vtgate learns the new columns, and on
+        // 2026-09-12 (PlanetScale cutover, runbook §3) this migration ran both
+        // ALTERs and then died on the UPDATE below with "column not found".
+        // Nothing is recorded in schema_migrations on failure, so the next run
+        // re-issued the ALTER and failed on "Duplicate column name" -- a boot
+        // loop. Skipping an ALTER whose first column already exists is exactly
+        // the state a failed earlier run leaves behind. The DML that follows is
+        // covered by MigrationPdo's schema-race retry.
+        if (!$this->columnExists($pdo, 'threads', 'status')) {
+            $pdo->exec(<<<'SQL'
+                ALTER TABLE threads
+                  ADD COLUMN status ENUM('open','needs_answer','solved','decision_made','archived') NOT NULL DEFAULT 'open' AFTER is_deleted,
+                  ADD COLUMN status_changed_at DATETIME NULL AFTER status,
+                  ADD COLUMN status_changed_by BIGINT UNSIGNED NULL AFTER status_changed_at,
+                  ADD KEY idx_threads_status (status, is_deleted, is_pending, last_post_at),
+                  ADD CONSTRAINT fk_threads_status_user FOREIGN KEY (status_changed_by) REFERENCES users(id) ON DELETE SET NULL
+            SQL);
+        }
 
-        $pdo->exec(<<<'SQL'
-            ALTER TABLE posts
-              ADD COLUMN is_wiki TINYINT(1) NOT NULL DEFAULT 0 AFTER is_op,
-              ADD KEY idx_posts_wiki (thread_id, is_wiki)
-        SQL);
+        if (!$this->columnExists($pdo, 'posts', 'is_wiki')) {
+            $pdo->exec(<<<'SQL'
+                ALTER TABLE posts
+                  ADD COLUMN is_wiki TINYINT(1) NOT NULL DEFAULT 0 AFTER is_op,
+                  ADD KEY idx_posts_wiki (thread_id, is_wiki)
+            SQL);
+        }
 
         $pdo->exec("UPDATE threads SET status = 'solved', status_changed_at = UTC_TIMESTAMP() WHERE accepted_answer_post_id IS NOT NULL");
 
@@ -414,5 +427,19 @@ return new class {
         $pdo->exec('ALTER TABLE threads DROP FOREIGN KEY fk_threads_status_user');
         $pdo->exec('ALTER TABLE posts DROP COLUMN is_wiki');
         $pdo->exec('ALTER TABLE threads DROP COLUMN status_changed_by, DROP COLUMN status_changed_at, DROP COLUMN status');
+    }
+
+    private function columnExists(\PDO $pdo, string $table, string $column): bool
+    {
+        $stmt = $pdo->prepare(<<<'SQL'
+            SELECT COUNT(*)
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = :table_name
+              AND COLUMN_NAME = :column_name
+        SQL);
+        $stmt->execute([':table_name' => $table, ':column_name' => $column]);
+
+        return (int) $stmt->fetchColumn() > 0;
     }
 };

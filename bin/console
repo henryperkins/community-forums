@@ -139,7 +139,8 @@ $log = static fn (string $m): int => fwrite(STDOUT, $m . PHP_EOL);
 /** Build a Migrator bound to the configured database. */
 $migrator = static function () use ($config): Migrator {
     $db = new Database($config->get('db'));
-    return new Migrator($db->pdo(), $config->get('paths.migrations'));
+    // migrationPdo(): statements retry across Vitess's async schema propagation.
+    return new Migrator($db->migrationPdo(), $config->get('paths.migrations'));
 };
 
 /** A Database bound to the configured database. */

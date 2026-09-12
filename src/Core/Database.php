@@ -31,36 +31,67 @@ final class Database
             return $this->pdo;
         }
 
-        $dsn = sprintf(
-            'mysql:host=%s;port=%d;dbname=%s;charset=%s',
-            $this->config['host'],
-            (int) $this->config['port'],
-            $this->config['database'],
-            $this->config['charset'] ?? 'utf8mb4',
-        );
-
-        $options = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::ATTR_STRINGIFY_FETCHES => false,
-            PDO::ATTR_TIMEOUT => 5,
-        ];
-
         $startedAt = hrtime(true);
         $this->connectionCount++;
         try {
             $this->pdo = new PDO(
-                $dsn,
+                $this->dsn(),
                 (string) $this->config['username'],
                 (string) $this->config['password'],
-                $options + $this->tlsOptions(),
+                $this->driverOptions(),
             );
         } finally {
             $this->connectionDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
         }
 
         return $this->pdo;
+    }
+
+    /**
+     * A separate connection for the migration runner (`bin/console migrate*`).
+     * Same DSN and driver options as pdo(), but statements retry across
+     * Vitess's asynchronous schema propagation (see MigrationPdo). Not memoised:
+     * the caller holds it for the duration of one migrate run. A policy may be
+     * injected (tests); by default it is chosen from the server version.
+     */
+    public function migrationPdo(?SchemaRaceRetry $retry = null): MigrationPdo
+    {
+        $startedAt = hrtime(true);
+        $this->connectionCount++;
+        try {
+            return new MigrationPdo(
+                $this->dsn(),
+                (string) $this->config['username'],
+                (string) $this->config['password'],
+                $this->driverOptions(),
+                $retry,
+            );
+        } finally {
+            $this->connectionDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
+        }
+    }
+
+    private function dsn(): string
+    {
+        return sprintf(
+            'mysql:host=%s;port=%d;dbname=%s;charset=%s',
+            $this->config['host'],
+            (int) $this->config['port'],
+            $this->config['database'],
+            $this->config['charset'] ?? 'utf8mb4',
+        );
+    }
+
+    /** @return array<int,mixed> */
+    private function driverOptions(): array
+    {
+        return [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+            PDO::ATTR_TIMEOUT => 5,
+        ] + $this->tlsOptions();
     }
 
     /**
