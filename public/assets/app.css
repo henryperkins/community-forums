@@ -986,6 +986,24 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     overflow-y: auto;
 }
 
+/* Inline media is a PREVIEW, not the published rendering. Unconstrained, an
+   uploaded photo laid itself out at natural size — a 1600x1200 upload rendered
+   1600px wide inside a ~550px editor that clips, so the author saw a 1:1 crop of
+   the top-left corner and had to scroll a 336px-tall editor past it. That
+   misreports both the size and the framing of a post that will scale the whole
+   image down to the column.
+   Fit it to the column and cap the height so the image stays in the text flow,
+   at its insertion point, without swallowing the surface. Scaling both bounds
+   with width/height:auto keeps the aspect ratio, so the preview is a faithful
+   miniature. Preview (the action bar toggle) remains the full-fidelity view and
+   is deliberately NOT capped. */
+.composer-box .wysiwyg-composer .ProseMirror img {
+    max-width: 100%;
+    max-height: 240px;
+    width: auto;
+    height: auto;
+}
+
 /* A mount's own header field (the New Topic title) sits inside the box and
    shares its inset, so the composer reads as one surface instead of a detached
    input stacked above a framed component. The box owns the only focus ring. */
@@ -1063,7 +1081,8 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
-.composer-toolbar-action[data-tip]::after {
+.composer-toolbar-action[data-tip]::after,
+.composer-format-toggle[data-tip]::after {
     content: attr(data-tip);
     position: absolute;
     z-index: 70;
@@ -1085,6 +1104,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 .composer-toolbar-action[data-tip]:hover::after,
 .composer-toolbar-action[data-tip]:focus-visible::after { translate: -50% 0; opacity: 1; }
+/* The action-bar toggle sits near the left edge of the mobile dock. */
+.composer-format-toggle[data-tip]::after { left: 0; translate: 0 2px; }
+.composer-format-toggle[data-tip]:hover::after,
+.composer-format-toggle[data-tip]:focus-visible::after { translate: 0 0; opacity: 1; }
 .composer-toolbar-sep { width: 1px; height: 20px; flex: 0 0 1px; margin: 0 2px; background: var(--border-hair); }
 .composer-more-wrap { display: none; }
 .composer-format-overflow {
@@ -1127,8 +1150,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     background: var(--surface-sunken);
     padding: 6px;
 }
+/* The thumbnail is [hidden] until the upload resolves, so pin the meta block to
+   the flexible track instead of letting it auto-place into the 48px thumb track. */
 .composer-upload-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); }
-.composer-upload-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; min-width: 0; }
+.composer-upload-meta { grid-column: 2; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; min-width: 0; }
 .composer-upload-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-size: .82rem; font-weight: var(--weight-semibold); }
 .composer-upload-status { min-width: 0; overflow-wrap: anywhere; color: var(--text-muted); font-size: .78rem; }
 .composer-upload-card.is-failed .composer-upload-status { color: var(--danger); }
@@ -1155,6 +1180,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-actions-end { flex: 0 0 auto; }
 .composer-actions-start > [data-composer-actions-start-slot],
 .composer-actions-end > [data-composer-actions-end-slot] { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.composer-format-toggle { position: relative; }
 .composer-format-toggle,
 .composer-attach-toggle,
 .composer-emoji-toggle,
@@ -1175,6 +1201,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-format-toggle[aria-expanded="true"],
 .composer-emoji-toggle[aria-expanded="true"],
 .composer-preview-toggle[aria-expanded="true"] { border-color: var(--border-hair); background: var(--surface-sunken); color: var(--text-strong); }
+.composer-actions-start:has(.composer-format-toggle[data-tip]:hover),
+.composer-actions-start:has(.composer-format-toggle[data-tip]:focus-visible) { overflow: visible; }
+/* Keep identity text inside its flex item when the tooltip opens above the row. */
+.composer-actions-start .composer-identity,
+.composer-actions-start .composer-anonymous-chip { overflow: hidden; }
 .composer-attach-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
 .composer-emoji-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
 /* Editor mode and minimise are tertiary: they ride at the quiet end of the

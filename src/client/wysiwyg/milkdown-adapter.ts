@@ -160,6 +160,17 @@ function buildChipDecorations(doc: ProseMirrorNode): DecorationSet {
 function richComposerPlugin(adapter: MilkdownComposerAdapter) {
   return $prose(() => new Plugin({
     key: new PluginKey(chipPluginKey),
+    view() {
+      return {
+        update(view, previousState) {
+          if (!previousState.selection.eq(view.state.selection)
+            || previousState.storedMarks !== view.state.storedMarks
+            || previousState.doc !== view.state.doc) {
+            adapter.notifyToolbarState();
+          }
+        },
+      };
+    },
     props: {
       decorations(state) {
         return buildChipDecorations(state.doc);
@@ -385,6 +396,87 @@ class MilkdownComposerAdapter {
     return !this.richMode || this.failed || this.destroyed;
   }
 
+  isActionActive(key: string, _action: MarkdownAction): boolean | null {
+    if (this.isSourceMode()) {
+      return null;
+    }
+    const view = this.currentView();
+    if (!view) {
+      return null;
+    }
+
+    if (key === 'spoiler') {
+      // Spoilers remain literal delimiters in Milkdown. Inspect only the current
+      // text block, preserving offsets and excluding code and inline atoms.
+      const { $from, $to } = view.state.selection;
+      if (!$from.sameParent($to) || $from.parent.type.spec.code) {
+        return false;
+      }
+      let text = '';
+      $from.parent.forEach((node) => {
+        text += node.isText && !isCodeText(node, $from.parent)
+          ? node.text
+          : '\0'.repeat(node.nodeSize);
+      });
+      for (const match of text.matchAll(/\|\|(?=[^\s\0])([^\0]*?[^\s\0])\|\|/g)) {
+        const start = match.index! + 2;
+        const end = start + match[1].length;
+        if ($from.parentOffset >= start && $to.parentOffset <= end) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    const markNames: Record<string, string[]> = {
+      bold: ['strong'],
+      italic: ['emphasis', 'em'],
+      strike: ['strike_through', 'strikethrough', 'strike'],
+      code: ['inlineCode', 'code'],
+      link: ['link'],
+    };
+    const names = markNames[key];
+    if (names) {
+      const marks = view.state.selection.empty
+        ? (view.state.storedMarks || view.state.selection.$from.marks())
+        : null;
+      return names.some((name) => {
+        const type = view.state.schema.marks[name];
+        if (!type) {
+          return false;
+        }
+        return marks
+          ? marks.some((mark) => mark.type === type)
+          : view.state.doc.rangeHasMark(view.state.selection.from, view.state.selection.to, type);
+      });
+    }
+
+    const nodeNames: Record<string, string[]> = {
+      quote: ['blockquote'],
+      h2: ['heading'],
+      list: ['bullet_list', 'bulletList'],
+      orderedList: ['ordered_list', 'orderedList'],
+      codeblock: ['code_block', 'codeBlock'],
+    };
+    const activeNodes = nodeNames[key];
+    if (!activeNodes) {
+      return false;
+    }
+    for (let depth = view.state.selection.$from.depth; depth >= 0; depth--) {
+      const node = view.state.selection.$from.node(depth);
+      if (activeNodes.includes(node.type.name)) {
+        return key !== 'h2' || Number(node.attrs.level) === 2;
+      }
+    }
+    return false;
+  }
+
+  notifyToolbarState(): void {
+    if (!this.destroyed) {
+      this.form.dispatchEvent(new Event('retroboards:composer-statechange'));
+    }
+  }
+
   keyTargets(): HTMLElement[] {
     return [this.host, this.textarea];
   }
@@ -604,6 +696,7 @@ class MilkdownComposerAdapter {
 
     return this.editor.create().then(() => {
       this.labelEditor();
+      this.notifyToolbarState();
     }).catch((error) => {
       this.failed = true;
       this.destroy();
@@ -642,6 +735,7 @@ class MilkdownComposerAdapter {
       this.textarea.required = this.wasRequired;
       this.toggle.textContent = 'Rich text';
       this.textarea.focus();
+      this.notifyToolbarState();
       return;
     }
 
@@ -655,6 +749,7 @@ class MilkdownComposerAdapter {
     this.ready.then(() => {
       this.editor?.action(replaceAll(markdown, true));
       this.focus();
+      this.notifyToolbarState();
     }).catch(() => {});
   }
 

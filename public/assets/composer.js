@@ -294,6 +294,16 @@
         return applyAction(ta, key);
     }
 
+    function actionActiveForAdapter(adapter, ta, key, action) {
+        if (adapter && typeof adapter.isActionActive === 'function') {
+            try {
+                var active = adapter.isActionActive(key, action);
+                if (active !== null && typeof active !== 'undefined') { return !!active; }
+            } catch (e) {}
+        }
+        return actionActive(ta, action);
+    }
+
     function currentLine(ta) {
         var v = ta.value, pos = ta.selectionStart;
         var lineStart = v.lastIndexOf('\n', pos - 1) + 1;
@@ -351,8 +361,13 @@
         bar.setAttribute('aria-label', 'Formatting');
         var buttons = [];
         function updateState() {
+            if (bar.hidden) { return; }
+            var active = form._rbComposerAdapter || form._rbComposerFallbackAdapter;
             buttons.forEach(function (item) {
-                item.button.setAttribute('aria-pressed', actionActive(ta, item.action) ? 'true' : 'false');
+                item.button.setAttribute(
+                    'aria-pressed',
+                    actionActiveForAdapter(active, ta, item.key, item.action) ? 'true' : 'false'
+                );
             });
         }
 
@@ -380,7 +395,7 @@
                 applyActionForAdapter(form._rbComposerAdapter || form._rbComposerFallbackAdapter, ta, key);
                 updateState();
             });
-            buttons.push({ button: b, action: action });
+            buttons.push({ button: b, key: key, action: action });
             return b;
         }
 
@@ -427,8 +442,11 @@
         bar.appendChild(moreWrap);
 
         ['input', 'keyup', 'mouseup', 'select'].forEach(function (evt) {
-            ta.addEventListener(evt, updateState);
+            listenWithCleanup(form, ta, evt, updateState);
         });
+        // Rich adapters own their selection and report only changes for this form.
+        // That keeps unrelated document selections from sweeping every toolbar.
+        listenWithCleanup(form, form, 'retroboards:composer-statechange', updateState);
         slot.appendChild(bar);
         slot.appendChild(overflow);
 
@@ -438,16 +456,21 @@
             formatToggle.type = 'button';
             formatToggle.className = 'composer-format-toggle';
             formatToggle.textContent = 'Aa';
-            formatToggle.setAttribute('aria-label', 'Formatting');
             formatToggle.setAttribute('aria-controls', bar.id);
+            formatToggle.setAttribute('aria-label', 'Formatting');
+            function syncFormatToggle(isOpen) {
+                formatToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                formatToggle.setAttribute('data-tip', isOpen ? 'Hide formatting toolbar' : 'Show formatting toolbar');
+            }
             var stored = storageRead('rb-composer:format-row');
             var open = stored !== 'closed';
             bar.hidden = !open;
-            formatToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            syncFormatToggle(open);
             formatToggle.addEventListener('click', function () {
                 var nextOpen = bar.hidden;
                 bar.hidden = !nextOpen;
-                formatToggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+                syncFormatToggle(nextOpen);
+                if (nextOpen) { updateState(); }
                 storageWrite('rb-composer:format-row', nextOpen ? 'open' : 'closed');
             });
             actionSlot.appendChild(formatToggle);
@@ -458,11 +481,30 @@
             overflow.hidden = true;
             more.setAttribute('aria-expanded', 'false');
         });
-        overflow.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') { return; }
+        function closeOverflow(restoreFocus) {
+            if (overflow.hidden) { return; }
             overflow.hidden = true;
             more.setAttribute('aria-expanded', 'false');
-            more.focus();
+            if (restoreFocus) { more.focus(); }
+        }
+        // Escape is claimed by an outer handler that collapses the whole composer.
+        // Dismissing this menu must consume the key, or one press both closes the
+        // menu AND folds the composer away, throwing focus out to the page.
+        function handleOverflowEscape(event) {
+            if (event.key !== 'Escape' || overflow.hidden) { return; }
+            event.preventDefault();
+            event.stopPropagation();
+            closeOverflow(true);
+        }
+        overflow.addEventListener('keydown', handleOverflowEscape);
+        // The panel is a SIBLING of the toggle, not a descendant, so the handler
+        // above never sees Escape pressed while focus is still on the toggle —
+        // the menu stayed open with no keyboard way to dismiss it.
+        more.addEventListener('keydown', handleOverflowEscape);
+        // Tabbing out of the menu left it open and floating over the composer.
+        listenWithCleanup(form, document, 'focusin', function (event) {
+            if (moreWrap.contains(event.target) || overflow.contains(event.target)) { return; }
+            closeOverflow(false);
         });
         updateState();
     }
