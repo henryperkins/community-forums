@@ -29,7 +29,7 @@ final class DigestService
             'window_start_utc' => $fromUtc,
             'window_end_utc' => $toUtc,
             'max_post_id' => $maxPostId,
-            'sources' => ['subscriptions' => $this->activity->sources($viewer->id()), 'saved_feeds' => []],
+            'sources' => ['subscriptions' => $this->activity->sources($viewer->id()), 'saved_feeds' => !empty($this->visibility->scope($viewer, true)['features']['saved_feeds']) ? $this->activity->savedSources($viewer->id()) : []],
         ];
     }
 
@@ -38,7 +38,7 @@ final class DigestService
         if (($payload['version'] ?? null) !== 1 || !is_int($payload['max_post_id'] ?? null)
             || $payload['max_post_id'] < 0 || !is_array($payload['sources'] ?? null)
             || !is_array($payload['sources']['subscriptions'] ?? null)
-            || ($payload['sources']['saved_feeds'] ?? null) !== []) {
+            || !is_array($payload['sources']['saved_feeds'] ?? null)) {
             return false;
         }
         foreach (['window_start_utc', 'window_end_utc'] as $field) {
@@ -56,6 +56,10 @@ final class DigestService
         foreach ($payload['sources']['subscriptions'] as $source) {
             if (!is_array($source) || !in_array($source['target_type'] ?? null, ['thread', 'board'], true)
                 || !is_int($source['target_id'] ?? null) || $source['target_id'] <= 0) { return false; }
+        }
+        foreach ($payload['sources']['saved_feeds'] as $source) {
+            if (!is_array($source) || !is_int($source['id'] ?? null) || $source['id'] <= 0
+                || !\App\Support\SavedFeedFilter::valid($source['filter'] ?? null)) { return false; }
         }
         return true;
     }

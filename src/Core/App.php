@@ -848,6 +848,14 @@ final class App
                 }
             },
             'presence_snapshot' => $presenceSnapshot,
+            'organization_nav' => static function () use ($container, $session, $features): array {
+                try {
+                    $viewer = $session->user();
+                    return $viewer === null ? [] : $container->get(PersonalOrganizationService::class)->overview($viewer, [
+                        'board_folders' => !empty($features['board_folders']), 'saved_feeds' => !empty($features['saved_feeds']),
+                    ]);
+                } catch (Throwable) { return []; }
+            },
             'rail_avatars' => $railAvatars,
             'features' => $features,
             'oauth_providers' => $oauthProviders,
@@ -1219,6 +1227,11 @@ final class App
             $c->get(WriteGate::class),
             $c->get(AuthorityGate::class),
         ));
+        $c->bind(\App\Repository\SavedFeedRepository::class, fn (Container $c) => new \App\Repository\SavedFeedRepository($c->get(Database::class)));
+        $c->bind(\App\Repository\BoardFolderRepository::class, fn (Container $c) => new \App\Repository\BoardFolderRepository($c->get(Database::class)));
+        $c->bind(\App\Service\SavedFeedService::class, fn (Container $c) => new \App\Service\SavedFeedService(
+            $c->get(\App\Repository\SavedFeedRepository::class), $c->get(FeedService::class), $c->get(FeatureFlags::class),
+        ));
         $c->bind(PersonalOrganizationService::class, fn (Container $c) => new PersonalOrganizationService(
             $c->get(Database::class),
             $c->get(BoardRepository::class),
@@ -1226,6 +1239,9 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(ThreadRepository::class),
             $c->get(ThreadUserRepository::class),
+            $c->get(\App\Repository\SavedFeedRepository::class),
+            $c->get(\App\Repository\BoardFolderRepository::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(SinceLastReadContextService::class, fn (Container $c) => new SinceLastReadContextService(
             $c->get(Database::class),
@@ -1582,6 +1598,7 @@ final class App
             $c->get(FollowRepository::class),
             $c->get(BlockRepository::class),
             $c->get(BoardMemberRepository::class),
+            $c->get(NotificationVisibilityService::class),
         ));
         $c->bind(SolvedAnswerService::class, fn (Container $c) => new SolvedAnswerService(
             $c->get(Database::class),
@@ -2379,6 +2396,12 @@ final class App
         $r->post('/settings/bookmark-folders/add-thread', [PersonalOrganizationController::class, 'addThreadToBookmarkFolder']);
         $r->post('/settings/bookmark-folders/{id}/threads', [PersonalOrganizationController::class, 'addThreadToBookmarkFolder']);
         $r->post('/settings/saved-feeds', [PersonalOrganizationController::class, 'createSavedFeed']);
+        $r->get('/feeds/saved/{id}', [\App\Controller\SavedFeedController::class, 'show']);
+        $r->post('/settings/saved-feeds/{id}', [PersonalOrganizationController::class, 'updateSavedFeed']);
+        $r->post('/settings/saved-feeds/{id}/delete', [PersonalOrganizationController::class, 'deleteSavedFeed']);
+        $r->post('/settings/board-folders/{id}/rename', [PersonalOrganizationController::class, 'renameFolder']);
+        $r->post('/settings/board-folders/{id}/delete', [PersonalOrganizationController::class, 'deleteFolder']);
+        $r->post('/settings/board-folders/{id}/boards/{board_id}/remove', [PersonalOrganizationController::class, 'removeBoard']);
 
         $r->get('/setup', [SetupController::class, 'show']);
         $r->post('/setup', [SetupController::class, 'submit']);

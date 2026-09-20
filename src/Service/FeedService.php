@@ -17,7 +17,9 @@ final class FeedService
         private FollowRepository $follows,
         private BlockRepository $blocks,
         private BoardMemberRepository $members,
+        private ?NotificationVisibilityService $visibility = null,
     ) {
+        $this->visibility ??= new NotificationVisibilityService($db);
     }
 
     /**
@@ -105,9 +107,23 @@ final class FeedService
     /** @return array{items:array<int,array<string,mixed>>, page:int, has_more:bool} */
     public function latest(int $userId, int $page = 1, int $perPage = 20): array
     {
+        return $this->recent($userId, $page, $perPage, []);
+    }
+
+    public function forSavedFeed(\App\Domain\User $viewer, array $filter, int $page = 1, int $perPage = 20): array
+    {
+        if (!\App\Support\SavedFeedFilter::valid($filter)) {
+            return ['items' => [], 'page' => max(1, $page), 'has_more' => false];
+        }
+        return $this->recent($viewer->id(), $page, $perPage, $filter['board_ids'],
+            $filter['board_ids'] === [] ? null : $this->visibility->scope($viewer, true));
+    }
+
+    private function recent(int $userId, int $page, int $perPage, array $selectedIds, ?array $readScope = null): array
+    {
         $page = max(1, $page);
         $perPage = max(1, min(100, $perPage));
-        $memberBoardIds = $this->members->boardIdsFor($userId);
+        $memberBoardIds = $readScope === null ? $this->members->boardIdsFor($userId) : [];
         $params = [$userId, $userId];
 
         $boardClause = "b.visibility = 'public'";
@@ -115,6 +131,14 @@ final class FeedService
             $mPlace = implode(',', array_fill(0, count($memberBoardIds), '?'));
             $boardClause = "(b.visibility = 'public' OR (b.visibility = 'private' AND b.id IN ($mPlace)))";
             $params = array_merge($params, $memberBoardIds);
+        }
+
+        if ($readScope !== null) {
+            $boardClause = \App\Repository\NotificationEligibility::board($readScope);
+        }
+        if ($selectedIds !== []) {
+            $boardClause = '(' . $boardClause . ') AND b.id IN (' . implode(',', array_fill(0, count($selectedIds), '?')) . ')';
+            $params = array_merge($params, $selectedIds);
         }
 
         $offset = ($page - 1) * $perPage;

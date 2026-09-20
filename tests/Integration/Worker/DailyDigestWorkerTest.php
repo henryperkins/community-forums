@@ -479,4 +479,204 @@ final class DailyDigestWorkerTest extends TestCase
         self::assertSame(1, $mailer->count());
     }
 
+    public function test_saved_feed_only_delivers_once_and_explicit_off_overrides(): void
+    {
+        $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+        $subs = new SubscriptionRepository($this->db); $subs->delete($uid, 'thread', $f['thread']['thread_id']);
+        $this->db->insert('INSERT INTO saved_feed_filters (user_id,name,filter_json,digest_enabled,created_at) VALUES (?,?,?,1,UTC_TIMESTAMP())', [$uid, 'Daily selected', json_encode(['board_ids' => [(int) $f['board']['id']], 'sort' => 'latest'])]);
+        $off = $this->makeThread($f['board'], $f['author'], 'EXCLUDED explicit off');
+        $subs->set($uid, 'thread', $off['thread_id'], false, false, 'off');
+        $this->db->run("UPDATE posts SET created_at = '2026-09-20 08:00:00'");
+        $mailer = new ArrayMailer();
+        self::assertSame(1, $this->worker($mailer)->run('2026-09-20 09:15:00')['sent']);
+        $text = $mailer->to($f['recipient']['email'])[0]['text'];
+        self::assertStringContainsString('Original eligible topic (1 new)', $text);
+        self::assertStringNotContainsString('EXCLUDED', $text);
+        self::assertSame(0, $this->worker($mailer)->run('2026-09-20 09:20:00')['sent']);
+    }
+
+    private function savedSource(array $fixture, array $boards, string $name = 'Saved daily'): int
+    {
+        return $this->db->insert('INSERT INTO saved_feed_filters (user_id,name,filter_json,digest_enabled,created_at) VALUES (?,?,?,1,UTC_TIMESTAMP())',
+            [$fixture['recipient']['id'], $name, json_encode(['board_ids' => $boards, 'sort' => 'latest'])]);
+    }
+
+    public function test_overlapping_saved_sources_and_subscriptions_count_each_post_once_with_effective_frequency(): void
+    {
+        $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+        $this->savedSource($f, [], 'All'); $this->savedSource($f, [(int) $f['board']['id']], 'Selected');
+        $subs = new SubscriptionRepository($this->db);
+        $subs->set($uid, 'board', (int) $f['board']['id'], true, true, 'daily');
+        foreach ([['off', true], ['instant', true], ['daily', false]] as [$frequency, $email]) {
+            $thread = $this->makeThread($f['board'], $f['author'], 'EXCLUDED ' . $frequency . (int) $email);
+            $subs->set($uid, 'thread', $thread['thread_id'], true, $email, $frequency);
+        }
+        $this->db->run("UPDATE posts SET created_at = '2026-09-20 08:00:00'");
+        $mailer = new ArrayMailer(); $this->worker($mailer)->run('2026-09-20 09:15:00');
+        $text = $mailer->to($f['recipient']['email'])[0]['text'];
+        self::assertSame(1, substr_count($text, 'Original eligible topic (1 new)'));
+        self::assertStringNotContainsString('EXCLUDED', $text);
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE user_id=? AND kind='digest'", [$uid]));
+    }
+
+    public function test_saved_feed_retry_intersects_original_and_current_filters_and_retains_other_sources(): void
+    {
+        foreach (['disable', 'delete', 'replace', 'corrupt', 'private', 'feature_off'] as $change) {
+            $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+            $subs = new SubscriptionRepository($this->db); $subs->delete($uid, 'thread', $f['thread']['thread_id']);
+            $id = $this->savedSource($f, [(int) $f['board']['id']]);
+            $otherBoard = $this->makeBoard($this->makeCategory());
+            $other = $this->makeThread($otherBoard, $f['author'], 'Remaining subscribed source ' . $change);
+            $subs->set($uid, 'thread', $other['thread_id'], true, true, 'daily');
+            $new = $this->makeThread($otherBoard, $f['author'], 'EXCLUDED newly selected ' . $change);
+            $this->db->run("UPDATE posts SET created_at='2026-09-20 08:00:00'");
+            $mailer = new ArrayMailer(); $mailer->failNext = true;
+            self::assertSame(1, $this->worker($mailer)->run('2026-09-20 09:15:00')['retrying']);
+            $job = $this->db->fetch("SELECT * FROM email_deliveries WHERE user_id=? AND kind='digest'", [$uid]);
+            $payload = json_decode($job['payload'], true);
+            self::assertSame([(int) $f['board']['id']], $payload['sources']['saved_feeds'][0]['filter']['board_ids']);
+            match ($change) {
+                'disable' => $this->db->run('UPDATE saved_feed_filters SET digest_enabled=0 WHERE id=?', [$id]),
+                'delete' => $this->db->run('DELETE FROM saved_feed_filters WHERE id=?', [$id]),
+                'replace' => $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', [json_encode(['board_ids'=>[(int) $otherBoard['id']], 'sort'=>'latest']), $id]),
+                'corrupt' => $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', ['{"board_ids":false,"sort":"latest"}', $id]),
+                'private' => $this->db->run("UPDATE boards SET visibility='private' WHERE id=?", [$f['board']['id']]),
+                'feature_off' => (new SettingRepository($this->db))->set('features', ['saved_feeds' => false]),
+            };
+            $this->db->run('UPDATE email_deliveries SET next_attempt_at=NULL WHERE id=?', [$job['id']]);
+            self::assertSame(1, $this->worker($mailer)->run('2026-09-20 09:20:00')['sent']);
+            $text = $mailer->to($f['recipient']['email'])[0]['text'];
+            self::assertStringContainsString('Remaining subscribed source ' . $change, $text);
+            self::assertStringNotContainsString('Original eligible topic', $text); self::assertStringNotContainsString('EXCLUDED', $text);
+            $this->db->run('UPDATE users SET digest_hour=NULL WHERE id=?', [$uid]);
+            (new SettingRepository($this->db))->set('features', ['saved_feeds' => true]);
+        }
+    }
+
+    public function test_saved_source_disable_is_terminal_and_all_boards_remains_distinct_from_revoked_selection(): void
+    {
+        $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+        (new SubscriptionRepository($this->db))->delete($uid, 'thread', $f['thread']['thread_id']);
+        $id = $this->savedSource($f, [(int) $f['board']['id']]);
+        $mailer = new ArrayMailer(); $mailer->failNext = true;
+        $this->worker($mailer)->run('2026-09-20 09:15:00');
+        $job = $this->db->fetch("SELECT * FROM email_deliveries WHERE user_id=? AND kind='digest'", [$uid]);
+        $this->db->run('UPDATE saved_feed_filters SET digest_enabled=0 WHERE id=?', [$id]);
+        $this->db->run('UPDATE email_deliveries SET next_attempt_at=NULL WHERE id=?', [$job['id']]);
+        $this->worker($mailer)->run('2026-09-20 09:20:00');
+        self::assertSame('suppressed', $this->db->fetchValue('SELECT status FROM email_deliveries WHERE id=?', [$job['id']]));
+        $this->db->run('UPDATE saved_feed_filters SET digest_enabled=1 WHERE id=?', [$id]);
+        self::assertSame(0, $this->worker($mailer)->run('2026-09-20 09:25:00')['sent']);
+        $activity = new \App\Repository\DigestActivityRepository($this->db);
+        $visibility = new \App\Service\NotificationVisibilityService($this->db);
+        $service = new \App\Service\DigestService($activity, $visibility, $this->config);
+        $this->db->run("UPDATE boards SET visibility='private' WHERE id=?", [$f['board']['id']]);
+        $other = $this->makeThread($this->makeBoard($this->makeCategory()), $f['author'], 'Public all-board activity');
+        $this->db->run("UPDATE posts SET created_at='2026-09-20 08:00:00' WHERE thread_id=?", [$other['thread_id']]);
+        $viewer = $this->userEntity($f['recipient']);
+        $max = (int) $this->db->fetchValue('SELECT MAX(id) FROM posts');
+        $selected = $service->snapshot($viewer, '2026-09-19 09:15:00', '2026-09-20 09:15:00', $max);
+        self::assertNull($service->render($viewer, $selected));
+        $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', ['{"board_ids":[],"sort":"latest"}', $id]);
+        self::assertNull($service->render($viewer, $selected), 'Broadening a current filter cannot expand the queued original selection');
+        $all = $service->snapshot($viewer, '2026-09-19 09:15:00', '2026-09-20 09:15:00', $max);
+        self::assertStringContainsString('Public all-board activity', $service->render($viewer, $all)['text']);
+        self::assertStringNotContainsString('Original eligible topic', $service->render($viewer, $all)['text']);
+    }
+
+    public function test_saved_source_validation_is_total_and_legacy_multiple_ids_stay_selected(): void
+    {
+        $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+        (new SubscriptionRepository($this->db))->delete($uid, 'thread', $f['thread']['thread_id']);
+        $otherBoard = $this->makeBoard($this->makeCategory()); $other = $this->makeThread($otherBoard, $f['author'], 'Second selected board');
+        $excluded = $this->makeThread($this->makeBoard($this->makeCategory()), $f['author'], 'EXCLUDED unselected');
+        $this->savedSource($f, [(int) $f['board']['id'], (int) $otherBoard['id']]);
+        $this->db->run("UPDATE posts SET created_at='2026-09-20 08:00:00'");
+        $mailer = new ArrayMailer(); $this->worker($mailer)->run('2026-09-20 09:15:00');
+        $text = $mailer->to($f['recipient']['email'])[0]['text'];
+        self::assertStringContainsString('Original eligible topic', $text); self::assertStringContainsString('Second selected board', $text); self::assertStringNotContainsString('EXCLUDED', $text);
+        $payload = json_decode($this->db->fetchValue("SELECT payload FROM email_deliveries WHERE user_id=? AND kind='digest'", [$uid]), true);
+        foreach ([null, [], ['id' => '1', 'filter' => ['board_ids' => [], 'sort' => 'latest']], ['id' => 1, 'filter' => ['board_ids' => [0], 'sort' => 'latest']], ['id' => 1, 'filter' => ['board_ids' => '1', 'sort' => 'latest']]] as $source) {
+            $bad = $payload; $bad['sources']['saved_feeds'] = [$source];
+            self::assertFalse(\App\Service\DigestService::validPayload($bad));
+        }
+        $bad = $payload; $bad['window_start_utc'] = "2026-09-19 09:15:00\0";
+        self::assertFalse(\App\Service\DigestService::validPayload($bad));
+    }
+
+    public function test_queued_saved_digest_opt_out_remains_available_in_all_restricted_states(): void
+    {
+        $this->makeAdmin();
+        foreach (['suspended', 'deactivated', 'pending_deletion', 'banned'] as $state) {
+            $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+            (new SubscriptionRepository($this->db))->delete($uid, 'thread', $f['thread']['thread_id']);
+            $id = $this->savedSource($f, [(int) $f['board']['id']]);
+            $mailer = new ArrayMailer(); $mailer->failNext = true;
+            self::assertSame(1, $this->worker($mailer)->run('2026-09-20 09:15:00')['retrying']);
+            $job = $this->db->fetch("SELECT * FROM email_deliveries WHERE user_id=? AND kind='digest'", [$uid]);
+            $this->db->run("UPDATE users SET status=?, suspended_until='2099-01-01' WHERE id=?", [$state, $uid]);
+            $this->db->run("UPDATE boards SET visibility='private' WHERE id=?", [$f['board']['id']]);
+            $this->actingAs($f['recipient']);
+            $this->assertRedirect($this->post('/settings/saved-feeds/' . $id, ['digest_enabled'=>'0']));
+            $this->db->run('UPDATE email_deliveries SET next_attempt_at=NULL WHERE id=?', [$job['id']]);
+            $this->worker($mailer)->run('2026-09-20 09:20:00');
+            self::assertSame('suppressed', $this->db->fetchValue('SELECT status FROM email_deliveries WHERE id=?', [$job['id']]));
+            self::assertSame(0, $mailer->count());
+            $this->db->run('UPDATE users SET digest_hour=NULL WHERE id=?', [$uid]);
+        }
+    }
+
+    public function test_saved_digest_narrowing_and_actor_privacy_exclude_unavailable_activity(): void
+    {
+        $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+        (new SubscriptionRepository($this->db))->delete($uid, 'thread', $f['thread']['thread_id']);
+        $id = $this->savedSource($f, []);
+        $otherBoard = $this->makeBoard($this->makeCategory());
+        $this->makeThread($otherBoard, $f['author'], 'EXCLUDED after narrowing');
+        foreach (['is_anonymous', 'is_pending', 'is_deleted'] as $field) {
+            $t = $this->makeThread($f['board'], $f['author'], 'EXCLUDED ' . $field);
+            $this->db->run("UPDATE posts SET $field=1 WHERE thread_id=?", [$t['thread_id']]);
+        }
+        $blocked = $this->makeUser();
+        $this->makeThread($f['board'], $blocked, 'EXCLUDED blocked actor');
+        (new \App\Repository\BlockRepository($this->db))->block((int) $blocked['id'], $uid);
+        $this->db->run("UPDATE posts SET created_at='2026-09-20 08:00:00'");
+        $mailer = new ArrayMailer(); $mailer->failNext = true;
+        $this->worker($mailer)->run('2026-09-20 09:15:00');
+        $job = $this->db->fetch("SELECT * FROM email_deliveries WHERE user_id=? AND kind='digest'", [$uid]);
+        $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', [json_encode(['board_ids'=>[(int) $f['board']['id']], 'sort'=>'latest']), $id]);
+        $this->db->run('UPDATE email_deliveries SET next_attempt_at=NULL WHERE id=?', [$job['id']]);
+        self::assertSame(1, $this->worker($mailer)->run('2026-09-20 09:20:00')['sent']);
+        $text = $mailer->to($f['recipient']['email'])[0]['text'];
+        self::assertStringContainsString('Original eligible topic (1 new)', $text);
+        self::assertStringNotContainsString('EXCLUDED', $text);
+    }
+
+    public function test_saved_digest_explicit_read_access_and_all_discovery_intersect_at_retry(): void
+    {
+        $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+        (new SubscriptionRepository($this->db))->delete($uid, 'thread', $f['thread']['thread_id']);
+        $id = $this->savedSource($f, [(int) $f['board']['id']]);
+        $this->db->run("UPDATE boards SET visibility='hidden' WHERE id=?", [$f['board']['id']]);
+        $service = new \App\Service\DigestService(new \App\Repository\DigestActivityRepository($this->db), new \App\Service\NotificationVisibilityService($this->db), $this->config);
+        $viewer = $this->userEntity($f['recipient']);
+        $payload = $service->snapshot($viewer, '2026-09-19 09:15:00', '2026-09-20 09:15:00', (int) $this->db->fetchValue('SELECT MAX(id) FROM posts'));
+        $rendered = $service->render($viewer, $payload);
+        self::assertNotNull($rendered);
+        self::assertStringContainsString('Original eligible topic', $rendered['text']);
+        $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', ['{"board_ids":[],"sort":"latest"}', $id]);
+        self::assertNull($service->render($viewer, $payload), 'Current all-board discovery excludes hidden boards');
+        $all = $service->snapshot($viewer, '2026-09-19 09:15:00', '2026-09-20 09:15:00', (int) $this->db->fetchValue('SELECT MAX(id) FROM posts'));
+        $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', [json_encode(['board_ids'=>[(int) $f['board']['id']], 'sort'=>'latest']), $id]);
+        self::assertNull($service->render($viewer, $all), 'Original all-board discovery cannot expand to a hidden direct scope');
+        $this->db->run("UPDATE boards SET visibility='private' WHERE id=?", [$f['board']['id']]);
+        $this->db->run("UPDATE users SET role='admin' WHERE id=?", [$uid]);
+        self::assertNotNull($service->render($this->userEntity($this->users()->find($uid)), $payload));
+        $this->db->run("UPDATE users SET role='user' WHERE id=?", [$uid]);
+        $mods = new \App\Repository\BoardModeratorRepository($this->db); $mods->assign((int) $f['board']['id'], $uid);
+        self::assertNotNull($service->render($viewer, $payload));
+        $mods->unassign((int) $f['board']['id'], $uid);
+        self::assertNull($service->render($viewer, $payload));
+    }
+
 }

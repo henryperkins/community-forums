@@ -1,7 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
@@ -13,70 +12,69 @@ use App\Service\PersonalOrganizationService;
 
 final class PersonalOrganizationController extends Controller
 {
-    public function createFolder(Request $request, array $params): Response
+    private function mutate(Request $request, string $flag, string $form, callable $operation, string $message): Response
     {
-        $this->requireFlag('board_folders');
-        try {
-            $this->container->get(PersonalOrganizationService::class)->createFolder($this->requireUser(), $request->str('name'));
-        } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/settings/boards', $e->first());
+        if (!$this->container->get(FeatureFlags::class)->enabled($flag)) { throw new NotFoundException('Not found.'); }
+        $user = $this->requireUser();
+        try { $operation($this->container->get(PersonalOrganizationService::class), $user); }
+        catch (ValidationException $e) {
+            return (new SettingsController($this->container))->boardsView($user, [
+                'org_form' => $form, 'org_errors' => $e->errors,
+                'org_old' => array_filter($e->old + $request->allInput(), static fn ($value, $key): bool => is_scalar($value) || ($key === 'board_ids' && is_array($value) && count(array_filter($value, 'is_scalar')) === count($value)), ARRAY_FILTER_USE_BOTH),
+            ], 422);
         }
-        return $this->redirectWithFlash('/settings/boards', 'Folder saved.');
+        return $this->redirectWithFlash('/settings/boards', $message);
     }
 
-    public function addBoard(Request $request, array $params): Response
+    public function createFolder(Request $r, array $p): Response
     {
-        $this->requireFlag('board_folders');
-        $folderId = ((int) ($params['id'] ?? 0)) ?: (int) $request->int('folder_id', 0);
-        $this->container->get(PersonalOrganizationService::class)->addBoardToFolder(
-            $this->requireUser(),
-            $folderId,
-            (int) $request->int('board_id', 0),
-        );
-        return $this->redirectWithFlash('/settings/boards', 'Board added to folder.');
+        return $this->mutate($r, 'board_folders', 'folder-create', fn ($s, $u) => $s->createFolder($u, $r->str('name')), 'Folder saved.');
     }
 
-    public function createSavedFeed(Request $request, array $params): Response
+    public function renameFolder(Request $r, array $p): Response
     {
-        $this->requireFlag('saved_feeds');
-        try {
-            $this->container->get(PersonalOrganizationService::class)->createSavedFeed($this->requireUser(), $request->allInput());
-        } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/settings/boards', $e->first());
-        }
-        return $this->redirectWithFlash('/settings/boards', 'Saved feed created.');
+        return $this->mutate($r, 'board_folders', 'folder-' . $p['id'], fn ($s, $u) => $s->renameFolder($u, (int) $p['id'], $r->str('name')), 'Folder renamed.');
     }
 
-    public function createBookmarkFolder(Request $request, array $params): Response
+    public function deleteFolder(Request $r, array $p): Response
     {
-        $this->requireFlag('bookmark_folders');
-        try {
-            $this->container->get(PersonalOrganizationService::class)->createBookmarkFolder($this->requireUser(), $request->str('name'));
-        } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/settings/boards', $e->first());
-        }
-        return $this->redirectWithFlash('/settings/boards', 'Bookmark folder saved.');
+        return $this->mutate($r, 'board_folders', 'folder-' . $p['id'], fn ($s, $u) => $s->deleteFolder($u, (int) $p['id']), 'Folder deleted.');
     }
 
-    public function addThreadToBookmarkFolder(Request $request, array $params): Response
+    public function addBoard(Request $r, array $p): Response
     {
-        $this->requireFlag('bookmark_folders');
-        try {
-            $this->container->get(PersonalOrganizationService::class)->addThreadToBookmarkFolder(
-                $this->requireUser(),
-                (int) ($params['id'] ?? $request->int('folder_id', 0)),
-                (int) $request->int('thread_id', 0),
-            );
-        } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/settings/boards', $e->first());
-        }
-        return $this->redirectWithFlash('/settings/boards', 'Thread added to bookmark folder.');
+        $folderId = (int) ($p['id'] ?? 0) ?: $r->int('folder_id', 0);
+        return $this->mutate($r, 'board_folders', 'folder-add', fn ($s, $u) => $s->addBoardToFolder($u, $folderId, $r->int('board_id', 0)), 'Board added to folder.');
     }
 
-    private function requireFlag(string $flag): void
+    public function removeBoard(Request $r, array $p): Response
     {
-        if (!$this->container->get(FeatureFlags::class)->enabled($flag)) {
-            throw new NotFoundException('Not found.');
-        }
+        if (!ctype_digit((string) ($p['board_id'] ?? '')) || (int) $p['board_id'] <= 0) { throw new NotFoundException('Not found.'); }
+        return $this->mutate($r, 'board_folders', 'folder-' . $p['id'], fn ($s, $u) => $s->removeBoardFromFolder($u, (int) $p['id'], (int) $p['board_id']), 'Board removed from folder.');
+    }
+
+    public function createSavedFeed(Request $r, array $p): Response
+    {
+        return $this->mutate($r, 'saved_feeds', 'feed-create', fn ($s, $u) => $s->createSavedFeed($u, $r->allInput()), 'Saved feed created.');
+    }
+
+    public function updateSavedFeed(Request $r, array $p): Response
+    {
+        return $this->mutate($r, 'saved_feeds', 'feed-' . $p['id'], fn ($s, $u) => $s->updateSavedFeed($u, (int) $p['id'], $r->allInput()), 'Saved feed updated.');
+    }
+
+    public function deleteSavedFeed(Request $r, array $p): Response
+    {
+        return $this->mutate($r, 'saved_feeds', 'feed-' . $p['id'], fn ($s, $u) => $s->deleteSavedFeed($u, (int) $p['id']), 'Saved feed deleted.');
+    }
+
+    public function createBookmarkFolder(Request $r, array $p): Response
+    {
+        return $this->mutate($r, 'bookmark_folders', 'bookmark-create', fn ($s, $u) => $s->createBookmarkFolder($u, $r->str('name')), 'Bookmark folder saved.');
+    }
+
+    public function addThreadToBookmarkFolder(Request $r, array $p): Response
+    {
+        return $this->mutate($r, 'bookmark_folders', 'bookmark-add', fn ($s, $u) => $s->addThreadToBookmarkFolder($u, (int) ($p['id'] ?? $r->int('folder_id', 0)), $r->int('thread_id', 0)), 'Thread added to bookmark folder.');
     }
 }

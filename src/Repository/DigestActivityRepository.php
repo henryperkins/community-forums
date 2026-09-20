@@ -17,6 +17,34 @@ final class DigestActivityRepository
         ], $this->db->fetchAll("SELECT target_type, target_id FROM subscriptions WHERE user_id = ? AND frequency = 'daily' AND email_enabled = 1", [$userId]));
     }
 
+    public function savedSources(int $userId): array
+    {
+        $sources = [];
+        foreach ((new SavedFeedRepository($this->db))->enabledForDigest($userId) as $row) {
+            $filter = \App\Support\SavedFeedFilter::parse((string) $row['filter_json']);
+            if ($filter !== null) { $sources[] = ['id' => (int) $row['id'], 'filter' => $filter]; }
+        }
+        return $sources;
+    }
+
+    private function savedScope(int $userId, array $payload, array $scope): string
+    {
+        if (empty($scope['features']['saved_feeds']) || $payload['sources']['saved_feeds'] === []) { return '0 = 1'; }
+        $current = array_column($this->savedSources($userId), 'filter', 'id');
+        $clauses = [];
+        $members = implode(',', array_map('intval', $scope['member_board_ids']) ?: [0]);
+        $discovery = "(b.visibility = 'public' OR (b.visibility = 'private' AND b.id IN ($members)))";
+        // All-board filters retain Latest discovery. Explicit selections retain
+        // their IDs and use the canonical read gate applied to the outer query.
+        $filterClause = static fn (array $filter): string => $filter['board_ids'] === []
+            ? $discovery : 'b.id IN (' . implode(',', $filter['board_ids']) . ')';
+        foreach ($payload['sources']['saved_feeds'] as $source) {
+            if (!isset($current[$source['id']])) { continue; }
+            $clauses[] = '(' . $filterClause($source['filter']) . ' AND ' . $filterClause($current[$source['id']]) . ')';
+        }
+        return $clauses === [] ? '0 = 1' : 'p.is_anonymous = 0 AND (' . implode(' OR ', $clauses) . ')';
+    }
+
     /** Both the original source selection and its current settings must permit activity. */
     public function activity(int $userId, array $payload, array $scope): array
     {
@@ -27,6 +55,7 @@ final class DigestActivityRepository
         }
         $threadIds = implode(',', $threadIds ?: [0]);
         $boardIds = implode(',', $boardIds ?: [0]);
+        $saved = $this->savedScope($userId, $payload, $scope);
         $access = NotificationEligibility::board($scope);
         $blocks = NotificationEligibility::unblocked((string) $userId, 'p.user_id');
         return $this->db->fetchAll(
@@ -44,6 +73,13 @@ final class DigestActivityRepository
                       AND sb.frequency = 'daily' AND sb.email_enabled = 1)
                    AND NOT EXISTS (SELECT 1 FROM subscriptions so WHERE so.user_id = :uid4
                     AND so.target_type = 'thread' AND so.target_id = t.id))
+                 OR (($saved)
+                    AND (EXISTS (SELECT 1 FROM subscriptions st WHERE st.user_id = $userId
+                            AND st.target_type = 'thread' AND st.target_id = t.id AND st.frequency = 'daily' AND st.email_enabled = 1)
+                      OR (NOT EXISTS (SELECT 1 FROM subscriptions st WHERE st.user_id = $userId AND st.target_type = 'thread' AND st.target_id = t.id)
+                        AND (EXISTS (SELECT 1 FROM subscriptions sb WHERE sb.user_id = $userId AND sb.target_type = 'board'
+                            AND sb.target_id = t.board_id AND sb.frequency = 'daily' AND sb.email_enabled = 1)
+                          OR NOT EXISTS (SELECT 1 FROM subscriptions sb WHERE sb.user_id = $userId AND sb.target_type = 'board' AND sb.target_id = t.board_id)))))
                )
              GROUP BY t.id, t.title, t.slug ORDER BY MAX(p.created_at) DESC, t.id DESC",
             ['uid' => $userId, 'start' => $payload['window_start_utc'], 'end' => $payload['window_end_utc'],

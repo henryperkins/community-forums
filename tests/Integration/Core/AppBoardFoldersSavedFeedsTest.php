@@ -11,6 +11,17 @@ use Tests\Support\TestCase;
 
 final class AppBoardFoldersSavedFeedsTest extends TestCase
 {
+    public function test_invalid_saved_feed_keeps_selected_board_and_digest(): void
+    {
+        $this->makeAdmin(); $user = $this->makeUser(); $board = $this->makeBoard($this->makeCategory());
+        $this->actingAs($user);
+        $response = $this->post('/settings/saved-feeds', ['name' => '   ', 'board_id' => (string) $board['id'], 'digest_enabled' => '1']);
+        $this->assertStatus(422, $response);
+        $dom = new \DOMDocument(); @$dom->loadHTML($response->body()); $xpath = new \DOMXPath($dom);
+        self::assertSame(1, $xpath->query('//form[@action="/settings/saved-feeds"]//option[@value="' . $board['id'] . '" and @selected]')->length);
+        self::assertSame(1, $xpath->query('//form[@action="/settings/saved-feeds"]//input[@name="digest_enabled" and @checked]')->length);
+    }
+
     /** @param array<string,bool> $flags */
     private function setFlags(array $flags): void
     {
@@ -121,17 +132,16 @@ final class AppBoardFoldersSavedFeedsTest extends TestCase
         $board = $this->makeBoard($this->makeCategory('Org Invalid'), ['slug' => 'org-invalid']);
         $this->actingAs($user);
 
-        $this->assertRedirect($this->post('/settings/board-folders', ['name' => '']), '/settings/boards');
+        $this->assertStatus(422, $this->post('/settings/board-folders', ['name' => '']));
         $this->assertStatus(200, $this->get('/settings/boards'));
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM board_folders WHERE user_id = ?', [(int) $user['id']]));
 
         $tooLong = str_repeat('x', 81);
-        $this->assertRedirect($this->post('/settings/saved-feeds', [
+        $page = $this->post('/settings/saved-feeds', [
             'name' => $tooLong,
             'board_id' => (int) $board['id'],
-        ]), '/settings/boards');
-        $page = $this->get('/settings/boards');
-        $this->assertStatus(200, $page);
+        ]);
+        $this->assertStatus(422, $page);
         $this->assertSeeText($page, 'Name must be 1 to 80 characters.');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM saved_feed_filters WHERE user_id = ?', [(int) $user['id']]));
     }
@@ -216,8 +226,9 @@ final class AppBoardFoldersSavedFeedsTest extends TestCase
         $this->post('/settings/bookmark-folders', ['name' => 'Read later']);
         $folderId = (int) $this->db->fetchValue('SELECT id FROM thread_bookmark_folders WHERE user_id = ?', [(int) $user['id']]);
 
-        $this->assertRedirect($this->post('/settings/bookmark-folders/' . $folderId . '/threads', ['thread_id' => (int) $thread['thread_id']]), '/settings/boards');
-        $this->assertSeeText($this->get('/settings/boards'), 'Star the thread before adding it to a bookmark folder.');
+        $invalid = $this->post('/settings/bookmark-folders/' . $folderId . '/threads', ['thread_id' => (int) $thread['thread_id']]);
+        $this->assertStatus(422, $invalid);
+        $this->assertSeeText($invalid, 'Star the thread before adding it to a bookmark folder.');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM thread_bookmark_folder_threads WHERE folder_id = ?', [$folderId]));
     }
 

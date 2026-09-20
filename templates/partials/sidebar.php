@@ -47,6 +47,19 @@ $unreadPill = static function (int $unread) use ($e): string {
 };
 ?>
 <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards">
+    <?php $organization = !$composeMode && is_callable($organization_nav ?? null) ? $organization_nav() : []; ?>
+    <?php foreach (($organization['board_folders'] ?? []) as $folder): ?>
+        <span class="board-rail-cat"><?= $e($folder['name']) ?></span>
+        <?php foreach ($folder['boards'] as $shortcut): ?>
+            <a class="board-rail-item" href="/c/<?= $e($shortcut['slug']) ?>"><span class="board-rail-name"><?= $e($shortcut['name']) ?></span></a>
+        <?php endforeach; ?>
+    <?php endforeach; ?>
+    <?php if (!empty($organization['saved_feeds'])): ?>
+        <span class="board-rail-cat">Saved feeds</span>
+        <?php foreach ($organization['saved_feeds'] as $shortcut): ?>
+            <a class="board-rail-item<?= $request_path === '/feeds/saved/' . $shortcut['id'] ? ' is-active' : '' ?>" href="/feeds/saved/<?= (int) $shortcut['id'] ?>"<?= $request_path === '/feeds/saved/' . $shortcut['id'] ? ' aria-current="page"' : '' ?>><span class="board-rail-name"><?= $e($shortcut['name']) ?></span></a>
+        <?php endforeach; ?>
+    <?php endif; ?>
     <?php if (empty($nav)): ?>
         <p class="muted board-rail-empty">No boards yet.</p>
     <?php else: ?>

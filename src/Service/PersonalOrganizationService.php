@@ -13,6 +13,10 @@ use App\Repository\BoardRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
+use App\Security\WriteGate;
+use App\Repository\SavedFeedRepository;
+use App\Repository\BoardFolderRepository;
+use App\Support\SavedFeedFilter;
 
 final class PersonalOrganizationService
 {
@@ -23,18 +27,16 @@ final class PersonalOrganizationService
         private BoardPolicy $policy,
         private ThreadRepository $threads,
         private ThreadUserRepository $threadUsers,
+        private SavedFeedRepository $feeds,
+        private BoardFolderRepository $folders,
+        private WriteGate $writeGate,
     ) {
     }
 
     public function createFolder(User $user, string $name): int
     {
-        $name = $this->name($name);
-        return $this->db->insert(
-            'INSERT INTO board_folders (user_id, name, position, created_at)
-             VALUES (?, ?, COALESCE((SELECT next_pos FROM (SELECT MAX(position) + 1 AS next_pos FROM board_folders WHERE user_id = ?) x), 0), UTC_TIMESTAMP())
-             ON DUPLICATE KEY UPDATE updated_at = UTC_TIMESTAMP()',
-            [$user->id(), $name, $user->id()],
-        );
+        $this->writeGate->assertCanWrite($user);
+        return $this->uniqueName(fn () => $this->db->transaction(fn () => $this->folders->create($user->id(), $this->name($name))), ['name' => $name]);
     }
 
     /**
@@ -63,17 +65,37 @@ final class PersonalOrganizationService
 
     public function addBoardToFolder(User $user, int $folderId, int $boardId): void
     {
-        $folder = $this->db->fetch('SELECT * FROM board_folders WHERE id = ? AND user_id = ?', [$folderId, $user->id()]);
-        if ($folder === null) {
-            throw new NotFoundException('Folder not found.');
-        }
+        $this->writeGate->assertCanWrite($user);
+        $this->ownedFolder($user, $folderId);
+        if ($boardId <= 0) { throw new ValidationException(['board_id' => 'Choose a board.'], ['folder_id' => $folderId, 'board_id' => $boardId]); }
         $board = $this->readableBoard($user, $boardId);
-        $this->db->run(
-            'INSERT INTO board_folder_boards (folder_id, board_id, position, created_at)
-             VALUES (?, ?, COALESCE((SELECT next_pos FROM (SELECT MAX(position) + 1 AS next_pos FROM board_folder_boards WHERE folder_id = ?) x), 0), UTC_TIMESTAMP())
-             ON DUPLICATE KEY UPDATE position = VALUES(position)',
-            [$folderId, (int) $board['id'], $folderId],
-        );
+        $this->db->transaction(fn () => $this->folders->addBoard($folderId, (int) $board['id']));
+    }
+
+    public function renameFolder(User $user, int $id, string $name): void
+    {
+        $this->ownedFolder($user, $id);
+        $this->writeGate->assertCanWrite($user);
+        $this->uniqueName(fn () => $this->db->transaction(fn () => $this->folders->rename($user->id(), $id, $this->name($name))), ['name' => $name]);
+    }
+
+    public function deleteFolder(User $user, int $id): void
+    {
+        $this->ownedFolder($user, $id);
+        $this->writeGate->assertCanWrite($user);
+        $this->db->transaction(fn () => $this->folders->delete($user->id(), $id));
+    }
+
+    public function removeBoardFromFolder(User $user, int $folderId, int $boardId): void
+    {
+        $this->ownedFolder($user, $folderId);
+        $this->writeGate->assertCanWrite($user);
+        $this->db->transaction(fn () => $this->folders->removeBoard($folderId, $boardId));
+    }
+
+    private function ownedFolder(User $user, int $id): array
+    {
+        return $this->folders->findOwned($user->id(), $id) ?? throw new NotFoundException('Folder not found.');
     }
 
     public function createBookmarkFolder(User $user, string $name): int
@@ -108,24 +130,75 @@ final class PersonalOrganizationService
     /** @param array<string,mixed> $input */
     public function createSavedFeed(User $user, array $input): int
     {
-        $name = $this->name((string) ($input['name'] ?? ''));
-        $boardId = (int) ($input['board_id'] ?? 0);
-        $boardIds = [];
-        if ($boardId > 0) {
-            $board = $this->readableBoard($user, $boardId);
-            $boardIds[] = (int) $board['id'];
+        $this->writeGate->assertCanWrite($user);
+        $this->validateFeedInput($input);
+        return $this->uniqueName(fn () => $this->db->transaction(fn () => $this->feeds->create(
+            $user->id(), $this->name((string) ($input['name'] ?? '')), $this->filterJson($user, $input), !empty($input['digest_enabled']),
+        )), $input);
+    }
+
+    public function updateSavedFeed(User $user, int $id, array $input): void
+    {
+        $current = $this->feeds->findOwned($user->id(), $id) ?? throw new NotFoundException('Saved feed not found.');
+        // Only this exact reduction bypasses the write gate and stale source access.
+        $fields = array_diff(array_keys($input), ['_token', 'digest_enabled']);
+        if ($fields === [] && isset($input['digest_enabled']) && in_array($input['digest_enabled'], ['0', 0], true)) {
+            $this->db->transaction(fn () => $this->feeds->disableDigest($user->id(), $id));
+            return;
         }
-        $filter = [
-            'board_ids' => $boardIds,
-            'sort' => 'latest',
-        ];
-        $json = json_encode($filter, JSON_UNESCAPED_SLASHES) ?: '{"board_ids":[],"sort":"latest"}';
-        return $this->db->insert(
-            'INSERT INTO saved_feed_filters (user_id, name, filter_json, digest_enabled, position, created_at)
-             VALUES (?, ?, ?, ?, COALESCE((SELECT next_pos FROM (SELECT MAX(position) + 1 AS next_pos FROM saved_feed_filters WHERE user_id = ?) x), 0), UTC_TIMESTAMP())
-             ON DUPLICATE KEY UPDATE filter_json = VALUES(filter_json), digest_enabled = VALUES(digest_enabled), updated_at = UTC_TIMESTAMP()',
-            [$user->id(), $name, $json, !empty($input['digest_enabled']) ? 1 : 0, $user->id()],
-        );
+        $this->writeGate->assertCanWrite($user);
+        $this->validateFeedInput($input);
+        $this->uniqueName(function () use ($user, $id, $input, $current): void {
+            $name = $this->name((string) ($input['name'] ?? $current['name']));
+            $json = array_key_exists('board_id', $input) || array_key_exists('board_ids', $input)
+                ? $this->filterJson($user, $input, (string) $current['filter_json']) : (string) $current['filter_json'];
+            $this->db->transaction(fn () => $this->feeds->update($user->id(), $id, $name, $json, !empty($input['digest_enabled'])));
+        }, $input);
+    }
+
+    public function deleteSavedFeed(User $user, int $id): void
+    {
+        $this->feeds->findOwned($user->id(), $id) ?? throw new NotFoundException('Saved feed not found.');
+        $this->writeGate->assertCanWrite($user);
+        $this->db->transaction(fn () => $this->feeds->delete($user->id(), $id));
+    }
+
+    private function validateFeedInput(array $input): void
+    {
+        $errors = [];
+        if (isset($input['name']) && !is_string($input['name'])) { $errors['name'] = 'Enter a valid name.'; }
+        if (isset($input['digest_enabled']) && !in_array($input['digest_enabled'], ['0', '1', 0, 1], true)) { $errors['digest_enabled'] = 'Choose a valid digest setting.'; }
+        if ($errors !== []) { throw new ValidationException($errors, $input); }
+    }
+
+    private function filterJson(User $user, array $input, ?string $original = null): string
+    {
+        // A blank selection is explicit all-boards; malformed IDs never mean all.
+        $values = $input['board_ids'] ?? (($input['board_id'] ?? '') === '' ? [] : [$input['board_id']]);
+        if (!is_array($values)) { throw new ValidationException(['board_id' => 'Choose valid boards.'], $input); }
+        $ids = [];
+        foreach ($values as $value) {
+            if ((!is_int($value) && !is_string($value)) || !ctype_digit((string) $value) || (int) $value <= 0) {
+                throw new ValidationException(['board_id' => 'Choose valid boards.'], $input);
+            }
+            $ids[] = (int) $value;
+        }
+        $ids = array_values(array_unique($ids));
+        $old = $original === null ? null : SavedFeedFilter::parse($original);
+        if ($old === null || $old['board_ids'] !== $ids) {
+            foreach ($ids as $id) { $this->readableBoard($user, $id); }
+        }
+        return json_encode(['board_ids' => $ids, 'sort' => 'latest'], JSON_THROW_ON_ERROR);
+    }
+
+    private function uniqueName(callable $operation, array $input): mixed
+    {
+        try { return $operation(); }
+        catch (ValidationException $e) { throw new ValidationException($e->errors, $input); }
+        catch (\PDOException $e) {
+            if ((int) ($e->errorInfo[1] ?? 0) !== 1062) { throw $e; }
+            throw new ValidationException(['name' => 'You already have an item with this name.'], $input);
+        }
     }
 
     private function name(string $name): string
@@ -171,16 +244,8 @@ final class PersonalOrganizationService
     /** @return list<array<string,mixed>> */
     private function boardFolders(User $user): array
     {
-        $rows = $this->db->fetchAll(
-            'SELECT f.id AS folder_id, f.name AS folder_name, f.position AS folder_position,
-                    b.id AS board_id, b.name AS board_name, b.slug AS board_slug, b.visibility AS board_visibility
-             FROM board_folders f
-             LEFT JOIN board_folder_boards fb ON fb.folder_id = f.id
-             LEFT JOIN boards b ON b.id = fb.board_id
-             WHERE f.user_id = ?
-             ORDER BY f.position ASC, f.id ASC, fb.position ASC, b.name ASC',
-            [$user->id()],
-        );
+        $rows = $this->folders->forUser($user->id());
+        $memberIds = array_flip($this->members->boardIdsFor($user->id()));
         $folders = [];
         foreach ($rows as $row) {
             $id = (int) $row['folder_id'];
@@ -193,7 +258,7 @@ final class PersonalOrganizationService
             }
             if ($row['board_id'] !== null) {
                 $boardId = (int) $row['board_id'];
-                if ($this->canReadBoard($user, $boardId, (string) ($row['board_visibility'] ?? 'public'))) {
+                if ($this->policy->canRead(['id' => $boardId, 'visibility' => $row['board_visibility']], $user, isset($memberIds[$boardId]))) {
                     $folders[$id]['boards'][] = [
                         'id' => $boardId,
                         'name' => (string) $row['board_name'],
@@ -208,30 +273,15 @@ final class PersonalOrganizationService
     /** @return list<array<string,mixed>> */
     private function savedFeeds(User $user): array
     {
-        $rows = $this->db->fetchAll(
-            'SELECT id, name, filter_json, digest_enabled, position
-             FROM saved_feed_filters
-             WHERE user_id = ?
-             ORDER BY position ASC, id ASC',
-            [$user->id()],
-        );
+        $rows = $this->feeds->forUser($user->id());
+        $memberIds = array_flip($this->members->boardIdsFor($user->id()));
+        $readable = [];
+        foreach ($this->boards->allOrdered() as $board) {
+            if ($this->policy->canRead($board, $user, isset($memberIds[(int) $board['id']]))) { $readable[(int) $board['id']] = true; }
+        }
         foreach ($rows as &$row) {
-            $filter = json_decode((string) ($row['filter_json'] ?? '{}'), true);
-            $filter = is_array($filter) ? $filter : [];
-            $boardIds = [];
-            foreach (($filter['board_ids'] ?? []) as $boardId) {
-                $boardId = (int) $boardId;
-                if ($boardId <= 0) {
-                    continue;
-                }
-                $board = $this->boards->find($boardId);
-                if ($board === null || !$this->canReadBoard($user, $boardId, (string) ($board['visibility'] ?? 'public'))) {
-                    continue;
-                }
-                $boardIds[$boardId] = $boardId;
-            }
-            $filter['board_ids'] = array_values($boardIds);
-            $row['filter'] = $filter;
+            $row['filter'] = SavedFeedFilter::parse((string) $row['filter_json']);
+            $row['readable_board_count'] = count(array_filter($row['filter']['board_ids'] ?? [], static fn (int $id): bool => isset($readable[$id])));
         }
         unset($row);
         return $rows;

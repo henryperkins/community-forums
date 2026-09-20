@@ -206,7 +206,11 @@ final class SettingsController extends Controller
 
     public function boards(Request $request): Response
     {
-        $user = $this->requireUser();
+        return $this->boardsView($this->requireUser());
+    }
+
+    public function boardsView(\App\Domain\User $user, array $data = [], int $status = 200): Response
+    {
         $featureFlags = $this->container->get(FeatureFlags::class);
         $policy = $this->container->get(BoardPolicy::class);
         $categories = $this->container->get(CategoryRepository::class)->all();
@@ -241,14 +245,15 @@ final class SettingsController extends Controller
             $organization = $this->container->get(PersonalOrganizationService::class)->overview($user, $organizationFlags);
         }
 
-        return $this->view('account/boards', [
+        return $this->view('account/boards', $data + [
+            'digest_active' => ($user->toArray()['digest_hour'] ?? null) !== null,
             'groups' => $groups,
             'prefs' => $prefs,
             'board_folders' => $organization['board_folders'],
             'saved_feeds' => $organization['saved_feeds'],
             'bookmark_folders' => $organization['bookmark_folders'],
             'starred_threads' => $organization['starred_threads'],
-        ]);
+        ], $status);
     }
 
     public function toggleBoardPref(Request $request): Response
