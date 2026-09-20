@@ -1,0 +1,1011 @@
+[WebServer] [Sun Sep 20 10:01:02 2026] PHP 8.5.4 Development Server (http://localhost:8034) started
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54002 Accepted
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54002 Closing
+
+Running 1 test using 1 worker
+
+(node:828104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54012 Accepted
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54012 Closing
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54020 Accepted
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54022 Accepted
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54020 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54022 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54020 Closing
+[WebServer] [Sun Sep 20 10:01:03 2026] 127.0.0.1:54022 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54032 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54048 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54050 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54032 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54048 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54050 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54032 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54048 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54050 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54052 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54052 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54054 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54054 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54058 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54064 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54058 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54064 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54058 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54064 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54066 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54076 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54080 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54086 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54096 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54066 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54076 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54080 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54086 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54096 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54066 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54076 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54080 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54086 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54096 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54102 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54102 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54110 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54126 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54110 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54126 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54110 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54126 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54134 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54144 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54152 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54134 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54144 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54160 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54152 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54160 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54134 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54144 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54152 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54160 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54164 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54164 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54180 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54190 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54180 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54190 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54180 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54190 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54194 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54196 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54206 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54216 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54194 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54196 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54206 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54216 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54194 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54196 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54206 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54216 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54226 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54226 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54232 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54248 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54232 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54248 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54232 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54248 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54254 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54256 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54270 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54282 Accepted
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54254 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54256 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54270 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54282 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54254 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54256 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54270 Closing
+[WebServer] [Sun Sep 20 10:01:04 2026] 127.0.0.1:54282 Closing
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42920 Accepted
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42920 Closing
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42928 Accepted
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42938 Accepted
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42928 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42938 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42928 Closing
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42938 Closing
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42944 Accepted
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42946 Accepted
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42956 Accepted
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42958 Accepted
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42944 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42946 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42956 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42944 Closing
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42946 Closing
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42956 Closing
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42958 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:10 2026] 127.0.0.1:42958 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42964 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42964 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42972 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42988 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42972 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42988 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42972 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42988 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42990 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42990 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:42990 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43006 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43008 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43006 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43008 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43006 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43008 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43016 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43016 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43032 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43032 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43034 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43048 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43034 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43048 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43034 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43048 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43054 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43064 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43068 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43070 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43076 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43054 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43064 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43068 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43070 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43076 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43054 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43064 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43068 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43070 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43076 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43088 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43088 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43094 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43108 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43094 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43108 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43094 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43108 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43124 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43132 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43138 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43140 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43124 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43132 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43138 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43140 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43124 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43132 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43138 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43140 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43148 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43148 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43154 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43162 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43154 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43162 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43154 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43162 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43168 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43168 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43168 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43176 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43190 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43192 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43176 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43190 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43192 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43176 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43190 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43192 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43208 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43208 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43210 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43214 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43210 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43214 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43210 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43214 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43220 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43230 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43236 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43238 Accepted
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43220 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43230 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43236 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43238 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43220 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43230 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43236 Closing
+[WebServer] [Sun Sep 20 10:01:15 2026] 127.0.0.1:43238 Closing
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44330 Accepted
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44330 Closing
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44340 Accepted
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44342 Accepted
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44340 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44342 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44340 Closing
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44342 Closing
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44344 Accepted
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44346 Accepted
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44358 Accepted
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44366 Accepted
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44344 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44346 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44358 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44366 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44344 Closing
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44346 Closing
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44358 Closing
+[WebServer] [Sun Sep 20 10:01:21 2026] 127.0.0.1:44366 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44380 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44380 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44382 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44392 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44382 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44392 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44382 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44392 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44406 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44418 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44420 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44406 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44418 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44420 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44406 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44418 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44420 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44432 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44432 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44436 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44436 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44446 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44456 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44446 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44456 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44446 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44456 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44466 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44474 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44488 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44502 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44516 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44466 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44474 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44488 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44502 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44516 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44466 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44474 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44488 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44502 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44516 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44532 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44532 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44544 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44558 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44544 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44558 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44544 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44558 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44564 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44576 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44592 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44604 Accepted
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44564 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44576 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44592 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44604 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44564 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44576 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44592 Closing
+[WebServer] [Sun Sep 20 10:01:26 2026] 127.0.0.1:44604 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44612 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44612 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44626 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44642 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44626 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44642 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44626 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44642 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44648 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44660 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44676 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44682 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44648 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44660 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44676 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44682 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44648 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44660 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44676 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44682 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44684 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44684 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44688 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44692 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44688 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44692 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44688 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44692 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44704 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44720 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44704 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44722 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44720 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44730 Accepted
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44722 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44704 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44730 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44720 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44722 Closing
+[WebServer] [Sun Sep 20 10:01:27 2026] 127.0.0.1:44730 Closing
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47268 Accepted
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47268 Closing
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47284 Accepted
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47296 Accepted
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47284 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47296 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47284 Closing
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47296 Closing
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47306 Accepted
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47322 Accepted
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47330 Accepted
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47346 Accepted
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47306 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47322 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47330 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47346 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47306 Closing
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47322 Closing
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47330 Closing
+[WebServer] [Sun Sep 20 10:01:32 2026] 127.0.0.1:47346 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47362 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47362 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47368 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47374 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47368 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47374 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47384 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47368 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47390 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47374 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47394 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47390 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47384 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47394 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47390 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47384 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47394 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47400 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47406 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47416 Accepted
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47400 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47406 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47416 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47400 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47406 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47416 Closing
+[WebServer] [Sun Sep 20 10:01:37 2026] 127.0.0.1:47428 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47428 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47430 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47430 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47432 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47432 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47432 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47444 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47458 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47464 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47472 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47480 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47458 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47444 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47464 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47472 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47480 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47444 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47464 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47472 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47480 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47458 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47490 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47506 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47490 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47506 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47512 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47528 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47536 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47544 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47556 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47512 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47528 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47536 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47512 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47528 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47536 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47544 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47556 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47544 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47556 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47570 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47570 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47578 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47582 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47578 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47590 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47578 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47600 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47582 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47608 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47612 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47582 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47590 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47600 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47608 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47590 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47612 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47600 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47608 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47612 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47628 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47636 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47628 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47644 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47636 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47652 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47644 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47666 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47652 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47678 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47666 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47644 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47678 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47652 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47666 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47678 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47688 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47688 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47700 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47716 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47724 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47732 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47746 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47756 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47700 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47716 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47724 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47732 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47746 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47700 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47724 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47732 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47746 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47716 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47756 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47756 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47768 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47772 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47768 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47774 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47772 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47782 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47774 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47798 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47782 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47814 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47798 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47774 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47814 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47782 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47798 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:47814 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57602 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57602 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57618 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57630 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57618 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57638 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57630 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57618 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57644 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57630 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57656 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57660 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57638 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57644 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57656 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57660 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57638 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57644 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57656 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57660 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57664 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57678 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57664 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57680 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57678 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57690 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57680 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57692 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57690 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57704 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57692 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57680 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57704 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57690 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57692 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57704 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57710 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57710 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57720 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57732 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57720 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57732 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57746 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57720 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57732 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57760 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57774 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57788 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57746 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57760 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57774 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57788 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57746 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57760 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57774 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57788 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57790 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57800 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57790 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57802 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57800 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57806 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57802 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57818 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57806 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57826 Accepted
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57818 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57802 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57826 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57806 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57818 Closing
+[WebServer] [Sun Sep 20 10:01:38 2026] 127.0.0.1:57826 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57836 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57836 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57842 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57842 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57846 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57842 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57856 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57868 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57876 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57846 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57856 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57856 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57846 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57868 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57876 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57868 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57876 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57892 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57906 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57908 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57892 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57906 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57908 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57892 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57906 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57908 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57920 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57920 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57934 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57934 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57948 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57950 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57948 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57950 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57964 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57948 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57950 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57966 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57970 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57978 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57966 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57970 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57978 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57964 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57966 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57970 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57978 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57964 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57980 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57988 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57980 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:57988 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58004 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58012 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58028 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58032 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58038 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58004 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58012 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58028 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58032 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58004 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58012 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58028 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58032 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58038 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58038 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58042 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58042 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58058 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58072 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58058 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58072 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58084 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58058 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58072 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58096 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58112 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58122 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58084 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58096 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58112 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58122 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58084 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58096 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58112 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58122 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58128 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58134 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58128 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58142 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58134 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58150 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58142 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58166 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58150 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58180 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58166 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58142 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58180 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58150 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58166 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58180 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58190 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58190 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58198 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58212 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58198 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58212 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58198 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58212 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58220 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58222 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58228 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58234 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58220 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58222 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58228 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58234 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58220 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58222 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58228 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58234 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58238 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58254 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58268 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58280 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58238 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58254 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58268 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58280 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58238 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58254 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58268 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58280 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58282 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58292 Accepted
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58282 Closing
+[WebServer] [Sun Sep 20 10:01:39 2026] 127.0.0.1:58292 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58300 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58300 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58306 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58322 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58306 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58328 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58306 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58330 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58340 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58350 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58322 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58328 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58330 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58328 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58330 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58322 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58340 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58350 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58340 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58350 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58366 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58370 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58366 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58370 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58386 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58394 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58386 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58400 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58394 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58416 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58400 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58386 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58416 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58394 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58400 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58416 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58424 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58424 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58434 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58450 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58434 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58434 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58450 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58450 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58460 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58476 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58480 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58492 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58460 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58476 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58480 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58492 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58460 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58476 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58480 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58492 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58506 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58516 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58506 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58532 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58516 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58548 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58532 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58550 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58548 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58554 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58550 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58532 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58554 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58548 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58550 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58554 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58566 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58566 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58574 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58588 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58574 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58588 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58574 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58588 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58604 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58606 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58610 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58604 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58606 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58610 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58604 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58606 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58610 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58620 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58626 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58636 Accepted
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58620 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58626 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58636 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58620 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58626 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58636 Closing
+[WebServer] [Sun Sep 20 10:01:40 2026] 127.0.0.1:58650 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58650 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58656 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58656 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58658 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58660 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58658 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58660 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58658 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58660 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58676 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58680 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58682 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58696 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58676 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58680 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58682 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58696 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58676 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58680 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58682 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58696 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58702 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58704 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58702 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58704 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58718 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58732 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58744 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58750 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58760 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58718 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58732 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58744 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58750 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58718 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58732 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58744 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58750 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58760 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58760 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58762 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58762 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58772 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58784 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58772 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58784 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58772 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58784 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58798 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58802 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58814 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58822 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58798 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58802 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58814 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58822 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58798 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58802 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58814 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58822 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58836 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58852 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58836 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58860 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58852 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58866 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58860 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58882 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58866 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58894 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58882 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58860 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58894 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58866 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58882 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58894 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58898 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58898 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58902 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58916 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58902 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58902 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58916 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58916 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58926 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58938 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58940 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58942 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58926 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58938 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58940 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58942 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58926 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58938 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58940 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58942 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58952 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58968 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58952 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58984 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58968 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59000 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58984 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59012 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59000 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59026 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59012 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:58984 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59026 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59000 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59012 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59026 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59036 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59036 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59038 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59044 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59038 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59038 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59044 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59044 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59048 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59054 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59056 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59062 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59048 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59054 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59056 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59062 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59048 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59054 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59056 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59062 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59072 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59088 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59072 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59088 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59094 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59108 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59094 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59112 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59108 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59126 Accepted
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59112 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59094 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59126 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59108 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59112 Closing
+[WebServer] [Sun Sep 20 10:01:41 2026] 127.0.0.1:59126 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59136 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59136 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59146 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59154 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59146 [200]: GET /assets/imladris.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59146 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59154 [200]: GET /assets/app.css?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59154 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59162 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59176 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59178 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59192 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59162 [200]: GET /assets/app.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59176 [200]: GET /assets/composer.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59178 [200]: GET /assets/passkeys.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59192 [200]: GET /assets/tour.js?v=afb875b94b337772
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59162 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59176 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59178 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59192 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59196 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59204 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59196 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59218 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59204 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59232 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59218 [200]: GET /assets/fonts/imladris/eb-garamond-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59234 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59232 [200]: GET /assets/fonts/imladris/marcellus-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59244 Accepted
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59234 [200]: GET /assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59218 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59244 [200]: GET /assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59232 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59234 Closing
+[WebServer] [Sun Sep 20 10:01:42 2026] 127.0.0.1:59244 Closing
+
+  ✓  1 [mobile] › tests/browser/account-console.spec.ts:629:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable (38.7s)
+
+  1 passed (40.1s)

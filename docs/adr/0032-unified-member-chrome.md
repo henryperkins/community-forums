@@ -179,6 +179,15 @@ selection never falls back to All boards. The [combined evidence index](../evide
 tracks fresh browser/query evidence. This repairs exposed workflows and does
 not introduce the deferred last-20 dropdown from proposed ADR 0035.
 
+On account pages at phone widths, a native closed section chooser replaces the
+long local settings navigation. Without JavaScript, the board rail remains
+available in a keyboard-focusable region capped at 176px; its real board,
+folder, feed and presence links remain reachable by scrolling. This account-only
+adaptation was required because the uncapped rail alone consumed 723px before
+the form. The enhanced drawer and desktop sticky rail retain their existing
+behavior. Initial Security, Profile and Notifications controls are measured
+before any scroll or chooser expansion in the combined browser gate.
+
 ## Feature-gap accounting
 
 | Handoff behavior | Resolution |

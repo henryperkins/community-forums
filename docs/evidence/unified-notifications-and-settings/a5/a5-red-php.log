@@ -1,0 +1,329 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+EEEEEEEEEEEEEEEEEEEF                                              20 / 20 (100%)
+
+Time: 00:00.122, Memory: 50.00 MB
+
+There were 19 errors:
+
+1) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #0 (null, 'Unknown device')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+2) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #1 ('', 'Unknown device')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+3) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #2 ('   ', 'Unknown device')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+4) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #3 ('<script>alert(1)</script>', 'Unknown device')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+5) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #4 ('xxxxxxxxxxxxxxxxxxxxxxxxxxxxx...ows NT', 'Unknown device')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+6) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #5 ('Mozilla/5.0 (Windows NT 10.0;...537.36', 'Chrome on Windows')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+7) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #6 ('Mozilla/5.0 (Windows NT 10.0).../149.0', 'Edge on Windows')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+8) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #7 ('Mozilla/5.0 (X11; Linux x86_6.../123.0', 'Opera on Linux')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+9) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #8 ('Mozilla/5.0 (iPhone; CPU iPho...5.1.15', 'Firefox on iOS')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+10) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #9 ('Mozilla/5.0 (iPad; CPU OS 18_.../604.1', 'Chrome on iOS')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+11) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #10 ('Mozilla/5.0 (iPhone; CPU iPho...5.1.15', 'Edge on iOS')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+12) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #11 ('Mozilla/5.0 (Linux; Android 1.../140.0', 'Edge on Android')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+13) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #12 ('Mozilla/5.0 (Linux; Android 1...r/28.0', 'Samsung Internet on Android')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+14) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #13 ('Mozilla/5.0 (Macintosh; Intel...5.1.15', 'Safari on macOS')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+15) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #14 ('Mozilla/5.0 (X11; Linux x86_6.../140.0', 'Firefox on Linux')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+16) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #15 ('Mozilla/5.0 (Linux; Android 1...537.36', 'Chrome on Android')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+17) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #16 ('Mozilla/5.0 (Windows NT 10.0)', 'Unknown browser on Windows')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+18) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #17 ('Firefox/140.0', 'Firefox on unknown OS')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+19) Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific with data set #18 ('Chrome/ Safari/', 'Unknown device')
+Error: Class "App\Support\UserAgentLabel" not found
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/UserAgentLabelTest.php:16
+
+--
+
+There was 1 failure:
+
+1) Tests\Integration\Core\AppSessionManagementTest::test_readable_labels_keep_escaped_raw_details_and_current_device_rules
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="system"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+    <title>Active sessions</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+            <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="Active sessions">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/imladris.css?v=5390d472e4695a11">\n
+    <link rel="stylesheet" href="/assets/app.css?v=5390d472e4695a11">\n
+    <link rel="stylesheet" href="/assets/wysiwyg-composer.css?v=5390d472e4695a11">        </head>\n
+<body class="variant-app is-rail-open is-reading-open" data-route="" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-user="ue89de03f" data-enter-to-send="1" data-show-preview="1" data-smart-lists="1" data-tour="1">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+<header class="forum-bar">\n
+        <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open board rail" aria-expanded="false" aria-controls="sidebar-nav">\n
+        <svg class="icon icon-menu nav-toggle-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\n
+    </button>\n
+\n
+    <a class="forum-bar-brand" href="/" aria-label="RetroBoards">\n
+                                <svg class="forum-bar-mark" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+            <span class="forum-bar-wordmark">RetroBoards</span>\n
+            </a>\n
+\n
+        <nav class="forum-bar-surfaces" aria-label="Primary">\n
+                    <a data-primary-route="boards" class="forum-bar-surface" href="/">Boards</a>\n
+                                                        <a data-primary-route="inbox" class="forum-bar-surface" href="/inbox">Inbox</a>\n
+                                                        <a data-primary-route="messages" class="forum-bar-surface" href="/messages">Messages</a>\n
+                        </nav>\n
+\n
+                <span class="forum-bar-searchwrap">\n
+            <a class="forum-bar-search" href="/search" aria-label="Search the council — Command K">\n
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>\n
+                <span class="forum-bar-search-label">Search the council…</span>\n
+                <span class="forum-bar-kbd">⌘K</span>\n
+            </a>\n
+        </span>\n
+    \n
+    <span class="forum-bar-right">\n
+                                <form class="inline forum-bar-panel-form" method="post" action="/settings/member-surfaces" data-panel-form="rail">\n
+                <input type="hidden" name="_token" value="012f4b7bd80f4887d5432faed056bb6933c79880964d24bb1347f36d0116961c">                <input type="hidden" name="rail_open" value="0">\n
+                <input type="hidden" name="return" value="/settings/sessions">\n
+                <button class="forum-bar-railtoggle is-on" type="submit" aria-controls="sidebar-nav" aria-expanded="true" aria-pressed="true" aria-label="Hide the board rail" title="Hide the board rail (⌘B)">\n
+                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><rect class="forum-bar-toggle-band" x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"/></svg>\n
+                </button>\n
+            </form>\n
+\n
+            \n
+            <span class="forum-bar-divider" aria-hidden="true"></span>\n
+\n
+                            <span class="forum-bar-compose">\n
+                    <a class="btn btn-small" href="/compose" aria-label="New topic"><svg class="icon icon-plus" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>\n
+<span>New topic</span></a>\n
+                </span>\n
+            \n
+                                        <a class="forum-bar-bell bell" href="/notifications" data-bell data-notification-link aria-label="Notifications" title="Notifications">\n
+                    <svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+                    <span class="bell-count" data-notification-count aria-hidden="true" hidden>0</span>\n
+                </a>\n
+                        <details class="identity-menu">\n
+                <summary class="forum-bar-user" aria-label="Open account menu for ue89de03f">\n
+                    <span class="avatar-wrap">\n
+                            <span class="monogram mono-8" aria-hidden="true">UE</span>\n
+                                                                            <span class="presence-dot" aria-hidden="true"></span>\n
+                                            </span>\n
+                    <span class="forum-bar-username">ue89de03f</span>\n
+                    <svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\n
+                </summary>\n
+                <div class="identity-menu-panel">\n
+                    <a href="/u/ue89de03f"><svg class="icon icon-user" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\n
+<span>Profile</span></a>\n
+                                            <a href="/notifications" data-notification-link aria-label="Notifications"><svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+<span>Notifications</span><span class="notification-count" data-notification-count aria-hidden="true" hidden>0</span></a>\n
+                                        <a href="/drafts"><svg class="icon icon-file" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>\n
+<span>Drafts</span></a>                                            <a href="/feed"><svg class="icon icon-users" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>\n
+<span>Following</span></a>\n
+                        <a href="/leaderboard"><svg class="icon icon-commend-star" viewBox="0 0 100 100" width="16" height="16" fill="currentColor" stroke="none" aria-hidden="true"><path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/></svg>\n
+<span>Top contributors</span></a>\n
+                                        <a href="/settings/account"><svg class="icon icon-settings-profile" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\n
+<span>Settings</span></a>\n
+                                        <form method="post" action="/logout">\n
+                        <input type="hidden" name="_token" value="012f4b7bd80f4887d5432faed056bb6933c79880964d24bb1347f36d0116961c">                        <button type="submit"><svg class="icon icon-log-out" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>\n
+<span>Log out</span></button>\n
+                    </form>\n
+                </div>\n
+            </details>\n
+            </span>\n
+</header>\n
+    <div class="app-shell">\n
+        <div class="nav-scrim" data-nav-scrim hidden></div>\n
+        <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards">\n
+                        <p class="muted board-rail-empty">No boards yet.</p>\n
+    \n
+            <div class="board-rail-foot">\n
+                        <section class="presence-widget" data-presence data-presence-limit="5" data-presence-poll>\n
+                <h2 class="presence-title">\n
+                    <a href="/users-online">Online</a>\n
+                    <span class="presence-count" data-presence-count>1</span>\n
+                </h2>\n
+                                <p class="sr-only" aria-live="polite" data-presence-summary>1 member here now.</p>\n
+                <ul class="presence-list" data-presence-list>\n
+                                            <li class="presence-row" data-presence-row="ue89de03f" data-presence-sig="ue89de03f:online:-:y">\n
+    <a class="presence-person" href="/u/ue89de03f" data-presence-state="online" data-presence-self="1">\n
+                            <span class="avatar-wrap">\n
+                    <span class="monogram mono-8" aria-hidden="true">UE</span>\n
+                <span class="presence-dot" aria-hidden="true"></span>\n
+            </span>\n
+                <span class="presence-person-id">\n
+            <span class="presence-name">ue89de03f<span class="presence-you">you</span></span>\n
+            <span class="presence-sub">@ue89de03f · Here now</span>\n
+        </span>\n
+    </a>\n
+</li>\n
+                                    </ul>\n
+                                                    <p class="presence-empty" data-presence-empty hidden>No one is showing as online.</p>\n
+                                <p class="presence-more" data-presence-more hidden></p>\n
+                <p class="presence-foot"><a class="presence-all" href="/users-online">See everyone online</a></p>\n
+            </section>\n
+        </div>\n
+    </nav>\n
+        <main class="main" id="main">\n
+                        <div class="settings-screen">\n
+    <header class="settings-head">\n
+        <span class="eyebrow">Account</span>\n
+        <h1>Account settings</h1>\n
+        <p>Everything this community knows about you, and everything it does on your behalf.</p>\n
+    </header>\n
+    <div class="settings">\n
+        <nav class="settings-rail" aria-label="Settings sections">\n
+            <div class="settings-rail-group">\n
+            <span class="settings-rail-title">Account</span>\n
+                                                            <a class="settings-rail-link" data-settings-key="profile" href="/settings/account"><svg class="icon icon-settings-profile" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\n
+<span>Profile</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="security" href="/settings/security"><svg class="icon icon-shield" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>\n
+<span>Security</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="privacy" href="/settings/privacy"><svg class="icon icon-eye" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>\n
+<span>Privacy</span></a>\n
+                    </div>\n
+            <div class="settings-rail-group">\n
+            <span class="settings-rail-title">Reading &amp; writing</span>\n
+                                                            <a class="settings-rail-link" data-settings-key="appearance" href="/settings/appearance"><svg class="icon icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>\n
+<span>Appearance</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="reading" href="/settings/preferences"><svg class="icon icon-book" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>\n
+<span>Reading</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="composing" href="/settings/composing"><svg class="icon icon-edit-3" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>\n
+<span>Composing</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="drafts" href="/drafts"><svg class="icon icon-file" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>\n
+<span>Drafts</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="boards" href="/settings/boards"><svg class="icon icon-menu" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\n
+<span>Boards</span></a>\n
+                    </div>\n
+            <div class="settings-rail-group">\n
+            <span class="settings-rail-title">Community</span>\n
+                                                            <a class="settings-rail-link" data-settings-key="notifications" href="/settings/notifications"><svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+<span>Notifications</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="connections" href="/settings/connections"><svg class="icon icon-link" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>\n
+<span>Connections</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="blocks" href="/settings/blocks"><svg class="icon icon-ban" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>\n
+<span>Blocks</span></a>\n
+                                                            <a class="settings-rail-link is-active" data-settings-key="sessions" href="/settings/sessions" aria-current="page"><svg class="icon icon-monitor" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M8 21h8M12 17v4"/></svg>\n
+<span>Sessions</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="account" href="/settings/account/lifecycle"><svg class="icon icon-archive" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>\n
+<span>Account</span></a>\n
+                                                            <a class="settings-rail-link" data-settings-key="appeals" href="/appeals"><svg class="icon icon-flag" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>\n
+<span>Appeals</span></a>\n
+                    </div>\n
+                <button class="linkbtn subnav-action" type="button" data-tour-replay>Replay tour</button>\n
+    </nav>\n
+\n
+        <div class="settings-pane">\n
+    <section class="scribe-panel is-list">\n
+        <div class="sessions-head">\n
+            <h2 class="scribe-panel-head">Active sessions &amp; devices</h2>\n
+            <form class="inline" method="post" action="/settings/sessions/revoke-others">\n
+                <input type="hidden" name="_token" value="012f4b7bd80f4887d5432faed056bb6933c79880964d24bb1347f36d0116961c">                <button class="btn btn-secondary btn-small" type="submit">Log out of all other devices</button>\n
+            </form>\n
+        </div>\n
+        <ul class="account-ruled-list">\n
+                                            <li class="account-ruled-row">\n
+                    <span class="account-row-main">\n
+                        <span class="account-row-name">Mozilla/5.0 (Windows NT 10.0) Chrome/149.0 Safari/537.36 &lt;script&gt;alert(1)&lt;/script&gt;</span>\n
+                        <span class="account-row-meta">IP — · last active Sep 20, 2026 at 09:51 UTC</span>\n
+                    </span>\n
+                                            <form class="inline" method="post" action="/settings/sessions/revoke">\n
+                            <input type="hidden" name="_token" value="012f4b7bd80f4887d5432faed056bb6933c79880964d24bb1347f36d0116961c">                            <input type="hidden" name="sid" value="bd52f4effeb9079f8976d6eb8b2f74f343a200a17ea61f0ead3791cbef7974c6">\n
+                            <button class="linkbtn danger" type="submit">Sign out</button>\n
+                        </form>\n
+                                    </li>\n
+                                            <li class="account-ruled-row">\n
+                    <span class="account-row-main">\n
+                        <span class="account-row-name">phpunit<span class="account-state-chip">This device</span></span>\n
+                        <span class="account-row-meta">IP — · last active Sep 20, 2026 at 09:51 UTC</span>\n
+                    </span>\n
+                                    </li>\n
+                    </ul>\n
+        <p class="account-note">Sessions expire 30 days after you sign in. Signing out a device revokes its token immediately.</p>\n
+    </section>\n
+        </div>\n
+    </div>\n
+</div>\n
+        </main>\n
+    </div>\n
+<script src="/assets/app.js?v=5390d472e4695a11" defer></script>\n
+<script src="/assets/composer.js?v=5390d472e4695a11" defer></script><script type="module" src="/assets/wysiwyg-composer.js?v=5390d472e4695a11"></script><script src="/assets/passkeys.js?v=5390d472e4695a11" defer></script><script src="/assets/tour.js?v=5390d472e4695a11" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 21370) contains "Chrome on Windows" [ASCII](length: 17).
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppSessionManagementTest.php:74
+
+ERRORS!
+Tests: 20, Assertions: 2, Errors: 19, Failures: 1.

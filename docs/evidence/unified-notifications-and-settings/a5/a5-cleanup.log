@@ -1,0 +1,91 @@
+==> Resetting browser-evidence rate-limit store
+==> Resetting browser-evidence package artifact store
+==> No rb-mariadb container; assuming database 'retroboards_unified_e2e' already exists (CI service).
+==> Rebuilding schema
+dropped all tables
+migrated: 0001_users
+migrated: 0002_categories
+migrated: 0003_settings
+migrated: 0004_boards
+migrated: 0005_sessions
+migrated: 0006_verifications
+migrated: 0007_board_slug_history
+migrated: 0008_threads
+migrated: 0009_posts
+migrated: 0010_moderation_log
+migrated: 0011_users_phase2_columns
+migrated: 0012_boards_phase2_columns
+migrated: 0013_threads_phase2
+migrated: 0014_posts_phase2
+migrated: 0015_sessions_ip
+migrated: 0016_board_moderators
+migrated: 0017_thread_user
+migrated: 0018_blocks
+migrated: 0019_reactions
+migrated: 0020_subscriptions
+migrated: 0021_notifications
+migrated: 0022_email_suppressions
+migrated: 0023_email_deliveries
+migrated: 0024_conversations
+migrated: 0025_conversation_participants
+migrated: 0026_dm_messages
+migrated: 0027_reports
+migrated: 0028_bans
+migrated: 0029_warnings
+migrated: 0030_user_notes
+migrated: 0031_board_members
+migrated: 0032_oauth_identities
+migrated: 0033_user_preferences
+migrated: 0034_user_board_prefs
+migrated: 0035_username_history
+migrated: 0036_follows
+migrated: 0037_badges
+migrated: 0038_user_badges
+migrated: 0039_reports_dm
+migrated: 0040_seed_badges
+migrated: 0041_users_reputation_index
+migrated: 0042_users_phase3
+migrated: 0043_attachments
+migrated: 0044_submission_idempotency
+migrated: 0045_pending_columns
+migrated: 0046_boards_require_approval
+migrated: 0047_posts_deleted_at
+migrated: 0048_phase4_gate_a
+migrated: 0049_phase5_registry_packages
+migrated: 0050_phase5_capabilities_roles
+migrated: 0051_phase5_webauthn
+migrated: 0052_phase5_provider_registry
+migrated: 0053_phase5_invitations
+migrated: 0054_phase5_totp_recovery
+migrated: 0055_phase5_service_secrets
+migrated: 0056_phase5_api_tokens
+migrated: 0057_phase5_webhooks
+migrated: 0058_phase4_carryover_foundation
+migrated: 0059_account_lifecycle
+migrated: 0060_moderation_appeals
+migrated: 0061_email_domain_and_system_mail
+migrated: 0062_bookmark_folders_profile_fields
+migrated: 0063_email_delivery_retry_backoff
+migrated: 0064_server_drafts
+migrated: 0065_server_extension_runtime
+migrated: 0066_phase5_seed_capabilities_owners
+migrated: 0067_owner_lifecycle_user_index
+migrated: 0068_phase5_registry_snapshots
+migrated: 0069_phase5_package_lifecycle
+migrated: 0070_phase5_publisher_review_security
+migrated: 0071_content_reference_tags
+migrated: 0072_phase5_theme_packages
+migrated: 0073_phase5_package_integrations
+migrated: 0074_phase5_provider_identity_backfill
+migrated: 0075_phase5_provider_admin_audit
+migrated: 0076_phase5_invitation_audit
+migrated: 0077_thread_intelligence
+migrated: 0078_purge_since_last_read_context
+migrated: 0079_drop_redundant_profile_field_index
+migrated: 0080_drop_redundant_indexes
+migrated: 0081_link_preview_enablement
+migrated: 0082_posts_read_order_index
+Fresh database. Applied 82 migration(s).
+==> Seeding
+Seeded RetroBoards e2e content.
+==> Database 'retroboards_unified_e2e' ready.

@@ -622,6 +622,12 @@ and organization workflows; they do not claim a last-20 dropdown or other
 deferred notification controls. Mobile account navigation and session labels
 are covered by the same combined repair and browser gate.
 
+The account-only no-JavaScript phone rail is capped at 176px and keyboard
+scrollable, with all real destinations retained. Its companion native closed
+settings chooser keeps the first form control in the initial viewport. This is
+a documented production adaptation, not a claim that the upstream prototype
+specified the same geometry; enhanced drawer and desktop behavior remain intact.
+
 For this approved implementation, the application digest is refreshed on the
 isolated repair branch after explicit source review, together with the generated
 manifest and styles. This is an exception to the historical merger-only slice
