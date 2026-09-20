@@ -78,6 +78,14 @@ async function visit(page: Page, url: string): Promise<void> {
     expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
+async function openSettingsSections(page: Page): Promise<void> {
+  const chooser = page.locator('[data-settings-mobile-nav]');
+  if (await chooser.isVisible()
+      && !(await chooser.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await chooser.locator(':scope > summary').click();
+  }
+}
+
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
   const trigger = page.getByRole('button', { name: /^Topic tools/ });
   await trigger.click();
@@ -1098,7 +1106,8 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
   }
 
   await visit(page, '/settings/account');
-  const replay = page.locator('[data-tour-replay]');
+  await openSettingsSections(page);
+  const replay = page.locator('[data-tour-replay]:visible');
   await expect(replay).toBeVisible();
   await replay.click();
   await expect(page.locator('.tour-popover')).toHaveAttribute('aria-modal', 'true');
@@ -1375,7 +1384,8 @@ test('phase 4 account lifecycle: export, deactivate/reactivate, request/cancel d
   // The lifecycle surface is reached through the settings rail, which only renders
   // the "Account" link when the flag is live — so this also proves the gated nav.
   await visit(page, '/settings/account');
-  await page.getByRole('link', { name: 'Account', exact: true }).click();
+  await openSettingsSections(page);
+  await page.locator('[data-settings-key="account"]:visible').click();
   await page.waitForURL(/\/settings\/account\/lifecycle$/);
   await expect(page.getByRole('heading', { name: 'Delete account' })).toBeVisible();
   await shot(page, info, '35-account-lifecycle');
