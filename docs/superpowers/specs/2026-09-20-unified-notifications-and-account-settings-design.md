@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-20
 
-**Status:** Approved repair scope; implementation and verification in progress. The [combined evidence index](../../evidence/unified-notifications-and-settings/README.md) records completion separately from the design contract.
+**Status:** Approved repair scope; implemented and locally verified on `codex/unified-notifications-settings`. The [combined evidence index](../../evidence/unified-notifications-and-settings/README.md) records completion separately from the design contract.
 
 **Source baseline:** `7257ca42`
 

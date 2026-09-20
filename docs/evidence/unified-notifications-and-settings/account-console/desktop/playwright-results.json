@@ -1,0 +1,794 @@
+{
+  "config": {
+    "argv": [
+      "/home/ubuntu/.nvm/versions/node/v24.21.0/bin/node",
+      "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/node_modules/.bin/playwright",
+      "test",
+      "account-console.spec.ts",
+      "--project=desktop",
+      "--reporter=list,json"
+    ],
+    "configFile": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/playwright.config.ts",
+    "rootDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/account-console/desktop/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/account-console/desktop/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "php -S localhost:8034 -t public public/index.php",
+      "cwd": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings",
+      "url": "http://localhost:8034",
+      "reuseExistingServer": false,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "account-console.spec.ts",
+      "file": "account-console.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "desktop grouped rail and common heading match the account shell contract",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1174,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:02.375Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-eee4fa3e9b9a036ddaae",
+          "file": "account-console.spec.ts",
+          "line": 159,
+          "column": 5
+        },
+        {
+          "title": "feature-dark entries vanish and Replay remains subordinate when enabled",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1525,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:03.627Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-5cc6a7d6ee141345d861",
+          "file": "account-console.spec.ts",
+          "line": 216,
+          "column": 5
+        },
+        {
+          "title": "representative Profile Security and Lifecycle 422 responses preserve explicit active state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1751,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:05.162Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-af2677c61687354c28aa",
+          "file": "account-console.spec.ts",
+          "line": 257,
+          "column": 5
+        },
+        {
+          "title": "mobile account rail records light and twilight responsive states",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "mobile account-shell evidence uses 390x844",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 290,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 53,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:06.940Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "mobile account-shell evidence uses 390x844",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 290,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-fbfab4d2e5f6e8d17c72",
+          "file": "account-console.spec.ts",
+          "line": 289,
+          "column": 5
+        },
+        {
+          "title": "mobile no-JavaScript account navigation follows every available ordinary href",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "no-JavaScript account-shell evidence uses 390x844",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 302,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:07.012Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "no-JavaScript account-shell evidence uses 390x844",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 302,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-0f625a75771ee39d4ac4",
+          "file": "account-console.spec.ts",
+          "line": 301,
+          "column": 5
+        },
+        {
+          "title": "full account shell is axe-clean in light twilight and system-dark registers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7760,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:07.018Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-32986d23927f138d21be",
+          "file": "account-console.spec.ts",
+          "line": 370,
+          "column": 5
+        },
+        {
+          "title": "slice 16 panes are axe-clean in light twilight and system-dark registers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 17462,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:14.784Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-15ac15eb1a130d214a4b",
+          "file": "account-console.spec.ts",
+          "line": 438,
+          "column": 5
+        },
+        {
+          "title": "slice 16 panes keep one boolean idiom and fit their width",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5039,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:32.253Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-576f1a7b93786791520b",
+          "file": "account-console.spec.ts",
+          "line": 470,
+          "column": 5
+        },
+        {
+          "title": "refused set-password re-renders inline on the connections pane",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 988,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:37.300Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-01fcb2ff57839d39a698",
+          "file": "account-console.spec.ts",
+          "line": 501,
+          "column": 5
+        },
+        {
+          "title": "slice 17 panes are axe-clean in light twilight and system-dark registers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7007,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:38.294Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-bb00292fef72a5439759",
+          "file": "account-console.spec.ts",
+          "line": 529,
+          "column": 5
+        },
+        {
+          "title": "slice 17 panes fit their width and keep the drafts hooks",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2217,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:45.314Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-5add45b72ab3b46ff4c4",
+          "file": "account-console.spec.ts",
+          "line": 558,
+          "column": 5
+        },
+        {
+          "title": "slice 17 lifecycle scopes a refused deletion to its own form",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 983,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:47.538Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-d7a41f577eb6561a84a1",
+          "file": "account-console.spec.ts",
+          "line": 586,
+          "column": 5
+        },
+        {
+          "title": "A5 mobile initial controls stay in view without JavaScript",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "dedicated 390x844 initial viewport",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 603,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:48.529Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "dedicated 390x844 initial viewport",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 603,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-4d38a022a6959dcafbaa",
+          "file": "account-console.spec.ts",
+          "line": 602,
+          "column": 5
+        },
+        {
+          "title": "A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "explicit viewport and script matrix",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 630,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:48.535Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "explicit viewport and script matrix",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 630,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-e827adb02310d7e8faf0",
+          "file": "account-console.spec.ts",
+          "line": 629,
+          "column": 5
+        },
+        {
+          "title": "A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6303,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:19:48.540Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-88de0af98d07f2cbf6c0",
+          "file": "account-console.spec.ts",
+          "line": 688,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-20T10:19:01.216Z",
+    "duration": 53737.721,
+    "expected": 11,
+    "skipped": 4,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

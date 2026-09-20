@@ -1,0 +1,298 @@
+{
+  "config": {
+    "argv": [
+      "/home/ubuntu/.nvm/versions/node/v24.21.0/bin/node",
+      "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/node_modules/.bin/playwright",
+      "test",
+      "gate-a.spec.ts",
+      "--project=mobile",
+      "--reporter=list,json",
+      "--grep",
+      "phase 4 profile media|phase 4 custom profile fields|phase 4 account lifecycle|admin email delivery|admin notifications keep"
+    ],
+    "configFile": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/playwright.config.ts",
+    "rootDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/gate-a-account-notifications/mobile/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/gate-a-account-notifications/mobile/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "php -S localhost:8034 -t public public/index.php",
+      "cwd": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings",
+      "url": "http://localhost:8034",
+      "reuseExistingServer": false,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "gate-a.spec.ts",
+      "file": "gate-a.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "phase 4 profile media: avatar upload, signature, and admin moderation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2109,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:25:07.366Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0857634bb2cd7e4169db-c7a00937075c86c37b53",
+          "file": "gate-a.spec.ts",
+          "line": 804,
+          "column": 5
+        },
+        {
+          "title": "phase 4 account lifecycle: export, deactivate/reactivate, request/cancel deletion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1826,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:25:09.557Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0857634bb2cd7e4169db-ed790314e5a7c132c443",
+          "file": "gate-a.spec.ts",
+          "line": 1377,
+          "column": 5
+        },
+        {
+          "title": "admin email delivery: dashboard, suppress/release, and a test-send",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1436,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:25:11.397Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0857634bb2cd7e4169db-b4d503afa2d32783df60",
+          "file": "gate-a.spec.ts",
+          "line": 1515,
+          "column": 5
+        },
+        {
+          "title": "admin notifications keep filters, tabs, counter, and email warning useful without JavaScript",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "one explicit no-JS notification journey is sufficient",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/gate-a.spec.ts",
+                    "line": 1559,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:25:12.844Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "one explicit no-JS notification journey is sufficient",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/gate-a.spec.ts",
+                        "line": 1559,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "0857634bb2cd7e4169db-789211284e0fa6217039",
+          "file": "gate-a.spec.ts",
+          "line": 1558,
+          "column": 5
+        },
+        {
+          "title": "phase 4 custom profile fields: member self-edit and public display",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 963,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:25:12.850Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0857634bb2cd7e4169db-0448f8387d430a2bc6cf",
+          "file": "gate-a.spec.ts",
+          "line": 1649,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-20T10:25:06.267Z",
+    "duration": 7620.016,
+    "expected": 4,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

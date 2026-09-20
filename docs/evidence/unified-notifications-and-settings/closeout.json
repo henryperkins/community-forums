@@ -1,0 +1,45 @@
+{
+  "date": "2026-09-20",
+  "application_source_head": "eeb72a9c78b81dd875d6d6bfd89ad52ffca14466",
+  "disposable_schemas_removed": [
+    "retroboards_unified_test",
+    "retroboards_unified_e2e",
+    "retroboards_unified_workers",
+    "retroboards_unified_lifecycle_race"
+  ],
+  "remaining_owned_schemas": 0,
+  "remaining_owned_schema_grants": 0,
+  "removed_storage_paths": [
+    "storage/packages-e2e-unified",
+    "storage/ratelimit-e2e-unified",
+    "storage/ratelimit-e2e-unified-a2-corrected",
+    "storage/ratelimit-e2e-unified-a2-mobile",
+    "storage/ratelimit-e2e-unified-a3",
+    "storage/ratelimit-e2e-unified-a3-collateral",
+    "storage/ratelimit-e2e-unified-a3-profile",
+    "storage/ratelimit-e2e-unified-a4",
+    "storage/ratelimit-e2e-unified-a4-manage",
+    "storage/ratelimit-e2e-unified-a4-review",
+    "storage/ratelimit-e2e-unified-a4-validation",
+    "storage/ratelimit-e2e-unified-a5-parent",
+    "storage/ratelimit-e2e-unified-board-capture",
+    "storage/ratelimit-e2e-unified-nav-collateral",
+    "storage/media/unified-evidence"
+  ],
+  "sanitized_playwright_reports": 20,
+  "evidence_files_checked_for_inherited_credentials": 649,
+  "inherited_credential_matches": 0,
+  "main_head_unchanged": "7257ca423e01a488bc21220542d9515fa41deda2",
+  "original_untracked_plan_files_preserved": 4,
+  "canonical_capture_sha256": "6411806655dc83ccd5493bcb3e9444e358d76df34d82057c86da819ef316cda4",
+  "canonical_matches_reviewed_combined_capture": true,
+  "branch_and_worktree_preserved": true,
+  "markdown_file_links_checked": 132,
+  "missing_markdown_file_links": 0,
+  "owned_sdd_scratch_workspaces_removed": 2,
+  "owned_browser_ports_closed": [
+    8034,
+    8035
+  ],
+  "unrelated_server_preserved": 8011
+}

@@ -1,0 +1,951 @@
+{
+  "config": {
+    "argv": [
+      "/home/ubuntu/.nvm/versions/node/v24.21.0/bin/node",
+      "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/node_modules/.bin/playwright",
+      "test",
+      "unified-chrome.spec.ts",
+      "--project=desktop",
+      "--reporter=list,json"
+    ],
+    "configFile": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/playwright.config.ts",
+    "rootDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/unified-chrome/desktop/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/unified-chrome/desktop/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "php -S localhost:8034 -t public public/index.php",
+      "cwd": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings",
+      "url": "http://localhost:8034",
+      "reuseExistingServer": false,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "unified-chrome.spec.ts",
+      "file": "unified-chrome.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "the bar and the rail are the design system's, at its geometry, in both registers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 997,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:44.502Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-09ee90b05bc7e51f3f09",
+          "file": "unified-chrome.spec.ts",
+          "line": 146,
+          "column": 5
+        },
+        {
+          "title": "long stored account names fit the bar and keep the account menu reachable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4764,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "40-character name at 1100px in light",
+                      "duration": 244
+                    },
+                    {
+                      "title": "40-character name at 1100px in dark",
+                      "duration": 146
+                    },
+                    {
+                      "title": "40-character name at 901px in light",
+                      "duration": 140
+                    },
+                    {
+                      "title": "40-character name at 901px in dark",
+                      "duration": 122
+                    },
+                    {
+                      "title": "40-character name at 924px in light",
+                      "duration": 130
+                    },
+                    {
+                      "title": "40-character name at 924px in dark",
+                      "duration": 120
+                    },
+                    {
+                      "title": "40-character name at 1024px in light",
+                      "duration": 123
+                    },
+                    {
+                      "title": "40-character name at 1024px in dark",
+                      "duration": 113
+                    },
+                    {
+                      "title": "40-character name at 1080px in light",
+                      "duration": 115
+                    },
+                    {
+                      "title": "40-character name at 1080px in dark",
+                      "duration": 116
+                    },
+                    {
+                      "title": "40-character name at 1081px in light",
+                      "duration": 121
+                    },
+                    {
+                      "title": "40-character name at 1081px in dark",
+                      "duration": 128
+                    },
+                    {
+                      "title": "40-character name at 1280px in light",
+                      "duration": 152
+                    },
+                    {
+                      "title": "40-character name at 1280px in dark",
+                      "duration": 148
+                    },
+                    {
+                      "title": "64-character name at 1100px in light",
+                      "duration": 146
+                    },
+                    {
+                      "title": "64-character name at 1100px in dark",
+                      "duration": 145
+                    },
+                    {
+                      "title": "64-character name at 901px in light",
+                      "duration": 129
+                    },
+                    {
+                      "title": "64-character name at 901px in dark",
+                      "duration": 122
+                    },
+                    {
+                      "title": "64-character name at 924px in light",
+                      "duration": 128
+                    },
+                    {
+                      "title": "64-character name at 924px in dark",
+                      "duration": 127
+                    },
+                    {
+                      "title": "64-character name at 1024px in light",
+                      "duration": 125
+                    },
+                    {
+                      "title": "64-character name at 1024px in dark",
+                      "duration": 127
+                    },
+                    {
+                      "title": "64-character name at 1080px in light",
+                      "duration": 124
+                    },
+                    {
+                      "title": "64-character name at 1080px in dark",
+                      "duration": 122
+                    },
+                    {
+                      "title": "64-character name at 1081px in light",
+                      "duration": 138
+                    },
+                    {
+                      "title": "64-character name at 1081px in dark",
+                      "duration": 131
+                    },
+                    {
+                      "title": "64-character name at 1280px in light",
+                      "duration": 127
+                    },
+                    {
+                      "title": "64-character name at 1280px in dark",
+                      "duration": 127
+                    }
+                  ],
+                  "startTime": "2026-09-20T10:23:45.578Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-d7fe2babf32479c5f909",
+          "file": "unified-chrome.spec.ts",
+          "line": 184,
+          "column": 5
+        },
+        {
+          "title": "the seat's leaf and the profile dot still take the away colour from the layer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 764,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:50.356Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-b7e8601eb7d8e77508be",
+          "file": "unified-chrome.spec.ts",
+          "line": 286,
+          "column": 5
+        },
+        {
+          "title": "a rail row without an avatar keeps a dot with a box",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 899,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:51.129Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-e45fe88a6e1a0c49d2b7",
+          "file": "unified-chrome.spec.ts",
+          "line": 312,
+          "column": 5
+        },
+        {
+          "title": "rail rows hover without an underline and \"See everyone online\" takes the accent",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 670,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:52.036Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-b85cf0d96bc6253eb5de",
+          "file": "unified-chrome.spec.ts",
+          "line": 335,
+          "column": 5
+        },
+        {
+          "title": "reading a topic keeps the chrome unread counts capped, named, and synchronized",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1517,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:52.715Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-d553cbda442f833daf91",
+          "file": "unified-chrome.spec.ts",
+          "line": 358,
+          "column": 5
+        },
+        {
+          "title": "the rail state persists and the drawer opens",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 755,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:54.245Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-a71cdbd5fc28262be1f0",
+          "file": "unified-chrome.spec.ts",
+          "line": 468,
+          "column": 5
+        },
+        {
+          "title": "the closed phone drawer is excluded from keyboard navigation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "phone drawer accessibility contract",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                    "line": 506,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 109,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:55.007Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "phone drawer accessibility contract",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                        "line": 506,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-c04b5c475d5572dd0b12",
+          "file": "unified-chrome.spec.ts",
+          "line": 505,
+          "column": 5
+        },
+        {
+          "title": "phone primary navigation reaches Messages without horizontal page overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "phone primary navigation contract",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                    "line": 534,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 106,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:55.124Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "phone primary navigation contract",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                        "line": 534,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-951256d94cda1f796129",
+          "file": "unified-chrome.spec.ts",
+          "line": 533,
+          "column": 5
+        },
+        {
+          "title": "a guest gets the design's Log in pill and production's Sign up beside it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 268,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:55.239Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-0b02a411ce4512c9a925",
+          "file": "unified-chrome.spec.ts",
+          "line": 547,
+          "column": 5
+        },
+        {
+          "title": "New topic survives the phone breakpoint as its glyph",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "phone chrome contract",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                    "line": 556,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 105,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:55.515Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "phone chrome contract",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                        "line": 556,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-2d84b61c37a543c4dd89",
+          "file": "unified-chrome.spec.ts",
+          "line": 555,
+          "column": 5
+        },
+        {
+          "title": "persistent bell keeps complete primary routes and mobile controls reachable at 320px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1540,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:23:56.710Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bef0c8684d22d6f2938c-9006508f96d25cc658c0",
+          "file": "unified-chrome.spec.ts",
+          "line": 651,
+          "column": 5
+        }
+      ],
+      "suites": [
+        {
+          "title": "with JavaScript disabled",
+          "file": "unified-chrome.spec.ts",
+          "line": 572,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the desktop rail POST persists across reloads and destinations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 953,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "buffer": ""
+                        },
+                        {
+                          "buffer": ""
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-20T10:23:55.629Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bef0c8684d22d6f2938c-dfd46042362a2b2ad2f3",
+              "file": "unified-chrome.spec.ts",
+              "line": 575,
+              "column": 7
+            },
+            {
+              "title": "mobile chrome reaches boards, messages, and account settings through native controls",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "phone progressive-enhancement contract",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                        "line": 612,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 110,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "buffer": ""
+                        },
+                        {
+                          "buffer": ""
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-20T10:23:56.592Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "phone progressive-enhancement contract",
+                          "location": {
+                            "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts",
+                            "line": 612,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bef0c8684d22d6f2938c-1180584997690b9423d1",
+              "file": "unified-chrome.spec.ts",
+              "line": 611,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "narrow primary navigation without JavaScript",
+          "file": "unified-chrome.spec.ts",
+          "line": 725,
+          "column": 6,
+          "specs": [
+            {
+              "title": "all three full primary labels remain native destinations at 320px",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 842,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "buffer": ""
+                        },
+                        {
+                          "buffer": ""
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-20T10:23:58.258Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bef0c8684d22d6f2938c-10af9f494535a6059082",
+              "file": "unified-chrome.spec.ts",
+              "line": 727,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-20T10:23:43.503Z",
+    "duration": 15670.801000000001,
+    "expected": 11,
+    "skipped": 4,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

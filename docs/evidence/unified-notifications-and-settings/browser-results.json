@@ -1,0 +1,538 @@
+{
+  "database": "retroboards_unified_e2e",
+  "origin": "http://localhost:8034",
+  "completed": true,
+  "scratch_removed": true,
+  "results": [
+    {
+      "suite": "notifications-unified",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6787
+    },
+    {
+      "suite": "notifications-unified",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "notifications-unified.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 28096
+    },
+    {
+      "suite": "notifications-unified",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6664
+    },
+    {
+      "suite": "notifications-unified",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "notifications-unified.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 32125
+    },
+    {
+      "suite": "account-settings-repairs",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6925
+    },
+    {
+      "suite": "account-settings-repairs",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "account-settings-repairs.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 57069
+    },
+    {
+      "suite": "account-settings-repairs",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6375
+    },
+    {
+      "suite": "account-settings-repairs",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "account-settings-repairs.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 56810
+    },
+    {
+      "suite": "account-console",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5964
+    },
+    {
+      "suite": "account-console",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "account-console.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 54429
+    },
+    {
+      "suite": "account-console",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6182
+    },
+    {
+      "suite": "account-console",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "account-console.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 76382
+    },
+    {
+      "suite": "totp",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5846
+    },
+    {
+      "suite": "totp",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "totp.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 8744
+    },
+    {
+      "suite": "totp",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5846
+    },
+    {
+      "suite": "totp",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "totp.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 24161
+    },
+    {
+      "suite": "profile-surface",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5814
+    },
+    {
+      "suite": "profile-surface",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "profile-surface.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 14308
+    },
+    {
+      "suite": "profile-surface",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5817
+    },
+    {
+      "suite": "profile-surface",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "profile-surface.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 16051
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5764
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "chamfer-removal.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 20402
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5803
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "chamfer-removal.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 21053
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5754
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "unified-chrome.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 16277
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5827
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "unified-chrome.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 15962
+    },
+    {
+      "suite": "board-index-remediation",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5794
+    },
+    {
+      "suite": "board-index-remediation",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "board-index-remediation.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5754
+    },
+    {
+      "suite": "board-index-remediation",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5936
+    },
+    {
+      "suite": "board-index-remediation",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "board-index-remediation.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6615
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5900
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "gate-a.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json",
+        "--grep",
+        "phase 4 profile media|phase 4 custom profile fields|phase 4 account lifecycle|admin email delivery|admin notifications keep"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 8563
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6108
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "gate-a.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json",
+        "--grep",
+        "phase 4 profile media|phase 4 custom profile fields|phase 4 account lifecycle|admin email delivery|admin notifications keep"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 8255
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "desktop",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 6915
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "desktop",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "a11y.spec.ts",
+        "--project=desktop",
+        "--reporter=list,json",
+        "--grep",
+        "phase 4 profile media panels|phase 4 custom profile fields settings panel"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5040
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "mobile",
+      "command": "bash",
+      "args": [
+        "prepare.sh"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5850
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "mobile",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test",
+        "a11y.spec.ts",
+        "--project=mobile",
+        "--reporter=list,json",
+        "--grep",
+        "phase 4 profile media panels|phase 4 custom profile fields settings panel"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 5040
+    }
+  ],
+  "report_server_environment": "omitted by closeout sanitation; hardened runner now strips it before publication",
+  "application_source_head": "eeb72a9c78b81dd875d6d6bfd89ad52ffca14466"
+}

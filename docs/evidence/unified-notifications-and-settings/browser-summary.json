@@ -1,0 +1,356 @@
+{
+  "runs": [
+    {
+      "suite": "account-console",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:19:01.216Z",
+      "duration": 53737.721,
+      "expected": 11,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "account-console",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:20:01.840Z",
+      "duration": 75686.31599999999,
+      "expected": 7,
+      "skipped": 8,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "account-settings-repairs",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:16:54.938Z",
+      "duration": 56441.769,
+      "expected": 32,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "account-settings-repairs",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:17:58.400Z",
+      "duration": 56168.754,
+      "expected": 32,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "board-index-remediation",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:24:27.399Z",
+      "duration": 5106.009,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "board-index-remediation",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:24:39.061Z",
+      "duration": 5998.717,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:22:50.490Z",
+      "duration": 19789.896,
+      "expected": 30,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:23:16.699Z",
+      "duration": 20441.565000000002,
+      "expected": 30,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:24:51.586Z",
+      "duration": 7936.787,
+      "expected": 5,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:25:06.267Z",
+      "duration": 7620.016,
+      "expected": 4,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "notifications-unified",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:15:41.224Z",
+      "duration": 27375.806,
+      "expected": 10,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "notifications-unified",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:16:15.901Z",
+      "duration": 31486.237999999998,
+      "expected": 10,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:25:21.417Z",
+      "duration": 4423.75,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:25:32.359Z",
+      "duration": 4373.7480000000005,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "profile-surface",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:22:08.566Z",
+      "duration": 13685.135999999999,
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "profile-surface",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:22:28.700Z",
+      "duration": 15417.592,
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "totp",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:21:23.998Z",
+      "duration": 8120.743,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "totp",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:21:38.589Z",
+      "duration": 23534.490999999998,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "startTime": "2026-09-20T10:23:43.503Z",
+      "duration": 15670.801000000001,
+      "expected": 11,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "mobile",
+      "startTime": "2026-09-20T10:24:05.624Z",
+      "duration": 15331.082999999999,
+      "expected": 14,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  ],
+  "totals": {
+    "expected": 224,
+    "skipped": 18,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "skips": [
+    {
+      "file": "account-console.spec.ts",
+      "title": "mobile account rail records light and twilight responsive states",
+      "project": "desktop",
+      "reasons": [
+        "mobile account-shell evidence uses 390x844"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "mobile no-JavaScript account navigation follows every available ordinary href",
+      "project": "desktop",
+      "reasons": [
+        "no-JavaScript account-shell evidence uses 390x844"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "A5 mobile initial controls stay in view without JavaScript",
+      "project": "desktop",
+      "reasons": [
+        "dedicated 390x844 initial viewport"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable",
+      "project": "desktop",
+      "reasons": [
+        "explicit viewport and script matrix"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "desktop grouped rail and common heading match the account shell contract",
+      "project": "mobile",
+      "reasons": [
+        "desktop account-shell evidence uses 1280x800"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "feature-dark entries vanish and Replay remains subordinate when enabled",
+      "project": "mobile",
+      "reasons": [
+        "feature hierarchy is captured once on desktop"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "representative Profile Security and Lifecycle 422 responses preserve explicit active state",
+      "project": "mobile",
+      "reasons": [
+        "validation ownership is captured once on desktop"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "full account shell is axe-clean in light twilight and system-dark registers",
+      "project": "mobile",
+      "reasons": [
+        "theme and axe evidence is captured once on desktop"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "slice 16 panes are axe-clean in light twilight and system-dark registers",
+      "project": "mobile",
+      "reasons": [
+        "axe and register parity are captured once on desktop"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "refused set-password re-renders inline on the connections pane",
+      "project": "mobile",
+      "reasons": [
+        "the 422 round-trip is captured once on desktop"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "slice 17 panes are axe-clean in light twilight and system-dark registers",
+      "project": "mobile",
+      "reasons": [
+        "axe and register parity are captured once on desktop"
+      ]
+    },
+    {
+      "file": "account-console.spec.ts",
+      "title": "slice 17 lifecycle scopes a refused deletion to its own form",
+      "project": "mobile",
+      "reasons": [
+        "the 422 round-trip is captured once on desktop"
+      ]
+    },
+    {
+      "file": "gate-a.spec.ts",
+      "title": "admin notifications keep filters, tabs, counter, and email warning useful without JavaScript",
+      "project": "mobile",
+      "reasons": [
+        "one explicit no-JS notification journey is sufficient"
+      ]
+    },
+    {
+      "file": "unified-chrome.spec.ts",
+      "title": "the closed phone drawer is excluded from keyboard navigation",
+      "project": "desktop",
+      "reasons": [
+        "phone drawer accessibility contract"
+      ]
+    },
+    {
+      "file": "unified-chrome.spec.ts",
+      "title": "phone primary navigation reaches Messages without horizontal page overflow",
+      "project": "desktop",
+      "reasons": [
+        "phone primary navigation contract"
+      ]
+    },
+    {
+      "file": "unified-chrome.spec.ts",
+      "title": "New topic survives the phone breakpoint as its glyph",
+      "project": "desktop",
+      "reasons": [
+        "phone chrome contract"
+      ]
+    },
+    {
+      "file": "unified-chrome.spec.ts",
+      "title": "mobile chrome reaches boards, messages, and account settings through native controls",
+      "project": "desktop",
+      "reasons": [
+        "phone progressive-enhancement contract"
+      ]
+    },
+    {
+      "file": "unified-chrome.spec.ts",
+      "title": "the desktop rail POST persists across reloads and destinations",
+      "project": "mobile",
+      "reasons": [
+        "the persisted toggle is desktop-only"
+      ]
+    }
+  ]
+}

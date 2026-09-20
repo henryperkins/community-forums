@@ -1,0 +1,32 @@
+[
+  {
+    "route": "boards",
+    "navLeft": 9,
+    "navRight": 311,
+    "labelLeft": 82.234375,
+    "labelRight": 119.65625,
+    "controlLeft": 74.234375,
+    "controlRight": 127.65625,
+    "viewport": 320
+  },
+  {
+    "route": "inbox",
+    "navLeft": 9,
+    "navRight": 311,
+    "labelLeft": 136.65625,
+    "labelRight": 167.84375,
+    "controlLeft": 128.65625,
+    "controlRight": 175.84375,
+    "viewport": 320
+  },
+  {
+    "route": "messages",
+    "navLeft": 9,
+    "navRight": 311,
+    "labelLeft": 184.84375,
+    "labelRight": 237.75,
+    "controlLeft": 176.84375,
+    "controlRight": 245.75,
+    "viewport": 320
+  }
+]

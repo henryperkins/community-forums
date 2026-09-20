@@ -1,0 +1,14 @@
+# N6 combined closeout
+
+The approved implementation is complete and locally verified. The final application source is eeb72a9c; 265f9f73 adds only the reviewed ADR/reconciliation record. Later closeout changes are evidence, plan/status documentation and the separately reviewed report-redaction runner correction.
+
+- Full PHP: 2,926 tests / 22,080 assertions, exit 0, six unchanged-path deprecations and one unrelated fixture-free migration skip.
+- Build/check/verify: exit 0; Imladris verification 24 tests / 296 assertions.
+- Combined browser: all 20 suite/project runs and 40 child commands exit 0; 224 passed, 18 intentional project exclusions, zero failures/flaky tests. Scratch removed by the runner.
+- Captured actual CLI: ten outcome assertions pass, every command exits 0 and repeated drains send zero. Five earlier real two-connection lifecycle races pass.
+- All ten runtime task reviews and final combined application review approve after recorded corrections. The final review's pending parent-owned gates are closed by the combined evidence index and closeout.json; its historical wording is retained honestly.
+- Report publication was hardened after finding inherited server environment in untracked Playwright JSON. Raw output now lives only in disposable scratch; published reports omit server env and child application/provider keys are deterministic test values. Three stubbed-child orchestration checks prove success/failure/malformed-report cleanup without claiming extra browser execution. The initial VM harness omitted its URL global; fixing only that harness yielded the recorded passing checks. All final real reports were sanitized before commit, and the evidence scan found zero inherited credential values.
+- Selected final captures were opened. The desktop Notifications pane was deliberately promoted to its existing canonical evidence path. The final 320px no-JS screenshot contains both compose and bell glyphs; the prior screenshot-only caveat is resolved.
+- Four disposable schemas, eight schema grants and fifteen owned storage directories were removed. Main remains 7257ca423e01a488bc21220542d9515fa41deda2 with its original four untracked plan files. The unrelated 8011 server remains running, and owned 8034/8035 listeners are gone. Branch/worktree are preserved for integration.
+
+The seven implementation rulings are preserved in implementation-decisions.md, with reasons and costs. Final review exclusions are accepted only as documented scope/evidence limits: new security history, email discovery, username/dropdown/matrix workflows, exactly-once transport guarantees, automatic legacy-state reconstruction, production provider/deployment/load evidence and actual browser UI zoom. No unresolved application finding was parked. No migration, production deployment, push, merge, real mail or external OAuth ceremony is claimed.

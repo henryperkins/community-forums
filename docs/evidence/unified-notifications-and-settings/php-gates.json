@@ -1,0 +1,61 @@
+{
+  "head": "eeb72a9c78b81dd875d6d6bfd89ad52ffca14466",
+  "transport": {
+    "MAIL_DRIVER": "sendmail",
+    "MAIL_FROM": ""
+  },
+  "completed": true,
+  "commands": [
+    {
+      "name": "build",
+      "command": [
+        "composer",
+        "build:imladris"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.164,
+      "log": "build.log"
+    },
+    {
+      "name": "check",
+      "command": [
+        "composer",
+        "check:imladris"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.168,
+      "log": "check.log"
+    },
+    {
+      "name": "verify",
+      "command": [
+        "flock",
+        "/tmp/retroboards-unified-phpunit.lock",
+        "composer",
+        "verify:imladris"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.37,
+      "log": "verify.log"
+    },
+    {
+      "name": "phpunit",
+      "command": [
+        "flock",
+        "/tmp/retroboards-unified-phpunit.lock",
+        "composer",
+        "test",
+        "--",
+        "--colors=never",
+        "--display-deprecations",
+        "--display-phpunit-deprecations",
+        "--display-skipped",
+        "--log-junit",
+        "docs/evidence/unified-notifications-and-settings/phpunit.xml"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 110.118,
+      "log": "phpunit.log"
+    }
+  ]
+}

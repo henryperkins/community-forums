@@ -2,7 +2,7 @@
 
 ## Unified notification and account repairs — 2026-09-20
 
-**In progress on `codex/unified-notifications-settings`; no deployment claimed.**
+**Implemented and locally verified on `codex/unified-notifications-settings`; no deployment claimed.**
 The approved repair covers the ten notification findings and nine account
 findings, with private subscription labels/opt-out shared between the audits.
 It includes lifecycle-state precedence, shared authorized notification history,
@@ -16,8 +16,10 @@ Member security history, email discovery, username changes and a last-20 bell
 dropdown remain explicit open requirements in proposed
 [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md). The accepted
 notification-control and staff-inbox carryovers retain ADR 0014/0021 ownership.
-The historical phase acceptance and suite totals below are not evidence that
-these newer repairs have passed their combined gate.
+The repair gate passed 2,926 PHP tests / 22,080 assertions, 224 browser tests
+(18 intentional skips), Imladris build/check/verification and independent review.
+PHP retained six deprecations and one unrelated migration-rehearsal skip. The
+historical phase totals below remain unchanged and are not this repair's evidence.
 
 ## Phase 5 release-train record
 

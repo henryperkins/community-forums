@@ -18,3 +18,7 @@ refer to the repository root or the disposable environment used at that time.
 | N4 shared notification UI | [Report](N4-report.md) | [Approved](N4-review.md) |
 | A5 mobile settings and session labels | [Report](A5-report.md) | [Approved](A5-review.md) |
 | N5 persistent bell and shared counts | [Report](N5-report.md) | [Approved after narrow-label correction](N5-review.md) |
+
+[Final independent branch review](final-review.md) approved the application and the scoped evidence-runner correction. The combined index records the subsequently completed browser, capture, integrity and cleanup gates.
+
+[Parent N6 closeout](N6-report.md) closes those remaining local acceptance gates and records the report-redaction correction and cleanup.

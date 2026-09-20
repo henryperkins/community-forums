@@ -1,0 +1,848 @@
+{
+  "config": {
+    "argv": [
+      "/home/ubuntu/.nvm/versions/node/v24.21.0/bin/node",
+      "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/node_modules/.bin/playwright",
+      "test",
+      "account-console.spec.ts",
+      "--project=mobile",
+      "--reporter=list,json"
+    ],
+    "configFile": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/playwright.config.ts",
+    "rootDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/account-console/mobile/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/docs/evidence/unified-notifications-and-settings/account-console/mobile/.artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "php -S localhost:8034 -t public public/index.php",
+      "cwd": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings",
+      "url": "http://localhost:8034",
+      "reuseExistingServer": false,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "account-console.spec.ts",
+      "file": "account-console.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "desktop grouped rail and common heading match the account shell contract",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "desktop account-shell evidence uses 1280x800",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 160,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 40,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:02.908Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "desktop account-shell evidence uses 1280x800",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 160,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-b1d0b1468a02bde647a4",
+          "file": "account-console.spec.ts",
+          "line": 159,
+          "column": 5
+        },
+        {
+          "title": "feature-dark entries vanish and Replay remains subordinate when enabled",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "feature hierarchy is captured once on desktop",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 217,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 30,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:03.026Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "feature hierarchy is captured once on desktop",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 217,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-2adf85ee39c93f3d72b9",
+          "file": "account-console.spec.ts",
+          "line": 216,
+          "column": 5
+        },
+        {
+          "title": "representative Profile Security and Lifecycle 422 responses preserve explicit active state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "validation ownership is captured once on desktop",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 258,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 34,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:03.067Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "validation ownership is captured once on desktop",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 258,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-23067ec34203bfeb9b22",
+          "file": "account-console.spec.ts",
+          "line": 257,
+          "column": 5
+        },
+        {
+          "title": "mobile account rail records light and twilight responsive states",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1169,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:03.111Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-c6b8c6bed2446f59e263",
+          "file": "account-console.spec.ts",
+          "line": 289,
+          "column": 5
+        },
+        {
+          "title": "mobile no-JavaScript account navigation follows every available ordinary href",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4566,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:04.289Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-bea2ea8468b7482632a5",
+          "file": "account-console.spec.ts",
+          "line": 301,
+          "column": 5
+        },
+        {
+          "title": "full account shell is axe-clean in light twilight and system-dark registers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "theme and axe evidence is captured once on desktop",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 371,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 32,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:08.861Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "theme and axe evidence is captured once on desktop",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 371,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-f2d5421605db630cdd9b",
+          "file": "account-console.spec.ts",
+          "line": 370,
+          "column": 5
+        },
+        {
+          "title": "slice 16 panes are axe-clean in light twilight and system-dark registers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "axe and register parity are captured once on desktop",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 439,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 28,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:08.899Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "axe and register parity are captured once on desktop",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 439,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-ed018e88361d0f6d7b6d",
+          "file": "account-console.spec.ts",
+          "line": 438,
+          "column": 5
+        },
+        {
+          "title": "slice 16 panes keep one boolean idiom and fit their width",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5106,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:08.933Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-2f70702f369db0c54de9",
+          "file": "account-console.spec.ts",
+          "line": 470,
+          "column": 5
+        },
+        {
+          "title": "refused set-password re-renders inline on the connections pane",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "the 422 round-trip is captured once on desktop",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 502,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 28,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:14.045Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "the 422 round-trip is captured once on desktop",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 502,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-d9c2a109361b7112cb65",
+          "file": "account-console.spec.ts",
+          "line": 501,
+          "column": 5
+        },
+        {
+          "title": "slice 17 panes are axe-clean in light twilight and system-dark registers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "axe and register parity are captured once on desktop",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 530,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 26,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:14.081Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "axe and register parity are captured once on desktop",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 530,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-fefd50141731c9f16912",
+          "file": "account-console.spec.ts",
+          "line": 529,
+          "column": 5
+        },
+        {
+          "title": "slice 17 panes fit their width and keep the drafts hooks",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2170,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:14.113Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-80df53d65dd1187c8a46",
+          "file": "account-console.spec.ts",
+          "line": 558,
+          "column": 5
+        },
+        {
+          "title": "slice 17 lifecycle scopes a refused deletion to its own form",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "the 422 round-trip is captured once on desktop",
+                  "location": {
+                    "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                    "line": 587,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 25,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:16.289Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "the 422 round-trip is captured once on desktop",
+                      "location": {
+                        "file": "/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/account-console.spec.ts",
+                        "line": 587,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-d49d8c17d4fa3b7d2153",
+          "file": "account-console.spec.ts",
+          "line": 586,
+          "column": 5
+        },
+        {
+          "title": "A5 mobile initial controls stay in view without JavaScript",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 16284,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Security light { firstControlBottom: \u001b[33m613.828125\u001b[39m }\n"
+                    },
+                    {
+                      "text": "Profile light { firstControlBottom: \u001b[33m714.390625\u001b[39m }\n"
+                    },
+                    {
+                      "text": "Notifications light { firstControlBottom: \u001b[33m693.015625\u001b[39m }\n"
+                    },
+                    {
+                      "text": "Security dark { firstControlBottom: \u001b[33m613.828125\u001b[39m }\n"
+                    },
+                    {
+                      "text": "Profile dark { firstControlBottom: \u001b[33m714.390625\u001b[39m }\n"
+                    },
+                    {
+                      "text": "Notifications dark { firstControlBottom: \u001b[33m693.015625\u001b[39m }\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:16.319Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-254fba639abc6aaaef38",
+          "file": "account-console.spec.ts",
+          "line": 602,
+          "column": 5
+        },
+        {
+          "title": "A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 38739,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:20:32.609Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-2e7a19dfb738ae2079f2",
+          "file": "account-console.spec.ts",
+          "line": 629,
+          "column": 5
+        },
+        {
+          "title": "A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6092,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-20T10:21:11.354Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4827ba36db4662ac4d2c-7a7f0a9e65ebba1c7bdc",
+          "file": "account-console.spec.ts",
+          "line": 688,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-20T10:20:01.840Z",
+    "duration": 75686.31599999999,
+    "expected": 7,
+    "skipped": 8,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
