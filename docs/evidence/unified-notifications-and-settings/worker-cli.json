@@ -1,0 +1,603 @@
+{
+  "database": "retroboards_unified_workers",
+  "transport": "array",
+  "started_at": "2026-09-20T09:10:18.462Z",
+  "commands": [
+    {
+      "command": [
+        "php",
+        "tests/notification-workers/fixture.php",
+        "seed"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 815,
+      "stderr": "",
+      "stdout": {
+        "database": "retroboards_unified_workers",
+        "command": "seed",
+        "checks": [],
+        "deliveries": [
+          {
+            "id": 1,
+            "user_id": 3,
+            "kind": "digest",
+            "subject": "Rehearsal queued",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 2,
+            "user_id": 4,
+            "kind": "digest",
+            "subject": "Rehearsal purged",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 3,
+            "user_id": 6,
+            "kind": "digest",
+            "subject": "Rehearsal paused",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 4,
+            "user_id": 7,
+            "kind": "digest",
+            "subject": "Rehearsal suppressed",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 5,
+            "user_id": 8,
+            "kind": "digest",
+            "subject": "Rehearsal banned",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 6,
+            "user_id": 5,
+            "kind": "digest",
+            "subject": "Rehearsal legacy",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 7,
+            "user_id": 5,
+            "kind": "digest",
+            "subject": "Rehearsal legacy failed",
+            "status": "failed",
+            "error": "unreplayable_legacy_digest",
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 8,
+            "user_id": 1,
+            "kind": "test",
+            "subject": "Rehearsal operator test",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          }
+        ],
+        "members": [
+          {
+            "id": 1,
+            "username": "worker-author",
+            "status": "active",
+            "timezone": null,
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 2,
+            "username": "worker-null-zone",
+            "status": "active",
+            "timezone": null,
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 3,
+            "username": "worker-queued",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 4,
+            "username": "worker-purged",
+            "status": "pending_deletion",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 5,
+            "username": "worker-legacy",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 6,
+            "username": "worker-paused",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 7,
+            "username": "worker-suppressed",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 8,
+            "username": "worker-banned",
+            "status": "banned",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 9,
+            "username": "worker-saved-feed",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          }
+        ]
+      }
+    },
+    {
+      "command": [
+        "php",
+        "bin/console",
+        "worker:purge-accounts"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 39,
+      "stderr": "",
+      "stdout": "Account purge: anonymised 1 due deletion(s).\n"
+    },
+    {
+      "command": [
+        "php",
+        "tests/notification-workers/fixture.php",
+        "inspect"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 31,
+      "stderr": "",
+      "stdout": {
+        "database": "retroboards_unified_workers",
+        "command": "inspect",
+        "checks": [],
+        "deliveries": [
+          {
+            "id": 1,
+            "user_id": 3,
+            "kind": "digest",
+            "subject": "Rehearsal queued",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 2,
+            "user_id": null,
+            "kind": "digest",
+            "subject": "Rehearsal purged",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 3,
+            "user_id": 6,
+            "kind": "digest",
+            "subject": "Rehearsal paused",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 4,
+            "user_id": 7,
+            "kind": "digest",
+            "subject": "Rehearsal suppressed",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 5,
+            "user_id": 8,
+            "kind": "digest",
+            "subject": "Rehearsal banned",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 6,
+            "user_id": 5,
+            "kind": "digest",
+            "subject": "Rehearsal legacy",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 7,
+            "user_id": 5,
+            "kind": "digest",
+            "subject": "Rehearsal legacy failed",
+            "status": "failed",
+            "error": "unreplayable_legacy_digest",
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 8,
+            "user_id": 1,
+            "kind": "test",
+            "subject": "Rehearsal operator test",
+            "status": "queued",
+            "error": null,
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          }
+        ],
+        "members": [
+          {
+            "id": 1,
+            "username": "worker-author",
+            "status": "active",
+            "timezone": null,
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 2,
+            "username": "worker-null-zone",
+            "status": "active",
+            "timezone": null,
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 3,
+            "username": "worker-queued",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 5,
+            "username": "worker-legacy",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 6,
+            "username": "worker-paused",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 7,
+            "username": "worker-suppressed",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 8,
+            "username": "worker-banned",
+            "status": "banned",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 9,
+            "username": "worker-saved-feed",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": null
+          }
+        ]
+      }
+    },
+    {
+      "command": [
+        "php",
+        "bin/console",
+        "worker:digest"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 54,
+      "stderr": "",
+      "stdout": "Daily digest: queued=2 sent=3 skipped_empty=0 suppressed=7 retrying=0 failed=1 invalid_timezone=0 blocked_reason=none\n"
+    },
+    {
+      "command": [
+        "php",
+        "bin/console",
+        "worker:email",
+        "100"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 35,
+      "stderr": "",
+      "stdout": "Email outbox: sent=1 suppressed=0 retrying=0 failed=0 skipped=0 blocked_reason=none\n"
+    },
+    {
+      "command": [
+        "php",
+        "bin/console",
+        "worker:digest"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 36,
+      "stderr": "",
+      "stdout": "Daily digest: queued=0 sent=0 skipped_empty=0 suppressed=0 retrying=0 failed=0 invalid_timezone=0 blocked_reason=none\n"
+    },
+    {
+      "command": [
+        "php",
+        "bin/console",
+        "worker:email",
+        "100"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 33,
+      "stderr": "",
+      "stdout": "Email outbox: sent=0 suppressed=0 retrying=0 failed=0 skipped=0 blocked_reason=none\n"
+    },
+    {
+      "command": [
+        "php",
+        "tests/notification-workers/fixture.php",
+        "verify"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 31,
+      "stderr": "",
+      "stdout": {
+        "database": "retroboards_unified_workers",
+        "command": "verify",
+        "checks": {
+          "null-zone_one_sent": true,
+          "queued_one_sent": true,
+          "saved-feed_one_sent": true,
+          "paused_terminal": true,
+          "suppressed_terminal": true,
+          "banned_terminal": true,
+          "purged_recipient_drain_continues": true,
+          "legacy_digest_permanent": true,
+          "operator_test_explicit_kind": true,
+          "no_queued_rows": true
+        },
+        "deliveries": [
+          {
+            "id": 1,
+            "user_id": 3,
+            "kind": "digest",
+            "subject": "Rehearsal queued",
+            "status": "sent",
+            "error": null,
+            "attempt_count": 1,
+            "sent_at": "2026-09-20 09:10:19",
+            "message_id": "array-1"
+          },
+          {
+            "id": 2,
+            "user_id": null,
+            "kind": "digest",
+            "subject": "Rehearsal purged",
+            "status": "suppressed",
+            "error": "recipient_missing",
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 3,
+            "user_id": 6,
+            "kind": "digest",
+            "subject": "Rehearsal paused",
+            "status": "suppressed",
+            "error": "recipient_paused",
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 4,
+            "user_id": 7,
+            "kind": "digest",
+            "subject": "Rehearsal suppressed",
+            "status": "suppressed",
+            "error": "address_suppressed",
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 5,
+            "user_id": 8,
+            "kind": "digest",
+            "subject": "Rehearsal banned",
+            "status": "suppressed",
+            "error": "recipient_banned",
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 6,
+            "user_id": 5,
+            "kind": "digest",
+            "subject": "Rehearsal legacy",
+            "status": "failed",
+            "error": "unreplayable_legacy_digest",
+            "attempt_count": 1,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 7,
+            "user_id": 5,
+            "kind": "digest",
+            "subject": "Rehearsal legacy failed",
+            "status": "failed",
+            "error": "unreplayable_legacy_digest",
+            "attempt_count": 0,
+            "sent_at": null,
+            "message_id": null
+          },
+          {
+            "id": 8,
+            "user_id": 1,
+            "kind": "test",
+            "subject": "Rehearsal operator test",
+            "status": "sent",
+            "error": null,
+            "attempt_count": 1,
+            "sent_at": "2026-09-20 09:10:19",
+            "message_id": "array-1"
+          },
+          {
+            "id": 9,
+            "user_id": 2,
+            "kind": "digest",
+            "subject": "Your daily digest — 1 active thread",
+            "status": "sent",
+            "error": null,
+            "attempt_count": 1,
+            "sent_at": "2026-09-20 09:10:19",
+            "message_id": "array-2"
+          },
+          {
+            "id": 10,
+            "user_id": 9,
+            "kind": "digest",
+            "subject": "Your daily digest — 1 active thread",
+            "status": "sent",
+            "error": null,
+            "attempt_count": 1,
+            "sent_at": "2026-09-20 09:10:19",
+            "message_id": "array-3"
+          }
+        ],
+        "members": [
+          {
+            "id": 1,
+            "username": "worker-author",
+            "status": "active",
+            "timezone": null,
+            "last_daily_digest_at": null
+          },
+          {
+            "id": 2,
+            "username": "worker-null-zone",
+            "status": "active",
+            "timezone": null,
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 3,
+            "username": "worker-queued",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 5,
+            "username": "worker-legacy",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 6,
+            "username": "worker-paused",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 7,
+            "username": "worker-suppressed",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 8,
+            "username": "worker-banned",
+            "status": "banned",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          },
+          {
+            "id": 9,
+            "username": "worker-saved-feed",
+            "status": "active",
+            "timezone": "UTC",
+            "last_daily_digest_at": "2026-09-20 09:10:19"
+          }
+        ]
+      }
+    }
+  ],
+  "verified": true,
+  "finished_at": "2026-09-20T09:10:19.537Z"
+}

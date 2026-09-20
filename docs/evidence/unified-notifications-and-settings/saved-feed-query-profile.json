@@ -1,0 +1,28 @@
+{
+    "fixture": {
+        "boards": 20,
+        "topics": 200,
+        "posts": 200
+    },
+    "saved_feed_1": {
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 4,
+        "query_ms": 1.509,
+        "items": 1
+    },
+    "saved_feed_100": {
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 4,
+        "query_ms": 1.381,
+        "items": 100
+    },
+    "digest_20_overlapping_sources": {
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 2,
+        "query_ms": 2.832,
+        "topics": 200
+    }
+}
