@@ -1,0 +1,696 @@
+{
+  "task": "N3",
+  "date_utc": "2026-09-20",
+  "command": "flock /tmp/retroboards-unified-phpunit.lock env MAIL_DRIVER=sendmail MAIL_FROM='' vendor/bin/phpunit --filter 'DailyDigestWorkerTest|NotificationEmailWorkerTest|EmailOpsRepositoryTest|EmailOpsServiceTest|AppAdminEmailTest|AppAccountLifecycleTest|AppNotificationPreferencesRepairTest' --log-junit /tmp/n3-junit.xml",
+  "transport": "ArrayMailer captures only; SendmailMailer with empty From for unconfigured cases",
+  "tests": 114,
+  "assertions": 1029,
+  "failures": 0,
+  "errors": 0,
+  "cases": [
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_index_requires_admin",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_unconfigured_transport_blocks_test_send_and_shows_blocked_banner",
+      "assertions": 8,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_suppress_validation_failure_rerenders_422_and_preserves_the_typed_address",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_email_status_reports_one_fact_per_line_without_contradiction",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_email_status_shows_from_and_domain_when_configured",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_test_send_with_configured_transport_enqueues_and_marks_sent_with_audit",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_suppress_then_remove_round_trip_via_http",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_unrelated_email_flash_stays_in_the_general_console_slot",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_suppression_reasons_and_action_labels_preserve_the_real_contract",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_suppress_cascades_subscription_email_channel_off",
+      "assertions": 1,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_delivery_log_filters_by_kind",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_delivery_filter_options_use_the_real_delivery_contract",
+      "assertions": 6,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_admin_requeues_failed_delivery_from_dashboard",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_dashboard_and_csv_export_attempt_metadata",
+      "assertions": 10,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_export_returns_csv_attachment",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_test_send_is_rate_limited",
+      "assertions": 21,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_domain_verification_refresh_records_spf_and_dkim_status",
+      "assertions": 8,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_verified_domain_requirement_blocks_test_send_until_spf_and_dkim_pass",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_announcement_email_broadcast_queues_system_email_and_worker_sends_it",
+      "assertions": 9,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_delivery_log_exact_multiple_of_page_size_has_no_next_link",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "test_delivery_log_pager_exposes_real_two_page_boundaries",
+      "assertions": 12,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "testOnlyReplayableFailedDigestCanBeRequeuedThroughRealAdminRoute",
+      "assertions": 15,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_self_service_lifecycle_cannot_clear_a_suspension",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_pending_deletion_cannot_be_bypassed_via_deactivation",
+      "assertions": 9,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_suspension_cannot_be_cleared_by_requesting_then_canceling_deletion",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_cancel_preserves_moderation_imposed_during_deletion",
+      "assertions": 15,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_live_site_record_blocks_recovery_despite_misleading_cached_status",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_expired_suspension_allows_lifecycle_without_erasing_timestamp",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_lifecycle_reauth_uses_current_password_hash_not_stale_user",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_due_deletion_is_not_stranded_by_a_later_ban",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_canceled_deletion_never_purges_even_when_cached_status_is_pending",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_pending_deletion_survives_timed_suspension_expiry",
+      "assertions": 12,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_self_deactivation_survives_timed_suspension_expiry_until_explicit_reactivation",
+      "assertions": 8,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_moderation_lift_keeps_self_deactivation_until_explicit_reactivation",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_user_can_export_account_archive_without_secrets",
+      "assertions": 14,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_user_can_deactivate_and_reactivate_account",
+      "assertions": 9,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_deletion_request_can_be_canceled_during_grace_period",
+      "assertions": 10,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_a_refused_lifecycle_action_scopes_its_error_to_its_own_form",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_a_scoped_lifecycle_error_falls_back_when_its_form_is_not_rendered",
+      "assertions": 6,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_final_active_admin_cannot_deactivate_or_request_deletion",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_due_deletion_purge_anonymizes_account_and_removes_pii",
+      "assertions": 23,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppAccountLifecycleTest",
+      "name": "test_purge_skips_request_when_account_is_no_longer_pending_deletion",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppNotificationPreferencesRepairTest",
+      "name": "test_owned_reductions_and_atomic_escalation_for_every_restricted_state",
+      "assertions": 112,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppNotificationPreferencesRepairTest",
+      "name": "test_settings_validation_retains_draft_and_normalizes_utc",
+      "assertions": 23,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppNotificationPreferencesRepairTest",
+      "name": "test_owned_controls_validate_all_channels_off_and_keep_thread_override",
+      "assertions": 10,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppNotificationPreferencesRepairTest",
+      "name": "test_legacy_validation_keeps_drafts_on_thread_and_settings_fallbacks",
+      "assertions": 9,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppNotificationPreferencesRepairTest",
+      "name": "test_assigned_nonmember_private_board_off_returns_to_accessible_settings",
+      "assertions": 8,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppNotificationPreferencesRepairTest",
+      "name": "test_assigned_nonmember_board_escalation_denied_while_thread_assignment_is_readable",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Core\\AppNotificationPreferencesRepairTest",
+      "name": "test_subscription_labels_distinguish_private_board_and_thread_read_authority",
+      "assertions": 10,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Repository\\EmailOpsRepositoryTest",
+      "name": "test_recent_filters_by_kind_and_email_and_counts",
+      "assertions": 6,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Repository\\EmailOpsRepositoryTest",
+      "name": "test_requeue_only_affects_failed_rows",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Repository\\EmailOpsRepositoryTest",
+      "name": "test_suppression_list_and_count_filter_by_reason",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Repository\\EmailOpsRepositoryTest",
+      "name": "test_subscription_cascade_helpers_toggle_email_channel",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Repository\\EmailOpsRepositoryTest",
+      "name": "testTerminalSuppressionClearsRetryMetadataAndCannotBeRequeued",
+      "assertions": 10,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Service\\EmailOpsServiceTest",
+      "name": "test_dashboard_model_reports_filtered_total_pages_without_clamping_the_request",
+      "assertions": 9,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Service\\EmailOpsServiceTest",
+      "name": "test_send_test_enqueues_a_test_row_marks_sent_and_audits",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Service\\EmailOpsServiceTest",
+      "name": "test_send_test_fails_closed_when_transport_unconfigured",
+      "assertions": 1,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Service\\EmailOpsServiceTest",
+      "name": "test_send_test_surfaces_failure_when_configured_transport_throws",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Service\\EmailOpsServiceTest",
+      "name": "test_manual_suppress_cascades_email_off_then_unsuppress_restores",
+      "assertions": 6,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Service\\EmailOpsServiceTest",
+      "name": "test_requeue_failed_resets_to_queued_with_audit",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Service\\EmailOpsServiceTest",
+      "name": "testTerminalAndUnreplayableRowsAreNoOpWithoutAudit",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testPrivateAccessIsRecheckedBeforeSending",
+      "assertions": 1,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testDigestRechecksBothBlockDirectionsAndFreshAssignedAccess",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testSendsOneNonEmptyDigestThenNotAgainSameDay",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testDigestBodyUsesOperatorSiteName",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testBeforeHourWaitsAndLateCronSchedulesOnce",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testDigestUsesRecipientLocalTimezoneNotUtc",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testNeverSendsAnEmptyDigest",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testPausedEmailUserDoesNotReceiveDigest",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "test_failed_digest_retries_without_scheduling_a_duplicate",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testNullTimezoneSchedulesDurablyBeforeUnconfiguredTransportAndRecovery",
+      "assertions": 14,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testDomainBlockPreservesQueuedWindowAndPreviousErrorWithoutAttempt",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testDstGapAndFoldAndInvalidZoneAreObservable",
+      "assertions": 10,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testTimezoneChangeCannotReverseWindowOrRecreateScheduledDate",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testRetryUsesFixedBoundsOriginalSourcesAndCurrentSourceSettings",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testRetryRechecksEveryTerminalCauseAndDoesNotReplayAfterRestoration",
+      "assertions": 72,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testLargeWindowIncludesAllThreadsAndBothTimeBounds",
+      "assertions": 107,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testSchedulingRollbackLeavesWatermarkAndOutboxUnchanged",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testDuePausedSuppressedAndBannedWindowsAreConsumedWithoutCatchup",
+      "assertions": 15,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testQueuedDigestFailureThenHttpOptOutInEveryRestrictedState",
+      "assertions": 36,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\DailyDigestWorkerTest",
+      "name": "testBothCommandsShareDrainLockAndEmailWorkerDrainsDigestRetries",
+      "assertions": 6,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testHeldPostIsCheckedAtSendTime",
+      "assertions": 1,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testBothBlockDirectionsAreRecheckedForQueuedMail",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testWorkerRefreshesAssignedModeratorAccessBetweenAttempts",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testSolvedEmailRespectsRecipientBlockingAccepter",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testSolvedEmailRespectsAccepterBlockingRecipient",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testUnblockedSolvedEventStillSendsAfterHistoryIsCleared",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testLegacySolvedEventResolvesSurvivingActorEvidence",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testLegacySolvedEventStillChecksResolvedActorBlock",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testSolvedRetryRechecksRecipientBlockAfterTransportFailure",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testSolvedRetryRechecksAccepterBlockAfterTransportFailure",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testLegacySolvedRetryRechecksResolvedActorBlock",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testLegacyEditedPostWithoutEventActorFailsClosed",
+      "assertions": 1,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testLegacySolvedEmailWithNoActorEvidenceFailsClosed",
+      "assertions": 1,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testLaterMentionCannotReplaceLegacyActorBlockedByRecipient",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testLaterMentionCannotReplaceLegacyActorBlockingRecipient",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testExplicitMentionActorIsNotReplacedByBlockedPostAuthor",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testSendsQueuedThenDoesNotResendOnRerun",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testInstantEmailUsesOperatorSiteName",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testSuppressedAddressIsDequeuedWithoutSending",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testPausedEmailUserQueuedRowIsDequeuedWithoutSending",
+      "assertions": 3,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testFailsClosedWhenTransportUnconfigured",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testTransportFailureMarksRowFailed",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testTransportFailureSchedulesRetryWithBackoff",
+      "assertions": 11,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testMaxAttemptsOnePreservesTerminalFailureBehavior",
+      "assertions": 6,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testBoundedDrainRespectsLimitAndResumesWithoutLoss",
+      "assertions": 8,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testSystemAnnouncementEmailIncludesUnsubscribeLink",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testConcurrentRunBacksOffWhileOutboxIsLocked",
+      "assertions": 6,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testUnavailableIsTerminalSuppressedAndNeverReportedSent",
+      "assertions": 5,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testMalformedMissingAndBannedRowsDoNotAbortLaterValidRows",
+      "assertions": 26,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testOperatorDiagnosticRetryPreservesSeparatePauseContract",
+      "assertions": 2,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testQueuedInstantFailureThenActualHttpOptOutInEveryRestrictedState",
+      "assertions": 28,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testAnnouncementAvailabilityIsRecheckedBeforeRetry",
+      "assertions": 4,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testCurrentPermittedStatesKeepDeliveryAndBanAfterFailureAllowsLaterJob",
+      "assertions": 7,
+      "status": "passed"
+    }
+  ]
+}

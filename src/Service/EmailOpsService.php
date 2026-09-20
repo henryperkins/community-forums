@@ -168,7 +168,7 @@ final class EmailOpsService
     /**
      * Re-queue a failed delivery for the worker. Returns whether a row was
      * actually requeued so the caller can report the idempotent no-op honestly
-     * (a delivery that is not in the failed state is left untouched, no audit).
+     * (suppressed and permanently invalid jobs are left untouched, with no audit).
      */
     public function requeueFailed(User $admin, int $id): bool
     {

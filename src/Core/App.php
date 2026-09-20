@@ -1115,6 +1115,11 @@ final class App
             $c->get(NotificationRepository::class), $c->get(NotificationVisibilityService::class), $c->get(ThreadReadService::class),
         ));
         $c->bind(EmailDomainStatusRepository::class, fn (Container $c) => new EmailDomainStatusRepository($c->get(Database::class)));
+        $c->bind(\App\Repository\DigestActivityRepository::class, fn (Container $c) => new \App\Repository\DigestActivityRepository($c->get(Database::class)));
+        $c->bind(\App\Service\DigestService::class, fn (Container $c) => new \App\Service\DigestService(
+            $c->get(\App\Repository\DigestActivityRepository::class), $c->get(\App\Service\NotificationVisibilityService::class),
+            $c->get(Config::class), $c->get(SettingRepository::class),
+        ));
         $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
         $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));
         $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));

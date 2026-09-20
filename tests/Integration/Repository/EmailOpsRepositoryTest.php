@@ -64,4 +64,23 @@ final class EmailOpsRepositoryTest extends TestCase
         $subs->enableEmailForUser((int) $u['id']);
         self::assertSame(1, (int) $this->db->fetchValue('SELECT email_enabled FROM subscriptions WHERE user_id = ?', [(int) $u['id']]));
     }
+    public function testTerminalSuppressionClearsRetryMetadataAndCannotBeRequeued(): void
+    {
+        $repo = new EmailDeliveryRepository($this->db);
+        $id = $repo->enqueue(null, 'terminal@example.test', 'instant', null);
+        $repo->markAttemptFailed($id, 'transport');
+        $repo->markSuppressed($id, 'recipient_missing');
+        $row = $repo->find($id);
+        self::assertSame('recipient_missing', $row['error']);
+        self::assertSame('suppressed', $row['status']);
+        self::assertNull($row['next_attempt_at']); self::assertNull($row['sent_at']); self::assertNull($row['message_id']);
+        self::assertSame(0, $repo->requeue($id));
+        foreach ([null, ['version' => 999]] as $payload) {
+            $id = $repo->enqueue(null, 'invalid@example.test', 'digest', null, null, $payload);
+            $repo->markFailed($id, 'transport');
+            self::assertFalse($repo::canRequeue($repo->find($id)));
+            self::assertSame(0, $repo->requeue($id));
+        }
+    }
+
 }

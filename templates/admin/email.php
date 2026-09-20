@@ -182,7 +182,7 @@ $unplacedFlash = $testMessage === '' ? $flashMessage : '';
                         <td class="notification-subject"><?= $e((string) ($delivery['subject'] ?? '')) ?></td>
                         <td class="notification-detail"><?= $e((string) ($delivery['error'] ?? $delivery['message_id'] ?? '')) ?></td>
                         <td class="action-cell">
-                            <?php if (($delivery['status'] ?? '') === 'failed'): ?>
+                            <?php if (\App\Repository\EmailDeliveryRepository::canRequeue($delivery)): ?>
                                 <form method="post" action="/admin/email/deliveries/<?= (int) $delivery['id'] ?>/requeue" class="inline-form">
                                     <?= $this->csrfField() ?>
                                     <button class="btn btn-secondary" type="submit">Requeue</button>

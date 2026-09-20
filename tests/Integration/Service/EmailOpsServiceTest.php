@@ -138,4 +138,19 @@ final class EmailOpsServiceTest extends TestCase
         self::assertSame('queued', (string) $this->db->fetchValue('SELECT status FROM email_deliveries WHERE id = ?', [$id]));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'email_requeued'"));
     }
+    public function testTerminalAndUnreplayableRowsAreNoOpWithoutAudit(): void
+    {
+        $admin = $this->userEntity($this->makeAdmin());
+        $repo = new EmailDeliveryRepository($this->db);
+        $id = $repo->enqueue(null, 'terminal@example.test', 'instant', null);
+        $repo->markSuppressed($id, 'recipient_paused');
+        self::assertFalse($this->service()->requeueFailed($admin, $id));
+        foreach ([null, ['version' => 999]] as $payload) {
+            $id = $repo->enqueue(null, 'invalid@example.test', 'digest', null, null, $payload);
+            $repo->markFailed($id, 'invalid_digest_payload');
+            self::assertFalse($this->service()->requeueFailed($admin, $id));
+        }
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'email_requeued'"));
+    }
+
 }

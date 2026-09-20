@@ -408,6 +408,8 @@ final class AppAccountLifecycleTest extends TestCase
              VALUES (?, 'thread-purge', 1, 'Purge draft', 'Draft body', '{}', UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 90 DAY))",
             [(int) $user['id']],
         );
+        $deliveryRepo = new \App\Repository\EmailDeliveryRepository($this->db);
+        $purgedJob = $deliveryRepo->enqueue((int) $user['id'], $user['email'], 'digest', 'pending digest');
         $this->actingAs($user);
         $thread = $this->makeThread($this->makeBoard($this->makeCategory()), $user, 'Kept discussion', 'Keep the conversation intact');
         $this->get('/settings/account/lifecycle');
@@ -435,6 +437,21 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM server_drafts WHERE user_id = ?', [(int) $user['id']]));
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE thread_id = ?', [(int) $thread['thread_id']]));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'account_purged' AND actor_id IS NULL"));
+        self::assertNull($deliveryRepo->find($purgedJob)['user_id'], 'Actual purge unlinks queued jobs.');
+        $later = $this->makeUser();
+        $validJob = $deliveryRepo->enqueue((int) $later['id'], $later['email'], 'system', 'later announcement', null,
+            ['type' => 'announcement', 'version' => 1, 'message' => 'Later valid job']);
+        $mailer = new \App\Mail\ArrayMailer();
+        $worker = new \App\Worker\NotificationEmailWorker($deliveryRepo, new \App\Repository\EmailSuppressionRepository($this->db),
+            new \App\Repository\PostRepository($this->db), $this->users(), $mailer, $this->config);
+        $stats = $worker->run();
+        self::assertSame(1, $stats['suppressed']); self::assertSame(1, $stats['sent']);
+        self::assertSame('recipient_missing', $deliveryRepo->find($purgedJob)['error']);
+        self::assertNull($deliveryRepo->find($purgedJob)['sent_at']);
+        self::assertNull($deliveryRepo->find($purgedJob)['message_id']);
+        self::assertSame('sent', $deliveryRepo->find($validJob)['status']);
+        self::assertSame(1, $mailer->count());
+
     }
 
     public function test_purge_skips_request_when_account_is_no_longer_pending_deletion(): void

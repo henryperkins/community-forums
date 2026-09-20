@@ -110,7 +110,7 @@ final class AdminEmailController extends Controller
 
         return $this->redirectWithFlash(
             '/admin/email?status=failed',
-            $requeued ? 'Failed delivery requeued.' : 'That delivery is not in a failed state — nothing was requeued.',
+            $requeued ? 'Failed delivery requeued.' : 'That delivery is not a replayable failed job — nothing was requeued.',
         );
     }
 

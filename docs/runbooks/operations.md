@@ -76,37 +76,46 @@ done — so an upgrade never silently starts new outbound traffic.
 
 ## 3. Email operations
 
-- **Pause all email:** disable the `email` flag (in-app notifications continue),
-  or stop the `worker:email` / `worker:digest` cron. Queued rows are preserved.
-- **Drain the instant queue:** `php bin/console worker:email [limit]` (oldest
-  first, bounded; safe to run repeatedly — at-most-once per `post:user`).
-- **Send due digests:** `php bin/console worker:digest` (timezone-aware,
-  watermarked; never sends twice or empty).
-- **Automatic retry/backoff:** transient transport failures stay `queued` until
-  attempts are exhausted. Defaults are five attempts total with retry delays of
-  5 minutes, 15 minutes, 1 hour, then 6 hours. `max_attempts=1` preserves the old
-  single-attempt behavior. `/admin/email` and the CSV export show attempt count,
-  last attempt, and next retry.
-- **Replay terminal failed sends:** once `attempt_count >= max_attempts`, rows
-  are marked `failed` and are **not** auto-retried. After fixing the transport,
-  use `/admin/email` to requeue individual failed rows, or requeue them in bulk:
-  ```sql
-  UPDATE email_deliveries
-     SET status='queued', error=NULL, attempt_count=0,
-         last_attempt_at=NULL, next_attempt_at=NULL
-   WHERE status='failed';
-  ```
-  then run `worker:email`. The `post:user` idempotency key prevents duplicates.
-- **Suppression:** bounced/complained addresses are suppressed and skipped.
-  Members self-recover via the signed unsubscribe/re-subscribe flow; an operator
-  can clear a row from `email_suppressions` once the inbox is healthy.
-- **Sender not configured:** with `MAIL_FROM` empty the worker fails closed and
-  leaves rows `queued` — configure the sender, then drain.
-- **Verified-domain blocking:** when `mail.require_verified_domain` or
-  `settings.email_require_verified_domain` is true, `/admin/email` must show SPF
-  and DKIM as `pass` for the configured From domain before test sends or workers
-  send mail. Use **Refresh SPF/DKIM status** after DNS changes. Blocked workers
-  leave rows `queued` and stamp the blocked reason in `email_deliveries.error`.
+- **Pause workers:** stop the `worker:email` / `worker:digest` cron to preserve
+  queued jobs. Disabling email availability also gates notification content;
+  draining unavailable content records terminal suppression.
+- **Drain the outbox:** `php bin/console worker:email [limit]` drains instant,
+  digest, announcement (`system`), and operator test jobs, oldest first in bounded
+  batches. `php bin/console worker:digest` schedules due local-date windows and
+  drains digest retries even when no new recipient is due. Both share one lock.
+- **Durable digests:** scheduling fixes the UTC window, upper post ID and original
+  source selection, then inserts the job and advances the watermark atomically.
+  Cron may run after the preferred local hour. NULL/empty zones use UTC; invalid
+  zones increment `invalid_timezone` without consuming the window. DST gaps run
+  afterward and folds schedule once. Paused, suppressed, banned and empty windows
+  are consumed without catch-up mail. Retries reload recipient state, access,
+  blocks, preferences and source settings; they never expand the original window.
+- **Automatic retry/backoff:** transient failures remain `queued` until attempts
+  are exhausted: five attempts by default, with delays of 5 minutes, 15 minutes,
+  1 hour, then 6 hours. CLI reports sent, suppressed, retrying, failed and skipped
+  counts; the digest command also reports scheduled (`queued`) and empty windows.
+  `/admin/email` and CSV include attempts, last attempt, next retry and reason.
+- **Replay failed sends:** fix the transport, then use `/admin/email` to requeue
+  individual replayable Failed jobs and drain again. Suppressed is terminal;
+  malformed `invalid_digest_payload` and `unreplayable_legacy_digest` failures
+  cannot be requeued through either the UI or its POST route. Do not bulk-update
+  statuses with SQL: that bypasses eligibility and replay classification.
+- **Truthful outcomes:** only transport success sets Sent, `sent_at`, and message
+  ID. Missing/deleted/banned recipients, paused delivery, suppression, disabled
+  digests or unavailable content record terminal Suppressed with a reason in
+  `error`, no message ID and no sent timestamp. Operator diagnostics retain their
+  explicit test-message contract. Clearing address suppression enables future
+  eligible jobs, not replay of opted-out activity; member recovery is deferred.
+- **Sender/domain blocking:** scheduling happens before transport checks. Empty
+  `MAIL_FROM` reports `blocked_reason=sender_unconfigured`. Required SPF/DKIM
+  verification reports `blocked_reason=domain_unverified` until `/admin/email`
+  shows pass for both. Use **Refresh SPF/DKIM status** after DNS changes. A block
+  leaves jobs queued, consumes no attempt and preserves payload and prior error.
+  Configure the sender/domain, then drain the existing jobs.
+- **Duplicate boundary:** the unique keys prevent duplicate scheduling and the
+  advisory lock prevents concurrent draining. SMTP success followed by a process
+  or database failure before recording success can still duplicate a later
+  attempt; exactly-once external mail delivery is not guaranteed.
 
 ## 3a. Account deletion grace (ADR 0006)
 

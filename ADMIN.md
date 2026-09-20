@@ -469,23 +469,24 @@ Completeness items (audited against an adjacent implementation), translated to o
 
 - **Per-subscription frequency** — each subscription is **Instant / Daily / Off** (`subscriptions.frequency`, PRODUCT_DESIGN.md §8.3); a **thread setting overrides its board**, and "Off" skips all sends for that target.
 - **Instant** rides the post-insert fan-out (queue worker); **Daily** activity is collected for the digest.
-- **Timezone-aware daily digest** — each user has a **timezone** and a **preferred digest hour** (`users.timezone`, `users.digest_hour`). An **hourly cron** sends a user's digest when their local clock hits that hour and there's new activity.
-- **Watermarking** — `users.last_daily_digest_at` ensures a digest contains only activity since the last one and is never sent twice or empty.
+- **Timezone-aware daily digest** — each user has a **timezone** and a **preferred digest hour** (`users.timezone`, `users.digest_hour`). An **hourly cron** schedules a user's digest at or after that hour on the local calendar date when there is eligible activity. NULL/empty legacy timezones mean UTC; invalid zones are reported and skipped. Spring-forward gaps run at the first valid time afterward; repeated fall-back hours schedule once.
+- **Durable watermarking** — `users.last_daily_digest_at` records the consumed window, not proof of delivery. A recipient row lock, fixed UTC bounds and upper post ID, original source IDs, and `digest:{user_id}:{local_date}` key persist atomically with the watermark. Retries reuse that payload and recheck current access, blocks, account state, preferences, and source settings. Empty, paused, suppressed, and banned windows are consumed without catch-up mail. Transport configuration blocks leave eligible jobs queued without consuming attempts.
 - **Digest template** — a dedicated branded, responsive **daily-digest** email (alongside the instant `new-post-in-thread` / `new-thread-in-board` templates) listing boards/threads with new activity and deep links.
-- **Cron cadence** — a **minutely** job drains the instant-email queue; an **hourly** job evaluates digest eligibility per timezone. Both run as VPS cron/worker processes (DECISIONS.md §2).
+- **Cron cadence** — a **minutely** `worker:email` job drains supported queued email kinds; an **hourly** `worker:digest` job schedules due windows and drains digest retries. Both use the same advisory drain lock. Both run as VPS cron/worker processes (DECISIONS.md §2).
 
 **Deliverability & compliance**
 
 - **Bounce & complaint webhooks** — inbound endpoints receive ESP bounce/complaint events and add the address to `email_suppressions` (§10). *(Requires the chosen provider to emit these — a selection criterion when the SMTP/ESP provider is picked, DECISIONS.md.)*
 - **Suppression cascade** — when an address is suppressed, **all of that user's email subscriptions are disabled** (`subscriptions.email_enabled = 0`) to protect sender reputation. Done in **app logic** (we use app-layer, not DB triggers — DECISIONS.md).
 - **One-click unsubscribe** — every notification email carries an unsubscribe link to a **`/unsubscribe`** page that validates a signed token (a `verifications`-style token, USER.md §7), applies the change, records suppression, and confirms — **no login required**.
-- **Suppression recovery** — a settings action lets a user **re-enable** email for a previously-suppressed address after confirming their inbox works (removes the suppression, re-enables their subscriptions).
+- **Suppression recovery** — operators can release an address through `/admin/email`; member self-recovery remains deferred under ADR 0014. Released addresses receive only future eligible activity, never terminal suppressed jobs.
 
 **Transparency & troubleshooting**
 
-- **Delivery activity log** — `email_deliveries` (§10) records each send (instant / digest / test / system) with **status** (Sent / Bounced / Complained / Suppressed / Failed) and error detail; surfaced as a log in the Console and in `/settings/notifications`, with a **CSV export**.
-- **Test send** — a "send a test notification" action from `/settings/notifications` verifies deliverability end-to-end.
-- **Digest preview** — a live preview of which boards/threads the next digest will include, from current unread activity + subscriptions.
+- **Delivery activity log** — `email_deliveries` (§10) records each send (instant / digest / test / system) with **status** (Queued / Sent / Bounced / Complained / Suppressed / Failed), attempt metadata, and error detail in the Console with a **CSV export**. Only successful transport calls set Sent, `sent_at`, and a message ID. Suppressed is terminal and includes a reason such as `recipient_missing`, `recipient_deleted`, `recipient_banned`, `recipient_paused`, `address_suppressed`, `delivery_disabled`, or `content_unavailable`; it has no sent timestamp or message ID. Transport blocks are global sender/domain status, never per-job errors.
+- **Replay** — only replayable Failed jobs expose Requeue, and the POST enforces the same rule. `invalid_digest_payload` and `unreplayable_legacy_digest` are permanent failures. Releasing suppression enables future eligible jobs; it cannot replay suppressed activity. Queue deduplication and the shared lock do not guarantee exactly-once SMTP: transport success followed by a crash before recording success can duplicate a retry.
+- **Test send** — `/admin/email` sends an operator diagnostic to the administrator. Member test-send remains deferred under ADR 0014.
+- **Digest preview** — remains deferred under ADR 0014; durable digest delivery does not add a member preview.
 
 ## 8. Integrations & Plugin System
 
@@ -789,7 +790,7 @@ CREATE TABLE email_deliveries (
   status     ENUM('queued','sent','bounced','complained','suppressed','failed') NOT NULL DEFAULT 'queued',
   error      VARCHAR(255) NULL,
   message_id VARCHAR(191) NULL,
-  idempotency_key VARCHAR(191) NULL,                          -- SCHEMA §7 #9: post_id+':'+user_id for 'instant' fan-out; NULL for digest/test/system
+  idempotency_key VARCHAR(191) NULL,                          -- SCHEMA §7 #9: post_id+':'+user_id for instant; digest:user:local-date for digest; nullable for test/system
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   sent_at    DATETIME NULL,
   PRIMARY KEY (id),

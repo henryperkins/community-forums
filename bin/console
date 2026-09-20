@@ -839,6 +839,9 @@ try {
 
         case 'worker:email':
             $db = $database();
+            $visibility = new \App\Service\NotificationVisibilityService($db);
+            $digests = new \App\Service\DigestService(new \App\Repository\DigestActivityRepository($db),
+                $visibility, $config, new SettingRepository($db));
             $worker = new NotificationEmailWorker(
                 new EmailDeliveryRepository($db),
                 new EmailSuppressionRepository($db),
@@ -849,14 +852,18 @@ try {
                 new SettingRepository($db),
                 $domainVerifier($db),
                 new EmailPreferenceService(new UserPreferenceRepository($db)),
-                new \App\Service\NotificationVisibilityService($db),
+                $visibility,
+                $digests,
             );
             $stats = $worker->run((int) ($argv[2] ?? 100));
-            $log(sprintf('Instant email: sent=%d suppressed=%d retrying=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['retrying'], $stats['failed'], $stats['skipped']));
+            $log(sprintf('Email outbox: sent=%d suppressed=%d retrying=%d failed=%d skipped=%d blocked_reason=%s', $stats['sent'], $stats['suppressed'], $stats['retrying'], $stats['failed'], $stats['skipped'], $stats['blocked_reason'] ?? 'none'));
             break;
 
         case 'worker:digest':
             $db = $database();
+            $visibility = new \App\Service\NotificationVisibilityService($db);
+            $digests = new \App\Service\DigestService(new \App\Repository\DigestActivityRepository($db),
+                $visibility, $config, new SettingRepository($db));
             $worker = new DailyDigestWorker(
                 $db,
                 new EmailDeliveryRepository($db),
@@ -866,10 +873,11 @@ try {
                 new SettingRepository($db),
                 $domainVerifier($db),
                 new EmailPreferenceService(new UserPreferenceRepository($db)),
-                new \App\Service\NotificationVisibilityService($db),
+                $visibility,
+                $digests,
             );
             $stats = $worker->run(gmdate('Y-m-d H:i:s'));
-            $log(sprintf('Daily digest: sent=%d skipped_empty=%d suppressed=%d', $stats['sent'], $stats['skipped_empty'], $stats['suppressed']));
+            $log(sprintf('Daily digest: queued=%d sent=%d skipped_empty=%d suppressed=%d retrying=%d failed=%d invalid_timezone=%d blocked_reason=%s', $stats['queued'], $stats['sent'], $stats['skipped_empty'], $stats['suppressed'], $stats['retrying'], $stats['failed'], $stats['invalid_timezone'], $stats['blocked_reason'] ?? 'none'));
             break;
 
         case 'verify:upgrade':
@@ -930,6 +938,7 @@ try {
                 new ModerationLogRepository($db),
                 new ServerDraftRepository($db),
                 new ReauthGate(new PasswordHasher()),
+                new \App\Repository\WebAuthnCredentialRepository($db),
             ))->purgeDue((int) ($argv[2] ?? 100));
             $log(sprintf('Account purge: anonymised %d due deletion(s).', $stats['purged']));
             break;

@@ -439,4 +439,120 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(1, $after['sent']);
         self::assertSame(1, $mailer->count());
     }
+    public function testUnavailableIsTerminalSuppressedAndNeverReportedSent(): void
+    {
+        $d = $this->queuedDelivery();
+        $this->db->run('UPDATE posts SET is_deleted = 1 WHERE id = ?', [$d['post_id']]);
+        $mailer = new ArrayMailer();
+        $this->worker($mailer)->run();
+        $row = $this->db->fetch('SELECT * FROM email_deliveries LIMIT 1');
+        self::assertSame('suppressed', $row['status']);
+        self::assertSame('content_unavailable', $row['error']);
+        self::assertNull($row['sent_at']);
+        self::assertNull($row['message_id']);
+        self::assertSame(0, $mailer->count());
+    }
+
+    public function testMalformedMissingAndBannedRowsDoNotAbortLaterValidRows(): void
+    {
+        $recipient = $this->makeUser();
+        $this->db->run('UPDATE users SET digest_hour = 9 WHERE id = ?', [$recipient['id']]);
+        $banned = $this->makeUser(['status' => 'banned']);
+        $repo = new EmailDeliveryRepository($this->db);
+        $ids = [
+            $repo->enqueue(null, 'gone@example.test', 'instant', null, '999:999') => ['suppressed', 'recipient_missing'],
+            $repo->enqueue((int) $banned['id'], $banned['email'], 'system', null, null, ['type' => 'announcement', 'message' => 'blocked']) => ['suppressed', 'recipient_banned'],
+            $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', null) => ['failed', 'unreplayable_legacy_digest'],
+            $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', null, null, ['version' => 999]) => ['failed', 'invalid_digest_payload'],
+        ];
+        $good = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'test', 'test');
+        $mailer = new ArrayMailer(); $stats = $this->worker($mailer)->run();
+        self::assertSame(1, $stats['sent']); self::assertSame(2, $stats['failed']); self::assertSame(2, $stats['suppressed']);
+        foreach ($ids as $id => [$status, $reason]) {
+            $row = $repo->find($id);
+            self::assertSame($status, $row['status']); self::assertSame($reason, $row['error']);
+            self::assertNull($row['sent_at']); self::assertNull($row['message_id']);
+            self::assertSame(0, $repo->requeue($id));
+        }
+        self::assertSame('sent', $repo->find($good)['status']);
+        self::assertSame(1, $mailer->count());
+        self::assertStringContainsString('This is a test email', $mailer->to($recipient['email'])[0]['text']);
+    }
+
+    public function testOperatorDiagnosticRetryPreservesSeparatePauseContract(): void
+    {
+        $admin = $this->makeAdmin();
+        (new UserPreferenceRepository($this->db))->merge((int) $admin['id'], ['pause_all_email' => true]);
+        (new EmailSuppressionRepository($this->db))->suppress($admin['email'], 'manual');
+        (new EmailDeliveryRepository($this->db))->enqueue((int) $admin['id'], $admin['email'], 'test', 'test');
+        $mailer = new ArrayMailer();
+        self::assertSame(1, $this->worker($mailer)->run()['sent']);
+        self::assertSame(1, $mailer->count());
+    }
+
+    public function testQueuedInstantFailureThenActualHttpOptOutInEveryRestrictedState(): void
+    {
+        $this->makeAdmin();
+        foreach (['suspended', 'banned', 'deactivated', 'pending_deletion'] as $state) {
+            $recipient = $this->makeUser(); $uid = (int) $recipient['id'];
+            $author = $this->makeUser(); $board = $this->makeBoard($this->makeCategory());
+            $thread = $this->makeThread($board, $author);
+            $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ?', [$thread['thread_id']]);
+            $subs = new \App\Repository\SubscriptionRepository($this->db);
+            $subs->set($uid, 'thread', $thread['thread_id'], true, true, 'instant');
+            $repo = new EmailDeliveryRepository($this->db);
+            $id = $repo->enqueue($uid, $recipient['email'], 'instant', null, $postId . ':' . $uid);
+            $mailer = new ArrayMailer(); $mailer->failNext = true;
+            self::assertSame(1, $this->worker($mailer)->run()['retrying']);
+            $this->db->run("UPDATE users SET status = ?, suspended_until = '2099-01-01' WHERE id = ?", [$state, $uid]);
+            $this->actingAs($recipient);
+            $sid = $subs->get($uid, 'thread', $thread['thread_id'])['id'];
+            $this->assertRedirect($this->post('/settings/notifications/subscriptions/' . $sid, ['frequency' => 'off']), '/settings/notifications');
+            $this->db->run('UPDATE email_deliveries SET next_attempt_at = NULL WHERE id = ?', [$id]);
+            self::assertSame(1, $this->worker($mailer)->run()['suppressed']);
+            self::assertSame(0, $mailer->count());
+            self::assertSame('suppressed', $repo->find($id)['status']);
+            self::assertSame(0, $repo->requeue($id));
+        }
+    }
+
+    public function testAnnouncementAvailabilityIsRecheckedBeforeRetry(): void
+    {
+        $recipient = $this->makeUser();
+        $repo = new EmailDeliveryRepository($this->db);
+        $id = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'system', 'notice', null, ['type' => 'announcement', 'message' => 'private broadcast']);
+        $mailer = new ArrayMailer(); $mailer->failNext = true;
+        $worker = $this->worker($mailer);
+        self::assertSame(1, $worker->run()['retrying']);
+        (new SettingRepository($this->db))->set('features', ['email' => false]);
+        $this->db->run('UPDATE email_deliveries SET next_attempt_at = NULL WHERE id = ?', [$id]);
+        self::assertSame(1, $worker->run()['suppressed']);
+        self::assertSame(0, $mailer->count());
+        self::assertSame('delivery_disabled', $repo->find($id)['error']);
+    }
+
+    public function testCurrentPermittedStatesKeepDeliveryAndBanAfterFailureAllowsLaterJob(): void
+    {
+        $repo = new EmailDeliveryRepository($this->db);
+        $mailer = new ArrayMailer();
+        foreach (['active', 'suspended', 'deactivated', 'pending_deletion'] as $state) {
+            $recipient = $this->makeUser(['status' => $state, 'suspended_until' => '2099-01-01']);
+            $repo->enqueue((int) $recipient['id'], $recipient['email'], 'system', 'notice', null, ['type' => 'announcement', 'message' => 'eligible']);
+        }
+        self::assertSame(4, $this->worker($mailer)->run()['sent']);
+        self::assertSame(4, $mailer->count());
+        $recipient = $this->makeUser();
+        $id = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'system', 'notice', null, ['type' => 'announcement', 'message' => 'eligible']);
+        $mailer->failNext = true;
+        self::assertSame(1, $this->worker($mailer)->run()['retrying']);
+        $this->db->run("UPDATE users SET status = 'banned' WHERE id = ?", [$recipient['id']]);
+        $this->db->run('UPDATE email_deliveries SET next_attempt_at = NULL WHERE id = ?', [$id]);
+        $later = $this->makeUser();
+        $repo->enqueue((int) $later['id'], $later['email'], 'system', 'notice', null, ['type' => 'announcement', 'message' => 'later']);
+        $stats = $this->worker($mailer)->run();
+        self::assertSame(1, $stats['suppressed']); self::assertSame(1, $stats['sent']);
+        self::assertSame('recipient_banned', $repo->find($id)['error']);
+        self::assertSame(5, $mailer->count());
+    }
+
 }

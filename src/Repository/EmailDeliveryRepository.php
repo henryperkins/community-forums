@@ -10,8 +10,7 @@ use App\Core\Database;
  * Durable email outbox + delivery log (P2-04). Instant sends carry an
  * idempotency_key (post_id:user_id) under the unique index uq_deliv_idem, so
  * the same (post, recipient) can be queued at most once even across retries
- * (DESIGN §9.6). digest/test/system sends use a NULL key (InnoDB allows
- * multiple NULLs).
+ * (DESIGN §9.6). digests use digest:user:local-date; test/system sends may use NULL keys.
  */
 final class EmailDeliveryRepository
 {
@@ -65,9 +64,9 @@ final class EmailDeliveryRepository
     }
 
     /** Mark an already-enqueued row suppressed without sending (recipient on the suppression list). */
-    public function markSuppressed(int $id): void
+    public function markSuppressed(int $id, ?string $reason = null): void
     {
-        $this->db->run("UPDATE email_deliveries SET status = 'suppressed' WHERE id = ?", [$id]);
+        $this->db->run("UPDATE email_deliveries SET status = 'suppressed', error = ?, next_attempt_at = NULL, sent_at = NULL, message_id = NULL WHERE id = ?", [$reason, $id]);
     }
 
     /**
@@ -87,15 +86,16 @@ final class EmailDeliveryRepository
     }
 
     /** @return array<int,array<string,mixed>> oldest queued sends, for the worker */
-    public function pending(int $limit = 50): array
+    public function pending(int $limit = 100, ?string $kind = null): array
     {
         $limit = max(1, $limit);
         return $this->db->fetchAll(
             "SELECT * FROM email_deliveries
-             WHERE status = 'queued'
+             WHERE status = 'queued'" . ($kind === null ? "" : " AND kind = :kind") . "
                AND (next_attempt_at IS NULL OR next_attempt_at <= UTC_TIMESTAMP())
              ORDER BY COALESCE(next_attempt_at, created_at) ASC, id ASC
              LIMIT " . $limit,
+            $kind === null ? [] : ['kind' => $kind],
         );
     }
 
@@ -206,7 +206,7 @@ final class EmailDeliveryRepository
         }
         $clause = $where === [] ? '' : ' WHERE ' . implode(' AND ', $where);
         return $this->db->fetchAll(
-            'SELECT id, user_id, email, kind, subject, status, attempt_count, max_attempts, last_attempt_at, next_attempt_at,
+            'SELECT id, user_id, email, kind, subject, payload, status, attempt_count, max_attempts, last_attempt_at, next_attempt_at,
                     error, message_id, created_at, sent_at
              FROM email_deliveries' . $clause . ' ORDER BY id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
             $params,
@@ -233,9 +233,25 @@ final class EmailDeliveryRepository
         return (int) $this->db->fetchValue('SELECT COUNT(*) FROM email_deliveries' . $clause, $params);
     }
 
+    /** Suppressed outcomes and permanently invalid jobs are never replayable. */
+    public static function canRequeue(array $row): bool
+    {
+        if (($row['status'] ?? '') !== 'failed'
+            || in_array($row['error'] ?? '', ['invalid_digest_payload', 'unreplayable_legacy_digest', 'unsupported_kind'], true)) {
+            return false;
+        }
+        if (($row['kind'] ?? '') === 'digest') {
+            $payload = json_decode((string) ($row['payload'] ?? ''), true);
+            return is_array($payload) && \App\Service\DigestService::validPayload($payload);
+        }
+        return in_array($row['kind'] ?? '', ['instant', 'system', 'test'], true);
+    }
+
     /** Re-queue a failed send for the worker. Returns rows affected (0 if not failed). */
     public function requeue(int $id): int
     {
+        $row = $this->find($id);
+        if ($row === null || !self::canRequeue($row)) { return 0; }
         return $this->db->run(
             "UPDATE email_deliveries
              SET status = 'queued', attempt_count = 0, last_attempt_at = NULL,

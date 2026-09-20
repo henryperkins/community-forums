@@ -439,4 +439,41 @@ final class AppAdminEmailTest extends TestCase
         self::assertStringContainsString('Boundary row 0', $second);
         self::assertStringNotContainsString('Boundary row 50', $second);
     }
+    public function testOnlyReplayableFailedDigestCanBeRequeuedThroughRealAdminRoute(): void
+    {
+        $author = $this->makeUser(); $recipient = $this->makeUser();
+        $this->db->run('UPDATE users SET digest_hour = 9 WHERE id = ?', [$recipient['id']]);
+        $thread = $this->makeThread($this->makeBoard($this->makeCategory()), $author);
+        (new \App\Repository\SubscriptionRepository($this->db))->set((int) $recipient['id'], 'thread', $thread['thread_id'], true, true, 'daily');
+        $this->db->run("UPDATE posts SET created_at = '2026-09-20 08:00:00' WHERE thread_id = ?", [$thread['thread_id']]);
+        $repo = new EmailDeliveryRepository($this->db);
+        $digest = new \App\Service\DigestService(new \App\Repository\DigestActivityRepository($this->db), new \App\Service\NotificationVisibilityService($this->db), $this->config);
+        $payload = $digest->snapshot($this->userEntity($recipient), '2026-09-19 09:15:00', '2026-09-20 09:15:00', (int) $this->db->fetchValue('SELECT MAX(id) FROM posts'));
+        $valid = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', 'valid', null, $payload, 1);
+        $mailer = new \App\Mail\ArrayMailer(); $mailer->failNext = true;
+        $worker = new NotificationEmailWorker($repo, new EmailSuppressionRepository($this->db), new PostRepository($this->db), $this->users(), $mailer, $this->config);
+        self::assertSame(1, $worker->run()['failed']);
+        $suppressed = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', 'suppressed', null, $payload);
+        $repo->markSuppressed($suppressed, 'recipient_paused');
+        $invalid = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', 'invalid', null, ['version' => 999]);
+        $repo->markFailed($invalid, 'invalid_digest_payload');
+        $legacy = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', 'legacy');
+        $repo->markFailed($legacy, 'unreplayable_legacy_digest');
+        $this->actingAs($this->makeAdmin());
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('/admin/email/deliveries/' . $valid . '/requeue', $body);
+        foreach ([$suppressed, $invalid, $legacy] as $id) {
+            self::assertStringNotContainsString('/admin/email/deliveries/' . $id . '/requeue', $body);
+            $before = $repo->find($id);
+            $this->post('/admin/email/deliveries/' . $id . '/requeue');
+            self::assertSame($before, $repo->find($id));
+        }
+        $this->assertRedirectContains($this->post('/admin/email/deliveries/' . $valid . '/requeue'), '/admin/email');
+        self::assertSame(0, (int) $repo->find($valid)['attempt_count']);
+        self::assertSame(1, $worker->run()['sent']);
+        self::assertSame(1, $mailer->count());
+        self::assertNotNull($repo->find($valid)['sent_at']);
+        self::assertNotNull($repo->find($valid)['message_id']);
+    }
+
 }
