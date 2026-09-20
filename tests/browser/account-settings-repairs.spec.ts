@@ -276,16 +276,22 @@ test.describe('account settings repairs without JavaScript', () => {
     await capture(page, info, '14-sessions-revoked');
   });
 
-  test('settings forms remain accessible in both themes', async ({ page }, info) => {
-    await login(page);
-    for (const theme of ['light', 'dark']) {
-      if (theme === 'dark') fixture('dark');
-      for (const route of ['security', 'account', 'notifications', 'sessions', 'boards']) {
+});
+
+// Axe uses an injected analysis frame; exercise the same server-rendered forms
+// with scripting enabled here. The task flows above independently prove no-JS.
+test.describe('account settings accessibility', () => {
+  test.beforeEach(() => fixture());
+  for (const route of ['security', 'account', 'notifications', 'sessions', 'boards']) {
+    test(`settings forms remain accessible in both themes: ${route}`, async ({ page }, info) => {
+      await login(page);
+      for (const theme of ['light', 'dark']) {
+        if (theme === 'dark') fixture('dark');
         await page.goto(`/settings/${route}`);
         const result = await new AxeBuilder({ page }).include('.settings-screen').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         expect(result.violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) }))).toEqual([]);
         if (theme === 'dark') await capture(page, info, `09-${route}-dark`);
       }
-    }
-  });
+    });
+  }
 });
