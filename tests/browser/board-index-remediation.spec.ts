@@ -31,6 +31,18 @@ async function signIn(page: Page, email = 'admin@retro.test') {
   await page.fill('input[name="password"]', 'password123');
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => !u.pathname.startsWith('/login'));
+  // These captures inspect the pane itself. Finish the first-run overlay through
+  // its real action so every isolated reseed produces the same visible surface.
+  if (await page.locator('body').getAttribute('data-tour') === '1') {
+    const tour = page.locator('.tour-popover');
+    await expect(tour).toBeVisible();
+    const completed = page.waitForResponse((response) =>
+      new URL(response.url()).pathname === '/onboarding/complete'
+      && response.request().method() === 'POST');
+    await tour.getByRole('button', { name: 'Skip', exact: true }).click();
+    expect((await completed).ok()).toBeTruthy();
+    await expect(tour).toBeHidden();
+  }
 }
 
 /** The appearance radios are visually replaced by their .choice-card labels. */
