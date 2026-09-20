@@ -1,0 +1,27 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+FF.                                                                 3 / 3 (100%)
+
+Time: 00:00.150, Memory: 48.00 MB
+
+There were 2 failures:
+
+1) Tests\Integration\Worker\NotificationEmailWorkerTest::testLaterMentionCannotReplaceLegacyActorBlockedByRecipient
+Only explicit event provenance can replace the original author as the known actor.
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:247
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:200
+
+2) Tests\Integration\Worker\NotificationEmailWorkerTest::testLaterMentionCannotReplaceLegacyActorBlockingRecipient
+Only explicit event provenance can replace the original author as the known actor.
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:247
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:205
+
+FAILURES!
+Tests: 3, Assertions: 11, Failures: 2.

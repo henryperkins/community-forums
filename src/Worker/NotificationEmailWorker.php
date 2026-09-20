@@ -172,7 +172,11 @@ final class NotificationEmailWorker
         $actors = (new NotificationRepository($this->posts->database()))->legacyInstantActors((int) $row['user_id'], (int) $post['id']);
         if ($actors !== []) {
             $ids = array_map(static fn (array $actor): int => (int) ($actor['actor_id'] ?? 0), $actors);
-            return in_array(0, $ids, true) ? [] : $ids;
+            // A later edit mention can create the only surviving notice while the
+            // older email-only job wins post:user deduplication. Its inferred actor
+            // must never remove the original post-author gate from a legacy job.
+            $ids[] = (int) $post['user_id'];
+            return in_array(0, $ids, true) ? [] : array_values(array_unique($ids));
         }
         // Ordinary initial-post mail can be recovered from an unchanged post. A
         // solved event targets its own author; an edit mention may have another actor.

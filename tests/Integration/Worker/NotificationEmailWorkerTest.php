@@ -195,6 +195,58 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(0, $mailer->count(), 'A self-authored target cannot identify the legacy solved-event actor.');
     }
 
+    public function testLaterMentionCannotReplaceLegacyActorBlockedByRecipient(): void
+    {
+        $this->checkLegacyLaterMention(false);
+    }
+
+    public function testLaterMentionCannotReplaceLegacyActorBlockingRecipient(): void
+    {
+        $this->checkLegacyLaterMention(true);
+    }
+
+    public function testExplicitMentionActorIsNotReplacedByBlockedPostAuthor(): void
+    {
+        $this->checkLegacyLaterMention(false, false);
+    }
+
+    private function checkLegacyLaterMention(bool $reverse, bool $legacy = true): void
+    {
+        $author = $this->makeUser();
+        $editor = $this->makeUser(['role' => 'admin']);
+        $recipient = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author);
+        $posts = new \App\Repository\PostRepository($this->db);
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        $notifications = new \App\Repository\NotificationRepository($this->db);
+        $subscriptions = new \App\Repository\SubscriptionRepository($this->db);
+        $deliveries = new \App\Repository\EmailDeliveryRepository($this->db);
+        $suppression = new \App\Repository\EmailSuppressionRepository($this->db);
+        $blocks = new \App\Repository\BlockRepository($this->db);
+        $mailer = new \App\Mail\ArrayMailer();
+        $service = new \App\Service\NotificationService($this->db, $notifications, $subscriptions,
+            $deliveries, $suppression, $blocks, $this->users(),
+            new \App\Core\FeatureFlags(new \App\Repository\SettingRepository($this->db)), $mailer);
+        $subscriptions->set((int) $recipient['id'], 'thread', $thread['thread_id'], false, true, 'instant');
+        $canonical = $this->threads()->findWithBoard($thread['thread_id']);
+        if ($legacy) {
+            $service->fanOutNewPost((int) $author['id'], $canonical, $postId, true, 'Original post');
+            $this->db->run('UPDATE email_deliveries SET payload = NULL WHERE user_id = ?', [$recipient['id']]);
+        }
+        self::assertSame(0, $notifications->unreadCount((int) $recipient['id']));
+        $blocks->block((int) ($reverse ? $author['id'] : $recipient['id']), (int) ($reverse ? $recipient['id'] : $author['id']));
+        $this->db->run('UPDATE posts SET edited_at = UTC_TIMESTAMP() WHERE id = ?', [$postId]);
+        $service->notifyMentions((int) $editor['id'], $canonical, $postId, [$recipient['username']]);
+        if ($legacy) {
+            self::assertNull($this->db->fetchValue('SELECT payload FROM email_deliveries WHERE user_id = ?', [$recipient['id']]), 'Existing legacy job wins deduplication.');
+        }
+        self::assertCount(1, $notifications->legacyInstantActors((int) $recipient['id'], $postId));
+        $worker = new \App\Worker\NotificationEmailWorker($deliveries, $suppression, $posts, $this->users(), $mailer, $this->config);
+        $worker->run();
+        self::assertSame($legacy ? 0 : 1, $mailer->count(), 'Only explicit event provenance can replace the original author as the known actor.');
+    }
+
     public function testSendsQueuedThenDoesNotResendOnRerun(): void
     {
         $this->queuedDelivery();
