@@ -187,7 +187,7 @@ final class AppForumIndexViewingTest extends TestCase
         $guestNotices = $this->get('/', ['pane' => 'notices'])->body();
         $this->assertDirectoryPane($guestNotices, 'notices');
         self::assertStringContainsString('href="/login?next=%2F%3Fpane%3Dnotices">Log in</a>', $guestNotices);
-        self::assertStringContainsString('to see notices about your account.', $guestNotices);
+        self::assertStringContainsString('to see notifications about your account.', $guestNotices);
 
         $guestConnections = $this->get('/', ['pane' => 'connections'])->body();
         $this->assertDirectoryPane($guestConnections, 'connections');

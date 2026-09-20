@@ -131,10 +131,10 @@ final class AppImladrisFidelityHighImpactTest extends TestCase
         $this->actingAs($target);
         $res = $this->get('/notifications');
         $this->assertStatus(200, $res);
-        self::assertStringContainsString('class="notif-icon"', $res->body());
+        self::assertStringContainsString('class="notification-icon"', $res->body());
         self::assertStringContainsString('<svg', $res->body());
-        self::assertStringContainsString('class="notif-body"', $res->body());
-        self::assertStringContainsString('notif-dot', $res->body());
+        self::assertStringContainsString('class="notification-body"', $res->body());
+        self::assertStringContainsString('notification-unread-dot', $res->body());
     }
 
     // ── #3 connections @handle mono class ─────────────────────────────────────

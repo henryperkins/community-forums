@@ -233,4 +233,33 @@ final class AppNotificationTest extends TestCase
             $this->assertRedirect($this->post('/notifications/clear', ['return' => $bad]), '/notifications');
         }
     }
+    public function test_both_entry_points_share_escaped_rows_and_zero_bulk_state(): void
+    {
+        $member = $this->makeUser();
+        $actor = $this->makeUser(['display_name' => '<b>Actor</b>']);
+        $thread = $this->makeThread($this->makeBoard($this->makeCategory()), $actor, '<script>Topic</script>');
+        $repo = new NotificationRepository($this->db);
+        $repo->create(['user_id' => (int) $member['id'], 'actor_id' => (int) $actor['id'], 'type' => 'reply', 'thread_id' => $thread['thread_id']]);
+        $repo->create(['user_id' => (int) $member['id'], 'type' => 'mod']);
+        $this->actingAs($member);
+        $lists = [];
+        foreach ([['/notifications', []], ['/', ['pane' => 'notices']]] as [$path, $query]) {
+            $body = $this->get($path, $query)->body();
+            self::assertSame(1, preg_match('/<ul[^>]*data-notification-list[^>]*>.*?<\/ul>/s', $body, $matches));
+            $lists[] = preg_replace('/<input type="hidden" name="return"[^>]*>/', '', $matches[0]);
+            self::assertStringContainsString('&lt;b&gt;Actor&lt;/b&gt; replied to', $matches[0]);
+            self::assertStringContainsString('&lt;script&gt;Topic&lt;/script&gt;', $matches[0]);
+            self::assertStringContainsString('Your appeal has been resolved', $matches[0]);
+            self::assertStringContainsString('Notification settings</a>', $body);
+        }
+        self::assertSame($lists[0], $lists[1]);
+        $repo->clear((int) $member['id']);
+        foreach ([['/notifications', []], ['/', ['pane' => 'notices']]] as [$path, $query]) {
+            $body = $this->get($path, $query)->body();
+            self::assertStringContainsString('No notifications yet.', $body);
+            self::assertMatchesRegularExpression('/<button[^>]*disabled[^>]*>Mark all read/', $body);
+            self::assertMatchesRegularExpression('/<button[^>]*disabled[^>]*>Clear all/', $body);
+        }
+    }
+
 }

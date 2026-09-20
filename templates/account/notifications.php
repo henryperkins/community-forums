@@ -16,6 +16,7 @@ if ($old !== []) { $pause_all_email = ($old['pause_all_email'] ?? '') === '1'; }
         <?= $this->partial('partials/settings_nav', ['active' => 'notifications']) ?>
 
         <div class="settings-pane">
+    <p class="notification-prose">Read your <a href="/notifications">Notifications</a> or manage delivery below.</p>
     <form method="post" action="/settings/notifications" class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Daily digest</h2>
         <?= $this->csrfField() ?>

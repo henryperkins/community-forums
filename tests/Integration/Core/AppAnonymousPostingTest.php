@@ -400,7 +400,7 @@ final class AppAnonymousPostingTest extends TestCase
 
     private function notificationList(string $html): string
     {
-        self::assertSame(1, preg_match('/<ul class="notif-list">.*?<\/ul>/s', $html, $matches));
+        self::assertSame(1, preg_match('/<ul[^>]*data-notification-list[^>]*>.*?<\/ul>/s', $html, $matches));
         return $matches[0];
     }
 }

@@ -53,7 +53,7 @@ final class AppForumIndexRemediationTest extends TestCase
         $boards = $this->get('/')->body();
         self::assertStringContainsString('data-directory-pane="boards"', $boards);
         self::assertStringContainsString('directory-tab-dot', $boards);
-        self::assertStringContainsString('Unread notices', $boards);
+        self::assertStringContainsString('Unread notifications', $boards);
 
         // And from every other pane the surface offers.
         foreach (['tags', 'connections'] as $pane) {
@@ -86,8 +86,8 @@ final class AppForumIndexRemediationTest extends TestCase
 
         $unread = $this->get('/', ['pane' => 'notices'])->body();
         self::assertStringContainsString('Remediation Author mentioned you in', $unread);
-        self::assertStringContainsString('class="directory-notice-topic">“Reading attention as a map”', $unread);
-        self::assertStringContainsString('class="is-unread"', $unread);
+        self::assertStringContainsString('class="notification-context">“Reading attention as a map”', $unread);
+        self::assertStringContainsString('class="notification-row is-unread"', $unread);
         // Unread never rests on colour alone.
         self::assertStringContainsString('class="sr-only">Unread.', $unread);
         self::assertMatchesRegularExpression('~action="/notifications/read-all"(?s).{0,400}?<button[^>]*>Mark all read~', $unread);
@@ -96,7 +96,7 @@ final class AppForumIndexRemediationTest extends TestCase
         $this->post('/notifications/read-all', []);
 
         $read = $this->get('/', ['pane' => 'notices'])->body();
-        self::assertStringContainsString('class="is-read"', $read);
+        self::assertStringContainsString('class="notification-row is-read"', $read);
         self::assertStringNotContainsString('class="sr-only">Unread.', $read);
         // Nothing left to mark, so the control says so.
         self::assertMatchesRegularExpression('~<button[^>]*disabled[^>]*>Mark all read~', $read);
@@ -127,7 +127,7 @@ final class AppForumIndexRemediationTest extends TestCase
 
         // The pane's own forms carry the return target.
         self::assertStringContainsString(
-            '<input type="hidden" name="return" value="/?pane=notices">',
+            '<input type="hidden" name="return" value="/?pane=notices&amp;filter=all">',
             $this->get('/', ['pane' => 'notices'])->body(),
         );
 
@@ -186,8 +186,8 @@ final class AppForumIndexRemediationTest extends TestCase
         $selectors = [
             // The account-adjacent panes, which had no rules at all.
             '.directory-light-pane', '.directory-pane-heading', '.directory-pane-actions',
-            '.directory-signin-state', '.directory-tag-list', '.directory-notice-list',
-            '.directory-notice-mark', '.directory-notice-text', '.directory-notice-topic',
+            '.directory-signin-state', '.directory-tag-list', '.notification-list',
+            '.notification-unread-dot', '.notification-message', '.notification-context',
             '.directory-connection-tabs', '.directory-people-list',
             // The Boards pane, which did.
             '.forum-directory__tabs', '.directory-tab-dot', '.forum-directory__stats',

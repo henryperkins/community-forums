@@ -25,6 +25,7 @@ final class NotificationController extends Controller
         $user = $this->requireNotifications();
         $query = NotificationReadService::query(['filter' => $request->query('filter'), 'before' => $request->query('before')]);
         $page = $this->container->get(NotificationReadService::class)->page($user, $query['filter'] === 'unread', $query['before']);
+        $page['items'] = array_map(static fn (array $row): array => \App\Support\NotificationPresenter::item($row, $user), $page['items']);
         return $this->view('notifications', [
             'notification_page' => $page,
             'notification_return' => NotificationReadService::historyUrl('/notifications', $query),

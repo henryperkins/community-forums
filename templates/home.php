@@ -32,33 +32,7 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
         'peek' => $peek,
     ], $changes));
 };
-$paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notices', 'connections' => 'Connections'];
-// The design's notice names the topic it is about — "Galadriel mentioned you in
-// 'Evaluations as ritual, not gate'" (BoardIndex.dc.html:448). recent() already
-// selects thread_title, so the verb and the topic are returned separately and
-// the topic is rendered in its own element rather than concatenated into one
-// string: only the topic is quoted, and only the topic changes weight when the
-// notice is unread.
-$notificationVerb = static function (array $notice): string {
-    $actor = ($notice['actor_display_name'] ?? '') !== ''
-        ? (string) $notice['actor_display_name']
-        : (string) ($notice['actor_username'] ?? 'Someone');
-    $named = ($notice['thread_title'] ?? '') !== '';
-    return match ((string) ($notice['type'] ?? '')) {
-        'reply' => $actor . ($named ? ' replied to' : ' replied'),
-        'new_thread' => $actor . ($named ? ' opened' : ' started a topic'),
-        'new_post' => $actor . ($named ? ' posted in' : ' posted'),
-        'mention' => $actor . ($named ? ' mentioned you in' : ' mentioned you'),
-        'reaction' => $actor . ' commended your post',
-        'follow' => $actor . ' followed you',
-        'badge' => 'You earned a badge',
-        'solved' => 'Your answer was accepted' . ($named ? ' in' : ''),
-        'dm' => $actor . ' sent you a message',
-        'mod' => 'A moderator action affects you',
-        'announcement' => 'A new announcement was published',
-        default => 'A new notice arrived',
-    };
-};
+$paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notifications', 'connections' => 'Connections'];
 ?>
 <div class="read-main read-pad board-index" data-directory-pane="<?= $e($pane) ?>">
     <nav class="forum-directory__tabs" aria-label="Board index panes">
@@ -66,7 +40,7 @@ $notificationVerb = static function (array $notice): string {
             <?php if (empty($availablePanes[$paneKey])) { continue; } ?>
             <a href="/?pane=<?= $e($paneKey) ?>"<?= $pane === $paneKey ? ' aria-current="page"' : '' ?>>
                 <?= $e($label) ?>
-                <?php if ($paneKey === 'notices' && (int) ($notification_unread ?? 0) > 0): ?><span class="directory-tab-dot"><span class="sr-only">Unread notices</span></span><?php endif; ?>
+                <?php if ($paneKey === 'notices' && (int) ($notification_unread ?? 0) > 0): ?><span class="directory-tab-dot"><span class="sr-only">Unread notifications</span></span><?php endif; ?>
             </a>
         <?php endforeach; ?>
     </nav>
@@ -203,49 +177,11 @@ $notificationVerb = static function (array $notice): string {
         </section>
     <?php elseif ($pane === 'notices'): ?>
         <section class="directory-light-pane directory-notices-pane">
-            <header class="directory-pane-heading">
-                <h1>Notices</h1>
-                <?php if ($current_user !== null && !empty($notifications)): ?>
-                    <?php /* The design disables Mark all read when nothing is
-                             unread (BoardIndex.dc.html:244) — offering it with
-                             nothing to mark states a queue that is not there. */ ?>
-                    <div class="directory-pane-actions">
-                        <form method="post" action="/notifications/read-all"><?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($notification_return) ?>"><button class="linkbtn" type="submit"<?= (int) ($notification_unread ?? 0) === 0 ? ' disabled' : '' ?>>Mark all read</button></form>
-                        <form method="post" action="/notifications/clear"><?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($notification_return) ?>"><button class="linkbtn danger" type="submit">Clear</button></form>
-                    </div>
-                <?php endif; ?>
-            </header>
-
-    <nav aria-label="Notification history">
-        <a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => 'all'])) ?>"<?= empty($notification_page['unread_only']) ? ' aria-current="page"' : '' ?>>All</a>
-        <a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => 'unread'])) ?>"<?= !empty($notification_page['unread_only']) ? ' aria-current="page"' : '' ?>>Unread</a>
-        <?php if (!empty($notification_page['before'])): ?><a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => !empty($notification_page['unread_only']) ? 'unread' : 'all'])) ?>">Latest</a><?php endif; ?>
-        <?php if (!empty($notification_page['next_before'])): ?><a rel="next" href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => !empty($notification_page['unread_only']) ? 'unread' : 'all', 'before' => $notification_page['next_before']])) ?>">Next</a><?php endif; ?>
-    </nav>
-            <p>What happened to your account. The topics themselves wait in the <a href="/inbox">inbox</a>.</p>
             <?php if ($current_user === null): ?>
-                <p class="directory-signin-state"><a href="/login?next=%2F%3Fpane%3Dnotices">Log in</a> to see notices about your account.</p>
-            <?php elseif (empty($notifications)): ?>
-                <p class="muted empty">All quiet. Nothing is waiting for you.</p>
+                <h1>Notifications</h1>
+                <p class="directory-signin-state"><a href="/login?next=%2F%3Fpane%3Dnotices">Log in</a> to see notifications about your account.</p>
             <?php else: ?>
-                <ul class="directory-notice-list">
-                    <?php foreach ($notifications as $notice): ?>
-                        <?php $unread = (int) $notice['is_read'] === 0; ?>
-                        <li class="<?= $unread ? 'is-unread' : 'is-read' ?>">
-                            <form method="post" action="/notifications/<?= (int) $notice['id'] ?>/read">
-                                <input type="hidden" name="return" value="<?= $e($notification_return) ?>">
-                                <?= $this->csrfField() ?>
-                                <button type="submit">
-                                    <?php /* The mark carries its own text, so unread
-                                             never rests on colour alone. */ ?>
-                                    <span class="directory-notice-mark"><?php if ($unread): ?><span class="sr-only">Unread.</span><?php endif; ?></span>
-                                    <span class="directory-notice-text"><?= $e($notificationVerb($notice)) ?><?php if (($notice['thread_title'] ?? '') !== ''): ?> <span class="directory-notice-topic">“<?= $e((string) $notice['thread_title']) ?>”</span><?php endif; ?></span>
-                                    <time datetime="<?= $e(iso_datetime((string) $notice['created_at'])) ?>"><?= $e(relative_datetime((string) $notice['created_at'])) ?></time>
-                                </button>
-                            </form>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                <?= $this->partial('partials/notification_list', ['page' => $notification_page, 'base_path' => '/', 'return_path' => $notification_return]) ?>
             <?php endif; ?>
         </section>
     <?php else: ?>

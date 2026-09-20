@@ -671,15 +671,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--ink-900);
     font-size: 11px; line-height: 16px; text-align: center; font-weight: 700;
 }
-.notif-list { list-style: none; padding: 0; margin: 12px 0 0; }
-.notif-row { border-top: 1px solid var(--border); }
-.notif-row.notif-unread { background: var(--brand-subtle); box-shadow: inset 3px 0 0 var(--accent-2); }
-.notif-open { margin: 0; }
-.notif-link { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 10px 12px; cursor: pointer; font: inherit; color: var(--text); }
-.notif-link:hover { background: var(--surface-3); }
-.notif-thread { color: var(--text-muted); }
-.notif-time { display: block; font-size: .8rem; color: var(--text-muted); margin-top: 2px; }
-.notif-actions { display: flex; gap: 14px; }
 .subscribe-form .input-small { padding: 2px 6px; font-size: .85rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
@@ -8862,22 +8853,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 .tag-card .tag-desc { font-family: var(--font-body); font-size: .9rem; color: var(--text-muted); line-height: 1.45; }
 
 .notifications-view .board-header h1 { display: inline-flex; align-items: center; gap: 12px; }
-.notif-actions { display: flex; gap: 18px; margin-top: 12px; }
-.notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.notif-row { border-bottom: 1px solid var(--border-hair); }
-.notif-link { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; background: none; border: 0; cursor: pointer; padding: 13px 12px; border-radius: var(--radius-md); font: inherit; }
-.notif-link:hover { background: var(--surface-sunken); }
-.notif-text { font-family: var(--font-body); font-size: 1rem; color: var(--text-body); }
-.notif-unread .notif-text { font-weight: var(--weight-semibold); color: var(--text-strong); }
-.notif-thread { font-family: var(--font-body); font-style: italic; font-size: .92rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.notif-time { margin-left: auto; flex: 0 0 auto; font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
 /* Per-type icon, stacked text/thread body, and the trailing unread dot (§notifications). */
-.notif-icon { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-sunken); color: var(--text-muted); border: 1px solid var(--border-hair); }
-.notif-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.notif-unread .notif-icon { background: var(--brand-subtle); color: var(--brand); border-color: var(--green-200); }
-.notif-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
-.notif-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); }
-.notif-dot.is-read { background: transparent; }
 
 .conn-tabs { margin: 0 0 16px; }
 .people-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -10720,7 +10696,7 @@ body.thread-restructure-open { overflow: hidden; }
    so the items fell back to UA chrome — an inline <a> and an inline-block <button>
    sharing a line, a 2px outset border, 13px Arial, and the <form> around every
    POST action breaking the column. There is no global button reset in this
-   codebase (each component owns its own: .btn, .linkbtn, .notif-link,
+   codebase (each component owns its own: .btn, .linkbtn, .notification-open,
    .dm-menu-item), so the row has to be stated here. The forms stay flex items —
    `display: contents` would buy nothing and costs the <form> its a11y box. */
 .post-menu-pop > a,
@@ -14706,54 +14682,38 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .directory-tag-list a > span:first-child { font-family: var(--font-label); font-size: .92rem; }
 .directory-tag-list a > span + span { color: var(--text-faint); font-family: var(--font-mono); font-size: .7rem; }
 
-/* Notices — one fact about your account per line. */
-.directory-notice-list {
-    margin: 22px 0 0;
-    padding: 0;
-    list-style: none;
-}
-.directory-notice-list li { border-bottom: 1px solid var(--border-hair); }
-.directory-notice-list form { display: contents; }
-.directory-notice-list button {
-    display: grid;
-    width: 100%;
-    min-height: 44px;
-    grid-template-columns: 6px minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 14px;
-    padding: 13px 2px;
-    border: 0;
-    background: none;
-    color: inherit;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-.directory-notice-list button:hover .directory-notice-text { color: var(--text-strong); }
-.directory-notice-mark {
-    width: 6px;
-    height: 6px;
-    align-self: center;
-    border-radius: 50%;
-    background: transparent;
-}
-.directory-notice-list li.is-unread .directory-notice-mark { background: var(--gold-ink); }
-.directory-notice-text {
-    min-width: 0;
-    color: var(--text-muted);
-    font-size: .99rem;
-    line-height: 1.5;
-    text-wrap: pretty;
-}
-.directory-notice-list li.is-unread .directory-notice-text { color: var(--text-body); }
-.directory-notice-list li.is-unread .directory-notice-topic { color: var(--text-strong); }
-.directory-notice-topic { font-style: italic; }
-.directory-notice-list time {
-    flex: 0 0 auto;
-    color: var(--text-faint);
-    font-family: var(--font-mono);
-    font-size: .71rem;
-    white-space: nowrap;
+/* Shared notification history: both entry points use these same rows. */
+.notification-panel { min-width: 0; }
+.notification-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.notification-heading h1 { margin: 0; }
+.notification-actions, .notification-history { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.notification-actions form { margin: 0; }
+.notification-actions button:disabled { color: var(--text-faint); cursor: default; }
+.notification-actions button, .notification-history a { min-height: 44px; display: inline-flex; align-items: center; }
+.notification-prose { color: var(--text-muted); line-height: 1.6; }
+.notification-prose a, .notification-history a { text-decoration: underline; text-underline-offset: 3px; }
+.notification-history { margin: 12px 0; border-bottom: 1px solid var(--border-hair); }
+.notification-history a[aria-current] { color: var(--text-strong); font-weight: var(--weight-semibold); text-decoration-thickness: 2px; }
+.notification-list { list-style: none; margin: 0; padding: 0; }
+.notification-row { border-bottom: 1px solid var(--border-hair); }
+.notification-row form { margin: 0; }
+.notification-open { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 13px; width: 100%; min-height: 44px; padding: 14px 8px; border: 0; border-radius: var(--radius-md); background: none; color: var(--text-body); font: inherit; text-align: left; cursor: pointer; }
+.notification-open:hover { background: var(--surface-sunken); }
+.notification-open:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.notification-icon { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-hair); border-radius: 50%; color: var(--text-muted); background: var(--surface-sunken); }
+.notification-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.notification-body { position: relative; min-width: 0; padding-left: 14px; overflow-wrap: anywhere; }
+.notification-message { color: var(--text-muted); line-height: 1.5; }
+.notification-context { font-style: italic; }
+.notification-row.is-unread .notification-message, .notification-row.is-unread .notification-context { color: var(--text-strong); }
+.notification-row.is-unread .notification-icon { background: var(--brand-subtle); color: var(--brand); }
+.notification-unread-dot { position: absolute; left: 0; top: .55em; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-ink); }
+.notification-open time { color: var(--text-muted); font-family: var(--font-mono); font-size: .72rem; white-space: nowrap; }
+@media (max-width: 600px) {
+    .notification-open { grid-template-columns: 28px minmax(0, 1fr); gap: 6px 10px; padding: 14px 4px; }
+    .notification-icon { width: 28px; height: 28px; }
+    .notification-open time { grid-column: 2; font-size: .7rem; }
+    .notification-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
 }
 
 /* Connections — followers and following. */

@@ -112,6 +112,7 @@ final class HomeController extends Controller
             $notificationUnread = $notificationRepo->unreadCount($user);
             if ($pane === 'notices') {
                 $notificationPage = $notificationRepo->page($user, $notificationQuery['filter'] === 'unread', $notificationQuery['before']);
+                $notificationPage['items'] = array_map(static fn (array $row): array => \App\Support\NotificationPresenter::item($row, $user), $notificationPage['items']);
                 $notifications = $notificationPage['items'];
             }
         }
