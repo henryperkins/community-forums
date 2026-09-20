@@ -605,3 +605,32 @@ on `.admin-console select.input, .settings-pane select.input` is register-blind
 for the same reason, but it is application-only and its removal would break
 `admin-remediation.spec.ts` (which pins that element's computed style) and orphan
 four padding gutters. ADR 0034 records it as a follow-up.
+
+## 2026-09-20 — unified notification and account repair
+
+The approved repair replaces the standalone notification rows and the Notices
+pane rows with one presenter and shared partials. The compatible pane URL stays
+`/?pane=notices`; its visible name is Notifications. The shared CSS preserves
+the design tokens, unread marker, accessible state, focus treatment, wrapping
+and secondary timestamps at narrow widths. Prose and history links retain
+visible underlines. The production-transfer portion is kept identical in the
+app stylesheet and source mirror before regenerating runtime assets.
+
+The persistent primary bell and saved-feed/folder rail groups are deliberate
+production adaptations recorded in ADR 0032. They complete existing navigation
+and organization workflows; they do not claim a last-20 dropdown or other
+deferred notification controls. Mobile account navigation and session labels
+are covered by the same combined repair and browser gate.
+
+For this approved implementation, the application digest is refreshed on the
+isolated repair branch after explicit source review, together with the generated
+manifest and styles. This is an exception to the historical merger-only slice
+procedure above: the implementation plan requires a coherent build and passing
+local verification before delivery. The literal `reconciled_through_commit`
+remains `6d81da590a12bd09bb8d0e282c042aa03d755a94`. A later integration that changes
+the application surface must refresh the digest and rebuild again.
+
+The [combined evidence index](../../evidence/unified-notifications-and-settings/README.md)
+owns the current implementation status, final build/test results, reviewed
+screenshots and deliberate canonical Notices-image promotion. Earlier phase
+or prototype captures do not stand in for this repair's evidence.
