@@ -6,7 +6,11 @@ import path from 'node:path';
 
 const root = path.resolve(__dirname, '../..');
 const evidence = path.resolve(root, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/unified-notifications-and-settings/account-settings-repairs');
-type Fixture = { id: number; board_id: number; status: string; display_name: string; bio: string; avatar_path: string | null; has_password: boolean };
+type Fixture = {
+  id: number; board_id: number; status: string; display_name: string; bio: string;
+  avatar_path: string | null; has_password: boolean; digest_hour: number | null; pause_all_email: boolean;
+  subscription: null | { id: number; target_id: number; frequency: string; email_enabled: number; in_app_enabled: number };
+};
 
 function fixture(command = 'reset'): Fixture {
   return JSON.parse(execFileSync('php', ['tests/browser/account-settings-repairs-fixture.php', command], {
@@ -124,7 +128,7 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(confirm.locator('[name="current_password"]')).toHaveValue('');
     await expect(confirm.locator('[name="totp_code"]')).toHaveValue('');
     await expect(page.getByLabel('Authenticator secret', { exact: true })).toHaveCount(0);
-    expect(await page.content()).not.toContain(secret);
+    expect((await page.content()).includes(secret), 'Reload must not disclose the setup secret').toBe(false);
     await capture(page, info, '03-totp-pending-reload');
   });
 
@@ -200,6 +204,38 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(form.locator('[name="name"]')).toHaveAttribute('aria-invalid', 'true');
     await capture(page, info, '07-feed-validation-retained');
   });
+
+  for (const state of ['suspended', 'banned', 'deactivated', 'pending_deletion']) {
+    test(`${state} member can turn off inaccessible subscriptions and all digest delivery`, async ({ page }, info) => {
+      await login(page);
+      const enabled = fixture('delivery-on').subscription!;
+      fixture('private-board');
+      fixture(`restrict-${state}`);
+      await page.goto('/settings/notifications');
+      expect((await page.content()).includes('Settings evidence topic')).toBe(false);
+      const off = page.locator(`form[action="/settings/notifications/subscriptions/${enabled.id}"]`).getByRole('button', { name: 'Turn off', exact: true });
+      await expect(off).toBeVisible();
+      await off.click();
+      const disabled = fixture('inspect').subscription!;
+      expect(disabled.frequency).toBe('off');
+      expect(Number(disabled.email_enabled)).toBe(0);
+      expect(Number(disabled.in_app_enabled)).toBe(0);
+      expect((await post(page, '/settings/account', { display_name: 'Still blocked' })).status()).toBe(403);
+      // A stale target-specific form must offer the same owner opt-out.
+      fixture('delivery-on');
+      expect((await post(page, `/t/${enabled.target_id}/subscribe`, { frequency: 'off' })).status()).toBe(303);
+      expect(fixture('inspect').subscription!.frequency).toBe('off');
+      await page.goto('/settings/notifications');
+      const global = page.locator('form[action="/settings/notifications"]');
+      await global.locator('[name="digest_hour"]').selectOption('');
+      await global.locator('[name="pause_all_email"]').check();
+      await global.locator('button[type="submit"]').click();
+      expect(fixture('inspect').digest_hour).toBeNull();
+      expect(fixture('inspect').pause_all_email).toBe(true);
+      expect(fixture('inspect').status).toBe(state);
+      await capture(page, info, `07-opt-out-${state}`);
+    });
+  }
 
   test('mobile settings navigation keeps the first control in view and works by keyboard', async ({ page }, info) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -321,6 +357,7 @@ test.describe('account settings accessibility', () => {
   test.beforeEach(() => fixture());
   for (const route of ['security', 'account', 'notifications', 'sessions', 'boards']) {
     test(`settings forms remain accessible in both themes: ${route}`, async ({ page }, info) => {
+      if (route === 'notifications') fixture('delivery-on');
       await login(page);
       for (const theme of ['light', 'dark']) {
         if (theme === 'dark') fixture('dark');

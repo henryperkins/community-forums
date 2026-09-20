@@ -8,6 +8,7 @@ use App\Core\Env;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\SessionRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\UserPreferenceRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
@@ -39,7 +40,7 @@ if ($command === 'reset') {
         email_verified_at = UTC_TIMESTAMP(), onboarded_at = UTC_TIMESTAMP(), created_at = '2020-01-01 00:00:00',
         timezone = 'UTC', digest_hour = NULL, last_daily_digest_at = NULL WHERE id = ?", [$hash, $uid]);
     foreach (['account_deletion_requests', 'bans', 'user_totp_credentials', 'user_recovery_codes',
-        'mfa_login_challenges', 'board_folders', 'saved_feed_filters', 'user_profile_fields', 'sessions'] as $table) {
+        'mfa_login_challenges', 'board_folders', 'saved_feed_filters', 'user_profile_fields', 'sessions', 'subscriptions'] as $table) {
         $db->run('DELETE FROM ' . $table . ' WHERE user_id = ?', [$uid]);
     }
     (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'light', 'pause_all_email' => false]);
@@ -75,6 +76,24 @@ if ($command === 'reset') {
             $db->run("UPDATE users SET suspended_until = '2020-01-01 00:00:00' WHERE id = ?", [$uid]);
             $db->run("UPDATE bans SET expires_at = '2020-01-01 00:00:00' WHERE user_id = ? AND scope = 'site' AND type = 'post'", [$uid]);
             break;
+        case 'delivery-on':
+            $threadId = (int) $db->fetchValue("SELECT t.id FROM threads t JOIN boards b ON b.id = t.board_id WHERE b.slug = 'settings-repair-board' ORDER BY t.id LIMIT 1");
+            (new SubscriptionRepository($db))->set($uid, 'thread', $threadId, true, true, 'daily');
+            $db->run("UPDATE users SET digest_hour = 9, timezone = 'UTC' WHERE id = ?", [$uid]);
+            (new UserPreferenceRepository($db))->merge($uid, ['pause_all_email' => false]);
+            break;
+        case 'restrict-suspended':
+        case 'restrict-banned':
+        case 'restrict-deactivated':
+        case 'restrict-pending_deletion':
+            $status = substr($command, strlen('restrict-'));
+            $db->run('UPDATE users SET status = ?, suspended_until = ? WHERE id = ?', [
+                $status, $status === 'suspended' ? '2030-01-01 00:00:00' : null, $uid,
+            ]);
+            if ($status === 'pending_deletion') {
+                (new \App\Repository\AccountDeletionRepository($db))->create($uid, $uid, '2030-01-01 00:00:00', 'browser_fixture');
+            }
+            break;
         case 'dark':
             (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'dark']);
             break;
@@ -104,8 +123,12 @@ if ($command === 'reset') {
     $user = $users->find($uid);
     $boardId = (int) $db->fetchValue("SELECT id FROM boards WHERE slug = 'settings-repair-board'");
 }
+$subscription = $db->fetch('SELECT id, target_id, frequency, email_enabled, in_app_enabled FROM subscriptions WHERE user_id = ? ORDER BY id LIMIT 1', [$uid]);
 echo json_encode([
     'id' => (int) $user['id'], 'board_id' => $boardId,
     'status' => $user['status'], 'display_name' => $user['display_name'], 'bio' => $user['bio'],
     'avatar_path' => $user['avatar_path'], 'has_password' => $user['password_hash'] !== null,
+    'digest_hour' => $user['digest_hour'] === null ? null : (int) $user['digest_hour'],
+    'pause_all_email' => !empty((new UserPreferenceRepository($db))->get($uid)['pause_all_email']),
+    'subscription' => $subscription,
 ], JSON_THROW_ON_ERROR) . "\n";
