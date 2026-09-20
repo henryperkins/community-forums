@@ -2880,7 +2880,7 @@ textarea.textarea-engraved,
 .admin-bar-right {
     margin-left: auto;
     display: flex;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     align-items: center;
     gap: 12px;
     min-width: 0;
@@ -2892,6 +2892,7 @@ textarea.textarea-engraved,
 .admin-bar-brand:hover { text-decoration: none; }
 .admin-bar-search .input-small { min-width: 0; width: clamp(120px, 18vw, 220px); }
 .admin-bar-user {
+    max-width: 220px;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -15871,6 +15872,7 @@ a.presence-person:hover { text-decoration: none; }
 .forum-bar-search:focus-visible,
 .forum-bar-railtoggle:focus-visible,
 .forum-bar-user:focus-visible,
+.forum-bar-bell:focus-visible,
 .forum-bar-signin:focus-visible,
 .forum-bar-signup:focus-visible,
 .board-rail-item:focus-visible {
@@ -16060,3 +16062,11 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
     .users-online-result { margin-inline-start: 0; }
     .users-online-search { max-width: none; }
 }
+
+/* ADR 0032 adaptation: persistent notification entry and locally anchored badge. */
+[data-bell] { flex: 0 0 40px; width: 40px; height: 40px; justify-content: center; border-radius: var(--radius); }
+.forum-bar-bell > .icon { width: 18px; height: 18px; }
+[data-bell] > .bell-count { top: 0; right: 0; }
+.notification-count { display: inline-block; min-width: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--ink-900); font-size: 11px; line-height: 16px; text-align: center; font-weight: 700; }
+[data-notification-count][hidden] { display: none; }
+[data-notification-heading] [data-notification-count]::after { content: " unread"; }

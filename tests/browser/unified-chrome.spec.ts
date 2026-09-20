@@ -646,3 +646,32 @@ test.describe('with JavaScript disabled', () => {
     await expect(page.getByRole('heading', { name: 'Account settings', exact: true })).toBeVisible();
   });
 });
+
+
+test('persistent bell keeps mobile search compose and rail controls reachable at 320px', async ({ page }, info) => {
+  await signIn(page);
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto('/');
+  for (const selector of ['[data-bell]', '.forum-bar-search', '.forum-bar-compose a', '[data-nav-toggle]', '.identity-menu > summary']) {
+    const control = page.locator(selector);
+    await expect(control).toBeVisible();
+    const box = (await control.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(3);
+    expect(box.x + box.width).toBeLessThanOrEqual(317);
+    await control.focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(control).toBeFocused();
+  }
+  await expect(page.locator('.identity-menu')).not.toHaveAttribute('open', '');
+  await page.locator('[data-bell]').focus();
+  expect(await page.locator('[data-bell]').evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
+  await page.screenshot({ path: shot('11-bell-320-focus.png', info.project.name) });
+  await page.locator('.forum-bar-search').click();
+  await expect(page).toHaveURL(/\/search$/);
+  await page.locator('.forum-bar-compose a').click();
+  await expect(page).toHaveURL(/\/compose$/);
+  await page.locator('[data-nav-toggle]').click();
+  await expect(page.locator('.board-rail')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});

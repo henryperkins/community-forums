@@ -38,9 +38,10 @@ $paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notificatio
     <nav class="forum-directory__tabs" aria-label="Board index panes">
         <?php foreach ($paneLabels as $paneKey => $label): ?>
             <?php if (empty($availablePanes[$paneKey])) { continue; } ?>
-            <a href="/?pane=<?= $e($paneKey) ?>"<?= $pane === $paneKey ? ' aria-current="page"' : '' ?>>
+            <?php $paneCount = $paneKey === 'notices' && $current_user !== null ? $notification_unread() : 0; ?>
+            <a<?= $paneKey === 'notices' && $current_user !== null ? ' data-notification-link aria-label="' . ($paneCount > 0 ? 'Notifications, ' . $paneCount . ' unread' : 'Notifications') . '"' : '' ?> href="/?pane=<?= $e($paneKey) ?>"<?= $pane === $paneKey ? ' aria-current="page"' : '' ?>>
                 <?= $e($label) ?>
-                <?php if ($paneKey === 'notices' && (int) ($notification_unread ?? 0) > 0): ?><span class="directory-tab-dot"><span class="sr-only">Unread notifications</span></span><?php endif; ?>
+                <?php if ($paneKey === 'notices' && $current_user !== null): ?><span class="notification-count" data-notification-count aria-hidden="true"<?= $paneCount === 0 ? ' hidden' : '' ?>><?= $paneCount > 99 ? '99+' : $paneCount ?></span><?php endif; ?>
             </a>
         <?php endforeach; ?>
     </nav>

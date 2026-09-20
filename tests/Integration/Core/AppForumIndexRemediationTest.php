@@ -32,7 +32,7 @@ final class AppForumIndexRemediationTest extends TestCase
      * while already on the Notices pane, which put the signal in the one place
      * it could say nothing new.
      */
-    public function test_the_notices_dot_reaches_a_member_reading_the_boards_pane(): void
+    public function test_the_notification_count_reaches_a_member_reading_the_boards_pane(): void
     {
         $reader = $this->makeUser(['username' => 'dot_reader']);
         $board = $this->makeBoard($this->makeCategory('Council'), ['slug' => 'dot-board']);
@@ -40,7 +40,7 @@ final class AppForumIndexRemediationTest extends TestCase
         $this->actingAs($reader);
 
         $quiet = $this->get('/')->body();
-        self::assertStringNotContainsString('directory-tab-dot', $quiet);
+        self::assertStringContainsString('data-notification-count aria-hidden="true" hidden>0', $quiet);
 
         (new NotificationRepository($this->db))->create([
             'user_id' => (int) $reader['id'],
@@ -52,16 +52,16 @@ final class AppForumIndexRemediationTest extends TestCase
         // The dot is visible from Boards — the pane the member is actually on.
         $boards = $this->get('/')->body();
         self::assertStringContainsString('data-directory-pane="boards"', $boards);
-        self::assertStringContainsString('directory-tab-dot', $boards);
-        self::assertStringContainsString('Unread notifications', $boards);
+        self::assertStringContainsString('data-notification-count aria-hidden="true">1', $boards);
+        self::assertStringContainsString('Notifications, 1 unread', $boards);
 
         // And from every other pane the surface offers.
         foreach (['tags', 'connections'] as $pane) {
-            self::assertStringContainsString('directory-tab-dot', $this->get('/', ['pane' => $pane])->body());
+            self::assertStringContainsString('data-notification-count aria-hidden="true">1', $this->get('/', ['pane' => $pane])->body());
         }
 
         $this->post('/notifications/read-all', []);
-        self::assertStringNotContainsString('directory-tab-dot', $this->get('/')->body());
+        self::assertStringContainsString('data-notification-count aria-hidden="true" hidden>0', $this->get('/')->body());
     }
 
     /**

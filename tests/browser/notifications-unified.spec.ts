@@ -9,7 +9,7 @@ if (!process.env.RB_EVIDENCE_DIR) throw new Error('RB_EVIDENCE_DIR is required f
 const evidence = path.resolve(root, process.env.RB_EVIDENCE_DIR);
 function fixture(command = 'reset'): { user_id: number; unread: number; old_id: number } {
   return JSON.parse(execFileSync('php', ['tests/browser/notifications-unified-fixture.php', command], {
-    cwd: root, env: { ...process.env, APP_ENV: 'test', MAIL_DRIVER: 'array', MAIL_FROM: 'evidence@example.test' }, encoding: 'utf8',
+    cwd: root, env: { ...process.env, APP_ENV: 'test', MAIL_DRIVER: 'array', MAIL_FROM: 'notification-evidence@example.test' }, encoding: 'utf8',
   }));
 }
 async function login(page: Page) {
@@ -159,4 +159,151 @@ test.describe('progressive enhancement', () => {
       await capture(page, info, `${name}-nojs-cleared`);
     });
   }
+});
+
+
+test('polling synchronizes every badge without replacing focused notification rows', async ({ page }) => {
+  await login(page);
+  await page.clock.install();
+  let unread = 105;
+  let requests = 0;
+  await page.route('**/notifications/bell?format=json', route => {
+    requests++;
+    return route.fulfill({ json: { unread, items: [] } });
+  });
+  await page.goto('/?pane=notices');
+  const counts = page.locator('[data-notification-count]');
+  const links = page.locator('[data-notification-link]');
+  await expect(counts).toHaveCount(4);
+  await expect(counts).toHaveText(['99+', '99+', '99+', '99+']);
+  const row = page.locator('.notification-open').first();
+  await row.focus();
+  await row.evaluate(el => el.setAttribute('data-preserved-row', 'yes'));
+  for (const value of [7, 0]) {
+    unread = value;
+    const before = requests;
+    await page.clock.fastForward(60001);
+    await expect.poll(() => requests).toBe(before + 1);
+    await expect(counts).toHaveText(Array(4).fill(String(value)));
+    for (const link of await links.all()) await expect(link).toHaveAttribute('aria-label', value ? 'Notifications, 7 unread' : 'Notifications');
+    for (const count of await counts.all()) await expect(count).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('.notification-heading h1')).toHaveAccessibleName(value ? 'Notifications, 7 unread' : 'Notifications');
+    await expect(row).toBeFocused();
+    await expect(row).toHaveAttribute('data-preserved-row', 'yes');
+  }
+  expect(await counts.evaluateAll(nodes => nodes.every(node => (node as HTMLElement).hidden))).toBeTruthy();
+  await expect(page.locator('[aria-live] [data-notification-count]')).toHaveCount(0);
+});
+
+test('guests and disabled notifications make no bell request and 404 stops polling', async ({ page }) => {
+  await page.clock.install();
+  let requests = 0;
+  page.on('request', request => { if (request.url().includes('/notifications/bell')) requests++; });
+  await page.goto('/');
+  await expect(page.locator('[data-bell]')).toHaveCount(0);
+  await page.clock.fastForward(120001);
+  expect(requests).toBe(0);
+  fixture('notifications-off');
+  await login(page);
+  await expect(page.locator('[data-notification-link]')).toHaveCount(0);
+  await page.clock.fastForward(120001);
+  expect(requests).toBe(0);
+  fixture();
+  await page.route('**/notifications/bell?format=json', route => route.fulfill({ status: 404 }));
+  await page.goto('/');
+  await expect.poll(() => requests).toBe(1);
+  await page.clock.fastForward(180001);
+  expect(requests).toBe(1);
+});
+
+test('replayed Notifications tour step highlights the visible primary bell with account menu closed', async ({ page }, info) => {
+  await login(page);
+  await page.goto('/settings/account');
+  await page.locator('[data-tour-replay]:visible').click();
+  const tour = page.locator('.tour-popover');
+  await expect(tour.getByRole('heading', { name: 'Welcome', exact: true })).toBeVisible();
+  await tour.getByRole('button', { name: 'Next', exact: true }).click();
+  await tour.getByRole('button', { name: 'Next', exact: true }).click();
+  await expect(tour.getByRole('heading', { name: 'Notifications', exact: true })).toBeVisible();
+  await expect(page.locator('[data-bell].tour-highlight')).toBeVisible();
+  await expect(page.locator('.identity-menu')).not.toHaveAttribute('open', '');
+  await capture(page, info, 'bell-tour');
+  await tour.getByRole('button', { name: 'Skip', exact: true }).click();
+});
+
+test.describe('persistent bell without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test('member and admin bell renders zero and 105 counts with a long account name', async ({ page }, info) => {
+    await login(page);
+    fixture('long-account');
+    for (const persona of ['member', 'admin']) {
+      if (persona === 'admin') fixture('admin');
+      for (const state of ['empty', 'high-count']) {
+        fixture(state);
+        await page.goto(persona === 'admin' ? '/admin' : '/');
+        const bell = page.locator('[data-bell]');
+        await expect(bell).toBeVisible();
+        await expect(bell).toHaveAccessibleName(state === 'empty' ? 'Notifications' : 'Notifications, 105 unread');
+        await expect(bell.locator('[data-notification-count]')).toHaveText(state === 'empty' ? '0' : '99+');
+        if (state === 'empty') await expect(bell.locator('[data-notification-count]')).toBeHidden();
+        else {
+          const badge = (await bell.locator('[data-notification-count]').boundingBox())!;
+          const box = (await bell.boundingBox())!;
+          expect(badge.x).toBeGreaterThanOrEqual(box.x);
+          expect(badge.x + badge.width).toBeLessThanOrEqual(box.x + box.width + 1);
+        }
+        if (persona === 'admin') {
+          const logout = page.locator('.admin-bar-right button[aria-label="Log out"]');
+          const box = (await logout.boundingBox())!;
+          expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width - 2);
+          expect((await page.locator('.admin-bar-brand').boundingBox())!.width).toBeGreaterThan(24);
+        }
+        await capture(page, info, `bell-nojs-${persona}-${state}`);
+        if (persona === 'member' && state === 'high-count') {
+          await page.locator('.identity-menu > summary').click();
+          const shortcut = page.locator('.identity-menu [data-notification-link]');
+          await expect(shortcut).toHaveAccessibleName('Notifications, 105 unread');
+          const badge = (await shortcut.locator('[data-notification-count]').boundingBox())!;
+          const row = (await shortcut.boundingBox())!;
+          expect(badge.x).toBeGreaterThanOrEqual(row.x);
+          expect(badge.x + badge.width).toBeLessThanOrEqual(row.x + row.width);
+          await capture(page, info, 'bell-nojs-account-menu');
+          await page.locator('.identity-menu > summary').click();
+        }
+        await bell.click();
+        await expect(page).toHaveURL(/\/notifications$/);
+      }
+    }
+  });
+});
+
+
+test('polling pauses while hidden and backs off after throttling', async ({ page }) => {
+  await login(page);
+  await page.clock.install();
+  let requests = 0;
+  await page.route('**/notifications/bell?format=json', route => {
+    requests++;
+    return requests <= 2 ? route.fulfill({ status: 429 }) : route.fulfill({ json: { unread: 4, items: [] } });
+  });
+  await page.goto('/');
+  await expect.poll(() => requests).toBe(1);
+  await page.clock.fastForward(60001);
+  await expect.poll(() => requests).toBe(2);
+  await page.clock.fastForward(60001);
+  expect(requests).toBe(2);
+  await page.clock.fastForward(60001);
+  await expect.poll(() => requests).toBe(3);
+  await expect(page.locator('[data-bell]')).toHaveAccessibleName('Notifications, 4 unread');
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.clock.fastForward(180001);
+  expect(requests).toBe(3);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(() => requests).toBe(4);
 });

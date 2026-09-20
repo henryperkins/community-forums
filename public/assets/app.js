@@ -113,15 +113,15 @@
     // Notification bell. The bell is a plain link without JS, so this only decorates.
     var bell = document.querySelector('[data-bell]');
     if (bell) {
-        var countEl = bell.querySelector('[data-bell-count]');
         shortPoll('/notifications/bell?format=json', 60000, function (data) {
-            if (!countEl) { return; }
-            if (data.unread > 0) {
-                countEl.textContent = data.unread > 99 ? '99+' : data.unread;
-                countEl.hidden = false;
-            } else {
-                countEl.hidden = true;
-            }
+            var unread = Math.max(0, Number(data.unread) || 0);
+            document.querySelectorAll('[data-notification-count]').forEach(function (node) {
+                node.textContent = unread > 99 ? '99+' : String(unread);
+                node.hidden = unread === 0;
+            });
+            document.querySelectorAll('[data-notification-link], [data-notification-heading]').forEach(function (node) {
+                node.setAttribute('aria-label', unread === 0 ? 'Notifications' : 'Notifications, ' + unread + ' unread');
+            });
         });
     }
 

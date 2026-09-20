@@ -15,7 +15,8 @@
  * off-canvas drawer's hamburger (`.nav-toggle`), operator branding (an uploaded
  * logo, and the dynamic site name in the lockup), the two pane toggles as POST
  * forms so the rail and reading-pane state persist without JavaScript, the
- * `99+` cap on the inbox count, the account menu behind the seat, a glyph on
+ * `99+` cap on counts, a persistent notification bell (ADR 0032 adaptation),
+ * the account menu behind the seat, a glyph on
  * New topic so it survives the phone breakpoint, and "Sign up" beside "Log in"
  * for a guest.
  */
@@ -31,6 +32,8 @@ $readingOpen = !empty($surfaces['inbox_reading_open']);
 $moderationAccess = is_array($moderation_access ?? null) ? $moderation_access : [];
 $moderationReportCount = (int) ($moderationAccess['report_count'] ?? 0);
 $inboxCount = (int) ($inbox_unread_count ?? 0);
+$notificationCount = $current_user !== null && !empty($features['notifications']) ? $notification_unread() : 0;
+$notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationCount . ' unread' : 'Notifications';
 ?>
 <header class="forum-bar">
     <?php // The phone drawer's opener. Desktop never shows it (app.css); the design has no drawer. ?>
@@ -132,6 +135,12 @@ $inboxCount = (int) ($inbox_unread_count ?? 0);
             // account menu, so it is a <details> summary wearing the same anatomy,
             // and the chevron is the menu's cue.
             ?>
+            <?php if (!empty($features['notifications'])): ?>
+                <a class="forum-bar-bell bell" href="/notifications" data-bell data-notification-link aria-label="<?= $e($notificationLabel) ?>" title="Notifications">
+                    <?= $this->partial('partials/icon', ['name' => 'bell']) ?>
+                    <span class="bell-count" data-notification-count aria-hidden="true"<?= $notificationCount === 0 ? ' hidden' : '' ?>><?= $notificationCount > 99 ? '99+' : $notificationCount ?></span>
+                </a>
+            <?php endif; ?>
             <details class="identity-menu">
                 <summary class="forum-bar-user" aria-label="Open account menu for <?= $e($current_user->displayName()) ?>">
                     <span class="avatar-wrap">
@@ -156,7 +165,7 @@ $inboxCount = (int) ($inbox_unread_count ?? 0);
                 <div class="identity-menu-panel">
                     <a href="/u/<?= $e($current_user->username()) ?>"><?= $this->partial('partials/icon', ['name' => 'user']) ?><span>Profile</span></a>
                     <?php if (!empty($features['notifications'])): ?>
-                        <a href="/notifications" data-bell><?= $this->partial('partials/icon', ['name' => 'bell']) ?><span>Notifications</span><span class="bell-count" data-bell-count hidden>0</span></a>
+                        <a href="/notifications" data-notification-link aria-label="<?= $e($notificationLabel) ?>"><?= $this->partial('partials/icon', ['name' => 'bell']) ?><span>Notifications</span><span class="notification-count" data-notification-count aria-hidden="true"<?= $notificationCount === 0 ? ' hidden' : '' ?>><?= $notificationCount > 99 ? '99+' : $notificationCount ?></span></a>
                     <?php endif; ?>
                     <?php if (!empty($features['drafts'])): ?><a href="/drafts"><?= $this->partial('partials/icon', ['name' => 'file']) ?><span>Drafts</span></a><?php endif; ?>
                     <?php if (!empty($features['community'])): ?>

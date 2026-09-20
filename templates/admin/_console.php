@@ -172,9 +172,10 @@ $disabledNote = 'Disabled until the feature flag is enabled';
             <?php endif; ?>
             <?php if ($viewer !== null): ?>
                 <?php if (!empty($features['notifications'])): ?>
-                    <a class="topbar-link bell" href="/notifications" data-bell title="Notifications">
+                    <?php $notificationCount = $notification_unread(); ?>
+                    <a class="topbar-link bell" href="/notifications" data-bell data-notification-link aria-label="<?= $notificationCount > 0 ? 'Notifications, ' . $notificationCount . ' unread' : 'Notifications' ?>" title="Notifications">
                         <svg class="bell-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                        <span class="bell-count" data-bell-count hidden>0</span>
+                        <span class="bell-count" data-notification-count aria-hidden="true"<?= $notificationCount === 0 ? ' hidden' : '' ?>><?= $notificationCount > 99 ? '99+' : $notificationCount ?></span>
                         <span class="sr-only">Notifications</span>
                     </a>
                 <?php endif; ?>

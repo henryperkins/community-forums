@@ -839,12 +839,15 @@ final class App
             'request_path' => $request->path(),
             'nav' => $nav,
             'inbox_unread_count' => $inboxUnreadCount,
-            'notification_unread' => static function () use ($container, $session): int {
+            'notification_unread' => static function () use ($container, $session, $features): int {
+                static $count = null;
+                if ($count !== null) { return $count; }
+                if (empty($features['notifications'])) { return $count = 0; }
                 try {
                     $viewer = $session->user();
-                    return $viewer === null ? 0 : $container->get(NotificationReadService::class)->unreadCount($viewer);
+                    return $count = $viewer === null ? 0 : $container->get(NotificationReadService::class)->unreadCount($viewer);
                 } catch (Throwable) {
-                    return 0;
+                    return $count = 0;
                 }
             },
             'presence_snapshot' => $presenceSnapshot,

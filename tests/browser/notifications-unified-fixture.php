@@ -33,6 +33,8 @@ if ($command === 'board-index-ready') {
 }
 $reader = $users->findByUsername('notifications-reader');
 if ($command === 'reset') {
+    $settings = new \App\Repository\SettingRepository($db);
+    $settings->set('features', array_merge($settings->get('features', []), ['notifications' => true]));
     PasswordHasher::setDefaultOptions(['memory_cost' => 8, 'time_cost' => 1, 'threads' => 1]);
     foreach (['reader', 'actor'] as $role) {
         $name = 'notifications-' . $role;
@@ -46,6 +48,7 @@ if ($command === 'reset') {
     $actor = $users->findByUsername('notifications-actor');
     $db->run('UPDATE users SET display_name = ? WHERE id = ?', [str_repeat('A', 64), (int) $actor['id']]);
     $uid = (int) $reader['id'];
+    $db->run("UPDATE users SET role = 'user', display_name = 'Notification member' WHERE id = ?", [$uid]);
     $repo->clear($uid);
     (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'light', 'density' => 'comfortable']);
     $boards = new BoardRepository($db);
@@ -83,6 +86,16 @@ if ($command === 'reset') {
         case 'dark': (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'dark']); break;
         case 'name40': $db->run('UPDATE users SET display_name = ? WHERE username = ?', [str_repeat('A', 40), 'notifications-actor']); break;
         case 'name64': $db->run('UPDATE users SET display_name = ? WHERE username = ?', [str_repeat('A', 64), 'notifications-actor']); break;
+        case 'high-count':
+            $repo->clear($uid);
+            for ($i = 0; $i < 105; $i++) { $repo->create(['user_id' => $uid, 'type' => 'badge']); }
+            break;
+        case 'admin': $db->run("UPDATE users SET role = 'admin' WHERE id = ?", [$uid]); break;
+        case 'long-account': $db->run('UPDATE users SET display_name = ? WHERE id = ?', [str_repeat('W', 64), $uid]); break;
+        case 'notifications-off':
+            $settings = new \App\Repository\SettingRepository($db);
+            $settings->set('features', array_merge($settings->get('features', []), ['notifications' => false]));
+            break;
         case 'inspect': break;
         default: throw new RuntimeException('Unknown notification fixture command.');
     }
