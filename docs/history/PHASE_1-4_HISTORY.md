@@ -2,6 +2,14 @@
 
 This document consolidates the completed-phase status and completion records for Phases 1-4 — previously maintained as separate files (`docs/PHASE_1_COMPLETION.md`, `docs/PHASE_2_STATUS.md`, `docs/PHASE_3_STATUS.md`, `PHASE_4_STATUS.md`) — into a single history record. The Phase 1 migration manifest is retained as a standalone sibling reference at [`PHASE_1_MIGRATIONS.md`](PHASE_1_MIGRATIONS.md). This record is retained for traceability and as PRODUCT_DESIGN §13 completion evidence. Each source's original content is reproduced faithfully under its section below.
 
+**Later repair record (2026-09-20).** Historical acceptance below is preserved.
+The notification/account audit found privacy, lifecycle, delivery and incomplete
+organization workflows after those releases. Their current remediation and
+fresh evidence are tracked in the [combined evidence index](../evidence/unified-notifications-and-settings/README.md)
+and [Phase 5 status](../../PHASE_5_STATUS.md); the old suite totals do not close
+the newer findings. Member security history and email discoverability are
+explicit open requirements in proposed [ADR 0035](../adr/0035-member-settings-completion-carryovers.md).
+
 ## Phase 1 completion
 
 ### RetroBoards — Phase 1 Completion & Evidence Index

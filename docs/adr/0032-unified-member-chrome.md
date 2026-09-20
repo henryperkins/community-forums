@@ -159,6 +159,26 @@ avatar's dot).
   phone drawer and touch controls described in decision 3. These are explicit
   production adaptations, not claims of byte-identical prototype markup.
 
+## Notification and organization repair — 2026-09-20
+
+The unified-notification repair adds the persistent primary notification bell
+with an initial authorized count. The existing `data-bell` tour hook remains on
+that visible control. The count and eligibility scope are lazy and memoized;
+adding the bell must not add eager shell queries to plain/JSON/health requests.
+The poll refreshes every notification count/link node and retains the full
+accessible count when the visual badge reads `99+`.
+
+Owned saved-feed and board-folder shortcuts are added before category groups
+without replacing category browsing, presence or the composer's destination
+selection. They retain privacy and feature gates and tolerate unavailable
+schema in the global shell. Originally empty saved-feed filters retain Latest
+discovery; explicit selections use current canonical read permission within
+the selected boards. This is a deliberate repair of the selectable private-board
+workflow, not an expansion of ordinary Latest discovery. A revoked or malformed
+selection never falls back to All boards. The [combined evidence index](../evidence/unified-notifications-and-settings/README.md)
+tracks fresh browser/query evidence. This repairs exposed workflows and does
+not introduce the deferred last-20 dropdown from proposed ADR 0035.
+
 ## Feature-gap accounting
 
 | Handoff behavior | Resolution |

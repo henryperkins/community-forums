@@ -10,6 +10,21 @@ carryover train as accepted.
 For the full default-dark flag inventory across phases, see
 `docs/evidence/deploy-dark-features.md`.
 
+**2026-09-20 correction.** The newer settings audit reopened the saved-feed,
+board-folder, lifecycle and avatar workflow acceptance: existing tables and
+enabled routes had not proved all promised behavior. The
+[combined repair evidence](../unified-notifications-and-settings/README.md)
+now owns the current open/read/rail/digest, restriction, draft-preservation and
+browser gates. Do not read the earlier foundation acceptance below as closing
+these newer findings. New member security-history/email-discovery gaps are
+tracked by proposed [ADR 0035](../../adr/0035-member-settings-completion-carryovers.md);
+the full notification matrix and staff-inbox carryovers remain in ADR 0014/0021.
+The feed repair preserves Latest discovery for an originally empty filter and
+uses current canonical read permission for explicit board selections. Original
+and current selections intersect on digest retry; a revoked selection cannot
+broaden delivery. This interpretation is recorded in ADR 0032 and the combined
+design so the rail's availability is not mistaken for unrestricted discovery.
+
 ## Later Phase 5 Work Not Counted As Open Phase 3
 
 | Item | Current state | Flag | Evidence pointer | Owner |

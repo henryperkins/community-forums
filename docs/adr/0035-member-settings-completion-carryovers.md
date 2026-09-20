@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-20
 
-**Status:** Proposed during planning; not a claim of implementation or accepted feature completion.
+**Status:** Proposed product disposition; the approved repair scope excludes these new workflows. They remain open requirements, not accepted feature completion.
 
 ## Context
 
@@ -20,6 +20,22 @@ ADR 0014 already covers the full event/channel matrix, quiet hours, digest previ
 | Last-20 notification dropdown | PRODUCT_DESIGN §6.10 describes the dropdown. This repair supplies the persistent bell/count and shared full/embedded list, but does not implement a new dropdown. | Reuse the same authorized read model and presenter; implement keyboard/focus, dismissal, mobile, no-JS fallback and current unread state without another eligibility or copy implementation. |
 
 The first two entries are newly identified, previously untracked gaps. The latter two make the boundaries of the current repair explicit; they are not claimed to have been accepted deferrals already. The full notification matrix and staff alert work retain their existing ADR owners instead of moving here.
+
+## Repair disposition — 2026-09-20
+
+The user authorized implementation of the unified-notification and account
+repair plans within their existing-feature scope. This authorizes the repairs,
+not a claim that these four product requirements have shipped. Carry them
+forward as explicit open requirements; this ADR's broader product disposition
+remains proposed. ADR 0014 and ADR 0021 retain their already accepted carryover
+status. No security-history route, email-discovery consumer, username-change
+workflow, or last-20 dropdown is included in this repair.
+
+Sessions and public profile activity cover different tasks. The former lists
+devices and supports revocation; the latter shows community participation.
+Operator audit history and selected authentication audit rows provide possible
+data sources for a future security history, but event coverage, retention,
+member ownership, and sensitive-field filtering still need a defined contract.
 
 ## Consequences
 

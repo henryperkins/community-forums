@@ -1,5 +1,26 @@
 # Phase 5 Status
 
+## Unified notification and account repairs — 2026-09-20
+
+**In progress on `codex/unified-notifications-settings`; no deployment claimed.**
+The approved repair covers the ten notification findings and nine account
+findings, with private subscription labels/opt-out shared between the audits.
+It includes lifecycle-state precedence, shared authorized notification history,
+durable digests, state-independent delivery reductions, TOTP/passwordless
+recovery, avatar draft preservation, saved-feed/folder behavior and mobile
+settings/session presentation. Current results and the final release gates live
+in the [combined evidence index](docs/evidence/unified-notifications-and-settings/README.md)
+and [runbook](docs/runbooks/unified-notifications.md).
+
+Member security history, email discovery, username changes and a last-20 bell
+dropdown remain explicit open requirements in proposed
+[ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md). The accepted
+notification-control and staff-inbox carryovers retain ADR 0014/0021 ownership.
+The historical phase acceptance and suite totals below are not evidence that
+these newer repairs have passed their combined gate.
+
+## Phase 5 release-train record
+
 **Status:** **Gate A accepted and default-on as of 2026-07-09 (any install without an explicit `features` override — fresh and upgraded alike); Gate B remains reserved.** Milestone 0 decisions are accepted for the release train, foundation schema landed, the migration ledger is reconciled, TOTP/recovery shipped before passkey enforcement, all four B2 support sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) are implemented, and the Foundation increment (F1-F11) is COMPLETE. Accepted Gate A/B2 flags now default on and remain independently reversible through `features.<flag>=false`: `package_registry`, `package_themes`, `capabilities`, `passkeys`, `provider_registry`, `invitations`, `service_secrets`, `api_tokens`, `webhooks`, and `first_party_hooks`; the package execution brake (`PACKAGE_EXECUTION_DISABLED` / `package_execution_disabled`) remains independent. P5-16 closeout evidence is indexed at `docs/evidence/phase5/gate-a-closeout.md`, ADR 0017 records Gate A acceptance, and ADR 0018 records the default-on authorization (the defaults apply to fresh and upgraded installs alike). Sandbox, governance, service-principal, and verified-link behavior remains gated until each Gate B workstream has release evidence. The WYSIWYG composer stream that shipped alongside Inc 4 (PR #33) graduated on 2026-07-02: `wysiwyg_composer` is now default-ON (`docs/runbooks/wysiwyg_composer.md`); the gate-a browser-evidence seed pins the textarea baseline, and `wysiwyg-composer.spec.ts` proves the GA default with no override.
 **Last updated:** 2026-07-14
 **Branch:** `main` holds everything through Increment 9 (invitations, PR #40 `c72b884`, merged 2026-07-08/09); Increment 8 (provider registry, PR #39 `0aeda29`) merged 2026-07-07, and the Inc 6 follow-ups merged ff `88267b7`, 2026-07-07

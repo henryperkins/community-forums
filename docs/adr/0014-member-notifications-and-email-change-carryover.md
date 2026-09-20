@@ -42,6 +42,21 @@ address is verified, notifies the old address, rate-limits abuse, records an
 audit/security event, and preserves account recovery guarantees for password and
 OAuth-linked accounts.
 
+## 2026-09-20 repair boundary
+
+The unified-notification repair completes existing subscription frequency and
+channel editing, owned opt-out after access loss, daily scheduling/retries and
+shared notification history. Its scope does not include the broader event/channel
+matrix, quiet hours, digest preview, member test-send, suppression recovery or
+email change. Those remain accepted carryovers under this ADR.
+
+An explicit subscription Off is persistent and overrides its board; this is
+not a claim that the complete per-event preference matrix has shipped.
+Suppressed jobs remain terminal after a preference or address is restored;
+restoration permits future jobs. The [combined evidence index](../evidence/unified-notifications-and-settings/README.md)
+records the repair's current verification state. Proposed [ADR 0035](0035-member-settings-completion-carryovers.md)
+tracks the separate newly identified product gaps.
+
 ## Consequences
 
 - The existing notification page must be described as a partial implementation,

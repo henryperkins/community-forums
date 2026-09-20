@@ -10,6 +10,21 @@ ADR 0027 (the board-page adoption that set this pattern); ADR 0024 (the first
 design-project adoption). CLAUDE.md's rule that deferrals and reversals are
 recorded in an ADR and never silently dropped.
 
+## Later notification repair — 2026-09-20
+
+The original transfer and evidence below remain historical records. The
+unified-notification repair replaces the Notices pane's independent row markup
+with the same authorized presenter and components as `/notifications`, while
+retaining `pane=notices` compatibility. Notification bulk actions preserve only
+validated notification destinations, filters and cursors. Current eligibility
+must be applied before list limits and unread counts; the original joined title
+alone does not prove permission to display it.
+
+`board-index-remediation.spec.ts` remains the browser owner of this pane. Its
+canonical `05-pane-notices.png` must be explicitly reviewed and promoted with
+the repair, as recorded in the [combined evidence index](../evidence/unified-notifications-and-settings/README.md).
+Unrelated directory deferrals below are unchanged.
+
 ## Context
 
 The member-surfaces transfer implemented the board index — `/` — from the

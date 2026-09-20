@@ -152,6 +152,12 @@ A `/settings` area with a left-nav (mirrors the admin Console pattern, ADMIN.md 
 - **Security activity:** recent logins, new-device sign-ins, password/email changes, provider link/unlink — also surfaced as notifications.
 - **Recovery:** email-based password reset; recovery codes if 2FA enabled.
 
+**Completion boundary (2026-09-20).** Sessions provides the current device list
+and revocation. The member-facing security-activity history above is still an
+open product requirement. Public profile activity, operator audit history, and
+selected authentication audit events do not complete this member workflow or
+its event coverage. See [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md).
+
 ### 3.4 Connections
 
 Manage linked logins (Google/Apple/GitHub + email/password): add a provider, remove a provider, see when each was linked and last used. The **keep-at-least-one-method** rule (§2.4) is enforced here.
@@ -206,7 +212,17 @@ The member shapes their own sidebar:
 - **Reorder** favorites; **collapse** categories with the state remembered per user.
 - **Custom groups / folders** of boards — **P2**.
 
-Backed by `user_board_prefs` (§7).
+Board preferences are backed by `user_board_prefs` (§7).
+
+**Saved-feed and folder repair (2026-09-20).** Owned saved feeds can be opened,
+renamed, filtered, included in the daily digest, or deleted from Boards settings.
+Board folders can be renamed and deleted, and their board shortcuts appear in
+the rail alongside saved feeds. A saved feed with an original All boards filter
+uses Latest's normal discovery rules. Explicitly selected boards use current
+read permission within those selections; removing access never turns a selected
+feed into All boards. Invalid stored filters remain unavailable. Digest retries
+intersect the original and current selections and honor current delivery
+preferences; changing a filter cannot add previously unqueued activity.
 
 **On a board page**, the member also controls their own read state directly:
 
@@ -260,6 +276,22 @@ Plus: **email digest cadence** (off / daily), **quiet hours**, **per-thread mute
 
 **Per-subscription frequency & digests (v0.4).** Each subscription's frequency is **Instant / Daily / Off**, set per board or thread — a **thread overrides its board**, and "Off" silences that target. Daily activity rolls into a **timezone-aware daily digest** sent at the member's chosen **digest hour** (with their timezone, §4.2). `/settings/notifications` also offers a **digest preview** (what the next digest will include), a **test send** to verify deliverability, and — if an address was auto-suppressed after a bounce — a **re-enable** action once the inbox is working again. (Infra in ADMIN.md §7.6.)
 
+**Repair scope and completion boundary (2026-09-20).** The implemented control
+set is subscription frequency and channel editing, global email pause, and daily
+digest settings. Off subscriptions remain visible so an explicit thread override
+is not lost. Owned delivery reductions remain available when an account is
+restricted or the subscription target becomes inaccessible; unavailable targets
+use a neutral label. Increasing delivery still requires current write and read
+permission. An unset timezone means UTC, including older stored NULL values.
+
+Both notification entry points share read/unread history and bulk actions; the
+bell count is present before JavaScript runs. Saved-feed digest sources obey
+the same global settings, current source choices and content permissions on
+every attempt. Queued mail suppressed after an opt-out is terminal, so restoring
+a preference does not replay that activity. The [repair evidence index](docs/evidence/unified-notifications-and-settings/README.md)
+tracks current verification. The matrix, quiet hours, digest preview, member
+test-send and suppression recovery remain carryovers in [ADR 0014](docs/adr/0014-member-notifications-and-email-change-carryover.md).
+
 ### 4.7 Privacy
 
 | Preference | Options |
@@ -269,6 +301,11 @@ Plus: **email digest cadence** (off / daily), **quiet hours**, **per-thread mute
 | Allow DMs from | Everyone · Members · No one |
 | Discoverable by email | On · Off |
 | **Block list** | Blocked users can't DM or @mention you, and their notifications to you are suppressed; optionally hide their posts behind a "blocked" stub. |
+
+**Email-discovery boundary (2026-09-20).** The preference is stored, but there is
+no email-based discovery consumer. Its presence is not evidence of a working
+lookup feature or permission to expose email addresses. The product contract
+remains open in [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md).
 
 **What "Show online presence" covers (ADR 0031).** Off means you appear on no
 presence surface at all — not the board rail, not `/users-online`, not the

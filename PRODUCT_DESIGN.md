@@ -294,6 +294,22 @@ This is a cornerstone and the most recently designed area. **Two unmistakable si
 | @mentions | P1 | Planned | Lives in the composer (autocomplete, parse-on-submit → notify, block-list aware) — **COMPOSER.md §6.1**. |
 | Mentions quick-filter | P2 | Planned | Sidebar entry (wired when @mentions land). |
 
+**2026-09-20 repair contract.** The full notification page and compatible
+`/?pane=notices` pane share authorization, read/unread history and presentation.
+The primary bell receives an initial, lazily computed server count and retains
+short polling. Owned delivery reductions work in every authenticated account
+state, including after content access is revoked. Digest scheduling must commit
+a fixed-window outbox job and watermark before checking transport readiness;
+every retry rechecks current recipient state, permissions and preferences.
+Queue deduplication does not guarantee exactly-once SMTP delivery.
+
+The [combined evidence index](docs/evidence/unified-notifications-and-settings/README.md)
+tracks implementation and verification of this repair. The last-20 dropdown
+remains an open requirement in proposed [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md).
+The full event/channel matrix and other member email controls retain their
+accepted carryover in [ADR 0014](docs/adr/0014-member-notifications-and-email-change-carryover.md).
+Completing this repair does not mark those larger requirements complete.
+
 ### 6.11 Moderation
 
 | Feature | Priority | Status | Notes |
@@ -698,7 +714,7 @@ CREATE TABLE moderation_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-> **Session handling.** RetroBoards uses opaque-token sessions backed by a **`sessions` table** (the hashed cookie token as the id, a per-session CSRF secret, device list, and revocation), which **ships in Phase 1** (DECISIONS §5 #9; canonical DDL in SCHEMA.md §1; migration `0005` in PHASE_1_MIGRATIONS) — this is what powers "log out everywhere" and the security-activity view. Cookies are `HttpOnly`, `Secure`, `SameSite=Lax`, rotated on login, with idle + absolute timeouts. **Guests have no row anywhere** — a guest is simply a request without a valid session.
+> **Session handling.** RetroBoards uses opaque-token sessions backed by a **`sessions` table** (the hashed cookie token as the id, a per-session CSRF secret, device list, and revocation), which **ships in Phase 1** (DECISIONS §5 #9; canonical DDL in SCHEMA.md §1; migration `0005` in PHASE_1_MIGRATIONS). It powers "log out everywhere" and device management. The member security-activity view remains a separate open requirement in proposed [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md); session rows do not establish event-history coverage. Cookies are `HttpOnly`, `Secure`, `SameSite=Lax`, rotated on login, with idle + absolute timeouts. **Guests have no row anywhere** — a guest is simply a request without a valid session.
 
 ### 8.3 Additions (v0.2 — folded-in features)
 

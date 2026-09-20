@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-20
 
-**Status:** Proposed implementation design; application changes have not started.
+**Status:** Approved repair scope; implementation and verification in progress. The [combined evidence index](../../evidence/unified-notifications-and-settings/README.md) records completion separately from the design contract.
 
 **Source baseline:** `7257ca42`
 
@@ -115,6 +115,13 @@ Transport success followed by a process crash can still produce a duplicate retr
 Complete the current advertised feature rather than merely hiding its Digest control. Provide an owner-only feed route, accessible rail shortcuts/groups, and rename/delete/remove controls for the existing saved feeds and board folders. Reuse the current latest-feed rendering and filtering conventions; no new filter language or sorting modes.
 
 An explicitly selected board that is deleted or becomes unreadable yields an empty/unavailable feed, never “all boards.” Distinguish an originally empty board filter (intentional all eligible boards) from a filter whose selected IDs become unavailable. Lists, rail, and digest must obey that distinction.
+
+An originally empty selection uses the existing Latest discovery rules. An
+explicit selection uses current canonical thread-read permission within those
+selected IDs, including readable hidden and private boards; a readable board
+offered by settings must not produce an inert feed merely because general
+discovery excludes it. Queued digests intersect the original and current
+filter scopes separately, preserving this distinction on retries.
 
 An enabled saved feed contributes eligible activity to the member's one daily digest at the configured hour. Global digest Off, global email pause, suppression, private access, blocks, and explicit subscription Off still apply. Effective thread-over-board email preferences outrank a saved feed: email-disabled/Off excludes activity, Instant remains instant-only, and Daily can contribute to the digest. A feed supplies daily activity when no explicit subscription controls that target. Deduplicate posts/threads that match several feeds or a subscription; aggregate the thread once. Saved-feed creation does not silently enable a user's global digest. When digest is Off, show a link to configure it. Disabling/deleting a saved feed removes it from subsequent delivery, including retries.
 
