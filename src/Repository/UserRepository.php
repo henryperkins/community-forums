@@ -19,6 +19,12 @@ final class UserRepository
         return $this->db->fetch('SELECT * FROM users WHERE id = ?', [$id]);
     }
 
+    /** Call inside the transaction that owns the account transition. @return array<string,mixed>|null */
+    public function findForUpdate(int $id): ?array
+    {
+        return $this->db->fetch('SELECT * FROM users WHERE id = ? FOR UPDATE', [$id]);
+    }
+
     public function findEntity(int $id): ?User
     {
         $row = $this->find($id);

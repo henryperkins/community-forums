@@ -312,6 +312,7 @@ final class AccountController extends Controller
             'errors' => [],
             'row' => $row,
             'pending_deletion' => $this->container->get(AccountLifecycleService::class)->pendingDeletion($user),
+            'available_actions' => $this->container->get(AccountLifecycleService::class)->availableActions($user),
         ], $data), $status);
     }
 

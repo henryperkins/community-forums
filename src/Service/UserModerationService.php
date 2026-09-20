@@ -13,6 +13,8 @@ use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\AttachmentRepository;
+use App\Repository\AccountDeletionRepository;
+use App\Repository\BanRepository;
 use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
@@ -58,6 +60,8 @@ final class UserModerationService
         private ?BoardRepository $boards = null,
         private ?IdempotencyRepository $idempotency = null,
         private ?BoardAuthority $boardAuthority = null,
+        private ?AccountDeletionRepository $deletions = null,
+        private ?BanRepository $bans = null,
     ) {
     }
 
@@ -298,9 +302,9 @@ final class UserModerationService
         $this->assertAdmin($actor);
         $reason = $this->requireReason($reason);
         $until = $this->validateSuspendUntil($until);
-        $subject = $this->requireGovernable($actor, $subjectId);
-
-        $this->db->transaction(function () use ($actor, $subject, $until, $reason): void {
+        $this->db->transaction(function () use ($actor, $subjectId, $until, $reason): void {
+            $subject = $this->requireGovernable($actor, $subjectId, true);
+            $this->lockModerationState($subjectId);
             $this->users->setStatus((int) $subject['id'], 'suspended', $until);
             // History row: type='post' (read-only) — a suspension keeps login +
             // read access (ADMIN §1.2), unlike a full ban. Enforcement rides
@@ -312,6 +316,14 @@ final class UserModerationService
             );
             $this->audit($actor, 'suspend', (int) $subject['id'], $reason);
         });
+    }
+
+    /** Target user is already locked; follow the lifecycle request/restriction order. */
+    private function lockModerationState(int $subjectId): ?array
+    {
+        $pending = ($this->deletions ?? new AccountDeletionRepository($this->db))->pendingForUserForUpdate($subjectId);
+        ($this->bans ?? new BanRepository($this->db))->activeSiteRestrictionsForUpdate($subjectId);
+        return $pending;
     }
 
     private function validateSuspendUntil(?string $until): ?string
@@ -338,9 +350,9 @@ final class UserModerationService
     {
         $this->assertAdmin($actor);
         $reason = $this->requireReason($reason);
-        $subject = $this->requireGovernable($actor, $subjectId);
-
-        $banId = $this->db->transaction(function () use ($actor, $subject, $reason): int {
+        $banId = $this->db->transaction(function () use ($actor, $subjectId, $reason): int {
+            $subject = $this->requireGovernable($actor, $subjectId, true);
+            $this->lockModerationState($subjectId);
             $this->users->setStatus((int) $subject['id'], 'banned', null);
             $banId = $this->db->insert(
                 "INSERT INTO bans (user_id, scope, type, reason, created_by, created_at, expires_at)
@@ -351,21 +363,29 @@ final class UserModerationService
             return $banId;
         });
         $this->hooks?->emit('member.banned', [
-            'user_id' => (int) $subject['id'],
+            'user_id' => $subjectId,
             'ban_id' => $banId,
             'actor_id' => $actor->id(),
-        ], 'user:' . (int) $subject['id'] . ':banned:' . $banId);
+        ], 'user:' . $subjectId . ':banned:' . $banId);
     }
 
     public function lift(User $actor, int $subjectId): void
     {
         $this->assertAdmin($actor);
-        $subject = $this->requireSubject($subjectId);
-
-        $this->db->transaction(function () use ($actor, $subject): void {
-            $this->users->setStatus((int) $subject['id'], 'active', null);
+        $this->db->transaction(function () use ($actor, $subjectId): void {
+            $subject = $this->requireSubject($subjectId, true);
+            $pending = $this->lockModerationState($subjectId);
+            $status = $subject['status'];
+            if ($status !== 'deleted') {
+                if ($pending !== null) {
+                    $status = 'pending_deletion';
+                } elseif (in_array($status, ['banned', 'suspended'], true)) {
+                    $status = 'active';
+                }
+            }
+            $this->users->setStatus((int) $subject['id'], $status, null);
             $this->db->run(
-                'UPDATE bans SET lifted_at = UTC_TIMESTAMP(), lifted_by = ? WHERE user_id = ? AND lifted_at IS NULL',
+                'UPDATE bans SET lifted_at = UTC_TIMESTAMP(), lifted_by = ? WHERE user_id = ? AND scope = \'site\' AND lifted_at IS NULL',
                 [$actor->id(), (int) $subject['id']],
             );
             $this->audit($actor, 'lift', (int) $subject['id'], null);
@@ -407,9 +427,18 @@ final class UserModerationService
         }
         $target = User::fromRow($row);
 
-        $this->db->transaction(function () use ($admin, $target, $userId, $row, $newRole): void {
-            if ($target->isAdmin() && $newRole !== 'admin') {
+        $this->db->transaction(function () use ($admin, $target, $userId, $newRole): void {
+            if ($newRole !== 'admin') {
                 $this->ownerGuard->assertNotLastOwnerForUpdate($target, 'role');
+            } else {
+                $this->owners->activeOwnerIdsForUpdate();
+            }
+            $this->users->activeAdminCountExcludingForUpdate($userId);
+            $row = $this->requireSubject($userId, true);
+            if ($row['status'] === 'deleted' || $row['role'] === $newRole) {
+                throw new ValidationException(['role' => 'The member is unavailable or already has this role.']);
+            }
+            if ($row['role'] === 'admin' && $newRole !== 'admin') {
                 $this->owners->deactivate($userId);
             }
             $this->users->setRole($userId, $newRole);
@@ -770,9 +799,9 @@ final class UserModerationService
     }
 
     /** @return array<string,mixed> */
-    private function requireSubject(int $subjectId): array
+    private function requireSubject(int $subjectId, bool $forUpdate = false): array
     {
-        $subject = $this->users->find($subjectId);
+        $subject = $forUpdate ? $this->users->findForUpdate($subjectId) : $this->users->find($subjectId);
         if ($subject === null) {
             throw new NotFoundException('User not found.');
         }
@@ -780,9 +809,9 @@ final class UserModerationService
     }
 
     /** @return array<string,mixed> a subject that is not the actor and not another admin */
-    private function requireGovernable(User $actor, int $subjectId): array
+    private function requireGovernable(User $actor, int $subjectId, bool $forUpdate = false): array
     {
-        $subject = $this->requireSubject($subjectId);
+        $subject = $this->requireSubject($subjectId, $forUpdate);
         if ((int) $subject['id'] === $actor->id()) {
             throw new ValidationException(['user' => 'You cannot moderate your own account.']);
         }

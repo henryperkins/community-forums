@@ -15,11 +15,12 @@ $errorForm = (string) ($error_form ?? '');
 // leave a scoped error with no element to attach to. Scope only where the form
 // is actually on the page; anything left over falls back to the alert card
 // rather than vanishing into a silent 422.
-$deactivateVisible = $status !== 'deactivated';
-$deleteVisible = $pending === null;
+$deactivateVisible = $available_actions['deactivate'];
+$deleteVisible = $available_actions['request_deletion'];
 $deactivateErrors = ($errorForm === 'deactivate' && $deactivateVisible) ? $errors : [];
 $deleteErrors = ($errorForm === 'delete' && $deleteVisible) ? $errors : [];
-$unscoped = ($deactivateErrors === [] && $deleteErrors === []) ? $errors : [];
+$unscoped = ($deactivateErrors === [] && $deleteErrors === [])
+    ? $errors : array_diff_key($errors, ['current_password' => true]);
 ?>
 <div class="settings-screen">
     <header class="settings-head">
@@ -50,13 +51,13 @@ $unscoped = ($deactivateErrors === [] && $deleteErrors === []) ? $errors : [];
 
     <section class="scribe-panel">
         <h2 class="scribe-panel-head">Deactivate account</h2>
-        <?php if ($status === 'deactivated'): ?>
+        <?php if ($available_actions['reactivate']): ?>
             <p class="lifecycle-note">Your account is deactivated. You can reactivate it to restore write access.</p>
             <form method="post" action="/settings/account/reactivate" class="inline-form">
                 <?= $this->csrfField() ?>
                 <button class="btn" type="submit">Reactivate account</button>
             </form>
-        <?php else: ?>
+        <?php elseif ($deactivateVisible): ?>
             <p class="lifecycle-note">Reversible. Your account stays sign-in capable, but posting and replying are blocked until you reactivate.</p>
             <form method="post" action="/settings/account/deactivate" class="stacked">
                 <?= $this->csrfField() ?>
@@ -67,18 +68,20 @@ $unscoped = ($deactivateErrors === [] && $deleteErrors === []) ? $errors : [];
                 </label>
                 <button class="btn btn-secondary" type="submit">Deactivate account</button>
             </form>
+        <?php else: ?>
+            <p class="lifecycle-note">Deactivation and reactivation are unavailable while your account has a pending deletion or site restriction.</p>
         <?php endif; ?>
     </section>
 
     <section class="scribe-panel danger-zone">
         <h2 class="scribe-panel-head">Delete account</h2>
-        <?php if ($pending !== null): ?>
+        <?php if ($available_actions['cancel_deletion']): ?>
             <p class="lifecycle-note">Deletion is scheduled after the grace period on <?= $e(human_datetime((string) $pending['purge_after'])) ?>. Your posts stay readable under a deleted-member identity; everything that identifies you is purged.</p>
             <form method="post" action="/settings/account/delete/cancel" class="inline-form">
                 <?= $this->csrfField() ?>
                 <button class="btn btn-secondary" type="submit">Cancel deletion request</button>
             </form>
-        <?php else: ?>
+        <?php elseif ($deleteVisible): ?>
             <p class="lifecycle-note">Deletion opens a 30-day grace period. Your account is write-blocked and you can cancel at any point. Your posts stay readable under a deleted-member identity; everything that identifies you is purged.</p>
             <form method="post" action="/settings/account/delete/request" class="stacked">
                 <?= $this->csrfField() ?>
@@ -89,6 +92,8 @@ $unscoped = ($deactivateErrors === [] && $deleteErrors === []) ? $errors : [];
                 </label>
                 <button class="btn danger" type="submit">Request account deletion</button>
             </form>
+        <?php else: ?>
+            <p class="lifecycle-note">Account deletion is unavailable while a site restriction applies.</p>
         <?php endif; ?>
     </section>
         </div>

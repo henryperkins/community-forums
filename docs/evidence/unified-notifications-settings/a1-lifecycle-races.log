@@ -1,0 +1,53 @@
+{
+    "schema": "retroboards_unified_lifecycle_race",
+    "cases": [
+        {
+            "action": "deactivate",
+            "order": "moderator_first",
+            "competing_lock_observed": true,
+            "parent_outcome": "applied",
+            "child_outcome": "refused",
+            "child_exit": 0,
+            "status": "banned",
+            "normal_write": 403
+        },
+        {
+            "action": "deactivate",
+            "order": "lifecycle_first",
+            "competing_lock_observed": true,
+            "parent_outcome": "applied",
+            "child_outcome": "applied",
+            "child_exit": 0,
+            "status": "banned",
+            "normal_write": 403
+        },
+        {
+            "action": "cancel",
+            "order": "moderator_first",
+            "competing_lock_observed": true,
+            "parent_outcome": "applied",
+            "child_outcome": "applied",
+            "child_exit": 0,
+            "status": "banned",
+            "normal_write": 403
+        },
+        {
+            "action": "cancel",
+            "order": "lifecycle_first",
+            "competing_lock_observed": true,
+            "parent_outcome": "applied",
+            "child_outcome": "applied",
+            "child_exit": 0,
+            "status": "banned",
+            "normal_write": 403
+        },
+        {
+            "action": "two_owner_deactivations",
+            "competing_lock_observed": true,
+            "child_outcome": "refused",
+            "child_exit": 0,
+            "active_owners": 1
+        }
+    ]
+}
+{"fixture_rows_remaining":0}

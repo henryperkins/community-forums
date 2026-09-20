@@ -28,6 +28,29 @@ final class AppUserModerationTest extends TestCase
         return (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$id]);
     }
 
+    public function test_lift_during_pending_deletion_keeps_normal_writes_blocked(): void
+    {
+        $this->actingAs($this->bad);
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        $this->actingAs($this->admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/ban', ['reason' => 'Restriction during grace']));
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/lift'));
+        self::assertSame('pending_deletion', $this->userStatus((int) $this->bad['id']));
+        $this->actingAs($this->users()->find((int) $this->bad['id']));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still blocked']));
+        $this->assertStatus(303, $this->post('/settings/account/delete/cancel'));
+    }
+
+    public function test_lift_cannot_reactivate_self_deactivated_or_deleted_accounts(): void
+    {
+        $this->actingAs($this->admin);
+        foreach (['deactivated', 'deleted'] as $status) {
+            $this->users()->setStatus((int) $this->bad['id'], $status, null);
+            $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/lift'));
+            self::assertSame($status, $this->userStatus((int) $this->bad['id']));
+        }
+    }
+
     public function testAdminSuspendThenLift(): void
     {
         $this->actingAs($this->admin);

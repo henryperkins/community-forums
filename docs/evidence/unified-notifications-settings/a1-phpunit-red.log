@@ -1,0 +1,15 @@
+1) Tests\Integration\Core\AppAccountLifecycleTest::test_self_service_lifecycle_cannot_clear_a_suspension
+2) Tests\Integration\Core\AppAccountLifecycleTest::test_pending_deletion_cannot_be_bypassed_via_deactivation
+3) Tests\Integration\Core\AppAccountLifecycleTest::test_suspension_cannot_be_cleared_by_requesting_then_canceling_deletion
+4) Tests\Integration\Core\AppAccountLifecycleTest::test_cancel_preserves_moderation_imposed_during_deletion
+5) Tests\Integration\Core\AppAccountLifecycleTest::test_live_site_record_blocks_recovery_despite_misleading_cached_status
+6) Tests\Integration\Core\AppAccountLifecycleTest::test_expired_suspension_allows_lifecycle_without_erasing_timestamp
+7) Tests\Integration\Core\AppAccountLifecycleTest::test_lifecycle_reauth_uses_current_password_hash_not_stale_user
+8) Tests\Integration\Core\AppAccountLifecycleTest::test_due_deletion_is_not_stranded_by_a_later_ban
+9) Tests\Integration\Core\AppUserModerationTest::test_lift_during_pending_deletion_keeps_normal_writes_blocked
+10) Tests\Integration\Core\AppUserModerationTest::test_lift_cannot_reactivate_self_deactivated_or_deleted_accounts
+
+FAILURES!
+Tests: 37, Assertions: 139, Failures: 10.
+
+Full transient output: /tmp/a1-red.log (HTML omitted from durable summary).

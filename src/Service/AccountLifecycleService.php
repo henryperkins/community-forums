@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\AccountDeletionRepository;
+use App\Repository\BanRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
@@ -32,6 +33,7 @@ final class AccountLifecycleService
         private ReauthGate $reauth,
         private WebAuthnCredentialRepository $webauthnCredentials,
         private ?LastOwnerGuard $ownerGuard = null,
+        private ?BanRepository $bans = null,
     ) {
     }
 
@@ -111,13 +113,11 @@ final class AccountLifecycleService
 
     public function deactivate(User $user, string $currentPassword, ?string $currentSessionId = null): void
     {
-        $this->assertPassword($user, $currentPassword);
-
-        $this->db->transaction(function () use ($user, $currentSessionId): void {
-            $this->assertNotFinalActiveAdmin($user);
-            $this->ownerGuard?->assertNotLastOwnerForUpdate($user, 'current_password');
-            $before = $this->users->find($user->id());
-            $this->users->setStatus($user->id(), 'deactivated');
+        $this->db->transaction(function () use ($user, $currentPassword, $currentSessionId): void {
+            [$before, $pending, $restrictions] = $this->lockState($user, true);
+            $this->assertPassword(User::fromRow($before), $currentPassword);
+            $this->assertAction('deactivate', $before, $pending, $restrictions);
+            $this->users->setStatus($user->id(), 'deactivated', $before['suspended_until']);
             $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
             $this->logs->log([
                 'actor_id' => $user->id(),
@@ -133,13 +133,10 @@ final class AccountLifecycleService
 
     public function reactivate(User $user): void
     {
-        $row = $this->users->find($user->id()) ?? [];
-        if (($row['status'] ?? '') !== 'deactivated') {
-            throw new ValidationException(['account' => 'Only deactivated accounts can be reactivated here.']);
-        }
-
         $this->db->transaction(function () use ($user): void {
-            $this->users->setStatus($user->id(), 'active');
+            [$row, $pending, $restrictions] = $this->lockState($user);
+            $this->assertAction('reactivate', $row, $pending, $restrictions);
+            $this->users->setStatus($user->id(), 'active', $row['suspended_until']);
             $this->logs->log([
                 'actor_id' => $user->id(),
                 'action' => 'account_reactivated',
@@ -154,18 +151,17 @@ final class AccountLifecycleService
 
     public function requestDeletion(User $user, string $currentPassword, ?string $currentSessionId = null): void
     {
-        $this->assertPassword($user, $currentPassword);
-
-        $this->db->transaction(function () use ($user, $currentSessionId): void {
-            $this->assertNotFinalActiveAdmin($user);
-            $this->ownerGuard?->assertNotLastOwnerForUpdate($user, 'current_password');
-            if ($this->deletions->pendingForUser($user->id()) !== null) {
-                return;
+        $this->db->transaction(function () use ($user, $currentPassword, $currentSessionId): void {
+            [$row, $pending, $restrictions] = $this->lockState($user, true);
+            $this->assertPassword(User::fromRow($row), $currentPassword);
+            if ($pending !== null) {
+                return; // A repeat cannot overwrite an independent restriction.
             }
+            $this->assertAction('request_deletion', $row, $pending, $restrictions);
 
             $purgeAfter = gmdate('Y-m-d H:i:s', time() + 30 * 86400);
             $requestId = $this->deletions->create($user->id(), $user->id(), $purgeAfter, 'self_service');
-            $this->users->setStatus($user->id(), 'pending_deletion');
+            $this->users->setStatus($user->id(), 'pending_deletion', $row['suspended_until']);
             $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
             $this->logs->log([
                 'actor_id' => $user->id(),
@@ -180,15 +176,16 @@ final class AccountLifecycleService
 
     public function cancelDeletion(User $user): void
     {
-        $pending = $this->deletions->pendingForUser($user->id());
-        if ($pending === null) {
-            throw new ValidationException(['account' => 'No pending deletion request was found.']);
-        }
-        $this->db->transaction(function () use ($user, $pending): void {
+        $this->db->transaction(function () use ($user): void {
+            [$row, $pending, $restrictions] = $this->lockState($user);
+            $this->assertAction('cancel_deletion', $row, $pending, $restrictions);
             if (!$this->deletions->cancel((int) $pending['id'], $user->id())) {
                 return;
             }
-            $this->users->setStatus($user->id(), 'active');
+            // Cancellation removes only the deletion hold. Reconcile a live
+            // restriction even if an older bypass left the cached status wrong.
+            [$status, $until] = $this->statusAfterCancellation($row, $restrictions);
+            $this->users->setStatus($user->id(), $status, $until);
             $this->logs->log([
                 'actor_id' => $user->id(),
                 'action' => 'account_deletion_canceled',
@@ -208,13 +205,16 @@ final class AccountLifecycleService
         foreach ($this->deletions->due($limit) as $request) {
             $this->db->transaction(function () use ($request, &$purged): void {
                 $userId = (int) $request['user_id'];
-                $row = $this->users->find($userId);
-                // Defence in depth: never anonymize an account that is no longer
-                // pending_deletion (e.g. reactivated, or a legacy status desync).
-                if ($row === null || (string) ($row['status'] ?? '') !== 'pending_deletion') {
+                $row = $this->users->findForUpdate($userId);
+                $pending = $this->deletions->pendingForUserForUpdate($userId);
+                // The durable request survives moderation during grace. Legacy
+                // active/deactivated anomalies require targeted reconciliation.
+                if ($row === null || !in_array($row['status'], ['pending_deletion', 'banned', 'suspended'], true)
+                    || $pending === null || (int) $pending['id'] !== (int) $request['id']
+                    || (string) $pending['purge_after'] > gmdate('Y-m-d H:i:s')) {
                     return;
                 }
-                if (!$this->deletions->markPurged((int) $request['id'])) {
+                if (!$this->deletions->markPurged((int) $pending['id'])) {
                     return;
                 }
 
@@ -247,11 +247,101 @@ final class AccountLifecycleService
         $this->reauth->requirePassword($user, $currentPassword);
     }
 
-    private function assertNotFinalActiveAdmin(User $user): void
+    /** @return array{deactivate:bool,reactivate:bool,request_deletion:bool,cancel_deletion:bool} */
+    public function availableActions(User $user): array
     {
-        if ($user->isAdmin() && $this->users->activeAdminCountExcludingForUpdate($user->id()) === 0) {
+        return $this->db->transaction(function () use ($user): array {
+            return $this->actions(...$this->lockState($user));
+        });
+    }
+
+    /**
+     * Owner-loss operations lock shared owner/admin rowsets first, then target,
+     * pending request, and restrictions. Recovery never acquires owner rowsets.
+     * @return array{array<string,mixed>,?array,list<array<string,mixed>>}
+     */
+    private function lockState(User $user, bool $ownerLoss = false): array
+    {
+        $otherAdmins = null;
+        if ($ownerLoss && $user->isAdmin()) {
+            $this->ownerGuard?->assertNotLastOwnerForUpdate($user, 'current_password');
+            $otherAdmins = $this->users->activeAdminCountExcludingForUpdate($user->id());
+        }
+        $row = $this->users->findForUpdate($user->id());
+        if ($row === null) {
+            throw new ValidationException(['account' => 'This account is no longer available.']);
+        }
+        if ($ownerLoss && $row['role'] === 'admin' && $otherAdmins === null) {
+            // A concurrent promotion changed which rowsets this operation needs.
+            // Do not acquire them after the target lock; retry from a fresh page.
+            throw new ValidationException(['account' => 'Your account role changed. Reload this page and try again.']);
+        }
+        if ($ownerLoss && $row['role'] === 'admin' && $otherAdmins === 0) {
             throw new ValidationException(['current_password' => 'Add another active admin before changing this account lifecycle state.']);
         }
+        return [
+            $row,
+            $this->deletions->pendingForUserForUpdate($user->id()),
+            ($this->bans ?? new BanRepository($this->db))->activeSiteRestrictionsForUpdate($user->id()),
+        ];
+    }
+
+    /** @param array<string,mixed> $row @param list<array<string,mixed>> $restrictions */
+    private function actions(array $row, ?array $pending, array $restrictions): array
+    {
+        $user = User::fromRow($row);
+        $restricted = $restrictions !== [] || $user->isBanned() || $user->isSuspended()
+            || ($row['suspended_until'] !== null && strtotime($row['suspended_until'] . ' UTC') > time());
+        $active = in_array($row['status'], ['active', 'suspended'], true) && $user->isActive();
+        return [
+            'deactivate' => $active && $pending === null && !$restricted,
+            'reactivate' => $user->isDeactivated() && $pending === null && !$restricted,
+            'request_deletion' => ($active || $user->isDeactivated()) && $pending === null && !$restricted,
+            'cancel_deletion' => $pending !== null && $row['status'] !== 'deleted',
+        ];
+    }
+
+    private function assertAction(string $action, array $row, ?array $pending, array $restrictions): void
+    {
+        if (!$this->actions($row, $pending, $restrictions)[$action]) {
+            throw new ValidationException(['account' => match ($action) {
+                'deactivate' => 'Only an active account without a pending deletion or site restriction can be deactivated.',
+                'reactivate' => 'Only a self-deactivated account without a pending deletion or site restriction can be reactivated.',
+                'request_deletion' => 'Account deletion requires an active or self-deactivated account without a site restriction.',
+                default => 'No pending deletion request is available to cancel.',
+            }]);
+        }
+    }
+
+    /** @return array{string,?string} */
+    private function statusAfterCancellation(array $row, array $restrictions): array
+    {
+        $until = $row['suspended_until'];
+        if ($row['status'] === 'banned') {
+            return ['banned', $until];
+        }
+        foreach ($restrictions as $restriction) {
+            if ($restriction['type'] === 'full') {
+                return ['banned', $until];
+            }
+        }
+        if (User::fromRow($row)->isSuspended()) {
+            return ['suspended', $until];
+        }
+        if ($restrictions !== []) {
+            $expiry = null;
+            foreach ($restrictions as $restriction) {
+                if ($restriction['expires_at'] === null) {
+                    return ['suspended', null];
+                }
+                $expiry = max($expiry ?? '', $restriction['expires_at']);
+            }
+            return ['suspended', $expiry];
+        }
+        if ($until !== null && strtotime($until . ' UTC') > time()) {
+            return ['suspended', $until];
+        }
+        return ['active', $until];
     }
 
     private function purgePii(int $userId, string $email): void

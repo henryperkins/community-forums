@@ -21,6 +21,15 @@ final class AccountDeletionRepository
         );
     }
 
+    /** @return array<string,mixed>|null */
+    public function pendingForUserForUpdate(int $userId): ?array
+    {
+        return $this->db->fetch(
+            "SELECT * FROM account_deletion_requests WHERE user_id = ? AND status = 'pending' ORDER BY id ASC LIMIT 1 FOR UPDATE",
+            [$userId],
+        );
+    }
+
     public function create(int $userId, int $requestedBy, string $purgeAfter, ?string $reason = null): int
     {
         return $this->db->insert(

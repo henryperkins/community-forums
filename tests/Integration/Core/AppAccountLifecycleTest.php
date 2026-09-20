@@ -39,6 +39,136 @@ final class AppAccountLifecycleTest extends TestCase
         );
     }
 
+    public function test_self_service_lifecycle_cannot_clear_a_suspension(): void
+    {
+        $this->makeAdmin();
+        $until = gmdate('Y-m-d H:i:s', time() + 7 * 86400);
+        $user = $this->makeUser(['status' => 'suspended', 'suspended_until' => $until]);
+        $this->actingAs($user);
+        $this->assertStatus(422, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+        $this->assertStatus(422, $this->post('/settings/account/reactivate'));
+        $row = $this->users()->find((int) $user['id']);
+        self::assertSame('suspended', $row['status']);
+        self::assertSame($until, $row['suspended_until']);
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still blocked']));
+    }
+
+    public function test_pending_deletion_cannot_be_bypassed_via_deactivation(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM account_deletion_requests WHERE user_id = ?', [$user['id']]));
+        $stale = $this->post('/settings/account/deactivate', ['current_password' => 'password123']);
+        $this->assertStatus(422, $stale);
+        self::assertStringContainsString('role="alert"', $stale->body());
+        self::assertStringNotContainsString('action="/settings/account/deactivate"', $stale->body());
+        self::assertStringContainsString('action="/settings/account/delete/cancel"', $stale->body());
+        $this->assertStatus(422, $this->post('/settings/account/reactivate'));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still blocked']));
+    }
+
+    public function test_suspension_cannot_be_cleared_by_requesting_then_canceling_deletion(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['status' => 'suspended']);
+        $this->actingAs($user);
+        $this->assertStatus(422, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        $this->assertStatus(422, $this->post('/settings/account/delete/cancel'));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still blocked']));
+    }
+
+    public function test_cancel_preserves_moderation_imposed_during_deletion(): void
+    {
+        $admin = $this->makeAdmin();
+        foreach (['suspend', 'ban'] as $action) {
+            $user = $this->makeUser();
+            $this->actingAs($user);
+            $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+            $this->actingAs($admin);
+            $this->assertStatus(303, $this->post('/mod/u/' . $user['id'] . '/' . $action, ['reason' => 'Independent restriction', 'until' => '2030-01-01 00:00:00']));
+            $this->actingAs($this->users()->find((int) $user['id']));
+            $page = $this->get('/settings/account/lifecycle');
+            self::assertStringContainsString('action="/settings/account/delete/cancel"', $page->body());
+            self::assertStringNotContainsString('action="/settings/account/deactivate"', $page->body());
+            $this->assertStatus(303, $this->post('/settings/account/delete/cancel'));
+            self::assertSame($action === 'ban' ? 'banned' : 'suspended', $this->users()->find((int) $user['id'])['status']);
+            if ($action === 'suspend') {
+                self::assertSame('2030-01-01 00:00:00', $this->users()->find((int) $user['id'])['suspended_until']);
+            }
+            $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still blocked']));
+        }
+    }
+
+    public function test_live_site_record_blocks_recovery_despite_misleading_cached_status(): void
+    {
+        $admin = $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->db->run("INSERT INTO bans (user_id, scope, type, reason, created_by) VALUES (?, 'site', 'full', 'Live restriction', ?)", [$user['id'], $admin['id']]);
+        $this->actingAs($user);
+        $this->assertStatus(422, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+        $this->assertStatus(422, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        $this->users()->setStatus((int) $user['id'], 'deactivated', null);
+        $this->assertStatus(422, $this->post('/settings/account/reactivate'));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still blocked']));
+    }
+
+    public function test_expired_suspension_allows_lifecycle_without_erasing_timestamp(): void
+    {
+        $this->makeAdmin();
+        $until = '2020-01-01 00:00:00';
+        $user = $this->makeUser(['status' => 'suspended', 'suspended_until' => $until]);
+        $this->actingAs($user);
+        $this->assertStatus(303, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+        $this->assertStatus(303, $this->post('/settings/account/reactivate'));
+        self::assertSame($until, $this->users()->find((int) $user['id'])['suspended_until']);
+        $this->assertStatus(303, $this->post('/settings/account', ['display_name' => 'Allowed']));
+    }
+
+    public function test_lifecycle_reauth_uses_current_password_hash_not_stale_user(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser();
+        $stale = \App\Domain\User::fromRow($user);
+        $this->db->run('UPDATE users SET password_hash = ? WHERE id = ?', [(new PasswordHasher())->hash('new-password123'), $user['id']]);
+        try {
+            $this->lifecycleService()->deactivate($stale, 'password123');
+            self::fail('Stale password authorized deactivation.');
+        } catch (\App\Core\ValidationException $e) {
+            self::assertArrayHasKey('current_password', $e->errors);
+        }
+        self::assertSame('active', $this->users()->find((int) $user['id'])['status']);
+    }
+
+    public function test_due_deletion_is_not_stranded_by_a_later_ban(): void
+    {
+        $admin = $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        $this->actingAs($admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $user['id'] . '/ban', ['reason' => 'Later ban']));
+        $this->db->run('UPDATE account_deletion_requests SET purge_after = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 SECOND) WHERE user_id = ?', [$user['id']]);
+        self::assertSame(['purged' => 1], $this->lifecycleService()->purgeDue());
+        self::assertSame('deleted', $this->users()->find((int) $user['id'])['status']);
+        self::assertSame('purged', $this->db->fetchValue('SELECT status FROM account_deletion_requests WHERE user_id = ?', [$user['id']]));
+    }
+
+    public function test_canceled_deletion_never_purges_even_when_cached_status_is_pending(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        $this->assertStatus(303, $this->post('/settings/account/delete/cancel'));
+        $this->db->run('UPDATE account_deletion_requests SET purge_after = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 SECOND) WHERE user_id = ?', [$user['id']]);
+        $this->users()->setStatus((int) $user['id'], 'pending_deletion', null);
+        self::assertSame(['purged' => 0], $this->lifecycleService()->purgeDue());
+        self::assertSame($user['email'], $this->users()->find((int) $user['id'])['email']);
+    }
+
     public function test_user_can_export_account_archive_without_secrets(): void
     {
         $this->makeAdmin();

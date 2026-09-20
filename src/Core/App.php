@@ -83,6 +83,7 @@ use App\Search\SearchService;
 use App\Repository\BadgeRepository;
 use App\Repository\BlockRepository;
 use App\Repository\AccountDeletionRepository;
+use App\Repository\BanRepository;
 use App\Repository\ApiTokenRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
@@ -1006,6 +1007,7 @@ final class App
 
         // Repositories.
         $c->bind(UserRepository::class, fn (Container $c) => new UserRepository($c->get(Database::class)));
+        $c->bind(BanRepository::class, fn (Container $c) => new BanRepository($c->get(Database::class)));
         $c->bind(AccountDeletionRepository::class, fn (Container $c) => new AccountDeletionRepository($c->get(Database::class)));
         $c->bind(SessionRepository::class, fn (Container $c) => new SessionRepository($c->get(Database::class)));
         $c->bind(SettingRepository::class, fn (Container $c) => new SettingRepository($c->get(Database::class)));
@@ -1456,6 +1458,8 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(IdempotencyRepository::class),
             $c->get(BoardAuthority::class),
+            $c->get(AccountDeletionRepository::class),
+            $c->get(BanRepository::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
             $c->get(Database::class),
@@ -1981,6 +1985,7 @@ final class App
             $c->get(ReauthGate::class),
             $c->get(WebAuthnCredentialRepository::class),
             $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(LastOwnerGuard::class) : null,
+            $c->get(BanRepository::class),
         ));
         $c->bind(MfaService::class, fn (Container $c) => new MfaService(
             $c->get(MfaRepository::class),
