@@ -14,9 +14,9 @@ function fixture(command = 'reset'): Fixture {
   }));
 }
 
-async function login(page: Page): Promise<void> {
+async function login(page: Page, email = 'settings-repair@retro.test'): Promise<void> {
   await page.goto('/login');
-  await page.locator('input[name="email"]').fill('settings-repair@retro.test');
+  await page.locator('input[name="email"]').fill(email);
   await page.locator('input[name="password"]').fill('password123');
   await page.locator('button[type="submit"]').click();
   await expect(page).not.toHaveURL(/\/login/);
@@ -67,6 +67,43 @@ test.describe('account settings repairs without JavaScript', () => {
     expect((await post(page, '/settings/account', { display_name: 'Still forbidden' })).status()).toBe(403);
     await capture(page, info, '02-deletion-cancel-retains-restriction');
   });
+
+  for (const hold of ['deactivated', 'pending_deletion']) {
+    test(`suspension expiry retains the ${hold} hold until explicit recovery`, async ({ page, browser }, info) => {
+      const data = fixture('inspect');
+      await login(page);
+      await page.goto('/settings/account/lifecycle');
+      const action = hold === 'deactivated' ? 'deactivate' : 'delete/request';
+      const form = page.locator(`form[action="/settings/account/${action}"]`);
+      await form.locator('[name="current_password"]').fill('password123');
+      await form.locator('button[type="submit"]').click();
+      const adminContext = await browser.newContext({ baseURL: new URL(page.url()).origin, javaScriptEnabled: false });
+      try {
+        const admin = await adminContext.newPage();
+        await login(admin, 'admin@retro.test');
+        await admin.goto(`/admin/users/${data.id}`);
+        const suspend = admin.locator(`form[action="/admin/users/${data.id}/suspend"]`);
+        await suspend.locator('[name="reason"]').fill('Temporary browser evidence suspension');
+        await suspend.locator('[name="until"]').fill('2030-01-01 00:00:00');
+        await suspend.getByRole('button', { name: 'Suspend', exact: true }).click();
+        expect(fixture('inspect').status).toBe(hold);
+        await page.reload();
+        await expect(page.locator('form[action="/settings/account/reactivate"]')).toHaveCount(0);
+        fixture('expire-suspension');
+        await page.reload();
+        expect((await post(page, '/settings/account', { display_name: 'Still blocked after expiry' })).status()).toBe(403);
+        expect(fixture('inspect').status).toBe(hold);
+        const recovery = hold === 'deactivated' ? 'reactivate' : 'delete/cancel';
+        await expect(page.locator(`form[action="/settings/account/${recovery}"]`)).toBeVisible();
+        await capture(page, info, `02-expiry-retains-${hold}`);
+        await page.locator(`form[action="/settings/account/${recovery}"] button`).click();
+        expect(fixture('inspect').status).toBe('active');
+        expect((await post(page, '/settings/account', { display_name: 'Recovered explicitly' })).status()).toBe(303);
+      } finally {
+        await adminContext.close();
+      }
+    });
+  }
 
   test('invalid TOTP retains confirmation on the same pending enrollment after reload', async ({ page }, info) => {
     await login(page);

@@ -71,6 +71,10 @@ if ($command === 'reset') {
         case 'passwordless':
             $db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [$uid]);
             break;
+        case 'expire-suspension':
+            $db->run("UPDATE users SET suspended_until = '2020-01-01 00:00:00' WHERE id = ?", [$uid]);
+            $db->run("UPDATE bans SET expires_at = '2020-01-01 00:00:00' WHERE user_id = ? AND scope = 'site' AND type = 'post'", [$uid]);
+            break;
         case 'dark':
             (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'dark']);
             break;
