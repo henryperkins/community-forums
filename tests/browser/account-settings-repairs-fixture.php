@@ -40,7 +40,7 @@ if ($command === 'reset') {
         email_verified_at = UTC_TIMESTAMP(), onboarded_at = UTC_TIMESTAMP(), created_at = '2020-01-01 00:00:00',
         timezone = 'UTC', digest_hour = NULL, last_daily_digest_at = NULL WHERE id = ?", [$hash, $uid]);
     foreach (['account_deletion_requests', 'bans', 'user_totp_credentials', 'user_recovery_codes',
-        'mfa_login_challenges', 'board_folders', 'saved_feed_filters', 'user_profile_fields', 'sessions', 'subscriptions'] as $table) {
+        'mfa_login_challenges', 'board_folders', 'saved_feed_filters', 'user_profile_fields', 'sessions', 'subscriptions', 'email_deliveries'] as $table) {
         $db->run('DELETE FROM ' . $table . ' WHERE user_id = ?', [$uid]);
     }
     (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'light', 'pause_all_email' => false]);
@@ -115,6 +115,37 @@ if ($command === 'reset') {
         case 'private-board':
             $db->run("UPDATE boards SET visibility = 'private' WHERE slug = 'settings-repair-board'");
             break;
+        case 'email-ops':
+            $threadId = (int) $db->fetchValue("SELECT t.id FROM threads t JOIN boards b ON b.id = t.board_id WHERE b.slug = 'settings-repair-board' ORDER BY t.id LIMIT 1");
+            (new SubscriptionRepository($db))->set($uid, 'thread', $threadId, true, true, 'daily');
+            $db->run("UPDATE users SET digest_hour = 0, timezone = 'UTC' WHERE id = ?", [$uid]);
+            $posting = new \App\Service\PostingService(
+                $db, new \App\Repository\ThreadRepository($db), new \App\Repository\PostRepository($db),
+                new BoardRepository($db), $users, new \App\Support\Markdown(new \App\Support\HtmlSanitizer()),
+                new \App\Security\WriteGate(), new \App\Security\BoardPolicy(), $config,
+            );
+            $admin = $users->findByUsername('admin');
+            $postId = $posting->reply($users->findEntity((int) $admin['id']), $threadId, [
+                'body' => 'A captured digest retry can deliver this eligible update.',
+            ]);
+            $payload = [
+                'version' => 1,
+                'window_start_utc' => gmdate('Y-m-d H:i:s', time() - 3600),
+                'window_end_utc' => gmdate('Y-m-d H:i:s'),
+                'max_post_id' => $postId,
+                'sources' => ['subscriptions' => [['target_type' => 'thread', 'target_id' => $threadId]], 'saved_feeds' => []],
+            ];
+            $deliveries = new \App\Repository\EmailDeliveryRepository($db);
+            foreach ([
+                'Replayable digest' => ['failed', 'Captured transport failed', $payload],
+                'Suppressed digest' => ['suppressed', 'email_paused', $payload],
+                'Invalid digest' => ['failed', 'invalid_digest_payload', ['version' => 99]],
+                'Legacy digest' => ['failed', 'unreplayable_legacy_digest', null],
+            ] as $subject => [$status, $reason, $body]) {
+                $id = $deliveries->enqueue($uid, 'settings-repair@retro.test', 'digest', $subject, null, $body);
+                $db->run('UPDATE email_deliveries SET status = ?, error = ?, attempt_count = 5 WHERE id = ?', [$status, $reason, $id]);
+            }
+            break;
         case 'inspect':
             break;
         default:
@@ -131,4 +162,5 @@ echo json_encode([
     'digest_hour' => $user['digest_hour'] === null ? null : (int) $user['digest_hour'],
     'pause_all_email' => !empty((new UserPreferenceRepository($db))->get($uid)['pause_all_email']),
     'subscription' => $subscription,
+    'deliveries' => $db->fetchAll('SELECT id, subject, status, error, attempt_count, sent_at, message_id FROM email_deliveries WHERE user_id = ? ORDER BY id', [$uid]),
 ], JSON_THROW_ON_ERROR) . "\n";

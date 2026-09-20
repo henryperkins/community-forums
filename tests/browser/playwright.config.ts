@@ -37,7 +37,9 @@ const inheritedEnv = Object.fromEntries(
 
 export default defineConfig({
   testDir: __dirname,
-  outputDir: path.join(repoRoot, 'docs/evidence/browser/.artifacts'),
+  outputDir: process.env.RB_EVIDENCE_DIR
+    ? path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR, '.artifacts')
+    : path.join(repoRoot, 'docs/evidence/browser/.artifacts'),
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,

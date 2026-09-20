@@ -10,6 +10,7 @@ type Fixture = {
   id: number; board_id: number; status: string; display_name: string; bio: string;
   avatar_path: string | null; has_password: boolean; digest_hour: number | null; pause_all_email: boolean;
   subscription: null | { id: number; target_id: number; frequency: string; email_enabled: number; in_app_enabled: number };
+  deliveries: Array<{ id: number; subject: string; status: string; error: string | null; attempt_count: number; sent_at: string | null; message_id: string | null }>;
 };
 
 function fixture(command = 'reset'): Fixture {
@@ -349,6 +350,44 @@ test.describe('account settings repairs without JavaScript', () => {
     await capture(page, info, '14-sessions-revoked');
   });
 
+});
+
+test.describe('notification delivery operations without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test.beforeEach(() => fixture());
+
+  test('terminal delivery rows stay terminal and a valid failed digest can be requeued', async ({ page }, info) => {
+    const seeded = fixture('email-ops');
+    await login(page, 'admin@retro.test');
+    await page.goto('/admin/email?email=settings-repair%40retro.test');
+    const rows = page.locator('.notification-delivery-table tbody tr');
+    await expect(rows).toHaveCount(4);
+    for (const subject of ['Suppressed digest', 'Invalid digest', 'Legacy digest']) {
+      const row = rows.filter({ hasText: subject });
+      await expect(row).toBeVisible();
+      await expect(row.getByRole('button', { name: 'Requeue', exact: true })).toHaveCount(0);
+      const job = seeded.deliveries.find((delivery) => delivery.subject === subject)!;
+      await post(page, `/admin/email/deliveries/${job.id}/requeue`);
+      expect(fixture('inspect').deliveries.find((delivery) => delivery.id === job.id)?.status).toBe(job.status);
+    }
+    await capture(page, info, '15-email-terminal-outcomes');
+    const retry = seeded.deliveries.find((delivery) => delivery.subject === 'Replayable digest')!;
+    await rows.filter({ hasText: 'Replayable digest' }).getByRole('button', { name: 'Requeue', exact: true }).click();
+    expect(fixture('inspect').deliveries.find((delivery) => delivery.id === retry.id)?.status).toBe('queued');
+    // Pin the capture transport on this CLI process too, not only on the browser server.
+    const output = execFileSync('flock', ['/tmp/retroboards-unified-phpunit.lock', 'php', 'bin/console', 'worker:email', '100'], {
+      cwd: root, env: { ...process.env, APP_ENV: 'test', MAIL_DRIVER: 'array', MAIL_FROM: 'notification-evidence@example.test' }, encoding: 'utf8',
+    });
+    expect(output).not.toMatch(/fatal|uncaught/i);
+    const sent = fixture('inspect').deliveries.find((delivery) => delivery.id === retry.id)!;
+    expect(sent.status).toBe('sent');
+    expect(Number(sent.attempt_count)).toBe(1);
+    expect(sent.sent_at).not.toBeNull();
+    expect(sent.message_id).not.toBeNull();
+    await page.goto('/admin/email?email=settings-repair%40retro.test');
+    await expect(rows.filter({ hasText: 'Replayable digest' })).toContainText('Sent');
+    await capture(page, info, '16-email-retry-sent');
+  });
 });
 
 // Axe uses an injected analysis frame; exercise the same server-rendered forms
