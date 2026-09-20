@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+(node:817410) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › tests/browser/notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows (5.8s)
+
+
+  1) [desktop] › tests/browser/notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('[data-notification-count]')
+    Expected: 4
+    Received: 3
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 5000ms
+      - waiting for locator('[data-notification-count]')
+        14 × locator resolved to 3 elements
+           - unexpected value "3"
+
+
+      175 |   const counts = page.locator('[data-notification-count]');
+      176 |   const links = page.locator('[data-notification-link]');
+    > 177 |   await expect(counts).toHaveCount(4);
+          |                        ^
+      178 |   await expect(counts).toHaveText(['99+', '99+', '99+', '99+']);
+      179 |   const row = page.locator('.notification-open').first();
+      180 |   await row.focus();
+        at /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/notifications-unified.spec.ts:177:24
+
+    Error Context: .superpowers/sdd/2026-09-20-unified-notifications/browser-n5/.artifacts/notifications-unified-poll-3fcb2-g-focused-notification-rows-desktop/error-context.md
+
+  1 failed
+    [desktop] › tests/browser/notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows 

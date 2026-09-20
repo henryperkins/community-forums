@@ -1,0 +1,86 @@
+
+Running 48 tests using 1 worker
+
+(node:817618) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/browser/notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history (1.9s)
+  ✓   2 [desktop] › tests/browser/notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes (13.6s)
+  ✓   3 [desktop] › tests/browser/notifications-unified.spec.ts:117:5 › inaccessible and empty states remain consistent at both entry points (1.1s)
+  ✓   4 [desktop] › tests/browser/notifications-unified.spec.ts:139:9 › progressive enhancement › standalone owned forms and bulk actions work without JavaScript (1.4s)
+  ✓   5 [desktop] › tests/browser/notifications-unified.spec.ts:139:9 › progressive enhancement › pane owned forms and bulk actions work without JavaScript (1.4s)
+  ✓   6 [desktop] › tests/browser/notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows (838ms)
+  ✓   7 [desktop] › tests/browser/notifications-unified.spec.ts:198:5 › guests and disabled notifications make no bell request and 404 stops polling (766ms)
+  ✓   8 [desktop] › tests/browser/notifications-unified.spec.ts:219:5 › replayed Notifications tour step highlights the visible primary bell with account menu closed (829ms)
+  ✓   9 [desktop] › tests/browser/notifications-unified.spec.ts:236:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name (1.6s)
+  ✓  10 [desktop] › tests/browser/notifications-unified.spec.ts:281:5 › polling pauses while hidden and backs off after throttling (900ms)
+
+  ✓  11 [desktop] › tests/browser/unified-chrome.spec.ts:146:5 › the bar and the rail are the design system's, at its geometry, in both registers (848ms)
+
+  ✓  12 [desktop] › tests/browser/unified-chrome.spec.ts:184:5 › long stored account names fit the bar and keep the account menu reachable (4.4s)
+
+  ✓  13 [desktop] › tests/browser/unified-chrome.spec.ts:286:5 › the seat's leaf and the profile dot still take the away colour from the layer (782ms)
+
+  ✓  14 [desktop] › tests/browser/unified-chrome.spec.ts:312:5 › a rail row without an avatar keeps a dot with a box (919ms)
+
+  ✓  15 [desktop] › tests/browser/unified-chrome.spec.ts:335:5 › rail rows hover without an underline and "See everyone online" takes the accent (691ms)
+
+  ✓  16 [desktop] › tests/browser/unified-chrome.spec.ts:358:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (1.5s)
+
+  ✓  17 [desktop] › tests/browser/unified-chrome.spec.ts:468:5 › the rail state persists and the drawer opens (766ms)
+
+  -  18 [desktop] › tests/browser/unified-chrome.spec.ts:505:5 › the closed phone drawer is excluded from keyboard navigation
+
+  -  19 [desktop] › tests/browser/unified-chrome.spec.ts:533:5 › phone primary navigation reaches Messages without horizontal page overflow
+
+  ✓  20 [desktop] › tests/browser/unified-chrome.spec.ts:547:5 › a guest gets the design's Log in pill and production's Sign up beside it (269ms)
+
+  -  21 [desktop] › tests/browser/unified-chrome.spec.ts:555:5 › New topic survives the phone breakpoint as its glyph
+
+  ✓  22 [desktop] › tests/browser/unified-chrome.spec.ts:575:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations (994ms)
+
+  -  23 [desktop] › tests/browser/unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls
+
+  ✓  24 [desktop] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps mobile search compose and rail controls reachable at 320px (918ms)
+(node:818370) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  25 [mobile] › tests/browser/notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history (1.9s)
+  ✓  26 [mobile] › tests/browser/notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes (14.3s)
+  ✓  27 [mobile] › tests/browser/notifications-unified.spec.ts:117:5 › inaccessible and empty states remain consistent at both entry points (1.1s)
+  ✓  28 [mobile] › tests/browser/notifications-unified.spec.ts:139:9 › progressive enhancement › standalone owned forms and bulk actions work without JavaScript (1.5s)
+  ✓  29 [mobile] › tests/browser/notifications-unified.spec.ts:139:9 › progressive enhancement › pane owned forms and bulk actions work without JavaScript (1.3s)
+  ✓  30 [mobile] › tests/browser/notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows (812ms)
+  ✓  31 [mobile] › tests/browser/notifications-unified.spec.ts:198:5 › guests and disabled notifications make no bell request and 404 stops polling (705ms)
+  ✓  32 [mobile] › tests/browser/notifications-unified.spec.ts:219:5 › replayed Notifications tour step highlights the visible primary bell with account menu closed (809ms)
+  ✓  33 [mobile] › tests/browser/notifications-unified.spec.ts:236:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name (1.7s)
+  ✓  34 [mobile] › tests/browser/notifications-unified.spec.ts:281:5 › polling pauses while hidden and backs off after throttling (878ms)
+
+  ✓  35 [mobile] › tests/browser/unified-chrome.spec.ts:146:5 › the bar and the rail are the design system's, at its geometry, in both registers (721ms)
+
+  ✓  36 [mobile] › tests/browser/unified-chrome.spec.ts:184:5 › long stored account names fit the bar and keep the account menu reachable (1.4s)
+
+  ✓  37 [mobile] › tests/browser/unified-chrome.spec.ts:286:5 › the seat's leaf and the profile dot still take the away colour from the layer (725ms)
+
+  ✓  38 [mobile] › tests/browser/unified-chrome.spec.ts:312:5 › a rail row without an avatar keeps a dot with a box (966ms)
+
+  ✓  39 [mobile] › tests/browser/unified-chrome.spec.ts:335:5 › rail rows hover without an underline and "See everyone online" takes the accent (908ms)
+
+  ✓  40 [mobile] › tests/browser/unified-chrome.spec.ts:358:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (1.7s)
+
+  ✓  41 [mobile] › tests/browser/unified-chrome.spec.ts:468:5 › the rail state persists and the drawer opens (1.1s)
+
+  ✓  42 [mobile] › tests/browser/unified-chrome.spec.ts:505:5 › the closed phone drawer is excluded from keyboard navigation (981ms)
+
+  ✓  43 [mobile] › tests/browser/unified-chrome.spec.ts:533:5 › phone primary navigation reaches Messages without horizontal page overflow (659ms)
+
+  ✓  44 [mobile] › tests/browser/unified-chrome.spec.ts:547:5 › a guest gets the design's Log in pill and production's Sign up beside it (264ms)
+
+  ✓  45 [mobile] › tests/browser/unified-chrome.spec.ts:555:5 › New topic survives the phone breakpoint as its glyph (564ms)
+
+  -  46 [mobile] › tests/browser/unified-chrome.spec.ts:575:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations
+
+  ✓  47 [mobile] › tests/browser/unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls (1.0s)
+
+  ✓  48 [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps mobile search compose and rail controls reachable at 320px (917ms)
+
+  5 skipped
+  43 passed (1.3m)

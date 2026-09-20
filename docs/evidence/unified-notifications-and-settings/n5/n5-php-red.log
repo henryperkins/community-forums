@@ -1,0 +1,52 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+FFFFF                                                               5 / 5 (100%)
+
+Time: 00:00.073, Memory: 14.00 MB
+
+There were 5 failures:
+
+1) Tests\Integration\Core\AppNotificationShellTest::test_member_and_admin_initial_counts_are_visible_capped_and_accessible
+primary bell is outside the closed account menu
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationShellTest.php:73
+
+2) Tests\Integration\Core\AppNotificationShellTest::test_plain_health_and_unrelated_json_do_no_notification_count_work
+/login does not resolve notification scope
+Failed asserting that an array does not contain 'SELECT board_id FROM board_members WHERE user_id = ?'.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationShellTest.php:92
+
+3) Tests\Integration\Core\AppNotificationShellTest::test_bell_resolves_one_scope_and_count_without_shell_duplication
+Failed asserting that 2 is identical to 1.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationShellTest.php:104
+
+4) Tests\Integration\Core\AppNotificationShellTest::test_shell_count_is_lazy_and_caches_zero_and_lookup_failure
+failed lookups are also memoized
+Failed asserting that 50 is identical to 49.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationShellTest.php:126
+
+5) Tests\Integration\Core\AppNotificationShellTest::test_guest_and_disabled_shell_have_no_dead_bell_or_count_work
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+-Array &0 []
++Array &0 [
++    0 => 'SELECT COUNT(*) FROM notifications n\n
++        LEFT JOIN users a ON a.id = n.actor_id\n
++        LEFT JOIN threads t ON t.id = n.thread_id\n
++        LEFT JOIN boards b ON b.id = t.board_id\n
++        LEFT JOIN posts pp ON pp.id = n.post_id WHERE n.user_id = ? AND n.is_read = 0 AND 0 = 1',
++]
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationShellTest.php:144
+
+FAILURES!
+Tests: 5, Assertions: 25, Failures: 5.

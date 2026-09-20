@@ -1,0 +1,66 @@
+
+Running 5 tests using 1 worker
+
+(node:813901) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows (5.8s)
+(node:813988) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [desktop] › notifications-unified.spec.ts:197:5 › guests and disabled notifications make no bell request and 404 stops polling (825ms)
+  ✓  3 [desktop] › notifications-unified.spec.ts:218:5 › replayed Notifications tour step highlights the visible primary bell with account menu closed (792ms)
+  ✘  4 [desktop] › notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name (1.4s)
+(node:814167) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  5 [desktop] › unified-chrome.spec.ts:651:5 › persistent bell keeps mobile search compose and rail controls reachable at 320px (1.0s)
+
+
+  1) [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows 
+
+    Error: expect(locator).toHaveAccessibleName(expected) failed
+
+    Locator:  locator('[data-notification-link]').nth(1)
+    Expected: "Notifications, 7 unread"
+    Received: ""
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveAccessibleName" with timeout 5000ms
+      - waiting for locator('[data-notification-link]').nth(1)
+        14 × locator resolved to <a href="/notifications" data-notification-link="" aria-label="Notifications, 7 unread">…</a>
+           - unexpected value ""
+
+
+      186 |     await expect.poll(() => requests).toBe(before + 1);
+      187 |     await expect(counts).toHaveText(Array(3).fill(String(value)));
+    > 188 |     for (const link of await links.all()) await expect(link).toHaveAccessibleName(value ? 'Notifications, 7 unread' : 'Notifications');
+          |                                                              ^
+      189 |     for (const count of await counts.all()) await expect(count).toHaveAttribute('aria-hidden', 'true');
+      190 |     await expect(row).toBeFocused();
+      191 |     await expect(row).toHaveAttribute('data-preserved-row', 'yes');
+        at /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/notifications-unified.spec.ts:188:62
+
+    Error Context: ../../.superpowers/sdd/2026-09-20-unified-notifications/browser-n5/.artifacts/notifications-unified-poll-3fcb2-g-focused-notification-rows-desktop/error-context.md
+
+  2) [desktop] › notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 
+
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 416.375
+    Received:    406.140625
+
+      249 |           const badge = (await bell.locator('[data-notification-count]').boundingBox())!;
+      250 |           const box = (await bell.boundingBox())!;
+    > 251 |           expect(badge.x).toBeGreaterThanOrEqual(box.x);
+          |                           ^
+      252 |           expect(badge.x + badge.width).toBeLessThanOrEqual(box.x + box.width + 1);
+      253 |         }
+      254 |         await capture(page, info, `bell-nojs-${persona}-${state}`);
+        at /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/notifications-unified.spec.ts:251:27
+
+    Error Context: ../../.superpowers/sdd/2026-09-20-unified-notifications/browser-n5/.artifacts/notifications-unified-pers-86f43-ts-with-a-long-account-name-desktop/error-context.md
+
+  2 failed
+    [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows 
+    [desktop] › notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 
+  3 passed (12.2s)

@@ -17,3 +17,4 @@ refer to the repository root or the disposable environment used at that time.
 | A4 saved feeds and folders | [Report](A4-report.md), [corrections](A4-fix-report.md) | [Approved after JSON-type and cleared-selection corrections](A4-review.md) |
 | N4 shared notification UI | [Report](N4-report.md) | [Approved](N4-review.md) |
 | A5 mobile settings and session labels | [Report](A5-report.md) | [Approved](A5-review.md) |
+| N5 persistent bell and shared counts | [Report](N5-report.md) | [Approved after narrow-label correction](N5-review.md) |

@@ -1,0 +1,11 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+................................................................. 65 / 98 ( 66%)
+.................................                                 98 / 98 (100%)
+
+Time: 00:01.987, Memory: 64.50 MB
+
+OK (98 tests, 1018 assertions)

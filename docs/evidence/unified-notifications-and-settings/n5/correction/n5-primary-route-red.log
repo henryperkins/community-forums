@@ -1,0 +1,30 @@
+
+Running 1 test using 1 worker
+
+(node:830856) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✘  1 [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (795ms)
+
+
+  1) [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px 
+
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 105
+    Received:    102
+
+      713 |       controlLeft: control.left, controlRight: control.right, viewport: document.documentElement.clientWidth };
+      714 |   });
+    > 715 |   expect(geometry.labelLeft).toBeGreaterThanOrEqual(geometry.navLeft);
+          |                              ^
+      716 |   expect(geometry.labelRight).toBeLessThanOrEqual(geometry.navRight);
+      717 |   expect(geometry.controlLeft).toBeGreaterThanOrEqual(geometry.navLeft + 3);
+      718 |   expect(geometry.controlRight).toBeLessThanOrEqual(geometry.navRight - 3);
+        at expectCompletePrimaryLabel (/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts:715:30)
+        at /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/unified-chrome.spec.ts:674:5
+
+    Error Context: .superpowers/sdd/2026-09-20-unified-notifications/browser-n5-correction/.artifacts/unified-chrome-persistent--1d985-controls-reachable-at-320px-mobile/error-context.md
+
+  1 failed
+    [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px 

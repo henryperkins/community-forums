@@ -1,0 +1,28 @@
+
+Running 1 test using 1 worker
+
+(node:816212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name (1.3s)
+
+
+  1) [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1278
+    Received:    1371.984375
+
+      255 |           const logout = page.locator('.admin-bar-right button[aria-label="Log out"]');
+      256 |           const box = (await logout.boundingBox())!;
+    > 257 |           expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width - 2);
+          |                                     ^
+      258 |           expect((await page.locator('.admin-bar-brand').boundingBox())!.width).toBeGreaterThan(24);
+      259 |         }
+      260 |         await capture(page, info, `bell-nojs-${persona}-${state}`);
+        at /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/notifications-unified.spec.ts:257:37
+
+    Error Context: .superpowers/sdd/2026-09-20-unified-notifications/browser-n5/.artifacts/notifications-unified-pers-86f43-ts-with-a-long-account-name-desktop/error-context.md
+
+  1 failed
+    [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 

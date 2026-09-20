@@ -1,0 +1,19 @@
+
+Running 6 tests using 1 worker
+
+(node:831762) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/notifications-unified.spec.ts:219:5 › replayed Notifications tour step highlights the visible primary bell with account menu closed (887ms)
+
+  ✓  2 [desktop] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.6s)
+
+  ✓  3 [desktop] › tests/browser/unified-chrome.spec.ts:724:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (857ms)
+(node:831899) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  4 [mobile] › tests/browser/notifications-unified.spec.ts:219:5 › replayed Notifications tour step highlights the visible primary bell with account menu closed (868ms)
+
+  ✓  5 [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.7s)
+
+  ✓  6 [mobile] › tests/browser/unified-chrome.spec.ts:724:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (933ms)
+
+  6 passed (8.8s)
