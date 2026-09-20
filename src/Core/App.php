@@ -1106,6 +1106,7 @@ final class App
         $c->bind(\App\Service\SubscriptionService::class, fn (Container $c) => new \App\Service\SubscriptionService(
             $c->get(Database::class), $c->get(SubscriptionRepository::class), $c->get(NotificationVisibilityService::class),
             $c->get(ThreadReadService::class), $c->get(BoardRepository::class), $c->get(WriteGate::class),
+            $c->get(BoardPolicy::class), $c->get(BoardMemberRepository::class),
         ));
         $c->bind(\App\Service\NotificationSettingsService::class, fn (Container $c) => new \App\Service\NotificationSettingsService(
             $c->get(Database::class), $c->get(UserRepository::class), $c->get(EmailPreferenceService::class), $c->get(WriteGate::class),

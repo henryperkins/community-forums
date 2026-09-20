@@ -1,0 +1,36 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+FFF                                                                 3 / 3 (100%)
+
+Time: 00:00.176, Memory: 52.50 MB
+
+There were 3 failures:
+
+1) Tests\Integration\Core\AppNotificationPreferencesRepairTest::test_assigned_nonmember_private_board_off_returns_to_accessible_settings
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'/settings/notifications'
++'/c/bf02013bd'
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:430
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationPreferencesRepairTest.php:146
+
+2) Tests\Integration\Core\AppNotificationPreferencesRepairTest::test_assigned_nonmember_board_escalation_denied_while_thread_assignment_is_readable
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 404.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:423
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationPreferencesRepairTest.php:159
+
+3) Tests\Integration\Core\AppNotificationPreferencesRepairTest::test_subscription_labels_distinguish_private_board_and_thread_read_authority
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppNotificationPreferencesRepairTest.php:172
+
+FAILURES!
+Tests: 3, Assertions: 6, Failures: 3.

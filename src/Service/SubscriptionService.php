@@ -8,8 +8,10 @@ use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\BoardRepository;
+use App\Repository\BoardMemberRepository;
 use App\Repository\SubscriptionRepository;
 use App\Security\WriteGate;
+use App\Security\BoardPolicy;
 
 /** Owner-only delivery reductions are available independently of content access. */
 final class SubscriptionService
@@ -21,6 +23,8 @@ final class SubscriptionService
         private ThreadReadService $threads,
         private BoardRepository $boards,
         private WriteGate $writeGate,
+        private BoardPolicy $boardPolicy,
+        private BoardMemberRepository $boardMembers,
     ) {}
 
     public function listForUser(User $viewer): array
@@ -87,9 +91,8 @@ final class SubscriptionService
         }
         if ($type !== 'board') { throw new NotFoundException('Subscription not found.'); }
         $board = $this->boards->find($id);
-        $scope = $this->visibility->scope($viewer, true);
-        if ($board === null || ($board['visibility'] === 'private' && !$viewer->isAdmin()
-            && !in_array($id, $scope['member_board_ids'], true) && !in_array($id, $scope['assigned_board_ids'], true))) {
+        // Board pages require membership; the assigned-moderator exception above is thread-only.
+        if ($board === null || !$this->boardPolicy->canRead($board, $viewer, $this->boardMembers->isMember($id, $viewer->id()))) {
             throw new NotFoundException('Subscription not found.');
         }
         return '/c/' . $board['slug'];

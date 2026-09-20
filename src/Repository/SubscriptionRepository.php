@@ -118,8 +118,13 @@ final class SubscriptionRepository
             }
             $scope = (new \App\Service\NotificationVisibilityService($this->db))->scope($viewer);
         }
-        $board = NotificationEligibility::board($scope);
-        $available = "($board AND (s.target_type = 'board' OR (t.id IS NOT NULL AND t.is_deleted = 0 AND t.is_pending = 0)))";
+        $threadBoard = NotificationEligibility::board($scope);
+        // BoardController permits admins/members, while ThreadReadService also permits assignments.
+        $boardScope = $scope;
+        $boardScope['assigned_board_ids'] = [];
+        $boardTarget = NotificationEligibility::board($boardScope);
+        $available = "((s.target_type = 'board' AND $boardTarget)
+            OR (s.target_type = 'thread' AND $threadBoard AND t.id IS NOT NULL AND t.is_deleted = 0 AND t.is_pending = 0))";
         return $this->db->fetchAll(
             "SELECT s.*, $available AS available,
                 CASE WHEN $available THEN t.title ELSE 'Unavailable subscription' END AS thread_title,

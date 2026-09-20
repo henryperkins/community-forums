@@ -120,4 +120,68 @@ final class AppNotificationPreferencesRepairTest extends TestCase
             self::assertStringContainsString('Notification settings', $page->body());
         }
     }
+
+    /** @return array{0:array,1:array,2:array,3:SubscriptionRepository} */
+    private function assignedPrivateBoardSubscriptions(): array
+    {
+        $moderator = $this->makeUser(['role' => 'moderator']);
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Private board subscription']);
+        $thread = $this->makeThread($board, $author, 'Assigned moderator readable thread');
+        $this->db->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [$board['id']]);
+        (new \App\Repository\BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $moderator['id']);
+        $subs = new SubscriptionRepository($this->db);
+        $subs->set((int) $moderator['id'], 'board', (int) $board['id'], true, true, 'daily');
+        $subs->set((int) $moderator['id'], 'thread', $thread['thread_id'], true, true, 'daily');
+        $this->actingAs($moderator);
+        return [$moderator, $board, $thread, $subs];
+    }
+
+    public function test_assigned_nonmember_private_board_off_returns_to_accessible_settings(): void
+    {
+        [$moderator, $board, $thread, $subs] = $this->assignedPrivateBoardSubscriptions();
+        $this->assertStatus(404, $this->get('/c/' . $board['slug']));
+        $this->assertStatus(200, $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']));
+        $response = $this->post('/b/' . $board['id'] . '/subscribe', ['frequency' => 'off']);
+        $this->assertRedirect($response, '/settings/notifications');
+        $this->assertStatus(200, $this->get('/settings/notifications'));
+        $row = $subs->get((int) $moderator['id'], 'board', (int) $board['id']);
+        self::assertSame('off', $row['frequency']);
+        self::assertSame(0, (int) $row['in_app_enabled']);
+        self::assertSame(0, (int) $row['email_enabled']);
+    }
+
+    public function test_assigned_nonmember_board_escalation_denied_while_thread_assignment_is_readable(): void
+    {
+        [$moderator, $board, $thread, $subs] = $this->assignedPrivateBoardSubscriptions();
+        $row = $subs->get((int) $moderator['id'], 'board', (int) $board['id']);
+        foreach (['/b/' . $board['id'] . '/subscribe', '/settings/notifications/subscriptions/' . $row['id']] as $path) {
+            $this->assertStatus(404, $this->post($path, ['frequency' => 'instant', 'in_app' => '1', 'email' => '1']));
+            self::assertSame('daily', $subs->get((int) $moderator['id'], 'board', (int) $board['id'])['frequency']);
+        }
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/subscribe', [
+            'frequency' => 'instant', 'in_app' => '1', 'email' => '1',
+        ]), '/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        self::assertSame('instant', $subs->get((int) $moderator['id'], 'thread', $thread['thread_id'])['frequency']);
+    }
+
+    public function test_subscription_labels_distinguish_private_board_and_thread_read_authority(): void
+    {
+        [$moderator, $board, $thread, $subs] = $this->assignedPrivateBoardSubscriptions();
+        $rows = array_column($subs->listForUserWithContext((int) $moderator['id']), null, 'target_type');
+        self::assertSame(0, (int) $rows['board']['available']);
+        self::assertNull($rows['board']['board_slug']);
+        self::assertSame('Unavailable subscription', $rows['board']['board_name']);
+        self::assertSame(1, (int) $rows['thread']['available']);
+        self::assertSame($thread['slug'], $rows['thread']['thread_slug']);
+        $response = $this->get('/settings/notifications');
+        $this->assertStatus(200, $response);
+        self::assertStringContainsString('Unavailable subscription', $response->body());
+        self::assertStringContainsString('href="/t/' . $thread['thread_id'] . '-' . $thread['slug'] . '"', $response->body());
+        // Real membership authorizes the board row again, matching BoardController.
+        $this->db->run('INSERT INTO board_members (board_id, user_id) VALUES (?, ?)', [$board['id'], $moderator['id']]);
+        $rows = array_column($subs->listForUserWithContext((int) $moderator['id']), null, 'target_type');
+        self::assertSame(1, (int) $rows['board']['available']);
+        $this->assertStatus(200, $this->get('/c/' . $board['slug']));
+    }
 }
