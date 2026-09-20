@@ -1,0 +1,24 @@
+{
+  "kind": "Runner orchestration verification with stubbed child processes; not browser test execution",
+  "checks": [
+    {
+      "case": "success",
+      "passed": true,
+      "stubbed_child_processes": 40,
+      "published_reports": 21
+    },
+    {
+      "case": "failed_test",
+      "passed": true,
+      "stubbed_child_processes": 2,
+      "published_reports": 2
+    },
+    {
+      "case": "malformed_report",
+      "passed": true,
+      "stubbed_child_processes": 2,
+      "published_reports": 1
+    }
+  ],
+  "temporary_files_removed": true
+}

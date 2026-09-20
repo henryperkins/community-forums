@@ -42,15 +42,32 @@ function run(command, args, env, suite, project) {
   if (result.status !== 0) throw new Error(`${command} exited ${result.status ?? result.signal ?? 'without a status'}`);
 }
 
+function preserveReport(rawPath, destination) {
+  if (!fs.existsSync(rawPath)) return;
+  // Playwright serializes webServer.env, including inherited host credentials.
+  // Keep raw output in disposable scratch and publish only the redacted report.
+  const report = JSON.parse(fs.readFileSync(rawPath, 'utf8'));
+  const servers = Array.isArray(report.config?.webServer)
+    ? report.config.webServer : [report.config?.webServer];
+  for (const server of servers) {
+    if (server && typeof server === 'object') delete server.env;
+  }
+  fs.writeFileSync(destination, `${JSON.stringify(report, null, 2)}\n`);
+  fs.rmSync(rawPath);
+}
+
 try {
   for (const suite of suites) {
     for (const project of ['desktop', 'mobile']) {
       const runScratch = path.join(scratch, suite.name, project);
       const capturePath = path.join(evidenceRoot, suite.name, project);
+      fs.mkdirSync(runScratch, { recursive: true });
       fs.mkdirSync(capturePath, { recursive: true });
       const env = {
         ...process.env,
         DB_DATABASE: database, APP_ENV: 'test',
+        APP_KEY: '0'.repeat(64),
+        OPENAI_API_KEY: 'browser-thread-intelligence-dummy-credential',
         MAIL_DRIVER: 'array', MAIL_FROM: 'notification-evidence@example.test',
         APP_URL: baseURL.origin, E2E_BASE_URL: baseURL.origin, RB_BASE_URL: baseURL.origin,
         E2E_PORT: baseURL.port || '80', WEBAUTHN_RP_ID: baseURL.hostname,
@@ -60,12 +77,16 @@ try {
         PACKAGES_STORAGE_PATH: path.join(runScratch, 'packages'),
         UPLOADS_PATH: path.join(runScratch, 'media'),
         RB_EVIDENCE_DIR: capturePath,
-        PLAYWRIGHT_JSON_OUTPUT_NAME: path.join(capturePath, 'playwright-results.json'),
+        PLAYWRIGHT_JSON_OUTPUT_NAME: path.join(runScratch, 'playwright-results.json'),
       };
       run('bash', ['prepare.sh'], env, suite.name, project);
       const args = ['playwright', 'test', `${suite.spec}.spec.ts`, `--project=${project}`, '--reporter=list,json'];
       if (suite.grep) args.push('--grep', suite.grep);
-      run('npx', args, env, suite.name, project);
+      try {
+        run('npx', args, env, suite.name, project);
+      } finally {
+        preserveReport(env.PLAYWRIGHT_JSON_OUTPUT_NAME, path.join(capturePath, 'playwright-results.json'));
+      }
     }
   }
   completed = true;
@@ -74,7 +95,8 @@ try {
     fs.rmSync(scratch, { recursive: true, force: true });
   } finally {
     fs.writeFileSync(path.join(evidenceRoot, 'browser-results.json'), `${JSON.stringify({
-      database, origin: baseURL.origin, completed, scratch_removed: !fs.existsSync(scratch), results,
+      database, origin: baseURL.origin, completed, scratch_removed: !fs.existsSync(scratch),
+      report_server_environment: 'omitted', results,
     }, null, 2)}\n`);
   }
 }
