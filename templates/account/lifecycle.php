@@ -15,8 +15,9 @@ $errorForm = (string) ($error_form ?? '');
 // leave a scoped error with no element to attach to. Scope only where the form
 // is actually on the page; anything left over falls back to the alert card
 // rather than vanishing into a silent 422.
-$deactivateVisible = $available_actions['deactivate'];
-$deleteVisible = $available_actions['request_deletion'];
+$hasPassword = !empty($has_password);
+$deactivateVisible = $available_actions['deactivate'] && $hasPassword;
+$deleteVisible = $available_actions['request_deletion'] && $hasPassword;
 $deactivateErrors = ($errorForm === 'deactivate' && $deactivateVisible) ? $errors : [];
 $deleteErrors = ($errorForm === 'delete' && $deleteVisible) ? $errors : [];
 $unscoped = ($deactivateErrors === [] && $deleteErrors === [])
@@ -68,6 +69,8 @@ $unscoped = ($deactivateErrors === [] && $deleteErrors === [])
                 </label>
                 <button class="btn btn-secondary" type="submit">Deactivate account</button>
             </form>
+        <?php elseif ($available_actions['deactivate']): ?>
+            <p class="lifecycle-note"><a href="/settings/security#set-password">Set a password</a> before deactivating your account.</p>
         <?php else: ?>
             <p class="lifecycle-note">Deactivation and reactivation are unavailable while your account has a pending deletion or site restriction.</p>
         <?php endif; ?>
@@ -92,6 +95,8 @@ $unscoped = ($deactivateErrors === [] && $deleteErrors === [])
                 </label>
                 <button class="btn danger" type="submit">Request account deletion</button>
             </form>
+        <?php elseif ($available_actions['request_deletion']): ?>
+            <p class="lifecycle-note"><a href="/settings/security#set-password">Set a password</a> before requesting account deletion.</p>
         <?php else: ?>
             <p class="lifecycle-note">Account deletion is unavailable while a site restriction applies.</p>
         <?php endif; ?>

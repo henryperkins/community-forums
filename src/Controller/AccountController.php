@@ -217,6 +217,20 @@ final class AccountController extends Controller
     }
 
     /** @param array<string,string> $params */
+    public function setInitialPassword(Request $request, array $params): Response
+    {
+        $user = $this->requireUser();
+        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        try {
+            $this->container->get(AccountService::class)->setInitialPassword($user, $request->allInput());
+        } catch (ValidationException $e) {
+            return $this->securityView($user, ['errors' => $e->errors, 'error_context' => 'set_password'], 422);
+        }
+        $this->revokeOtherSessionsFor($user);
+        return $this->redirectWithFlash('/settings/security', 'Password set — you can now sign in with your email.');
+    }
+
+    /** @param array<string,string> $params */
     public function startTotpEnrollment(Request $request, array $params): Response
     {
         $user = $this->requireUser();
@@ -295,6 +309,7 @@ final class AccountController extends Controller
             // current_password field. Without a context the template would light
             // up all five and emit five copies of the same error id.
             'error_context' => '',
+            'has_password' => $this->container->get(UserRepository::class)->findEntity($user->id())?->passwordHash() !== null,
             'totp' => $this->container->get(MfaService::class)->status($user->id()),
             'passkeys' => $this->container->get(FeatureFlags::class)->enabled('passkeys')
                 ? $this->container->get(PasskeyService::class)->status($user)
@@ -311,6 +326,7 @@ final class AccountController extends Controller
         return $this->view('account/lifecycle', array_replace([
             'errors' => [],
             'row' => $row,
+            'has_password' => ($row['password_hash'] ?? null) !== null,
             'pending_deletion' => $this->container->get(AccountLifecycleService::class)->pendingDeletion($user),
             'available_actions' => $this->container->get(AccountLifecycleService::class)->availableActions($user),
         ], $data), $status);

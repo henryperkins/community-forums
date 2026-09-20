@@ -77,7 +77,7 @@ final class MfaService
         $this->writeGate->assertCanWrite($user);
         $this->requirePassword($user, $currentPassword);
         $row = $this->mfa->totpForUser($user->id());
-        if ($row === null || ($row['enabled_at'] !== null && $row['disabled_at'] === null)) {
+        if ($row === null || $row['enabled_at'] !== null || $row['disabled_at'] !== null) {
             throw new ValidationException(['totp_code' => 'Start two-factor enrollment before verifying a code.']);
         }
 
@@ -175,8 +175,7 @@ final class MfaService
         $this->reauth->requirePassword(
             $user,
             $currentPassword,
-            'current_password',
-            'Set a password before managing two-factor authentication.',
+            missingPasswordError: 'Set a password in Security before managing two-factor authentication.',
         );
     }
 

@@ -50,26 +50,13 @@ $errors = $errors ?? [];
     </section>
 
     <?php if (empty($has_password)): ?>
-        <section class="scribe-panel">
-            <h2 class="scribe-panel-head">Set a password</h2>
-            <p class="muted">Your account currently signs in only through a connected provider. Set a password to add email sign-in (required before you can disconnect your last provider).</p>
-            <form method="post" action="/settings/connections/set-password" class="stacked">
-                <?= $this->csrfField() ?>
-                <div class="field-grid">
-                    <label class="field">
-                        <span>New password</span>
-                        <input type="password" name="new_password" class="input" autocomplete="new-password" required<?= field_attrs($errors, 'new_password') ?>>
-                        <?= field_error($errors, 'new_password') ?>
-                    </label>
-                    <label class="field">
-                        <span>Confirm new password</span>
-                        <input type="password" name="new_password_confirm" class="input" autocomplete="new-password" required<?= field_attrs($errors, 'new_password_confirm') ?>>
-                        <?= field_error($errors, 'new_password_confirm') ?>
-                    </label>
-                </div>
-                <button class="btn" type="submit">Set password</button>
-            </form>
-        </section>
+        <?= $this->partial('partials/set_password_form', ['action' => '/settings/connections/set-password', 'errors' => $errors]) ?>
+    <?php elseif ($errors !== []): ?>
+        <div class="scribe-panel error-list" role="alert">
+            <?php foreach ($errors as $message): ?>
+                <p><?= $e($message) ?></p>
+            <?php endforeach; ?>
+        </div>
     <?php endif; ?>
         </div>
     </div>

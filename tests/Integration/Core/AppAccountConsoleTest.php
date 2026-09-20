@@ -21,6 +21,112 @@ final class AppAccountConsoleTest extends TestCase
         $this->makeAdmin();
     }
 
+    public function test_passwordless_security_and_lifecycle_offer_first_password_without_impossible_prompts(): void
+    {
+        $user = $this->makePasswordlessUser();
+        $this->actingAs($user);
+        $security = $this->get('/settings/security');
+        self::assertStringContainsString('id="set-password"', $security->body());
+        self::assertStringContainsString('action="/settings/security/set-password"', $security->body());
+        self::assertStringNotContainsString('name="current_password"', $security->body());
+        $lifecycle = $this->get('/settings/account/lifecycle');
+        self::assertStringNotContainsString('name="current_password"', $lifecycle->body());
+        self::assertStringContainsString('href="/settings/security#set-password"', $lifecycle->body());
+        foreach (['/settings/security/totp/enroll', '/settings/account/deactivate', '/settings/account/delete/request', '/settings/security'] as $path) {
+            $response = $this->post($path);
+            $this->assertStatus(422, $response);
+            self::assertStringContainsString('Set a password', $response->body());
+            self::assertStringNotContainsString('Your current password is incorrect.', $response->body());
+        }
+    }
+
+    public function test_security_first_password_validates_and_works_with_oauth_dark(): void
+    {
+        $this->setFeatureFlags(['oauth' => false]);
+        $user = $this->makePasswordlessUser();
+        $this->actingAs($user);
+        $mismatch = $this->post('/settings/security/set-password', ['new_password' => 'new-secure-password', 'new_password_confirm' => 'different-password']);
+        $this->assertStatus(422, $mismatch);
+        self::assertStringContainsString('aria-describedby="err-new_password_confirm"', $mismatch->body());
+        self::assertStringNotContainsString('new-secure-password', $mismatch->body());
+        self::assertStringNotContainsString('different-password', $mismatch->body());
+        self::assertNull($this->users()->find((int) $user['id'])['password_hash']);
+        $good = $this->post('/settings/security/set-password', ['new_password' => 'new-secure-password', 'new_password_confirm' => 'new-secure-password']);
+        $this->assertRedirect($good, '/settings/security');
+        self::assertTrue(password_verify('new-secure-password', $this->users()->find((int) $user['id'])['password_hash']));
+        self::assertStringContainsString('Change password', $this->get('/settings/security')->body());
+        $this->assertStatus(404, $this->post('/settings/connections/set-password'));
+        $this->assertStatus(404, $this->get('/settings/connections'));
+        $refused = $this->post('/settings/security/set-password', ['new_password' => 'replacement-password', 'new_password_confirm' => 'replacement-password']);
+        $this->assertStatus(422, $refused);
+        self::assertStringContainsString('already has a password', $refused->body());
+        self::assertTrue(password_verify('new-secure-password', $this->users()->find((int) $user['id'])['password_hash']));
+    }
+
+    public function test_first_password_refuses_stale_passwordless_snapshot(): void
+    {
+        $row = $this->makePasswordlessUser();
+        $stale = $this->userEntity($row);
+        $hasher = new \App\Security\PasswordHasher();
+        $service = new \App\Service\AccountService($this->db, $this->users(), $hasher, new \App\Security\ReauthGate($hasher), new \App\Security\WriteGate(), $this->config);
+        $this->users()->setPassword($stale->id(), $hasher->hash('first-password'));
+        try {
+            $service->setInitialPassword($stale, ['new_password' => 'stale-replacement', 'new_password_confirm' => 'stale-replacement']);
+            self::fail('A stale passwordless identity must not overwrite a password.');
+        } catch (\App\Core\ValidationException $error) {
+            self::assertArrayHasKey('new_password', $error->errors);
+        }
+        self::assertTrue($hasher->verify('first-password', $this->users()->find($stale->id())['password_hash']));
+    }
+
+    public function test_first_password_is_rate_limited_and_restricted_accounts_cannot_set_credentials(): void
+    {
+        $user = $this->makePasswordlessUser();
+        $this->actingAs($user);
+        for ($i = 0; $i < 10; $i++) {
+            $this->assertStatus(422, $this->post('/settings/security/set-password', ['new_password' => 'short']));
+        }
+        $this->assertStatus(429, $this->post('/settings/security/set-password', ['new_password' => 'short']));
+        foreach (['banned', 'suspended', 'deactivated', 'pending_deletion'] as $status) {
+            $restricted = $this->makePasswordlessUser();
+            $this->db->run('UPDATE users SET status = ?, suspended_until = ? WHERE id = ?', [$status, gmdate('Y-m-d H:i:s', time() + 3600), $restricted['id']]);
+            $this->actingAs($this->users()->find((int) $restricted['id']));
+            $this->assertStatus(403, $this->post('/settings/security/set-password', ['new_password' => 'restricted-password', 'new_password_confirm' => 'restricted-password']));
+            self::assertNull($this->users()->find((int) $restricted['id'])['password_hash']);
+        }
+    }
+
+    public function test_passwordless_accounts_can_recover_from_deactivation_and_cancel_pending_deletion(): void
+    {
+        $deactivated = $this->makePasswordlessUser();
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [$deactivated['id']]);
+        $this->actingAs($this->users()->find((int) $deactivated['id']));
+        $page = $this->get('/settings/account/lifecycle');
+        self::assertStringContainsString('action="/settings/account/reactivate"', $page->body());
+        self::assertStringNotContainsString('name="current_password"', $page->body());
+        $this->assertRedirect($this->post('/settings/account/reactivate'), '/settings/account/lifecycle');
+        self::assertSame('active', $this->users()->find((int) $deactivated['id'])['status']);
+
+        $pending = $this->makeUser();
+        $this->actingAs($pending);
+        $this->assertRedirect($this->post('/settings/account/delete/request', ['current_password' => 'password123']), '/settings/account/lifecycle');
+        $this->db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [$pending['id']]);
+        $this->actingAs($this->users()->find((int) $pending['id']));
+        $page = $this->get('/settings/account/lifecycle');
+        self::assertStringContainsString('action="/settings/account/delete/cancel"', $page->body());
+        self::assertStringNotContainsString('name="current_password"', $page->body());
+        $this->assertRedirect($this->post('/settings/account/delete/cancel'), '/settings/account/lifecycle');
+        self::assertSame('active', $this->users()->find((int) $pending['id'])['status']);
+    }
+
+    /** @return array<string,mixed> */
+    private function makePasswordlessUser(): array
+    {
+        $user = $this->makeUser();
+        $this->db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [$user['id']]);
+        return $this->users()->find((int) $user['id']);
+    }
+
     /** @return iterable<string,array{string,string}> */
     public static function accountRoutes(): iterable
     {

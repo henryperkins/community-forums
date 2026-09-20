@@ -183,7 +183,21 @@ final class AccountService
             throw new ValidationException($errors);
         }
 
-        $this->users->setPassword($user->id(), $this->hasher->hash($new));
+        $hash = $this->hasher->hash($new);
+        $this->db->transaction(function () use ($user, $hash): void {
+            // A second request may have set a password or restricted this account
+            // after authentication. Recheck the authoritative row under its lock.
+            $row = $this->users->findForUpdate($user->id());
+            if ($row === null) {
+                throw new ValidationException(['new_password' => 'This account is no longer available.']);
+            }
+            $currentUser = User::fromRow($row);
+            $this->writeGate->assertCanWrite($currentUser);
+            if ($currentUser->passwordHash() !== null) {
+                throw new ValidationException(['new_password' => 'This account already has a password. Use change password instead.']);
+            }
+            $this->users->setPassword($user->id(), $hash);
+        });
     }
 
     /** @param array<string,mixed> $input */
@@ -196,8 +210,10 @@ final class AccountService
         $confirm = (string) ($input['new_password_confirm'] ?? '');
 
         $errors = [];
-        if (!$this->reauth->verifyPassword($user, $current)) {
-            $errors['current_password'] = 'Your current password is incorrect.';
+        try {
+            $this->reauth->requirePassword($user, $current, missingPasswordError: 'Set a password in Security before changing it.');
+        } catch (ValidationException $error) {
+            $errors = $error->errors;
         }
         $min = (int) $this->config->get('limits.password_min', 8);
         if (strlen($new) < $min) {

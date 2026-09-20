@@ -1,0 +1,18 @@
+Sanitized RED evidence (response HTML and all credential values omitted).
+Command: flock /tmp/retroboards-unified-phpunit.lock env MAIL_DRIVER=sendmail MAIL_FROM='' vendor/bin/phpunit --filter 'pending_enrollment|disabled_enrollment|passwordless_security|security_first_password|first_password'
+Exit: 1
+
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+Runtime:       PHP 8.5.4
+Time: 00:00.204, Memory: 52.00 MB
+1) Tests\Integration\Core\AppAccountConsoleTest::test_passwordless_security_and_lifecycle_offer_first_password_without_impossible_prompts
+2) Tests\Integration\Core\AppAccountConsoleTest::test_security_first_password_validates_and_works_with_oauth_dark
+3) Tests\Integration\Core\AppAccountConsoleTest::test_first_password_refuses_stale_passwordless_snapshot
+4) Tests\Integration\Core\AppAccountConsoleTest::test_first_password_is_rate_limited_and_restricted_accounts_cannot_set_credentials
+5) Tests\Integration\Core\AppMfaTest::test_pending_enrollment_survives_invalid_code_password_and_reload
+6) Tests\Integration\Core\AppMfaTest::test_pending_enrollment_restarts_only_after_explicit_password_confirmation
+7) Tests\Integration\Core\AppMfaTest::test_disabled_enrollment_cannot_be_confirmed_again
+8) Tests\Integration\Core\AppSessionManagementTest::test_first_password_on_either_route_revokes_other_sessions_and_preserves_current_session
+Tests: 8, Assertions: 15, Failures: 8.
+
+Expected defects: confirmation form absent after invalid code; restart label absent; disabled enrollment accepted; passwordless Security unavailable; Security first-password route returns 404; stale passwordless snapshot overwrites an existing password.

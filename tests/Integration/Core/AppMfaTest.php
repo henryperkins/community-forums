@@ -11,6 +11,65 @@ use Tests\Support\TestCase;
 
 final class AppMfaTest extends TestCase
 {
+    public function test_pending_enrollment_survives_invalid_code_password_and_reload(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $start = $this->post('/settings/security/totp/enroll', ['current_password' => 'password123']);
+        $secret = $this->extractAuthenticatorSecret($start);
+        $encrypted = $this->db->fetchValue('SELECT secret_ciphertext FROM user_totp_credentials WHERE user_id = ?', [$user['id']]);
+        foreach ([['password123', 'invalid'], ['wrong-password', (new Totp())->code($secret)]] as [$password, $code]) {
+            $bad = $this->post('/settings/security/totp/confirm', ['current_password' => $password, 'totp_code' => $code]);
+            $this->assertStatus(422, $bad);
+            self::assertTrue(str_contains($bad->body(), 'action="/settings/security/totp/confirm"'), 'Pending confirmation must remain usable after validation failure.');
+            self::assertFalse(str_contains($bad->body(), $secret), 'A validation error must not redisclose the secret.');
+            self::assertDoesNotMatchRegularExpression('/name="(?:current_password|totp_code)"[^>]*value="[^\"]+"/', $bad->body());
+            self::assertTrue($encrypted === $this->db->fetchValue('SELECT secret_ciphertext FROM user_totp_credentials WHERE user_id = ?', [$user['id']]), 'Invalid confirmation must preserve the pending secret.');
+        }
+        $reload = $this->get('/settings/security');
+        self::assertTrue(str_contains($reload->body(), 'action="/settings/security/totp/confirm"'));
+        self::assertFalse(str_contains($reload->body(), $secret));
+        $usedCode = (new Totp())->code($secret);
+        $good = $this->post('/settings/security/totp/confirm', ['current_password' => 'password123', 'totp_code' => $usedCode]);
+        $this->assertStatus(200, $good);
+        $codes = $this->extractRecoveryCodes($good);
+        self::assertCount(10, $codes);
+        $this->assertStatus(422, $this->post('/settings/security/totp/disable', ['current_password' => 'password123', 'disable_code' => $usedCode]));
+        $reload = $this->get('/settings/security');
+        foreach ($codes as $code) {
+            self::assertFalse(str_contains($reload->body(), $code), 'Recovery codes appear only on the successful response.');
+        }
+    }
+
+    public function test_pending_enrollment_restarts_only_after_explicit_password_confirmation(): void
+    {
+        $this->makeAdmin();
+        $this->actingAs($this->makeUser());
+        $start = $this->post('/settings/security/totp/enroll', ['current_password' => 'password123']);
+        $secret = $this->extractAuthenticatorSecret($start);
+        $bad = $this->post('/settings/security/totp/enroll', ['current_password' => 'wrong-password']);
+        $this->assertStatus(422, $bad);
+        self::assertTrue(str_contains($bad->body(), 'Restart setup'), 'A pending enrollment must expose an explicit restart.');
+        self::assertFalse(str_contains($bad->body(), $secret));
+        $restart = $this->post('/settings/security/totp/enroll', ['current_password' => 'password123']);
+        $replacement = $this->extractAuthenticatorSecret($restart);
+        self::assertTrue($secret !== $replacement, 'Restart must issue a fresh provisioning secret.');
+        self::assertFalse(str_contains($this->get('/settings/security')->body(), $replacement));
+        $confirmed = $this->post('/settings/security/totp/confirm', ['current_password' => 'password123', 'totp_code' => (new Totp())->code($replacement)]);
+        $this->assertStatus(200, $confirmed);
+    }
+
+    public function test_disabled_enrollment_cannot_be_confirmed_again(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser();
+        $secret = $this->enrollTotp($user, 'password123');
+        $this->db->run('UPDATE user_totp_credentials SET disabled_at = UTC_TIMESTAMP() WHERE user_id = ?', [$user['id']]);
+        $response = $this->post('/settings/security/totp/confirm', ['current_password' => 'password123', 'totp_code' => (new Totp())->code($secret)]);
+        $this->assertStatus(422, $response);
+    }
+
     public function test_user_enrolls_totp_uses_recovery_code_and_disables_without_javascript(): void
     {
         $this->makeAdmin();

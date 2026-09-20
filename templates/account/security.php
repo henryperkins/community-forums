@@ -7,12 +7,11 @@ $setup = $totp_setup ?? null;
 $recoveryCodes = $new_recovery_codes ?? [];
 $secErrs = $errors ?? [];
 $secCtx = (string) ($error_context ?? '');
+$hasPassword = !empty($has_password);
 /**
- * Five forms on this page carry a current_password field and share one $errors
- * array, so that one key is scoped to the form it came from — otherwise every
- * form would light up and the page would repeat one error id five times. Keys
- * that can only come from a single form (new_password, totp_code, disable_code)
- * need no scoping; totp/recovery are panel-level and have no input to attach to.
+ * Scope credential errors to their originating form. In particular, a stale
+ * first-password POST must not mark the change-password fields as invalid.
+ * totp/recovery are panel-level errors without an input to attach to.
  */
 $sfattr = function (string $context, string $field) use ($secCtx, $secErrs): string {
     return $secCtx === $context ? field_attrs($secErrs, $field, 'err-' . $context . '-' . $field) : '';
@@ -30,10 +29,11 @@ $sferr = function (string $context, string $field) use ($secCtx, $secErrs): stri
  * which showed the message under a field that had nothing to do with it.)
  */
 $secFormRendered = match ($secCtx) {
-    'password' => true,
-    'totp_enroll' => empty($totp['enabled']),
-    'totp_confirm' => is_array($setup),
-    'totp_rotate', 'totp_disable' => !empty($totp['enabled']),
+    'password' => $hasPassword,
+    'set_password' => !$hasPassword,
+    'totp_enroll' => $hasPassword && empty($totp['enabled']),
+    'totp_confirm' => $hasPassword && !empty($totp['pending']),
+    'totp_rotate', 'totp_disable' => $hasPassword && !empty($totp['enabled']),
     default => false,
 };
 // totp/recovery are excluded: the panel below already owns those two.
@@ -60,6 +60,9 @@ $secPanelFocus = $secOrphaned === [];
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
+    <?php if (!$hasPassword): ?>
+        <?= $this->partial('partials/set_password_form', ['action' => '/settings/security/set-password', 'errors' => $secCtx === 'set_password' ? $secErrs : []]) ?>
+    <?php else: ?>
     <form method="post" action="/settings/security" class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Password</h2>
         <?= $this->csrfField() ?>
@@ -78,20 +81,21 @@ $secPanelFocus = $secOrphaned === [];
             <div class="field-cell">
                 <label class="field">
                     <span>New password</span>
-                    <input type="password" name="new_password" class="input" autocomplete="new-password"<?= field_attrs($secErrs, 'new_password') ?> required>
+                    <input type="password" name="new_password" class="input" autocomplete="new-password"<?= $sfattr('password', 'new_password') ?> required>
                 </label>
-                <?= field_error($secErrs, 'new_password') ?>
+                <?= $sferr('password', 'new_password') ?>
             </div>
             <div class="field-cell">
                 <label class="field">
                     <span>Confirm new password</span>
-                    <input type="password" name="new_password_confirm" class="input" autocomplete="new-password"<?= field_attrs($secErrs, 'new_password_confirm') ?> required>
+                    <input type="password" name="new_password_confirm" class="input" autocomplete="new-password"<?= $sfattr('password', 'new_password_confirm') ?> required>
                 </label>
-                <?= field_error($secErrs, 'new_password_confirm') ?>
+                <?= $sferr('password', 'new_password_confirm') ?>
             </div>
         </div>
         <button class="btn" type="submit">Change password</button>
     </form>
+    <?php endif; ?>
 
     <section class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Two-factor authentication</h2>
@@ -111,7 +115,9 @@ $secPanelFocus = $secOrphaned === [];
             <?php endif; ?>
         <?php endforeach; ?>
 
-        <?php if (!$totp['enabled']): ?>
+        <?php if (!$hasPassword): ?>
+            <p class="muted"><a href="/settings/security#set-password">Set a password</a> before managing two-factor authentication.</p>
+        <?php elseif (!$totp['enabled']): ?>
             <form method="post" action="/settings/security/totp/enroll" class="stacked">
                 <?= $this->csrfField() ?>
                 <label class="field">
@@ -119,7 +125,7 @@ $secPanelFocus = $secOrphaned === [];
                     <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_enroll', 'current_password') ?> required>
                 </label>
                 <?= $sferr('totp_enroll', 'current_password') ?>
-                <button class="btn" type="submit">Start setup</button>
+                <button class="btn" type="submit"><?= !empty($totp['pending']) ? 'Restart setup' : 'Start setup' ?></button>
             </form>
         <?php endif; ?>
 
@@ -133,21 +139,24 @@ $secPanelFocus = $secOrphaned === [];
                     <span>Authenticator URI</span>
                     <input class="input" value="<?= $e((string) $setup['uri']) ?>" readonly>
                 </label>
-                <form method="post" action="/settings/security/totp/confirm" class="stacked">
-                    <?= $this->csrfField() ?>
-                    <label class="field">
-                        <span>Current password</span>
-                        <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_confirm', 'current_password') ?> required>
-                    </label>
-                    <?= $sferr('totp_confirm', 'current_password') ?>
-                    <label class="field">
-                        <span>6-digit code</span>
-                        <input name="totp_code" class="input" inputmode="numeric" autocomplete="one-time-code"<?= field_attrs($secErrs, 'totp_code') ?> required>
-                    </label>
-                    <?= field_error($secErrs, 'totp_code') ?>
-                    <button class="btn" type="submit">Verify and enable</button>
-                </form>
             </div>
+        <?php endif; ?>
+
+        <?php if ($hasPassword && !empty($totp['pending'])): ?>
+            <form method="post" action="/settings/security/totp/confirm" class="stacked">
+                <?= $this->csrfField() ?>
+                <label class="field">
+                    <span>Current password</span>
+                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_confirm', 'current_password') ?> required>
+                </label>
+                <?= $sferr('totp_confirm', 'current_password') ?>
+                <label class="field">
+                    <span>6-digit code</span>
+                    <input name="totp_code" class="input" inputmode="numeric" autocomplete="one-time-code"<?= field_attrs($secErrs, 'totp_code') ?> required>
+                </label>
+                <?= field_error($secErrs, 'totp_code') ?>
+                <button class="btn" type="submit">Verify and enable</button>
+            </form>
         <?php endif; ?>
 
         <?php // feature-removed FR-04: the design keeps a recovery-code grid permanently
@@ -165,7 +174,7 @@ $secPanelFocus = $secOrphaned === [];
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($totp['enabled'])): ?>
+        <?php if ($hasPassword && !empty($totp['enabled'])): ?>
             <form method="post" action="/settings/security/totp/recovery/rotate" class="stacked">
                 <?= $this->csrfField() ?>
                 <label class="field">

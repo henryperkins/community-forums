@@ -2341,6 +2341,7 @@ final class App
         $r->post('/settings/avatar/remove', [AccountController::class, 'removeAvatar']);
         $r->get('/settings/security', [AccountController::class, 'securityForm']);
         $r->post('/settings/security', [AccountController::class, 'updateSecurity']);
+        $r->post('/settings/security/set-password', [AccountController::class, 'setInitialPassword']);
         $r->post('/settings/security/totp/enroll', [AccountController::class, 'startTotpEnrollment']);
         $r->post('/settings/security/totp/confirm', [AccountController::class, 'confirmTotpEnrollment']);
         $r->post('/settings/security/totp/recovery/rotate', [AccountController::class, 'rotateRecoveryCodes']);

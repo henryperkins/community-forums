@@ -244,7 +244,7 @@ final class AccountLifecycleService
 
     private function assertPassword(User $user, string $currentPassword): void
     {
-        $this->reauth->requirePassword($user, $currentPassword);
+        $this->reauth->requirePassword($user, $currentPassword, missingPasswordError: 'Set a password in Security before deactivating or deleting your account.');
     }
 
     /** @return array{deactivate:bool,reactivate:bool,request_deletion:bool,cancel_deletion:bool} */

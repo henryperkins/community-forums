@@ -1,0 +1,14 @@
+Command: flock /tmp/retroboards-unified-phpunit.lock env MAIL_DRIVER=sendmail MAIL_FROM='' vendor/bin/phpunit --filter 'AppMfaTest|AppAccountConsoleTest|AppOAuth|AppSessionManagementTest|AppAccountLifecycle|AppAccountTest|ReauthGate|TotpTest'
+Exit: 0
+
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+...............................................................  63 / 107 ( 58%)
+............................................                    107 / 107 (100%)
+
+Time: 00:01.714, Memory: 64.50 MB
+
+OK (107 tests, 767 assertions)

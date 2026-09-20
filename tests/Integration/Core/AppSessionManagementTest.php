@@ -34,6 +34,23 @@ final class AppSessionManagementTest extends TestCase
         return $id;
     }
 
+    public function test_first_password_on_either_route_revokes_other_sessions_and_preserves_current_session(): void
+    {
+        foreach (['/settings/security/set-password' => '/settings/security', '/settings/connections/set-password' => '/settings/connections'] as $path => $destination) {
+            $user = $this->makeUser();
+            $this->db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [$user['id']]);
+            $this->actingAs($this->users()->find((int) $user['id']));
+            $other = $this->seedSession((int) $user['id']);
+            $current = hash('sha256', $this->cookies['rb_session']);
+            $response = $this->post($path, ['new_password' => 'new-secure-password', 'new_password_confirm' => 'new-secure-password']);
+            $this->assertRedirect($response, $destination);
+            $sessions = new SessionRepository($this->db);
+            self::assertNull($sessions->findActive($other));
+            self::assertNotNull($sessions->findActive($current));
+            $this->assertStatus(200, $this->get('/settings/security'));
+        }
+    }
+
     public function test_lists_sessions_and_marks_current(): void
     {
         $user = $this->makeUser(['username' => 'devices']);
