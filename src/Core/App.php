@@ -218,6 +218,8 @@ use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NavigationService;
 use App\Service\NotificationService;
+use App\Service\NotificationReadService;
+use App\Service\NotificationVisibilityService;
 use App\Service\OAuthService;
 use App\Service\PasskeyService;
 use App\Service\OAuth\HttpClient as OAuthHttpClient;
@@ -837,6 +839,14 @@ final class App
             'request_path' => $request->path(),
             'nav' => $nav,
             'inbox_unread_count' => $inboxUnreadCount,
+            'notification_unread' => static function () use ($container, $session): int {
+                try {
+                    $viewer = $session->user();
+                    return $viewer === null ? 0 : $container->get(NotificationReadService::class)->unreadCount($viewer);
+                } catch (Throwable) {
+                    return 0;
+                }
+            },
             'presence_snapshot' => $presenceSnapshot,
             'rail_avatars' => $railAvatars,
             'features' => $features,
@@ -1090,6 +1100,12 @@ final class App
         $c->bind(ReactionRepository::class, fn (Container $c) => new ReactionRepository($c->get(Database::class)));
         $c->bind(SubscriptionRepository::class, fn (Container $c) => new SubscriptionRepository($c->get(Database::class)));
         $c->bind(NotificationRepository::class, fn (Container $c) => new NotificationRepository($c->get(Database::class)));
+        $c->bind(NotificationVisibilityService::class, fn (Container $c) => new NotificationVisibilityService(
+            $c->get(Database::class), $c->get(FeatureFlags::class), $c->get(AuthorityGate::class),
+        ));
+        $c->bind(NotificationReadService::class, fn (Container $c) => new NotificationReadService(
+            $c->get(NotificationRepository::class), $c->get(NotificationVisibilityService::class),
+        ));
         $c->bind(EmailDomainStatusRepository::class, fn (Container $c) => new EmailDomainStatusRepository($c->get(Database::class)));
         $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
         $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));

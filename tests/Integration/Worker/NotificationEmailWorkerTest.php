@@ -48,6 +48,50 @@ final class NotificationEmailWorkerTest extends TestCase
         return ['post_id' => $postId, 'user' => $recipient];
     }
 
+    public function testHeldPostIsCheckedAtSendTime(): void
+    {
+        $d = $this->queuedDelivery();
+        $this->db->run('UPDATE posts SET is_pending = 1 WHERE id = ?', [$d['post_id']]);
+        $mailer = new ArrayMailer();
+        $this->worker($mailer)->run();
+        self::assertSame(0, $mailer->count());
+    }
+
+    public function testBothBlockDirectionsAreRecheckedForQueuedMail(): void
+    {
+        $d = $this->queuedDelivery();
+        $author = (int) $this->db->fetchValue('SELECT user_id FROM posts WHERE id = ?', [$d['post_id']]);
+        $recipient = (int) $d['user']['id'];
+        $blocks = new \App\Repository\BlockRepository($this->db);
+        $mailer = new ArrayMailer();
+        $worker = $this->worker($mailer);
+        foreach ([[$author, $recipient], [$recipient, $author]] as [$a, $b]) {
+            $blocks->block($a, $b);
+            $this->db->run("UPDATE email_deliveries SET status = 'queued', next_attempt_at = NULL WHERE user_id = ?", [$recipient]);
+            $worker->run();
+            self::assertSame(0, $mailer->count());
+            $blocks->unblock($a, $b);
+        }
+    }
+
+    public function testWorkerRefreshesAssignedModeratorAccessBetweenAttempts(): void
+    {
+        $d = $this->queuedDelivery();
+        $recipient = (int) $d['user']['id'];
+        $board = (int) $this->db->fetchValue('SELECT t.board_id FROM threads t JOIN posts p ON p.thread_id = t.id WHERE p.id = ?', [$d['post_id']]);
+        $this->db->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [$board]);
+        $this->db->run("UPDATE users SET status = 'suspended', suspended_until = '2099-01-01' WHERE id = ?", [$recipient]);
+        $mods = new \App\Repository\BoardModeratorRepository($this->db);
+        $mods->assign($board, $recipient);
+        $mailer = new ArrayMailer();
+        $worker = $this->worker($mailer);
+        self::assertSame(1, $worker->run()['sent']);
+        $mods->unassign($board, $recipient);
+        $this->db->run("UPDATE email_deliveries SET status = 'queued', next_attempt_at = NULL WHERE user_id = ?", [$recipient]);
+        self::assertSame(0, $worker->run()['sent']);
+        self::assertSame(1, $mailer->count());
+    }
+
     public function testSendsQueuedThenDoesNotResendOnRerun(): void
     {
         $this->queuedDelivery();

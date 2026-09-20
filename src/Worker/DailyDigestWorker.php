@@ -13,6 +13,9 @@ use App\Repository\EmailSuppressionRepository;
 use App\Repository\SettingRepository;
 use App\Service\EmailPreferenceService;
 use App\Service\EmailDomainVerifier;
+use App\Service\NotificationVisibilityService;
+use App\Repository\NotificationEligibility;
+use App\Repository\UserRepository;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
@@ -37,7 +40,9 @@ final class DailyDigestWorker
         private ?SettingRepository $settings = null,
         private ?EmailDomainVerifier $domainVerifier = null,
         private ?EmailPreferenceService $emailPrefs = null,
+        private ?NotificationVisibilityService $visibility = null,
     ) {
+        $this->visibility ??= new NotificationVisibilityService($db);
     }
 
     /**
@@ -60,7 +65,7 @@ final class DailyDigestWorker
         $users = $this->db->fetchAll(
             "SELECT id, email, status, timezone, digest_hour, last_daily_digest_at
              FROM users
-             WHERE digest_hour IS NOT NULL AND timezone IS NOT NULL AND status <> 'banned'",
+             WHERE digest_hour IS NOT NULL AND status <> 'banned'",
         );
 
         foreach ($users as $u) {
@@ -104,7 +109,7 @@ final class DailyDigestWorker
     private function isDue(array $u, DateTimeImmutable $now): bool
     {
         try {
-            $tz = new DateTimeZone((string) $u['timezone']);
+            $tz = new DateTimeZone((string) ($u['timezone'] ?? '') ?: 'UTC');
         } catch (Throwable) {
             return false;
         }
@@ -130,13 +135,23 @@ final class DailyDigestWorker
      */
     private function digestActivity(int $userId, string $since): array
     {
+        $viewer = (new UserRepository($this->db))->findEntity($userId);
+        if ($viewer === null) {
+            return [];
+        }
+        $scope = $this->visibility->scope($viewer, true);
+        if (empty($scope['features']['notifications']) || empty($scope['features']['email'])) {
+            return [];
+        }
+        $access = NotificationEligibility::board($scope);
+        $blocks = NotificationEligibility::unblocked((string) $userId, 'p.user_id');
         $rows = $this->db->fetchAll(
             "SELECT t.id AS thread_id, t.title, t.slug, COUNT(*) AS n
              FROM posts p
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
              WHERE p.is_deleted = 0 AND p.is_pending = 0 AND p.user_id <> :uid AND p.created_at > :since
-               AND t.is_deleted = 0 AND t.is_pending = 0
+               AND t.is_deleted = 0 AND t.is_pending = 0 AND $access AND $blocks
                AND (
                  EXISTS (SELECT 1 FROM subscriptions s
                          WHERE s.user_id = :uid2 AND s.target_type = 'thread' AND s.target_id = t.id

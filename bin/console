@@ -849,6 +849,7 @@ try {
                 new SettingRepository($db),
                 $domainVerifier($db),
                 new EmailPreferenceService(new UserPreferenceRepository($db)),
+                new \App\Service\NotificationVisibilityService($db),
             );
             $stats = $worker->run((int) ($argv[2] ?? 100));
             $log(sprintf('Instant email: sent=%d suppressed=%d retrying=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['retrying'], $stats['failed'], $stats['skipped']));
@@ -865,6 +866,7 @@ try {
                 new SettingRepository($db),
                 $domainVerifier($db),
                 new EmailPreferenceService(new UserPreferenceRepository($db)),
+                new \App\Service\NotificationVisibilityService($db),
             );
             $stats = $worker->run(gmdate('Y-m-d H:i:s'));
             $log(sprintf('Daily digest: sent=%d skipped_empty=%d suppressed=%d', $stats['sent'], $stats['skipped_empty'], $stats['suppressed']));

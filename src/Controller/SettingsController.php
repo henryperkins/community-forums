@@ -147,7 +147,7 @@ final class SettingsController extends Controller
         $row = $this->container->get(UserRepository::class)->find($user->id()) ?? [];
         return $this->view('account/notifications', [
             'row' => $row,
-            'subscriptions' => $this->container->get(SubscriptionRepository::class)->listForUserWithContext($user->id()),
+            'subscriptions' => $this->container->get(SubscriptionRepository::class)->listForUserWithContext($user->id(), $this->container->get(\App\Service\NotificationVisibilityService::class)->scope($user)),
             'timezones' => \DateTimeZone::listIdentifiers(),
             'pause_all_email' => $this->container->get(EmailPreferenceService::class)->pauseAllEmail($user->id()),
         ]);

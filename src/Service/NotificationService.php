@@ -262,7 +262,7 @@ final class NotificationService
 
     /**
      * Which of $ids may currently access the board: everyone for public/hidden;
-     * admins + board_members for private. Re-checked at fan-out so a revoked
+     * admins + board_members + assigned board moderators for private. Re-checked at fan-out so a revoked
      * member is dropped (PHASE_2_PLAN §11 "notification payload leaks revoked
      * access").
      *
@@ -288,6 +288,9 @@ final class NotificationService
             $set[(int) $r['id']] = true;
         }
         foreach ($this->db->fetchAll("SELECT user_id FROM board_members WHERE board_id = ? AND user_id IN ($place)", array_merge([$boardId], $ids)) as $r) {
+            $set[(int) $r['user_id']] = true;
+        }
+        foreach ($this->db->fetchAll("SELECT user_id FROM board_moderators WHERE board_id = ? AND user_id IN ($place)", array_merge([$boardId], $ids)) as $r) {
             $set[(int) $r['user_id']] = true;
         }
         return $set;

@@ -100,6 +100,7 @@ final class NotificationRepository
         ]);
     }
 
+    /** Unfiltered persistence count; recipient surfaces use NotificationReadService. */
     public function unreadCount(int $userId): int
     {
         return (int) $this->db->fetchValue(
@@ -108,7 +109,9 @@ final class NotificationRepository
         );
     }
 
-    /** @return array<int,array<string,mixed>> the most recent notifications with actor + thread context */
+    /** Legacy unfiltered persistence helper. Recipient surfaces must use NotificationReadService.
+     * @return array<int,array<string,mixed>>
+     */
     public function recent(int $userId, int $limit = 20): array
     {
         $limit = max(1, $limit);
@@ -139,6 +142,57 @@ final class NotificationRepository
         }
         unset($r);
 
+        return $rows;
+    }
+
+    private const CONTEXT = ' FROM notifications n
+        LEFT JOIN users a ON a.id = n.actor_id
+        LEFT JOIN threads t ON t.id = n.thread_id
+        LEFT JOIN boards b ON b.id = t.board_id
+        LEFT JOIN posts pp ON pp.id = n.post_id';
+
+    public function pageForScope(array $scope, bool $unreadOnly, ?int $beforeId, int $limit = 30): array
+    {
+        return $this->scopedRows($scope,
+            ($unreadOnly ? ' AND n.is_read = 0' : '')
+            . ($beforeId !== null ? ' AND n.id < ' . max(0, $beforeId) : ''),
+            max(1, min(101, $limit)),
+        );
+    }
+
+    public function findForScope(array $scope, int $id): ?array
+    {
+        return $this->scopedRows($scope, ' AND n.id = ' . max(0, $id), 1)[0] ?? null;
+    }
+
+    public function unreadCountForScope(array $scope): int
+    {
+        return (int) $this->db->fetchValue('SELECT COUNT(*)' . self::CONTEXT
+            . ' WHERE n.user_id = ? AND n.is_read = 0 AND ' . NotificationEligibility::notification($scope),
+            [(int) $scope['user_id']],
+        );
+    }
+
+    private function scopedRows(array $scope, string $extra, int $limit): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT n.*, a.username AS actor_username, a.display_name AS actor_display_name,
+                t.title AS thread_title, t.slug AS thread_slug,
+                COALESCE(pp.is_anonymous, (SELECT op.is_anonymous FROM posts op
+                    WHERE op.thread_id = t.id AND op.is_op = 1 LIMIT 1), 0) AS post_is_anonymous'
+            . self::CONTEXT . ' WHERE n.user_id = ? AND ' . NotificationEligibility::notification($scope)
+            . $extra . ' ORDER BY n.id DESC LIMIT ' . $limit,
+            [(int) $scope['user_id']],
+        );
+        foreach ($rows as &$row) {
+            if ((int) $row['post_is_anonymous'] === 1
+                && in_array($row['type'], ['reply', 'new_thread', 'new_post', 'mention'], true)) {
+                $row['actor_username'] = null;
+                $row['actor_display_name'] = 'Anonymous';
+                $row['actor_id'] = null;
+            }
+        }
+        unset($row);
         return $rows;
     }
 

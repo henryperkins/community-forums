@@ -99,24 +99,32 @@ final class SubscriptionRepository
     /**
      * The user's active subscriptions with the thread title / board name resolved
      * for the /settings/notifications list. Targets that no longer exist are
-     * dropped (LEFT JOIN + filter) so the list never links to deleted content.
+     * represented by neutral labels so owners can still reduce delivery.
+     * The shared scope prevents per-subscription membership lookups.
      *
      * @return array<int,array<string,mixed>>
      */
-    public function listForUserWithContext(int $userId): array
+    public function listForUserWithContext(int $userId, ?array $scope = null): array
     {
+        if ($scope === null) {
+            $viewer = (new UserRepository($this->db))->findEntity($userId);
+            if ($viewer === null) {
+                return [];
+            }
+            $scope = (new \App\Service\NotificationVisibilityService($this->db))->scope($viewer);
+        }
+        $board = NotificationEligibility::board($scope);
+        $available = "($board AND (s.target_type = 'board' OR (t.id IS NOT NULL AND t.is_deleted = 0 AND t.is_pending = 0)))";
         return $this->db->fetchAll(
-            "SELECT s.target_type, s.target_id, s.in_app_enabled, s.email_enabled, s.frequency,
-                    t.title AS thread_title, t.slug AS thread_slug, t.is_deleted AS thread_deleted,
-                    b.name AS board_name, b.slug AS board_slug
+            "SELECT s.*, $available AS available,
+                CASE WHEN $available THEN t.title ELSE 'Unavailable subscription' END AS thread_title,
+                CASE WHEN $available THEN t.slug ELSE NULL END AS thread_slug,
+                CASE WHEN $available THEN b.name ELSE 'Unavailable subscription' END AS board_name,
+                CASE WHEN $available THEN b.slug ELSE NULL END AS board_slug
              FROM subscriptions s
              LEFT JOIN threads t ON s.target_type = 'thread' AND t.id = s.target_id
-             LEFT JOIN boards  b ON s.target_type = 'board'  AND b.id = s.target_id
+             LEFT JOIN boards b ON b.id = CASE WHEN s.target_type = 'board' THEN s.target_id ELSE t.board_id END
              WHERE s.user_id = ? AND s.frequency <> 'off'
-               AND (
-                    (s.target_type = 'thread' AND t.id IS NOT NULL AND t.is_deleted = 0)
-                 OR (s.target_type = 'board'  AND b.id IS NOT NULL)
-               )
              ORDER BY s.target_type, s.target_id",
             [$userId],
         );

@@ -12,6 +12,12 @@ final class PostRepository
     {
     }
 
+    /** Preserve manually constructed workers while sharing their injected connection. */
+    public function database(): Database
+    {
+        return $this->db;
+    }
+
     /**
      * @param array{thread_id:int,user_id:int,body:string,body_html:string,is_op?:bool,is_anonymous?:bool,parent_post_id?:?int} $data
      */

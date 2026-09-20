@@ -9,7 +9,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BlockRepository;
 use App\Repository\FollowRepository;
-use App\Repository\NotificationRepository;
+use App\Service\NotificationReadService;
 use App\Repository\TagRepository;
 use App\Service\NavigationService;
 use App\Service\PreferenceService;
@@ -106,10 +106,10 @@ final class HomeController extends Controller
         $notifications = [];
         $notificationUnread = 0;
         if ($user !== null && !empty($availablePanes['notices'])) {
-            $notificationRepo = $this->container->get(NotificationRepository::class);
-            $notificationUnread = $notificationRepo->unreadCount($user->id());
+            $notificationRepo = $this->container->get(NotificationReadService::class);
+            $notificationUnread = $notificationRepo->unreadCount($user);
             if ($pane === 'notices') {
-                $notifications = $notificationRepo->recent($user->id(), 30);
+                $notifications = $notificationRepo->page($user)['items'];
             }
         }
 

@@ -1,0 +1,558 @@
+{
+    "database": "retroboards_unified_test",
+    "server": "11.8.6-MariaDB-5ubuntu0.1 from Ubuntu",
+    "notifications": 10000,
+    "subscriptions": 100,
+    "eligible_unread": 5000,
+    "returned_items": 30,
+    "returned_subscriptions": 100,
+    "unavailable_subscriptions": 50,
+    "scope_page_count_subscription_queries": 6,
+    "repeat_scope_count_queries": 0,
+    "elapsed_ms_observed_not_a_threshold": 16.013,
+    "page_plan": [
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "n",
+            "type": "index",
+            "possible_keys": "idx_notif_user",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": null,
+            "rows": "31",
+            "Extra": "Using where"
+        },
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "t",
+            "type": "eq_ref",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": "retroboards_unified_test.n.thread_id",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "b",
+            "type": "eq_ref",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": "retroboards_unified_test.t.board_id",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "pp",
+            "type": "eq_ref",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": "retroboards_unified_test.n.post_id",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 5,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "cp",
+            "type": "unique_subquery",
+            "possible_keys": "PRIMARY,idx_cp_active_user",
+            "key": "PRIMARY",
+            "key_len": "16",
+            "ref": "func,func",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 6,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "nm",
+            "type": "index_subquery",
+            "possible_keys": "PRIMARY,idx_dm_conv",
+            "key": "idx_dm_conv",
+            "key_len": "8",
+            "ref": "func",
+            "rows": "1",
+            "Extra": "Using index; Using where"
+        },
+        {
+            "id": 4,
+            "select_type": "MATERIALIZED",
+            "table": "nc",
+            "type": "index",
+            "possible_keys": "PRIMARY",
+            "key": "idx_conversations_kind",
+            "key_len": "7",
+            "ref": null,
+            "rows": "1",
+            "Extra": "Using index"
+        },
+        {
+            "id": 3,
+            "select_type": "MATERIALIZED",
+            "table": "nb2",
+            "type": "index",
+            "possible_keys": "PRIMARY,idx_blocks_blocked",
+            "key": "idx_blocks_blocked",
+            "key_len": "8",
+            "ref": null,
+            "rows": "1",
+            "Extra": "Using index"
+        },
+        {
+            "id": 2,
+            "select_type": "MATERIALIZED",
+            "table": "nb",
+            "type": "index",
+            "possible_keys": "PRIMARY,idx_blocks_blocked",
+            "key": "idx_blocks_blocked",
+            "key_len": "8",
+            "ref": null,
+            "rows": "1",
+            "Extra": "Using index"
+        }
+    ],
+    "count_plan": [
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "n",
+            "type": "ALL",
+            "possible_keys": "idx_notif_user",
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": "10000",
+            "Extra": "Using where"
+        },
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "t",
+            "type": "eq_ref",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": "retroboards_unified_test.n.thread_id",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "b",
+            "type": "eq_ref",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": "retroboards_unified_test.t.board_id",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "pp",
+            "type": "eq_ref",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": "retroboards_unified_test.n.post_id",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 5,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "cp",
+            "type": "unique_subquery",
+            "possible_keys": "PRIMARY,idx_cp_active_user",
+            "key": "PRIMARY",
+            "key_len": "16",
+            "ref": "func,func",
+            "rows": "1",
+            "Extra": "Using where"
+        },
+        {
+            "id": 6,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "nm",
+            "type": "index_subquery",
+            "possible_keys": "PRIMARY,idx_dm_conv",
+            "key": "idx_dm_conv",
+            "key_len": "8",
+            "ref": "func",
+            "rows": "1",
+            "Extra": "Using index; Using where"
+        },
+        {
+            "id": 4,
+            "select_type": "MATERIALIZED",
+            "table": "nc",
+            "type": "index",
+            "possible_keys": "PRIMARY",
+            "key": "idx_conversations_kind",
+            "key_len": "7",
+            "ref": null,
+            "rows": "1",
+            "Extra": "Using index"
+        },
+        {
+            "id": 3,
+            "select_type": "MATERIALIZED",
+            "table": "nb2",
+            "type": "index",
+            "possible_keys": "PRIMARY,idx_blocks_blocked",
+            "key": "idx_blocks_blocked",
+            "key_len": "8",
+            "ref": null,
+            "rows": "1",
+            "Extra": "Using index"
+        },
+        {
+            "id": 2,
+            "select_type": "MATERIALIZED",
+            "table": "nb",
+            "type": "index",
+            "possible_keys": "PRIMARY,idx_blocks_blocked",
+            "key": "idx_blocks_blocked",
+            "key_len": "8",
+            "ref": null,
+            "rows": "1",
+            "Extra": "Using index"
+        }
+    ],
+    "count_analysis": {
+        "query_optimization": {
+            "r_total_time_ms": 0.209137501
+        },
+        "query_block": {
+            "select_id": 1,
+            "cost": 28.4773316,
+            "r_loops": 1,
+            "r_total_time_ms": 13.4581718,
+            "nested_loop": [
+                {
+                    "table": {
+                        "table_name": "n",
+                        "access_type": "ALL",
+                        "possible_keys": [
+                            "idx_notif_user"
+                        ],
+                        "loops": 1,
+                        "r_loops": 1,
+                        "rows": 10000,
+                        "r_rows": 10000,
+                        "cost": 1.6408548,
+                        "r_table_time_ms": 1.219453656,
+                        "r_other_time_ms": 4.608871947,
+                        "r_engine_stats": {
+                            "pages_accessed": 52
+                        },
+                        "filtered": 100,
+                        "r_total_filtered": 100,
+                        "attached_condition": "n.user_id = 1381 and n.is_read = 0 and (n.`type` in ('mod','announcement','badge') or !(<in_optimizer>((1381,n.actor_id),(1381,n.actor_id) in (subquery#2)) and n.actor_id is not null and <cache>(1381 is not null)) and !(<in_optimizer>((n.actor_id,1381),(n.actor_id,1381) in (subquery#3)) and <cache>(1381 is not null) and n.actor_id is not null)) and (n.conversation_id is null or <in_optimizer>(n.conversation_id,n.conversation_id in (subquery#4)) and n.`type` = 'dm' and <in_optimizer>((n.conversation_id,1381),<exists>(subquery#5))) and (n.`type` <> 'dm' or n.conversation_id is not null) and (n.`type` not in ('reply','mention','reaction','new_post','new_thread','solved') or n.thread_id is not null)",
+                        "r_filtered": 100
+                    }
+                },
+                {
+                    "table": {
+                        "table_name": "t",
+                        "access_type": "eq_ref",
+                        "possible_keys": [
+                            "PRIMARY"
+                        ],
+                        "key": "PRIMARY",
+                        "key_length": "8",
+                        "used_key_parts": [
+                            "id"
+                        ],
+                        "ref": [
+                            "retroboards_unified_test.n.thread_id"
+                        ],
+                        "loops": 10000,
+                        "r_loops": 10000,
+                        "rows": 1,
+                        "r_rows": 1,
+                        "cost": 8.9452192,
+                        "r_table_time_ms": 4.662927398,
+                        "r_other_time_ms": 2.854462986,
+                        "r_engine_stats": {
+                            "pages_accessed": 10000
+                        },
+                        "filtered": 100,
+                        "r_total_filtered": 100,
+                        "attached_condition": "trigcond(n.thread_id is null or t.is_deleted = 0 and t.is_pending = 0 and t.`id` is not null) and trigcond(trigcond(n.thread_id is not null))",
+                        "r_filtered": 100
+                    }
+                },
+                {
+                    "table": {
+                        "table_name": "b",
+                        "access_type": "eq_ref",
+                        "possible_keys": [
+                            "PRIMARY"
+                        ],
+                        "key": "PRIMARY",
+                        "key_length": "8",
+                        "used_key_parts": [
+                            "id"
+                        ],
+                        "ref": [
+                            "retroboards_unified_test.t.board_id"
+                        ],
+                        "loops": 10000,
+                        "r_loops": 10000,
+                        "r_table_loops": 200,
+                        "rows": 1,
+                        "r_rows": 1,
+                        "cost": 8.9460384,
+                        "r_table_time_ms": 0.060708276,
+                        "r_other_time_ms": 0.037538787,
+                        "r_engine_stats": {
+                            "pages_accessed": 200
+                        },
+                        "filtered": 100,
+                        "r_total_filtered": 100,
+                        "attached_condition": "trigcond(n.thread_id is null or t.is_deleted = 0 and t.is_pending = 0 and t.`id` is not null and b.`id` is not null and b.visibility <> 'private') and trigcond(trigcond(t.board_id is not null))",
+                        "r_filtered": 100
+                    }
+                },
+                {
+                    "table": {
+                        "table_name": "pp",
+                        "access_type": "eq_ref",
+                        "possible_keys": [
+                            "PRIMARY"
+                        ],
+                        "key": "PRIMARY",
+                        "key_length": "8",
+                        "used_key_parts": [
+                            "id"
+                        ],
+                        "ref": [
+                            "retroboards_unified_test.n.post_id"
+                        ],
+                        "loops": 10000,
+                        "r_loops": 5000,
+                        "r_table_loops": 0,
+                        "rows": 1,
+                        "r_rows": 0,
+                        "cost": 8.9452192,
+                        "r_engine_stats": [],
+                        "filtered": 100,
+                        "r_total_filtered": 100,
+                        "attached_condition": "trigcond(n.post_id is null or pp.is_deleted = 0 and pp.is_pending = 0 and pp.thread_id = t.`id` and pp.`id` is not null) and trigcond(trigcond(n.post_id is not null))",
+                        "r_filtered": 100
+                    }
+                }
+            ],
+            "subqueries": [
+                {
+                    "query_block": {
+                        "select_id": 5,
+                        "cost": 0.00171364,
+                        "nested_loop": [
+                            {
+                                "table": {
+                                    "table_name": "cp",
+                                    "access_type": "unique_subquery",
+                                    "possible_keys": [
+                                        "PRIMARY",
+                                        "idx_cp_active_user"
+                                    ],
+                                    "key": "PRIMARY",
+                                    "key_length": "16",
+                                    "used_key_parts": [
+                                        "conversation_id",
+                                        "user_id"
+                                    ],
+                                    "ref": [
+                                        "func",
+                                        "func"
+                                    ],
+                                    "loops": 1,
+                                    "r_loops": 0,
+                                    "rows": 1,
+                                    "r_rows": null,
+                                    "cost": 0.00171364,
+                                    "r_engine_stats": [],
+                                    "filtered": 100,
+                                    "r_total_filtered": null,
+                                    "r_filtered": null
+                                }
+                            }
+                        ],
+                        "subqueries": [
+                            {
+                                "query_block": {
+                                    "select_id": 6,
+                                    "cost": 0.001792605,
+                                    "nested_loop": [
+                                        {
+                                            "table": {
+                                                "table_name": "nm",
+                                                "access_type": "index_subquery",
+                                                "possible_keys": [
+                                                    "PRIMARY",
+                                                    "idx_dm_conv"
+                                                ],
+                                                "key": "idx_dm_conv",
+                                                "key_length": "8",
+                                                "used_key_parts": [
+                                                    "conversation_id"
+                                                ],
+                                                "ref": [
+                                                    "func"
+                                                ],
+                                                "loops": 1,
+                                                "r_loops": 0,
+                                                "rows": 1,
+                                                "r_rows": null,
+                                                "cost": 0.001792605,
+                                                "r_engine_stats": [],
+                                                "filtered": 100,
+                                                "r_total_filtered": null,
+                                                "r_filtered": null,
+                                                "using_index": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "materialization": {
+                        "r_strategy": "undefined",
+                        "query_block": {
+                            "select_id": 4,
+                            "cost": 0.00171364,
+                            "nested_loop": [
+                                {
+                                    "table": {
+                                        "table_name": "nc",
+                                        "access_type": "index",
+                                        "possible_keys": [
+                                            "PRIMARY"
+                                        ],
+                                        "key": "idx_conversations_kind",
+                                        "key_length": "7",
+                                        "used_key_parts": [
+                                            "kind",
+                                            "last_message_at"
+                                        ],
+                                        "loops": 1,
+                                        "r_loops": 0,
+                                        "rows": 1,
+                                        "r_rows": null,
+                                        "cost": 0.006792605,
+                                        "r_engine_stats": [],
+                                        "filtered": 100,
+                                        "r_total_filtered": null,
+                                        "r_filtered": null,
+                                        "using_index": true
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "materialization": {
+                        "r_strategy": "undefined",
+                        "query_block": {
+                            "select_id": 3,
+                            "cost": 0.001693605,
+                            "r_loops": 1,
+                            "r_total_time_ms": 0.0008529262,
+                            "nested_loop": [
+                                {
+                                    "table": {
+                                        "table_name": "nb2",
+                                        "access_type": "index",
+                                        "possible_keys": [
+                                            "PRIMARY",
+                                            "idx_blocks_blocked"
+                                        ],
+                                        "key": "idx_blocks_blocked",
+                                        "key_length": "8",
+                                        "used_key_parts": [
+                                            "blocked_user_id"
+                                        ],
+                                        "loops": 1,
+                                        "r_loops": 1,
+                                        "rows": 1,
+                                        "r_rows": 0,
+                                        "cost": 0.006792605,
+                                        "r_table_time_ms": 0.0003110672,
+                                        "r_other_time_ms": 7.024098e-5,
+                                        "r_engine_stats": {
+                                            "pages_accessed": 1
+                                        },
+                                        "filtered": 100,
+                                        "r_total_filtered": 100,
+                                        "r_filtered": 100,
+                                        "using_index": true
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "materialization": {
+                        "r_strategy": "undefined",
+                        "query_block": {
+                            "select_id": 2,
+                            "cost": 0.001693605,
+                            "r_loops": 1,
+                            "r_total_time_ms": 0.0030605,
+                            "nested_loop": [
+                                {
+                                    "table": {
+                                        "table_name": "nb",
+                                        "access_type": "index",
+                                        "possible_keys": [
+                                            "PRIMARY",
+                                            "idx_blocks_blocked"
+                                        ],
+                                        "key": "idx_blocks_blocked",
+                                        "key_length": "8",
+                                        "used_key_parts": [
+                                            "blocked_user_id"
+                                        ],
+                                        "loops": 1,
+                                        "r_loops": 1,
+                                        "rows": 1,
+                                        "r_rows": 0,
+                                        "cost": 0.006792605,
+                                        "r_table_time_ms": 0.001414854,
+                                        "r_other_time_ms": 0.0005619278,
+                                        "r_engine_stats": {
+                                            "pages_accessed": 1
+                                        },
+                                        "filtered": 100,
+                                        "r_total_filtered": 100,
+                                        "r_filtered": 100,
+                                        "using_index": true
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "cleanup": "All fixture writes rolled back in finally."
+}

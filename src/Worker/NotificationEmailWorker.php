@@ -15,6 +15,7 @@ use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Service\EmailPreferenceService;
 use App\Service\EmailDomainVerifier;
+use App\Service\NotificationVisibilityService;
 use Throwable;
 
 /**
@@ -39,7 +40,9 @@ final class NotificationEmailWorker
         private ?SettingRepository $settings = null,
         private ?EmailDomainVerifier $domainVerifier = null,
         private ?EmailPreferenceService $emailPrefs = null,
+        private ?NotificationVisibilityService $visibility = null,
     ) {
+        $this->visibility ??= new NotificationVisibilityService($posts->database());
     }
 
     /**
@@ -126,7 +129,8 @@ final class NotificationEmailWorker
 
         // Re-apply the read gate for the recipient at send time.
         $recipientId = (int) ($row['user_id'] ?? 0);
-        if (!$this->recipientCanRead($recipientId, (string) $post['board_visibility'], (int) $post['board_id'])) {
+        $recipient = $this->users->findEntity($recipientId);
+        if ($recipient === null || !$this->visibility->canReadPost($recipient, $post, $this->visibility->scope($recipient, true))) {
             return null;
         }
 
@@ -177,21 +181,6 @@ final class NotificationEmailWorker
             . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
         return ['subject' => $subject, 'text' => $text, 'html' => $html];
-    }
-
-    private function recipientCanRead(int $userId, string $visibility, int $boardId): bool
-    {
-        if ($visibility !== 'private') {
-            return true;
-        }
-        if ($userId <= 0) {
-            return false;
-        }
-        $user = $this->users->find($userId);
-        if ($user !== null && ($user['role'] ?? '') === 'admin') {
-            return true;
-        }
-        return $this->users->isBoardMember($boardId, $userId);
     }
 
     private function siteName(): string

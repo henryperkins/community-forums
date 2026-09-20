@@ -41,6 +41,47 @@ final class DailyDigestWorkerTest extends TestCase
         return $u;
     }
 
+    public function testPrivateAccessIsRecheckedBeforeSending(): void
+    {
+        $author = $this->makeUser();
+        $recipient = $this->makeDigestUser(9);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'PRIVATE-AFTER-REVOCATION');
+        (new SubscriptionRepository($this->db))->set((int) $recipient['id'], 'thread', $thread['thread_id'], true, true, 'daily');
+        $this->db->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [$board['id']]);
+        $mailer = new ArrayMailer();
+        $this->worker($mailer)->run('2026-06-26 09:30:00');
+        self::assertSame(0, $mailer->count());
+    }
+
+    public function testDigestRechecksBothBlockDirectionsAndFreshAssignedAccess(): void
+    {
+        $author = $this->makeUser();
+        $recipient = $this->makeDigestUser(9);
+        $uid = (int) $recipient['id'];
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author);
+        (new SubscriptionRepository($this->db))->set($uid, 'thread', $thread['thread_id'], true, true, 'daily');
+        $mailer = new ArrayMailer();
+        $worker = $this->worker($mailer);
+        $blocks = new \App\Repository\BlockRepository($this->db);
+        foreach ([[$uid, (int) $author['id']], [(int) $author['id'], $uid]] as [$a, $b]) {
+            $blocks->block($a, $b);
+            $this->db->run('UPDATE users SET last_daily_digest_at = NULL WHERE id = ?', [$uid]);
+            self::assertSame(0, $worker->run('2026-06-26 09:30:00')['sent']);
+            $blocks->unblock($a, $b);
+        }
+        $this->db->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [$board['id']]);
+        $mods = new \App\Repository\BoardModeratorRepository($this->db);
+        $mods->assign((int) $board['id'], $uid);
+        $this->db->run("UPDATE users SET status = 'suspended', suspended_until = '2099-01-01', last_daily_digest_at = NULL, timezone = NULL WHERE id = ?", [$uid]);
+        self::assertSame(1, $worker->run('2026-06-26 09:30:00')['sent'], 'NULL zone uses UTC; suspended assignment retains read access');
+        $mods->unassign((int) $board['id'], $uid);
+        $this->db->run('UPDATE users SET last_daily_digest_at = NULL WHERE id = ?', [$uid]);
+        self::assertSame(0, $worker->run('2026-06-26 09:30:00')['sent']);
+        self::assertSame(1, $mailer->count());
+    }
+
     public function testSendsOneNonEmptyDigestThenNotAgainSameDay(): void
     {
         $author = $this->makeUser();

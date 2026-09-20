@@ -10,8 +10,9 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Domain\User;
 use App\Repository\NotificationRepository;
-use App\Repository\ThreadRepository;
-use App\Security\BoardPolicy;
+use App\Service\NotificationReadService;
+use App\Service\NotificationVisibilityService;
+use App\Service\ThreadReadService;
 
 /**
  * The notification bell + list (P2-03). Short-poll JSON endpoint for the unread
@@ -24,10 +25,10 @@ final class NotificationController extends Controller
     public function index(Request $request): Response
     {
         $user = $this->requireNotifications();
-        $repo = $this->container->get(NotificationRepository::class);
+        $page = $this->container->get(NotificationReadService::class)->page($user);
         return $this->view('notifications', [
-            'notifications' => $repo->recent($user->id(), 30),
-            'unread_count' => $repo->unreadCount($user->id()),
+            'notifications' => $page['items'],
+            'unread_count' => $page['unread'],
         ]);
     }
 
@@ -35,7 +36,7 @@ final class NotificationController extends Controller
     public function bell(Request $request): Response
     {
         $user = $this->requireNotifications();
-        $repo = $this->container->get(NotificationRepository::class);
+        $page = $this->container->get(NotificationReadService::class)->page($user, false, null, 10);
         $items = array_map(function (array $n): array {
             return [
                 'id' => (int) $n['id'],
@@ -45,10 +46,10 @@ final class NotificationController extends Controller
                 'is_read' => (int) $n['is_read'] === 1,
                 'created_at' => $n['created_at'],
             ];
-        }, $repo->recent($user->id(), 10));
+        }, $page['items']);
 
         return Response::json([
-            'unread' => $repo->unreadCount($user->id()),
+            'unread' => $page['unread'],
             'items' => $items,
         ]);
     }
@@ -108,14 +109,13 @@ final class NotificationController extends Controller
     /** Re-check access and build the deep link for a notification the user owns. */
     private function resolveTarget(int $notificationId, int $userId): ?string
     {
-        $row = $this->container->get(NotificationRepository::class)->recent($userId, 100);
-        $n = null;
-        foreach ($row as $candidate) {
-            if ((int) $candidate['id'] === $notificationId) {
-                $n = $candidate;
-                break;
-            }
+        $me = $this->currentUser();
+        if ($me === null) {
+            return null;
         }
+        $n = $this->container->get(NotificationRepository::class)->findForScope(
+            $this->container->get(NotificationVisibilityService::class)->scope($me), $notificationId,
+        );
         if ($n === null) {
             return null;
         }
@@ -141,14 +141,9 @@ final class NotificationController extends Controller
             return null;
         }
 
-        $thread = $this->container->get(ThreadRepository::class)->findWithBoard((int) $n['thread_id']);
-        if ($thread === null || (int) $thread['is_deleted'] === 1) {
-            return null;
-        }
-        $me = $this->currentUser();
-        $isMember = $me !== null && $this->container->get(\App\Repository\BoardMemberRepository::class)
-            ->isMember((int) $thread['board_id'], $me->id());
-        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $me, $isMember)) {
+        try {
+            $thread = $this->container->get(ThreadReadService::class)->loadForUser($me, (int) $n['thread_id']);
+        } catch (NotFoundException) {
             return null;
         }
         $url = '/t/' . (int) $thread['id'] . '-' . $thread['slug'];
