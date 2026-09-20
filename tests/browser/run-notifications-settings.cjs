@@ -16,10 +16,15 @@ if (baseURL.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].include
 const suites = [
   'notifications-unified', 'account-settings-repairs', 'account-console', 'totp',
   'profile-surface', 'chamfer-removal', 'unified-chrome', 'board-index-remediation',
-];
+].map((name) => ({ name, spec: name }));
+// Keep the existing CI journeys honest after profile forms and settings navigation change.
+suites.push(
+  { name: 'gate-a-account-notifications', spec: 'gate-a', grep: 'phase 4 profile media|phase 4 custom profile fields|phase 4 account lifecycle|admin email delivery|admin notifications keep' },
+  { name: 'profile-media-accessibility', spec: 'a11y', grep: 'phase 4 profile media panels|phase 4 custom profile fields settings panel' },
+);
 for (const suite of suites) {
-  if (!fs.existsSync(path.join(__dirname, `${suite}.spec.ts`))) {
-    throw new Error(`Missing evidence spec: ${suite}.spec.ts`);
+  if (!fs.existsSync(path.join(__dirname, `${suite.spec}.spec.ts`))) {
+    throw new Error(`Missing evidence spec: ${suite.spec}.spec.ts`);
   }
 }
 
@@ -40,8 +45,8 @@ function run(command, args, env, suite, project) {
 try {
   for (const suite of suites) {
     for (const project of ['desktop', 'mobile']) {
-      const runScratch = path.join(scratch, suite, project);
-      const capturePath = path.join(evidenceRoot, suite, project);
+      const runScratch = path.join(scratch, suite.name, project);
+      const capturePath = path.join(evidenceRoot, suite.name, project);
       fs.mkdirSync(capturePath, { recursive: true });
       const env = {
         ...process.env,
@@ -57,8 +62,10 @@ try {
         RB_EVIDENCE_DIR: capturePath,
         PLAYWRIGHT_JSON_OUTPUT_NAME: path.join(capturePath, 'playwright-results.json'),
       };
-      run('bash', ['prepare.sh'], env, suite, project);
-      run('npx', ['playwright', 'test', `${suite}.spec.ts`, `--project=${project}`, '--reporter=list,json'], env, suite, project);
+      run('bash', ['prepare.sh'], env, suite.name, project);
+      const args = ['playwright', 'test', `${suite.spec}.spec.ts`, `--project=${project}`, '--reporter=list,json'];
+      if (suite.grep) args.push('--grep', suite.grep);
+      run('npx', args, env, suite.name, project);
     }
   }
   completed = true;

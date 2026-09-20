@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Browser, type BrowserContext, type Page, type TestInfo } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -121,6 +122,7 @@ async function settle(page: Page): Promise<void> {
 
 async function shot(page: Page, folder: 'desktop' | 'mobile' | 'comparisons', name: string): Promise<void> {
   await settle(page);
+  fs.mkdirSync(path.join(EVIDENCE_DIR, folder), { recursive: true });
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, folder, `${name}.png`),
     fullPage: true,

@@ -368,6 +368,13 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Morning reading' })).toBeVisible();
     await expect(page.locator('.feed-thread').filter({ hasText: 'Settings evidence topic' })).toBeVisible();
     await capture(page, info, '10-saved-feed-open');
+    await page.goto('/compose');
+    await expect(page.locator(`#sidebar-nav a[href="${url}"]`)).toHaveCount(0);
+    const destination = page.locator('[data-compose-board-picker="settings-repair-board"]');
+    await expect(destination).toHaveCount(1);
+    await destination.click();
+    await expect(page).toHaveURL(/\/compose\?board=settings-repair-board$/);
+    await expect(destination).toHaveAttribute('aria-pressed', 'true');
     await page.goto('/settings/boards');
     const edit = page.locator(`form[action="/settings/saved-feeds/${id}"]`).filter({ has: page.locator('input[name="name"]') });
     await edit.locator('[name="name"]').fill('Focused reading');
@@ -403,6 +410,11 @@ test.describe('account settings repairs without JavaScript', () => {
     await rename.locator('button[type="submit"]').click();
     await expect(page.locator('#sidebar-nav')).toContainText('Reference reading');
     await capture(page, info, '12-folder-shortcut');
+    await page.goto('/compose');
+    await expect(page.locator('#sidebar-nav')).not.toContainText('Reference reading');
+    await expect(page.locator('[data-compose-board-picker="settings-repair-board"]')).toHaveCount(1);
+    await expect(page.locator('#sidebar-nav .board-rail-foot')).toBeVisible();
+    await page.goto('/settings/boards');
     await page.locator(`form[action="/settings/board-folders/${id}/boards/${data.board_id}/remove"] button`).click();
     await expect(page.locator('#sidebar-nav a[href="/c/settings-repair-board"]')).toHaveCount(1);
     await page.locator(`form[action="/settings/board-folders/${id}/delete"] button`).click();

@@ -1,6 +1,7 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { execFile } from 'node:child_process';
+import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -51,6 +52,7 @@ async function runWebhookWorker(repoRoot: string): Promise<{ stdout: string; std
 }
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
+  fs.mkdirSync(path.join(EVIDENCE_DIR, info.project.name), { recursive: true });
   const options = {
     path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
     fullPage: true,
@@ -802,13 +804,13 @@ test('phase 4 profile media: avatar upload, signature, and admin moderation', as
     mimeType: 'image/png',
     buffer: Buffer.from(PNG_1X1, 'base64'),
   });
-  await avatarPanel.locator('form[action="/settings/avatar"] button[type="submit"]').click();
-  await page.waitForURL(/\/settings\/account$/);
-  await expect(page.getByRole('status').getByText('Avatar updated.')).toBeVisible();
+  await avatarPanel.locator('button[formaction="/settings/avatar"]').click();
+  await page.waitForURL(/\/settings\/avatar$/);
+  await expect(page.getByRole('status').getByText('Avatar updated. Other profile edits are not saved.', { exact: true })).toBeVisible();
   await expect(page.locator('.profile-media-panel img[src^="/media/"]')).toBeVisible();
 
   await page.locator('textarea[name="signature"]').fill(`Profile media evidence (${info.project.name})`);
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.getByRole('button', { name: 'Save profile', exact: true }).click();
   await page.waitForURL(/\/settings\/account$/);
   await expect(page.getByRole('status').getByText('Your profile has been updated.')).toBeVisible();
 
@@ -1650,7 +1652,7 @@ test('phase 4 custom profile fields: member self-edit and public display', async
   await fieldsPanel.locator('input[name="custom_value_2"]').fill('UTC');
   await shot(page, info, '52-custom-profile-fields-edit');
 
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.getByRole('button', { name: 'Save profile', exact: true }).click();
   await page.waitForURL(/\/settings\/account$/);
   await expect(page.locator('.flash')).toContainText('Your profile has been updated.');
 

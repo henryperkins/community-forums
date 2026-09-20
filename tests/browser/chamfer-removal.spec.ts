@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import fs from 'node:fs';
 import path from 'node:path';
 
 /**
@@ -82,11 +83,13 @@ for (const theme of ['light', 'dark'] as const) {
 
     async function shot(page: Page, name: string): Promise<void> {
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const directory = path.join(EVIDENCE_DIR, theme === 'dark' ? 'twilight' : '', test.info().project.name);
+      fs.mkdirSync(directory, { recursive: true });
       // Focusing a field scrolls it into view. Reset scroll so sticky chrome
       // stays at the top of the full-page capture without clearing focus.
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
       await page.screenshot({
-        path: path.join(EVIDENCE_DIR, theme === 'dark' ? 'twilight' : '', test.info().project.name, `${name}.png`),
+        path: path.join(directory, `${name}.png`),
         fullPage: true,
         animations: 'disabled',
       });

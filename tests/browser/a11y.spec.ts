@@ -552,10 +552,10 @@ test('phase 4 profile media panels have no serious axe violations', async ({ pag
     mimeType: 'image/png',
     buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC', 'base64'),
   });
-  await avatarPanel.locator('form[action="/settings/avatar"] button[type="submit"]').click();
-  await page.waitForURL(/\/settings\/account$/);
+  await avatarPanel.locator('button[formaction="/settings/avatar"]').click();
+  await page.waitForURL(/\/settings\/avatar$/);
   await page.locator('textarea[name="signature"]').fill(`Profile media a11y (${info.project.name})`);
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.getByRole('button', { name: 'Save profile', exact: true }).click();
   await page.waitForURL(/\/settings\/account$/);
 
   await login(page, 'admin@retro.test');
