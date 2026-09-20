@@ -131,11 +131,45 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(page.getByLabel('Authenticator secret', { exact: true })).toHaveCount(0);
     expect((await page.content()).includes(secret), 'Reload must not disclose the setup secret').toBe(false);
     await capture(page, info, '03-totp-pending-reload');
+    const code = execFileSync('php', ['-r', "require 'vendor/autoload.php'; echo (new \\App\\Security\\Totp())->code($argv[1]);", secret], {
+      cwd: root, encoding: 'utf8',
+    });
+    await confirm.locator('[name="current_password"]').fill('password123');
+    await confirm.locator('[name="totp_code"]').fill(code);
+    await confirm.locator('button[type="submit"]').click();
+    await expect(page.locator('ul.code-list code')).toHaveCount(10);
+    await page.reload();
+    await expect(page.locator('ul.code-list code')).toHaveCount(0);
+    await expect(confirm).toHaveCount(0);
+  });
+
+  test('pending TOTP restart requires the current password and returns fresh setup once', async ({ page }, info) => {
+    await login(page);
+    await page.goto('/settings/security');
+    const enroll = page.locator('form[action="/settings/security/totp/enroll"]');
+    await enroll.locator('[name="current_password"]').fill('password123');
+    await enroll.locator('button[type="submit"]').click();
+    const original = await page.getByLabel('Authenticator secret', { exact: true }).inputValue();
+    expect((await post(page, '/settings/security/totp/enroll', { current_password: 'incorrect' })).status()).toBe(422);
+    await page.reload();
+    await expect(page.locator('form[action="/settings/security/totp/confirm"]')).toBeVisible();
+    await expect(enroll).toBeVisible();
+    await enroll.locator('[name="current_password"]').fill('password123');
+    await enroll.getByRole('button', { name: /restart setup/i }).click();
+    const renewed = await page.getByLabel('Authenticator secret', { exact: true }).inputValue();
+    expect(renewed !== original, 'Explicit restart replaces the pending secret').toBe(true);
+    await page.reload();
+    await expect(page.getByLabel('Authenticator secret', { exact: true })).toHaveCount(0);
+    await expect(page.locator('form[action="/settings/security/totp/confirm"]')).toBeVisible();
+    await capture(page, info, '03-totp-restarted-pending');
   });
 
   test('passwordless member can set a password from Security with retained validation', async ({ page }, info) => {
     await login(page);
     fixture('passwordless');
+    await page.goto('/settings/account/lifecycle');
+    await expect(page.locator('input[name="current_password"]')).toHaveCount(0);
+    await expect(page.locator('a[href="/settings/security#set-password"]')).toBeVisible();
     await page.goto('/settings/security');
     const form = page.locator('form[action="/settings/security/set-password"]');
     await expect(form).toBeVisible();
@@ -370,9 +404,14 @@ test.describe('notification delivery operations without JavaScript', () => {
       await post(page, `/admin/email/deliveries/${job.id}/requeue`);
       expect(fixture('inspect').deliveries.find((delivery) => delivery.id === job.id)?.status).toBe(job.status);
     }
-    await capture(page, info, '15-email-terminal-outcomes');
     const retry = seeded.deliveries.find((delivery) => delivery.subject === 'Replayable digest')!;
-    await rows.filter({ hasText: 'Replayable digest' }).getByRole('button', { name: 'Requeue', exact: true }).click();
+    const requeue = rows.filter({ hasText: 'Replayable digest' }).getByRole('button', { name: 'Requeue', exact: true });
+    // Focus must reveal the action inside the table's native horizontal scroll region.
+    await requeue.focus();
+    await expect(requeue).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    await capture(page, info, '15-email-terminal-outcomes');
+    await requeue.click();
     expect(fixture('inspect').deliveries.find((delivery) => delivery.id === retry.id)?.status).toBe('queued');
     // Pin the capture transport on this CLI process too, not only on the browser server.
     const output = execFileSync('flock', ['/tmp/retroboards-unified-phpunit.lock', 'php', 'bin/console', 'worker:email', '100'], {
@@ -407,4 +446,21 @@ test.describe('account settings accessibility', () => {
       }
     });
   }
+
+  test('delivery log remains accessible with terminal and replayable outcomes in both themes', async ({ page }, info) => {
+    fixture('email-ops');
+    await login(page, 'admin@retro.test');
+    try {
+      for (const theme of ['light', 'dark']) {
+        fixture(`admin-${theme}`);
+        await page.goto('/admin/email?email=settings-repair%40retro.test');
+        const result = await new AxeBuilder({ page }).include('.notification-delivery-card').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+        expect(result.violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) }))).toEqual([]);
+        await page.getByRole('button', { name: 'Requeue', exact: true }).focus();
+        if (theme === 'dark') await capture(page, info, '17-email-outcomes-dark');
+      }
+    } finally {
+      fixture('admin-light');
+    }
+  });
 });

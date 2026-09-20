@@ -97,6 +97,11 @@ if ($command === 'reset') {
         case 'dark':
             (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'dark']);
             break;
+        case 'admin-dark':
+        case 'admin-light':
+            $admin = $users->findByUsername('admin');
+            (new UserPreferenceRepository($db))->merge((int) $admin['id'], ['theme' => substr($command, strlen('admin-'))]);
+            break;
         case 'other-sessions':
             $sessions = new SessionRepository($db);
             foreach ([
@@ -138,7 +143,7 @@ if ($command === 'reset') {
             $deliveries = new \App\Repository\EmailDeliveryRepository($db);
             foreach ([
                 'Replayable digest' => ['failed', 'Captured transport failed', $payload],
-                'Suppressed digest' => ['suppressed', 'email_paused', $payload],
+                'Suppressed digest' => ['suppressed', 'recipient_paused', $payload],
                 'Invalid digest' => ['failed', 'invalid_digest_payload', ['version' => 99]],
                 'Legacy digest' => ['failed', 'unreplayable_legacy_digest', null],
             ] as $subject => [$status, $reason, $body]) {
