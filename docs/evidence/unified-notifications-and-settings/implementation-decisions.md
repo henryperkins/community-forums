@@ -33,5 +33,12 @@ carryovers. They are recorded in the order they were made.
    This repairs the exposed selected-board workflow without changing ordinary
    Latest. If the product later wants narrower discovery even for explicit
    selections, that would intentionally remove currently authorized results.
+7. **Bound the account page's board rail without JavaScript on phones.**
+   The measured rail alone consumed 723px, placing Security's first control
+   below 1,600px; collapsing only the local settings links could not meet the
+   approved initial-viewport requirement. A compact region with native keyboard
+   scrolling preserves the existing board, folder and feed links. The tradeoff
+   is separate rail scrolling on these account pages; the enhanced drawer and
+   desktop layout keep their existing behavior.
 
 Final verification and review disposition are recorded in the [evidence index](README.md).

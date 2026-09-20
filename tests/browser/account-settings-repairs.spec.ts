@@ -28,10 +28,10 @@ async function login(page: Page, email = 'settings-repair@retro.test'): Promise<
   await expect(page).not.toHaveURL(/\/login/);
 }
 
-async function capture(page: Page, info: TestInfo, name: string): Promise<void> {
+async function capture(page: Page, info: TestInfo, name: string, fullPage = true): Promise<void> {
   const directory = path.join(evidence, info.project.name);
   fs.mkdirSync(directory, { recursive: true });
-  await page.screenshot({ path: path.join(directory, `${name}.png`), fullPage: true });
+  await page.screenshot({ path: path.join(directory, `${name}.png`), fullPage });
 }
 
 async function post(page: Page, url: string, data: Record<string, string> = {}) {
@@ -345,7 +345,7 @@ test.describe('account settings repairs without JavaScript', () => {
       await expect(nav.locator('[aria-current="page"]')).toHaveText(label);
       await page.keyboard.press('Enter');
       await expect(nav).not.toHaveAttribute('open', '');
-      await capture(page, info, `08-mobile-${label.toLowerCase()}`);
+      await capture(page, info, `08-mobile-${label.toLowerCase()}`, false);
     }
     await page.setViewportSize({ width: 320, height: 844 });
     const width = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
