@@ -170,5 +170,6 @@ echo json_encode([
     'digest_hour' => $user['digest_hour'] === null ? null : (int) $user['digest_hour'],
     'pause_all_email' => !empty((new UserPreferenceRepository($db))->get($uid)['pause_all_email']),
     'subscription' => $subscription,
+    'saved_feeds' => $db->fetchAll('SELECT id, name, filter_json, digest_enabled FROM saved_feed_filters WHERE user_id = ? ORDER BY id', [$uid]),
     'deliveries' => $db->fetchAll('SELECT id, subject, status, error, attempt_count, sent_at, message_id FROM email_deliveries WHERE user_id = ? ORDER BY id', [$uid]),
 ], JSON_THROW_ON_ERROR) . "\n";

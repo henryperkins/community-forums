@@ -10,6 +10,7 @@ type Fixture = {
   id: number; board_id: number; status: string; display_name: string; bio: string;
   avatar_path: string | null; has_password: boolean; digest_hour: number | null; pause_all_email: boolean;
   subscription: null | { id: number; target_id: number; frequency: string; email_enabled: number; in_app_enabled: number };
+  saved_feeds: Array<{ id: number; name: string; filter_json: string; digest_enabled: number }>;
   deliveries: Array<{ id: number; subject: string; status: string; error: string | null; attempt_count: number; sent_at: string | null; message_id: string | null }>;
 };
 
@@ -233,6 +234,21 @@ test.describe('account settings repairs without JavaScript', () => {
     expect(fixture('inspect').bio).toBe('Keep this biography');
   });
 
+  test('Enter in a profile field saves the profile without triggering an avatar action', async ({ page }) => {
+    await login(page);
+    await page.goto('/settings/account');
+    const name = page.locator('[name="display_name"]');
+    await name.fill('Saved with Enter');
+    const [response] = await Promise.all([
+      page.waitForResponse((result) => result.request().method() === 'POST'),
+      name.press('Enter'),
+    ]);
+    expect(new URL(response.url()).pathname).toBe('/settings/account');
+    expect(response.status()).toBe(303);
+    expect(fixture('inspect').display_name).toBe('Saved with Enter');
+    expect(fixture('inspect').avatar_path).toBeNull();
+  });
+
   test('saved-feed validation preserves the chosen board and digest option', async ({ page }, info) => {
     const data = fixture('inspect');
     await login(page);
@@ -249,6 +265,33 @@ test.describe('account settings repairs without JavaScript', () => {
   });
 
   for (const state of ['suspended', 'banned', 'deactivated', 'pending_deletion']) {
+    test(`${state} member can turn off a saved-feed digest without reconfiguring the source`, async ({ page }, info) => {
+      const data = fixture('inspect');
+      await login(page);
+      await page.goto('/settings/boards');
+      const create = page.locator('form[action="/settings/saved-feeds"]');
+      await create.locator('[name="name"]').fill('Restricted reading');
+      await create.locator('[name="board_id"]').selectOption(String(data.board_id));
+      await create.locator('[name="digest_enabled"]').check();
+      await create.locator('button[type="submit"]').click();
+      const original = fixture('inspect').saved_feeds[0];
+      expect(Number(original.digest_enabled)).toBe(1);
+      fixture('private-board');
+      fixture(`restrict-${state}`);
+      await page.goto('/settings/boards');
+      const url = `/settings/saved-feeds/${original.id}`;
+      await page.locator(`form[action="${url}"]`).getByRole('button', { name: 'Turn off digest', exact: true }).click();
+      const disabled = fixture('inspect').saved_feeds[0];
+      expect(Number(disabled.digest_enabled)).toBe(0);
+      expect(disabled.name).toBe(original.name);
+      expect(disabled.filter_json).toBe(original.filter_json);
+      expect((await post(page, url, { digest_enabled: '1' })).status()).toBe(403);
+      expect((await post(page, url, { digest_enabled: '0', name: 'Forbidden rename' })).status()).toBe(403);
+      expect(fixture('inspect').saved_feeds[0].name).toBe(original.name);
+      expect(fixture('inspect').status).toBe(state);
+      await capture(page, info, `07-feed-opt-out-${state}`);
+    });
+
     test(`${state} member can turn off inaccessible subscriptions and all digest delivery`, async ({ page }, info) => {
       await login(page);
       const enabled = fixture('delivery-on').subscription!;
