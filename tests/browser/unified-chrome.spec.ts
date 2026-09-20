@@ -648,7 +648,7 @@ test.describe('with JavaScript disabled', () => {
 });
 
 
-test('persistent bell keeps mobile search compose and rail controls reachable at 320px', async ({ page }, info) => {
+test('persistent bell keeps complete primary routes and mobile controls reachable at 320px', async ({ page }, info) => {
   await signIn(page);
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto('/');
@@ -663,6 +663,28 @@ test('persistent bell keeps mobile search compose and rail controls reachable at
     await page.keyboard.press('Shift+Tab');
     await expect(control).toBeFocused();
   }
+  const primaryGeometry = [];
+  // A visible link can still have its label clipped by the scroll container.
+  // Measure the real text after keyboard focus, then activate every destination.
+  for (const [route, destination] of [['boards', '/'], ['inbox', '/inbox'], ['messages', '/messages']]) {
+    const link = page.locator(`[data-primary-route="${route}"]`);
+    await link.focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(link).toBeFocused();
+    primaryGeometry.push({ route, ...await expectCompletePrimaryLabel(link) });
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(new RegExp(`${destination === '/' ? '/$' : destination + '$'}`));
+    await expect(page.locator(`[data-primary-route="${route}"]`)).toHaveAttribute('aria-current', 'page');
+  }
+  for (const [route, destination] of [['boards', '/'], ['inbox', '/inbox'], ['messages', '/messages']]) {
+    const link = page.locator(`[data-primary-route="${route}"]`);
+    await expectCompletePrimaryLabel(link);
+    if (info.project.name === 'mobile') await link.tap(); else await link.click();
+    await expect(page).toHaveURL(new RegExp(`${destination === '/' ? '/$' : destination + '$'}`));
+  }
+  fs.writeFileSync(shot('13-primary-route-geometry.json', info.project.name), JSON.stringify(primaryGeometry, null, 2) + '\n');
+  await page.goto('/');
   await expect(page.locator('.identity-menu')).not.toHaveAttribute('open', '');
   await page.locator('[data-bell]').focus();
   expect(await page.locator('[data-bell]').evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
@@ -673,5 +695,47 @@ test('persistent bell keeps mobile search compose and rail controls reachable at
   await expect(page).toHaveURL(/\/compose$/);
   await page.locator('[data-nav-toggle]').click();
   await expect(page.locator('.board-rail')).toBeVisible();
+  const headerBottom = (await page.locator('.forum-bar').boundingBox())!.y + (await page.locator('.forum-bar').boundingBox())!.height;
+  expect((await page.locator('.board-rail').boundingBox())!.y).toBeGreaterThanOrEqual(headerBottom - 1);
+  expect((await page.locator('[data-nav-scrim]').boundingBox())!.y).toBeGreaterThanOrEqual(headerBottom - 1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
+
+async function expectCompletePrimaryLabel(link: Locator) {
+  await expect(link).toBeVisible();
+  const geometry = await link.evaluate(el => {
+    const nav = el.closest('.forum-bar-surfaces')!.getBoundingClientRect();
+    const text = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent!.trim() !== '')!;
+    const range = document.createRange();
+    range.selectNodeContents(text);
+    const label = range.getBoundingClientRect();
+    const control = el.getBoundingClientRect();
+    return { navLeft: nav.left, navRight: nav.right, labelLeft: label.left, labelRight: label.right,
+      controlLeft: control.left, controlRight: control.right, viewport: document.documentElement.clientWidth };
+  });
+  expect(geometry.labelLeft).toBeGreaterThanOrEqual(geometry.navLeft);
+  expect(geometry.labelRight).toBeLessThanOrEqual(geometry.navRight);
+  expect(geometry.controlLeft).toBeGreaterThanOrEqual(geometry.navLeft + 3);
+  expect(geometry.controlRight).toBeLessThanOrEqual(geometry.navRight - 3);
+  expect(geometry.controlRight).toBeLessThanOrEqual(geometry.viewport - 3);
+  return geometry;
+}
+
+test.describe('narrow primary navigation without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test('all three full primary labels remain native destinations at 320px', async ({ page }, info) => {
+    await signIn(page);
+    await page.setViewportSize({ width: 320, height: 844 });
+    await page.goto('/');
+    for (const [route, destination] of [['inbox', '/inbox'], ['messages', '/messages'], ['boards', '/']]) {
+      const link = page.locator(`[data-primary-route="${route}"]`);
+      await expectCompletePrimaryLabel(link);
+      if (info.project.name === 'mobile') await link.tap(); else await link.click();
+      await expect(page).toHaveURL(new RegExp(`${destination === '/' ? '/$' : destination + '$'}`));
+    }
+    await expect(page.locator('[data-bell] .icon')).toBeVisible();
+    await expect(page.locator('.forum-bar-compose .icon')).toBeVisible();
+    await page.screenshot({ path: shot('12-primary-routes-320-nojs.png', info.project.name) });
+  });
 });

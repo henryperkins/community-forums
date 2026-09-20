@@ -5,8 +5,9 @@
  * (docs/design-system/imladris/components/forum/ForumNav.jsx), rendered
  * server-side (ADR 0032).
  *
- * One row, one register, identical on every app route: house lockup · surface
- * pills · search · rail toggle · New topic · the viewer. The class vocabulary is
+ * One register, identical on every app route: house lockup · surface
+ * pills · search · rail toggle · New topic · the viewer. Below 381px the primary
+ * routes use their own row so all labels remain readable. The class vocabulary is
  * the design's own and the layered /assets/imladris.css styles it directly;
  * app.css carries only what the layer cannot express — see its "Member chrome"
  * block. The 2026-08-27 transfer copies of this bar (.topbar*) are retired.

@@ -15966,6 +15966,16 @@ a.presence-person:hover { text-decoration: none; }
     .forum-bar-compose .icon { display: block; width: 16px; height: 16px; }
     .forum-bar-compose .btn > span { display: none; }
 }
+/* ADR 0032 adaptation: below 381px, keep complete route labels on a second
+   row instead of letting the persistent controls squeeze their scroll area.
+   The shared height also moves the drawer, scrim, and scroll offsets below
+   both rows. Admin/auth layouts without member chrome retain their height. */
+@media (max-width: 380px) {
+    :root:has(.forum-bar) { --topbar-h: 108px; }
+    .forum-bar { flex-wrap: wrap; align-content: center; row-gap: 0; padding-block: 5px; }
+    .forum-bar-surfaces { order: 1; flex: 0 0 100%; justify-content: center; overflow: visible; padding: 4px; }
+    .forum-bar-surface { min-height: 44px; }
+}
 @media (prefers-reduced-motion: reduce) {
     .board-rail { transition: none; }
 }

@@ -219,6 +219,10 @@ test('guests and disabled notifications make no bell request and 404 stops polli
 test('replayed Notifications tour step highlights the visible primary bell with account menu closed', async ({ page }, info) => {
   await login(page);
   await page.goto('/settings/account');
+  const sections = page.locator('[data-settings-mobile-nav]');
+  if (await sections.isVisible() && await sections.getAttribute('open') === null) {
+    await sections.locator('> summary').click();
+  }
   await page.locator('[data-tour-replay]:visible').click();
   const tour = page.locator('.tour-popover');
   await expect(tour.getByRole('heading', { name: 'Welcome', exact: true })).toBeVisible();
