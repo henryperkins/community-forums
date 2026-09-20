@@ -679,4 +679,22 @@ final class DailyDigestWorkerTest extends TestCase
         self::assertNull($service->render($viewer, $payload));
     }
 
+    public function test_object_shaped_saved_filters_are_excluded_from_snapshots_and_current_retry_sources(): void
+    {
+        $f = $this->digestFixture(); $uid = (int) $f['recipient']['id'];
+        (new SubscriptionRepository($this->db))->delete($uid, 'thread', $f['thread']['thread_id']);
+        $id = $this->savedSource($f, []);
+        $service = new \App\Service\DigestService(new \App\Repository\DigestActivityRepository($this->db), new \App\Service\NotificationVisibilityService($this->db), $this->config);
+        $viewer = $this->userEntity($f['recipient']); $max = (int) $this->db->fetchValue('SELECT MAX(id) FROM posts');
+        $valid = $service->snapshot($viewer, '2026-09-19 09:15:00', '2026-09-20 09:15:00', $max);
+        self::assertNotNull($service->render($viewer, $valid));
+        foreach (['{}', '{"0":' . $f['board']['id'] . '}'] as $ids) {
+            $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', ['{"board_ids":' . $ids . ',"sort":"latest"}', $id]);
+            $snapshot = $service->snapshot($viewer, '2026-09-19 09:15:00', '2026-09-20 09:15:00', $max);
+            self::assertSame([], $snapshot['sources']['saved_feeds']);
+            self::assertNull($service->render($viewer, $snapshot));
+            self::assertNull($service->render($viewer, $valid), 'A valid original source cannot use a malformed current scope');
+        }
+    }
+
 }

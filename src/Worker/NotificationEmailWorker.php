@@ -82,8 +82,8 @@ final class NotificationEmailWorker
                             $stats['failed']++;
                             continue;
                         }
-                        $payload = json_decode((string) $row['payload'], true);
-                        if (!is_array($payload) || !\App\Service\DigestService::validPayload($payload)) {
+                        $payload = \App\Service\DigestService::parsePayload((string) $row['payload']);
+                        if ($payload === null) {
                             $this->deliveries->markFailed($id, 'invalid_digest_payload');
                             $stats['failed']++;
                             continue;

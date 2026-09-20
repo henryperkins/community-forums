@@ -596,4 +596,39 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertStringContainsString('Batch continued.', $mailer->to($recipient['email'])[0]['text']);
     }
 
+    public function test_digest_raw_json_rejects_object_shaped_lists_and_drains_later_valid_v1_job(): void
+    {
+        $recipient = $this->makeUser(); $uid = (int) $recipient['id'];
+        $this->db->run('UPDATE users SET digest_hour=9 WHERE id=?', [$uid]);
+        $author = $this->makeUser(); $board = $this->makeBoard($this->makeCategory());
+        $this->makeThread($board, $author, 'Valid all-board digest activity');
+        $this->db->run("UPDATE posts SET created_at='2026-09-20 08:00:00'");
+        $feedId = (new \App\Repository\SavedFeedRepository($this->db))->create($uid, 'All', '{"board_ids":[],"sort":"latest"}', true);
+        $payload = ['version'=>1, 'window_start_utc'=>'2026-09-19 09:15:00', 'window_end_utc'=>'2026-09-20 09:15:00',
+            'max_post_id'=>(int) $this->db->fetchValue('SELECT MAX(id) FROM posts'),
+            'sources'=>['subscriptions'=>[], 'saved_feeds'=>[['id'=>$feedId, 'filter'=>['board_ids'=>[], 'sort'=>'latest']]]]];
+        $repo = new EmailDeliveryRepository($this->db); $invalidIds = [];
+        foreach (['empty_board_object', 'numeric_board_object', 'saved_sources_object', 'subscriptions_object'] as $shape) {
+            $invalid = json_decode(json_encode($payload));
+            if ($shape === 'empty_board_object') { $invalid->sources->saved_feeds[0]->filter->board_ids = new \stdClass(); }
+            if ($shape === 'numeric_board_object') { $invalid->sources->saved_feeds[0]->filter->board_ids = (object) ['0'=>(int) $board['id']]; }
+            if ($shape === 'saved_sources_object') { $invalid->sources->saved_feeds = (object) $invalid->sources->saved_feeds; }
+            if ($shape === 'subscriptions_object') { $invalid->sources->subscriptions = new \stdClass(); }
+            $id = $repo->enqueue($uid, $recipient['email'], 'digest', null, null, $payload);
+            $this->db->run('UPDATE email_deliveries SET payload=? WHERE id=?', [json_encode($invalid), $id]);
+            $invalidIds[] = $id;
+        }
+        $validId = $repo->enqueue($uid, $recipient['email'], 'digest', null, null, $payload);
+        $mailer = new ArrayMailer(); $stats = $this->worker($mailer)->run();
+        self::assertSame(4, $stats['failed']); self::assertSame(1, $stats['sent']);
+        foreach ($invalidIds as $id) {
+            $row = $repo->find($id);
+            self::assertSame('failed', $row['status']); self::assertSame('invalid_digest_payload', $row['error']);
+            self::assertNull($row['sent_at']); self::assertNull($row['message_id']);
+        }
+        self::assertSame('sent', $repo->find($validId)['status']);
+        self::assertSame(1, $mailer->count());
+        self::assertStringContainsString('Valid all-board digest activity', $mailer->to($recipient['email'])[0]['text']);
+    }
+
 }

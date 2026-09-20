@@ -150,7 +150,8 @@ final class PersonalOrganizationService
         $this->validateFeedInput($input);
         $this->uniqueName(function () use ($user, $id, $input, $current): void {
             $name = $this->name((string) ($input['name'] ?? $current['name']));
-            $json = array_key_exists('board_id', $input) || array_key_exists('board_ids', $input)
+            // Full forms mark the filter present even when a multiple select has no successful control.
+            $json = array_key_exists('board_id', $input) || array_key_exists('board_ids', $input) || array_key_exists('board_filter_present', $input)
                 ? $this->filterJson($user, $input, (string) $current['filter_json']) : (string) $current['filter_json'];
             $this->db->transaction(fn () => $this->feeds->update($user->id(), $id, $name, $json, !empty($input['digest_enabled'])));
         }, $input);
@@ -168,6 +169,7 @@ final class PersonalOrganizationService
         $errors = [];
         if (isset($input['name']) && !is_string($input['name'])) { $errors['name'] = 'Enter a valid name.'; }
         if (isset($input['digest_enabled']) && !in_array($input['digest_enabled'], ['0', '1', 0, 1], true)) { $errors['digest_enabled'] = 'Choose a valid digest setting.'; }
+        if (array_key_exists('board_filter_present', $input) && !in_array($input['board_filter_present'], ['1', 1], true)) { $errors['board_id'] = 'Choose a valid board filter.'; }
         if ($errors !== []) { throw new ValidationException($errors, $input); }
     }
 

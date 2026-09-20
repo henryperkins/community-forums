@@ -8,7 +8,10 @@ final class SavedFeedFilter
 {
     public static function parse(string $json): ?array
     {
-        $filter = json_decode($json, true);
+        // Decode objects as objects: board_ids:{} is not intentional discovery [].
+        $decoded = json_decode($json);
+        if (!$decoded instanceof \stdClass) { return null; }
+        $filter = get_object_vars($decoded);
         return self::valid($filter) ? $filter : null;
     }
 

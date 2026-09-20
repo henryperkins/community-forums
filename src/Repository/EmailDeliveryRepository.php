@@ -241,8 +241,7 @@ final class EmailDeliveryRepository
             return false;
         }
         if (($row['kind'] ?? '') === 'digest') {
-            $payload = json_decode((string) ($row['payload'] ?? ''), true);
-            return is_array($payload) && \App\Service\DigestService::validPayload($payload);
+            return \App\Service\DigestService::parsePayload((string) ($row['payload'] ?? '')) !== null;
         }
         return in_array($row['kind'] ?? '', ['instant', 'system', 'test'], true);
     }

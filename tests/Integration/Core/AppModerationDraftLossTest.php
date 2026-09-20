@@ -150,4 +150,25 @@ final class AppModerationDraftLossTest extends TestCase
         $this->assertRedirectContains($right, '/admin/webhooks');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM webhooks WHERE id = ?', [$id]));
     }
+    public function test_admin_cannot_requeue_digest_with_object_shaped_snapshot_boards(): void
+    {
+        $admin = $this->makeAdmin(); $this->actingAs($admin);
+        $repo = new \App\Repository\EmailDeliveryRepository($this->db);
+        foreach (['{}', '{"0":1}'] as $boards) {
+            $raw = '{"version":1,"window_start_utc":"2026-09-19 09:15:00","window_end_utc":"2026-09-20 09:15:00","max_post_id":100,"sources":{"subscriptions":[],"saved_feeds":[{"id":1,"filter":{"board_ids":' . $boards . ',"sort":"latest"}}]}}';
+            $id = $repo->enqueue((int) $admin['id'], $admin['email'], 'digest', null);
+            $this->db->run("UPDATE email_deliveries SET payload=?, status='failed', error='transport failure', attempt_count=5 WHERE id=?", [$raw, $id]);
+            $response = $this->post('/admin/email/deliveries/' . $id . '/requeue');
+            $this->assertRedirectContains($response, '/admin/email');
+            self::assertSame('failed', $repo->find($id)['status']);
+            self::assertSame(5, (int) $repo->find($id)['attempt_count']);
+            self::assertSame('transport failure', $repo->find($id)['error']);
+        }
+        $validId = $repo->enqueue((int) $admin['id'], $admin['email'], 'digest', null);
+        $raw = str_replace('"board_ids":{"0":1}', '"board_ids":[]', $raw);
+        $this->db->run("UPDATE email_deliveries SET payload=?, status='failed', error='transport failure' WHERE id=?", [$raw, $validId]);
+        $this->assertRedirectContains($this->post('/admin/email/deliveries/' . $validId . '/requeue'), '/admin/email');
+        self::assertSame('queued', $repo->find($validId)['status']);
+    }
+
 }

@@ -150,7 +150,7 @@ foreach (($groups ?? []) as $group) {
                                 $boardIds = $feed['filter']['board_ids'] ?? [];
                                 $feedOld = $oldFor('feed-' . $feed['id']);
                                 $selectedIds = isset($feedOld['board_ids']) && is_array($feedOld['board_ids']) ? array_map('intval', $feedOld['board_ids'])
-                                    : (array_key_exists('board_id', $feedOld) ? ((string) $feedOld['board_id'] === '' ? [] : [(int) $feedOld['board_id']]) : $boardIds);
+                                    : (array_key_exists('board_id', $feedOld) ? ((string) $feedOld['board_id'] === '' ? [] : [(int) $feedOld['board_id']]) : (isset($feedOld['board_filter_present']) ? [] : $boardIds));
                                 $visibleIds = array_map(static fn (array $board): int => (int) $board['id'], $boardChoices);
                                 $multi = count($boardIds) > 1;
                                 $feedDigest = $feedOld !== [] ? !empty($feedOld['digest_enabled']) : !empty($feed['digest_enabled']);
@@ -163,9 +163,10 @@ foreach (($groups ?? []) as $group) {
                                     <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'feed-' . $feed['id']]) ?>
                                     <form method="post" action="/settings/saved-feeds/<?= (int) $feed['id'] ?>" class="org-form">
                                         <?= $this->csrfField() ?>
+                                        <input type="hidden" name="board_filter_present" value="1">
                                         <label for="feed-name-<?= (int) $feed['id'] ?>">Feed name</label>
                                         <input class="input input-small" id="feed-name-<?= (int) $feed['id'] ?>" name="name"<?php if ($invalidFor('feed-' . $feed['id'], 'name')): ?> aria-invalid="true" aria-describedby="feed-<?= (int) $feed['id'] ?>-name-error"<?php endif; ?> value="<?= $e($feedOld['name'] ?? $feed['name']) ?>" maxlength="80" required>
-                                        <label for="feed-board-<?= (int) $feed['id'] ?>">Board filter</label>
+                                        <label for="feed-board-<?= (int) $feed['id'] ?>">Board filter<?= $multi ? ' (select none for all boards)' : '' ?></label>
                                         <select class="input input-small" id="feed-board-<?= (int) $feed['id'] ?>"<?php if ($invalidFor('feed-' . $feed['id'], 'board_id')): ?> aria-invalid="true" aria-describedby="feed-<?= (int) $feed['id'] ?>-board_id-error"<?php endif; ?> name="<?= $multi ? 'board_ids[]' : 'board_id' ?>"<?= $multi ? ' multiple' : '' ?>>
                                             <?php if (!$multi): ?><option value=""<?= $selectedIds === [] ? ' selected' : '' ?>>All boards</option><?php endif; ?>
                                             <?php foreach (array_diff($selectedIds, $visibleIds) as $selectedId): ?>

@@ -67,6 +67,7 @@ final class AppSavedFeedReadTest extends TestCase
             $this->assertRedirect($this->post('/settings/saved-feeds/' . $id, ['digest_enabled' => '0']));
             $this->assertStatus(403, $this->post('/settings/saved-feeds/' . $id, ['digest_enabled' => '1']));
             $this->assertStatus(403, $this->post('/settings/saved-feeds/' . $id, ['digest_enabled' => '0', 'name' => 'Changed']));
+            $this->assertStatus(403, $this->post('/settings/saved-feeds/' . $id, ['digest_enabled' => '0', 'board_filter_present' => '1']));
             $row = $this->db->fetch('SELECT * FROM saved_feed_filters WHERE id = ?', [$id]);
             self::assertSame('My scope', $row['name']); self::assertSame(0, (int) $row['digest_enabled']);
         }
@@ -156,6 +157,43 @@ final class AppSavedFeedReadTest extends TestCase
         $this->assertSeeText($this->get($url), 'Selected visible topic');
         $mods->unassign((int) $f['board']['id'], (int) $f['user']['id']);
         $this->assertDontSeeText($this->get($url), 'Selected visible topic');
+    }
+
+    public function test_object_shaped_stored_board_ids_never_become_discovery_filters(): void
+    {
+        $f = $this->fixture();
+        foreach (['{}', '{"0":' . $f['board']['id'] . '}'] as $ids) {
+            $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', ['{"board_ids":' . $ids . ',"sort":"latest"}', $f['id']]);
+            $page = $this->get('/feeds/saved/' . $f['id']);
+            $this->assertStatus(200, $page);
+            $this->assertSeeText($page, 'unavailable');
+            $this->assertDontSeeText($page, 'Selected visible topic');
+            $this->assertDontSeeText($page, 'Unrelated public topic');
+        }
+        $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', ['{"board_ids":[],"sort":"latest"}', $f['id']]);
+        $this->assertSeeText($this->get('/feeds/saved/' . $f['id']), 'Unrelated public topic');
+    }
+
+    public function test_cleared_full_multiselect_round_trips_and_partial_update_keeps_original_scope(): void
+    {
+        $f = $this->fixture();
+        $otherBoard = (int) $this->db->fetchValue('SELECT board_id FROM threads WHERE id=?', [$f['other']['thread_id']]);
+        $ids = [(int) $f['board']['id'], $otherBoard];
+        $this->db->run('UPDATE saved_feed_filters SET filter_json=? WHERE id=?', [json_encode(['board_ids'=>$ids, 'sort'=>'latest']), $f['id']]);
+        $url = '/settings/saved-feeds/' . $f['id'];
+        $this->assertRedirect($this->post($url, ['name'=>'Partial rename', 'digest_enabled'=>'1']));
+        self::assertSame($ids, json_decode($this->db->fetchValue('SELECT filter_json FROM saved_feed_filters WHERE id=?', [$f['id']]), true)['board_ids']);
+        $page = $this->get('/settings/boards');
+        $dom = new \DOMDocument(); @$dom->loadHTML($page->body()); $xp = new \DOMXPath($dom);
+        self::assertSame(1, $xp->query('//form[@action="' . $url . '"]//input[@name="board_filter_present" and @value="1"]')->length);
+        $invalid = $this->post($url, ['name'=>'   ', 'board_filter_present'=>'1', 'digest_enabled'=>'1']);
+        $this->assertStatus(422, $invalid);
+        $dom = new \DOMDocument(); @$dom->loadHTML($invalid->body()); $xp = new \DOMXPath($dom);
+        self::assertSame(0, $xp->query('//form[@action="' . $url . '"]//select[@name="board_ids[]"]//option[@selected]')->length);
+        self::assertSame(1, $xp->query('//form[@action="' . $url . '"]//input[@name="digest_enabled" and @checked]')->length);
+        self::assertSame($ids, json_decode($this->db->fetchValue('SELECT filter_json FROM saved_feed_filters WHERE id=?', [$f['id']]), true)['board_ids']);
+        $this->assertRedirect($this->post($url, ['name'=>'All readable boards', 'board_filter_present'=>'1', 'digest_enabled'=>'1']));
+        self::assertSame([], json_decode($this->db->fetchValue('SELECT filter_json FROM saved_feed_filters WHERE id=?', [$f['id']]), true)['board_ids']);
     }
 
 }

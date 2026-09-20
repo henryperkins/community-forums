@@ -33,12 +33,39 @@ final class DigestService
         ];
     }
 
+    /** Preserve JSON object/list types at every durable payload boundary. */
+    public static function parsePayload(string $json): ?array
+    {
+        $decoded = json_decode($json);
+        if (!$decoded instanceof \stdClass || !($decoded->sources ?? null) instanceof \stdClass
+            || !is_array($decoded->sources->subscriptions ?? null)
+            || !is_array($decoded->sources->saved_feeds ?? null)) {
+            return null;
+        }
+        $payload = get_object_vars($decoded);
+        $sources = get_object_vars($decoded->sources);
+        foreach ($sources['subscriptions'] as $key => $source) {
+            if (!$source instanceof \stdClass) { return null; }
+            $sources['subscriptions'][$key] = get_object_vars($source);
+        }
+        foreach ($sources['saved_feeds'] as $key => $source) {
+            if (!$source instanceof \stdClass || !($source->filter ?? null) instanceof \stdClass) { return null; }
+            $filter = get_object_vars($source->filter);
+            // Leave board_ids typed until validPayload checks the required list.
+            $sources['saved_feeds'][$key] = get_object_vars($source);
+            $sources['saved_feeds'][$key]['filter'] = $filter;
+        }
+        $payload['sources'] = $sources;
+        return self::validPayload($payload) ? $payload : null;
+    }
+
     public static function validPayload(array $payload): bool
     {
         if (($payload['version'] ?? null) !== 1 || !is_int($payload['max_post_id'] ?? null)
             || $payload['max_post_id'] < 0 || !is_array($payload['sources'] ?? null)
             || !is_array($payload['sources']['subscriptions'] ?? null)
-            || !is_array($payload['sources']['saved_feeds'] ?? null)) {
+            || !is_array($payload['sources']['saved_feeds'] ?? null)
+            || !array_is_list($payload['sources']['subscriptions']) || !array_is_list($payload['sources']['saved_feeds'])) {
             return false;
         }
         foreach (['window_start_utc', 'window_end_utc'] as $field) {
