@@ -628,6 +628,11 @@ settings chooser keeps the first form control in the initial viewport. This is
 a documented production adaptation, not a claim that the upstream prototype
 specified the same geometry; enhanced drawer and desktop behavior remain intact.
 
+At 380px and narrower the member header uses two rows and a 108px height, with
+primary routes on the second row and the drawer/scrim offset kept in sync. The
+full route labels remain readable alongside the persistent bell. This explicit
+ADR 0032 adaptation trades header height for navigation reachability.
+
 For this approved implementation, the application digest is refreshed on the
 isolated repair branch after explicit source review, together with the generated
 manifest and styles. This is an exception to the historical merger-only slice

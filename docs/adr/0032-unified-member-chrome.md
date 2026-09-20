@@ -168,6 +168,13 @@ adding the bell must not add eager shell queries to plain/JSON/health requests.
 The poll refreshes every notification count/link node and retains the full
 accessible count when the visual badge reads `99+`.
 
+At 380px and narrower, the primary route group moves to a second full-width
+row, with a 108px member header and matching drawer/scrim offsets. The added
+bell otherwise leaves too little width to read even the Boards label at 320px.
+Every route retains its full label, focus gutter and ordinary link behavior;
+keyboard, touch and no-JavaScript checks cover Boards, Inbox and Messages.
+This narrow-header adaptation spends vertical space to retain usable routes.
+
 Owned saved-feed and board-folder shortcuts are added before category groups
 without replacing category browsing, presence or the composer's destination
 selection. They retain privacy and feature gates and tolerate unavailable
