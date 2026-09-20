@@ -261,6 +261,9 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(form.locator('[name="board_id"]')).toHaveValue(String(data.board_id));
     await expect(form.locator('[name="digest_enabled"]')).toBeChecked();
     await expect(form.locator('[name="name"]')).toHaveAttribute('aria-invalid', 'true');
+    const errorId = await form.locator('[name="name"]').getAttribute('aria-describedby');
+    expect(errorId).toBeTruthy();
+    await expect(page.locator(`[id="${errorId}"]`)).toBeVisible();
     await capture(page, info, '07-feed-validation-retained');
   });
 
@@ -366,7 +369,9 @@ test.describe('account settings repairs without JavaScript', () => {
     await link.click();
     await expect(page).toHaveURL(new RegExp(`${url}$`));
     await expect(page.getByRole('heading', { level: 1, name: 'Morning reading' })).toBeVisible();
-    await expect(page.locator('.feed-thread').filter({ hasText: 'Settings evidence topic' })).toBeVisible();
+    const topicLinks = page.locator('.feed-thread');
+    await expect(topicLinks.filter({ hasText: 'Settings evidence topic' }).first()).toBeVisible();
+    expect((await topicLinks.allTextContents()).every((title) => title.trim() === 'Settings evidence topic')).toBe(true);
     await capture(page, info, '10-saved-feed-open');
     await page.goto('/compose');
     await expect(page.locator(`#sidebar-nav a[href="${url}"]`)).toHaveCount(0);
@@ -500,6 +505,16 @@ test.describe('account settings accessibility', () => {
     test(`settings forms remain accessible in both themes: ${route}`, async ({ page }, info) => {
       if (route === 'notifications') fixture('delivery-on');
       await login(page);
+      if (route === 'boards') {
+        const data = fixture('inspect');
+        await page.goto('/settings/boards');
+        for (const suffix of ['one', 'two']) {
+          expect((await post(page, '/settings/board-folders', { name: `Reading folder ${suffix}` })).status()).toBe(303);
+          expect((await post(page, '/settings/saved-feeds', {
+            name: `Saved reading ${suffix}`, board_id: String(data.board_id), digest_enabled: '1',
+          })).status()).toBe(303);
+        }
+      }
       for (const theme of ['light', 'dark']) {
         if (theme === 'dark') fixture('dark');
         await page.goto(`/settings/${route}`);
