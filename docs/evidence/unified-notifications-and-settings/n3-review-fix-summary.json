@@ -1,0 +1,41 @@
+{
+  "task": "N3 independent review P2 follow-up",
+  "date_utc": "2026-09-20",
+  "scope": "Malformed date payload validation and worker/admin regression coverage",
+  "red": {
+    "tests": 2,
+    "assertions": 2,
+    "failures": 2,
+    "outcomes": [
+      "admin GET returned 500 instead of 200",
+      "only invalid calendar job permanently failed; both NUL date jobs retried"
+    ]
+  },
+  "green": {
+    "tests": 116,
+    "assertions": 1060,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 2.296
+  },
+  "command": "flock /tmp/retroboards-unified-phpunit.lock env MAIL_DRIVER=sendmail MAIL_FROM='' vendor/bin/phpunit --filter 'DailyDigestWorkerTest|NotificationEmailWorkerTest|EmailOpsRepositoryTest|EmailOpsServiceTest|AppAdminEmailTest|AppAccountLifecycleTest|AppNotificationPreferencesRepairTest' --log-junit /tmp/n3-review-fix-junit.xml",
+  "new_cases": [
+    {
+      "class": "Tests\\Integration\\Admin\\AppAdminEmailTest",
+      "name": "testFailedDigestWithOldDateParserErrorCannotBreakAdminOrBeRequeued",
+      "assertions": 7,
+      "status": "passed"
+    },
+    {
+      "class": "Tests\\Integration\\Worker\\NotificationEmailWorkerTest",
+      "name": "testMalformedDigestDatesFailPermanentlyAndLaterJobStillSends",
+      "assertions": 24,
+      "status": "passed"
+    }
+  ],
+  "transport": "ArrayMailer captures only; no real mail",
+  "checks": [
+    "php -l src/Service/DigestService.php passed",
+    "git diff --check on owned paths passed"
+  ]
+}

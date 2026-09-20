@@ -476,4 +476,26 @@ final class AppAdminEmailTest extends TestCase
         self::assertNotNull($repo->find($valid)['message_id']);
     }
 
+    public function testFailedDigestWithOldDateParserErrorCannotBreakAdminOrBeRequeued(): void
+    {
+        $recipient = $this->makeUser();
+        $repo = new EmailDeliveryRepository($this->db);
+        $id = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', 'Malformed date', null, [
+            'version' => 1, 'max_post_id' => 1,
+            'window_start_utc' => "2026-09-19 09:15:00\0",
+            'window_end_utc' => '2026-09-20 09:15:00',
+            'sources' => ['subscriptions' => [], 'saved_feeds' => []],
+        ]);
+        $repo->markFailed($id, 'Previous worker date parse failure');
+        $before = $repo->find($id);
+        $this->actingAs($this->makeAdmin());
+        $page = $this->get('/admin/email');
+        self::assertSame(200, $page->status());
+        self::assertStringContainsString('Previous worker date parse failure', $page->body());
+        self::assertStringNotContainsString('/admin/email/deliveries/' . $id . '/requeue', $page->body());
+        $this->assertRedirectContains($this->post('/admin/email/deliveries/' . $id . '/requeue'), '/admin/email');
+        self::assertSame($before, $repo->find($id));
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'email_requeued'"));
+    }
+
 }

@@ -555,4 +555,45 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(5, $mailer->count());
     }
 
+    public function testMalformedDigestDatesFailPermanentlyAndLaterJobStillSends(): void
+    {
+        $recipient = $this->makeUser();
+        $this->db->run('UPDATE users SET digest_hour = 9 WHERE id = ?', [$recipient['id']]);
+        $repo = new EmailDeliveryRepository($this->db);
+        $payload = [
+            'version' => 1, 'max_post_id' => 1,
+            'window_start_utc' => '2026-09-19 09:15:00',
+            'window_end_utc' => '2026-09-20 09:15:00',
+            'sources' => ['subscriptions' => [], 'saved_feeds' => []],
+        ];
+        $invalidIds = [];
+        foreach (['window_start_utc', 'window_end_utc'] as $field) {
+            $bad = $payload;
+            $bad[$field] .= "\0";
+            $invalidIds[] = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', 'Malformed date', null, $bad);
+        }
+        $bad = $payload;
+        $bad['window_start_utc'] = '2026-02-30 09:15:00';
+        $invalidIds[] = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'digest', 'Invalid calendar date', null, $bad);
+        $good = $repo->enqueue((int) $recipient['id'], $recipient['email'], 'system', 'Later valid job', null,
+            ['type' => 'announcement', 'message' => 'Batch continued.']);
+        $mailer = new ArrayMailer();
+        $stats = $this->worker($mailer)->run();
+        self::assertSame(3, $stats['failed']);
+        self::assertSame(0, $stats['retrying']);
+        self::assertSame(1, $stats['sent']);
+        foreach ($invalidIds as $id) {
+            $row = $repo->find($id);
+            self::assertSame('failed', $row['status']);
+            self::assertSame('invalid_digest_payload', $row['error']);
+            self::assertNull($row['next_attempt_at']);
+            self::assertNull($row['sent_at']);
+            self::assertNull($row['message_id']);
+            self::assertSame(0, $repo->requeue($id));
+        }
+        self::assertSame('sent', $repo->find($good)['status']);
+        self::assertSame(1, $mailer->count());
+        self::assertStringContainsString('Batch continued.', $mailer->to($recipient['email'])[0]['text']);
+    }
+
 }

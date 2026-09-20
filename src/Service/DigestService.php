@@ -44,7 +44,12 @@ final class DigestService
         foreach (['window_start_utc', 'window_end_utc'] as $field) {
             $value = $payload[$field] ?? null;
             if (!is_string($value)) { return false; }
-            $date = \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value, new \DateTimeZone('UTC'));
+            try {
+                $date = \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value, new \DateTimeZone('UTC'));
+            } catch (\ValueError) {
+                // Valid JSON strings may contain NUL bytes rejected by PHP's parser.
+                return false;
+            }
             if ($date === false || $date->format('Y-m-d H:i:s') !== $value) { return false; }
         }
         if ($payload['window_start_utc'] > $payload['window_end_utc']) { return false; }
