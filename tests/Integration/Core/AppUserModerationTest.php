@@ -51,6 +51,29 @@ final class AppUserModerationTest extends TestCase
         }
     }
 
+    public function test_new_timed_suspension_cannot_replace_an_existing_full_site_ban(): void
+    {
+        $this->actingAs($this->admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/ban', ['reason' => 'Full ban']));
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', ['reason' => 'Additional suspension', 'until' => '2030-01-01 00:00:00']));
+        self::assertSame('banned', $this->userStatus((int) $this->bad['id']), 'Full-ban cache precedence also governs queued recipient eligibility.');
+        $this->db->run("UPDATE users SET suspended_until = '2020-01-01 00:00:00' WHERE id = ?", [$this->bad['id']]);
+        $this->db->run("UPDATE bans SET expires_at = '2020-01-01 00:00:00' WHERE user_id = ? AND type = 'post'", [$this->bad['id']]);
+        $this->actingAs($this->users()->find((int) $this->bad['id']));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Full ban still applies']));
+    }
+
+    public function test_suspend_reconciles_a_live_full_ban_even_when_cached_status_is_active(): void
+    {
+        $this->actingAs($this->admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/ban', ['reason' => 'Full ban']));
+        $this->users()->setStatus((int) $this->bad['id'], 'active', null);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', ['reason' => 'Additional suspension', 'until' => '2030-01-01 00:00:00']));
+        self::assertSame('banned', $this->userStatus((int) $this->bad['id']));
+        $this->actingAs($this->users()->find((int) $this->bad['id']));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Full ban still applies']));
+    }
+
     public function testAdminSuspendThenLift(): void
     {
         $this->actingAs($this->admin);

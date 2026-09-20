@@ -169,6 +169,76 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertSame($user['email'], $this->users()->find((int) $user['id'])['email']);
     }
 
+    public function test_pending_deletion_survives_timed_suspension_expiry(): void
+    {
+        $admin = $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        $this->actingAs($admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $user['id'] . '/suspend', ['reason' => 'During grace', 'until' => '2030-01-01 00:00:00']));
+        $this->actingAs($this->users()->find((int) $user['id']));
+        $live = $this->get('/settings/account/lifecycle');
+        self::assertStringContainsString('action="/settings/account/delete/cancel"', $live->body());
+        self::assertStringNotContainsString('action="/settings/account/deactivate"', $live->body());
+        self::assertStringNotContainsString('action="/settings/account/reactivate"', $live->body());
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'During suspension']));
+
+        // Advance only moderation clocks; the durable deletion grace is open.
+        $this->expireSuspension((int) $user['id']);
+        self::assertSame('pending', $this->db->fetchValue('SELECT status FROM account_deletion_requests WHERE user_id = ?', [$user['id']]));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'After suspension']));
+        $expired = $this->get('/settings/account/lifecycle');
+        self::assertStringContainsString('action="/settings/account/delete/cancel"', $expired->body());
+        self::assertStringNotContainsString('action="/settings/account/reactivate"', $expired->body());
+        $this->assertStatus(303, $this->post('/settings/account/delete/cancel'));
+        $this->assertStatus(303, $this->post('/settings/account', ['display_name' => 'Explicitly recovered']));
+    }
+
+    public function test_self_deactivation_survives_timed_suspension_expiry_until_explicit_reactivation(): void
+    {
+        $admin = $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $this->assertStatus(303, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+        $this->actingAs($admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $user['id'] . '/suspend', ['reason' => 'During deactivation', 'until' => '2030-01-01 00:00:00']));
+        $this->actingAs($this->users()->find((int) $user['id']));
+        $live = $this->get('/settings/account/lifecycle');
+        self::assertStringNotContainsString('action="/settings/account/reactivate"', $live->body());
+        $this->assertStatus(422, $this->post('/settings/account/reactivate'));
+        $this->expireSuspension((int) $user['id']);
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still self-deactivated']));
+        $expired = $this->get('/settings/account/lifecycle');
+        self::assertStringContainsString('action="/settings/account/reactivate"', $expired->body());
+        $this->assertStatus(303, $this->post('/settings/account/reactivate'));
+        $this->assertStatus(303, $this->post('/settings/account', ['display_name' => 'Explicitly reactivated']));
+    }
+
+    public function test_moderation_lift_keeps_self_deactivation_until_explicit_reactivation(): void
+    {
+        $admin = $this->makeAdmin();
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $this->assertStatus(303, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+        $this->actingAs($admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $user['id'] . '/suspend', ['reason' => 'Indefinite suspension']));
+        $this->actingAs($this->users()->find((int) $user['id']));
+        self::assertStringNotContainsString('action="/settings/account/reactivate"', $this->get('/settings/account/lifecycle')->body());
+        $this->actingAs($admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $user['id'] . '/lift'));
+        $this->actingAs($this->users()->find((int) $user['id']));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still self-deactivated']));
+        self::assertStringContainsString('action="/settings/account/reactivate"', $this->get('/settings/account/lifecycle')->body());
+        $this->assertStatus(303, $this->post('/settings/account/reactivate'));
+    }
+
+    private function expireSuspension(int $userId): void
+    {
+        $this->db->run("UPDATE users SET suspended_until = '2020-01-01 00:00:00' WHERE id = ?", [$userId]);
+        $this->db->run("UPDATE bans SET expires_at = '2020-01-01 00:00:00' WHERE user_id = ? AND scope = 'site' AND type = 'post'", [$userId]);
+    }
+
     public function test_user_can_export_account_archive_without_secrets(): void
     {
         $this->makeAdmin();

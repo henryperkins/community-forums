@@ -66,6 +66,22 @@ anonymized automatically; reconcile their request/history first. Canceling a
 request always prevents its purge, regardless of cached account status. The
 30-day grace and existing anonymization/content-preservation policy remain.
 
+## Suspension and lifecycle precedence
+
+When a site suspension is imposed during deletion grace or self-deactivation,
+the cached status stays `pending_deletion` or `deactivated`. The independent
+`bans` row and suspension expiry continue to block lifecycle recovery while
+live. Expiry never restores ordinary writes through those lifecycle holds:
+the member must explicitly cancel deletion or reactivate when permitted. A
+moderation lift likewise leaves self-deactivation in place. Ordinary accounts
+with only a timed suspension retain automatic expiry behavior.
+
+An existing full site ban takes precedence over a new suspension, including
+when the full ban exists only in the durable restriction record and the cached
+status is stale. Its cached status remains `banned` for normal write checks and
+queued-mail recipient eligibility. This is deliberately not a rule putting
+pending deletion above full bans.
+
 ## Rehearsal
 
 Use an empty, explicitly provisioned schema named

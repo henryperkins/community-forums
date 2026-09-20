@@ -304,11 +304,23 @@ final class UserModerationService
         $until = $this->validateSuspendUntil($until);
         $this->db->transaction(function () use ($actor, $subjectId, $until, $reason): void {
             $subject = $this->requireGovernable($actor, $subjectId, true);
-            $this->lockModerationState($subjectId);
-            $this->users->setStatus((int) $subject['id'], 'suspended', $until);
-            // History row: type='post' (read-only) — a suspension keeps login +
-            // read access (ADMIN §1.2), unlike a full ban. Enforcement rides
-            // users.status; this row is the accountable record.
+            [$pending, $restrictions] = $this->lockModerationState($subjectId);
+            $fullBan = $subject['status'] === 'banned';
+            foreach ($restrictions as $restriction) {
+                $fullBan = $fullBan || $restriction['type'] === 'full';
+            }
+            // A timed suspension must not erase a lifecycle hold on expiry.
+            // Full bans retain cache precedence for both writes and queued mail.
+            $status = match (true) {
+                $subject['status'] === 'deleted' => 'deleted',
+                $fullBan => 'banned',
+                $pending !== null => 'pending_deletion',
+                $subject['status'] === 'deactivated' => 'deactivated',
+                default => 'suspended',
+            };
+            $this->users->setStatus((int) $subject['id'], $status, $until);
+            // The live restriction and expiry remain independent of the cached
+            // lifecycle state, so recovery must still consult this record.
             $this->db->run(
                 "INSERT INTO bans (user_id, scope, type, reason, created_by, created_at, expires_at)
                  VALUES (?, 'site', 'post', ?, ?, UTC_TIMESTAMP(), ?)",
@@ -318,12 +330,16 @@ final class UserModerationService
         });
     }
 
-    /** Target user is already locked; follow the lifecycle request/restriction order. */
-    private function lockModerationState(int $subjectId): ?array
+    /**
+     * Target user is already locked; follow the lifecycle request/restriction order.
+     * @return array{?array,list<array<string,mixed>>}
+     */
+    private function lockModerationState(int $subjectId): array
     {
-        $pending = ($this->deletions ?? new AccountDeletionRepository($this->db))->pendingForUserForUpdate($subjectId);
-        ($this->bans ?? new BanRepository($this->db))->activeSiteRestrictionsForUpdate($subjectId);
-        return $pending;
+        return [
+            ($this->deletions ?? new AccountDeletionRepository($this->db))->pendingForUserForUpdate($subjectId),
+            ($this->bans ?? new BanRepository($this->db))->activeSiteRestrictionsForUpdate($subjectId),
+        ];
     }
 
     private function validateSuspendUntil(?string $until): ?string
@@ -374,7 +390,7 @@ final class UserModerationService
         $this->assertAdmin($actor);
         $this->db->transaction(function () use ($actor, $subjectId): void {
             $subject = $this->requireSubject($subjectId, true);
-            $pending = $this->lockModerationState($subjectId);
+            [$pending] = $this->lockModerationState($subjectId);
             $status = $subject['status'];
             if ($status !== 'deleted') {
                 if ($pending !== null) {

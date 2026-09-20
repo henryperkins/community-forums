@@ -1,0 +1,55 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+.........FFF..........................FF........                  48 / 48 (100%)
+
+Time: 00:00.814, Memory: 60.50 MB
+
+There were 5 failures:
+
+1) Tests\Integration\Core\AppAccountLifecycleTest::test_pending_deletion_survives_timed_suspension_expiry
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:423
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppAccountLifecycleTest.php:190
+
+2) Tests\Integration\Core\AppAccountLifecycleTest::test_self_deactivation_survives_timed_suspension_expiry_until_explicit_reactivation
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:423
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppAccountLifecycleTest.php:211
+
+3) Tests\Integration\Core\AppAccountLifecycleTest::test_moderation_lift_keeps_self_deactivation_until_explicit_reactivation
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:423
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppAccountLifecycleTest.php:231
+
+4) Tests\Integration\Core\AppUserModerationTest::test_new_timed_suspension_cannot_replace_an_existing_full_site_ban
+Full-ban cache precedence also governs queued recipient eligibility.
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'banned'
++'suspended'
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppUserModerationTest.php:59
+
+5) Tests\Integration\Core\AppUserModerationTest::test_suspend_reconciles_a_live_full_ban_even_when_cached_status_is_active
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'banned'
++'suspended'
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppUserModerationTest.php:72
+
+FAILURES!
+Tests: 48, Assertions: 211, Failures: 5.
