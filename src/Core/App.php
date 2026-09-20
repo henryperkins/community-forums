@@ -1103,8 +1103,15 @@ final class App
         $c->bind(NotificationVisibilityService::class, fn (Container $c) => new NotificationVisibilityService(
             $c->get(Database::class), $c->get(FeatureFlags::class), $c->get(AuthorityGate::class),
         ));
+        $c->bind(\App\Service\SubscriptionService::class, fn (Container $c) => new \App\Service\SubscriptionService(
+            $c->get(Database::class), $c->get(SubscriptionRepository::class), $c->get(NotificationVisibilityService::class),
+            $c->get(ThreadReadService::class), $c->get(BoardRepository::class), $c->get(WriteGate::class),
+        ));
+        $c->bind(\App\Service\NotificationSettingsService::class, fn (Container $c) => new \App\Service\NotificationSettingsService(
+            $c->get(Database::class), $c->get(UserRepository::class), $c->get(EmailPreferenceService::class), $c->get(WriteGate::class),
+        ));
         $c->bind(NotificationReadService::class, fn (Container $c) => new NotificationReadService(
-            $c->get(NotificationRepository::class), $c->get(NotificationVisibilityService::class),
+            $c->get(NotificationRepository::class), $c->get(NotificationVisibilityService::class), $c->get(ThreadReadService::class),
         ));
         $c->bind(EmailDomainStatusRepository::class, fn (Container $c) => new EmailDomainStatusRepository($c->get(Database::class)));
         $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
@@ -2351,6 +2358,7 @@ final class App
         $r->post('/settings/preferences/reset', [SettingsController::class, 'resetPreferences']);
         $r->get('/settings/preferences/export', [SettingsController::class, 'exportPreferences']);
         $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);
+        $r->post('/settings/notifications/subscriptions/{id}', [SubscriptionController::class, 'updateOwned']);
         $r->post('/settings/notifications', [SettingsController::class, 'updateNotifications']);
         $r->get('/settings/sessions', [SettingsController::class, 'sessions']);
         $r->post('/settings/sessions/revoke', [SettingsController::class, 'revokeSession']);

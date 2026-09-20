@@ -10,7 +10,6 @@ use App\Core\Response;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\SessionRepository;
-use App\Repository\SubscriptionRepository;
 use App\Repository\UserBoardPrefRepository;
 use App\Repository\UserPreferenceRepository;
 use App\Repository\UserRepository;
@@ -143,29 +142,28 @@ final class SettingsController extends Controller
 
     public function notificationsForm(Request $request): Response
     {
-        $user = $this->requireUser();
-        $row = $this->container->get(UserRepository::class)->find($user->id()) ?? [];
-        return $this->view('account/notifications', [
-            'row' => $row,
-            'subscriptions' => $this->container->get(SubscriptionRepository::class)->listForUserWithContext($user->id(), $this->container->get(\App\Service\NotificationVisibilityService::class)->scope($user)),
+        return $this->notificationsView($this->requireUser());
+    }
+
+    public function notificationsView(\App\Domain\User $viewer, array $data = [], int $status = 200): Response
+    {
+        return $this->view('account/notifications', array_replace([
+            'row' => $this->container->get(UserRepository::class)->find($viewer->id()) ?? [],
+            'subscriptions' => $this->container->get(\App\Service\SubscriptionService::class)->listForUser($viewer),
             'timezones' => \DateTimeZone::listIdentifiers(),
-            'pause_all_email' => $this->container->get(EmailPreferenceService::class)->pauseAllEmail($user->id()),
-        ]);
+            'pause_all_email' => $this->container->get(EmailPreferenceService::class)->pauseAllEmail($viewer->id()),
+            'errors' => [], 'old' => [],
+        ], $data), $status);
     }
 
     public function updateNotifications(Request $request): Response
     {
         $user = $this->requireUser();
-
-        $tz = trim((string) $request->str('timezone'));
-        if ($tz !== '' && !in_array($tz, \DateTimeZone::listIdentifiers(), true)) {
-            $tz = '';
+        try {
+            $this->container->get(\App\Service\NotificationSettingsService::class)->update($user, $request->allInput());
+        } catch (\App\Core\ValidationException $e) {
+            return $this->notificationsView($user, ['errors' => $e->errors, 'old' => $e->old], 422);
         }
-        $hourRaw = $request->post('digest_hour');
-        $hour = ($hourRaw === null || $hourRaw === '') ? null : max(0, min(23, (int) $hourRaw));
-
-        $this->container->get(UserRepository::class)->updateDigest($user->id(), $tz !== '' ? $tz : null, $hour);
-        $this->container->get(EmailPreferenceService::class)->setPauseAllEmail($user->id(), $request->post('pause_all_email') === '1');
         return $this->redirectWithFlash('/settings/notifications', 'Notification settings saved.');
     }
 

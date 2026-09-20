@@ -177,4 +177,60 @@ final class AppNotificationTest extends TestCase
         $this->post('/notifications/read-all');
         self::assertSame(0, (new NotificationRepository($this->db))->unreadCount((int) $reader['id']));
     }
+
+    public function test_old_owned_notification_can_still_be_opened(): void
+    {
+        $member = $this->makeUser();
+        $repo = new NotificationRepository($this->db);
+        $old = $repo->create(['user_id' => (int) $member['id'], 'type' => 'badge']);
+        for ($i = 0; $i < 105; $i++) {
+            $repo->markRead((int) $member['id'], $repo->create(['user_id' => (int) $member['id'], 'type' => 'badge']));
+        }
+        $this->actingAs($member);
+        $this->assertRedirect($this->post('/notifications/' . $old . '/read'), '/u/' . $member['username']);
+    }
+
+    public function test_foreign_and_unavailable_open_do_not_acknowledge(): void
+    {
+        $member = $this->makeUser();
+        $other = $this->makeUser();
+        $repo = new NotificationRepository($this->db);
+        $foreign = $repo->create(['user_id' => (int) $other['id'], 'type' => 'badge']);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $other);
+        $owned = $repo->create(['user_id' => (int) $member['id'], 'type' => 'reply', 'thread_id' => $thread['thread_id']]);
+        $this->db->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [$board['id']]);
+        $this->actingAs($member);
+        $this->assertStatus(404, $this->post('/notifications/' . $foreign . '/read'));
+        $this->assertRedirect($this->post('/notifications/' . $owned . '/read'), '/notifications');
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT is_read FROM notifications WHERE id = ?', [$owned]));
+    }
+
+    public function test_notification_history_filters_and_safe_returns(): void
+    {
+        $member = $this->makeUser();
+        $repo = new NotificationRepository($this->db);
+        $old = $repo->create(['user_id' => (int) $member['id'], 'type' => 'badge']);
+        for ($i = 0; $i < 35; $i++) {
+            $repo->markRead((int) $member['id'], $repo->create(['user_id' => (int) $member['id'], 'type' => 'badge']));
+        }
+        $this->actingAs($member);
+        foreach ([['/notifications', []], ['/', ['pane' => 'notices']]] as [$path, $query]) {
+            $first = $this->get($path, $query);
+            self::assertStringContainsString('rel="next"', $first->body());
+            $page = $this->get($path, $query + ['filter' => 'unread']);
+            self::assertStringContainsString('/notifications/' . $old . '/read', $page->body());
+            $older = $this->get($path, $query + ['before' => (string) ($old + 1)]);
+            self::assertStringContainsString('/notifications/' . $old . '/read', $older->body());
+            self::assertStringContainsString('>Latest</a>', $older->body());
+            $malformed = $this->get($path, $query + ['before' => ['malformed']]);
+            $this->assertStatus(200, $malformed);
+            self::assertStringNotContainsString('/notifications/' . $old . '/read', $malformed->body());
+
+        }
+        $this->assertRedirect($this->post('/notifications/read-all', ['return' => '/?pane=notices&filter=unread&before=123']), '/?pane=notices&filter=unread&before=123');
+        foreach (['/admin', '//evil.test', '/notifications?evil=1', '/?pane=connections'] as $bad) {
+            $this->assertRedirect($this->post('/notifications/clear', ['return' => $bad]), '/notifications');
+        }
+    }
 }

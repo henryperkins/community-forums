@@ -11,8 +11,6 @@ use App\Core\Response;
 use App\Domain\User;
 use App\Repository\NotificationRepository;
 use App\Service\NotificationReadService;
-use App\Service\NotificationVisibilityService;
-use App\Service\ThreadReadService;
 
 /**
  * The notification bell + list (P2-03). Short-poll JSON endpoint for the unread
@@ -25,8 +23,11 @@ final class NotificationController extends Controller
     public function index(Request $request): Response
     {
         $user = $this->requireNotifications();
-        $page = $this->container->get(NotificationReadService::class)->page($user);
+        $query = NotificationReadService::query(['filter' => $request->query('filter'), 'before' => $request->query('before')]);
+        $page = $this->container->get(NotificationReadService::class)->page($user, $query['filter'] === 'unread', $query['before']);
         return $this->view('notifications', [
+            'notification_page' => $page,
+            'notification_return' => NotificationReadService::historyUrl('/notifications', $query),
             'notifications' => $page['items'],
             'unread_count' => $page['unread'],
         ]);
@@ -59,15 +60,10 @@ final class NotificationController extends Controller
     {
         $user = $this->requireNotifications();
         $id = (int) ($params['id'] ?? 0);
-        $repo = $this->container->get(NotificationRepository::class);
-        $repo->markRead($user->id(), $id);
-
-        // Resolve a safe deep link, re-checking access now (not at creation).
-        $target = $this->resolveTarget($id, $user->id());
-        if ($target === null) {
-            return $this->redirectWithFlash('/notifications', 'That content is no longer available.');
-        }
-        return $this->redirect($target);
+        $result = $this->container->get(NotificationReadService::class)->open($user, $id);
+        if ($result['url'] !== null) { return $this->redirect($result['url']); }
+        return $this->redirectWithFlash($this->returnTo($request), $result['outcome'] === 'acknowledged'
+            ? 'Notification acknowledged.' : 'That content is no longer available.');
     }
 
     public function readAll(Request $request): Response
@@ -84,18 +80,9 @@ final class NotificationController extends Controller
         return $this->redirectWithFlash($this->returnTo($request), 'Notifications cleared.');
     }
 
-    /**
-     * Notices is a pane of the board index as well as a standalone page, so a
-     * bulk action has to land back where it was invoked rather than always on
-     * /notifications — being thrown to a different surface reads as a
-     * navigation, not a mark. Same guard as SettingsController: a leading "/"
-     * not followed by "/" or "\", so an absolute or protocol-relative target
-     * can never be smuggled in.
-     */
     private function returnTo(Request $request): string
     {
-        $return = (string) $request->post('return', '');
-        return preg_match('#^/(?![/\\\\])#', $return) === 1 ? $return : '/notifications';
+        return NotificationReadService::safeReturn($request->post('return'));
     }
 
     private function requireNotifications(): User
@@ -106,50 +93,4 @@ final class NotificationController extends Controller
         return $this->requireUser();
     }
 
-    /** Re-check access and build the deep link for a notification the user owns. */
-    private function resolveTarget(int $notificationId, int $userId): ?string
-    {
-        $me = $this->currentUser();
-        if ($me === null) {
-            return null;
-        }
-        $n = $this->container->get(NotificationRepository::class)->findForScope(
-            $this->container->get(NotificationVisibilityService::class)->scope($me), $notificationId,
-        );
-        if ($n === null) {
-            return null;
-        }
-
-        // Social notifications link to people, not threads.
-        if ($n['type'] === 'follow' && ($n['actor_username'] ?? '') !== '') {
-            return '/u/' . (string) $n['actor_username'];
-        }
-        if ($n['type'] === 'badge') {
-            $me = $this->currentUser();
-            return $me !== null ? '/u/' . $me->username() : '/notifications';
-        }
-        if ($n['type'] === 'mod' && $n['conversation_id'] !== null) {
-            return '/mod/reports';
-        }
-
-        // An announcement has no thread/post; it points at the site banner ('/').
-        if ($n['type'] === 'announcement') {
-            return '/';
-        }
-
-        if ($n['thread_id'] === null) {
-            return null;
-        }
-
-        try {
-            $thread = $this->container->get(ThreadReadService::class)->loadForUser($me, (int) $n['thread_id']);
-        } catch (NotFoundException) {
-            return null;
-        }
-        $url = '/t/' . (int) $thread['id'] . '-' . $thread['slug'];
-        if ($n['post_id'] !== null) {
-            $url .= '#p' . (int) $n['post_id'];
-        }
-        return $url;
-    }
 }

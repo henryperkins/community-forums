@@ -41,6 +41,14 @@ if (!empty($my_snooze)) {
                      setting whose whole value is that it is quick to change. */ ?>
             <div class="topic-tools-section-body">
                 <?php if (($notifications_on ?? false)): ?>
+                    <?php if (!empty($subscription_errors)): ?>
+                        <form class="stacked" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
+                            <?= $this->csrfField() ?>
+                            <?php foreach ($subscription_errors as $error): ?><p class="field-error" role="alert"><?= $e($error) ?></p><?php endforeach; ?>
+                            <?= $this->partial('partials/subscription_controls', ['subscription' => $subscription ?? [], 'subscription_old' => $subscription_old ?? []]) ?>
+                            <button class="btn" type="submit">Save subscription</button>
+                        </form>
+                    <?php endif; ?>
                     <?php $frequency = (string) ($subscription['frequency'] ?? 'off'); ?>
                     <div class="watch-segmented" role="group" aria-label="Watch this topic">
                         <?php foreach ([
@@ -57,7 +65,7 @@ if (!empty($my_snooze)) {
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
-                <?php if (($workflow_on ?? false)): ?>
+                <?php if (($workflow_on ?? false) && !empty($can_write)): ?>
                     <?php // The active pill clears the snooze when pressed again, which is
                           // the only way back the design gives it — a "Clear snooze" option
                           // in a list of three futures is a fourth choice that is not one. ?>

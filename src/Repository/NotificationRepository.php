@@ -17,6 +17,11 @@ final class NotificationRepository
     {
     }
 
+    public function findOwned(int $userId, int $notificationId): ?array
+    {
+        return $this->db->fetch('SELECT * FROM notifications WHERE user_id = ? AND id = ?', [$userId, $notificationId]);
+    }
+
     /**
      * Insert a notification. Returns the new id, or 0 if a same-kind row already
      * exists for this (recipient, actor, post/thread) — a cheap dedupe so a

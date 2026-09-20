@@ -1,0 +1,22 @@
+/tmp/n2-red.log
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+There were 5 failures:
+1) Tests\Integration\Core\AppNotificationPreferencesRepairTest::test_owned_reductions_and_atomic_escalation_for_every_restricted_state
+2) Tests\Integration\Core\AppNotificationPreferencesRepairTest::test_settings_validation_retains_draft_and_normalizes_utc
+3) Tests\Integration\Core\AppNotificationPreferencesRepairTest::test_owned_controls_validate_all_channels_off_and_keep_thread_override
+4) Tests\Integration\Core\AppNotificationTest::test_foreign_and_unavailable_open_do_not_acknowledge
+5) Tests\Integration\Core\AppNotificationTest::test_notification_history_filters_and_safe_returns
+FAILURES!
+Tests: 13, Assertions: 21, Failures: 5.
+Rendered response bodies omitted; full transient log remains in /tmp during this run.
+/tmp/n2-restricted-draft-red.log
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+There was 1 failure:
+1) Tests\Integration\Core\AppNotificationPreferencesRepairTest::test_owned_reductions_and_atomic_escalation_for_every_restricted_state
+FAILURES!
+Tests: 1, Assertions: 2, Failures: 1.
+Rendered response bodies omitted; full transient log remains in /tmp during this run.

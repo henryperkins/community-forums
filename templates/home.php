@@ -210,11 +210,18 @@ $notificationVerb = static function (array $notice): string {
                              unread (BoardIndex.dc.html:244) — offering it with
                              nothing to mark states a queue that is not there. */ ?>
                     <div class="directory-pane-actions">
-                        <form method="post" action="/notifications/read-all"><?= $this->csrfField() ?><input type="hidden" name="return" value="/?pane=notices"><button class="linkbtn" type="submit"<?= (int) ($notification_unread ?? 0) === 0 ? ' disabled' : '' ?>>Mark all read</button></form>
-                        <form method="post" action="/notifications/clear"><?= $this->csrfField() ?><input type="hidden" name="return" value="/?pane=notices"><button class="linkbtn danger" type="submit">Clear</button></form>
+                        <form method="post" action="/notifications/read-all"><?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($notification_return) ?>"><button class="linkbtn" type="submit"<?= (int) ($notification_unread ?? 0) === 0 ? ' disabled' : '' ?>>Mark all read</button></form>
+                        <form method="post" action="/notifications/clear"><?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($notification_return) ?>"><button class="linkbtn danger" type="submit">Clear</button></form>
                     </div>
                 <?php endif; ?>
             </header>
+
+    <nav aria-label="Notification history">
+        <a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => 'all'])) ?>"<?= empty($notification_page['unread_only']) ? ' aria-current="page"' : '' ?>>All</a>
+        <a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => 'unread'])) ?>"<?= !empty($notification_page['unread_only']) ? ' aria-current="page"' : '' ?>>Unread</a>
+        <?php if (!empty($notification_page['before'])): ?><a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => !empty($notification_page['unread_only']) ? 'unread' : 'all'])) ?>">Latest</a><?php endif; ?>
+        <?php if (!empty($notification_page['next_before'])): ?><a rel="next" href="<?= $e(\App\Service\NotificationReadService::historyUrl('/', ['filter' => !empty($notification_page['unread_only']) ? 'unread' : 'all', 'before' => $notification_page['next_before']])) ?>">Next</a><?php endif; ?>
+    </nav>
             <p>What happened to your account. The topics themselves wait in the <a href="/inbox">inbox</a>.</p>
             <?php if ($current_user === null): ?>
                 <p class="directory-signin-state"><a href="/login?next=%2F%3Fpane%3Dnotices">Log in</a> to see notices about your account.</p>
@@ -226,6 +233,7 @@ $notificationVerb = static function (array $notice): string {
                         <?php $unread = (int) $notice['is_read'] === 0; ?>
                         <li class="<?= $unread ? 'is-unread' : 'is-read' ?>">
                             <form method="post" action="/notifications/<?= (int) $notice['id'] ?>/read">
+                                <input type="hidden" name="return" value="<?= $e($notification_return) ?>">
                                 <?= $this->csrfField() ?>
                                 <button type="submit">
                                     <?php /* The mark carries its own text, so unread

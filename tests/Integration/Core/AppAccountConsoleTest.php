@@ -247,7 +247,7 @@ final class AppAccountConsoleTest extends TestCase
             '/settings/account/reactivate',
             [],
             'account',
-            'Only deactivated accounts can be reactivated here.',
+            'Only a self-deactivated account without a pending deletion or site restriction can be reactivated.',
         ];
         yield 'request deletion' => [
             '/settings/account/delete/request',
@@ -259,7 +259,7 @@ final class AppAccountConsoleTest extends TestCase
             '/settings/account/delete/cancel',
             [],
             'account',
-            'No pending deletion request was found.',
+            'No pending deletion request is available to cancel.',
         ];
     }
 

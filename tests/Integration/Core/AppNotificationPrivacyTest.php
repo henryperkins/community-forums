@@ -202,9 +202,21 @@ final class AppNotificationPrivacyTest extends TestCase
         self::assertSame(0, $this->reader()->unreadCount($this->userEntity($outsider)));
         $this->actingAs($member);
         $this->assertStatus(200, $this->get('/messages/' . $conversation));
+        $dmNotice = $repo->recent((int) $member['id'])[0];
+        $this->assertRedirect($this->post('/notifications/' . $dmNotice['id'] . '/read'), '/messages/' . $conversation);
+        $this->actingAs($admin);
+        $reportNotice = $repo->recent((int) $admin['id'])[0];
+        $this->assertRedirect($this->post('/notifications/' . $reportNotice['id'] . '/read'), '/mod/reports');
+        $this->actingAs($outsider);
+        $unauthorized = $repo->recent((int) $outsider['id'])[0];
+        $this->assertRedirect($this->post('/notifications/' . $unauthorized['id'] . '/read'), '/notifications');
+
         (new \App\Repository\SettingRepository($this->db))->set('features', ['dms' => false, 'moderation_queue' => false]);
         self::assertSame(0, $this->reader()->unreadCount($this->userEntity($member)));
         self::assertSame(0, $this->reader()->unreadCount($this->userEntity($admin)));
+        $this->actingAs($member);
+        $this->assertRedirect($this->post('/notifications/' . $dmNotice['id'] . '/read'), '/notifications');
+
     }
     public function test_dm_notice_must_fall_within_retained_membership_interval(): void
     {

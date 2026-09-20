@@ -41,17 +41,24 @@ $notifIcons = [
         <?php if (!empty($notifications)): ?>
             <div class="notif-actions">
                 <form class="inline" method="post" action="/notifications/read-all">
-                    <?= $this->csrfField() ?>
+                    <?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($notification_return) ?>">
                     <button class="linkbtn" type="submit">Mark all read</button>
                 </form>
                 <form class="inline" method="post" action="/notifications/clear">
-                    <?= $this->csrfField() ?>
+                    <?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($notification_return) ?>">
                     <button class="linkbtn danger" type="submit">Clear all</button>
                 </form>
             </div>
         <?php endif; ?>
     </header>
 
+
+    <nav aria-label="Notification history">
+        <a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/notifications', ['filter' => 'all'])) ?>"<?= empty($notification_page['unread_only']) ? ' aria-current="page"' : '' ?>>All</a>
+        <a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/notifications', ['filter' => 'unread'])) ?>"<?= !empty($notification_page['unread_only']) ? ' aria-current="page"' : '' ?>>Unread</a>
+        <?php if (!empty($notification_page['before'])): ?><a href="<?= $e(\App\Service\NotificationReadService::historyUrl('/notifications', ['filter' => !empty($notification_page['unread_only']) ? 'unread' : 'all'])) ?>">Latest</a><?php endif; ?>
+        <?php if (!empty($notification_page['next_before'])): ?><a rel="next" href="<?= $e(\App\Service\NotificationReadService::historyUrl('/notifications', ['filter' => !empty($notification_page['unread_only']) ? 'unread' : 'all', 'before' => $notification_page['next_before']])) ?>">Next</a><?php endif; ?>
+    </nav>
     <?php if (empty($notifications)): ?>
         <p class="muted empty">No notifications yet.</p>
     <?php else: ?>
@@ -59,7 +66,7 @@ $notifIcons = [
             <?php foreach ($notifications as $n): ?>
                 <li class="notif-row<?= (int) $n['is_read'] === 0 ? ' notif-unread' : '' ?>">
                     <form class="notif-open" method="post" action="/notifications/<?= (int) $n['id'] ?>/read">
-                        <?= $this->csrfField() ?>
+                        <?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($notification_return) ?>">
                         <button class="notif-link" type="submit">
                             <span class="notif-icon">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><?php foreach (($notifIcons[$n['type']] ?? $notifIcons['reply']) as $d): ?><path d="<?= $e($d) ?>"></path><?php endforeach; ?></svg>

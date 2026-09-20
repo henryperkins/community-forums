@@ -104,12 +104,15 @@ final class HomeController extends Controller
         // nothing new, so the count is resolved for every pane and only the
         // list itself is loaded on demand.
         $notifications = [];
+        $notificationPage = [];
+        $notificationQuery = NotificationReadService::query(['filter' => $request->query('filter'), 'before' => $request->query('before')]);
         $notificationUnread = 0;
         if ($user !== null && !empty($availablePanes['notices'])) {
             $notificationRepo = $this->container->get(NotificationReadService::class);
             $notificationUnread = $notificationRepo->unreadCount($user);
             if ($pane === 'notices') {
-                $notifications = $notificationRepo->page($user)['items'];
+                $notificationPage = $notificationRepo->page($user, $notificationQuery['filter'] === 'unread', $notificationQuery['before']);
+                $notifications = $notificationPage['items'];
             }
         }
 
@@ -141,6 +144,8 @@ final class HomeController extends Controller
             'directory_groups' => $directoryGroups,
             'directory_totals' => $totals,
             'tags' => $tags,
+            'notification_page' => $notificationPage,
+            'notification_return' => NotificationReadService::historyUrl('/', $notificationQuery),
             'notifications' => $notifications,
             'notification_unread' => $notificationUnread,
             'connection_mode' => $connectionMode,

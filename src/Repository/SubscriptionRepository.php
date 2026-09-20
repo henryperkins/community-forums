@@ -18,12 +18,17 @@ final class SubscriptionRepository
     }
 
     /** @return array<string,mixed>|null */
-    public function get(int $userId, string $targetType, int $targetId): ?array
+    public function get(int $userId, string $targetType, int $targetId, bool $lock = false): ?array
     {
         return $this->db->fetch(
-            'SELECT * FROM subscriptions WHERE user_id = ? AND target_type = ? AND target_id = ?',
+            'SELECT * FROM subscriptions WHERE user_id = ? AND target_type = ? AND target_id = ?' . ($lock ? ' FOR UPDATE' : ''),
             [$userId, $targetType, $targetId],
         );
+    }
+
+    public function findOwned(int $userId, int $id, bool $lock = false): ?array
+    {
+        return $this->db->fetch('SELECT * FROM subscriptions WHERE user_id = ? AND id = ?' . ($lock ? ' FOR UPDATE' : ''), [$userId, $id]);
     }
 
     public function set(int $userId, string $targetType, int $targetId, bool $inApp, bool $email, string $frequency): void
@@ -97,7 +102,7 @@ final class SubscriptionRepository
     }
 
     /**
-     * The user's active subscriptions with the thread title / board name resolved
+     * The user's subscriptions (including Off overrides) with safe target labels
      * for the /settings/notifications list. Targets that no longer exist are
      * represented by neutral labels so owners can still reduce delivery.
      * The shared scope prevents per-subscription membership lookups.
@@ -124,7 +129,7 @@ final class SubscriptionRepository
              FROM subscriptions s
              LEFT JOIN threads t ON s.target_type = 'thread' AND t.id = s.target_id
              LEFT JOIN boards b ON b.id = CASE WHEN s.target_type = 'board' THEN s.target_id ELSE t.board_id END
-             WHERE s.user_id = ? AND s.frequency <> 'off'
+             WHERE s.user_id = ?
              ORDER BY s.target_type, s.target_id",
             [$userId],
         );

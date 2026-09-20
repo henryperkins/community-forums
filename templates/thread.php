@@ -18,7 +18,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
 // that the slot alone renders, so the two must not be able to drift apart.
 $canCurateMemory = $current_user !== null && !empty($can_write) && !empty($can_curate_memory);
 $topicToolSections = [
-    'watch' => $current_user !== null && !empty($can_write) && (($notifications_on ?? false) || ($workflow_on ?? false)),
+    'watch' => $current_user !== null && (($notifications_on ?? false) || (!empty($can_write) && ($workflow_on ?? false))),
     'standing' => $current_user !== null && ($workflow_on ?? false),
     'tags' => $current_user !== null && ($tags_on ?? false) && (!empty($thread_tags) || !empty($can_edit_tags)),
     'memory' => $canCurateMemory,
@@ -153,6 +153,8 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
         'thread' => $thread,
         'topic_tool_sections' => $topicToolSections,
         'subscription' => $subscription,
+        'subscription_errors' => $subscription_errors ?? [],
+        'subscription_old' => $subscription_old ?? [],
         'notifications_on' => $notifications_on,
         'workflow_on' => $workflow_on,
         'my_snooze' => $my_snooze,

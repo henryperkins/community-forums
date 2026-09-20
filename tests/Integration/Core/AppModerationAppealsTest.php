@@ -153,6 +153,15 @@ final class AppModerationAppealsTest extends TestCase
 
         $this->assertRedirect($response, '/mod/appeals');
         self::assertSame('reversed', (string) $this->db->fetchValue('SELECT status FROM moderation_appeals WHERE id = ?', [$appealId]));
+        $notice = $this->db->fetch("SELECT * FROM notifications WHERE user_id = ? AND type = 'mod' ORDER BY id DESC LIMIT 1", [$this->member['id']]);
+        self::assertNull($notice['thread_id']);
+        self::assertNull($notice['post_id']);
+        $this->actingAs($this->member);
+        $this->assertRedirect($this->post('/notifications/' . $notice['id'] . '/read'), '/appeals');
+        $this->assertSeeText($this->get('/appeals'), 'Restored.');
+        (new SettingRepository($this->db))->set('features', ['appeals' => false]);
+        $this->assertRedirect($this->post('/notifications/' . $notice['id'] . '/read'), '/notifications');
+
         self::assertSame(0, (int) $this->posts()->find($this->replyId)['is_deleted']);
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_appeal_events WHERE appeal_id = ? AND event = 'reversed'", [$appealId]));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'appeal_resolved' AND target_type = 'post' AND target_id = ?", [$this->replyId]));
