@@ -2,6 +2,12 @@
 
 2026-09-20. Focused PHP verification: **114 tests, 1,029 assertions, zero failures/errors**. See `n3-phpunit-summary.json` for the sanitized case inventory and exact command. No real mail was sent.
 
+This is the N3 task-time record. The later malformed-date correction is recorded
+in `n3-review-fix-summary.json` (116 tests, 1,060 assertions). A4 subsequently
+implemented saved-feed sources, and the actual CLI rehearsal now verifies all
+ten outcomes in [worker-cli.json](worker-cli.json). The [combined index](README.md)
+owns final release results and reviewed browser evidence.
+
 | Contract | Evidence |
 |---|---|
 | Reproduce unreplayable failure and false Sent | Initial focused run: 68 tests, 312 assertions, two expected failures: digest was Failed instead of Queued; unavailable instant was Sent instead of Suppressed |

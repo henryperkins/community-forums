@@ -120,6 +120,19 @@ if ($command === 'reset') {
         case 'private-board':
             $db->run("UPDATE boards SET visibility = 'private' WHERE slug = 'settings-repair-board'");
             break;
+        case 'legacy-multi-feed':
+            $selected = array_map('intval', array_column($db->fetchAll("SELECT id FROM boards WHERE slug IN ('general', 'settings-repair-board') ORDER BY id"), 'id'));
+            if (count($selected) !== 2) {
+                throw new RuntimeException('Missing legacy feed fixture boards.');
+            }
+            (new \App\Repository\SavedFeedRepository($db))->create($uid, 'Legacy multi-board reading', json_encode([
+                'board_ids' => $selected, 'sort' => 'latest',
+            ], JSON_THROW_ON_ERROR), true);
+            break;
+        case 'corrupt-feed':
+            // JSON objects must never be mistaken for an intentional empty array.
+            (new \App\Repository\SavedFeedRepository($db))->create($uid, 'Corrupt reading', '{"board_ids":{},"sort":"latest"}', true);
+            break;
         case 'email-ops':
             $threadId = (int) $db->fetchValue("SELECT t.id FROM threads t JOIN boards b ON b.id = t.board_id WHERE b.slug = 'settings-repair-board' ORDER BY t.id LIMIT 1");
             (new SubscriptionRepository($db))->set($uid, 'thread', $threadId, true, true, 'daily');

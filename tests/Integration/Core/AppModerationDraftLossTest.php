@@ -123,7 +123,7 @@ final class AppModerationDraftLossTest extends TestCase
 
         $this->assertRedirectContains($res, '/admin/email');
         $flash = urldecode(implode(' ', $res->cookieHeaders()));
-        self::assertStringContainsString('not in a failed state', $flash);
+        self::assertStringContainsString('not a replayable failed job', $flash);
         $row = $this->db->fetch('SELECT status, attempt_count FROM email_deliveries WHERE id = ?', [$id]);
         self::assertSame('sent', (string) $row['status']);
         self::assertSame(1, (int) $row['attempt_count']);

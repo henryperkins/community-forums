@@ -397,6 +397,36 @@ test.describe('account settings repairs without JavaScript', () => {
     expect((await page.request.get(url)).status()).toBe(404);
   });
 
+  test('clearing a legacy multi-board saved feed survives validation and saves All boards', async ({ page }, info) => {
+    await login(page);
+    const original = fixture('legacy-multi-feed').saved_feeds[0];
+    await page.goto('/settings/boards');
+    const form = page.locator(`form[action="/settings/saved-feeds/${original.id}"]`).filter({ has: page.locator('input[name="name"]') });
+    const selection = form.locator('select[name="board_ids[]"]');
+    await expect(selection.locator('option:checked')).toHaveCount(2);
+    await selection.selectOption([]);
+    await form.locator('[name="name"]').fill('   ');
+    await form.locator('button[type="submit"]').click();
+    await expect(form.locator('[name="name"]')).toHaveAttribute('aria-invalid', 'true');
+    await expect(selection.locator('option:checked')).toHaveCount(0);
+    expect(fixture('inspect').saved_feeds[0].filter_json).toBe(original.filter_json);
+    await form.locator('[name="name"]').fill('All visible reading');
+    await form.locator('button[type="submit"]').click();
+    expect(JSON.parse(fixture('inspect').saved_feeds[0].filter_json).board_ids).toEqual([]);
+    await expect(form.locator('select[name="board_id"]')).toHaveValue('');
+    await capture(page, info, '11-legacy-selection-cleared');
+  });
+
+  test('malformed saved-feed JSON stays unavailable without broadening its contents', async ({ page }, info) => {
+    await login(page);
+    const feed = fixture('corrupt-feed').saved_feeds[0];
+    await page.goto(`/feeds/saved/${feed.id}`);
+    await expect(page.locator('.feed-thread')).toHaveCount(0);
+    await expect(page.getByText('This saved feed is unavailable. Update its filter in board settings.', { exact: true })).toBeVisible();
+    expect((await page.content()).includes('Settings evidence topic')).toBe(false);
+    await capture(page, info, '11-malformed-feed-unavailable');
+  });
+
   test('folder shortcuts can be renamed, removed, and deleted without deleting the board', async ({ page }, info) => {
     const data = fixture('inspect');
     await login(page);
