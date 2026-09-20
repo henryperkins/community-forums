@@ -207,7 +207,7 @@ final class AppAdminStructureReorderTest extends TestCase
         $this->assertStatus(403, $this->post('/admin/boards/' . $b['id'] . '/archive'));
 
         $this->logoutClient();
-        $this->get('/');
+        $this->get('/login'); // Obtain a valid guest token from an actual form.
         $this->assertRedirectContains(
             $this->post('/admin/structure/reorder', ['scope' => 'category', 'ids' => [(int) $this->categoryId]]),
             '/login',

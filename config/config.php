@@ -27,6 +27,9 @@ return [
         'username' => Env::get('DB_USERNAME', 'retro'),
         'password' => Env::get('DB_PASSWORD', 'retropw'),
         'charset' => 'utf8mb4',
+        // Avoid an extra prepare round trip per query on remote MySQL. Values
+        // remain PDO-bound; false restores server-side prepares if required.
+        'emulate_prepares' => Env::bool('DB_EMULATE_PREPARES', true),
         // TLS for the MySQL connection. Off by default (same-host or private
         // network). Required when the database is reached over the public
         // internet — see docs/runbooks/deployment-cloudflare.md.

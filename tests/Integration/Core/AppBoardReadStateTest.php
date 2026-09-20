@@ -154,9 +154,9 @@ final class AppBoardReadStateTest extends TestCase
     public function test_a_guest_is_sent_to_log_in_rather_than_writing(): void
     {
         [$member, $board, $thread] = $this->seedBoardWithTopic('read-guest', 'read_state_guest');
-        // A guest's CSRF secret is minted by their first GET; posting cold would
+        // A guest's CSRF secret is minted by a form GET; posting cold would
         // be refused by the token gate before the auth gate is ever consulted.
-        $this->get('/c/read-guest');
+        $this->get('/login');
 
         $response = $this->post('/t/' . (int) $thread['thread_id'] . '/read', ['state' => 'unread']);
 

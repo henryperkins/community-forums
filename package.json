@@ -1,9 +1,11 @@
 {
   "private": true,
   "scripts": {
-    "build": "npm run build:wysiwyg",
-    "build:wysiwyg": "vite build --config vite.config.mjs",
-    "check:wysiwyg": "npm run build:wysiwyg && git diff --exit-code -- public/assets/wysiwyg-composer.js public/assets/wysiwyg-composer.css",
+    "build": "node bin/build-assets.mjs",
+    "build:wysiwyg": "npm run build",
+    "check:assets": "node bin/build-assets.mjs --check",
+    "check:wysiwyg": "npm run check:assets",
+    "test:assets": "node --test tests/worker/*.test.mjs",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail"
   },

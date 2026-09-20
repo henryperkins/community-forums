@@ -359,7 +359,7 @@ final class AppInvitationsTest extends TestCase
         $this->setMode('invite');
         $valid = $this->issueInvitation();
         $this->withRateLimit('invite_redeem', 1, 900);
-        $this->get('/register'); // seed CSRF without charging the policy
+        $this->get('/login'); // Seed CSRF through a form without charging the invite policy.
 
         $first = $this->post('/register', $this->registerFields('probe1', 'probe1@example.test') + ['invite' => str_repeat('e', 64)]);
         $this->assertStatus(422, $first); // consumed the single unit
@@ -533,7 +533,7 @@ final class AppInvitationsTest extends TestCase
         $this->enableInvitations();
         $this->setMode('invite');
         $this->makeAdmin();
-        $this->get('/register');
+        $this->get('/login'); // Invite-only registration without an invite renders no form.
 
         $missing = $this->post('/register', $this->registerFields('noinvite', 'noinvite@example.test'));
         $this->assertStatus(403, $missing);
@@ -612,7 +612,7 @@ final class AppInvitationsTest extends TestCase
         $this->setMode('invite');
         $otherBoard = $this->makeBoard($this->makeCategory(), []);
         $invite = $this->issueInvitation(); // no board grant, no role
-        $this->get('/register');
+        $this->get('/register', ['invite' => $invite['token']]);
 
         $res = $this->post('/register', $this->registerFields('forger', 'forger@example.test') + [
             'invite' => $invite['token'],

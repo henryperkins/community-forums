@@ -166,7 +166,7 @@ final class AppPostingTest extends TestCase
     public function test_guest_cannot_create_thread(): void
     {
         // Guest with a valid CSRF token still gets bounced to login.
-        $this->get('/c/general');
+        $this->get('/login');
         $response = $this->post('/threads', [
             'board_id' => $this->boardId,
             'title' => 'guest topic',

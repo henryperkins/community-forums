@@ -19,8 +19,8 @@ use App\Security\Session;
 /**
  * First-run setup wizard (ADMIN §9). Creates the first administrator, the
  * community name, and a starter set of categories/boards — all in application
- * code (Phase 1 has no seed migration) — then signs the admin in. Once an admin
- * exists the install is "initialized" and the wizard locks.
+ * code (Phase 1 has no seed migration) — then signs the admin in. The completion
+ * marker keeps the wizard locked; older installs also recognize an existing admin.
  */
 final class SetupService
 {
@@ -56,7 +56,11 @@ final class SetupService
 
     public function isInitialized(): bool
     {
-        return $this->users->adminCount() > 0;
+        // installed_at is written in the same transaction as the initial
+        // administrator. Settings are loaded once per request, so a completed
+        // install needs no additional users query and never reopens setup.
+        return $this->settings->getString('installed_at') !== ''
+            || $this->users->adminCount() > 0;
     }
 
     /** @param array<string,mixed> $input */

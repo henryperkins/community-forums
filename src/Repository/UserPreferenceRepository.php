@@ -21,12 +21,14 @@ final class UserPreferenceRepository
     /** @return array<string,mixed> decoded prefs ({} when none stored) */
     public function get(int $userId): array
     {
-        $raw = $this->db->fetchValue('SELECT prefs FROM user_preferences WHERE user_id = ?', [$userId]);
-        if ($raw === false || $raw === null) {
-            return [];
-        }
-        $decoded = json_decode((string) $raw, true);
-        return is_array($decoded) ? $decoded : [];
+        return $this->db->remember(__METHOD__ . ':' . $userId, function () use ($userId): array {
+            $raw = $this->db->fetchValue('SELECT prefs FROM user_preferences WHERE user_id = ?', [$userId]);
+            if ($raw === false || $raw === null) {
+                return [];
+            }
+            $decoded = json_decode((string) $raw, true);
+            return is_array($decoded) ? $decoded : [];
+        });
     }
 
     /**

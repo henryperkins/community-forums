@@ -19,6 +19,9 @@ final class Database
     private float $connectionDurationMs = 0.0;
     private int $queryCount = 0;
     private float $queryDurationMs = 0.0;
+    private bool $requestCacheActive = false;
+    /** @var array<string,mixed> Only explicitly selected repository reads. */
+    private array $requestCache = [];
 
     /** @param array<string,mixed> $config db config block */
     public function __construct(private array $config)
@@ -85,13 +88,22 @@ final class Database
     /** @return array<int,mixed> */
     private function driverOptions(): array
     {
-        return [
+        $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_EMULATE_PREPARES => (bool) ($this->config['emulate_prepares'] ?? true),
             PDO::ATTR_STRINGIFY_FETCHES => false,
             PDO::ATTR_TIMEOUT => 5,
-        ] + $this->tlsOptions();
+        ];
+        // Preserve the native-prepare single-statement boundary under emulation.
+        // Prefer the PHP 8.4+ name without introducing an 8.2 runtime requirement.
+        foreach (['Pdo\\Mysql::ATTR_MULTI_STATEMENTS', 'PDO::MYSQL_ATTR_MULTI_STATEMENTS'] as $name) {
+            if (defined($name)) {
+                $options[constant($name)] = false;
+                break;
+            }
+        }
+        return $options + $this->tlsOptions();
     }
 
     /**
@@ -132,7 +144,51 @@ final class Database
     /** Allow tests to inject a pre-built PDO (e.g. a shared transaction). */
     public function setPdo(PDO $pdo): void
     {
+        $this->clearRequestCache();
         $this->pdo = $pdo;
+    }
+
+    /** App::handle owns this scope; CLI workers deliberately do not cache. */
+    public function beginRequestCache(): void
+    {
+        $this->clearRequestCache();
+        $this->requestCacheActive = true;
+    }
+
+    public function endRequestCache(): void
+    {
+        $this->requestCacheActive = false;
+        $this->clearRequestCache();
+    }
+
+    public function isRequestCacheActive(): bool
+    {
+        return $this->requestCacheActive;
+    }
+
+    public function clearRequestCache(): void
+    {
+        $this->requestCache = [];
+    }
+
+    /**
+     * Memoize a pure, non-locking read across repositories sharing this DB.
+     * Null/false are valid results. Exceptions are never cached. Callers using
+     * raw PDO for writes must clear the cache or use transaction() boundaries.
+     *
+     * @template T
+     * @param callable():T $loader
+     * @return T
+     */
+    public function remember(string $key, callable $loader): mixed
+    {
+        if (!$this->requestCacheActive) {
+            return $loader();
+        }
+        if (!array_key_exists($key, $this->requestCache)) {
+            $this->requestCache[$key] = $loader();
+        }
+        return $this->requestCache[$key];
     }
 
     /**
@@ -142,6 +198,10 @@ final class Database
      */
     public function run(string $sql, array $params = []): \PDOStatement
     {
+        // Unknown statements and failed writes invalidate conservatively too.
+        if (!$this->isReadOnlyStatement($sql)) {
+            $this->clearRequestCache();
+        }
         $pdo = $this->pdo();
         $startedAt = hrtime(true);
         $this->queryCount++;
@@ -152,6 +212,54 @@ final class Database
         } finally {
             $this->queryDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
         }
+    }
+
+    /** Recognize SELECT and WITH ... SELECT without exempting WITH ... UPDATE/DELETE. */
+    private function isReadOnlyStatement(string $sql): bool
+    {
+        if (preg_match('/^\s*SELECT\b/i', $sql)) {
+            return true;
+        }
+        if (!preg_match('/^\s*WITH\b/i', $sql)
+            || str_contains($sql, '\\')
+            || preg_match('~/\*(?:!|M!)~i', $sql)) {
+            // Backslash quoting depends on SQL mode; executable comments can
+            // contain statements. Neither is needed by our directory CTE.
+            return false;
+        }
+
+        // Ignore literals, quoted identifiers and ordinary comments before
+        // balancing groups. The token after the final CTE must be SELECT;
+        // a SELECT inside a CTE or its comments says nothing about that verb.
+        $structure = preg_replace(
+            <<<'REGEX'
+            ~'(?:''|[^'])*'|"(?:""|[^"])*"|`(?:``|[^`])*`|--(?=\s|$)[^\r\n]*|\#[^\r\n]*|/\*.*?\*/~s
+            REGEX,
+            ' ',
+            $sql,
+        );
+        if ($structure === null) {
+            return false;
+        }
+        preg_match_all('/[(),;]|[a-z_][a-z0-9_$]*/i', $structure, $matches);
+        $depth = 0;
+        $afterGroup = false;
+        foreach ($matches[0] as $token) {
+            if ($token === '(') {
+                $depth++;
+            } elseif ($token === ')') {
+                $depth--;
+                $afterGroup = $depth === 0;
+            } elseif ($depth === 0 && $afterGroup) {
+                if ($token === ',' || strcasecmp($token, 'AS') === 0) {
+                    // Another CTE, or the end of an optional CTE column list.
+                    $afterGroup = false;
+                } else {
+                    return strcasecmp($token, 'SELECT') === 0;
+                }
+            }
+        }
+        return false;
     }
 
     /** @param array<string,mixed>|list<mixed> $params */
@@ -192,21 +300,26 @@ final class Database
      */
     public function transaction(callable $callback): mixed
     {
-        $pdo = $this->pdo();
-        if ($pdo->inTransaction()) {
-            return $callback();
-        }
-
-        $pdo->beginTransaction();
+        $this->clearRequestCache();
         try {
-            $result = $callback();
-            $pdo->commit();
-            return $result;
-        } catch (Throwable $e) {
+            $pdo = $this->pdo();
             if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+                return $callback();
             }
-            throw $e;
+
+            $pdo->beginTransaction();
+            try {
+                $result = $callback();
+                $pdo->commit();
+                return $result;
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $e;
+            }
+        } finally {
+            $this->clearRequestCache();
         }
     }
 

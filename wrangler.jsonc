@@ -3,7 +3,7 @@
   // Runbook: docs/runbooks/deployment-cloudflare.md
   //
   // The Worker is a thin front door: it fixes up the client-IP header and hands
-  // every request to a single container instance running the Apache/PHP image.
+  // dynamic requests to a single container running the Apache/PHP image.
   // Secrets (APP_KEY, DB_PASSWORD, DB_SSL_CA_PEM, R2 keys) are NOT here --
   // set them with `wrangler secret put`.
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -13,6 +13,16 @@
   "compatibility_flags": ["nodejs_compat"],
 
   "observability": { "enabled": true },
+
+  "build": { "command": "npm run build" },
+  "assets": {
+    // Generated allowlist only: never upload public/index.php or local uploads.
+    "directory": "./.build/static",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
 
   "containers": [
     {
@@ -76,6 +86,7 @@
     "DB_PORT": "3306",
     "DB_DATABASE": "imladris-boards",
     "DB_USERNAME": "jfi825th4rola9t3c6pw",
+    "DB_EMULATE_PREPARES": "true",
     "DB_SSL": "true",
     "DB_SSL_CA": "/etc/ssl/certs/ca-certificates.crt",
 
@@ -84,7 +95,8 @@
     "R2_ACCOUNT_ID": "a77e479f6736120eadd99973dbeb705e",
     "UPLOADS_PATH": "/data/media",
     "PACKAGES_STORAGE_PATH": "/data/packages",
-    "RATELIMIT_PATH": "/data/ratelimit",
+    // The single instance owns this ephemeral ledger; restart resets its limits.
+    "RATELIMIT_PATH": "/var/www/html/storage/ratelimit",
 
     // The Worker overwrites X-Forwarded-For with the verified client IP, so the
     // app must trust the hop it sees, or every request is attributed to one

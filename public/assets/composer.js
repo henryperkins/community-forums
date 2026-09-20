@@ -171,11 +171,29 @@
     };
 
     var wysiwygFactory = null;
+    var wysiwygResolved = false;
+    var wysiwygLoading = false;
 
     function registerWysiwygAdapter(factory) {
-        wysiwygFactory = factory;
-        document.querySelectorAll('form.composer').forEach(function (form) {
-            if (form._rbComposerEnhance) { form._rbComposerEnhance(); }
+        // All optional loading paths settle once. Controls keep the adapter
+        // they were wired against, including after a failed editor import.
+        if (wysiwygResolved) { return; }
+        wysiwygFactory = typeof factory === 'function' ? factory : null;
+        wysiwygResolved = true;
+        enhanceWithin(document);
+    }
+
+    function loadWysiwygAdapter() {
+        if (wysiwygLoading || wysiwygResolved) { return; }
+        wysiwygLoading = true;
+        var source = document.body.getAttribute('data-wysiwyg-src');
+        if (!source) { registerWysiwygAdapter(null); return; }
+        // The core owns both imports so a missing entry, rejected dependency,
+        // or evaluation error all initialize the normal textarea controls.
+        import(/* @vite-ignore */ source).then(function (module) {
+            return module.loadWysiwygAdapter();
+        }).then(registerWysiwygAdapter, function () {
+            registerWysiwygAdapter(null);
         });
     }
 
@@ -2739,6 +2757,15 @@
     function enhance(form, prefs) {
         var ta = form.querySelector('.composer-input');
         if (!ta) { return; }
+        // The optional module loads asynchronously. Keep the server textarea
+        // usable while it loads, then wire pickers, uploads and keyboard targets
+        // once with the resolved adapter. A failed import resolves to null and
+        // enhances the textarea instead; later inbox forms use the same result.
+        if (document.body.getAttribute('data-wysiwyg-composer') === '1'
+            && !form.hasAttribute('data-no-wysiwyg') && !wysiwygResolved) {
+            loadWysiwygAdapter();
+            return;
+        }
         form._rbComposerEnhance = function () {
             maybeUpgradeWysiwyg(form, ta, form._rbComposerFallbackAdapter || form._rbComposerAdapter);
         };

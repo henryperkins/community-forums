@@ -15,9 +15,9 @@ final class BoardRepository
     /** @return array<int,array<string,mixed>> all boards, category+position ordered */
     public function allOrdered(): array
     {
-        return $this->db->fetchAll(
+        return $this->db->remember(__METHOD__, fn (): array => $this->db->fetchAll(
             'SELECT * FROM boards ORDER BY category_id ASC, position ASC, id ASC',
-        );
+        ));
     }
 
     /** @return array<int,array<string,mixed>> */

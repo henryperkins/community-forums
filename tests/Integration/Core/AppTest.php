@@ -112,20 +112,19 @@ final class AppTest extends TestCase
         self::assertLessThanOrEqual(9, $this->db->metrics()['queries']);
     }
 
-    public function test_layout_versions_core_assets_for_edge_caching(): void
+    public function test_layout_uses_fingerprinted_core_assets_from_the_build_manifest(): void
     {
         $this->makeAdmin();
         $response = $this->get('/');
 
-        self::assertMatchesRegularExpression(
-            '#/assets/app\.css\?v=([a-f0-9]{16})#',
-            $response->body(),
-        );
-        preg_match('#/assets/app\.css\?v=([a-f0-9]{16})#', $response->body(), $match);
-        $version = $match[1] ?? '';
-        self::assertNotSame('', $version);
-        self::assertStringContainsString('/assets/imladris.css?v=' . $version, $response->body());
-        self::assertStringContainsString('/assets/app.js?v=' . $version, $response->body());
+        $root = dirname(__DIR__, 3);
+        $manifest = json_decode((string) file_get_contents($root . '/config/assets.json'), true, flags: JSON_THROW_ON_ERROR);
+        foreach (['app.css', 'imladris.css', 'app.js'] as $name) {
+            $url = $manifest['urls'][$name];
+            self::assertMatchesRegularExpression('#^/assets/dist/[A-Za-z0-9_-]+-[A-Za-z0-9_-]+\.(css|js)$#', $url);
+            self::assertStringContainsString('"' . $url . '"', $response->body());
+            self::assertSame($manifest['files'][$url]['sha256'], hash_file('sha256', $root . '/public' . $url));
+        }
     }
 
     public function test_post_route_dispatches_exactly_once(): void

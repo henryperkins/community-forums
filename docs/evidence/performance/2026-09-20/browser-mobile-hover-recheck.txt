@@ -1,0 +1,4 @@
+  ✓  1 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:179:5 › collapsed formatting row explains itself and stays recoverable (1.8s)
+  ✓  2 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:179:5 › collapsed formatting row explains itself and stays recoverable (1.8s)
+  ✓  3 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:179:5 › collapsed formatting row explains itself and stays recoverable (1.8s)
+  3 passed (7.3s)

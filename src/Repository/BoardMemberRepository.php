@@ -20,6 +20,9 @@ final class BoardMemberRepository
 
     public function isMember(int $boardId, int $userId): bool
     {
+        if ($this->db->isRequestCacheActive()) {
+            return in_array($boardId, $this->boardIdsFor($userId), true);
+        }
         return $this->db->fetchValue(
             'SELECT 1 FROM board_members WHERE board_id = ? AND user_id = ? LIMIT 1',
             [$boardId, $userId],
@@ -44,8 +47,10 @@ final class BoardMemberRepository
     /** Board ids the user belongs to (to annotate nav/listings in one query). */
     public function boardIdsFor(int $userId): array
     {
-        $rows = $this->db->fetchAll('SELECT board_id FROM board_members WHERE user_id = ?', [$userId]);
-        return array_map(static fn (array $r): int => (int) $r['board_id'], $rows);
+        return $this->db->remember(__METHOD__ . ':' . $userId, function () use ($userId): array {
+            $rows = $this->db->fetchAll('SELECT board_id FROM board_members WHERE user_id = ?', [$userId]);
+            return array_map(static fn (array $r): int => (int) $r['board_id'], $rows);
+        });
     }
 
     /** @return array<int,array<string,mixed>> members of a board with handles */

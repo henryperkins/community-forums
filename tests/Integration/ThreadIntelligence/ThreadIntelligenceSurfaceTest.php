@@ -534,11 +534,11 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         }
 
         $this->logoutClient();
-        // This GET also seeds the guest CSRF cookie, so the POSTs below carry a valid
-        // token: the 302 to /login is the auth gate answering, not the CSRF gate's 403.
         $guestHtml = $this->get($url)->body();
         self::assertStringContainsString('data-living-brief', $guestHtml);
         self::assertStringNotContainsString('living-brief-curator-' . $seed['thread_id'], $guestHtml);
+        // Seed CSRF through a guest form so these POSTs exercise the auth gate.
+        $this->get('/login');
         foreach ($forms as $label => [$path, $body]) {
             $response = $this->post($path, $body);
             self::assertContains($response->status(), [302, 303], $label . ' must bounce a guest');

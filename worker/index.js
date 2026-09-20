@@ -1,11 +1,11 @@
 import { Container, getContainer } from "@cloudflare/containers";
+import { routeRequest } from "./assets.mjs";
 
 /**
  * RetroBoards front door.
  *
- * The Worker owns two things the container cannot do for itself: it establishes
- * the trusted client IP, and it drives the cron workers that would otherwise
- * need a crontab inside the image.
+ * The Worker serves the compiled public assets, establishes the trusted client
+ * IP, and drives cron workers that would otherwise need a crontab in the image.
  *
  * Runbook: docs/runbooks/deployment-cloudflare.md
  */
@@ -15,7 +15,6 @@ import { Container, getContainer } from "@cloudflare/containers";
 const CONTAINER_ID = "main";
 
 const CONSOLE = "/var/www/html/bin/console";
-const EDGE_CACHE_CONTROL = "public, max-age=300, s-maxage=3600";
 
 /** Cron expression -> `bin/console` commands, in run order. */
 const CRON_JOBS = {
@@ -24,26 +23,6 @@ const CRON_JOBS = {
 	"10 3 * * *": ["worker:purge-ips", "worker:attachments", "worker:packages"],
 	"0 7 * * *": ["worker:digest"],
 };
-
-function isPublicAssetRequest(request) {
-	if (request.method !== "GET") {
-		return false;
-	}
-	const url = new URL(request.url);
-	return url.pathname === "/brand.css"
-		|| (url.pathname.startsWith("/assets/") && url.searchParams.has("v"))
-		|| url.pathname.startsWith("/assets/fonts/");
-}
-
-function withCacheStatus(response, status) {
-	const headers = new Headers(response.headers);
-	headers.set("X-RetroBoards-Cache", status);
-	return new Response(response.body, {
-		status: response.status,
-		statusText: response.statusText,
-		headers,
-	});
-}
 
 async function fetchForum(request, env) {
 	// The app resolves the client IP from X-Forwarded-For, honouring it only
@@ -114,6 +93,7 @@ export class ForumContainer extends Container {
 			DB_DATABASE: env.DB_DATABASE,
 			DB_USERNAME: env.DB_USERNAME,
 			DB_PASSWORD: env.DB_PASSWORD,
+			DB_EMULATE_PREPARES: env.DB_EMULATE_PREPARES,
 			DB_SSL: env.DB_SSL,
 			DB_SSL_CA: env.DB_SSL_CA,
 			DB_SSL_CA_PEM: env.DB_SSL_CA_PEM,
@@ -201,38 +181,8 @@ export class ForumContainer extends Container {
 }
 
 export default {
-	async fetch(request, env, ctx) {
-		if (!isPublicAssetRequest(request)) {
-			return fetchForum(request, env);
-		}
-
-		const cache = caches.default;
-		const cacheKey = new Request(request.url, { method: "GET" });
-		const cached = await cache.match(cacheKey);
-		if (cached) {
-			return withCacheStatus(cached, "HIT");
-		}
-
-		const response = await fetchForum(request, env);
-		if (response.status !== 200) {
-			return response;
-		}
-
-		const headers = new Headers(response.headers);
-		headers.delete("Set-Cookie");
-		headers.set("Cache-Control", EDGE_CACHE_CONTROL);
-		const cacheable = new Response(response.body, {
-			status: response.status,
-			statusText: response.statusText,
-			headers,
-		});
-		ctx.waitUntil(
-			cache.put(cacheKey, cacheable.clone()).catch((err) => {
-				console.error(`asset cache put failed: ${err}`);
-			}),
-		);
-
-		return withCacheStatus(cacheable, "MISS");
+	async fetch(request, env) {
+		return routeRequest(request, env, () => fetchForum(request, env));
 	},
 
 	async scheduled(controller, env, ctx) {

@@ -1,0 +1,79 @@
+{
+  "browser": "Chromium (Playwright 1.61.1)",
+  "url": "http://localhost:8043",
+  "browser_plugin": "unavailable; repository Playwright harness used",
+  "database": "retroboards_e2e; freshly prepared before each viewport project",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "suites": [
+    "wysiwyg-composer.spec.ts",
+    "composer-toolbar-hardening.spec.ts"
+  ],
+  "checks": [
+    "No editor entry or Milkdown request on login, appearance settings or empty inbox",
+    "Inbox fragment insertion loads one Milkdown chunk, creates editor, submits reply without page errors",
+    "Failed editor entry and adapter chunk each initialize textarea controls exactly once, stamp idempotency, apply bold, and submit a real topic",
+    "JavaScript-disabled composer submits server-rendered Markdown",
+    "Strict CSP, rich editor interactions, suggestions, uploads, Enter semantics and no-op edit preservation"
+  ],
+  "commands": [
+    "bash tests/browser/prepare.sh (before each viewport project and again after verification)",
+    "E2E_PORT=8043 RB_EVIDENCE_DIR=/tmp/retroboards-asset-evidence-desktop npx --prefix tests/browser playwright test --config tests/browser/playwright.config.ts wysiwyg-composer.spec.ts composer-toolbar-hardening.spec.ts --project=desktop",
+    "E2E_PORT=8043 RB_EVIDENCE_DIR=/tmp/retroboards-asset-evidence-mobile npx --prefix tests/browser playwright test --config tests/browser/playwright.config.ts wysiwyg-composer.spec.ts composer-toolbar-hardening.spec.ts --project=mobile",
+    "E2E_PORT=8043 RB_EVIDENCE_DIR=/tmp/retroboards-asset-evidence-hover npx --prefix tests/browser playwright test --config tests/browser/playwright.config.ts composer-toolbar-hardening.spec.ts --project=mobile --grep \"collapsed formatting row\" --repeat-each=3",
+    "npm run check:assets",
+    "npm run test:assets",
+    "npx wrangler deploy --dry-run --containers-rollout none --outdir /tmp/retroboards-worker-check",
+    "composer check:imladris"
+  ],
+  "results": {
+    "desktop": {
+      "passed": 37,
+      "skipped": 3
+    },
+    "mobile": {
+      "passed": 26,
+      "skipped": 14
+    },
+    "worker": {
+      "passed": 8,
+      "skipped": 0,
+      "runtime": "Node assertions plus Miniflare Workers Assets binding"
+    }
+  },
+  "screenshots": [
+    "desktop-failed-chunk-textarea.png",
+    "desktop-failed-entry-textarea.png",
+    "desktop-lazy-inbox-composer.png",
+    "desktop-no-js-composer.png",
+    "mobile-failed-chunk-textarea.png",
+    "mobile-failed-entry-textarea.png",
+    "mobile-no-js-composer.png"
+  ],
+  "manifest_version": "6ba4ffef9eadf890",
+  "mobile_initial_run": {
+    "passed": 25,
+    "skipped": 14,
+    "failed": 1,
+    "test": "collapsed formatting row explains itself and stays recoverable",
+    "failure": "Playwright hover action timed out while the formatting button moved and Attach images intercepted pointer events.",
+    "unchanged_isolated_recheck": "3 consecutive passes",
+    "unchanged_clean_full_rerun": "26 passes, 14 viewport skips",
+    "production_changes_for_this_failure": "none",
+    "failure_log": "browser-mobile-initial-failure.txt",
+    "recheck_log": "browser-mobile-hover-recheck.txt"
+  },
+  "cleanup": {
+    "fixtures": "Ran tests/browser/prepare.sh again after verification to restore the dedicated retroboards_e2e schema, seed data, flags, preferences and drafts.",
+    "servers": "The temporary visual-comparison server was stopped; no listeners remain on browser ports 8043 or 8044.",
+    "screenshots": "Selected current desktop/mobile captures copied to this directory; broad existing browser evidence was not overwritten."
+  }
+}

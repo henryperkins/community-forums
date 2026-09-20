@@ -33,20 +33,8 @@ final class CloudflareDeploymentContractTest extends TestCase
         }
     }
 
-    public function test_worker_caches_only_public_get_assets_without_cookies(): void
-    {
-        $worker = $this->read('worker/index.js');
-
-        self::assertStringContainsString('request.method !== "GET"', $worker);
-        self::assertStringContainsString('url.pathname === "/brand.css"', $worker);
-        self::assertStringContainsString('url.pathname.startsWith("/assets/") && url.searchParams.has("v")', $worker);
-        self::assertStringContainsString('caches.default', $worker);
-        self::assertStringContainsString('cache.match(cacheKey)', $worker);
-        self::assertStringContainsString('headers.delete("Set-Cookie")', $worker);
-        self::assertStringContainsString('public, max-age=300, s-maxage=3600', $worker);
-        self::assertStringContainsString('cache.put(cacheKey, cacheable.clone())', $worker);
-        self::assertStringContainsString('X-RetroBoards-Cache', $worker);
-    }
+    // Asset routing/cache semantics run against actual Requests/Responses and
+    // the Workers Assets binding in `npm run test:assets` (tests/worker/).
 
     public function test_worker_allows_cold_start_time_for_mounts_and_migrations(): void
     {

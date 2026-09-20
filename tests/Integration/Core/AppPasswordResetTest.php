@@ -211,6 +211,8 @@ final class AppPasswordResetTest extends TestCase
         $show = $this->get('/reset', ['token' => str_repeat('a', 64)]);
         $this->assertStatus(200, $show);
         $this->assertSeeText($show, 'invalid or has expired');
+        self::assertSame([], $show->cookieHeaders());
+        $this->get('/login'); // The invalid-link page has no form; supply a valid guest CSRF token.
 
         $resp = $this->post('/reset', [
             'token' => str_repeat('a', 64), 'password' => 'newpassword9', 'password_confirm' => 'newpassword9',
@@ -254,12 +256,14 @@ final class AppPasswordResetTest extends TestCase
             [gmdate('Y-m-d H:i:s', time() - 3600), (int) $user['id']],
         );
 
-        // The form treats the expired link as invalid (and seeds the guest CSRF cookie)…
+        // The expired-link page has no reset form and does not mint a guest cookie.
         $show = $this->get('/reset', ['token' => $token]);
         $this->assertStatus(200, $show);
         $this->assertSeeText($show, 'invalid or has expired');
+        self::assertSame([], $show->cookieHeaders());
+        $this->get('/login');
 
-        // …and submitting it fails closed without rotating the password.
+        // A submission with valid CSRF still fails without rotating the password.
         $resp = $this->post('/reset', [
             'token' => $token, 'password' => 'newpassword9', 'password_confirm' => 'newpassword9',
         ]);

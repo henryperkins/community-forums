@@ -1,0 +1,115 @@
+{
+  "gzip_level": 9,
+  "manifest_version": "6ba4ffef9eadf890",
+  "rows": [
+    {
+      "name": "imladris.css",
+      "url": "/assets/dist/imladris-style-BCCSHjuG.css",
+      "before": {
+        "raw_bytes": 159647,
+        "gzip_bytes": 33663
+      },
+      "after": {
+        "raw_bytes": 102694,
+        "gzip_bytes": 17360
+      }
+    },
+    {
+      "name": "app.css",
+      "url": "/assets/dist/app-style-DoskWIQG.css",
+      "before": {
+        "raw_bytes": 558089,
+        "gzip_bytes": 105910
+      },
+      "after": {
+        "raw_bytes": 377771,
+        "gzip_bytes": 56741
+      }
+    },
+    {
+      "name": "app.js",
+      "url": "/assets/dist/app-97a98cfe6141fd45.js",
+      "before": {
+        "raw_bytes": 93306,
+        "gzip_bytes": 22380
+      },
+      "after": {
+        "raw_bytes": 38521,
+        "gzip_bytes": 10891
+      }
+    },
+    {
+      "name": "composer.js",
+      "url": "/assets/dist/composer-7dbe56fb74bd2844.js",
+      "before": {
+        "raw_bytes": 124643,
+        "gzip_bytes": 26293
+      },
+      "after": {
+        "raw_bytes": 54707,
+        "gzip_bytes": 15644
+      }
+    },
+    {
+      "name": "passkeys.js",
+      "url": "/assets/dist/passkeys-45dd692ca9028436.js",
+      "before": {
+        "raw_bytes": 11450,
+        "gzip_bytes": 2430
+      },
+      "after": {
+        "raw_bytes": 4961,
+        "gzip_bytes": 1621
+      }
+    },
+    {
+      "name": "tour.js",
+      "url": "/assets/dist/tour-7cdbe315501e3843.js",
+      "before": {
+        "raw_bytes": 6914,
+        "gzip_bytes": 2424
+      },
+      "after": {
+        "raw_bytes": 3665,
+        "gzip_bytes": 1575
+      }
+    },
+    {
+      "name": "wysiwyg-composer.css",
+      "url": "/assets/dist/wysiwyg-composer-BqYYcGYs.css",
+      "before": {
+        "raw_bytes": 517,
+        "gzip_bytes": 320
+      },
+      "after": {
+        "raw_bytes": 517,
+        "gzip_bytes": 320
+      }
+    },
+    {
+      "name": "wysiwyg-composer.js",
+      "url": "/assets/dist/wysiwyg-composer-CNH4HhNE.js",
+      "before": {
+        "raw_bytes": 473274,
+        "gzip_bytes": 141683
+      },
+      "after": {
+        "raw_bytes": 1399,
+        "gzip_bytes": 794
+      }
+    }
+  ],
+  "core_total_before": {
+    "raw_bytes": 954049,
+    "gzip_bytes": 193100
+  },
+  "core_total_after": {
+    "raw_bytes": 582319,
+    "gzip_bytes": 103832
+  },
+  "lazy_editor_chunk": {
+    "url": "/assets/dist/milkdown-adapter-BlKZNv62.js",
+    "raw_bytes": 465123,
+    "gzip_bytes": 137562
+  }
+}

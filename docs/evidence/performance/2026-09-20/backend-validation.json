@@ -1,0 +1,42 @@
+{
+  "base_commit": "a90a1012",
+  "manifest_version": "6ba4ffef9eadf890",
+  "phpunit": {
+    "runtime": "PHP 8.5.4",
+    "tests": 2956,
+    "assertions": 22331,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "deprecations": 6,
+    "exit_code": 0,
+    "command": "COMPOSER_PROCESS_TIMEOUT=0 RB_TEST_FRESH=1 MAIL_DRIVER=sendmail MAIL_FROM= composer test -- --display-deprecations --display-skipped"
+  },
+  "php82": {
+    "runtime": "PHP 8.2.33",
+    "tests": 37,
+    "assertions": 271,
+    "failures": 0,
+    "exit_code": 0,
+    "coverage": [
+      "native and emulated parameters",
+      "single SQL statement boundary",
+      "request cache and invalidation",
+      "HTTP query budgets and CSRF",
+      "session throttle, expiry and revocation",
+      "setup locking",
+      "TLS options",
+      "asset manifest fallback"
+    ],
+    "command": "docker run --rm --network host --env MAIL_DRIVER=sendmail --env MAIL_FROM= --entrypoint php -v /home/ubuntu/community-forums:/var/www/html:ro -w /var/www/html retroboards:performance-verify vendor/bin/phpunit --do-not-cache-result tests/Integration/Core/DatabaseParameterTest.php tests/Integration/Core/DatabaseRequestCacheTest.php tests/Integration/Repository/RequestCacheRepositoryTest.php tests/Integration/Core/AppRequestPerformanceTest.php tests/Integration/Service/SetupServiceTest.php tests/Unit/Core/DatabaseTlsTest.php tests/Unit/Core/AssetManifestTest.php"
+  },
+  "container": {
+    "command": "docker build -t retroboards:performance-verify .",
+    "image_id": "98a17dd31cc6",
+    "exit_code": 0,
+    "manifest_version": "6ba4ffef9eadf890",
+    "asset_digests_verified": 50,
+    "layout_urls_resolved": 23
+  },
+  "production_mutations": false
+}

@@ -489,7 +489,7 @@ final class AppFeatureFlagTest extends TestCase
         $securityPage = $this->get('/settings/security');
         $this->assertStatus(200, $securityPage);
         self::assertStringNotContainsString('data-passkey-panel', $securityPage->body());
-        self::assertStringNotContainsString('/assets/passkeys.js', $this->get('/')->body());
+        self::assertStringNotContainsString('/assets/dist/passkeys-', $this->get('/')->body());
         $this->logoutClient();
         $login = $this->get('/login');
         $this->assertStatus(200, $login);
@@ -498,7 +498,7 @@ final class AppFeatureFlagTest extends TestCase
 
         $this->setFlags(['passkeys' => true]);
         self::assertNotSame(404, $this->post('/settings/security/passkeys/challenge', [])->status());
-        self::assertStringContainsString('/assets/passkeys.js', $this->get('/')->body());
+        self::assertStringContainsString('/assets/dist/passkeys-', $this->get('/')->body());
         $this->logoutClient();
         $enabledLogin = $this->get('/login');
         $this->assertStatus(200, $enabledLogin);

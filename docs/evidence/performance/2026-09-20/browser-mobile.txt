@@ -1,0 +1,42 @@
+  -   1 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:68:5 › toolbar reflects active marks across rich and source modes
+  ✓   2 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:105:5 › rich toolbar follows caret movement through every supported format (1.4s)
+  ✓   3 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:155:5 › overflow menu is dismissable from its own toggle and restores focus (1.1s)
+  ✓   4 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:179:5 › collapsed formatting row explains itself and stays recoverable (1.6s)
+  ✓   5 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:231:5 › upload card does not change height while the upload is in flight (3.3s)
+  -   6 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:272:5 › a second in-flight upload stacks without disturbing the first card
+  -   7 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:329:7 › inline wide image is a capped in-place preview, Preview stays full size
+  -   8 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:329:7 › inline tall image is a capped in-place preview, Preview stays full size
+  -   9 [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:329:7 › inline small image is a capped in-place preview, Preview stays full size
+  ✓  10 [mobile] › tests/browser/wysiwyg-composer.spec.ts:161:5 › textarea composer inserts @ mention from keyboard picker (630ms)
+  ✓  11 [mobile] › tests/browser/wysiwyg-composer.spec.ts:172:5 › textarea # picker inserts board reference and does not steal headings (688ms)
+  ✓  12 [mobile] › tests/browser/wysiwyg-composer.spec.ts:184:5 › wysiwyg kill switch keeps textarea composer fallback (611ms)
+  ✓  13 [mobile] › tests/browser/wysiwyg-composer.spec.ts:194:5 › wysiwyg assets load under strict CSP without violations (625ms)
+  -  14 [mobile] › tests/browser/wysiwyg-composer.spec.ts:226:5 › pages without a composer do not fetch Milkdown, including a later inbox insertion
+  ✓  15 [mobile] › tests/browser/wysiwyg-composer.spec.ts:261:5 › a failed editor entry leaves enhanced textarea controls and a working submit (1.9s)
+  ✓  16 [mobile] › tests/browser/wysiwyg-composer.spec.ts:261:5 › a failed editor chunk leaves enhanced textarea controls and a working submit (1.2s)
+  ✓  17 [mobile] › tests/browser/wysiwyg-composer.spec.ts:286:5 › fingerprinted styles preserve a JavaScript-disabled composer submit (793ms)
+  ✓  18 [mobile] › tests/browser/wysiwyg-composer.spec.ts:309:5 › new topic WYSIWYG compose and submit (1.1s)
+  -  19 [mobile] › tests/browser/wysiwyg-composer.spec.ts:327:5 › rich upload reordering is preserved in canonical Markdown on submit
+  ✓  20 [mobile] › tests/browser/wysiwyg-composer.spec.ts:366:5 › source mode edits canonical Markdown and switches back (1.2s)
+  ✓  21 [mobile] › tests/browser/wysiwyg-composer.spec.ts:389:5 › wysiwyg toolbar actions update the rich editor canonical markdown (964ms)
+  ✓  22 [mobile] › tests/browser/wysiwyg-composer.spec.ts:404:5 › wysiwyg bold toolbar toggles bold typing at an empty caret without inserting a rule (1.1s)
+  ✓  23 [mobile] › tests/browser/wysiwyg-composer.spec.ts:422:5 › wysiwyg inline mark toolbar toggles rich typing at an empty caret (1.4s)
+  ✓  24 [mobile] › tests/browser/wysiwyg-composer.spec.ts:456:5 › wysiwyg reference selections become chips and serialize to markdown (959ms)
+  ✓  25 [mobile] › tests/browser/wysiwyg-composer.spec.ts:472:5 › wysiwyg slash menu inserts snippets and GIPHY media (1.1s)
+  ✓  26 [mobile] › tests/browser/wysiwyg-composer.spec.ts:523:5 › wysiwyg image drop uploads and inserts markdown at the rich selection (1.1s)
+  ✓  27 [mobile] › tests/browser/wysiwyg-composer.spec.ts:539:5 › unsupported file drops are cancelled in rich and source composer modes (1.1s)
+  -  28 [mobile] › tests/browser/wysiwyg-composer.spec.ts:554:5 › wysiwyg Enter sends from a plain rich paragraph on desktop
+  -  29 [mobile] › tests/browser/wysiwyg-composer.spec.ts:574:5 › wysiwyg colon autocomplete and emoji dialog insert at the rich remembered caret
+  -  30 [mobile] › tests/browser/wysiwyg-composer.spec.ts:614:5 › wysiwyg Enter preserves list authoring blockquote and code editing before sending
+  -  31 [mobile] › tests/browser/wysiwyg-composer.spec.ts:676:5 › wysiwyg Meta+Enter sends from a list when the preference is off
+  ✓  32 [mobile] › tests/browser/wysiwyg-composer.spec.ts:692:5 › wysiwyg mobile Enter edits and the send button submits (1.1s)
+  -  33 [mobile] › tests/browser/wysiwyg-composer.spec.ts:711:5 › wysiwyg in-flight Enter produces one POST and announces sending
+  -  34 [mobile] › tests/browser/wysiwyg-composer.spec.ts:761:5 › wysiwyg Escape blurs unless an open suggestion menu consumes it
+  ✓  35 [mobile] › tests/browser/wysiwyg-composer.spec.ts:778:5 › pasted internal topic url becomes canonical markdown chip (1.1s)
+  ✓  36 [mobile] › tests/browser/wysiwyg-composer.spec.ts:804:5 › pasted markdown source becomes rich structure, not literal text (1.2s)
+  -  37 [mobile] › tests/browser/wysiwyg-composer.spec.ts:845:5 › pasted text stays literal inside a code fence and under paste-as-plain-text
+  ✓  38 [mobile] › tests/browser/wysiwyg-composer.spec.ts:874:5 › no-op edit does not rewrite body (2.0s)
+  ✓  39 [mobile] › tests/browser/wysiwyg-composer.spec.ts:901:5 › server preview matches final rendered post for supported syntax (2.0s)
+  ✓  40 [mobile] › tests/browser/wysiwyg-composer.spec.ts:934:5 › mobile WYSIWYG edits and submits through rich mode without textarea fallback (1.0s)
+  14 skipped
+  26 passed (35.4s)

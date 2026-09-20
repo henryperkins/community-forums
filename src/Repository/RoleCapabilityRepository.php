@@ -18,6 +18,23 @@ final class RoleCapabilityRepository
     /** @return list<string> */
     public function roleKeysHolding(string $capabilityKey): array
     {
+        if ($this->db->isRequestCacheActive()) {
+            $map = $this->db->remember(__METHOD__, function (): array {
+                $rows = $this->db->fetchAll(
+                    'SELECT c.capability_key, r.role_key
+                     FROM role_capabilities rc
+                     JOIN roles r ON r.id = rc.role_id
+                     JOIN capabilities c ON c.id = rc.capability_id',
+                );
+                $map = [];
+                foreach ($rows as $row) {
+                    $map[(string) $row['capability_key']][] = (string) $row['role_key'];
+                }
+                return $map;
+            });
+            return $map[$capabilityKey] ?? [];
+        }
+
         $rows = $this->db->fetchAll(
             'SELECT r.role_key
              FROM role_capabilities rc

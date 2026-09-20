@@ -10,6 +10,11 @@ on:
       - 'src/**'
       - 'templates/**'
       - 'public/**'
+      - 'config/assets.json'
+      - 'bin/build-assets.mjs'
+      - 'vite.config.mjs'
+      - 'package*.json'
+      - 'worker/**'
       - 'database/migrations/**'
       - 'tests/browser/**'
       - '.github/workflows/browser-evidence.yml'
@@ -77,6 +82,12 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+
+      - name: Verify generated assets and static routing
+        run: |
+          npm ci
+          npm run check:assets
+          npm run test:assets
 
       - name: Capture screenshots (prepare DB + run Playwright)
         working-directory: tests/browser

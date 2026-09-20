@@ -169,7 +169,7 @@ final class AppMemberShellTest extends TestCase
 
     public function test_guest_cannot_write_member_surface_preferences(): void
     {
-        $this->get('/'); // establish the guest session/CSRF secret
+        $this->get('/login'); // Establish the guest CSRF secret through a form.
         $this->assertRedirectContains(
             $this->post('/settings/member-surfaces', ['rail_open' => '0', 'return' => '/']),
             '/login',

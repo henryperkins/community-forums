@@ -1,0 +1,46 @@
+  1) [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:179:5 › collapsed formatting row explains itself and stays recoverable
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.hover: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('form.composer').first().getByRole('button', { name: 'Formatting', exact: true })
+        - locator resolved to <button type="button" aria-expanded="true" aria-label="Formatting" class="composer-format-toggle" aria-controls="composer-toolbar-1" data-tip="Hide formatting toolbar">Aa</button>
+      - attempting hover action
+        2 × waiting for element to be visible and stable
+          - element is not stable
+        - retrying hover action
+        - waiting 20ms
+        - waiting for element to be visible and stable
+        - element is not stable
+      - retrying hover action
+        - waiting 100ms
+        - waiting for element to be visible and stable
+        - element is visible and stable
+        - scrolling into view if needed
+        - done scrolling
+        - performing hover action
+        - <button type="button" title="Attach images" aria-label="Attach images" class="composer-attach-toggle">＋</button> intercepts pointer events
+      - retrying hover action
+        - waiting 100ms
+        55 × waiting for element to be visible and stable
+           - element is not stable
+         - retrying hover action
+           - waiting 500ms
+
+
+      187 |   await expect(bar).toBeVisible();
+      188 |   await expect(toggle).toHaveAttribute('data-tip', 'Hide formatting toolbar');
+    > 189 |   await toggle.hover();
+          |                ^
+      190 |   await expect.poll(() => toggle.evaluate((button) => getComputedStyle(button, '::after').opacity)).toBe('1');
+      191 |
+      192 |   await toggle.click();
+        at /home/ubuntu/community-forums/tests/browser/composer-toolbar-hardening.spec.ts:189:16
+
+    Error Context: ../../../tmp/retroboards-asset-evidence-mobile/.artifacts/composer-toolbar-hardening-c7311-tself-and-stays-recoverable-mobile/error-context.md
+
+  1 failed
+    [mobile] › tests/browser/composer-toolbar-hardening.spec.ts:179:5 › collapsed formatting row explains itself and stays recoverable
+  14 skipped
+  25 passed (1.1m)

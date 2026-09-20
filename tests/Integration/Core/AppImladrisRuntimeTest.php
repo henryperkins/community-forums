@@ -21,8 +21,8 @@ final class AppImladrisRuntimeTest extends TestCase
             $this->assertStatus(200, $response);
             $body = $response->body();
 
-            $imladris = strpos($body, '<link rel="stylesheet" href="/assets/imladris.css?v=');
-            $application = strpos($body, '<link rel="stylesheet" href="/assets/app.css?v=');
+            $imladris = strpos($body, '<link rel="stylesheet" href="/assets/dist/imladris-style-');
+            $application = strpos($body, '<link rel="stylesheet" href="/assets/dist/app-style-');
 
             self::assertNotFalse($imladris, $path . ' loads the Imladris runtime');
             self::assertNotFalse($application, $path . ' keeps application overrides');

@@ -72,12 +72,15 @@ There is **no PHPUnit CI**; the only GitHub workflow (`.github/workflows/browser
 `App::handle(Request): Response` is the whole kernel and is **pure** (no superglobals, no `echo`) so the entire stack runs in-process under test. `App`'s constructor takes optional `Database` + `RateLimiter` so tests inject fakes. Per-request pipeline:
 
 ```
-buildContainer → Session::start → presence heartbeat → Flash::load → shareViewGlobals
-  → process() [ health/robots/sitemap bypass → setup gate → CSRF gate → route dispatch → exception mapping ]
-  → SecurityHeaders::apply → Session::commit → Flash::commit
+buildContainer → beginRequestCache → Session::start → presence heartbeat → Flash::load
+  → process() [ setup gate → CSRF gate → route dispatch → exception mapping ]
+    → first HTML render loads shareViewGlobals (JSON/redirects skip it)
+  → preload headers → SecurityHeaders::apply → Session::commit → Flash::commit
+  → endRequestCache (finally)
 ```
 
-- `shareViewGlobals()` runs **before** the setup gate and even against an un-migrated/unreachable DB, so every lookup is individually wrapped in `try/catch(Throwable)` with a safe default. **Anything you add to the global shell must tolerate a missing table.**
+- `shareViewGlobals()` runs lazily on the first HTML render, including error pages against an un-migrated/unreachable DB, so every lookup is individually wrapped in `try/catch(Throwable)` with a safe default. **Anything you add to the global shell must tolerate a missing table.** CSRF tokens are generated when a form requests one, so guest pages without forms do not issue an `rb_csrf` cookie.
+- Selected repository reads use `Database::remember()` only within the HTTP request. Writes and transaction boundaries invalidate the cache; CLI workers do not memoize. New raw-PDO writes must explicitly invalidate cached reads or run inside `Database::transaction()`.
 - `/healthz`, `/robots.txt`, `/sitemap.xml` are dispatched before the setup gate and CSRF check so they answer pre-setup / DB-down.
 
 ### Dependency injection (`src/Core/Container.php`) — hand-wired, no autowiring
@@ -119,7 +122,7 @@ Every post-MVP subsystem is gated by a flag. `DEFAULTS` map + a `features` JSON 
 ### Database & migrations
 File-based runner (`src/Core/Migrator.php`). A migration is `database/migrations/NNNN_name.php` that **`return`s an anonymous class with `up(\PDO)`/`down(\PDO)`**, ordered by the zero-padded 4-digit prefix, tracked in `schema_migrations`. **To add one: use the next number (currently `0082`)**, write DDL in a `<<<'SQL'` nowdoc, make `up()` additive (drop FKs before columns in `down()`), then `php bin/console migrate`. Migrations are **additive-only / forward-only**; `migrate:rollback` cascades through *all* migrations and is greenfield-only. `bin/console migrate*` connects through `Database::migrationPdo()` (a `MigrationPdo`) whose statements retry across Vitess's asynchronous schema propagation — inert on MariaDB/MySQL — and any `ALTER` on a pre-existing table should be `information_schema`-guarded so a run that died half-way converges instead of replaying the `ALTER` (pattern: `0048`, `0079`; see `docs/runbooks/deployment-cloudflare.md` §3). Data seeds live inside a numbered migration using `INSERT IGNORE` (pattern: `0040_seed_badges.php`). After landing a schema migration, hand-update `SCHEMA.md` (shape + §9 changelog + version bump).
 
-PDO is configured `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, **`EMULATE_PREPARES=false`** — so **never bind `LIMIT`/`OFFSET`** (cast to int + concatenate after clamping) and **never reuse a named placeholder twice** (give it two names). Use UTC everywhere (`UTC_TIMESTAMP()` / `gmdate()`); IPs are stored packed via `inet_pton` into `VARBINARY(16)`.
+PDO is configured `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, and **emulated prepares by default** to avoid a separate prepare round trip. `DB_EMULATE_PREPARES=false` restores native prepares. Keep queries compatible with either mode: **never bind `LIMIT`/`OFFSET`** (cast to int + concatenate after clamping) and **never reuse a named placeholder twice** (give it two names). Multi-statement execution is disabled. Use UTC everywhere (`UTC_TIMESTAMP()` / `gmdate()`); IPs are stored packed via `inet_pton` into `VARBINARY(16)`.
 
 ### Views & progressive enhancement (`src/Core/View.php`, `templates/`, `public/assets/`)
 Plain-PHP templates rendered with `$this` bound to the `View`; globals + per-render data are `extract()`ed. **Single-level layout**: a leaf template calls `$this->layout('layout')` + `$this->section(...)`; `templates/layout.php` is the one shell (three-pane `variant=app` vs centered `variant=plain` for auth/setup/errors). The member chrome — `partials/topbar.php` and `partials/sidebar.php` — renders the design system's `ForumNav` / `BoardRail` / `PresenceList` in their own class vocabulary (`.forum-bar*`, `.board-rail*`, `.presence-*`), styled by the generated `imladris.css`; `app.css`'s "Member chrome" block carries only what that layer cannot express, and an unlayered `app.css` rule beats a layered one regardless of specificity, so hand properties back with `revert-layer` rather than restating them (ADR 0032). Escape output with `$this->e()` / the `$e` closure; the **only** sanctioned raw echo is pre-sanitized HTML (`$p['body_html']`, sanitized at write time by `App\Support\Markdown`). Emit CSRF with `$this->csrfField()`. Global template helpers (`mask_author`, `human_datetime`, `monogram_*`) are autoloaded functions in `src/Support/helpers.php`.

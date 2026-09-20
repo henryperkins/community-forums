@@ -1,0 +1,34 @@
+[
+  {
+    "route": "/login",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "source_and_minified_screenshots_identical": true
+  },
+  {
+    "route": "/c/general",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "source_and_minified_screenshots_identical": true
+  },
+  {
+    "route": "/login",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "source_and_minified_screenshots_identical": true
+  },
+  {
+    "route": "/c/general",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "source_and_minified_screenshots_identical": true
+  }
+]

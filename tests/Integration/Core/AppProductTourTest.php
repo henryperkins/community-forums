@@ -27,7 +27,7 @@ final class AppProductTourTest extends TestCase
         // Fresh account → the shell asks the enhancement to run the tour.
         $home = $this->get('/');
         $this->assertSeeText($home, 'data-tour="1"');
-        $this->assertSeeText($home, '/assets/tour.js');
+        $this->assertSeeText($home, '/assets/dist/tour-');
 
         // Completing it persists server-side.
         $res = $this->post('/onboarding/complete');

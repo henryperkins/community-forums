@@ -21,6 +21,7 @@ use App\Repository\UserRepository;
 final class Session
 {
     private const GUEST_CSRF_COOKIE = 'rb_csrf';
+    private const TOUCH_INTERVAL_SECONDS = 60;
     private const PREVIEW_COOKIE = 'rb_theme_preview_build';
     /** @var array<string,string> */
     private const COOKIE_KEYS = [
@@ -70,7 +71,13 @@ final class Session
 
         $this->sessionRow = $row;
         $this->user = $user;
-        $this->sessions->touch($id);
+        // The active-session read still enforces expiry and revocation on every
+        // request. Only the device list's activity timestamp is throttled.
+        $lastSeen = $row['last_seen_at'] ?? null;
+        $lastSeenAt = is_string($lastSeen) ? strtotime($lastSeen . ' UTC') : false;
+        if ($lastSeenAt === false || $lastSeenAt <= time() - self::TOUCH_INTERVAL_SECONDS) {
+            $this->sessions->touch($id);
+        }
     }
 
     public function user(): ?User

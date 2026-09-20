@@ -34,6 +34,18 @@ final class SetupServiceTest extends TestCase
         self::assertFalse($this->service()->isInitialized());
     }
 
+    public function test_completed_setup_stays_locked_without_recounting_administrators(): void
+    {
+        // A durable completion marker also keeps setup closed during account
+        // repairs, when the legacy administrator projection may be absent.
+        (new SettingRepository($this->db))->set('installed_at', '2026-09-20 00:00:00');
+        $this->db->resetMetrics();
+        self::assertTrue($this->service()->isInitialized());
+        self::assertSame(1, $this->db->metrics()['queries']);
+        $this->expectException(ForbiddenException::class);
+        $this->service()->run([]);
+    }
+
     public function test_run_creates_admin_settings_and_starter_content(): void
     {
         $admin = $this->service()->run([

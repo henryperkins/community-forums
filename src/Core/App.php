@@ -298,6 +298,7 @@ use App\Service\SetupService;
 use App\Service\Webhook\CurlWebhookTransport;
 use App\Service\Webhook\WebhookTransport;
 use App\Service\WebhookService;
+use App\Support\AssetManifest;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
 use App\Support\MentionLinker;
@@ -324,7 +325,7 @@ final class App
     public const CORE_VERSION = '0.5.0-dev';
 
     private Router $router;
-    private ?string $assetVersion = null;
+    private ?AssetManifest $assets = null;
 
     public function __construct(
         private Config $config,
@@ -352,7 +353,20 @@ final class App
     public function handle(Request $request): Response
     {
         $container = $this->buildContainer($request);
+        $database = $container->get(Database::class);
+        $database->beginRequestCache();
+        try {
+            return $this->handleRequest($container, $request);
+        } finally {
+            // App and injected Database instances can serve more than one
+            // request in tests or long-running hosts. Never retain permissions
+            // or settings across that boundary, including an exceptional exit.
+            $database->endRequestCache();
+        }
+    }
 
+    private function handleRequest(Container $container, Request $request): Response
+    {
         if ($this->isInfrastructurePath($request->path())) {
             $response = $this->process($container, $request);
             SecurityHeaders::apply(
@@ -372,8 +386,15 @@ final class App
         $session->start($request);
         $this->heartbeat($container, $session->user());
         $flash->load($request);
-        $allowGiphyCsp = $this->shareViewGlobals($container, $request);
+        $allowGiphyCsp = false;
+        // JSON, downloads and redirects need authentication and the normal
+        // route gates, but not navigation, branding or appearance queries.
+        // Rendering an HTML error on one of those routes still loads the shell.
+        $container->get(View::class)->beforeRender(function () use ($container, $request, &$allowGiphyCsp): void {
+            $allowGiphyCsp = $this->shareViewGlobals($container, $request);
+        });
         $response = $this->process($container, $request);
+        $this->preloadAssets($response);
 
         SecurityHeaders::apply(
             $response,
@@ -390,6 +411,24 @@ final class App
     private function isInfrastructurePath(string $path): bool
     {
         return in_array($path, ['/healthz', '/robots.txt', '/sitemap.xml'], true);
+    }
+
+    private function preloadAssets(Response $response): void
+    {
+        if ($response->status() !== 200 || !str_starts_with((string) $response->getHeader('Content-Type'), 'text/html')) {
+            return;
+        }
+
+        $urls = $this->assets()->urls();
+        $links = [];
+        foreach (['imladris.css' => 'style', 'app.css' => 'style', 'app.js' => 'script'] as $name => $type) {
+            $links[] = '<' . $urls[$name] . '>; rel=preload; as=' . $type;
+        }
+        $links[] = '<' . $urls['fonts/imladris/eb-garamond-latin-400-normal.woff2']
+            . '>; rel=preload; as=font; type="font/woff2"; crossorigin';
+        // Only public build assets: an edge may send cached Early Hints before
+        // authentication. Theme previews and private resource URLs stay out.
+        $response->header('Link', implode(', ', $links));
     }
 
     private function emitRequestTelemetry(Container $container, Request $request, Response $response): void
@@ -834,7 +873,7 @@ final class App
             'site_name' => $siteName,
             'app_name' => $appName,
             'current_user' => $session->user(),
-            'csrf_token' => $container->get(Csrf::class)->token(),
+            'csrf_token' => static fn (): string => $container->get(Csrf::class)->token(),
             'flash' => $flash->current(),
             'request_path' => $request->path(),
             'nav' => $nav,
@@ -868,7 +907,8 @@ final class App
             'member_surfaces' => $memberSurfaces,
             'branding' => $branding,
             'package_theme' => $packageTheme,
-            'asset_version' => $this->assetVersion(),
+            'asset_version' => $this->assets()->version(),
+            'asset_urls' => $this->assets()->urls(),
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
             'site_announcement' => $siteAnnouncement,
@@ -880,25 +920,9 @@ final class App
             && $siteSettings['giphy_public_key'] !== '';
     }
 
-    private function assetVersion(): string
+    private function assets(): AssetManifest
     {
-        if ($this->assetVersion !== null) {
-            return $this->assetVersion;
-        }
-
-        $base = rtrim((string) $this->config->get('paths.base', ''), '/\\');
-        $files = array_merge(
-            glob($base . '/public/assets/*.css') ?: [],
-            glob($base . '/public/assets/*.js') ?: [],
-        );
-        sort($files);
-
-        $hash = hash_init('sha256');
-        foreach ($files as $file) {
-            hash_update($hash, basename($file) . "\0");
-            hash_update_file($hash, $file);
-        }
-        return $this->assetVersion = substr(hash_final($hash), 0, 16);
+        return $this->assets ??= new AssetManifest((string) $this->config->get('paths.base', ''));
     }
 
     /**

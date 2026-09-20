@@ -7,6 +7,8 @@ $memberSurfaces = $member_surfaces ?? ['rail_open' => true, 'inbox_reading_open'
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
 $themePackage = $package_theme ?? ['active_css_digest' => null, 'preview_css_digest' => null];
 $assetVersion = (string) ($asset_version ?? '1');
+$assetUrls = $asset_urls ?? (new \App\Support\AssetManifest(dirname(__DIR__)))->urls();
+$assetUrl = static fn (string $name): string => $assetUrls[$name] ?? '/assets/' . $name . '?v=' . $assetVersion;
 $appUrl = rtrim((string) ($app_url ?? ''), '/');
 $canonical = $this->block('canonical', '');
 $robots = $this->block('robots', '');
@@ -17,7 +19,8 @@ $desc = $this->block('description', $brand['name'] . ' — a community forum.');
 // identity row and area tier, so the member topbar and board rail stay out of it.
 $showChrome = $variant !== 'auth' && $variant !== 'admin';
 $richComposerOn = !empty($features['rich_composer']);
-$wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
+$wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
+    && isset($assetUrls['wysiwyg-composer.js'], $assetUrls['wysiwyg-composer.css']);
 ?>
 <!doctype html>
 <html lang="en"
@@ -43,13 +46,13 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
     <?php else: ?>
         <link rel="icon" href="data:,">
     <?php endif; ?>
-    <link rel="stylesheet" href="/assets/imladris.css?v=<?= $e($assetVersion) ?>">
-    <link rel="stylesheet" href="/assets/app.css?v=<?= $e($assetVersion) ?>">
-    <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="/assets/wysiwyg-composer.css?v=<?= $e($assetVersion) ?>"><?php endif; ?>
+    <link rel="stylesheet" href="<?= $e($assetUrl('imladris.css')) ?>">
+    <link rel="stylesheet" href="<?= $e($assetUrl('app.css')) ?>">
+    <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="<?= $e($assetUrl('wysiwyg-composer.css')) ?>"><?php endif; ?>
     <?php if (!empty($themePackage['preview_css_digest'])): ?><link rel="stylesheet" href="/theme/preview.css?v=<?= $e($themePackage['preview_css_digest']) ?>"><?php elseif (!empty($themePackage['active_css_digest'])): ?><link rel="stylesheet" href="/theme/<?= $e($themePackage['active_css_digest']) ?>.css"><?php endif; ?>
     <?php if (!empty($brand['has_custom_colors'])): ?><link rel="stylesheet" href="/brand.css?v=<?= $e($brand['version'] ?: '1') ?>"><?php endif; ?>
 </head>
-<body<?= $this->block('account_settings', '') === '1' ? ' data-account-settings="1"' : '' ?> class="variant-<?= $e($variant) ?> <?= !empty($memberSurfaces['rail_open']) ? 'is-rail-open' : 'is-rail-closed' ?> <?= !empty($memberSurfaces['inbox_reading_open']) ? 'is-reading-open' : 'is-reading-closed' ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>" data-rail-open="<?= !empty($memberSurfaces['rail_open']) ? '1' : '0' ?>" data-inbox-reading-open="<?= !empty($memberSurfaces['inbox_reading_open']) ? '1' : '0' ?>"<?= $wysiwygComposerOn ? ' data-wysiwyg-composer="1"' : '' ?><?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
+<body<?= $this->block('account_settings', '') === '1' ? ' data-account-settings="1"' : '' ?> class="variant-<?= $e($variant) ?> <?= !empty($memberSurfaces['rail_open']) ? 'is-rail-open' : 'is-rail-closed' ?> <?= !empty($memberSurfaces['inbox_reading_open']) ? 'is-reading-open' : 'is-reading-closed' ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>" data-rail-open="<?= !empty($memberSurfaces['rail_open']) ? '1' : '0' ?>" data-inbox-reading-open="<?= !empty($memberSurfaces['inbox_reading_open']) ? '1' : '0' ?>"<?php if ($wysiwygComposerOn): ?> data-wysiwyg-composer="1" data-wysiwyg-src="<?= $e($assetUrl('wysiwyg-composer.js')) ?>"<?php endif; ?><?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>
 <?php if ($showChrome): ?>
 <?= $this->partial('partials/topbar') ?>
@@ -90,10 +93,9 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
         <?= $content ?>
     </main>
 <?php endif; ?>
-<script src="/assets/app.js?v=<?= $e($assetVersion) ?>" defer></script>
-<?php if ($richComposerOn): ?><script src="/assets/composer.js?v=<?= $e($assetVersion) ?>" defer></script><?php endif; ?>
-<?php if ($wysiwygComposerOn): ?><script type="module" src="/assets/wysiwyg-composer.js?v=<?= $e($assetVersion) ?>"></script><?php endif; ?>
-<?php if (!empty($features['passkeys'])): ?><script src="/assets/passkeys.js?v=<?= $e($assetVersion) ?>" defer></script><?php endif; ?>
-<?php if (!empty($features['product_tour']) && ($current_user ?? null) !== null): ?><script src="/assets/tour.js?v=<?= $e($assetVersion) ?>" defer></script><?php endif; ?>
+<script src="<?= $e($assetUrl('app.js')) ?>" defer></script>
+<?php if ($richComposerOn): ?><script src="<?= $e($assetUrl('composer.js')) ?>" defer></script><?php endif; ?>
+<?php if (!empty($features['passkeys'])): ?><script src="<?= $e($assetUrl('passkeys.js')) ?>" defer></script><?php endif; ?>
+<?php if (!empty($features['product_tour']) && ($current_user ?? null) !== null): ?><script src="<?= $e($assetUrl('tour.js')) ?>" defer></script><?php endif; ?>
 </body>
 </html>

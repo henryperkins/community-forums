@@ -3,13 +3,15 @@
 # ---------------------------------------------------------------------------
 # Stage 1: compile JS/CSS assets (Vite + TypeScript → public/assets/)
 # ---------------------------------------------------------------------------
-FROM node:22-alpine AS assets
+FROM node:24-alpine AS assets
 WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY vite.config.mjs ./
+COPY bin/build-assets.mjs bin/build-assets.mjs
 COPY src/client/ src/client/
-RUN npm run build:wysiwyg
+COPY public/assets/ public/assets/
+RUN mkdir -p config && npm run build
 
 # ---------------------------------------------------------------------------
 # Stage 2: PHP base — OS libraries + PHP extensions shared by the vendor
@@ -61,9 +63,10 @@ RUN composer install \
 FROM phpbase
 
 # FUSE + an S3 client so /data can be backed by an R2 bucket. Cloudflare
-# Containers have an ephemeral filesystem: uploads, installed packages and the
-# rate-limit ledger would not survive a restart on local disk. Unused (and
-# inert) when R2_BUCKET is unset, e.g. a VPS deploy with a real volume.
+# Containers have an ephemeral filesystem: uploads and installed packages need
+# this mount to survive a restart. The single-instance rate-limit ledger stays
+# on local disk and deliberately resets on restart. Unused (and inert) when
+# R2_BUCKET is unset, e.g. a VPS deploy with a real volume.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends s3fs fuse3 \
     && echo 'user_allow_other' >> /etc/fuse.conf \
@@ -82,8 +85,9 @@ COPY --chown=www-data:www-data . .
 COPY --chown=www-data:www-data --from=vendor /build/vendor ./vendor
 
 # Freshly compiled JS/CSS assets (authoritative; overwrite any pre-committed versions)
-COPY --chown=www-data:www-data --from=assets /build/public/assets/wysiwyg-composer.js ./public/assets/wysiwyg-composer.js
-COPY --chown=www-data:www-data --from=assets /build/public/assets/wysiwyg-composer.css ./public/assets/wysiwyg-composer.css
+RUN rm -rf public/assets/dist
+COPY --chown=www-data:www-data --from=assets /build/public/assets/dist ./public/assets/dist
+COPY --chown=www-data:www-data --from=assets /build/config/assets.json ./config/assets.json
 
 COPY deploy/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
 COPY deploy/entrypoint.sh /usr/local/bin/retroboards-entrypoint

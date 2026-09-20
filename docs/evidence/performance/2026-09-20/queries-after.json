@@ -1,0 +1,58 @@
+{
+    "guest_home": {
+        "status": 200,
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 6,
+        "query_ms": 1.648,
+        "total_ms": 8.679
+    },
+    "guest_thread": {
+        "status": 200,
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 27,
+        "query_ms": 3.325,
+        "total_ms": 11.568
+    },
+    "member_home": {
+        "status": 200,
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 19,
+        "query_ms": 3.323,
+        "total_ms": 7.026
+    },
+    "member_thread": {
+        "status": 200,
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 57,
+        "query_ms": 6.278,
+        "total_ms": 12.525
+    },
+    "presence": {
+        "status": 200,
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 4,
+        "query_ms": 0.446,
+        "total_ms": 0.901
+    },
+    "bell": {
+        "status": 200,
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 10,
+        "query_ms": 1.536,
+        "total_ms": 2.668
+    },
+    "preview": {
+        "status": 200,
+        "connections": 0,
+        "connection_ms": 0,
+        "queries": 3,
+        "query_ms": 0.281,
+        "total_ms": 1.237
+    }
+}

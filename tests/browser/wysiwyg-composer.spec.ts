@@ -207,7 +207,7 @@ test('wysiwyg assets load under strict CSP without violations', async ({ page })
   });
   page.on('response', (response) => {
     const pathname = new URL(response.url()).pathname;
-    if (pathname === '/assets/wysiwyg-composer.js' || pathname === '/assets/wysiwyg-composer.css') {
+    if (/^\/assets\/dist\/wysiwyg-composer-[A-Za-z0-9_-]+\.(js|css)$/.test(pathname)) {
       loadedAssets.push(pathname);
     }
   });
@@ -217,10 +217,93 @@ test('wysiwyg assets load under strict CSP without violations', async ({ page })
 
   await expect(page.locator('body')).toHaveAttribute('data-wysiwyg-composer', '1');
   await expect(form.locator('textarea.composer-input')).toBeVisible();
-  expect(loadedAssets).toContain('/assets/wysiwyg-composer.js');
-  expect(loadedAssets).toContain('/assets/wysiwyg-composer.css');
+  expect(loadedAssets.some((asset) => asset.endsWith('.js'))).toBe(true);
+  expect(loadedAssets.some((asset) => asset.endsWith('.css'))).toBe(true);
   expect(pageErrors).toEqual([]);
   expect(violations).toEqual([]);
+});
+
+test('pages without a composer do not fetch Milkdown, including a later inbox insertion', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'inbox insertion is a desktop reading-pane interaction');
+  setWysiwygComposer(true);
+  const chunks: string[] = [];
+  const errors: string[] = [];
+  page.on('request', (request) => {
+    if (/\/(?:milkdown-adapter|wysiwyg-composer)-[^/]+\.js$/.test(new URL(request.url()).pathname)) chunks.push(request.url());
+  });
+  page.on('pageerror', (error) => errors.push(error.stack || error.message));
+  await visit(page, '/login');
+  await expect(page.locator('form.composer')).toHaveCount(0);
+  expect(chunks).toEqual([]);
+  await login(page, 'bob@retro.test');
+  await visit(page, '/settings/appearance');
+  await expect(page.locator('form.composer')).toHaveCount(0);
+  expect(chunks).toEqual([]);
+  await visit(page, '/inbox?scope=all');
+  await expect(page.locator('form.composer')).toHaveCount(0);
+  expect(chunks).toEqual([]);
+  await page.locator('.inbox-row-title').first().click();
+  const form = page.locator('.inbox-reading form.composer');
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+  expect(chunks.filter((url) => url.includes('/milkdown-adapter-'))).toHaveLength(1);
+  expect(chunks.filter((url) => url.includes('/wysiwyg-composer-'))).toHaveLength(1);
+  const reply = `Lazy inbox editor ${Date.now()}`;
+  await editor.fill(reply);
+  await page.screenshot({ path: info.outputPath('lazy-inbox-composer.png') });
+  await form.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.locator('.post-body').filter({ hasText: reply })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+for (const asset of ['entry', 'chunk']) {
+test(`a failed editor ${asset} leaves enhanced textarea controls and a working submit`, async ({ page }, info) => {
+  setWysiwygComposer(true);
+  await page.route(asset === 'entry' ? '**/wysiwyg-composer-*.js' : '**/milkdown-adapter-*.js', (route) => route.abort());
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  await expect(textarea).toBeVisible();
+  await expect(textarea).toHaveAttribute('data-rb-enhanced', '1');
+  const title = `${asset} fallback ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await textarea.fill('Submitted with the rich editor unavailable.');
+  await textarea.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+  await form.locator('[data-composer-action="bold"]').click();
+  await expect(textarea).toHaveValue('**Submitted with the rich editor unavailable.**');
+  await expect(form.locator('input[name="idempotency_key"]')).not.toHaveValue('');
+  await expect(form.locator('[data-composer-action="bold"]')).toHaveCount(1);
+  await page.screenshot({ path: info.outputPath(`failed-${asset}-textarea.png`) });
+  await form.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+  await expect(page.locator('.post-op .post-body')).toContainText('Submitted with the rich editor unavailable.');
+  await expect(page.locator('.post-op .post-body strong')).toHaveText('Submitted with the rich editor unavailable.');
+});
+}
+
+test('fingerprinted styles preserve a JavaScript-disabled composer submit', async ({ browser }, info) => {
+  setWysiwygComposer(true);
+  const context = await browser.newContext({ ...info.project.use, javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await login(page, 'bob@retro.test');
+    await visit(page, '/c/general');
+    const details = page.locator('details.composer-details#new-topic');
+    await details.locator(':scope > summary').click();
+    const form = details.locator('form.composer');
+    const title = `No JavaScript ${Date.now()}`;
+    await form.locator('input[name="title"]').fill(title);
+    await form.locator('textarea.composer-input').fill('Server-rendered **Markdown** still submits.');
+    await page.screenshot({ path: info.outputPath('no-js-composer.png') });
+    await form.locator('button[type="submit"]').click();
+    await page.waitForURL(/\/t\/\d+-/);
+    await expect(page.getByRole('heading', { name: title })).toBeVisible();
+    await expect(page.locator('.post-op .post-body strong')).toHaveText('Markdown');
+  } finally {
+    await context.close();
+  }
 });
 
 test('new topic WYSIWYG compose and submit', async ({ page }) => {

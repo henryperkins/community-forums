@@ -212,7 +212,7 @@ final class AppComposerTest extends TestCase
         $page = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $page);
         self::assertMatchesRegularExpression('/<textarea\b[^>]*class="composer-input"[^>]*name="body"/', $page->body());
-        self::assertStringNotContainsString('/assets/composer.js', $page->body());
+        self::assertStringNotContainsString('/assets/dist/composer-', $page->body());
 
         $reply = $this->post('/t/' . (int) $thread['thread_id'] . '/reply', ['body' => 'Textarea fallback reply.']);
         $this->assertRedirectContains($reply, '/t/' . (int) $thread['thread_id']);
@@ -226,12 +226,12 @@ final class AppComposerTest extends TestCase
         $this->actingAs($user);
 
         // GA default-on (2026-07-02): with no features override the Milkdown
-        // bundle loads alongside the shared composer bridge.
+        // loader is available to the shared composer bridge when a form needs it.
         $defaultPage = $this->get('/c/wysiwyg-assets');
-        self::assertStringContainsString('/assets/composer.js', $defaultPage->body());
-        self::assertStringContainsString('/assets/wysiwyg-composer.css', $defaultPage->body());
+        self::assertStringContainsString('/assets/dist/composer-', $defaultPage->body());
+        self::assertStringContainsString('/assets/dist/wysiwyg-composer-', $defaultPage->body());
         self::assertMatchesRegularExpression(
-            '#<script type="module" src="/assets/wysiwyg-composer\.js\?v=[a-f0-9]{16}"></script>#',
+            '#data-wysiwyg-src="/assets/dist/wysiwyg-composer-[A-Za-z0-9_-]+\.js"#',
             $defaultPage->body(),
         );
         self::assertStringContainsString('data-wysiwyg-composer="1"', $defaultPage->body());
@@ -240,16 +240,16 @@ final class AppComposerTest extends TestCase
         // the enhanced Markdown composer keeps loading.
         (new SettingRepository($this->db))->set('features', ['wysiwyg_composer' => false]);
         $disabledPage = $this->get('/c/wysiwyg-assets');
-        self::assertStringContainsString('/assets/composer.js', $disabledPage->body());
-        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $disabledPage->body());
+        self::assertStringContainsString('/assets/dist/composer-', $disabledPage->body());
+        self::assertStringNotContainsString('/assets/dist/wysiwyg-composer-', $disabledPage->body());
         self::assertStringNotContainsString('data-wysiwyg-composer="1"', $disabledPage->body());
 
         // Broad kill switch: rich_composer=false keeps every enhanced asset
         // out even though wysiwyg_composer stays true by default.
         (new SettingRepository($this->db))->set('features', ['rich_composer' => false]);
         $killedPage = $this->get('/c/wysiwyg-assets');
-        self::assertStringNotContainsString('/assets/composer.js', $killedPage->body());
-        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $killedPage->body());
+        self::assertStringNotContainsString('/assets/dist/composer-', $killedPage->body());
+        self::assertStringNotContainsString('/assets/dist/wysiwyg-composer-', $killedPage->body());
         self::assertStringNotContainsString('data-wysiwyg-composer="1"', $killedPage->body());
     }
 

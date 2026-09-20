@@ -19,6 +19,9 @@ final class BoardModeratorRepository
 
     public function isModerator(int $boardId, int $userId): bool
     {
+        if ($this->db->isRequestCacheActive()) {
+            return in_array($boardId, $this->boardsFor($userId), true);
+        }
         return $this->db->fetchValue(
             'SELECT 1 FROM board_moderators WHERE board_id = ? AND user_id = ? LIMIT 1',
             [$boardId, $userId],
@@ -43,8 +46,10 @@ final class BoardModeratorRepository
     /** @return list<int> board ids this user moderates */
     public function boardsFor(int $userId): array
     {
-        $rows = $this->db->fetchAll('SELECT board_id FROM board_moderators WHERE user_id = ?', [$userId]);
-        return array_map(static fn (array $r): int => (int) $r['board_id'], $rows);
+        return $this->db->remember(__METHOD__ . ':' . $userId, function () use ($userId): array {
+            $rows = $this->db->fetchAll('SELECT board_id FROM board_moderators WHERE user_id = ?', [$userId]);
+            return array_map(static fn (array $r): int => (int) $r['board_id'], $rows);
+        });
     }
 
     /** @return array<int,array<string,mixed>> moderators of a board with handles */

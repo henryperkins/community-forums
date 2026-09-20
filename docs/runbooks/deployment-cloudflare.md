@@ -382,19 +382,28 @@ currently work.
 
 Zone settings, all of which matter to this app specifically:
 
-- **Cache** is source-controlled in `worker/index.js`, not a zone Cache Rule.
-  Successful versioned `GET /assets/*?v=...` and `GET /brand.css` responses are
-  stored through `caches.default` for one hour (`s-maxage=3600`) with a
-  five-minute browser TTL. Unversioned sub-assets such as fonts bypass this
-  cache. `Set-Cookie` is stripped before storage, cache keys retain the query
-  string, and responses expose `X-RetroBoards-Cache: MISS|HIT`. Core CSS/JS URLs
-  carry a content-derived `?v=` value so a deployment cannot pair new HTML with
-  stale JS/CSS. Leave everything else uncached. Do **not** create a "Cache
-  Everything" rule: HTML carries session state, and `/media/{id}` already emits
+- **Static assets** are built by `npm run build`, described by
+  `config/assets.json`, and staged under `.build/static` for Workers Static
+  Assets. The Worker serves allowlisted `/assets/*` without invoking the PHP
+  container. Content-hashed CSS, JS and fonts receive
+  `public, max-age=31536000, immutable`; mutable source URLs revalidate.
+  Conditional requests retain `304` behavior. The PHP layout and preload
+  headers use the same manifest as the Worker. `/brand.css` and `/theme/*.css`
+  remain application routes with their own cache policy. Set the zone's
+  **Browser Cache TTL to Respect Existing Headers** so it does not replace the
+  application policy. Do **not** create a "Cache Everything" rule: HTML can
+  carry session state, and `/media/{id}` already emits
   the correct headers per object — `public, max-age=31536000, immutable` when
   the attachment is public, `private, no-store` otherwise
   (`MediaController.php:126`). Overriding that serves private-board attachments
   from the edge.
+- **Early Hints:** enable it in the zone after deploying the repository
+  changes. Successful HTML responses emit `Link` preload headers for the two
+  core stylesheets, `app.js`, and EB Garamond 400. Only public build URLs are
+  included. Cloudflare learns these headers from a previous response, so a
+  first visit to a cold URI does not guarantee a `103`. Verify a warmed URI
+  over HTTP/2 or HTTP/3; this repository change does not itself enable the zone
+  setting. See [Cloudflare Early Hints](https://developers.cloudflare.com/cache/advanced-configuration/early-hints/).
 - **Leave Bot Fight Mode off.** It force-enables JavaScript Detections, which
   injects an *inline* script. `SecurityHeaders::csp()` sends
   `script-src 'self'` with no nonce (`src/Security/SecurityHeaders.php:41`), so
@@ -494,8 +503,60 @@ at a second R2 bucket over the S3 API — egress is free.
 
 ## 14. Measured latency — the open performance problem
 
-**Status 2026-08-06: the DB move to `gcp-us-east4` is live.** Two separate
-latency wins landed in one cutover: the branch region AND the access hostname.
+**Repository optimization work, 2026-09-20:** the September account cutover
+in §15 supersedes the August placement below. The checked-in database host is
+`gcp-us-central1.connect.psdb.cloud` and the container remains pinned to ENAM.
+The repository work does not move the production database or change zone
+settings. Local query counts and browser evidence are recorded in
+[the performance verification record](../evidence/performance/2026-09-20/verification.md).
+
+The request path now uses emulated PDO prepares by default, avoiding a separate
+server prepare exchange while continuing to bind every parameter. Set
+`DB_EMULATE_PREPARES=false` to restore native prepares; the Worker forwards the
+setting to the container. Multi-statement execution stays disabled, and query
+syntax remains compatible with native prepares. No automatic query replay or
+persistent connection pool has been added.
+
+Settings, role capability maps, user preferences, board membership/moderator
+lists, ordered boards and thread-intelligence job rows are memoized within one
+HTTP request. Database writes and transaction boundaries invalidate these
+reads; the cache is cleared even when request handling throws. CLI workers do
+not retain cached reads across jobs. HTML globals initialize when the View
+first renders, so JSON polls, previews, uploads and redirects keep their auth,
+feature, rate-limit and CSRF gates without paying for the shell. HTML error
+responses still initialize it.
+
+Session activity writes are limited to once per minute, using the already-read
+session timestamp. Revocation and expiry are still checked on every request.
+The setup gate uses the existing transactional `installed_at` marker; legacy
+installs without it fall back to counting admins. Guest CSRF secrets are issued
+when a form renders or a submitted token is verified. Cookie-free guest reads
+are **not** an instruction to enable public HTML caching.
+
+`RATELIMIT_PATH` now points to `/var/www/html/storage/ratelimit` on local
+container storage. The single-instance constraint remains required. This
+removes R2/s3fs I/O from rate-limited requests; a container replacement resets
+the ephemeral rate-limit ledger.
+
+Build assets with `npm run build`; verify reproducibility with
+`npm run check:assets` and Worker behavior with `npm run test:assets`. The build
+minifies core CSS/JS into content-hashed files, rewrites font URLs, and emits a
+small editor entry that loads Milkdown only when a composer exists (including
+a composer inserted later). Keep the manifest and generated files together in
+deployments. The Docker build and Wrangler build command regenerate them.
+
+Production follow-up remains: colocate the branch with ENAM and use its
+region-scoped access host, deploy this code, set Browser Cache TTL/Early Hints,
+then remeasure connect time, query time/count, first and repeat asset requests,
+and signed-in thread TTFB. Persistent connections need a separate dropped-link
+and transaction-state rehearsal after that move. APCu/page caching also remains
+a separate change requiring cross-request invalidation; neither is needed for
+these request-scoped caches.
+
+### Historical placement measurements — 2026-08-06
+
+The DB move to `gcp-us-east4` was live on this date. Two separate latency wins
+landed in one cutover: the branch region AND the access hostname.
 
 Every page render is dominated by database round trips, not by PHP:
 

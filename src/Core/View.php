@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use Closure;
 use RuntimeException;
 use Throwable;
 
@@ -28,6 +29,7 @@ final class View
     private array $capturing = [];
 
     private ?string $layout = null;
+    private ?Closure $beforeRender = null;
 
     public function __construct(private string $templatePath)
     {
@@ -44,6 +46,19 @@ final class View
         return $this->shared[$key] ?? $default;
     }
 
+    /** Load request globals only if a controller actually renders HTML. */
+    public function beforeRender(Closure $initialize): void
+    {
+        $this->beforeRender = $initialize;
+    }
+
+    private function initialize(): void
+    {
+        $initialize = $this->beforeRender;
+        $this->beforeRender = null;
+        $initialize?->__invoke();
+    }
+
     /**
      * Render a template to a complete HTML string, applying a layout if the
      * template requested one.
@@ -52,6 +67,7 @@ final class View
      */
     public function render(string $template, array $data = []): string
     {
+        $this->initialize();
         $this->layout = null;
         $this->sections = [];
 
@@ -69,6 +85,7 @@ final class View
     /** @param array<string,mixed> $data */
     public function partial(string $template, array $data = []): string
     {
+        $this->initialize();
         return $this->renderTemplate($template, $data);
     }
 
@@ -141,7 +158,8 @@ final class View
 
     public function csrfToken(): string
     {
-        return (string) $this->shared('csrf_token', '');
+        $token = $this->shared('csrf_token', '');
+        return (string) ($token instanceof Closure ? $token() : $token);
     }
 
     public function csrfField(): string

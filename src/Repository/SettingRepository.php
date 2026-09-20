@@ -32,12 +32,16 @@ final class SettingRepository
             return [];
         }
 
-        $keys = array_keys($defaults);
-        $placeholders = implode(', ', array_fill(0, count($keys), '?'));
-        $rows = $this->db->fetchAll(
-            'SELECT `key`, `value` FROM settings WHERE `key` IN (' . $placeholders . ')',
-            $keys,
-        );
+        if ($this->db->isRequestCacheActive()) {
+            $rows = array_intersect_key($this->requestRows(), $defaults);
+        } else {
+            $keys = array_keys($defaults);
+            $placeholders = implode(', ', array_fill(0, count($keys), '?'));
+            $rows = $this->db->fetchAll(
+                'SELECT `key`, `value` FROM settings WHERE `key` IN (' . $placeholders . ')',
+                $keys,
+            );
+        }
 
         $values = $defaults;
         foreach ($rows as $row) {
@@ -68,6 +72,19 @@ final class SettingRepository
 
     public function has(string $key): bool
     {
+        if ($this->db->isRequestCacheActive()) {
+            return array_key_exists($key, $this->requestRows());
+        }
         return $this->db->fetchValue('SELECT 1 FROM settings WHERE `key` = ? LIMIT 1', [$key]) !== false;
+    }
+
+    /** @return array<string,array{key:string,value:mixed}> Raw rows preserve SQL/JSON null and existence. */
+    private function requestRows(): array
+    {
+        return $this->db->remember(__METHOD__, fn (): array => array_column(
+            $this->db->fetchAll('SELECT `key`, `value` FROM settings'),
+            null,
+            'key',
+        ));
     }
 }
