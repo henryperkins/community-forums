@@ -1,0 +1,21 @@
+```
+Error: expect(locator).not.toHaveClass(expected) failed
+
+Locator: locator('#reply').locator('textarea[name="body"]')
+Expected pattern: not /is-wysiwyg-source-hidden/
+Received string: "composer-input is-wysiwyg-source-hidden"
+Timeout: 5000ms
+
+Call log:
+  - Expect "not toHaveClass" with timeout 5000ms
+  - waiting for locator('#reply').locator('textarea[name="body"]')
+    - locator resolved to <textarea rows="4" name="body" role="combobox" maxlength="20000" data-rb-enhanced="1" aria-expanded="false" aria-haspopup="listbox" aria-autocomplete="list" id="composer-body-reply-thread-2" aria-controls="composer-reference-menu-2" class="composer-input is-wysiwyg-source-hidden" aria-label="Reply to “Share your favourite keyboard shortcuts”…" placeholder="Reply to “Share your favourite keyboard shortcuts”…"></textarea>
+    13 × unexpected value "composer-input is-wysiwyg-source-hidden"
+       - locator resolved to <textarea rows="4" name="body" role="combobox" maxlength="20000" data-rb-enhanced="1" aria-expanded="false" aria-haspopup="listbox" aria-autocomplete="list" id="composer-body-reply-thread-2" aria-controls="composer-slash-menu-2" class="composer-input is-wysiwyg-source-hidden" aria-label="Reply to “Share your favourite keyboard shortcuts”…" placeholder="Reply to “Share your favourite keyboard shortcuts”…"></textarea>
+    - unexpected value "composer-input is-wysiwyg-source-hidden"
+
+```
+
+```yaml
+- combobox "Reply to “Share your favourite keyboard shortcuts”…": Typed while the editor module was delayed.
+```

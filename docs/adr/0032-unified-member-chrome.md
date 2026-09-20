@@ -248,3 +248,19 @@ location data, skeleton, or error card is introduced by that prompt.
 - Current completion-review results are recorded in
   `docs/evidence/imladris-unified-chrome/README.md`. Earlier capture counts have
   been replaced by fresh runs, rather than inferred from existing image files.
+
+### Startup geometry follow-up — 2026-09-20
+
+The mobile drawer geometry is selected by CSS `scripting: enabled` before the
+deferred application bundle arrives. Native fragment links keep the drawer
+reachable while that bundle is delayed or blocked; installed handlers adopt an
+already-open drawer and preserve keyboard focus. The no-JavaScript stacked rail,
+including the bounded account-settings rail, keeps its existing presentation.
+The same startup contract covers the thread scroll area and reply dock; native
+focus exposes the full form until its controller is installed. A focused textarea
+keeps Source mode and its caret when the rich-editor module arrives.
+
+The local warm CLS measurement fell from 1.047470 to 0.038149. Keyboard, no-JS,
+blocked-bundle and delayed-editor evidence, plus the authorized presentation
+baseline refresh and release checks, are recorded in
+[`docs/evidence/performance/2026-09-20/cls-fix/README.md`](../evidence/performance/2026-09-20/cls-fix/README.md).

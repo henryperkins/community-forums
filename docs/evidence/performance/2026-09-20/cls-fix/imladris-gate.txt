@@ -1,0 +1,3 @@
+Production presentation changed after Imladris reconciliation. Review the design-system contract before updating config/imladris-runtime-baseline.json. Current digest: a1cf62a470d64ae474ae848da1a0557742b120b208bda3bd6f968b21196710f2
+Script php bin/build-imladris-assets.php --check handling the check:imladris event returned with error code 1
+Script @check:imladris was called via verify:imladris

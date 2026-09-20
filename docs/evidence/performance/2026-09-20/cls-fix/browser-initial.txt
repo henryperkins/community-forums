@@ -1,0 +1,488 @@
+
+Running 114 tests using 1 worker
+
+(node:990048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  -    1 [desktop] › composer-expansion.spec.ts:187:7 › reply dock expands on tap and folds back when an empty composer is left (Milkdown)
+
+  -    2 [desktop] › composer-expansion.spec.ts:226:7 › empty reply dock folds when focus tabs away, and keeps a draft open (Milkdown)
+
+  -    3 [desktop] › composer-expansion.spec.ts:251:7 › composer-owned controls never fold the dock (Milkdown)
+
+  -    4 [desktop] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (Milkdown)
+
+  -    5 [desktop] › composer-expansion.spec.ts:187:7 › reply dock expands on tap and folds back when an empty composer is left (textarea)
+
+  -    6 [desktop] › composer-expansion.spec.ts:226:7 › empty reply dock folds when focus tabs away, and keeps a draft open (textarea)
+
+  -    7 [desktop] › composer-expansion.spec.ts:251:7 › composer-owned controls never fold the dock (textarea)
+
+  -    8 [desktop] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (textarea)
+
+  -    9 [desktop] › composer-expansion.spec.ts:340:5 › a restored browser-local reply draft opens instead of hiding in the collapsed dock
+
+  ✓   10 [desktop] › composer-expansion.spec.ts:365:5 › the reply composer is one framed surface with no nested editor card (1.0s)
+
+  -   11 [desktop] › composer-expansion.spec.ts:433:5 › an expanded empty reply leaves most of the mobile viewport to the conversation
+
+  ✓   12 [desktop] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field (1.9s)
+
+  ✓   13 [desktop] › composer-expansion.spec.ts:498:5 › the editor mode control stays keyboard and screen-reader operable (1.0s)
+
+  ✓   14 [desktop] › composer-expansion.spec.ts:519:5 › DM and edit mounts keep working through the shared-shell change (1.1s)
+
+  ✓   15 [desktop] › composer-expansion.spec.ts:559:5 › the reworked composer surfaces introduce no serious axe violations (2.2s)
+  ✓   16 [desktop] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts (5.4s)
+  ✓   17 [desktop] › imladris-forum-surfaces.spec.ts:331:5 › board identity opens the one topic composer and restores focus to its actual opener (790ms)
+  ✓   18 [desktop] › imladris-forum-surfaces.spec.ts:400:5 › the board identity condenses on scroll without adding flow height or a tab stop (1.4s)
+  -   19 [desktop] › imladris-forum-surfaces.spec.ts:460:5 › the phone board keeps its activity column, its touch targets and its Follow state
+  ✓   20 [desktop] › imladris-forum-surfaces.spec.ts:539:5 › board route does not overflow at the 860px shell transition (851ms)
+  ✓   21 [desktop] › imladris-forum-surfaces.spec.ts:557:5 › forum index does not overflow across the 860px shell transition (554ms)
+  ✓   22 [desktop] › imladris-forum-surfaces.spec.ts:588:5 › no-JavaScript board composer and canonical thread remain usable (780ms)
+  ✓   23 [desktop] › thread-view-study.spec.ts:186:5 › desktop Topic tools accords, traps focus, and restores each opener (1.3s)
+  ✓   24 [desktop] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus (2.2s)
+  ✓   25 [desktop] › thread-view-study.spec.ts:264:5 › post menus are exclusive, dismiss outside, and open real disclosures safely (1.9s)
+  ✓   26 [desktop] › thread-view-study.spec.ts:329:5 › copy link keeps anchor navigation when Clipboard is absent or rejects (876ms)
+  ✓   27 [desktop] › thread-view-study.spec.ts:362:5 › quote controls stay hidden when the rendered topic has no reply composer target (931ms)
+
+  ✓   28 [desktop] › thread-view-study.spec.ts:378:5 › quote inserts through the active WYSIWYG adapter and survives submit synchronization (869ms)
+
+  ✓   29 [desktop] › thread-view-study.spec.ts:416:5 › quote inserts exactly once through the source adapter (888ms)
+  ✘   30 [desktop] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry (1.1s)
+(node:990972) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   31 [desktop] › thread-view-study.spec.ts:549:5 › coarse pointers keep post actions visible and reachable above the mobile breakpoint
+  ✓   32 [desktop] › thread-view-study.spec.ts:606:5 › post menu rows stack full-width with no user-agent chrome (839ms)
+  ✓   33 [desktop] › thread-view-study.spec.ts:680:5 › reduced motion removes Study animations (694ms)
+  ✓   34 [desktop] › thread-view-study.spec.ts:689:5 › light and dark Study surfaces retain readable semantic colors (752ms)
+  -   35 [desktop] › thread-view-study.spec.ts:743:5 › mobile composer honors a representative keyboard inset
+  ✓   36 [desktop] › thread-view-study.spec.ts:755:5 › the staff badge flips register and clears AA in both (672ms)
+  ✓   37 [desktop] › thread-view-study.spec.ts:812:5 › standing chips sit above the title and state status as a word alone (1.9s)
+  ✓   38 [desktop] › thread-view-study.spec.ts:863:5 › the star pill uses the commend star and never wraps the facts row (1.0s)
+  ✓   39 [desktop] › thread-view-study.spec.ts:910:5 › a bare reaction chip drops the orphaned name separator (990ms)
+  ✓   40 [desktop] › thread-view-study.spec.ts:943:5 › server-invalid engraved controls receive the effective danger frame (124ms)
+
+  ✓   41 [desktop] › thread-view-study.spec.ts:976:5 › the Study reads and replies with JavaScript disabled (1.0s)
+  ✓   42 [desktop] › thread-view-study.spec.ts:1031:5 › post actions are reachable by keyboard alone (1.2s)
+
+  ✓   43 [desktop] › unified-chrome.spec.ts:146:5 › the bar and the rail are the design system's, at its geometry, in both registers (846ms)
+
+  ✓   44 [desktop] › unified-chrome.spec.ts:184:5 › long stored account names fit the bar and keep the account menu reachable (4.8s)
+
+  ✓   45 [desktop] › unified-chrome.spec.ts:286:5 › the seat's leaf and the profile dot still take the away colour from the layer (727ms)
+
+  ✓   46 [desktop] › unified-chrome.spec.ts:312:5 › a rail row without an avatar keeps a dot with a box (891ms)
+
+  ✓   47 [desktop] › unified-chrome.spec.ts:335:5 › rail rows hover without an underline and "See everyone online" takes the accent (687ms)
+
+  ✓   48 [desktop] › unified-chrome.spec.ts:358:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (1.6s)
+
+  ✓   49 [desktop] › unified-chrome.spec.ts:468:5 › the rail state persists and the drawer opens (732ms)
+
+  -   50 [desktop] › unified-chrome.spec.ts:505:5 › the closed phone drawer is excluded from keyboard navigation
+
+  -   51 [desktop] › unified-chrome.spec.ts:533:5 › phone primary navigation reaches Messages without horizontal page overflow
+
+  ✓   52 [desktop] › unified-chrome.spec.ts:547:5 › a guest gets the design's Log in pill and production's Sign up beside it (272ms)
+
+  -   53 [desktop] › unified-chrome.spec.ts:555:5 › New topic survives the phone breakpoint as its glyph
+
+  ✓   54 [desktop] › unified-chrome.spec.ts:575:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations (981ms)
+
+  -   55 [desktop] › unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls
+
+  ✓   56 [desktop] › unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.4s)
+
+  ✓   57 [desktop] › unified-chrome.spec.ts:727:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (842ms)
+(node:991603) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   58 [mobile] › composer-expansion.spec.ts:187:7 › reply dock expands on tap and folds back when an empty composer is left (Milkdown) (1.3s)
+
+  ✓   59 [mobile] › composer-expansion.spec.ts:226:7 › empty reply dock folds when focus tabs away, and keeps a draft open (Milkdown) (1.3s)
+
+  ✓   60 [mobile] › composer-expansion.spec.ts:251:7 › composer-owned controls never fold the dock (Milkdown) (1.8s)
+
+  ✓   61 [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (Milkdown) (1.8s)
+
+  ✓   62 [mobile] › composer-expansion.spec.ts:187:7 › reply dock expands on tap and folds back when an empty composer is left (textarea) (814ms)
+
+  ✓   63 [mobile] › composer-expansion.spec.ts:226:7 › empty reply dock folds when focus tabs away, and keeps a draft open (textarea) (1.2s)
+
+  ✓   64 [mobile] › composer-expansion.spec.ts:251:7 › composer-owned controls never fold the dock (textarea) (1.6s)
+
+  ✘   65 [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (textarea) (30.2s)
+(node:991936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   66 [mobile] › composer-expansion.spec.ts:340:5 › a restored browser-local reply draft opens instead of hiding in the collapsed dock (1.0s)
+
+  ✓   67 [mobile] › composer-expansion.spec.ts:365:5 › the reply composer is one framed surface with no nested editor card (925ms)
+
+  ✓   68 [mobile] › composer-expansion.spec.ts:433:5 › an expanded empty reply leaves most of the mobile viewport to the conversation (879ms)
+
+  ✘   69 [mobile] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field (30.1s)
+(node:992129) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   70 [mobile] › composer-expansion.spec.ts:498:5 › the editor mode control stays keyboard and screen-reader operable (1.0s)
+
+  ✓   71 [mobile] › composer-expansion.spec.ts:519:5 › DM and edit mounts keep working through the shared-shell change (1.0s)
+
+  ✓   72 [mobile] › composer-expansion.spec.ts:559:5 › the reworked composer surfaces introduce no serious axe violations (2.5s)
+  ✘   73 [mobile] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts (6.6s)
+(node:992433) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   74 [mobile] › imladris-forum-surfaces.spec.ts:331:5 › board identity opens the one topic composer and restores focus to its actual opener (747ms)
+(node:992570) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   75 [mobile] › imladris-forum-surfaces.spec.ts:400:5 › the board identity condenses on scroll without adding flow height or a tab stop (1.5s)
+(node:992664) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   76 [mobile] › imladris-forum-surfaces.spec.ts:460:5 › the phone board keeps its activity column, its touch targets and its Follow state (686ms)
+(node:992748) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   77 [mobile] › imladris-forum-surfaces.spec.ts:539:5 › board route does not overflow at the 860px shell transition
+  -   78 [mobile] › imladris-forum-surfaces.spec.ts:557:5 › forum index does not overflow across the 860px shell transition
+  ✓   79 [mobile] › imladris-forum-surfaces.spec.ts:588:5 › no-JavaScript board composer and canonical thread remain usable (838ms)
+  -   80 [mobile] › thread-view-study.spec.ts:186:5 › desktop Topic tools accords, traps focus, and restores each opener
+  ✘   81 [mobile] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus (30.1s)
+(node:992923) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   82 [mobile] › thread-view-study.spec.ts:264:5 › post menus are exclusive, dismiss outside, and open real disclosures safely (1.9s)
+  -   83 [mobile] › thread-view-study.spec.ts:329:5 › copy link keeps anchor navigation when Clipboard is absent or rejects
+  -   84 [mobile] › thread-view-study.spec.ts:362:5 › quote controls stay hidden when the rendered topic has no reply composer target
+  -   85 [mobile] › thread-view-study.spec.ts:378:5 › quote inserts through the active WYSIWYG adapter and survives submit synchronization
+  -   86 [mobile] › thread-view-study.spec.ts:416:5 › quote inserts exactly once through the source adapter
+  ✘   87 [mobile] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry (1.2s)
+(node:993062) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   88 [mobile] › thread-view-study.spec.ts:549:5 › coarse pointers keep post actions visible and reachable above the mobile breakpoint (823ms)
+  ✓   89 [mobile] › thread-view-study.spec.ts:606:5 › post menu rows stack full-width with no user-agent chrome (702ms)
+  ✓   90 [mobile] › thread-view-study.spec.ts:680:5 › reduced motion removes Study animations (720ms)
+  ✓   91 [mobile] › thread-view-study.spec.ts:689:5 › light and dark Study surfaces retain readable semantic colors (692ms)
+  ✓   92 [mobile] › thread-view-study.spec.ts:743:5 › mobile composer honors a representative keyboard inset (646ms)
+  ✓   93 [mobile] › thread-view-study.spec.ts:755:5 › the staff badge flips register and clears AA in both (623ms)
+  -   94 [mobile] › thread-view-study.spec.ts:812:5 › standing chips sit above the title and state status as a word alone
+  -   95 [mobile] › thread-view-study.spec.ts:863:5 › the star pill uses the commend star and never wraps the facts row
+  -   96 [mobile] › thread-view-study.spec.ts:910:5 › a bare reaction chip drops the orphaned name separator
+  -   97 [mobile] › thread-view-study.spec.ts:943:5 › server-invalid engraved controls receive the effective danger frame
+  -   98 [mobile] › thread-view-study.spec.ts:976:5 › the Study reads and replies with JavaScript disabled
+  -   99 [mobile] › thread-view-study.spec.ts:1031:5 › post actions are reachable by keyboard alone
+
+  ✓  100 [mobile] › unified-chrome.spec.ts:146:5 › the bar and the rail are the design system's, at its geometry, in both registers (669ms)
+
+  ✓  101 [mobile] › unified-chrome.spec.ts:184:5 › long stored account names fit the bar and keep the account menu reachable (1.4s)
+
+  ✓  102 [mobile] › unified-chrome.spec.ts:286:5 › the seat's leaf and the profile dot still take the away colour from the layer (665ms)
+
+  ✓  103 [mobile] › unified-chrome.spec.ts:312:5 › a rail row without an avatar keeps a dot with a box (871ms)
+
+  ✓  104 [mobile] › unified-chrome.spec.ts:335:5 › rail rows hover without an underline and "See everyone online" takes the accent (998ms)
+
+  ✓  105 [mobile] › unified-chrome.spec.ts:358:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (1.6s)
+
+  ✓  106 [mobile] › unified-chrome.spec.ts:468:5 › the rail state persists and the drawer opens (1.0s)
+
+  ✓  107 [mobile] › unified-chrome.spec.ts:505:5 › the closed phone drawer is excluded from keyboard navigation (936ms)
+
+  ✓  108 [mobile] › unified-chrome.spec.ts:533:5 › phone primary navigation reaches Messages without horizontal page overflow (623ms)
+
+  ✓  109 [mobile] › unified-chrome.spec.ts:547:5 › a guest gets the design's Log in pill and production's Sign up beside it (245ms)
+
+  ✓  110 [mobile] › unified-chrome.spec.ts:555:5 › New topic survives the phone breakpoint as its glyph (553ms)
+
+  -  111 [mobile] › unified-chrome.spec.ts:575:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations
+
+  ✘  112 [mobile] › unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls (547ms)
+(node:993608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  113 [mobile] › unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.6s)
+
+  ✓  114 [mobile] › unified-chrome.spec.ts:727:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (919ms)
+
+
+  1) [desktop] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 2
+    Received:    69.75
+
+      495 |     expect(
+      496 |       Math.abs((toolsBox!.x + toolsBox!.width) - layoutViewportRight),
+    > 497 |     ).toBeLessThanOrEqual(2);
+          |       ^
+      498 |   } else {
+      499 |     expect(toolsBox!.width).toBeCloseTo(390, 0);
+      500 |     expect(toolsBox!.height).toBeLessThanOrEqual(844 * 0.86 + 1);
+        at /home/ubuntu/community-forums/tests/browser/thread-view-study.spec.ts:497:7
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/thread-view-study-Study-la-35714-desktop-and-mobile-geometry-desktop/error-context.md
+
+  2) [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (textarea)
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForLoadState: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+      "domcontentloaded" event fired
+      "load" event fired
+    ============================================================
+
+      333 |     await bodyOf(form, mode.rich).type(' — sending now');
+      334 |     await form.locator('.composer-send').click();
+    > 335 |     await page.waitForLoadState('networkidle');
+          |                ^
+      336 |     await expect(page.locator('.post-body').last()).toContainText('sending now');
+      337 |   });
+      338 | }
+        at /home/ubuntu/community-forums/tests/browser/composer-expansion.spec.ts:335:16
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/composer-expansion-minimiz-7bdbe-ening-restores-it-textarea--mobile/error-context.md
+
+  3) [mobile] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForLoadState: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+      "domcontentloaded" event fired
+      "load" event fired
+    ============================================================
+
+      491 |   await body.type('One coherent composer surface.');
+      492 |   await form.locator('.composer-send').click();
+    > 493 |   await page.waitForLoadState('networkidle');
+          |              ^
+      494 |   await expect(page.locator('h1')).toContainText(unique);
+      495 |   await expect(page.locator('.post-op .post-body')).toContainText('One coherent composer surface');
+      496 | });
+        at /home/ubuntu/community-forums/tests/browser/composer-expansion.spec.ts:493:14
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/composer-expansion-new-top-ace1e-e-title-as-its-header-field-mobile/error-context.md
+
+  4) [mobile] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts
+
+    Error: unexpected console warnings/errors or page errors
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 12
+
+    - Array []
+    + Array [
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    + ]
+
+      61 |
+      62 | function expectNoBrowserMessages(entries: string[]): void {
+    > 63 |   expect(entries, 'unexpected console warnings/errors or page errors').toEqual([]);
+         |                                                                        ^
+      64 | }
+      65 |
+      66 | async function dismissTour(page: Page): Promise<void> {
+        at expectNoBrowserMessages (/home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:63:72)
+        at /home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:328:3
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/imladris-forum-surfaces-fo-28f48-and-accessibility-contracts-mobile/error-context.md
+
+  5) [mobile] › imladris-forum-surfaces.spec.ts:331:5 › board identity opens the one topic composer and restores focus to its actual opener
+
+    Error: unexpected console warnings/errors or page errors
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    + ]
+
+      61 |
+      62 | function expectNoBrowserMessages(entries: string[]): void {
+    > 63 |   expect(entries, 'unexpected console warnings/errors or page errors').toEqual([]);
+         |                                                                        ^
+      64 | }
+      65 |
+      66 | async function dismissTour(page: Page): Promise<void> {
+        at expectNoBrowserMessages (/home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:63:72)
+        at /home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:397:3
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/imladris-forum-surfaces-bo-667fc--focus-to-its-actual-opener-mobile/error-context.md
+
+  6) [mobile] › imladris-forum-surfaces.spec.ts:400:5 › the board identity condenses on scroll without adding flow height or a tab stop
+
+    Error: unexpected console warnings/errors or page errors
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    + ]
+
+      61 |
+      62 | function expectNoBrowserMessages(entries: string[]): void {
+    > 63 |   expect(entries, 'unexpected console warnings/errors or page errors').toEqual([]);
+         |                                                                        ^
+      64 | }
+      65 |
+      66 | async function dismissTour(page: Page): Promise<void> {
+        at expectNoBrowserMessages (/home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:63:72)
+        at /home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:457:3
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/imladris-forum-surfaces-th-fa1f4-g-flow-height-or-a-tab-stop-mobile/error-context.md
+
+  7) [mobile] › imladris-forum-surfaces.spec.ts:460:5 › the phone board keeps its activity column, its touch targets and its Follow state
+
+    Error: unexpected console warnings/errors or page errors
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    +   "http 429: http://localhost:8041/presence?format=json",
+    +   "error: Failed to load resource: the server responded with a status of 429 (Too Many Requests) (http://localhost:8041/presence?format=json:0:0)",
+    + ]
+
+      61 |
+      62 | function expectNoBrowserMessages(entries: string[]): void {
+    > 63 |   expect(entries, 'unexpected console warnings/errors or page errors').toEqual([]);
+         |                                                                        ^
+      64 | }
+      65 |
+      66 | async function dismissTour(page: Page): Promise<void> {
+        at expectNoBrowserMessages (/home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:63:72)
+        at /home/ubuntu/community-forums/tests/browser/imladris-forum-surfaces.spec.ts:536:3
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/imladris-forum-surfaces-th-f73ae-argets-and-its-Follow-state-mobile/error-context.md
+
+  8) [mobile] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('[data-topic-tools-section="management"]').locator(':scope > summary')
+        - locator resolved to <summary>…</summary>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not stable
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not stable
+        - retrying click action
+          - waiting 100ms
+        57 × waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <div class="topic-tools-scrim" data-topic-tools-scrim=""></div> intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+
+
+      123 |   const management = page.locator('[data-topic-tools-section="management"]');
+      124 |   if (!(await management.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    > 125 |     await management.locator(':scope > summary').click();
+          |                                                  ^
+      126 |   }
+      127 | }
+      128 |
+        at openManagement (/home/ubuntu/community-forums/tests/browser/thread-view-study.spec.ts:125:50)
+        at openRestructure (/home/ubuntu/community-forums/tests/browser/thread-view-study.spec.ts:235:5)
+        at /home/ubuntu/community-forums/tests/browser/thread-view-study.spec.ts:242:3
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/thread-view-study-split-or-f7365-sal-path-and-restores-focus-mobile/error-context.md
+
+  9) [mobile] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry ─
+
+    Error: expect(received).toBeCloseTo(expected, precision)
+
+    Expected: 390
+    Received: 767
+
+    Expected precision:    0
+    Expected difference: < 0.5
+    Received difference:   377
+
+      497 |     ).toBeLessThanOrEqual(2);
+      498 |   } else {
+    > 499 |     expect(toolsBox!.width).toBeCloseTo(390, 0);
+          |                             ^
+      500 |     expect(toolsBox!.height).toBeLessThanOrEqual(844 * 0.86 + 1);
+      501 |     const actionBoxes = await page.locator('[data-post-toolbar] button:visible, [data-post-toolbar] summary:visible').evaluateAll((items) => items.map((item) => {
+      502 |       const itemBox = item.getBoundingClientRect();
+        at /home/ubuntu/community-forums/tests/browser/thread-view-study.spec.ts:499:29
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/thread-view-study-Study-la-35714-desktop-and-mobile-geometry-mobile/error-context.md
+
+  10) [mobile] › unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls
+
+    Error: expect(locator).toBeHidden() failed
+
+    Locator: locator('.nav-toggle')
+    Expected: hidden
+    Error: strict mode violation: locator('.nav-toggle') resolved to 2 elements:
+        1) <a class="nav-toggle" href="#sidebar-nav" data-nav-fallback="" aria-label="Open board rail">…</a> aka getByLabel('Open board rail').first()
+        2) <button hidden="" type="button" class="nav-toggle" data-nav-toggle="" aria-expanded="false" aria-controls="sidebar-nav" aria-label="Open board rail">…</button> aka getByLabel('Open board rail').nth(1)
+
+    Call log:
+      - Expect "toBeHidden" with timeout 5000ms
+      - waiting for locator('.nav-toggle')
+
+
+      614 |     await page.goto('/');
+      615 |
+    > 616 |     await expect(page.locator('.nav-toggle')).toBeHidden();
+          |                                               ^
+      617 |     const rail = page.locator('nav.board-rail');
+      618 |     await expect(rail).toBeVisible();
+      619 |     expect(await railIsOffCanvas(page)).toBe(false);
+        at /home/ubuntu/community-forums/tests/browser/unified-chrome.spec.ts:616:47
+
+    Error Context: ../../docs/evidence/performance/2026-09-20/cls-fix/browser/.artifacts/unified-chrome-with-JavaSc-eecc5-ngs-through-native-controls-mobile/error-context.md
+
+  10 failed
+    [desktop] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry ─
+    [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (textarea)
+    [mobile] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field
+    [mobile] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts
+    [mobile] › imladris-forum-surfaces.spec.ts:331:5 › board identity opens the one topic composer and restores focus to its actual opener
+    [mobile] › imladris-forum-surfaces.spec.ts:400:5 › the board identity condenses on scroll without adding flow height or a tab stop
+    [mobile] › imladris-forum-surfaces.spec.ts:460:5 › the phone board keeps its activity column, its touch targets and its Follow state
+    [mobile] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus
+    [mobile] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry ──
+    [mobile] › unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls
+  31 skipped
+  73 passed (3.3m)

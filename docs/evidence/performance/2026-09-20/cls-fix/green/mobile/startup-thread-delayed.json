@@ -1,0 +1,106 @@
+{
+  "mode": "controlled delayed bundles; routing disables cache",
+  "before": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 782
+    },
+    "scroll": {
+      "x": 14,
+      "y": 78,
+      "width": 362,
+      "height": 675
+    },
+    "dock": {
+      "x": 14,
+      "y": 761,
+      "width": 362,
+      "height": 67
+    }
+  },
+  "afterApp": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 782
+    },
+    "scroll": {
+      "x": 14,
+      "y": 78,
+      "width": 362,
+      "height": 675
+    },
+    "dock": {
+      "x": 14,
+      "y": 761,
+      "width": 362,
+      "height": 67
+    }
+  },
+  "afterComposer": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 782
+    },
+    "scroll": {
+      "x": 14,
+      "y": 78,
+      "width": 362,
+      "height": 675
+    },
+    "dock": {
+      "x": 14,
+      "y": 761,
+      "width": 362,
+      "height": 67
+    }
+  },
+  "cls": 0.03797520103502726,
+  "shifts": [
+    {
+      "startTime": 71.69999992847443,
+      "value": 0.0005986049456493882,
+      "hadRecentInput": false
+    },
+    {
+      "startTime": 85.09999990463257,
+      "value": 0.000027962014216569654,
+      "hadRecentInput": false
+    },
+    {
+      "startTime": 756.0999999046326,
+      "value": 0.0373486340751613,
+      "hadRecentInput": false
+    }
+  ],
+  "frames": [
+    {
+      "time": 85.5,
+      "boxes": {
+        "main": {
+          "x": 0,
+          "y": 62,
+          "width": 390,
+          "height": 782
+        },
+        "scroll": {
+          "x": 14,
+          "y": 78,
+          "width": 362,
+          "height": 675
+        },
+        "dock": {
+          "x": 14,
+          "y": 761,
+          "width": 362,
+          "height": 67
+        }
+      }
+    }
+  ]
+}

@@ -2663,10 +2663,9 @@
         var dockMedia = typeof window.matchMedia === 'function'
             ? window.matchMedia('(max-width: 860px)')
             : null;
-        // Stamping the dock here (rather than relying on the global .has-js) is
-        // what lets the compact CSS apply: if this script never runs, the shell
-        // stays fully expanded instead of collapsing into a dock nothing can
-        // reopen.
+        // CSS already supplies the compact geometry and native focus fallback.
+        // This stamp hands expansion to the controller, so explicit minimize
+        // can fold even a non-empty draft without the fallback reopening it.
         form.setAttribute('data-composer-dock', '1');
         if (minimize) {
             var syncMinimize = function () { minimize.hidden = !dockMedia || !dockMedia.matches; };
@@ -2744,9 +2743,9 @@
         };
         // Local draft restoration happens synchronously before this controller
         // is installed, so its input event cannot expand the dock. Derive the
-        // initial presentation from the canonical adapter state instead of
-        // hiding a restored draft in the compact shell.
-        if (!composerIsEmpty(form)) { expand(false); }
+        // initial presentation from the canonical adapter state and preserve
+        // focus that entered the native form while enhancement was loading.
+        if (!composerIsEmpty(form) || form.contains(document.activeElement)) { expand(false); }
         addCleanup(form, function () {
             form._rbExpansion = null;
             form.removeAttribute('data-composer-dock');

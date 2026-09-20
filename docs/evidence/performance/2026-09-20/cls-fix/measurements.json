@@ -1,0 +1,75 @@
+{
+  "scope": "Disposable local moderator-member fixture; not deployed or production p75",
+  "target": 0.1,
+  "before": [
+    {
+      "label": "cold",
+      "cls": 0.09745856752129074,
+      "unfilteredShiftSum": 1.047973037997788,
+      "cachedResponses": 0,
+      "httpStatus": 200,
+      "errors": []
+    },
+    {
+      "label": "warm",
+      "cls": 1.047469971180771,
+      "unfilteredShiftSum": 1.047469971180771,
+      "cachedResponses": 17,
+      "httpStatus": 200,
+      "errors": []
+    }
+  ],
+  "after": [
+    {
+      "label": "cold",
+      "cls": 0.0005525100464869935,
+      "unfilteredShiftSum": 0.03790114412164829,
+      "cachedResponses": 0,
+      "httpStatus": 200,
+      "errors": []
+    },
+    {
+      "label": "warm-1",
+      "cls": 0.038149358193252506,
+      "unfilteredShiftSum": 0.038149358193252506,
+      "cachedResponses": 17,
+      "httpStatus": 200,
+      "errors": []
+    },
+    {
+      "label": "warm-2",
+      "cls": 0.038149358193252506,
+      "unfilteredShiftSum": 0.038149358193252506,
+      "cachedResponses": 17,
+      "httpStatus": 200,
+      "errors": []
+    },
+    {
+      "label": "warm-3",
+      "cls": 0.038149358193252506,
+      "unfilteredShiftSum": 0.038149358193252506,
+      "cachedResponses": 17,
+      "httpStatus": 200,
+      "errors": []
+    }
+  ],
+  "profile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "deviceScaleFactor": 2,
+    "isMobile": true,
+    "hasTouch": true,
+    "cpuSlowdown": 4,
+    "network": {
+      "latencyMs": 150,
+      "downloadBitsPerSecond": 1600000,
+      "uploadBitsPerSecond": 750000
+    },
+    "cache": "new context initially, same context subsequent visits",
+    "holdAfterLoadMs": 3500,
+    "navigationIntervalMs": 1000
+  },
+  "browser": "149.0.7827.55"
+}

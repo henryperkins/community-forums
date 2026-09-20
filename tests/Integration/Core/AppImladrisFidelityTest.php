@@ -760,7 +760,7 @@ final class AppImladrisFidelityTest extends TestCase
         self::assertStringContainsString('<nav class="forum-bar-surfaces" aria-label="Primary">', $html);
         self::assertStringContainsString('class="forum-bar-search" href="/search"', $html);
         self::assertStringContainsString('<summary class="forum-bar-user"', $html);
-        self::assertStringContainsString('<nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards">', $html);
+        self::assertStringContainsString('<nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards"', $html);
         self::assertStringContainsString('<div class="board-rail-foot">', $html);
     }
 

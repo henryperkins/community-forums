@@ -1,0 +1,56 @@
+{
+  "mode": "controlled delayed bundles; routing disables cache",
+  "before": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 1346.15625
+    },
+    "scroll": null,
+    "dock": null
+  },
+  "afterApp": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 1346.15625
+    },
+    "scroll": null,
+    "dock": null
+  },
+  "afterComposer": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 1346.15625
+    },
+    "scroll": null,
+    "dock": null
+  },
+  "cls": 0.0005334097211363522,
+  "shifts": [
+    {
+      "startTime": 89.5,
+      "value": 0.0005334097211363522,
+      "hadRecentInput": false
+    }
+  ],
+  "frames": [
+    {
+      "time": 106.19999992847443,
+      "boxes": {
+        "main": {
+          "x": 0,
+          "y": 62,
+          "width": 390,
+          "height": 1346.16
+        },
+        "scroll": null,
+        "dock": null
+      }
+    }
+  ]
+}

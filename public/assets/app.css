@@ -1661,8 +1661,9 @@ body[data-route="inbox"] .app-shell { max-width: none; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    Imladris — Phase 4: mobile (off-canvas drawer, FAB, touch targets).
-   The drawer is JS-only (scoped to .has-js); without JS the rail stacks above
-   the content so navigation is never trapped.
+   Scripting capability fixes the geometry before deferred scripts arrive.
+   Native fragment links keep a slow/failed bundle usable; with scripting
+   disabled the rail still stacks above the content.
    ══════════════════════════════════════════════════════════════════════════ */
 .nav-toggle {
     display: none; align-items: center; justify-content: center;
@@ -1672,6 +1673,7 @@ body[data-route="inbox"] .app-shell { max-width: none; }
     color: var(--text-body); cursor: pointer;
 }
 .nav-toggle-ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.nav-toggle[hidden], .nav-close { display: none; }
 body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error pages → no dead control */
 
 /* Floating "new topic" affordance (mobile, board context). */
@@ -1685,15 +1687,16 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .fab:hover { background: var(--brand-hover); text-decoration: none; }
 .fab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-@media (max-width: 860px) {
-    .has-js .nav-toggle { display: inline-flex; }
-    .fab { display: inline-flex; }
+@media (max-width: 860px) and (scripting: enabled) {
+    .nav-toggle:not([hidden]) { display: inline-flex; }
+    body[data-nav-ready] [data-nav-fallback] { display: none; }
+    body:not([data-nav-ready]) .nav-close { display: block; padding: 12px; }
 
-    /* Off-canvas drawer — JS only. The layer's .board-rail is a column in a
+    /* The layer's .board-rail is a column in a
        fixed-height flex shell; on a phone it becomes this fixed drawer, which
        undoes the sticky desktop geometry the "Member chrome" block gives it. */
-    .has-js .app-shell { display: block; height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
-    .has-js .board-rail {
+    :root .app-shell { display: block; height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
+    .app-shell > .board-rail {
         position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
         display: flex; width: 322px; max-width: 86vw; max-height: none; z-index: 60;
         transform: translateX(-100%);
@@ -1702,12 +1705,16 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
         transition: transform var(--dur-base) var(--ease-calm);
         box-shadow: var(--shadow-xl); overflow-y: auto;
     }
-    .has-js body.nav-open .board-rail { transform: none; visibility: visible; }
-    .has-js .main { width: 100%; }
+    body.nav-open .board-rail,
+    body:not([data-nav-ready]) .board-rail:target { transform: none; visibility: visible; }
+    .main { width: 100%; }
     .nav-scrim:not([hidden]) {
         position: fixed; inset: 0; top: var(--topbar-h);
         background: var(--scrim); z-index: 55;
     }
+}
+@media (max-width: 860px) {
+    .fab { display: inline-flex; }
 
     /* The inbox's own phone rules now collapse at 1279px, not 860 — where the
        reading pane actually runs out of room — and live with the rest of the
@@ -1781,20 +1788,19 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     border-radius: 0; box-shadow: none; padding: 0; margin-top: 18px;
 }
 .thread-conversation { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-/* FT-01. The viewport-capped column and its inner scroll port are an ENHANCED
-   affordance: they trade document scrolling for a pinned composer, which only
-   works once app.js can drive the drawer. Ungated, they also applied to the
-   unenhanced document, where the in-flow Topic tools left the reading pane at
-   12px. Without JS the thread is one naturally-flowing document instead.
-   The @media twin below must carry the same gate at the same specificity. */
-body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
-    height: calc(100vh - var(--topbar-h) - 48px);
-    height: calc(100dvh - var(--topbar-h) - 48px);
+/* The scroll port and dock keep their first-paint geometry while scripts load.
+   Topic tools have a native fragment drawer in this mode. With scripting off,
+   tools and posts remain in one naturally flowing document (FT-01). */
+@media (scripting: enabled) {
+    body[data-route="thread"] .thread-conversation {
+        height: calc(100vh - var(--topbar-h) - 48px);
+        height: calc(100dvh - var(--topbar-h) - 48px);
+    }
+    [data-thread-study] > .thread-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 }
 .thread-scroll { overscroll-behavior: contain; padding: 0 8px 12px 0; scrollbar-gutter: stable; }
 /* The canonical thread owns this enhanced scroll surface. The Community Inbox
    now injects a bounded .inbox-preview instead of the complete thread markup. */
-[data-thread-enhanced="1"] > .thread-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .thread-dock {
     position: relative; z-index: 2; flex: 0 0 auto; min-width: 0;
     margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-hair);
@@ -1806,10 +1812,6 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .inbox-reading.is-open .thread-conversation { height: 100%; min-height: 0; }
 @media (max-width: 860px) {
     body[data-route="thread"] .main { padding-bottom: 16px; }
-    body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
-        height: calc(100vh - var(--topbar-h) - 32px);
-        height: calc(100dvh - var(--topbar-h) - 32px);
-    }
     .thread-scroll { padding-right: 3px; }
     .thread-dock { margin-top: 8px; padding-top: 8px; }
     .inbox-reading.is-open {
@@ -1818,11 +1820,16 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         padding: 10px 14px 14px;
     }
     .inbox-reading.is-open [data-inbox-reading-content] { height: calc(100% - 48px); }
-    /* Gated on the composer script's own stamp rather than the global .has-js:
-       only wireExpansion() can reopen a folded dock, so if composer.js never
-       runs the shell must stay fully expanded instead of collapsing into a
-       one-line surface with no way out. */
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-box {
+}
+@media (max-width: 860px) and (scripting: enabled) {
+    body[data-route="thread"] .thread-conversation {
+        height: calc(100vh - var(--topbar-h) - 32px);
+        height: calc(100dvh - var(--topbar-h) - 32px);
+    }
+    /* Before wireExpansion installs, native focus and typed text expose the full
+       form. Afterwards the controller owns expansion, including explicit minimize
+       with a draft. Server-rendered errors/drafts already carry .is-expanded. */
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-box {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -1830,16 +1837,16 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         padding: 3px;
         border-radius: var(--radius-pill);
     }
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-header,
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-format-slot,
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-upload-tray,
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-actions-start,
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-actions-end > :not(.composer-send),
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-meta-row,
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) [data-composer-after-box],
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .wysiwyg-source-toggle { display: none; }
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-input,
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .wysiwyg-composer {
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-upload-tray,
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-start,
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-end > :not(.composer-send),
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-meta-row,
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) [data-composer-after-box],
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-source-toggle { display: none; }
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-input,
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer {
         grid-column: 1;
         grid-row: 1;
         width: 100%;
@@ -1850,10 +1857,10 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         resize: none;
         overflow: hidden;
     }
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .wysiwyg-composer .ProseMirror {
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer .ProseMirror {
         height: 44px; min-height: 44px; max-height: 44px; padding: 10px 12px; overflow: hidden;
     }
-    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-actions-bar {
+    .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-bar {
         grid-column: 2;
         grid-row: 1;
         padding: 0;
@@ -2787,7 +2794,7 @@ textarea.textarea-engraved,
     .settings-rail-link span { overflow-wrap: anywhere; }
     .session-agent-details summary { min-height: 44px; padding-block: 10px; }
 }
-@media (max-width: 860px) {
+@media (max-width: 860px) and (scripting: none) {
     /* With no drawer script, account pages retain the real board, folder and
        feed links in a bounded, focusable rail instead of a full-height preface. */
     html:not(.has-js) [data-account-settings] .board-rail {
@@ -10048,8 +10055,8 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
    outside the column instead, so the stream and the composer dock below it share
    one measure. Only above the shell's own breakpoint, where the surface has room
    beside it; at 860px and below the column is the pane and there is none. */
-@media (min-width: 861px) {
-    [data-thread-enhanced="1"] > .thread-scroll { margin-right: -23px; }
+@media (min-width: 861px) and (scripting: enabled) {
+    [data-thread-study] > .thread-scroll { margin-right: -23px; }
 }
 .thread-study-head { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--border-hair); }
 /* The display token, not a literal: 2.15rem was 1.6px shy of --text-display-lg
@@ -10118,6 +10125,9 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
     background: var(--surface-raised);
     color: var(--text-body);
 }
+a.topic-tools-open, button.topic-tools-open { display: inline-flex; align-items: center; gap: 4px; font: 400 .78rem var(--font-label); text-decoration: none; }
+.topic-tools-open[hidden], .topic-tools-open[data-topic-tools-fallback],
+[data-thread-study] [data-topic-tools-fallback-close], .topic-tools-close[hidden] { display: none; }
 /* One esteem glyph. The commend star is gold whether or not the topic is starred —
    the pill's own colour carries the state, as .star-on already does. */
 .star-btn .icon-commend-star { flex: 0 0 auto; width: 13px; height: 13px; color: var(--star); }
@@ -10484,19 +10494,24 @@ a.link-preview:hover .link-preview-title { color: var(--accent); }
 }
 body.topic-tools-open,
 body.thread-restructure-open { overflow: hidden; }
-[data-thread-enhanced="1"] .topic-tools:not([hidden]) {
-    position: fixed;
-    inset: 0 0 0 auto;
-    z-index: 80;
-    display: flex;
-    flex-direction: column;
-    width: min(392px, 92vw);
-    margin: 0;
-    border-width: 0 0 0 1px;
-    border-radius: 0;
-    background: var(--surface-raised);
-    box-shadow: var(--shadow-xl);
-    animation: study-slide-in 260ms var(--ease-calm);
+@media (scripting: enabled) {
+    .topic-tools:not([hidden]) {
+        position: fixed;
+        inset: 0 0 0 auto;
+        z-index: 80;
+        display: flex;
+        flex-direction: column;
+        width: min(392px, 92vw);
+        margin: 0;
+        border-width: 0 0 0 1px;
+        border-radius: 0;
+        background: var(--surface-raised);
+        box-shadow: var(--shadow-xl);
+        animation: study-slide-in 260ms var(--ease-calm);
+    }
+    [data-thread-study]:not([data-thread-enhanced]) .topic-tools:not(:target) { display: none; }
+    [data-thread-study]:not([data-thread-enhanced]) [data-topic-tools-fallback],
+    [data-thread-study]:not([data-thread-enhanced]) [data-topic-tools-fallback-close] { display: inline-flex; }
 }
 .topic-tools-scrim:not([hidden]) {
     position: fixed;
@@ -10821,13 +10836,15 @@ body.thread-restructure-open { overflow: hidden; }
     .thread-facts-actions { margin-left: 0; }
     .thread-facts .thread-byline { flex-basis: 100%; overflow: visible; white-space: normal; }
     .thread-facts .thread-participants-rule { padding-left: 0; border-left: 0; }
-    [data-thread-enhanced="1"] .topic-tools:not([hidden]) {
-        inset: auto 0 0 0;
-        width: 100%;
-        max-height: 86dvh;
-        border-width: 1px 0 0;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        animation-name: study-sheet-in;
+    @media (scripting: enabled) {
+        .topic-tools:not([hidden]) {
+            inset: auto 0 0 0;
+            width: 100%;
+            max-height: 86dvh;
+            border-width: 1px 0 0;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            animation-name: study-sheet-in;
+        }
     }
     .topic-tools-head { position: relative; padding-top: 22px; }
     .topic-tools-head::before {
@@ -10924,7 +10941,7 @@ body.thread-restructure-open { overflow: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    [data-thread-enhanced="1"] .topic-tools:not([hidden]),
+    .topic-tools:not([hidden]),
     [data-thread-enhanced="1"] .thread-restructure[open] .thread-restructure-dialog,
     .post-toolbar { animation: none !important; transition: none !important; }
 }

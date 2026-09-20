@@ -1,0 +1,20 @@
+
+Running 10 tests using 1 worker
+
+(node:996732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts (5.6s)
+  ✓   2 [desktop] › imladris-forum-surfaces.spec.ts:588:5 › no-JavaScript board composer and canonical thread remain usable (734ms)
+  ✓   3 [desktop] › thread-view-study.spec.ts:186:5 › desktop Topic tools accords, traps focus, and restores each opener (1.3s)
+  ✓   4 [desktop] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus (2.2s)
+  ✓   5 [desktop] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry (1.4s)
+(node:997009) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [mobile] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts (6.4s)
+  ✓   7 [mobile] › imladris-forum-surfaces.spec.ts:588:5 › no-JavaScript board composer and canonical thread remain usable (798ms)
+  -   8 [mobile] › thread-view-study.spec.ts:186:5 › desktop Topic tools accords, traps focus, and restores each opener
+  ✓   9 [mobile] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus (1.5s)
+  ✓  10 [mobile] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry (1.3s)
+
+  1 skipped
+  9 passed (22.4s)

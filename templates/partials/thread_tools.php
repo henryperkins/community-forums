@@ -23,10 +23,11 @@ if (!empty($my_snooze)) {
 ?>
 <?php if ($hasTools): ?>
 <div class="topic-tools-scrim" data-topic-tools-scrim hidden></div>
-<aside class="topic-tools" id="topic-tools-<?= (int) $thread['id'] ?>" data-topic-tools aria-labelledby="topic-tools-title-<?= (int) $thread['id'] ?>">
+<aside class="topic-tools" id="topic-tools-<?= (int) $thread['id'] ?>" data-topic-tools tabindex="-1" aria-labelledby="topic-tools-title-<?= (int) $thread['id'] ?>">
     <header class="topic-tools-head">
         <span class="topic-tools-mark" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?></span>
         <h2 id="topic-tools-title-<?= (int) $thread['id'] ?>">Topic tools</h2>
+        <a class="topic-tools-close" data-topic-tools-fallback-close href="#thread-title-<?= (int) $thread['id'] ?>" aria-label="Close Topic tools"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
         <button type="button" class="topic-tools-close" data-topic-tools-close hidden aria-label="Close Topic tools"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
     </header>
     <div class="topic-tools-body">

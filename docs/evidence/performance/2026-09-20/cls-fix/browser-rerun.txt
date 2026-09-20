@@ -1,0 +1,38 @@
+
+Running 20 tests using 1 worker
+
+(node:995015) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  -   1 [desktop] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (Milkdown)
+
+  -   2 [desktop] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (textarea)
+
+  ✓   3 [desktop] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field (2.1s)
+  ✓   4 [desktop] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts (5.4s)
+  ✓   5 [desktop] › imladris-forum-surfaces.spec.ts:331:5 › board identity opens the one topic composer and restores focus to its actual opener (768ms)
+  ✓   6 [desktop] › imladris-forum-surfaces.spec.ts:400:5 › the board identity condenses on scroll without adding flow height or a tab stop (1.4s)
+  -   7 [desktop] › imladris-forum-surfaces.spec.ts:460:5 › the phone board keeps its activity column, its touch targets and its Follow state
+  ✓   8 [desktop] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus (2.1s)
+  ✓   9 [desktop] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry (1.5s)
+
+  -  10 [desktop] › unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls
+(node:995368) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  11 [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (Milkdown) (1.8s)
+
+  ✓  12 [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (textarea) (1.7s)
+
+  ✓  13 [mobile] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field (2.1s)
+  ✓  14 [mobile] › imladris-forum-surfaces.spec.ts:278:5 › forum index, board, and canonical thread satisfy production visual and accessibility contracts (6.6s)
+  ✓  15 [mobile] › imladris-forum-surfaces.spec.ts:331:5 › board identity opens the one topic composer and restores focus to its actual opener (586ms)
+  ✓  16 [mobile] › imladris-forum-surfaces.spec.ts:400:5 › the board identity condenses on scroll without adding flow height or a tab stop (1.3s)
+  ✓  17 [mobile] › imladris-forum-surfaces.spec.ts:460:5 › the phone board keeps its activity column, its touch targets and its Follow state (566ms)
+  ✓  18 [mobile] › thread-view-study.spec.ts:225:5 › split or merge closes by every dismissal path and restores focus (1.6s)
+  ✓  19 [mobile] › thread-view-study.spec.ts:439:5 › Study layout matches desktop and mobile geometry (1.3s)
+
+  ✓  20 [mobile] › unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls (969ms)
+
+  4 skipped
+  16 passed (33.5s)

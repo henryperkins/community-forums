@@ -1,0 +1,18 @@
+{
+  "beforeUpgrade": {
+    "x": 14,
+    "y": 610.03125,
+    "width": 362,
+    "height": 217.96875
+  },
+  "afterUpgrade": {
+    "x": 14,
+    "y": 606.03125,
+    "width": 362,
+    "height": 221.96875
+  },
+  "inputPreserved": true,
+  "sourceFocusAndCaretPreserved": true,
+  "continuedTypingVisible": true,
+  "explicitRichSwitchPreservesCompleteInput": true
+}

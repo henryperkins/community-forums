@@ -1,0 +1,21 @@
+
+Running 7 tests using 1 worker
+
+(node:996433) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [mobile] › startup-geometry.spec.ts:185:7 › home keeps first-paint geometry as deferred app and composer arrive (2.3s)
+
+  ✓  2 [mobile] › startup-geometry.spec.ts:185:7 › thread keeps first-paint geometry as deferred app and composer arrive (2.2s)
+
+  ✓  3 [mobile] › startup-geometry.spec.ts:230:5 › blocked app still exposes the rail and Topic tools through native keyboard links (1.3s)
+
+  ✓  4 [mobile] › startup-geometry.spec.ts:267:5 › native drawers preserve open state and keyboard focus when app enhancement arrives (1.0s)
+
+  ✓  5 [mobile] › startup-geometry.spec.ts:332:5 › blocked composer keeps its native textarea and submit controls accessible (673ms)
+
+  ✓  6 [mobile] › startup-geometry.spec.ts:352:5 › delayed rich adapter preserves text entered through the first-paint textarea (883ms)
+
+  ✓  7 [mobile] › startup-geometry.spec.ts:405:5 › no JavaScript retains the natural rail, readable thread, and full native form (721ms)
+
+  7 passed (9.8s)

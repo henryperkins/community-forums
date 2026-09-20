@@ -1,0 +1,20 @@
+
+> test:assets
+> node --test tests/worker/*.test.mjs
+
+✔ the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses (197.491748ms)
+✔ fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable (20.678129ms)
+✔ only the genuine current version makes source asset URLs immutable (0.77407ms)
+✔ conditional requests retain 304 and validators, and HEAD retains its empty body (0.567183ms)
+✔ range responses and their status survive without exposing Set-Cookie (0.338715ms)
+✔ missing/private assets and unsupported methods never fall through to PHP or an SPA (0.379005ms)
+✔ branding, package themes and application routes retain dynamic response semantics (0.553993ms)
+✔ published manifest names only verified asset bytes and font preload matches emitted CSS (17.162134ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 482.749819

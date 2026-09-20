@@ -1,0 +1,152 @@
+{
+  "mode": "controlled delayed bundles; routing disables cache",
+  "before": {
+    "main": {
+      "x": 0,
+      "y": 739.171875,
+      "width": 390,
+      "height": 2591.984375
+    },
+    "scroll": {
+      "x": 14,
+      "y": 755.171875,
+      "width": 362,
+      "height": 2319.265625
+    },
+    "dock": {
+      "x": 14,
+      "y": 3082.4375,
+      "width": 362,
+      "height": 232.71875
+    }
+  },
+  "afterApp": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 782
+    },
+    "scroll": {
+      "x": 14,
+      "y": 78,
+      "width": 362,
+      "height": 509.28125
+    },
+    "dock": {
+      "x": 14,
+      "y": 595.28125,
+      "width": 362,
+      "height": 232.71875
+    }
+  },
+  "afterComposer": {
+    "main": {
+      "x": 0,
+      "y": 62,
+      "width": 390,
+      "height": 782
+    },
+    "scroll": {
+      "x": 14,
+      "y": 78,
+      "width": 362,
+      "height": 675
+    },
+    "dock": {
+      "x": 14,
+      "y": 761,
+      "width": 362,
+      "height": 67
+    }
+  },
+  "cls": 1.0477395591554786,
+  "shifts": [
+    {
+      "startTime": 100.29999995231628,
+      "value": 0.00028706770661453913,
+      "hadRecentInput": false
+    },
+    {
+      "startTime": 789.1999999284744,
+      "value": 0.9499939239275732,
+      "hadRecentInput": false
+    },
+    {
+      "startTime": 1447.6000000238419,
+      "value": 0.09745856752129074,
+      "hadRecentInput": false
+    }
+  ],
+  "frames": [
+    {
+      "time": 114.10000002384186,
+      "boxes": {
+        "main": {
+          "x": 0,
+          "y": 739.17,
+          "width": 390,
+          "height": 2591.98
+        },
+        "scroll": {
+          "x": 14,
+          "y": 755.17,
+          "width": 362,
+          "height": 2319.27
+        },
+        "dock": {
+          "x": 14,
+          "y": 3082.44,
+          "width": 362,
+          "height": 232.72
+        }
+      }
+    },
+    {
+      "time": 789.6999999284744,
+      "boxes": {
+        "main": {
+          "x": 0,
+          "y": 62,
+          "width": 390,
+          "height": 782
+        },
+        "scroll": {
+          "x": 14,
+          "y": 78,
+          "width": 362,
+          "height": 509.28
+        },
+        "dock": {
+          "x": 14,
+          "y": 595.28,
+          "width": 362,
+          "height": 232.72
+        }
+      }
+    },
+    {
+      "time": 1447.6999999284744,
+      "boxes": {
+        "main": {
+          "x": 0,
+          "y": 62,
+          "width": 390,
+          "height": 782
+        },
+        "scroll": {
+          "x": 14,
+          "y": 78,
+          "width": 362,
+          "height": 675
+        },
+        "dock": {
+          "x": 14,
+          "y": 761,
+          "width": 362,
+          "height": 67
+        }
+      }
+    }
+  ]
+}

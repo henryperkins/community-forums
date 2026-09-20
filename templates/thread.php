@@ -68,7 +68,7 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
             <?php if ($status !== null): ?><span class="thread-status-chip is-<?= $e($status) ?>" data-thread-status="<?= $e($status) ?>"><?= $e($statusLabel) ?></span><?php endif; ?>
         </div>
         <?php endif; ?>
-        <h1 class="thread-study-title"><?= $e($thread['title']) ?></h1>
+        <h1 class="thread-study-title" id="thread-title-<?= (int) $thread['id'] ?>" tabindex="-1"><?= $e($thread['title']) ?></h1>
         <div class="thread-facts">
         <?php
         // "Opened by" byline — derive OP anonymity from the OP post on this page so an
@@ -126,6 +126,7 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
             </form>
         <?php endif; ?>
         <?php if ($hasTopicTools): ?>
+            <a class="topic-tools-open" data-topic-tools-fallback href="#topic-tools-<?= (int) $thread['id'] ?>"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></a>
             <button type="button" class="topic-tools-open" data-topic-tools-open hidden aria-controls="topic-tools-<?= (int) $thread['id'] ?>" aria-expanded="false"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></button>
         <?php endif; ?>
         </div>

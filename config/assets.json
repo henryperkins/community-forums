@@ -1,13 +1,13 @@
 {
-  "version": "6ba4ffef9eadf890",
+  "version": "65bc5e0a486cd6dc",
   "urls": {
-    "app.css": "/assets/dist/app-style-DoskWIQG.css",
+    "app.css": "/assets/dist/app-style-BKsusVoz.css",
     "imladris.css": "/assets/dist/imladris-style-BCCSHjuG.css",
-    "app.js": "/assets/dist/app-97a98cfe6141fd45.js",
-    "composer.js": "/assets/dist/composer-7dbe56fb74bd2844.js",
+    "app.js": "/assets/dist/app-e8e6836ee9e8fbdf.js",
+    "composer.js": "/assets/dist/composer-a2aa3a51baf61349.js",
     "passkeys.js": "/assets/dist/passkeys-45dd692ca9028436.js",
     "tour.js": "/assets/dist/tour-7cdbe315501e3843.js",
-    "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-CNH4HhNE.js",
+    "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-BDzu1ong.js",
     "wysiwyg-composer.css": "/assets/dist/wysiwyg-composer-BqYYcGYs.css",
     "fonts/imladris/cormorant-garamond-latin-400-italic.woff2": "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
     "fonts/imladris/cormorant-garamond-latin-400-normal.woff2": "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
@@ -27,27 +27,27 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "57293d2e30e07ca3a98b99875026189244cd4b414f984d347790f4211bf05e02",
+      "sha256": "458ed1a9a4492d0b68c5a2d28cccc836d90c669d63a12ba595e5c1304c62fac0",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "23b3764fa22835bfee3a7527b6248d6280de3fae7ec18d9084252e23af442723",
+      "sha256": "236583cf93bf0d2f393e0eee7c909927483724aae3edc524de37dcc1044dfe93",
       "immutable": false
     },
     "/assets/composer.js": {
-      "sha256": "9ae9032ae766198f4b4c9845f4ea35ff376811b73260d3709f5cf805a2790a99",
+      "sha256": "6ca3f68c82d20d276caad4f93777aec28fd24430e9530e41ba3d90db2bb296f6",
       "immutable": false
     },
-    "/assets/dist/app-97a98cfe6141fd45.js": {
-      "sha256": "97a98cfe6141fd45781edb101dc98f69024ef4d82302ab7233dc6ea95c3dfda2",
+    "/assets/dist/app-e8e6836ee9e8fbdf.js": {
+      "sha256": "e8e6836ee9e8fbdfbe9c33728c807211e4fd8dc94a5799287daa2c1e7d539513",
       "immutable": true
     },
-    "/assets/dist/app-style-DoskWIQG.css": {
-      "sha256": "1212afa3f7e4057ef57949c3bf676b99d1cbfd096fb70c155bc33de155570e46",
+    "/assets/dist/app-style-BKsusVoz.css": {
+      "sha256": "e7f5f0684fdd5b5e2a74f91e4e442a86a85a2fd0bbcdb7d6d36fb14b78d7b079",
       "immutable": true
     },
-    "/assets/dist/composer-7dbe56fb74bd2844.js": {
-      "sha256": "7dbe56fb74bd2844063cc2316144890fbc11cdf348e1b958450ac701cb770308",
+    "/assets/dist/composer-a2aa3a51baf61349.js": {
+      "sha256": "a2aa3a51baf613490e1c9cbe216487ac3a778994a6d9e051e576a2045d334efb",
       "immutable": true
     },
     "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2": {
@@ -114,8 +114,8 @@
       "sha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
       "immutable": true
     },
-    "/assets/dist/milkdown-adapter-BlKZNv62.js": {
-      "sha256": "5350349d47300dab41c7b671d3fffb6c6affd143bc31e6b285c57a0dc0dc4be9",
+    "/assets/dist/milkdown-adapter-DbFcQ9eR.js": {
+      "sha256": "cad433eec68bab010b849b026ba9c46dbd983d93657107dba5d0e292b99728f9",
       "immutable": true
     },
     "/assets/dist/passkeys-45dd692ca9028436.js": {
@@ -126,12 +126,12 @@
       "sha256": "7cdbe315501e3843c09d8d32cb00903184ec03b4ba4b1074344fd8f5fc48be24",
       "immutable": true
     },
-    "/assets/dist/wysiwyg-composer-BqYYcGYs.css": {
-      "sha256": "5755d74ce4e46287e36e134dc4b17ed2a9fbbfa2e301671dae75fb6e12eb1ff4",
+    "/assets/dist/wysiwyg-composer-BDzu1ong.js": {
+      "sha256": "95b2576f81b46e1e19338c5229c37d1ee71f39117605f9d77b7fefb26a838e30",
       "immutable": true
     },
-    "/assets/dist/wysiwyg-composer-CNH4HhNE.js": {
-      "sha256": "25d78ac9a44d19702ff291842f600340a2596d353a6b92f43f3044ac44b1eaf4",
+    "/assets/dist/wysiwyg-composer-BqYYcGYs.css": {
+      "sha256": "5755d74ce4e46287e36e134dc4b17ed2a9fbbfa2e301671dae75fb6e12eb1ff4",
       "immutable": true
     },
     "/assets/elven-star.svg": {

@@ -613,7 +613,7 @@ test.describe('with JavaScript disabled', () => {
     await signIn(page);
     await page.goto('/');
 
-    await expect(page.locator('.nav-toggle')).toBeHidden();
+    await expect(page.locator('.nav-toggle:visible')).toHaveCount(0);
     const rail = page.locator('nav.board-rail');
     await expect(rail).toBeVisible();
     expect(await railIsOffCanvas(page)).toBe(false);

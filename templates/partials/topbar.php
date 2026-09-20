@@ -38,7 +38,10 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
 ?>
 <header class="forum-bar">
     <?php // The phone drawer's opener. Desktop never shows it (app.css); the design has no drawer. ?>
-    <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open board rail" aria-expanded="false" aria-controls="sidebar-nav">
+    <a class="nav-toggle" data-nav-fallback href="#sidebar-nav" aria-label="Open board rail">
+        <?= $this->partial('partials/icon', ['name' => 'menu', 'class' => 'nav-toggle-ic']) ?>
+    </a>
+    <button class="nav-toggle" type="button" data-nav-toggle hidden aria-label="Open board rail" aria-expanded="false" aria-controls="sidebar-nav">
         <?= $this->partial('partials/icon', ['name' => 'menu', 'class' => 'nav-toggle-ic']) ?>
     </button>
 

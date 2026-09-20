@@ -211,8 +211,12 @@ class MilkdownComposerAdapter {
   ) {
     this.ta = textarea;
     this.wasRequired = textarea.required;
+    // A member may already be writing while the lazy module downloads. Keep
+    // that native editor, focus and selection intact until they choose Rich text.
+    this.richMode = document.activeElement !== textarea;
     this.host = document.createElement('div');
     this.host.className = 'wysiwyg-composer';
+    this.host.hidden = !this.richMode;
 
     this.toggle = document.createElement('button');
     this.toggle.type = 'button';
@@ -222,7 +226,7 @@ class MilkdownComposerAdapter {
     // formatting row for it; the old position is kept as a fallback so an
     // older cached shell still gets a working toggle.
     this.toggle.className = 'composer-mode-toggle wysiwyg-source-toggle';
-    this.toggle.textContent = 'Source';
+    this.toggle.textContent = this.richMode ? 'Source' : 'Rich text';
 
     textarea.parentNode?.insertBefore(this.host, textarea);
     const modeSlot = form.querySelector<HTMLElement>('[data-composer-mode-slot]');
@@ -231,8 +235,10 @@ class MilkdownComposerAdapter {
     } else {
       textarea.parentNode?.insertBefore(this.toggle, textarea.nextSibling);
     }
-    textarea.classList.add('is-wysiwyg-source-hidden');
-    textarea.required = false;
+    if (this.richMode) {
+      textarea.classList.add('is-wysiwyg-source-hidden');
+      textarea.required = false;
+    }
     this.toggle.addEventListener('click', () => this.toggleSourceMode());
 
     this.richInput = () => {

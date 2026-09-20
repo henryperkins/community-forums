@@ -1,0 +1,14 @@
+{
+  "fixtureDatabase": "retroboards_cls_e2e_20260920",
+  "fixtureDatabaseRemoved": true,
+  "temporaryServerPortsStopped": [
+    8041,
+    8042
+  ],
+  "localFixtureCookiesRemoved": true,
+  "preexistingEvidenceFilesRestored": 37,
+  "restoredBytesVerified": true,
+  "preexistingPort8011StillListening": true,
+  "productionChanged": false,
+  "committedOrPushed": false
+}

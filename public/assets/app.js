@@ -404,14 +404,25 @@
         for (var i = 0; i < roots.length; i++) {
             var root = roots[i];
             if (root.getAttribute('data-thread-enhanced') === '1') { continue; }
-            root.setAttribute('data-thread-enhanced', '1');
             var tools = root.querySelector('[data-topic-tools]');
             var openers = root.querySelectorAll('[data-topic-tools-open]');
+            var targetedTools = tools && window.location.hash === '#' + tools.id;
+            var previousFocus = document.activeElement;
+            root.setAttribute('data-thread-enhanced', '1');
             if (tools && openers.length) {
                 tools.hidden = true;
                 for (var k = 0; k < openers.length; k++) { openers[k].hidden = false; }
                 var close = tools.querySelector('[data-topic-tools-close]');
                 if (close) { close.hidden = false; }
+                // Adopt a native drawer opened while the bundle was loading.
+                // Only consume this drawer's fragment; post deep links survive.
+                if (targetedTools) {
+                    setTopicTools(root, true, '', openers[0]);
+                    clearDrawerFragment(tools.id);
+                    if (tools.contains(previousFocus) && visible(previousFocus)) { previousFocus.focus(); }
+                } else if (previousFocus && previousFocus.matches('[data-topic-tools-fallback]')) {
+                    openers[0].focus();
+                }
             }
             var enhancedOnly = root.querySelectorAll('[data-post-disclosure-open], [data-post-disclosure-close], [data-thread-restructure-open], [data-thread-restructure-close]');
             for (var j = 0; j < enhancedOnly.length; j++) { enhancedOnly[j].hidden = false; }
@@ -426,6 +437,11 @@
     var restructureFocus = new WeakMap();
     var disclosureFocus = new WeakMap();
     var disclosureOpeners = new WeakMap();
+
+    function clearDrawerFragment(id) {
+        if (window.location.hash !== '#' + id) { return; }
+        try { window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search); } catch (error) { /* Native fragment remains harmless after enhancement. */ }
+    }
 
     function visible(element) {
         return !!element && element.getClientRects().length > 0;
@@ -459,7 +475,7 @@
             var scrim = root.querySelector('[data-topic-tools-scrim]');
             if (scrim) { scrim.hidden = false; }
             document.body.classList.add('topic-tools-open');
-            var first = tools.querySelector('[data-topic-tools-close], summary, button, input, select, textarea, a[href]');
+            var first = tools.querySelector('[data-topic-tools-close]');
             if (first) { first.focus(); }
         } else {
             tools.hidden = true;
@@ -1281,10 +1297,14 @@
 
     // Mobile navigation drawer (Phase 4): the sidebar rail slides in over a scrim
     // on small screens. Without JS the rail simply stacks above the content (the
-    // server-rendered nav stays reachable); this only adds the off-canvas toggle.
+    // server-rendered nav stays reachable). With scripting enabled CSS already
+    // supplies the drawer and fragment links; add state, Escape and focus return.
     var navToggle = document.querySelector('[data-nav-toggle]');
     var navScrim = document.querySelector('[data-nav-scrim]');
     if (navToggle) {
+        var sidebar = document.querySelector('[data-sidebar]');
+        var nativeNavOpen = sidebar && window.location.hash === '#' + sidebar.id;
+        var navFallbackFocused = document.activeElement && document.activeElement.matches('[data-nav-fallback], [data-nav-close]');
         var setNav = function (open) {
             document.body.classList.toggle('nav-open', open);
             navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -1302,12 +1322,17 @@
             if (e.key === 'Escape' && document.body.classList.contains('nav-open')) { setNav(false); }
         });
         // Closing the drawer after following a rail link keeps the next page clean.
-        var sidebar = document.querySelector('[data-sidebar]');
         if (sidebar) {
             sidebar.addEventListener('click', function (e) {
+                if (e.target.closest && e.target.closest('[data-nav-close]')) { e.preventDefault(); }
                 if (e.target.closest && e.target.closest('a')) { setNav(false); }
             });
         }
+        setNav(!!nativeNavOpen);
+        document.body.setAttribute('data-nav-ready', '1');
+        navToggle.hidden = false;
+        if (nativeNavOpen) { clearDrawerFragment(sidebar.id); }
+        if (navFallbackFocused) { navToggle.focus(); }
     }
 
     // The admin console has no navigation JavaScript. Its area tier scrolls
