@@ -1,0 +1,291 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const root = path.resolve(__dirname, '../..');
+const evidence = path.resolve(root, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/unified-notifications-and-settings/account-settings-repairs');
+type Fixture = { id: number; board_id: number; status: string; display_name: string; bio: string; avatar_path: string | null; has_password: boolean };
+
+function fixture(command = 'reset'): Fixture {
+  return JSON.parse(execFileSync('php', ['tests/browser/account-settings-repairs-fixture.php', command], {
+    cwd: root, env: { ...process.env, APP_ENV: 'test', MAIL_DRIVER: 'array' }, encoding: 'utf8',
+  }));
+}
+
+async function login(page: Page): Promise<void> {
+  await page.goto('/login');
+  await page.locator('input[name="email"]').fill('settings-repair@retro.test');
+  await page.locator('input[name="password"]').fill('password123');
+  await page.locator('button[type="submit"]').click();
+  await expect(page).not.toHaveURL(/\/login/);
+}
+
+async function capture(page: Page, info: TestInfo, name: string): Promise<void> {
+  const directory = path.join(evidence, info.project.name);
+  fs.mkdirSync(directory, { recursive: true });
+  await page.screenshot({ path: path.join(directory, `${name}.png`), fullPage: true });
+}
+
+async function post(page: Page, url: string, data: Record<string, string> = {}) {
+  const token = await page.locator('input[name="_token"]').first().inputValue();
+  return page.request.post(url, { form: { _token: token, ...data }, maxRedirects: 0 });
+}
+
+test.describe('account settings repairs without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test.beforeEach(() => fixture());
+
+  test('suspension cannot be removed through stale lifecycle actions', async ({ page }, info) => {
+    await login(page);
+    await page.goto('/settings/account/lifecycle');
+    fixture('suspend');
+    expect((await post(page, '/settings/account/deactivate', { current_password: 'password123' })).status()).toBe(422);
+    expect((await post(page, '/settings/account/reactivate')).status()).toBe(422);
+    expect((await post(page, '/settings/account', { display_name: 'Forbidden write' })).status()).toBe(403);
+    expect(fixture('inspect').status).toBe('suspended');
+    await page.reload();
+    await expect(page.locator('form[action="/settings/account/deactivate"]')).toHaveCount(0);
+    await capture(page, info, '01-suspension-retained');
+  });
+
+  test('scheduled deletion stays restricted and cancellation retains a later suspension', async ({ page }, info) => {
+    await login(page);
+    await page.goto('/settings/account/lifecycle');
+    const form = page.locator('form[action="/settings/account/delete/request"]');
+    await form.locator('[name="current_password"]').fill('password123');
+    await form.locator('button[type="submit"]').click();
+    await expect(page.locator('form[action="/settings/account/delete/cancel"]')).toBeVisible();
+    expect((await post(page, '/settings/account/deactivate', { current_password: 'password123' })).status()).toBe(422);
+    expect((await post(page, '/settings/account/reactivate')).status()).toBe(422);
+    expect((await post(page, '/settings/account', { display_name: 'Forbidden write' })).status()).toBe(403);
+    fixture('suspend');
+    await page.reload();
+    await page.locator('form[action="/settings/account/delete/cancel"] button').click();
+    expect(fixture('inspect').status).toBe('suspended');
+    expect((await post(page, '/settings/account', { display_name: 'Still forbidden' })).status()).toBe(403);
+    await capture(page, info, '02-deletion-cancel-retains-restriction');
+  });
+
+  test('invalid TOTP retains confirmation on the same pending enrollment after reload', async ({ page }, info) => {
+    await login(page);
+    await page.goto('/settings/security');
+    const enroll = page.locator('form[action="/settings/security/totp/enroll"]');
+    await enroll.locator('[name="current_password"]').fill('password123');
+    await enroll.locator('button[type="submit"]').click();
+    const secret = await page.getByLabel('Authenticator secret', { exact: true }).inputValue();
+    const confirm = page.locator('form[action="/settings/security/totp/confirm"]');
+    await confirm.locator('[name="current_password"]').fill('password123');
+    await confirm.locator('[name="totp_code"]').fill('000000');
+    // A non-numeric code deterministically fails regardless of the current TOTP.
+    const response = await post(page, '/settings/security/totp/confirm', { current_password: 'password123', totp_code: 'invalid' });
+    expect(response.status()).toBe(422);
+    expect((await response.text()).includes('action="/settings/security/totp/confirm"')).toBe(true);
+    await page.reload();
+    await expect(confirm).toBeVisible();
+    await expect(confirm.locator('[name="current_password"]')).toHaveValue('');
+    await expect(confirm.locator('[name="totp_code"]')).toHaveValue('');
+    await expect(page.getByLabel('Authenticator secret', { exact: true })).toHaveCount(0);
+    expect(await page.content()).not.toContain(secret);
+    await capture(page, info, '03-totp-pending-reload');
+  });
+
+  test('passwordless member can set a password from Security with retained validation', async ({ page }, info) => {
+    await login(page);
+    fixture('passwordless');
+    await page.goto('/settings/security');
+    const form = page.locator('form[action="/settings/security/set-password"]');
+    await expect(form).toBeVisible();
+    await expect(page.locator('input[name="current_password"]')).toHaveCount(0);
+    await form.locator('[name="new_password"]').fill('new-password123');
+    await form.locator('[name="new_password_confirm"]').fill('different-password123');
+    await form.locator('button[type="submit"]').click();
+    await expect(page.getByText('The passwords do not match.', { exact: true })).toBeVisible();
+    await expect(form.locator('[name="new_password"]')).toHaveValue('');
+    await form.locator('[name="new_password"]').fill('new-password123');
+    await form.locator('[name="new_password_confirm"]').fill('new-password123');
+    await form.locator('button[type="submit"]').click();
+    expect(fixture('inspect').has_password).toBe(true);
+    await capture(page, info, '04-password-set');
+  });
+
+  test('invalid avatar preserves unsaved profile fields', async ({ page }, info) => {
+    await login(page);
+    await page.goto('/settings/account');
+    await page.locator('[name="display_name"]').fill('Draft display name');
+    await page.locator('[name="bio"]').fill('Draft biography');
+    await page.locator('[name="location"]').fill('Draft place');
+    await page.locator('[name="pronouns"]').fill('they/them');
+    await page.locator('[name="custom_label_1"]').fill('Draft label');
+    await page.locator('[name="custom_value_1"]').fill('Draft value');
+    await page.locator('[name="avatar"]').setInputFiles({ name: 'bad.txt', mimeType: 'text/plain', buffer: Buffer.from('not an image') });
+    await page.locator('button').filter({ hasText: /^Upload avatar$/ }).click();
+    for (const [name, value] of Object.entries({ display_name: 'Draft display name', bio: 'Draft biography', location: 'Draft place', pronouns: 'they/them', custom_label_1: 'Draft label', custom_value_1: 'Draft value' })) {
+      await expect(page.locator(`[name="${name}"]`)).toHaveValue(value);
+    }
+    expect(fixture('inspect').display_name).toBe('Settings member');
+    await capture(page, info, '05-avatar-error-retains-draft');
+  });
+
+  test('avatar upload and removal keep a draft until Save profile', async ({ page }, info) => {
+    await login(page);
+    await page.goto('/settings/account');
+    await page.locator('[name="display_name"]').fill('Keep this draft');
+    await page.locator('[name="bio"]').fill('Keep this biography');
+    const png = execFileSync('php', ['-r', '$im = imagecreatetruecolor(8, 8); imagefilledrectangle($im, 0, 0, 7, 7, imagecolorallocate($im, 10, 120, 200)); imagepng($im);']);
+    await page.locator('[name="avatar"]').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png });
+    await page.locator('button').filter({ hasText: /^Upload avatar$/ }).click();
+    await expect(page.locator('[name="display_name"]')).toHaveValue('Keep this draft');
+    await expect(page.locator('[name="bio"]')).toHaveValue('Keep this biography');
+    expect(fixture('inspect').display_name).toBe('Settings member');
+    expect(fixture('inspect').avatar_path).toMatch(/^\/media\/\d+$/);
+    await page.locator('button').filter({ hasText: /^Remove avatar$/ }).click();
+    await expect(page.locator('[name="display_name"]')).toHaveValue('Keep this draft');
+    expect(fixture('inspect').avatar_path).toBeNull();
+    await capture(page, info, '06-avatar-removed-draft-retained');
+    await page.locator('form[action="/settings/account"] button[type="submit"]:not([formaction])').click();
+    expect(fixture('inspect').display_name).toBe('Keep this draft');
+    expect(fixture('inspect').bio).toBe('Keep this biography');
+  });
+
+  test('saved-feed validation preserves the chosen board and digest option', async ({ page }, info) => {
+    const data = fixture('inspect');
+    await login(page);
+    await page.goto('/settings/boards');
+    const form = page.locator('form[action="/settings/saved-feeds"]');
+    await form.locator('[name="name"]').fill('   ');
+    await form.locator('[name="board_id"]').selectOption(String(data.board_id));
+    await form.locator('[name="digest_enabled"]').check();
+    await form.locator('button[type="submit"]').click();
+    await expect(form.locator('[name="board_id"]')).toHaveValue(String(data.board_id));
+    await expect(form.locator('[name="digest_enabled"]')).toBeChecked();
+    await expect(form.locator('[name="name"]')).toHaveAttribute('aria-invalid', 'true');
+    await capture(page, info, '07-feed-validation-retained');
+  });
+
+  test('mobile settings navigation keeps the first control in view and works by keyboard', async ({ page }, info) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await login(page);
+    for (const [url, label] of [['/settings/security', 'Security'], ['/settings/account', 'Profile'], ['/settings/notifications', 'Notifications']]) {
+      await page.goto(url);
+      const nav = page.locator('[data-settings-mobile-nav]');
+      const summary = nav.locator(':scope > summary');
+      await expect(summary).toHaveText(`Settings: ${label}`);
+      await expect(nav).not.toHaveAttribute('open', '');
+      const control = page.locator('.settings-pane input:not([type="hidden"]):not(:disabled):visible, .settings-pane select:not(:disabled):visible').first();
+      const box = await control.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.y + box!.height, `${label}: first editable control`).toBeLessThan(844);
+      await summary.focus();
+      await page.keyboard.press('Enter');
+      await expect(nav).toHaveAttribute('open', '');
+      await expect(nav.locator('[aria-current="page"]')).toHaveText(label);
+      await page.keyboard.press('Enter');
+      await expect(nav).not.toHaveAttribute('open', '');
+      await capture(page, info, `08-mobile-${label.toLowerCase()}`);
+    }
+    await page.setViewportSize({ width: 320, height: 844 });
+    const width = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
+    expect(width.content).toBeLessThanOrEqual(width.viewport + 1);
+  });
+
+  test('saved feeds can be opened, managed, and remain scoped after board access is lost', async ({ page }, info) => {
+    const data = fixture('inspect');
+    await login(page);
+    await page.goto('/settings/boards');
+    const create = page.locator('form[action="/settings/saved-feeds"]');
+    await create.locator('[name="name"]').fill('Morning reading');
+    await create.locator('[name="board_id"]').selectOption(String(data.board_id));
+    await create.locator('[name="digest_enabled"]').check();
+    await create.locator('button[type="submit"]').click();
+    const link = page.locator('.saved-feed-card a[href^="/feeds/saved/"]').filter({ hasText: 'Morning reading' });
+    await expect(link).toBeVisible();
+    const url = (await link.getAttribute('href'))!;
+    const id = url.split('/').at(-1)!;
+    await expect(page.locator(`#sidebar-nav a[href="${url}"]`)).toHaveCount(1);
+    await link.click();
+    await expect(page).toHaveURL(new RegExp(`${url}$`));
+    await expect(page.getByRole('heading', { level: 1, name: 'Morning reading' })).toBeVisible();
+    await expect(page.locator('.feed-thread').filter({ hasText: 'Settings evidence topic' })).toBeVisible();
+    await capture(page, info, '10-saved-feed-open');
+    await page.goto('/settings/boards');
+    const edit = page.locator(`form[action="/settings/saved-feeds/${id}"]`).filter({ has: page.locator('input[name="name"]') });
+    await edit.locator('[name="name"]').fill('Focused reading');
+    await edit.locator('button[type="submit"]').click();
+    await expect(page.locator(`.saved-feed-card a[href="${url}"]`)).toHaveText('Focused reading');
+    fixture('private-board');
+    await page.goto(url);
+    await expect(page.locator('.feed-thread')).toHaveCount(0);
+    expect((await page.content()).includes('Settings evidence topic')).toBe(false);
+    // A revoked selected board must not turn into the all-boards feed.
+    await capture(page, info, '11-saved-feed-revoked');
+    await page.goto('/settings/boards');
+    await page.locator(`form[action="/settings/saved-feeds/${id}/delete"] button`).click();
+    await expect(page.locator(`a[href="${url}"]`)).toHaveCount(0);
+    expect((await page.request.get(url)).status()).toBe(404);
+  });
+
+  test('folder shortcuts can be renamed, removed, and deleted without deleting the board', async ({ page }, info) => {
+    const data = fixture('inspect');
+    await login(page);
+    await page.goto('/settings/boards');
+    const create = page.locator('form[action="/settings/board-folders"]');
+    await create.locator('[name="name"]').fill('Work reading');
+    await create.locator('button[type="submit"]').click();
+    const add = page.locator('form[action="/settings/board-folders/0/boards"]');
+    const id = await add.locator('[name="folder_id"]').inputValue();
+    await add.locator('[name="board_id"]').selectOption(String(data.board_id));
+    await add.locator('button[type="submit"]').click();
+    await expect(page.locator('#sidebar-nav')).toContainText('Work reading');
+    await expect(page.locator('#sidebar-nav a[href="/c/settings-repair-board"]')).toHaveCount(2);
+    const rename = page.locator(`form[action="/settings/board-folders/${id}/rename"]`);
+    await rename.locator('[name="name"]').fill('Reference reading');
+    await rename.locator('button[type="submit"]').click();
+    await expect(page.locator('#sidebar-nav')).toContainText('Reference reading');
+    await capture(page, info, '12-folder-shortcut');
+    await page.locator(`form[action="/settings/board-folders/${id}/boards/${data.board_id}/remove"] button`).click();
+    await expect(page.locator('#sidebar-nav a[href="/c/settings-repair-board"]')).toHaveCount(1);
+    await page.locator(`form[action="/settings/board-folders/${id}/delete"] button`).click();
+    await expect(page.locator('#sidebar-nav')).not.toContainText('Reference reading');
+    expect((await page.request.get('/c/settings-repair-board')).status()).toBe(200);
+  });
+
+  test('sessions show readable labels, keep raw details escaped, and revoke other devices', async ({ page }, info) => {
+    await login(page);
+    fixture('other-sessions');
+    await page.goto('/settings/sessions');
+    const rows = page.locator('.account-ruled-row');
+    await expect(rows).toHaveCount(3);
+    const known = rows.filter({ hasText: 'Chrome on Windows' });
+    await expect(known.locator('.account-row-name')).toContainText('Chrome on Windows');
+    await expect(known.locator('details')).not.toHaveAttribute('open', '');
+    await known.locator('details > summary').click();
+    await expect(known.locator('details')).toContainText('Chrome/149.0.0.0');
+    const unknown = rows.filter({ has: page.locator('.account-row-name', { hasText: 'Unknown device' }) });
+    await unknown.locator('details > summary').click();
+    await expect(unknown.locator('details')).toContainText('<script>unknown-browser</script>');
+    await expect(unknown.locator('script')).toHaveCount(0);
+    await expect(page.getByText('This device', { exact: true })).toBeVisible();
+    await capture(page, info, '13-sessions-readable');
+    await unknown.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await expect(rows).toHaveCount(2);
+    await page.getByRole('button', { name: 'Log out of all other devices' }).click();
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText('This device');
+    await capture(page, info, '14-sessions-revoked');
+  });
+
+  test('settings forms remain accessible in both themes', async ({ page }, info) => {
+    await login(page);
+    for (const theme of ['light', 'dark']) {
+      if (theme === 'dark') fixture('dark');
+      for (const route of ['security', 'account', 'notifications', 'sessions', 'boards']) {
+        await page.goto(`/settings/${route}`);
+        const result = await new AxeBuilder({ page }).include('.settings-screen').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+        expect(result.violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) }))).toEqual([]);
+        if (theme === 'dark') await capture(page, info, `09-${route}-dark`);
+      }
+    }
+  });
+});

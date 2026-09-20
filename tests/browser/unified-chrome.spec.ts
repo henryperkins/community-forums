@@ -19,7 +19,7 @@ import path from 'node:path';
  */
 
 const ROOT = path.resolve(__dirname, '../..');
-const OUT = path.join(ROOT, 'docs/evidence/imladris-unified-chrome');
+const OUT = path.resolve(ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-unified-chrome');
 
 if (process.env.RB_BASE_URL) {
   test.use({ baseURL: process.env.RB_BASE_URL });

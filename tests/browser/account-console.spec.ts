@@ -487,24 +487,23 @@ test('slice 16 panes keep one boolean idiom and fit their width', async ({ page 
 
 test('refused set-password re-renders inline on the connections pane', async ({ page }, info: TestInfo) => {
   test.skip(info.project.name !== 'desktop', 'the 422 round-trip is captured once on desktop');
-  // Before slice 16 this path caught ValidationException and redirected with a
-  // flash, so the pane's own error slot could never render and the
-  // confirm-field message had nowhere to go. Only an account with no password
-  // sees the form, so this walks the seeded OAuth-only member if one exists.
+  // Use a real passwordless state after sign-in so this regression cannot skip.
   await login(page);
-  await page.goto('/settings/connections');
-  const form = page.locator('form[action="/settings/connections/set-password"]');
-  if (await form.count() === 0) {
-    test.skip(true, 'seed has no password-less account; covered by AppOAuthTest');
+  runPhp("$db->run('UPDATE users SET password_hash = NULL WHERE email = ?', ['bob@retro.test']);");
+  try {
+    await page.goto('/settings/connections');
+    const form = page.locator('form[action="/settings/connections/set-password"]');
+    await expect(form).toBeVisible();
+    await form.locator('input[name="new_password"]').fill('brandnewpass');
+    await form.locator('input[name="new_password_confirm"]').fill('branddifferent');
+    await form.locator('button[type="submit"]').click();
+    await page.waitForLoadState('load');
+    await expect(page.getByText('The passwords do not match.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Connected accounts' })).toHaveCount(1);
+    await shot(page, 'desktop', 's16-connections-422');
+  } finally {
+    runPhp("$hash = (new \\App\\Security\\PasswordHasher())->hash('password123'); $db->run('UPDATE users SET password_hash = ? WHERE email = ?', [$hash, 'bob@retro.test']);");
   }
-  await form.locator('input[name="new_password"]').fill('brandnewpass');
-  await form.locator('input[name="new_password_confirm"]').fill('branddifferent');
-  await form.locator('button[type="submit"]').click();
-  await page.waitForLoadState('load');
-  await expect(page.getByText('The passwords do not match.', { exact: true })).toBeVisible();
-  // The whole pane comes back, not a bare form.
-  await expect(page.getByRole('heading', { level: 2, name: 'Connected accounts' })).toHaveCount(1);
-  await shot(page, 'desktop', 's16-connections-422');
 });
 
 // ─── Slice 17: Boards, Drafts and Account lifecycle ─────────────────────────

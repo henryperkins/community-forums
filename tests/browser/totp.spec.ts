@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import path from 'node:path';
+import fs from 'node:fs';
 
 test.use({ javaScriptEnabled: false });
 test.setTimeout(70_000);
@@ -63,7 +64,9 @@ function totp(secret: string, at: number = Date.now()): string {
 }
 
 function shot(name: string, projectName: string): string {
-  return `../../docs/evidence/browser/${projectName}/${name}.png`;
+  const directory = path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser', projectName);
+  fs.mkdirSync(directory, { recursive: true });
+  return path.join(directory, `${name}.png`);
 }
 
 async function waitForFreshTotpStep(): Promise<void> {

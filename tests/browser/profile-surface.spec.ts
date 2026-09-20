@@ -6,7 +6,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
-const evidenceRoot = path.join(repoRoot, 'docs', 'evidence', 'imladris-profile-production');
+const evidenceRoot = path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-profile-production');
 const sourceFile = path.join(
   repoRoot,
   'docs',

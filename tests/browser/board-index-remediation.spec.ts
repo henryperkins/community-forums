@@ -12,7 +12,7 @@ import path from 'node:path';
  * rows WITH their peek lists, and each pane gets its own frame.
  */
 
-const OUT = path.resolve(__dirname, '../../docs/evidence/imladris-board-index-remediation');
+const OUT = path.resolve(__dirname, '../..', process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-board-index-remediation');
 
 // Defaults to the project's own webServer. Set RB_BASE_URL to point the capture
 // at a separately served instance (a private evidence database, say).

@@ -84,6 +84,21 @@ jobs:
           CI: 'true'
         run: npm run evidence
 
+      - name: Prepare notification and account evidence database
+        env:
+          MYSQL_PWD: ${{ env.DB_PASSWORD }}
+        run: >-
+          mysql --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME"
+          --execute="CREATE DATABASE IF NOT EXISTS retroboards_unified_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+      - name: Verify unified notifications and account settings
+        working-directory: tests/browser
+        env:
+          DB_DATABASE: retroboards_unified_e2e
+          E2E_PORT: '8034'
+          CI: 'true'
+        run: npm run evidence:notifications-settings
+
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -92,4 +107,5 @@ jobs:
           path: |
             docs/evidence/browser/**/*.png
             docs/evidence/browser/.artifacts/**
+            docs/evidence/unified-notifications-and-settings/**
           if-no-files-found: error
