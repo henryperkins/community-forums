@@ -6,7 +6,7 @@ Running 1 test using 1 worker
   ✘  1 [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name (1.3s)
 
 
-  1) [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 
+  1) [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name
 
     Error: expect(received).toBeLessThanOrEqual(expected)
 
@@ -25,4 +25,4 @@ Running 1 test using 1 worker
     Error Context: .superpowers/sdd/2026-09-20-unified-notifications/browser-n5/.artifacts/notifications-unified-pers-86f43-ts-with-a-long-account-name-desktop/error-context.md
 
   1 failed
-    [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 
+    [desktop] › tests/browser/notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name

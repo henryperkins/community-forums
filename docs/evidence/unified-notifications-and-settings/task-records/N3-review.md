@@ -1,6 +1,6 @@
 # N3 independent review
 
-**Reviewed commit:** `b211ea363aa91290a249d15a3683353ccd4a72b2` (20 owned paths).  
+**Reviewed commit:** `b211ea363aa91290a249d15a3683353ccd4a72b2` (20 owned paths).
 **Result:** Approved after correction `92bbe65b70486a846e138b411e991e4f2a4291c6`; the one P2 malformed-payload defect is resolved. No residual grounded N3 finding.
 
 Read N3-brief.md, N3-report.md, the approved combined design, applicable repository instructions, the full runtime/repository/admin/docs diff, and focused regression cases. Excluded parent N6 uncommitted documentation and unfinished A2/A3/A4/N4/N5/A5 work. Saved-feed payload support remains intentionally reserved for A4. No runtime source edits or commits were made.
@@ -9,7 +9,7 @@ Read N3-brief.md, N3-report.md, the approved combined design, applicable reposit
 
 ### P2: Make digest payload validation return false for malformed dates instead of throwing
 
-**Primary location:** `src/Service/DigestService.php:47` (date parsing within `validPayload`).  
+**Primary location:** `src/Service/DigestService.php:47` (date parsing within `validPayload`).
 **Affected callers:** `src/Worker/NotificationEmailWorker.php:86,111-114`; `src/Repository/EmailDeliveryRepository.php:245`; `templates/admin/email.php:185`.
 
 A JSON string containing an escaped null byte is a valid stored JSON value, but PHP's `DateTimeImmutable::createFromFormat()` throws `ValueError` for that string. `validPayload()` currently passes it through without guarding the exception. Consequently, a malformed digest with `window_start_utc` equal to `"2026-09-19 09:15:00\u0000"` is treated as a transient failure and remains Queued with a retry schedule rather than becoming permanently Failed with `invalid_digest_payload`. After retries are exhausted (or with `max_attempts=1`), the Failed row retains the parser error; rendering `/admin/email` calls `canRequeue()`, which calls the same throwing validator and produces HTTP 500. A direct admin requeue POST has the same unguarded validation path.

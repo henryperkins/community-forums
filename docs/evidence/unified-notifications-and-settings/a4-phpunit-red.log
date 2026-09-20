@@ -10,21 +10,21 @@ Time: 00:01.061, Memory: 58.50 MB
 There were 8 failures:
 
 1) Tests\Integration\Core\AppBoardFoldersSavedFeedsTest::test_invalid_saved_feed_keeps_selected_board_and_digest
-Unexpected HTTP status. Body: 
+Unexpected HTTP status. Body:
 Failed asserting that 303 is identical to 422.
 
 /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:423
 /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppBoardFoldersSavedFeedsTest.php:19
 
 2) Tests\Integration\Core\AppBoardFoldersSavedFeedsTest::test_invalid_personal_organization_names_do_not_hit_the_500_handler
-Unexpected HTTP status. Body: 
+Unexpected HTTP status. Body:
 Failed asserting that 303 is identical to 422.
 
 /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:423
 /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppBoardFoldersSavedFeedsTest.php:135
 
 3) Tests\Integration\Core\AppBoardFoldersSavedFeedsTest::test_bookmark_folder_rejects_unstarred_threads
-Unexpected HTTP status. Body: 
+Unexpected HTTP status. Body:
 Failed asserting that 303 is identical to 422.
 
 /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Support/TestCase.php:423

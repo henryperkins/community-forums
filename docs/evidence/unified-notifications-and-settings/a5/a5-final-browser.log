@@ -4603,7 +4603,7 @@ Notifications dark { firstControlBottom: 693.015625 }
   ✓  30 [mobile] › tests/browser/account-console.spec.ts:687:5 › A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript (1.2s)
 
 
-  1) [mobile] › tests/browser/account-console.spec.ts:629:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable 
+  1) [mobile] › tests/browser/account-console.spec.ts:629:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable
 
     Test timeout of 30000ms exceeded.
 
@@ -4621,6 +4621,6 @@ Notifications dark { firstControlBottom: 693.015625 }
     Error Context: .superpowers/sdd/2026-09-20-unified-notifications/browser-a5/.artifacts/account-console-A5-chooser-adaa1-w-with-every-link-reachable-mobile/error-context.md
 
   1 failed
-    [mobile] › tests/browser/account-console.spec.ts:629:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable 
+    [mobile] › tests/browser/account-console.spec.ts:629:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable
   12 skipped
   17 passed (1.8m)

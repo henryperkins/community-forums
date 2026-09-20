@@ -15,7 +15,7 @@ Running 5 tests using 1 worker
   ✓  5 [desktop] › unified-chrome.spec.ts:651:5 › persistent bell keeps mobile search compose and rail controls reachable at 320px (1.0s)
 
 
-  1) [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows 
+  1) [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows
 
     Error: expect(locator).toHaveAccessibleName(expected) failed
 
@@ -42,7 +42,7 @@ Running 5 tests using 1 worker
 
     Error Context: ../../.superpowers/sdd/2026-09-20-unified-notifications/browser-n5/.artifacts/notifications-unified-poll-3fcb2-g-focused-notification-rows-desktop/error-context.md
 
-  2) [desktop] › notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 
+  2) [desktop] › notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name
 
     Error: expect(received).toBeGreaterThanOrEqual(expected)
 
@@ -61,6 +61,6 @@ Running 5 tests using 1 worker
     Error Context: ../../.superpowers/sdd/2026-09-20-unified-notifications/browser-n5/.artifacts/notifications-unified-pers-86f43-ts-with-a-long-account-name-desktop/error-context.md
 
   2 failed
-    [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows 
-    [desktop] › notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name 
+    [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows
+    [desktop] › notifications-unified.spec.ts:235:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name
   3 passed (12.2s)

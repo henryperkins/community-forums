@@ -6,7 +6,7 @@ Running 1 test using 1 worker
   ✘  1 [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history (5.7s)
 
 
-  1) [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history 
+  1) [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history
 
     Error: expect(locator).toBeVisible() failed
 
@@ -32,4 +32,4 @@ Running 1 test using 1 worker
     Error Context: ../../docs/evidence/unified-notifications-and-settings/n4/red/.artifacts/notifications-unified-both-e1a68-eachable-old-unread-history-desktop/error-context.md
 
   1 failed
-    [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history 
+    [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history

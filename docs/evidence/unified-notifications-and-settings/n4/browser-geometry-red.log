@@ -6,7 +6,7 @@ Running 1 test using 1 worker
   ✘  1 [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes (2.0s)
 
 
-  1) [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes 
+  1) [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes
 
     Error: expect(received).toBeLessThan(expected)
 
@@ -25,4 +25,4 @@ Running 1 test using 1 worker
     Error Context: ../../docs/evidence/unified-notifications-and-settings/n4/geometry-red/.artifacts/notifications-unified-long-e84de-cent-layouts-in-both-themes-desktop/error-context.md
 
   1 failed
-    [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes 
+    [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes

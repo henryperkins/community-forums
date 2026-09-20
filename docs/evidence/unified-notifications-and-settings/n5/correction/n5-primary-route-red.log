@@ -7,7 +7,7 @@ Running 1 test using 1 worker
   ✘  1 [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (795ms)
 
 
-  1) [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px 
+  1) [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px
 
     Error: expect(received).toBeGreaterThanOrEqual(expected)
 
@@ -27,4 +27,4 @@ Running 1 test using 1 worker
     Error Context: .superpowers/sdd/2026-09-20-unified-notifications/browser-n5-correction/.artifacts/unified-chrome-persistent--1d985-controls-reachable-at-320px-mobile/error-context.md
 
   1 failed
-    [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px 
+    [mobile] › tests/browser/unified-chrome.spec.ts:651:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px
