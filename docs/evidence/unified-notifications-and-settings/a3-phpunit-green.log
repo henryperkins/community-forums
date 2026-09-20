@@ -1,0 +1,13 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: phpunit.xml
+
+...............................................................  63 / 130 ( 48%)
+......[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+......................................................... 126 / 130 ( 96%)
+....                                                            130 / 130 (100%)
+
+Time: 00:02.838, Memory: 68.50 MB
+
+OK (130 tests, 1321 assertions)

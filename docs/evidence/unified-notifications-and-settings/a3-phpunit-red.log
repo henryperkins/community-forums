@@ -1,0 +1,60 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: phpunit.xml
+
+...FFFFFFF.........                                               19 / 19 (100%)
+
+Time: 00:00.294, Memory: 58.50 MB
+
+There were 7 failures:
+
+1) Tests\Integration\Core\AppProfileMediaTest::test_invalid_avatar_preserves_the_unsaved_profile_draft
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 422.
+
+tests/Support/TestCase.php:423
+tests/Integration/Core/AppProfileMediaTest.php:71
+
+2) Tests\Integration\Core\AppProfileMediaTest::test_avatar_upload_and_removal_preserve_all_fields_until_profile_save
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 200.
+
+tests/Support/TestCase.php:423
+tests/Integration/Core/AppProfileMediaTest.php:90
+
+3) Tests\Integration\Core\AppProfileMediaTest::test_missing_and_oversized_avatars_preserve_drafts_without_creating_attachments
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 422.
+
+tests/Support/TestCase.php:423
+tests/Integration/Core/AppProfileMediaTest.php:118
+
+4) Tests\Integration\Core\AppProfileMediaTest::test_profile_and_avatar_controls_share_one_multipart_form
+Failed asserting that 0 is identical to 1.
+
+tests/Integration/Core/AppProfileMediaTest.php:138
+
+5) Tests\Integration\Core\AppProfileMediaTest::test_profile_media_defaults_on_and_operator_rollback_regates_mutations
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 200.
+
+tests/Support/TestCase.php:423
+tests/Integration/Core/AppProfileMediaTest.php:161
+
+6) Tests\Integration\Core\AppProfileMediaTest::test_user_uploads_and_removes_avatar_when_profile_media_enabled
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 200.
+
+tests/Support/TestCase.php:423
+tests/Integration/Core/AppProfileMediaTest.php:188
+
+7) Tests\Integration\Core\AppProfileMediaTest::test_admin_removes_uploaded_avatar_and_audits_profile_media_action
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 200.
+
+tests/Support/TestCase.php:423
+tests/Integration/Core/AppProfileMediaTest.php:222
+
+FAILURES!
+Tests: 19, Assertions: 69, Failures: 7.

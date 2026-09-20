@@ -9,6 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Domain\User;
 use App\Repository\UserRepository;
 use App\Repository\UserProfileFieldRepository;
 use App\Service\AccountLifecycleService;
@@ -34,17 +35,38 @@ final class AccountController extends Controller
     /** @param array<string,string> $params */
     public function accountForm(Request $request, array $params): Response
     {
-        $user = $this->requireUser();
+        return $this->accountView($this->requireUser());
+    }
+
+    /** @param array<string,mixed> $data */
+    private function accountView(User $user, array $data = [], int $status = 200): Response
+    {
         $row = $this->container->get(UserRepository::class)->find($user->id()) ?? [];
-        $customEnabled = $this->container->get(FeatureFlags::class)->enabled('custom_profile_fields');
+        $flags = $this->container->get(FeatureFlags::class);
+        $customEnabled = $flags->enabled('custom_profile_fields');
+        $old = $this->accountOld($row, $customEnabled ? $this->container->get(UserProfileFieldRepository::class)->forUser($user->id()) : []);
+        $draftFields = ['display_name', 'bio', 'location', 'website', 'pronouns', 'signature'];
+        if ($customEnabled) {
+            for ($i = 1; $i <= 3; $i++) {
+                $draftFields[] = 'custom_label_' . $i;
+                $draftFields[] = 'custom_value_' . $i;
+            }
+        }
+        // Avatar paths and account metadata always come from persisted data.
+        foreach ($draftFields as $field) {
+            if (array_key_exists($field, $data['old'] ?? [])) {
+                $old[$field] = is_scalar($data['old'][$field]) ? (string) $data['old'][$field] : '';
+            }
+        }
         return $this->view('account/settings', [
-            'errors' => [],
-            'old' => $this->accountOld($row, $customEnabled ? $this->container->get(UserProfileFieldRepository::class)->forUser($user->id()) : []),
+            'errors' => $data['errors'] ?? [],
+            'old' => $old,
+            'avatar_message' => $data['avatar_message'] ?? '',
             'email' => $row['email'] ?? '',
             'email_verified' => ($row['email_verified_at'] ?? null) !== null,
-            'profile_media' => $this->container->get(FeatureFlags::class)->enabled('profile_media'),
+            'profile_media' => $flags->enabled('profile_media'),
             'custom_profile_fields' => $customEnabled,
-        ]);
+        ], $status);
     }
 
     /** @param array<string,mixed> $row @param array<int,array{label:string,value:string,position:int}> $custom */
@@ -77,19 +99,7 @@ final class AccountController extends Controller
         try {
             $this->container->get(AccountService::class)->updateProfile($user, $request->allInput());
         } catch (ValidationException $e) {
-            $row = $this->container->get(UserRepository::class)->find($user->id()) ?? [];
-            $old = $e->old;
-            if (!array_key_exists('avatar_path', $old)) {
-                $old['avatar_path'] = $row['avatar_path'] ?? '';
-            }
-            return $this->view('account/settings', [
-                'errors' => $e->errors,
-                'old' => $old,
-                'email' => $row['email'] ?? '',
-                'email_verified' => ($row['email_verified_at'] ?? null) !== null,
-                'profile_media' => $this->container->get(FeatureFlags::class)->enabled('profile_media'),
-                'custom_profile_fields' => $this->container->get(FeatureFlags::class)->enabled('custom_profile_fields'),
-            ], 422);
+            return $this->accountView($user, ['errors' => $e->errors, 'old' => $e->old], 422);
         }
         return $this->redirectWithFlash('/settings/account', 'Your profile has been updated.');
     }
@@ -182,16 +192,26 @@ final class AccountController extends Controller
         try {
             $this->container->get(ProfileMediaService::class)->uploadAvatar($user, $request->file('avatar'));
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/settings/account', $e->first());
+            return $this->accountView($user, [
+                'old' => $request->allInput(),
+                'errors' => ['avatar' => $e->first() . ' Choose the file again to retry. Other profile edits are not saved.'],
+            ], 422);
         }
-        return $this->redirectWithFlash('/settings/account', 'Avatar updated.');
+        return $this->accountView($user, [
+            'old' => $request->allInput(),
+            'avatar_message' => 'Avatar updated. Other profile edits are not saved.',
+        ]);
     }
 
     public function removeAvatar(Request $request, array $params): Response
     {
         $this->requireProfileMedia();
-        $this->container->get(ProfileMediaService::class)->removeAvatar($this->requireUser());
-        return $this->redirectWithFlash('/settings/account', 'Avatar removed.');
+        $user = $this->requireUser();
+        $this->container->get(ProfileMediaService::class)->removeAvatar($user);
+        return $this->accountView($user, [
+            'old' => $request->allInput(),
+            'avatar_message' => 'Avatar removed. Other profile edits are not saved.',
+        ]);
     }
 
     /** @param array<string,string> $params */

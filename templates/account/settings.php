@@ -21,45 +21,37 @@
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($profile_media)): ?>
-        <?php // The panel head is a real heading, as it already is on Security and
-              // Notifications. It was the only scribe-panel head still rendering as a
-              // <span>, which left this page's panels outside the heading outline. ?>
-        <section class="scribe-panel profile-media-panel">
-            <h2 class="scribe-panel-head">Avatar</h2>
-            <?php if (!empty($old['avatar_path'])): ?>
+    <form method="post" action="/settings/account" enctype="multipart/form-data" class="settings-pane">
+        <?= $this->csrfField() ?>
+        <?php // Keep native Enter submission on the profile save path. ?>
+        <button type="submit" formaction="/settings/account" hidden tabindex="-1" aria-hidden="true">Save profile</button>
+        <?php if (!empty($profile_media)): ?>
+            <section class="scribe-panel profile-media-panel">
+                <h2 class="scribe-panel-head">Avatar</h2>
+                <?php if (!empty($avatar_message)): ?>
+                    <p role="status"><?= $e($avatar_message) ?></p>
+                <?php endif; ?>
+                <p class="muted">Uploading or removing an avatar saves only the avatar. Use Save profile to save your other edits.</p>
                 <div class="avatar-row">
-                    <img class="monogram avatar-img monogram-gilt" src="<?= $e($old['avatar_path']) ?>" alt="" width="64" height="64">
-                    <div class="avatar-actions">
-                        <form method="post" action="/settings/avatar" enctype="multipart/form-data" class="stacked">
-                            <?= $this->csrfField() ?>
-                            <label class="field">
-                                <span>Upload avatar</span>
-                                <input type="file" name="avatar" class="input input-engraved" accept="image/png,image/jpeg,image/gif,image/webp" required>
-                            </label>
-                            <button class="btn" type="submit">Upload avatar</button>
-                        </form>
-                        <form method="post" action="/settings/avatar/remove" class="inline-form">
-                            <?= $this->csrfField() ?>
-                            <button class="linkbtn muted" type="submit">Remove avatar</button>
-                        </form>
+                    <?php if (!empty($old['avatar_path'])): ?>
+                        <img class="monogram avatar-img monogram-gilt" src="<?= $e($old['avatar_path']) ?>" alt="" width="64" height="64">
+                    <?php endif; ?>
+                    <div class="avatar-actions stacked">
+                        <label class="field">
+                            <span>Upload avatar</span>
+                            <input type="file" name="avatar" class="input input-engraved" accept="image/png,image/jpeg,image/gif,image/webp"<?= field_attrs($errors, 'avatar') ?>>
+                        </label>
+                        <?= field_error($errors, 'avatar') ?>
+                        <button class="btn" type="submit" formaction="/settings/avatar" formnovalidate>Upload avatar</button>
+                        <?php if (!empty($old['avatar_path'])): ?>
+                            <button class="linkbtn muted" type="submit" formaction="/settings/avatar/remove" formnovalidate>Remove avatar</button>
+                        <?php endif; ?>
                     </div>
                 </div>
-            <?php else: ?>
-                <form method="post" action="/settings/avatar" enctype="multipart/form-data" class="stacked">
-                    <?= $this->csrfField() ?>
-                    <label class="field">
-                        <span>Upload avatar</span>
-                        <input type="file" name="avatar" class="input input-engraved" accept="image/png,image/jpeg,image/gif,image/webp" required>
-                    </label>
-                    <button class="btn" type="submit">Upload avatar</button>
-                </form>
-            <?php endif; ?>
-        </section>
-    <?php endif; ?>
+            </section>
+        <?php endif; ?>
 
-    <form method="post" action="/settings/account" class="stacked scribe-panel">
-        <?= $this->csrfField() ?>
+        <section class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Identity</h2>
         <label class="field">
             <span>Email <span class="muted">(not editable in this version)</span></span>
@@ -125,7 +117,8 @@
                 <?= field_error($errors, 'custom_profile_fields') ?>
             </fieldset>
         <?php endif; ?>
-        <button class="btn" type="submit">Save changes</button>
+        <button class="btn" type="submit">Save profile</button>
+        </section>
     </form>
         </div>
     </div>
