@@ -1,0 +1,12 @@
+
+Running 5 tests using 1 worker
+
+(node:805947) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history (1.8s)
+  ✓  2 [mobile] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes (14.7s)
+  ✓  3 [mobile] › notifications-unified.spec.ts:117:5 › inaccessible and empty states remain consistent at both entry points (1.1s)
+  ✓  4 [mobile] › notifications-unified.spec.ts:139:9 › progressive enhancement › standalone owned forms and bulk actions work without JavaScript (1.6s)
+  ✓  5 [mobile] › notifications-unified.spec.ts:139:9 › progressive enhancement › pane owned forms and bulk actions work without JavaScript (1.4s)
+
+  5 passed (21.8s)

@@ -1,0 +1,28 @@
+
+Running 1 test using 1 worker
+
+(node:805120) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes (2.0s)
+
+
+  1) [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes 
+
+    Error: expect(received).toBeLessThan(expected)
+
+    Expected: < 16
+    Received:   16.59375
+
+      93 |           const dot = (await button.locator('.notification-unread-dot').boundingBox())!;
+      94 |           const message = (await button.locator('.notification-message').boundingBox())!;
+    > 95 |           expect(Math.abs(dot.y - message.y)).toBeLessThan(16);
+         |                                               ^
+      96 |           await button.scrollIntoViewIfNeeded();
+      97 |           const box = (await button.boundingBox())!;
+      98 |           expect(box.y).toBeGreaterThanOrEqual(0);
+        at /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/notifications-unified.spec.ts:95:47
+
+    Error Context: ../../docs/evidence/unified-notifications-and-settings/n4/geometry-red/.artifacts/notifications-unified-long-e84de-cent-layouts-in-both-themes-desktop/error-context.md
+
+  1 failed
+    [desktop] › notifications-unified.spec.ts:75:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes 

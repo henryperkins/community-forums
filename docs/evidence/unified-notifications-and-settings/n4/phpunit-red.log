@@ -1,0 +1,221 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+FFF.................F.............................                50 / 50 (100%)
+
+Time: 00:00.945, Memory: 62.50 MB
+
+There were 4 failures:
+
+1) Tests\Unit\Support\NotificationPresenterTest::test_every_stored_event_has_copy_and_an_icon
+Shared presenter must exist
+Failed asserting that false is true.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/NotificationPresenterTest.php:15
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/NotificationPresenterTest.php:22
+
+2) Tests\Unit\Support\NotificationPresenterTest::test_anonymous_missing_actors_and_targetless_appeals
+Shared presenter must exist
+Failed asserting that false is true.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/NotificationPresenterTest.php:15
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/NotificationPresenterTest.php:31
+
+3) Tests\Unit\Support\NotificationPresenterTest::test_long_labels_survive_and_template_escapes_at_boundary
+Shared presenter must exist
+Failed asserting that false is true.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/NotificationPresenterTest.php:15
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Unit/Support/NotificationPresenterTest.php:41
+
+4) Tests\Integration\Core\AppForumIndexRemediationTest::test_a_bulk_notice_action_returns_to_the_pane_it_was_invoked_from
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="system"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+    <title>RetroBoards</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+            <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="RetroBoards">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/imladris.css?v=ab9d8a0602c21f7c">\n
+    <link rel="stylesheet" href="/assets/app.css?v=ab9d8a0602c21f7c">\n
+    <link rel="stylesheet" href="/assets/wysiwyg-composer.css?v=ab9d8a0602c21f7c">        </head>\n
+<body class="variant-app is-rail-open is-reading-open" data-route="boards" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-user="return_reader" data-enter-to-send="1" data-show-preview="1" data-smart-lists="1" data-tour="1">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+<header class="forum-bar">\n
+        <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open board rail" aria-expanded="false" aria-controls="sidebar-nav">\n
+        <svg class="icon icon-menu nav-toggle-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\n
+    </button>\n
+\n
+    <a class="forum-bar-brand" href="/" aria-label="RetroBoards">\n
+                                <svg class="forum-bar-mark" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+            <span class="forum-bar-wordmark">RetroBoards</span>\n
+            </a>\n
+\n
+        <nav class="forum-bar-surfaces" aria-label="Primary">\n
+                    <a data-primary-route="boards" class="forum-bar-surface is-active" href="/" aria-current="page">Boards</a>\n
+                                                        <a data-primary-route="inbox" class="forum-bar-surface" href="/inbox">Inbox</a>\n
+                                                        <a data-primary-route="messages" class="forum-bar-surface" href="/messages">Messages</a>\n
+                        </nav>\n
+\n
+                <span class="forum-bar-searchwrap">\n
+            <a class="forum-bar-search" href="/search" aria-label="Search the council — Command K">\n
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>\n
+                <span class="forum-bar-search-label">Search the council…</span>\n
+                <span class="forum-bar-kbd">⌘K</span>\n
+            </a>\n
+        </span>\n
+    \n
+    <span class="forum-bar-right">\n
+                                <form class="inline forum-bar-panel-form" method="post" action="/settings/member-surfaces" data-panel-form="rail">\n
+                <input type="hidden" name="_token" value="ba7d920911de129288311a7b7ba0bf82b2fd2fe32a881d3705c309b7fefd170e">                <input type="hidden" name="rail_open" value="0">\n
+                <input type="hidden" name="return" value="/">\n
+                <button class="forum-bar-railtoggle is-on" type="submit" aria-controls="sidebar-nav" aria-expanded="true" aria-pressed="true" aria-label="Hide the board rail" title="Hide the board rail (⌘B)">\n
+                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><rect class="forum-bar-toggle-band" x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"/></svg>\n
+                </button>\n
+            </form>\n
+\n
+            \n
+            <span class="forum-bar-divider" aria-hidden="true"></span>\n
+\n
+                            <span class="forum-bar-compose">\n
+                    <a class="btn btn-small" href="/compose" aria-label="New topic"><svg class="icon icon-plus" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>\n
+<span>New topic</span></a>\n
+                </span>\n
+            \n
+                        <details class="identity-menu">\n
+                <summary class="forum-bar-user" aria-label="Open account menu for return_reader">\n
+                    <span class="avatar-wrap">\n
+                            <span class="monogram mono-9" aria-hidden="true">RR</span>\n
+                                                                            <span class="presence-dot" aria-hidden="true"></span>\n
+                                            </span>\n
+                    <span class="forum-bar-username">return_reader</span>\n
+                    <svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\n
+                </summary>\n
+                <div class="identity-menu-panel">\n
+                    <a href="/u/return_reader"><svg class="icon icon-user" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\n
+<span>Profile</span></a>\n
+                                            <a href="/notifications" data-bell><svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+<span>Notifications</span><span class="bell-count" data-bell-count hidden>0</span></a>\n
+                                        <a href="/drafts"><svg class="icon icon-file" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>\n
+<span>Drafts</span></a>                                            <a href="/feed"><svg class="icon icon-users" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>\n
+<span>Following</span></a>\n
+                        <a href="/leaderboard"><svg class="icon icon-commend-star" viewBox="0 0 100 100" width="16" height="16" fill="currentColor" stroke="none" aria-hidden="true"><path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/></svg>\n
+<span>Top contributors</span></a>\n
+                                        <a href="/settings/account"><svg class="icon icon-settings-profile" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\n
+<span>Settings</span></a>\n
+                                        <form method="post" action="/logout">\n
+                        <input type="hidden" name="_token" value="ba7d920911de129288311a7b7ba0bf82b2fd2fe32a881d3705c309b7fefd170e">                        <button type="submit"><svg class="icon icon-log-out" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>\n
+<span>Log out</span></button>\n
+                    </form>\n
+                </div>\n
+            </details>\n
+            </span>\n
+</header>\n
+    <div class="app-shell">\n
+        <div class="nav-scrim" data-nav-scrim hidden></div>\n
+        <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards">\n
+                                    <span class="board-rail-cat">Council</span>\n
+                                                                                                        <a class="board-rail-item" data-board-slug="return-board" href="/c/return-board">\n
+                        <span class="board-rail-name">Board return-board</span>\n
+                                                                    </a>\n
+                                        \n
+            <div class="board-rail-foot">\n
+                        <section class="presence-widget" data-presence data-presence-limit="5" data-presence-poll>\n
+                <h2 class="presence-title">\n
+                    <a href="/users-online">Online</a>\n
+                    <span class="presence-count" data-presence-count>1</span>\n
+                </h2>\n
+                                <p class="sr-only" aria-live="polite" data-presence-summary>1 member here now.</p>\n
+                <ul class="presence-list" data-presence-list>\n
+                                            <li class="presence-row" data-presence-row="return_reader" data-presence-sig="return_reader:online:-:y">\n
+    <a class="presence-person" href="/u/return_reader" data-presence-state="online" data-presence-self="1">\n
+                            <span class="avatar-wrap">\n
+                    <span class="monogram mono-9" aria-hidden="true">RR</span>\n
+                <span class="presence-dot" aria-hidden="true"></span>\n
+            </span>\n
+                <span class="presence-person-id">\n
+            <span class="presence-name">return_reader<span class="presence-you">you</span></span>\n
+            <span class="presence-sub">@return_reader · Here now</span>\n
+        </span>\n
+    </a>\n
+</li>\n
+                                    </ul>\n
+                                                    <p class="presence-empty" data-presence-empty hidden>No one is showing as online.</p>\n
+                                <p class="presence-more" data-presence-more hidden></p>\n
+                <p class="presence-foot"><a class="presence-all" href="/users-online">See everyone online</a></p>\n
+            </section>\n
+        </div>\n
+    </nav>\n
+        <main class="main" id="main">\n
+                        <div class="read-main read-pad board-index" data-directory-pane="notices">\n
+    <nav class="forum-directory__tabs" aria-label="Board index panes">\n
+                                <a href="/?pane=boards">\n
+                Boards                            </a>\n
+                                <a href="/?pane=tags">\n
+                Tags                            </a>\n
+                                <a href="/?pane=notices" aria-current="page">\n
+                Notices                <span class="directory-tab-dot"><span class="sr-only">Unread notices</span></span>            </a>\n
+                                <a href="/?pane=connections">\n
+                Connections                            </a>\n
+            </nav>\n
+\n
+            <section class="directory-light-pane directory-notices-pane">\n
+            <header class="directory-pane-heading">\n
+                <h1>Notices</h1>\n
+                                                        <div class="directory-pane-actions">\n
+                        <form method="post" action="/notifications/read-all"><input type="hidden" name="_token" value="ba7d920911de129288311a7b7ba0bf82b2fd2fe32a881d3705c309b7fefd170e"><input type="hidden" name="return" value="/?pane=notices&amp;filter=all"><button class="linkbtn" type="submit">Mark all read</button></form>\n
+                        <form method="post" action="/notifications/clear"><input type="hidden" name="_token" value="ba7d920911de129288311a7b7ba0bf82b2fd2fe32a881d3705c309b7fefd170e"><input type="hidden" name="return" value="/?pane=notices&amp;filter=all"><button class="linkbtn danger" type="submit">Clear</button></form>\n
+                    </div>\n
+                            </header>\n
+\n
+    <nav aria-label="Notification history">\n
+        <a href="/?pane=notices&amp;filter=all" aria-current="page">All</a>\n
+        <a href="/?pane=notices&amp;filter=unread">Unread</a>\n
+                    </nav>\n
+            <p>What happened to your account. The topics themselves wait in the <a href="/inbox">inbox</a>.</p>\n
+                            <ul class="directory-notice-list">\n
+                                                                    <li class="is-unread">\n
+                            <form method="post" action="/notifications/123/read">\n
+                                <input type="hidden" name="return" value="/?pane=notices&amp;filter=all">\n
+                                <input type="hidden" name="_token" value="ba7d920911de129288311a7b7ba0bf82b2fd2fe32a881d3705c309b7fefd170e">                                <button type="submit">\n
+                                                                        <span class="directory-notice-mark"><span class="sr-only">Unread.</span></span>\n
+                                    <span class="directory-notice-text">Remediation Author mentioned you in <span class="directory-notice-topic">“Something happened”</span></span>\n
+                                    <time datetime="2026-09-20T09:11:04+00:00">just now</time>\n
+                                </button>\n
+                            </form>\n
+                        </li>\n
+                                                                    <li class="is-unread">\n
+                            <form method="post" action="/notifications/122/read">\n
+                                <input type="hidden" name="return" value="/?pane=notices&amp;filter=all">\n
+                                <input type="hidden" name="_token" value="ba7d920911de129288311a7b7ba0bf82b2fd2fe32a881d3705c309b7fefd170e">                                <button type="submit">\n
+                                                                        <span class="directory-notice-mark"><span class="sr-only">Unread.</span></span>\n
+                                    <span class="directory-notice-text">Remediation Author replied to <span class="directory-notice-topic">“Something happened”</span></span>\n
+                                    <time datetime="2026-09-20T09:11:04+00:00">just now</time>\n
+                                </button>\n
+                            </form>\n
+                        </li>\n
+                                    </ul>\n
+                    </section>\n
+    </div>\n
+        </main>\n
+    </div>\n
+<script src="/assets/app.js?v=ab9d8a0602c21f7c" defer></script>\n
+<script src="/assets/composer.js?v=ab9d8a0602c21f7c" defer></script><script type="module" src="/assets/wysiwyg-composer.js?v=ab9d8a0602c21f7c"></script><script src="/assets/passkeys.js?v=ab9d8a0602c21f7c" defer></script><script src="/assets/tour.js?v=ab9d8a0602c21f7c" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 15782) contains "<input type="hidden" name="return" value="/?pane=notices">" [ASCII](length: 58).
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppForumIndexRemediationTest.php:129
+
+FAILURES!
+Tests: 50, Assertions: 242, Failures: 4.

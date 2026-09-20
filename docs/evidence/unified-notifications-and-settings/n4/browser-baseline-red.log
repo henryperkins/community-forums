@@ -1,0 +1,35 @@
+
+Running 1 test using 1 worker
+
+(node:803519) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history (5.7s)
+
+
+  1) [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-notification-list]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-notification-list]')
+
+
+      48 |     await page.goto(url);
+      49 |     const rows = page.locator('[data-notification-list]');
+    > 50 |     await expect(rows).toBeVisible();
+         |                        ^
+      51 |     await expect(rows.getByRole('button', { name: /Unread\. Anonymous mentioned you in/ })).toBeVisible();
+      52 |     await expect(rows.getByRole('button', { name: /Someone replied to/ })).toBeVisible();
+      53 |     await expect(rows.getByRole('button', { name: /Your appeal has been resolved.*Acknowledge notification/ })).toBeVisible();
+        at /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/browser/notifications-unified.spec.ts:50:24
+
+    Error Context: ../../docs/evidence/unified-notifications-and-settings/n4/red/.artifacts/notifications-unified-both-e1a68-eachable-old-unread-history-desktop/error-context.md
+
+  1 failed
+    [desktop] › notifications-unified.spec.ts:43:5 › both entry points render the same authorized rows, UTC time and reachable old unread history 

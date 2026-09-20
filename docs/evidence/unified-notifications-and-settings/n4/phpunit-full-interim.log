@@ -1,0 +1,168 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+.............................................................   61 / 2892 (  2%)
+....................................................DD.......  122 / 2892 (  4%)
+.............................................................  183 / 2892 (  6%)
+.............................................................  244 / 2892 (  8%)
+.............................................................  305 / 2892 ( 10%)
+.............................................................  366 / 2892 ( 12%)
+.............................................................  427 / 2892 ( 14%)
+.....................DD......................................  488 / 2892 ( 16%)
+.............................................................  549 / 2892 ( 18%)
+.............................................................  610 / 2892 ( 21%)
+.............................................................  671 / 2892 ( 23%)
+.............................................................  732 / 2892 ( 25%)
+..............................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+..........................  793 / 2892 ( 27%)
+.............................................................  854 / 2892 ( 29%)
+.............................................................  915 / 2892 ( 31%)
+.............................................................  976 / 2892 ( 33%)
+............................................................. 1037 / 2892 ( 35%)
+............................................................. 1098 / 2892 ( 37%)
+............................................................. 1159 / 2892 ( 40%)
+............................................................. 1220 / 2892 ( 42%)
+............................................................. 1281 / 2892 ( 44%)
+......................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....................................... 1342 / 2892 ( 46%)
+............F................................................ 1403 / 2892 ( 48%)
+............................................................. 1464 / 2892 ( 50%)
+............................................................. 1525 / 2892 ( 52%)
+.............................F............................... 1586 / 2892 ( 54%)
+............................................................. 1647 / 2892 ( 56%)
+............................................................. 1708 / 2892 ( 59%)
+............................................................. 1769 / 2892 ( 61%)
+............................................................. 1830 / 2892 ( 63%)
+............................................................. 1891 / 2892 ( 65%)
+............................................................. 1952 / 2892 ( 67%)
+............................................................. 2013 / 2892 ( 69%)
+...................D....................S.................... 2074 / 2892 ( 71%)
+............................................................. 2135 / 2892 ( 73%)
+............................................................. 2196 / 2892 ( 75%)
+............................................................. 2257 / 2892 ( 78%)
+............................................................. 2318 / 2892 ( 80%)
+............................................................. 2379 / 2892 ( 82%)
+............................................................. 2440 / 2892 ( 84%)
+............................................................. 2501 / 2892 ( 86%)
+............................................................. 2562 / 2892 ( 88%)
+................D............................................ 2623 / 2892 ( 90%)
+............................................................. 2684 / 2892 ( 92%)
+............................................................. 2745 / 2892 ( 94%)
+............................................................. 2806 / 2892 ( 97%)
+............................................................. 2867 / 2892 ( 99%)
+.........................                                     2892 / 2892 (100%)
+
+Time: 01:29.879, Memory: 88.50 MB
+
+There were 2 failures:
+
+1) Tests\Integration\Core\AppForumIndexViewingTest::test_tags_notices_and_connections_are_real_feature_gated_panes
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="system"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+    <title>RetroBoards</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+            <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="RetroBoards">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/imladris.css?v=6a15473b94d8529e">\n
+    <link rel="stylesheet" href="/assets/app.css?v=6a15473b94d8529e">\n
+    <link rel="stylesheet" href="/assets/wysiwyg-composer.css?v=6a15473b94d8529e">        </head>\n
+<body class="variant-app is-rail-open is-reading-open" data-route="boards" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+<header class="forum-bar">\n
+        <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open board rail" aria-expanded="false" aria-controls="sidebar-nav">\n
+        <svg class="icon icon-menu nav-toggle-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\n
+    </button>\n
+\n
+    <a class="forum-bar-brand" href="/" aria-label="RetroBoards">\n
+                                <svg class="forum-bar-mark" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+            <span class="forum-bar-wordmark">RetroBoards</span>\n
+            </a>\n
+\n
+        <nav class="forum-bar-surfaces" aria-label="Primary">\n
+                    <a data-primary-route="boards" class="forum-bar-surface is-active" href="/" aria-current="page">Boards</a>\n
+                            </nav>\n
+\n
+                <span class="forum-bar-searchwrap">\n
+            <a class="forum-bar-search" href="/search" aria-label="Search the council — Command K">\n
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>\n
+                <span class="forum-bar-search-label">Search the council…</span>\n
+                <span class="forum-bar-kbd">⌘K</span>\n
+            </a>\n
+        </span>\n
+    \n
+    <span class="forum-bar-right">\n
+                    <a class="forum-bar-signup" href="/register">Sign up</a>\n
+            <a class="forum-bar-signin" href="/login">Log in</a>\n
+            </span>\n
+</header>\n
+    <div class="app-shell">\n
+        <div class="nav-scrim" data-nav-scrim hidden></div>\n
+        <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards">\n
+                                    <span class="board-rail-cat">Panes</span>\n
+                                                                                                        <a class="board-rail-item" data-board-slug="pane-board" href="/c/pane-board">\n
+                        <span class="board-rail-name">Board pane-board</span>\n
+                                                                    </a>\n
+                                        \n
+            <div class="board-rail-foot">\n
+                        <section class="presence-widget" data-presence data-presence-limit="5" data-presence-poll>\n
+                <h2 class="presence-title">\n
+                    <a href="/users-online">Online</a>\n
+                    <span class="presence-count" data-presence-count>0</span>\n
+                </h2>\n
+                                <p class="sr-only" aria-live="polite" data-presence-summary>0 members here now.</p>\n
+                <ul class="presence-list" data-presence-list>\n
+                                    </ul>\n
+                                                    <p class="presence-empty" data-presence-empty>No one is showing as online.</p>\n
+                                <p class="presence-more" data-presence-more hidden></p>\n
+                <p class="presence-foot"><a class="presence-all" href="/users-online">See everyone online</a></p>\n
+            </section>\n
+        </div>\n
+    </nav>\n
+        <main class="main" id="main">\n
+                        <div class="read-main read-pad board-index" data-directory-pane="notices">\n
+    <nav class="forum-directory__tabs" aria-label="Board index panes">\n
+                                <a href="/?pane=boards">\n
+                Boards                            </a>\n
+                                <a href="/?pane=tags">\n
+                Tags                            </a>\n
+                                <a href="/?pane=notices" aria-current="page">\n
+                Notifications                            </a>\n
+                                <a href="/?pane=connections">\n
+                Connections                            </a>\n
+            </nav>\n
+\n
+            <section class="directory-light-pane directory-notices-pane">\n
+                            <h1>Notifications</h1>\n
+                <p class="directory-signin-state"><a href="/login?next=%2F%3Fpane%3Dnotices">Log in</a> to see notifications about your account.</p>\n
+                    </section>\n
+    </div>\n
+        </main>\n
+    </div>\n
+<script src="/assets/app.js?v=6a15473b94d8529e" defer></script>\n
+<script src="/assets/composer.js?v=6a15473b94d8529e" defer></script><script type="module" src="/assets/wysiwyg-composer.js?v=6a15473b94d8529e"></script><script src="/assets/passkeys.js?v=6a15473b94d8529e" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 6187) contains "to see notices about your account." [ASCII](length: 34).
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppForumIndexViewingTest.php:190
+
+2) Tests\Integration\Core\AppModerationDraftLossTest::test_requeue_of_a_non_failed_delivery_reports_the_noop
+Failed asserting that 'rb_flash=That delivery is not a replayable failed job — nothing was requeued.; Expires=Sun, 20 Sep 2026 09:18:34 GMT; Max-Age=60; Path=/; Secure; HttpOnly; SameSite=Lax' [UTF-8](length: 170) contains "not in a failed state" [ASCII](length: 21).
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Core/AppModerationDraftLossTest.php:126
+
+FAILURES!
+Tests: 2892, Assertions: 21764, Failures: 2, Deprecations: 6, Skipped: 1.

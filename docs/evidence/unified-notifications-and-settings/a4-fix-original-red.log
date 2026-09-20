@@ -1,0 +1,34 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+FF                                                                  2 / 2 (100%)
+
+Time: 00:00.064, Memory: 14.00 MB
+
+There were 2 failures:
+
+1) A4ReviewRegressionTest::test_empty_object_filter_is_unavailable_in_page_and_digest
+Failed asserting that Array &0 [
+    'board_ids' => Array &1 [],
+    'sort' => 'latest',
+] is null.
+
+/tmp/A4ReviewRegressionTest.php:20
+
+2) A4ReviewRegressionTest::test_cleared_multiselect_replaces_previous_filter
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+-Array &0 []
++Array &0 [
++    0 => 200,
++    1 => 201,
++]
+
+/tmp/A4ReviewRegressionTest.php:36
+
+FAILURES!
+Tests: 2, Assertions: 4, Failures: 2.
