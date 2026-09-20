@@ -63,6 +63,22 @@ final class AppSessionManagementTest extends TestCase
         $this->assertSeeText($res, 'PhoneSafari');      // the other device
     }
 
+    public function test_readable_labels_keep_escaped_raw_details_and_current_device_rules(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $ua = 'Mozilla/5.0 (Windows NT 10.0) Chrome/149.0 Safari/537.36 <script>alert(1)</script>';
+        $other = $this->seedSession((int) $user['id'], $ua);
+        $response = $this->get('/settings/sessions');
+        $this->assertStatus(200, $response);
+        self::assertStringContainsString('Chrome on Windows', $response->body());
+        self::assertStringContainsString('<summary>Browser details</summary>', $response->body());
+        self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $response->body());
+        self::assertStringNotContainsString('<script>alert(1)</script>', $response->body());
+        self::assertStringContainsString('value="' . $other . '"', $response->body());
+        self::assertStringNotContainsString('name="sid" value="' . hash('sha256', $this->cookies['rb_session']) . '"', $response->body());
+    }
+
     public function test_revoke_one_session(): void
     {
         $user = $this->makeUser(['username' => 'revoker']);
@@ -75,6 +91,17 @@ final class AppSessionManagementTest extends TestCase
         $res = $this->post('/settings/sessions/revoke', ['sid' => $other]);
         $this->assertRedirect($res, '/settings/sessions');
         self::assertNull($sessions->findActive($other));
+    }
+
+    public function test_revoking_current_token_requires_login_on_the_next_request(): void
+    {
+        $this->actingAs($this->makeUser());
+        $current = hash('sha256', $this->cookies['rb_session']);
+        $this->assertRedirect($this->post('/settings/sessions/revoke', ['sid' => $current]), '/settings/sessions');
+        self::assertNull((new SessionRepository($this->db))->findActive($current));
+        $response = $this->get('/settings/sessions');
+        $this->assertStatus(302, $response);
+        self::assertStringStartsWith('/login?next=', $response->getHeader('location'));
     }
 
     public function test_cannot_revoke_another_users_session(): void

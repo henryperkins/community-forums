@@ -46,7 +46,7 @@ $unreadPill = static function (int $unread) use ($e): string {
         . ($unread > 99 ? '99+' : $unread) . '</span>';
 };
 ?>
-<nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards">
+<nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards"<?= $this->block('account_settings', '') === '1' ? ' tabindex="0"' : '' ?>>
     <?php $organization = !$composeMode && is_callable($organization_nav ?? null) ? $organization_nav() : []; ?>
     <?php foreach (($organization['board_folders'] ?? []) as $folder): ?>
         <span class="board-rail-cat"><?= $e($folder['name']) ?></span>

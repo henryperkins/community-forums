@@ -26,10 +26,14 @@ $lifetimeDays = (int) ($session_lifetime_days ?? 30);
             <?php foreach ($sessions as $s): ?>
                 <?php $isCurrent = ($current_id ?? null) === $s['id']; ?>
                 <li class="account-ruled-row">
-                    <span class="account-row-main">
-                        <span class="account-row-name"><?= $e($s['user_agent'] ?: 'Unknown device') ?><?php if ($isCurrent): ?><span class="account-state-chip">This device</span><?php endif; ?></span>
+                    <div class="account-row-main">
+                        <span class="account-row-name"><?= $e($s['device_label']) ?><?php if ($isCurrent): ?><span class="account-state-chip">This device</span><?php endif; ?></span>
                         <span class="account-row-meta">IP <?= $e($s['ip'] ?: '—') ?> · last active <?= $e(human_datetime($s['last_seen_at'])) ?></span>
-                    </span>
+                        <details class="session-agent-details">
+                            <summary>Browser details</summary>
+                            <p><?= $e($s['user_agent'] ?: 'No browser details reported.') ?></p>
+                        </details>
+                    </div>
                     <?php if (!$isCurrent): ?>
                         <form class="inline" method="post" action="/settings/sessions/revoke">
                             <?= $this->csrfField() ?>

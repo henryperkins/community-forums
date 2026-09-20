@@ -139,10 +139,21 @@ async function expectAxeClean(page: Page, label: string): Promise<void> {
   expect(violations, `${label} serious/critical axe violations`).toEqual([]);
 }
 
+async function settingsNav(page: Page) {
+  const chooser = page.locator('[data-settings-mobile-nav]');
+  if (await chooser.isVisible() && await chooser.getAttribute('open') === null) {
+    await chooser.locator('summary').click();
+  }
+  return page.getByRole('navigation', { name: 'Settings sections' });
+}
+
 async function expectOneCurrent(page: Page, key: string): Promise<void> {
-  const nav = page.getByRole('navigation', { name: 'Settings sections' });
+  const chooser = page.locator('[data-settings-mobile-nav]');
+  const wasClosed = await chooser.isVisible() && await chooser.getAttribute('open') === null;
+  const nav = await settingsNav(page);
   await expect(nav.locator('.settings-rail-link.is-active[aria-current="page"]')).toHaveCount(1);
   await expect(nav.locator(`.settings-rail-link[data-settings-key="${key}"]`)).toHaveAttribute('aria-current', 'page');
+  if (wasClosed) await chooser.locator('summary').click();
 }
 
 test('desktop grouped rail and common heading match the account shell contract', async ({ page }, info: TestInfo) => {
@@ -152,7 +163,7 @@ test('desktop grouped rail and common heading match the account shell contract',
 
   await expect(page.getByRole('heading', { level: 1, name: 'Account settings' })).toHaveCount(1);
   await expect(page.getByText(INTRO, { exact: true })).toBeVisible();
-  const nav = page.getByRole('navigation', { name: 'Settings sections' });
+  const nav = await settingsNav(page);
   await expect(nav.locator('.settings-rail-title')).toHaveText(['Account', 'Reading & writing', 'Community']);
   await expect(nav.locator('.settings-rail-link')).toHaveText([...DESTINATION_LABELS]);
   expect(await nav.locator('.settings-rail-group').evaluateAll((groups) => groups.map((group) => (
@@ -181,7 +192,7 @@ test('desktop grouped rail and common heading match the account shell contract',
   expect(geometry.railTop).toBeGreaterThanOrEqual(80);
   expect(geometry.overflow).toBeLessThanOrEqual(0);
 
-  const stickyAfterScroll = await page.locator('.settings-rail').evaluate((rail) => {
+  const stickyAfterScroll = await nav.evaluate((rail) => {
     window.scrollTo(0, Math.min(500, Math.max(0, document.documentElement.scrollHeight - window.innerHeight - 1)));
     const expectedTop = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h')) + 22;
     return new Promise<{ actualTop: number; expectedTop: number; scrollY: number }>((resolve) => {
@@ -209,7 +220,7 @@ test('feature-dark entries vanish and Replay remains subordinate when enabled', 
     writeFeatureMap(featureState(original, false));
     await login(page);
     await page.goto('/settings/account');
-    const nav = page.getByRole('navigation', { name: 'Settings sections' });
+    const nav = await settingsNav(page);
     for (const href of ['/drafts', '/settings/connections', '/settings/account/lifecycle', '/appeals']) {
       await expect(nav.locator(`a[href="${href}"]`)).toHaveCount(0);
     }
@@ -305,7 +316,7 @@ test('mobile no-JavaScript account navigation follows every available ordinary h
     await login(page);
 
     await page.goto('/settings/account');
-    const initialNav = page.getByRole('navigation', { name: 'Settings sections' });
+    const initialNav = await settingsNav(page);
     await expect(initialNav.locator('.settings-rail-title')).toHaveText(['Account', 'Reading & writing', 'Community']);
     expect(await initialNav.locator('a').evaluateAll((links) => links.map((link) => link.getAttribute('href'))))
       .toEqual(DESTINATIONS.map(([href]) => href));
@@ -320,7 +331,7 @@ test('mobile no-JavaScript account navigation follows every available ordinary h
 
     for (const [href, active] of DESTINATIONS) {
       await page.goto('/settings/account');
-      const nav = page.getByRole('navigation', { name: 'Settings sections' });
+      const nav = await settingsNav(page);
       const link = nav.locator(`a[href="${href}"]`);
       await expect(link).toHaveCount(1);
       const [response] = await Promise.all([page.waitForNavigation(), link.click()]);
@@ -328,8 +339,8 @@ test('mobile no-JavaScript account navigation follows every available ordinary h
       if (active !== '') await expectOneCurrent(page, active);
 
       if (href !== '/appeals') {
-        const metrics = await page.evaluate(() => {
-          const rail = document.querySelector('.settings-rail');
+        const currentNav = await settingsNav(page);
+        const metrics = await currentNav.evaluate((rail) => {
           const pane = document.querySelector('.settings-pane');
           if (!(rail instanceof HTMLElement) || !(pane instanceof HTMLElement)) throw new Error('Account shell missing');
           const controls = Array.from(rail.querySelectorAll('a, button')).map((control) => Math.round(control.getBoundingClientRect().height));
@@ -585,4 +596,143 @@ test('slice 17 lifecycle scopes a refused deletion to its own form', async ({ pa
   await expect(page.locator('#err-delete-current_password')).toBeVisible();
   await expect(page.locator('#err-deactivate-current_password')).toHaveCount(0);
   await shot(page, 'desktop', 's17-lifecycle-422');
+});
+
+
+test('A5 mobile initial controls stay in view without JavaScript', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'mobile', 'dedicated 390x844 initial viewport');
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+  try {
+    const page = await context.newPage();
+    await login(page);
+    for (const theme of ['light', 'dark']) {
+      for (const [href, label] of [['/settings/security', 'Security'], ['/settings/account', 'Profile'], ['/settings/notifications', 'Notifications']]) {
+        await page.goto(href);
+        await page.locator('html').evaluate((html, value) => html.setAttribute('data-theme', value), theme);
+        const control = page.locator('.settings-pane input:not([type="hidden"]):visible, .settings-pane button:visible, .settings-pane select:visible').first();
+        const box = await control.boundingBox();
+        console.log(label, theme, { firstControlBottom: box!.y + box!.height });
+        expect(box).not.toBeNull();
+        expect(box!.y + box!.height, `${label} first control`).toBeLessThan(844);
+        const chooser = page.locator('[data-settings-mobile-nav]');
+        await expect(chooser.locator('summary')).toHaveText(`Settings: ${label}`);
+        await expect(chooser).not.toHaveAttribute('open', '');
+        await settle(page);
+        fs.mkdirSync(path.join(EVIDENCE_DIR, 'mobile'), { recursive: true });
+        await page.screenshot({ path: path.join(EVIDENCE_DIR, 'mobile', `a5-initial-${label.toLowerCase()}-${theme}.png`), fullPage: false });
+      }
+    }
+  } finally { await context.close(); }
+});
+
+
+test('A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'mobile', 'explicit viewport and script matrix');
+  test.setTimeout(90_000); // Six contexts, two themes and 24 inspected captures.
+  const original = readFeatureMap();
+  try {
+    writeFeatureMap(featureState(original, true));
+    for (const javaScriptEnabled of [false, true]) {
+      for (const width of [390, 320, 640]) {
+        const context = await browser.newContext({ baseURL, javaScriptEnabled, viewport: { width, height: width === 640 ? 500 : 844 }, deviceScaleFactor: width === 640 ? 2 : 1 });
+        try {
+          const page = await context.newPage();
+          await login(page);
+          for (const theme of ['light', 'dark']) {
+            await page.goto('/settings/security');
+            await page.locator('html').evaluate((html, value) => html.setAttribute('data-theme', value), theme);
+            const chooser = page.locator('[data-settings-mobile-nav]');
+            const summary = chooser.locator('summary');
+            await expect(chooser).not.toHaveAttribute('open', '');
+            await summary.focus();
+            await page.keyboard.press('Enter');
+            await expect(chooser).toHaveAttribute('open', '');
+            await page.keyboard.press('Tab');
+            await expect(chooser.getByRole('link', { name: 'Profile', exact: true })).toBeFocused();
+            await summary.focus();
+            await page.keyboard.press('Space');
+            await expect(chooser).not.toHaveAttribute('open', '');
+            await page.keyboard.press('Tab');
+            await expect(page.locator('input[name="current_password"]').first()).toBeFocused();
+            await summary.click();
+            const nav = await settingsNav(page);
+            await expect(nav.locator('a')).toHaveText([...DESTINATION_LABELS]);
+            // A translated/long label must wrap, retaining its touch target.
+            await nav.locator('a').first().evaluate((link) => { link.querySelector('span')!.textContent = 'VeryLongAccountSectionLabelWithoutBreaks'.repeat(3); });
+            await expectNoOverflow(page, `${width} ${theme} js=${javaScriptEnabled}`);
+            await shot(page, 'mobile', `a5-chooser-${width}-${theme}-${javaScriptEnabled ? 'js' : 'nojs'}`);
+            await summary.click();
+            if (!javaScriptEnabled) {
+              const rail = page.getByRole('navigation', { name: 'Boards', exact: true });
+              await rail.focus();
+              await expect(rail).toBeFocused();
+              await rail.locator('a').last().focus();
+              const last = await rail.locator('a').last().boundingBox();
+              const bounds = await rail.boundingBox();
+              expect(last!.y).toBeGreaterThanOrEqual(bounds!.y);
+              expect(last!.y + last!.height).toBeLessThanOrEqual(bounds!.y + bounds!.height);
+            }
+            await page.goto('/settings/sessions');
+            await page.locator('html').evaluate((html, value) => html.setAttribute('data-theme', value), theme);
+            await expect(page.getByText('This device', { exact: true })).toBeVisible();
+            await expectNoOverflow(page, `sessions ${width} ${theme}`);
+            await shot(page, 'mobile', `a5-sessions-${width}-${theme}-${javaScriptEnabled ? 'js' : 'nojs'}`);
+          }
+        } finally { await context.close(); }
+      }
+    }
+  } finally { writeFeatureMap(original); }
+});
+
+
+test('A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript', async ({ browser, baseURL }, info) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: { width: info.project.name === 'mobile' ? 390 : 1280, height: 844 } });
+  let ids: string[] = [];
+  const raw = 'Mozilla/5.0 (Windows NT 10.0) Chrome/149.0 Safari/537.36 <script>alert(1)</script>' + 'x'.repeat(160);
+  try {
+    const page = await context.newPage();
+    await login(page);
+    await page.goto('/settings/sessions');
+    await page.getByRole('button', { name: 'Log out of all other devices', exact: true }).click();
+    const encoded = Buffer.from(JSON.stringify([raw, '', '<img src=x onerror=alert(1)>']), 'utf8').toString('base64');
+    ids = JSON.parse(runPhp(`
+$userId = (int) $db->fetch('SELECT id FROM users WHERE email = ?', ['bob@retro.test'])['id'];
+$ids = [];
+foreach (json_decode(base64_decode('${encoded}'), true) as $agent) {
+    $id = hash('sha256', random_bytes(32));
+    (new \\App\\Repository\\SessionRepository($db))->create(['id' => $id, 'user_id' => $userId, 'csrf_secret' => bin2hex(random_bytes(32)), 'user_agent' => $agent, 'expires_at' => gmdate('Y-m-d H:i:s', time() + 3600)]);
+    $ids[] = $id;
+}
+echo json_encode($ids);
+`));
+    await page.goto('/settings/sessions');
+    const rows = page.locator('.account-ruled-row');
+    const current = rows.filter({ hasText: 'This device' });
+    await expect(current).toHaveCount(1);
+    await expect(current.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0);
+    const chrome = rows.filter({ hasText: 'Chrome on Windows' });
+    await expect(chrome.locator('.account-row-name')).toHaveText('Chrome on Windows');
+    await expect(chrome.locator('details')).not.toHaveAttribute('open', '');
+    await chrome.locator('summary').click();
+    await expect(chrome.locator('details p')).toHaveText(raw);
+    await expect(chrome.locator('details script, details img')).toHaveCount(0);
+    const blank = rows.filter({ hasText: 'No browser details reported.' });
+    await expect(blank.locator('.account-row-name')).toHaveText('Unknown device');
+    const malformed = rows.filter({ hasText: '<img src=x onerror=alert(1)>' });
+    await expect(malformed.locator('.account-row-name')).toHaveText('Unknown device');
+    await malformed.locator('summary').click();
+    await expect(malformed.locator('img')).toHaveCount(0);
+    await expectNoOverflow(page, 'expanded raw session details');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await shot(page, info.project.name === 'mobile' ? 'mobile' : 'desktop', 'a5-session-raw-details');
+    await chrome.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await expect(page.getByText('That device was signed out.', { exact: true })).toBeVisible();
+    await expect(page.locator('.account-row-name').filter({ hasText: 'Chrome on Windows' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Log out of all other devices', exact: true }).click();
+    await expect(page.locator('.account-ruled-row')).toHaveCount(1);
+    await expect(page.getByText('This device', { exact: true })).toBeVisible();
+  } finally {
+    for (const id of ids) runPhp(`$db->run('DELETE FROM sessions WHERE id = ?', ['${id}']);`);
+    await context.close();
+  }
 });

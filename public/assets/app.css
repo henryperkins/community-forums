@@ -2765,6 +2765,40 @@ textarea.textarea-engraved,
         min-height: 44px;
     }
 }
+/* Native account navigation keeps the form within the initial phone viewport. */
+.settings-mobile-nav { display: none; }
+.session-agent-details { margin-top: 6px; color: var(--text-muted); font-size: .86rem; }
+.session-agent-details summary { cursor: pointer; width: fit-content; }
+.session-agent-details p { margin: 8px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 719px) {
+    .settings > .settings-rail-desktop { display: none; }
+    .settings-mobile-nav { display: block; min-width: 0; }
+    .settings-mobile-nav > summary {
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid var(--border-hair);
+        border-radius: var(--radius-md);
+        color: var(--text-strong);
+        font-family: var(--font-label);
+        overflow-wrap: anywhere;
+        cursor: pointer;
+    }
+    .settings-mobile-nav[open] > summary { margin-bottom: 14px; }
+    .settings-rail-link span { overflow-wrap: anywhere; }
+    .session-agent-details summary { min-height: 44px; padding-block: 10px; }
+}
+@media (max-width: 860px) {
+    /* With no drawer script, account pages retain the real board, folder and
+       feed links in a bounded, focusable rail instead of a full-height preface. */
+    html:not(.has-js) [data-account-settings] .board-rail {
+        position: static;
+        max-height: 176px;
+        padding-block: 8px;
+        overflow-y: auto;
+        border-bottom: 1px solid var(--border-hair);
+    }
+    html:not(.has-js) [data-account-settings] .app-shell { align-content: start; }
+}
 .field-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

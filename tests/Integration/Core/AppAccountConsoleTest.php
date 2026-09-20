@@ -145,6 +145,14 @@ final class AppAccountConsoleTest extends TestCase
         yield 'account lifecycle' => ['/settings/account/lifecycle', 'account'];
     }
 
+    public function test_account_destinations_keep_guest_login_redirects(): void
+    {
+        foreach (self::accountRoutes() as [$path]) {
+            $response = $this->get($path);
+            $this->assertRedirectContains($response, '/login?next=');
+        }
+    }
+
     #[DataProvider('accountRoutes')]
     public function test_all_account_routes_render_one_common_head_and_explicit_active_destination(
         string $path,
@@ -159,7 +167,8 @@ final class AppAccountConsoleTest extends TestCase
         self::assertSame(1, substr_count($body, '<span class="eyebrow">Account</span>'));
         self::assertSame(1, substr_count($body, '<h1>Account settings</h1>'));
         self::assertSame(1, substr_count($body, self::INTRO));
-        self::assertSame(1, substr_count($body, 'aria-label="Settings sections"'));
+        self::assertSame(2, substr_count($body, 'aria-label="Settings sections"'));
+        self::assertStringContainsString('data-settings-mobile-nav>', $body);
         if ($path === '/drafts') {
             self::assertStringNotContainsString('<h1>Drafts</h1>', $body);
         }
@@ -433,6 +442,18 @@ final class AppAccountConsoleTest extends TestCase
         );
 
         return $match['nav'];
+    }
+
+    public function test_mobile_chooser_reuses_the_filtered_desktop_navigation_and_is_closed(): void
+    {
+        $this->actingAs($this->makeUser());
+        $this->setFeatureFlags(['drafts' => false, 'oauth' => false, 'account_lifecycle' => false, 'appeals' => false]);
+        $response = $this->get('/settings/security');
+        self::assertSame(1, preg_match('~<details class="settings-mobile-nav" data-settings-mobile-nav>\s*<summary>Settings: Security</summary>\s*<nav[^>]+>(.*?)</nav>~s', $response->body(), $matches));
+        self::assertSame(trim($this->settingsNav($response)), trim($matches[1]));
+        self::assertStringNotContainsString('href="/appeals"', $matches[1]);
+        self::assertStringNotContainsString('href="/drafts"', $matches[1]);
+        self::assertSame(1, substr_count($matches[1], 'aria-current="page"'));
     }
 
     /** @return list<list<string>> */

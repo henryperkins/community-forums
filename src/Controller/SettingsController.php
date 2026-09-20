@@ -172,8 +172,13 @@ final class SettingsController extends Controller
     public function sessions(Request $request): Response
     {
         $user = $this->requireUser();
+        $sessions = $this->container->get(SessionRepository::class)->listActiveForUser($user->id());
+        foreach ($sessions as &$session) {
+            $session['device_label'] = \App\Support\UserAgentLabel::for($session['user_agent']);
+        }
+        unset($session);
         return $this->view('account/sessions', [
-            'sessions' => $this->container->get(SessionRepository::class)->listActiveForUser($user->id()),
+            'sessions' => $sessions,
             'current_id' => $this->session()->currentSessionId(),
             // The design's closing note quotes a fixed "30 days of inactivity"
             // (AccountSettings.dc.html:424). Both halves are wrong here:
