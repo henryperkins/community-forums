@@ -55,9 +55,9 @@ final class NotificationVisibilityService
     }
 
     /** Final delivery gate, after reloading both the recipient and the post. */
-    public function canReadPost(User $viewer, array $post, array $scope): bool
+    public function canReadPost(User $viewer, array $post, array $scope, ?array $actorIds = null): bool
     {
-        if (empty($scope['features']['notifications']) || empty($scope['features']['email'])
+        if ($actorIds === [] || empty($scope['features']['notifications']) || empty($scope['features']['email'])
             || (int) ($post['is_deleted'] ?? 0) !== 0 || (int) ($post['is_pending'] ?? 0) !== 0) {
             return false;
         }
@@ -72,7 +72,15 @@ final class NotificationVisibilityService
         } catch (\App\Core\NotFoundException) {
             return false;
         }
-        return (int) ($thread['is_pending'] ?? 0) === 0
-            && !(new \App\Repository\BlockRepository($this->db))->blockedEitherWay($viewer->id(), (int) $post['user_id']);
+        if ((int) ($thread['is_pending'] ?? 0) !== 0) {
+            return false;
+        }
+        $blocks = new \App\Repository\BlockRepository($this->db);
+        foreach ($actorIds ?? [(int) $post['user_id']] as $actorId) {
+            if ($actorId <= 0 || $blocks->blockedEitherWay($viewer->id(), $actorId)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

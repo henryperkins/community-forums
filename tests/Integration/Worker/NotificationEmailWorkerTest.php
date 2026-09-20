@@ -92,6 +92,109 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(1, $mailer->count());
     }
 
+    public function testSolvedEmailRespectsRecipientBlockingAccepter(): void
+    {
+        $this->checkSolvedBlockDirection(false);
+    }
+
+    public function testSolvedEmailRespectsAccepterBlockingRecipient(): void
+    {
+        $this->checkSolvedBlockDirection(true);
+    }
+
+    private function checkSolvedBlockDirection(bool $reverse, bool $blocked = true, bool $legacy = false, bool $retry = false): void
+    {
+        $actor = $this->makeUser();
+        $recipient = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $actor);
+        $postId = (new \App\Repository\PostRepository($this->db))->create([
+            'thread_id' => $thread['thread_id'], 'user_id' => (int) $recipient['id'],
+            'body' => 'Accepted answer', 'body_html' => '<p>Accepted answer</p>',
+        ]);
+        $notices = new \App\Repository\NotificationRepository($this->db);
+        $deliveries = new \App\Repository\EmailDeliveryRepository($this->db);
+        $suppression = new \App\Repository\EmailSuppressionRepository($this->db);
+        $blocks = new \App\Repository\BlockRepository($this->db);
+        $mailer = new \App\Mail\ArrayMailer();
+        $service = new \App\Service\NotificationService($this->db, $notices,
+            new \App\Repository\SubscriptionRepository($this->db), $deliveries,
+            $suppression, $blocks, $this->users(),
+            new \App\Core\FeatureFlags(new \App\Repository\SettingRepository($this->db)), $mailer);
+        $service->notifySolved((int) $recipient['id'], (int) $actor['id'], $thread['thread_id'], $postId);
+        $payload = json_decode((string) $this->db->fetchValue('SELECT payload FROM email_deliveries WHERE user_id = ?', [$recipient['id']]), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame((int) $actor['id'], $payload['actor_id']);
+        self::assertSame('solved', $payload['event_type']);
+        if ($legacy) {
+            $this->db->run('UPDATE email_deliveries SET payload = NULL WHERE user_id = ?', [$recipient['id']]);
+        }
+        if ($retry) {
+            $mailer->failNext = true;
+            $worker = $this->worker($mailer);
+            self::assertSame(1, $worker->run()['retrying']);
+            $this->db->run('UPDATE email_deliveries SET next_attempt_at = NULL WHERE user_id = ?', [$recipient['id']]);
+        }
+        if ($blocked) {
+            $blocks->block((int) ($reverse ? $actor['id'] : $recipient['id']), (int) ($reverse ? $recipient['id'] : $actor['id']));
+        }
+        $reader = new \App\Service\NotificationReadService($notices, new \App\Service\NotificationVisibilityService($this->db));
+        self::assertSame($blocked ? 0 : 1, $reader->unreadCount($this->userEntity($recipient)));
+        if (!$legacy) {
+            $notices->clear((int) $recipient['id']);
+        }
+        $worker ??= new \App\Worker\NotificationEmailWorker($deliveries, $suppression,
+            new \App\Repository\PostRepository($this->db), $this->users(), $mailer, $this->config);
+        $worker->run();
+        self::assertSame($blocked ? 0 : 1, $mailer->count(), 'Solved event actor governs email as well as the visible notification.');
+    }
+    public function testUnblockedSolvedEventStillSendsAfterHistoryIsCleared(): void
+    {
+        $this->checkSolvedBlockDirection(false, false);
+    }
+
+    public function testLegacySolvedEventResolvesSurvivingActorEvidence(): void
+    {
+        $this->checkSolvedBlockDirection(false, false, true);
+    }
+
+    public function testLegacySolvedEventStillChecksResolvedActorBlock(): void
+    {
+        $this->checkSolvedBlockDirection(false, true, true);
+    }
+
+    public function testSolvedRetryRechecksRecipientBlockAfterTransportFailure(): void
+    {
+        $this->checkSolvedBlockDirection(false, true, false, true);
+    }
+
+    public function testSolvedRetryRechecksAccepterBlockAfterTransportFailure(): void
+    {
+        $this->checkSolvedBlockDirection(true, true, false, true);
+    }
+
+    public function testLegacySolvedRetryRechecksResolvedActorBlock(): void
+    {
+        $this->checkSolvedBlockDirection(false, true, true, true);
+    }
+
+    public function testLegacyEditedPostWithoutEventActorFailsClosed(): void
+    {
+        $d = $this->queuedDelivery();
+        $this->db->run('UPDATE posts SET edited_at = UTC_TIMESTAMP() WHERE id = ?', [$d['post_id']]);
+        $mailer = new ArrayMailer();
+        $this->worker($mailer)->run();
+        self::assertSame(0, $mailer->count());
+    }
+
+    public function testLegacySolvedEmailWithNoActorEvidenceFailsClosed(): void
+    {
+        $d = $this->queuedDelivery();
+        $this->db->run('UPDATE posts SET user_id = ? WHERE id = ?', [$d['user']['id'], $d['post_id']]);
+        $mailer = new ArrayMailer();
+        $this->worker($mailer)->run();
+        self::assertSame(0, $mailer->count(), 'A self-authored target cannot identify the legacy solved-event actor.');
+    }
+
     public function testSendsQueuedThenDoesNotResendOnRerun(): void
     {
         $this->queuedDelivery();

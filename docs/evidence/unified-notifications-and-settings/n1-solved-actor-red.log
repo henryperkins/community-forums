@@ -1,0 +1,33 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/phpunit.xml
+
+FFF                                                                 3 / 3 (100%)
+
+Time: 00:00.144, Memory: 48.00 MB
+
+There were 3 failures:
+
+1) Tests\Integration\Worker\NotificationEmailWorkerTest::testSolvedEmailRespectsRecipientBlockingAccepter
+Blocked solved actor must be suppressed for email as well as the visible notification.
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:132
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:97
+
+2) Tests\Integration\Worker\NotificationEmailWorkerTest::testSolvedEmailRespectsAccepterBlockingRecipient
+Blocked solved actor must be suppressed for email as well as the visible notification.
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:132
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:102
+
+3) Tests\Integration\Worker\NotificationEmailWorkerTest::testLegacySolvedEmailWithNoActorEvidenceFailsClosed
+A self-authored target cannot identify the legacy solved-event actor.
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/unified-notifications-settings/tests/Integration/Worker/NotificationEmailWorkerTest.php:140
+
+FAILURES!
+Tests: 3, Assertions: 5, Failures: 3.

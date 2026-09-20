@@ -99,7 +99,7 @@ final class NotificationService
             if ($emailOn && (int) $s['email_enabled'] === 1 && $s['frequency'] === 'instant') {
                 $email = $contacts[$uid]['email'] ?? null;
                 if ($email !== null) {
-                    $this->enqueueInstant($uid, $email, $postId);
+                    $this->enqueueInstant($uid, $email, $postId, $actorId, $isNewThread ? 'new_thread' : 'reply');
                 }
             }
         }
@@ -154,7 +154,7 @@ final class NotificationService
             ]);
             $notified[$uid] = true;
             if ($emailOn) {
-                $this->enqueueInstant($uid, $u['email'], $postId);
+                $this->enqueueInstant($uid, $u['email'], $postId, $actorId, 'mention');
             }
         }
         return $notified;
@@ -243,12 +243,12 @@ final class NotificationService
         if ($this->flags->enabled('email') && $this->mailer->isConfigured()) {
             $contact = $this->users->contactsForIds([$answerAuthorId])[$answerAuthorId] ?? null;
             if ($contact !== null && ($contact['email'] ?? '') !== '') {
-                $this->enqueueInstant($answerAuthorId, (string) $contact['email'], $postId);
+                $this->enqueueInstant($answerAuthorId, (string) $contact['email'], $postId, $actorId, 'solved');
             }
         }
     }
 
-    private function enqueueInstant(int $userId, string $email, int $postId): void
+    private function enqueueInstant(int $userId, string $email, int $postId, int $actorId, string $eventType): void
     {
         if ($this->emailPrefs?->pauseAllEmail($userId) === true) {
             return;
@@ -257,7 +257,10 @@ final class NotificationService
             return;
         }
         // idempotency_key = post:user — at most one instant email per (post, recipient).
-        $this->deliveries->enqueue($userId, $email, 'instant', null, $postId . ':' . $userId);
+        $this->deliveries->enqueue($userId, $email, 'instant', null, $postId . ':' . $userId, [
+            'version' => 1, 'type' => 'instant', 'event_type' => $eventType,
+            'actor_id' => $actorId, 'post_id' => $postId,
+        ]);
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
+use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Service\EmailPreferenceService;
@@ -130,7 +131,9 @@ final class NotificationEmailWorker
         // Re-apply the read gate for the recipient at send time.
         $recipientId = (int) ($row['user_id'] ?? 0);
         $recipient = $this->users->findEntity($recipientId);
-        if ($recipient === null || !$this->visibility->canReadPost($recipient, $post, $this->visibility->scope($recipient, true))) {
+        $actors = $this->instantActors($row, $post);
+        if ($recipient === null || $actors === []
+            || !$this->visibility->canReadPost($recipient, $post, $this->visibility->scope($recipient, true), $actors)) {
             return null;
         }
 
@@ -146,6 +149,36 @@ final class NotificationEmailWorker
             . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
         return ['subject' => $subject, 'text' => $text, 'html' => $html];
+    }
+
+    /**
+     * Event provenance survives notification clearing. Legacy self-authored or edited
+     * targets cannot safely identify an actor without a surviving event row.
+     * @return list<int>
+     */
+    private function instantActors(array $row, array $post): array
+    {
+        if (($row['payload'] ?? null) !== null) {
+            $payload = json_decode((string) $row['payload'], true);
+            if (!is_array($payload) || ($payload['version'] ?? null) !== 1
+                || ($payload['type'] ?? null) !== 'instant'
+                || !in_array($payload['event_type'] ?? null, ['reply', 'new_thread', 'mention', 'solved'], true)
+                || !is_int($payload['actor_id'] ?? null) || $payload['actor_id'] <= 0
+                || ($payload['post_id'] ?? null) !== (int) $post['id']) {
+                return [];
+            }
+            return [$payload['actor_id']];
+        }
+        $actors = (new NotificationRepository($this->posts->database()))->legacyInstantActors((int) $row['user_id'], (int) $post['id']);
+        if ($actors !== []) {
+            $ids = array_map(static fn (array $actor): int => (int) ($actor['actor_id'] ?? 0), $actors);
+            return in_array(0, $ids, true) ? [] : $ids;
+        }
+        // Ordinary initial-post mail can be recovered from an unchanged post. A
+        // solved event targets its own author; an edit mention may have another actor.
+        $authorId = (int) $post['user_id'];
+        return $authorId !== (int) $row['user_id'] && $authorId > 0 && ($post['edited_at'] ?? null) === null
+            ? [$authorId] : [];
     }
 
     /**

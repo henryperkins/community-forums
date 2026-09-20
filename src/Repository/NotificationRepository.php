@@ -196,6 +196,16 @@ final class NotificationRepository
         return $rows;
     }
 
+    /** Legacy jobs have no event payload; all surviving candidate actors must pass. */
+    public function legacyInstantActors(int $userId, int $postId): array
+    {
+        return $this->db->fetchAll(
+            "SELECT DISTINCT actor_id FROM notifications
+             WHERE user_id = ? AND post_id = ? AND type IN ('reply', 'new_post', 'new_thread', 'mention', 'solved')",
+            [$userId, $postId],
+        );
+    }
+
     public function markRead(int $userId, int $id): void
     {
         $this->db->run(
