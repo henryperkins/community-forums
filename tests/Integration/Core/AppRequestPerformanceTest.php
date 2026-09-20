@@ -39,7 +39,7 @@ final class AppRequestPerformanceTest extends TestCase
         // Guest home still reads settings, categories, boards, directory topic
         // signals, theme state and public presence. The thread also loads its
         // enabled workflow/intelligence/poll surfaces, even for a guest.
-        foreach (['guest' => [6, 27], 'member' => [20, 60]] as $viewerType => [$homeBudget, $threadBudget]) {
+        foreach (['guest' => [6, 26], 'member' => [18, 51]] as $viewerType => [$homeBudget, $threadBudget]) {
             if ($viewerType === 'member') {
                 $this->actingAs($viewer);
             }
@@ -58,7 +58,7 @@ final class AppRequestPerformanceTest extends TestCase
         $this->users()->updateLastSeen((int) $viewer['id']);
         $this->actingAs($viewer);
 
-        foreach (['/presence' => 6, '/notifications/bell' => 12] as $path => $budget) {
+        foreach (['/presence' => 6, '/notifications/bell' => 9] as $path => $budget) {
             $response = $this->measured($path);
             self::assertSame(200, $response->status());
             self::assertSame('application/json; charset=UTF-8', $response->getHeader('Content-Type'));
@@ -72,6 +72,43 @@ final class AppRequestPerformanceTest extends TestCase
         self::assertSame(200, $preview->status());
         self::assertStringContainsString('<strong>Preview</strong>', $preview->body());
         self::assertLessThanOrEqual(6, $this->db->metrics()['queries']);
+    }
+
+    public function test_unread_context_links_do_not_add_queries_per_item(): void
+    {
+        $this->install();
+        $author = $this->makeUser();
+        $viewer = $this->makeUser();
+        $this->users()->updateLastSeen((int) $viewer['id']);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author);
+        $threadId = (int) $thread['thread_id'];
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$threadId]);
+        $replies = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $replies[] = $this->posting()->reply($this->userEntity($author), $threadId, ['body' => 'Unread context item ' . $i]);
+        }
+        $this->actingAs($viewer);
+        $counts = [];
+        foreach ([$replies[4] => [$replies[5]], $opId => $replies] as $cursor => $expectedItems) {
+            $this->db->run(
+                'INSERT INTO thread_user (user_id, thread_id, last_read_post_id) VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE last_read_post_id = VALUES(last_read_post_id)',
+                [$viewer['id'], $threadId, $cursor],
+            );
+            $response = $this->measured('/t/' . $threadId . '-' . $thread['slug']);
+            $counts[] = $this->db->metrics()['queries'];
+            self::assertSame(200, $response->status());
+            foreach ($expectedItems as $postId) {
+                self::assertStringContainsString('href="#p' . $postId . '"', $response->body());
+            }
+            self::assertSame((int) $replies[5], (int) $this->db->fetchValue(
+                'SELECT last_read_post_id FROM thread_user WHERE user_id = ? AND thread_id = ?',
+                [$viewer['id'], $threadId],
+            ));
+        }
+        self::assertSame($counts[0], $counts[1], 'One and six unread items must use the same number of database exchanges.');
+        self::assertLessThanOrEqual(53, $counts[1]);
     }
 
     public function test_cookie_free_guest_reads_and_guest_forms_keep_csrf_protection(): void

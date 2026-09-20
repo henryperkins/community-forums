@@ -49,7 +49,7 @@ final class BoardModeratorRepository
         return $this->db->remember(__METHOD__ . ':' . $userId, function () use ($userId): array {
             $rows = $this->db->fetchAll('SELECT board_id FROM board_moderators WHERE user_id = ?', [$userId]);
             return array_map(static fn (array $r): int => (int) $r['board_id'], $rows);
-        });
+        }, ['board_moderators']);
     }
 
     /** @return array<int,array<string,mixed>> moderators of a board with handles */

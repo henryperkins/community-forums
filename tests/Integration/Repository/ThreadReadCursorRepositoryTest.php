@@ -8,10 +8,59 @@ use App\Repository\PostRepository;
 use App\Repository\ThreadUserRepository;
 use App\Service\RepairService;
 use App\Service\SinceLastReadContextService;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\TestCase;
 
 final class ThreadReadCursorRepositoryTest extends TestCase
 {
+    #[DataProvider('prepareModes')]
+    public function test_batch_post_pages_keep_time_order_ties_and_viewer_visibility(bool $emulated): void
+    {
+        $fixture = $this->seedSkewedReadOrder('batch');
+        $repo = new PostRepository($this->db);
+        $threadId = (int) $fixture['target']['thread_id'];
+        $extra = [];
+        foreach (['deleted' => '09:30', 'pending' => '10:30', 'tied' => '10:00'] as $kind => $time) {
+            $extra[$kind] = $repo->create([
+                'thread_id' => $threadId, 'user_id' => (int) $fixture['viewer']['id'],
+                'body' => $kind, 'body_html' => '<p>' . $kind . '</p>',
+            ]);
+            $this->db->run('UPDATE posts SET created_at = ?, is_deleted = ?, is_pending = ? WHERE id = ?', [
+                '2026-08-27 ' . $time . ':00', $kind === 'deleted' ? 1 : 0, $kind === 'pending' ? 1 : 0, $extra[$kind],
+            ]);
+        }
+        $ids = [$fixture['moved'], $fixture['cursor'], $extra['deleted'], $extra['pending'], $fixture['source_op'], 0, $extra['tied'], $fixture['moved']];
+        $originalMode = $this->pdo->getAttribute(\PDO::ATTR_EMULATE_PREPARES);
+        $this->pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emulated);
+        try {
+            foreach ([false, true] as $staff) {
+                $this->db->resetMetrics();
+                self::assertSame([
+                    $fixture['moved'] => $staff ? 3 : 2,
+                    $fixture['cursor'] => $staff ? 2 : 1,
+                    $extra['deleted'] => 1,
+                    $extra['pending'] => 1,
+                    $fixture['source_op'] => 1,
+                    0 => 1,
+                    $extra['tied'] => 2,
+                ], $repo->pagesOfPosts($threadId, $ids, 2, $staff));
+                self::assertSame(1, $this->db->metrics()['queries']);
+            }
+            $this->db->resetMetrics();
+            self::assertSame([], $repo->pagesOfPosts($threadId, [], 2));
+            self::assertSame(0, $this->db->metrics()['queries']);
+            self::assertSame(4, $repo->pageOfPost($threadId, $fixture['moved'], 0));
+            self::assertSame(1, $this->db->metrics()['queries']);
+        } finally {
+            $this->pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $originalMode);
+        }
+    }
+
+    public static function prepareModes(): array
+    {
+        return ['emulated' => [true], 'native' => [false]];
+    }
+
     /**
      * Build a target topic whose chronologically newest post has a numerically
      * smaller id than the stored cursor. This is the shape produced when an

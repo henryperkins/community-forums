@@ -1,0 +1,1 @@
+Rollback verified: no fixture users remain; no open transaction.

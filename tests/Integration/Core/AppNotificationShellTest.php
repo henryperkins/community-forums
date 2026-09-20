@@ -19,10 +19,10 @@ final class NotificationShellStatement extends \PDOStatement
     {
         self::$queries[] = $this->queryString;
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        foreach ($trace as $index => $frame) {
-            // Attribute the scope's own reads, excluding independent authority checks.
-            if (($frame['class'] ?? '') === \App\Service\NotificationVisibilityService::class
-                && ($trace[$index - 1]['class'] ?? '') === \App\Core\Database::class) {
+        foreach ($trace as $frame) {
+            // Include reads delegated to repositories while resolving scope,
+            // excluding independent authority checks elsewhere in the request.
+            if (($frame['class'] ?? '') === \App\Service\NotificationVisibilityService::class) {
                 self::$scopeQueries[] = $this->queryString;
                 break;
             }

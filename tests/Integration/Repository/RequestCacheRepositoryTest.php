@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Repository;
 
+use App\Core\FeatureFlags;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
@@ -11,12 +12,90 @@ use App\Repository\RoleCapabilityRepository;
 use App\Repository\RoleRepository;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadIntelligenceJobRepository;
+use App\Repository\ThreadUserRepository;
 use App\Repository\UserPreferenceRepository;
+use App\Service\NotificationVisibilityService;
+use App\Service\SinceLastReadContextService;
 use DateTimeImmutable;
 use Tests\Support\TestCase;
 
 final class RequestCacheRepositoryTest extends TestCase
 {
+    public function test_cursor_and_context_writes_keep_unrelated_metadata_without_hiding_the_new_cursor(): void
+    {
+        $user = $this->makeUser();
+        $userId = (int) $user['id'];
+        $board = $this->makeBoard($this->makeCategory());
+        $boardId = (int) $board['id'];
+        $thread = $this->makeThread($board, $user);
+        $threadId = (int) $thread['thread_id'];
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$threadId]);
+        (new BoardMemberRepository($this->db))->add($boardId, $userId, null);
+        (new BoardModeratorRepository($this->db))->assign($boardId, $userId);
+        (new SettingRepository($this->db))->set('site_name', 'Cached community');
+        (new UserPreferenceRepository($this->db))->merge($userId, ['theme' => 'dark']);
+        $metadata = fn (): array => [
+            (new SettingRepository($this->db))->getString('site_name'),
+            (new UserPreferenceRepository($this->db))->get($userId),
+            (new BoardMemberRepository($this->db))->boardIdsFor($userId),
+            (new BoardModeratorRepository($this->db))->boardsFor($userId),
+            (new RoleCapabilityRepository($this->db))->roleKeysHolding('core.post.create'),
+        ];
+        $state = new ThreadUserRepository($this->db);
+        $cursor = fn () => $this->db->remember('test.cursor', fn () => $state->find($userId, $threadId), ['thread_user']);
+        $this->db->beginRequestCache();
+        $expected = $metadata();
+        self::assertSame('Cached community', $expected[0]);
+        self::assertSame(['theme' => 'dark'], $expected[1]);
+        self::assertSame([$boardId], $expected[2]);
+        self::assertSame([$boardId], $expected[3]);
+        self::assertContains('system.user', $expected[4]);
+        self::assertNull($cursor());
+
+        $state->markRead($userId, $threadId, $opId);
+        self::assertSame($opId, (int) $cursor()['last_read_post_id']);
+        $this->db->resetMetrics();
+        self::assertSame($expected, $metadata());
+        self::assertSame(0, $this->db->metrics()['queries'], 'Cursor persistence must not reload settings or permissions.');
+
+        $replyId = $this->posting()->reply($this->userEntity($user), $threadId, ['body' => 'An unread reply.']);
+        $metadata();
+        $context = (new SinceLastReadContextService($this->db))->forThread($userId, $threadId);
+        self::assertSame([$replyId], array_column($context['items'], 'post_id'));
+        $this->db->resetMetrics();
+        self::assertSame($expected, $metadata());
+        self::assertSame(0, $this->db->metrics()['queries'], 'Context persistence must not reload settings or permissions.');
+    }
+
+    public function test_notification_scope_reuses_membership_and_assignment_reads_but_fresh_scope_observes_revocation(): void
+    {
+        $user = $this->makeUser();
+        $viewer = $this->userEntity($user);
+        $boardId = (int) $this->makeBoard($this->makeCategory())['id'];
+        (new BoardMemberRepository($this->db))->add($boardId, $viewer->id(), null);
+        (new BoardModeratorRepository($this->db))->assign($boardId, $viewer->id());
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        $visibility = new NotificationVisibilityService($this->db, $flags);
+        $this->db->beginRequestCache();
+        $flags->all();
+        (new BoardMemberRepository($this->db))->boardIdsFor($viewer->id());
+        (new BoardModeratorRepository($this->db))->boardsFor($viewer->id());
+        $this->db->resetMetrics();
+
+        $scope = $visibility->scope($viewer);
+        self::assertSame([$boardId], $scope['member_board_ids']);
+        self::assertSame([$boardId], $scope['assigned_board_ids']);
+        self::assertSame(0, $this->db->metrics()['queries']);
+
+        // Raw writes model an external revocation that an explicit fresh read
+        // must observe even while the old request snapshot is populated.
+        $this->pdo->exec('DELETE FROM board_members WHERE user_id = ' . $viewer->id());
+        $this->pdo->exec('DELETE FROM board_moderators WHERE user_id = ' . $viewer->id());
+        $fresh = $visibility->scope($viewer, fresh: true);
+        self::assertSame([], $fresh['member_board_ids']);
+        self::assertSame([], $fresh['assigned_board_ids']);
+    }
+
     public function test_settings_bulk_single_and_has_share_one_snapshot_with_per_call_defaults(): void
     {
         $writer = new SettingRepository($this->db);

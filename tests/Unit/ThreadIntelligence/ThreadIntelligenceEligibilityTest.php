@@ -21,6 +21,27 @@ use Tests\Support\TestCase;
  */
 final class ThreadIntelligenceEligibilityTest extends TestCase
 {
+    public function test_empty_brief_progress_reuses_the_eligibility_count_and_refreshes_after_post_changes(): void
+    {
+        $seed = $this->seedThread(1);
+        $service = $this->eligibility()['service'];
+        $this->db->beginRequestCache();
+        self::assertSame('initial_post_threshold', $service->forExplicitRefresh($seed['thread_id'], $this->now())->code);
+        $this->db->resetMetrics();
+        self::assertSame(['eligible' => 1, 'threshold' => 8], $service->initialPostProgress($seed['thread_id']));
+        self::assertSame(0, $this->db->metrics()['queries'], 'The empty-state count was already read for eligibility.');
+
+        $postId = $this->insertPost($seed['thread_id'], $seed['author_id'], '2026-07-10 10:00:00');
+        self::assertSame(['eligible' => 2, 'threshold' => 8], $service->initialPostProgress($seed['thread_id']));
+        $this->db->run('UPDATE posts SET is_pending = 1 WHERE id = ?', [$postId]);
+        self::assertSame(['eligible' => 1, 'threshold' => 8], $service->initialPostProgress($seed['thread_id']));
+        $this->db->endRequestCache();
+        $this->db->resetMetrics();
+        $service->initialPostProgress($seed['thread_id']);
+        $service->initialPostProgress($seed['thread_id']);
+        self::assertSame(2, $this->db->metrics()['queries'], 'CLI consumers must continue reading current persisted counts.');
+    }
+
     private function now(string $time = '2026-07-10 12:00:00', string $timezone = 'UTC'): DateTimeImmutable
     {
         return new DateTimeImmutable($time, new DateTimeZone($timezone));

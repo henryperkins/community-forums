@@ -247,13 +247,14 @@ final class ThreadController extends Controller
 
         if ($sinceLastReadContext !== null) {
             $threadUrl = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug'];
+            $contextPages = $postRepo->pagesOfPosts(
+                (int) $thread['id'],
+                array_column($sinceLastReadContext['items'], 'post_id'),
+                $perPage,
+                $includeDeleted,
+            );
             foreach ($sinceLastReadContext['items'] as &$item) {
-                $targetPage = $postRepo->pageOfPost(
-                    (int) $thread['id'],
-                    (int) $item['post_id'],
-                    $perPage,
-                    $includeDeleted,
-                );
+                $targetPage = $contextPages[(int) $item['post_id']];
                 if ($targetPage === $page) {
                     $item['url'] = '#p' . (int) $item['post_id'];
                     continue;

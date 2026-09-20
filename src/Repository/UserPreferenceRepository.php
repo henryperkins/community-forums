@@ -28,7 +28,7 @@ final class UserPreferenceRepository
             }
             $decoded = json_decode((string) $raw, true);
             return is_array($decoded) ? $decoded : [];
-        });
+        }, ['user_preferences']);
     }
 
     /**

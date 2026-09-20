@@ -85,6 +85,6 @@ final class SettingRepository
             $this->db->fetchAll('SELECT `key`, `value` FROM settings'),
             null,
             'key',
-        ));
+        ), ['settings']);
     }
 }

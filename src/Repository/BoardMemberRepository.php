@@ -50,7 +50,7 @@ final class BoardMemberRepository
         return $this->db->remember(__METHOD__ . ':' . $userId, function () use ($userId): array {
             $rows = $this->db->fetchAll('SELECT board_id FROM board_members WHERE user_id = ?', [$userId]);
             return array_map(static fn (array $r): int => (int) $r['board_id'], $rows);
-        });
+        }, ['board_members']);
     }
 
     /** @return array<int,array<string,mixed>> members of a board with handles */

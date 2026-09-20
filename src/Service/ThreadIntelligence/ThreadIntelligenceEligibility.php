@@ -220,17 +220,19 @@ final class ThreadIntelligenceEligibility
     /** @return array{total:int,after_checkpoint:int} */
     private function eligiblePostCounts(int $threadId, ?int $checkpoint): array
     {
-        $row = $this->db->fetch(
-            'SELECT COUNT(*) AS total,
-                    SUM(CASE WHEN id > :checkpoint THEN 1 ELSE 0 END) AS after_checkpoint
-             FROM posts
-             WHERE thread_id = :thread_id AND is_deleted = 0 AND is_pending = 0',
-            ['checkpoint' => $checkpoint ?? 0, 'thread_id' => $threadId],
-        );
-        return [
-            'total' => (int) ($row['total'] ?? 0),
-            'after_checkpoint' => (int) ($row['after_checkpoint'] ?? 0),
-        ];
+        return $this->db->remember(__METHOD__ . ':' . $threadId . ':' . ($checkpoint ?? 0), function () use ($threadId, $checkpoint): array {
+            $row = $this->db->fetch(
+                'SELECT COUNT(*) AS total,
+                        SUM(CASE WHEN id > :checkpoint THEN 1 ELSE 0 END) AS after_checkpoint
+                 FROM posts
+                 WHERE thread_id = :thread_id AND is_deleted = 0 AND is_pending = 0',
+                ['checkpoint' => $checkpoint ?? 0, 'thread_id' => $threadId],
+            );
+            return [
+                'total' => (int) ($row['total'] ?? 0),
+                'after_checkpoint' => (int) ($row['after_checkpoint'] ?? 0),
+            ];
+        }, ['posts']);
     }
 
     private function positiveIntOrNull(mixed $value): ?int

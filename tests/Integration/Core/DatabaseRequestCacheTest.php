@@ -12,6 +12,123 @@ use RuntimeException;
 
 final class DatabaseRequestCacheTest extends TestCase
 {
+    public function test_table_scoped_writes_preserve_unrelated_reads_and_invalidate_unknown_dependencies(): void
+    {
+        $db = $this->databaseWithCursor();
+        $db->beginRequestCache();
+        self::assertSame('original', $this->metadata($db));
+        self::assertSame(0, $this->cursor($db));
+        $unknown = fn () => $db->remember('unknown', fn () => (int) $db->fetchValue('SELECT position FROM request_cache_cursors'));
+        self::assertSame(0, $unknown());
+
+        $db->run('UPDATE request_cache_cursors SET position = 7', [], ['request_cache_cursors']);
+        $db->resetMetrics();
+        self::assertSame('original', $this->metadata($db));
+        self::assertSame(0, $db->metrics()['queries'], 'An unrelated write must retain the metadata read.');
+        self::assertSame(7, $this->cursor($db));
+        self::assertSame(7, $unknown());
+        self::assertSame(2, $db->metrics()['queries'], 'Affected and unclassified reads must be fetched again.');
+
+        $db->run('UPDATE request_cache_values SET value = ?', ['new metadata']);
+        self::assertSame('new metadata', $this->metadata($db), 'Unclassified writes still invalidate every snapshot.');
+    }
+
+    #[DataProvider('transactionOutcomes')]
+    public function test_scoped_transaction_commit_and_rollback_keep_only_unrelated_snapshots(bool $rollback): void
+    {
+        $db = $this->databaseWithCursor();
+        $db->beginRequestCache();
+        self::assertSame('original', $this->metadata($db));
+        self::assertSame(0, $this->cursor($db));
+        // A scoped transaction must discard a pre-transaction cursor snapshot.
+        $db->pdo()->exec('UPDATE request_cache_cursors SET position = 3');
+        try {
+            $db->transaction(function () use ($db, $rollback): void {
+                self::assertSame(3, $this->cursor($db));
+                $db->run('UPDATE request_cache_cursors SET position = 7', [], ['request_cache_cursors']);
+                self::assertSame(7, $this->cursor($db));
+                if ($rollback) {
+                    throw new RuntimeException('rollback');
+                }
+            }, ['request_cache_cursors']);
+            self::assertFalse($rollback);
+        } catch (RuntimeException $e) {
+            self::assertTrue($rollback);
+            self::assertSame('rollback', $e->getMessage());
+        }
+        self::assertSame($rollback ? 3 : 7, $this->cursor($db));
+        $db->resetMetrics();
+        self::assertSame('original', $this->metadata($db));
+        self::assertSame(0, $db->metrics()['queries']);
+    }
+
+    public static function transactionOutcomes(): array
+    {
+        return ['commit' => [false], 'rollback' => [true]];
+    }
+
+    #[DataProvider('transactionOutcomes')]
+    public function test_unclassified_nested_writes_cannot_be_undone_by_a_scoped_transaction_cache(bool $rollback): void
+    {
+        $db = $this->databaseWithCursor();
+        $db->beginRequestCache();
+        self::assertSame('original', $this->metadata($db));
+        try {
+            $db->transaction(function () use ($db, $rollback): void {
+                $db->transaction(function () use ($db): void {
+                    $db->run('UPDATE request_cache_values SET value = ?', ['changed inside']);
+                });
+                self::assertSame('changed inside', $this->metadata($db));
+                if ($rollback) {
+                    throw new RuntimeException('rollback');
+                }
+            }, ['request_cache_cursors']);
+            self::assertFalse($rollback);
+        } catch (RuntimeException $e) {
+            self::assertTrue($rollback);
+            self::assertSame('rollback', $e->getMessage());
+        }
+        self::assertSame($rollback ? 'original' : 'changed inside', $this->metadata($db));
+    }
+
+    public function test_nested_scopes_accumulate_so_outer_rollback_discards_inner_snapshots(): void
+    {
+        $db = $this->databaseWithCursor();
+        $db->beginRequestCache();
+        self::assertSame('original', $this->metadata($db));
+        try {
+            $db->transaction(function () use ($db): void {
+                $db->transaction(function () use ($db): void {
+                    $db->run('UPDATE request_cache_values SET value = ?', ['changed inside'], ['request_cache_values']);
+                }, ['request_cache_values']);
+                self::assertSame('changed inside', $this->metadata($db));
+                throw new RuntimeException('rollback');
+            }, ['request_cache_cursors']);
+            self::fail('The outer transaction must roll back.');
+        } catch (RuntimeException $e) {
+            self::assertSame('rollback', $e->getMessage());
+        }
+        self::assertSame('original', $this->metadata($db));
+    }
+
+    private function databaseWithCursor(): Database
+    {
+        $db = $this->database();
+        $db->run('CREATE TEMPORARY TABLE request_cache_cursors (position INT) ENGINE=InnoDB');
+        $db->run('INSERT INTO request_cache_cursors VALUES (0)');
+        return $db;
+    }
+
+    private function metadata(Database $db): mixed
+    {
+        return $db->remember('metadata', fn () => $db->fetchValue('SELECT value FROM request_cache_values WHERE id = 1'), ['request_cache_values']);
+    }
+
+    private function cursor(Database $db): int
+    {
+        return $db->remember('cursor', fn () => (int) $db->fetchValue('SELECT position FROM request_cache_cursors'), ['request_cache_cursors']);
+    }
+
     public function test_memoization_is_enabled_only_between_request_boundaries(): void
     {
         $db = new Database([]);

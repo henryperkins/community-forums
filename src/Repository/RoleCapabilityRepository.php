@@ -31,7 +31,7 @@ final class RoleCapabilityRepository
                     $map[(string) $row['capability_key']][] = (string) $row['role_key'];
                 }
                 return $map;
-            });
+            }, ['role_capabilities', 'roles', 'capabilities']);
             return $map[$capabilityKey] ?? [];
         }
 

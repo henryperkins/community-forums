@@ -17,7 +17,7 @@ final class BoardRepository
     {
         return $this->db->remember(__METHOD__, fn (): array => $this->db->fetchAll(
             'SELECT * FROM boards ORDER BY category_id ASC, position ASC, id ASC',
-        ));
+        ), ['boards']);
     }
 
     /** @return array<int,array<string,mixed>> */

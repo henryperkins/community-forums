@@ -60,6 +60,7 @@ final class ThreadUserRepository
                  VALUES (:uid, :tid, :pid, 0)
                  ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)',
                 ['uid' => $userId, 'tid' => $threadId, 'pid' => $postId],
+                ['thread_user'],
             );
             $current = $this->db->fetch(
                 'SELECT tu.last_read_post_id, current_post.id AS current_id,
@@ -87,9 +88,10 @@ final class ThreadUserRepository
                 $this->db->run(
                     'UPDATE thread_user SET last_read_post_id = ? WHERE user_id = ? AND thread_id = ?',
                     [$candidateId, $userId, $threadId],
+                    ['thread_user'],
                 );
             }
-        });
+        }, ['thread_user']);
     }
 
     /**

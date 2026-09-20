@@ -1,0 +1,33 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/ubuntu/community-forums/phpunit.xml
+
+....FF...............                                             21 / 21 (100%)
+
+Time: 00:00.100, Memory: 14.00 MB
+
+There were 2 failures:
+
+1) Tests\Integration\Core\DatabaseRequestCacheTest::test_unclassified_nested_writes_cannot_be_undone_by_a_scoped_transaction_cache with data set "rollback" (true)
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'original'
++'changed inside'
+
+/home/ubuntu/community-forums/tests/Integration/Core/DatabaseRequestCacheTest.php:91
+
+2) Tests\Integration\Core\DatabaseRequestCacheTest::test_nested_scopes_accumulate_so_outer_rollback_discards_inner_snapshots
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'original'
++'changed inside'
+
+/home/ubuntu/community-forums/tests/Integration/Core/DatabaseRequestCacheTest.php:111
+
+FAILURES!
+Tests: 21, Assertions: 121, Failures: 2.

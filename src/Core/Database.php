@@ -22,6 +22,10 @@ final class Database
     private bool $requestCacheActive = false;
     /** @var array<string,mixed> Only explicitly selected repository reads. */
     private array $requestCache = [];
+    /** @var array<string,list<string>> Missing dependencies invalidate on every write. */
+    private array $requestCacheTables = [];
+    /** @var list<list<string>|null> Union of invalidations within each transaction. */
+    private array $transactionCacheTables = [];
 
     /** @param array<string,mixed> $config db config block */
     public function __construct(private array $config)
@@ -166,9 +170,34 @@ final class Database
         return $this->requestCacheActive;
     }
 
-    public function clearRequestCache(): void
+    /**
+     * Invalidate all reads by default. A bounded write may name every table it
+     * affects (including indirect effects); unclassified reads still expire.
+     *
+     * @param list<string>|null $writtenTables
+     */
+    public function clearRequestCache(?array $writtenTables = null): void
     {
+        // A nested operation may affect more than its enclosing declaration.
+        // Carry that union through commit/rollback, including reads repopulated
+        // after the inner write. An unknown mutation makes the whole scope unknown.
+        foreach ($this->transactionCacheTables as &$tables) {
+            $tables = $tables === null || $writtenTables === null || $writtenTables === []
+                ? null
+                : array_values(array_unique([...$tables, ...$writtenTables]));
+        }
+        unset($tables);
+        if ($writtenTables !== null && $writtenTables !== []) {
+            foreach ($this->requestCache as $key => $_) {
+                $dependencies = $this->requestCacheTables[$key] ?? [];
+                if ($dependencies === [] || array_intersect($dependencies, $writtenTables) !== []) {
+                    unset($this->requestCache[$key], $this->requestCacheTables[$key]);
+                }
+            }
+            return;
+        }
         $this->requestCache = [];
+        $this->requestCacheTables = [];
     }
 
     /**
@@ -178,15 +207,17 @@ final class Database
      *
      * @template T
      * @param callable():T $loader
+     * @param list<string> $tables Every table contributing to the cached value.
      * @return T
      */
-    public function remember(string $key, callable $loader): mixed
+    public function remember(string $key, callable $loader, array $tables = []): mixed
     {
         if (!$this->requestCacheActive) {
             return $loader();
         }
         if (!array_key_exists($key, $this->requestCache)) {
             $this->requestCache[$key] = $loader();
+            $this->requestCacheTables[$key] = $tables;
         }
         return $this->requestCache[$key];
     }
@@ -195,12 +226,13 @@ final class Database
      * Run a query with bound params and return the statement.
      *
      * @param array<string,mixed>|list<mixed> $params
+     * @param list<string>|null $writtenTables Null/empty keeps full invalidation.
      */
-    public function run(string $sql, array $params = []): \PDOStatement
+    public function run(string $sql, array $params = [], ?array $writtenTables = null): \PDOStatement
     {
         // Unknown statements and failed writes invalidate conservatively too.
         if (!$this->isReadOnlyStatement($sql)) {
-            $this->clearRequestCache();
+            $this->clearRequestCache($writtenTables);
         }
         $pdo = $this->pdo();
         $startedAt = hrtime(true);
@@ -296,11 +328,15 @@ final class Database
      *
      * @template T
      * @param callable():T $callback
+     * @param list<string>|null $writtenTables All tables the callback may mutate.
+     *   Scoped writes inside must also declare their tables; unknown writes and
+     *   nested transactions still invalidate everything, never restore old reads.
      * @return T
      */
-    public function transaction(callable $callback): mixed
+    public function transaction(callable $callback, ?array $writtenTables = null): mixed
     {
-        $this->clearRequestCache();
+        $this->clearRequestCache($writtenTables);
+        $this->transactionCacheTables[] = $writtenTables ?: null;
         try {
             $pdo = $this->pdo();
             if ($pdo->inTransaction()) {
@@ -319,7 +355,7 @@ final class Database
                 throw $e;
             }
         } finally {
-            $this->clearRequestCache();
+            $this->clearRequestCache(array_pop($this->transactionCacheTables));
         }
     }
 

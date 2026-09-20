@@ -32,7 +32,7 @@ final class ThreadIntelligenceJobRepository
         return $this->db->remember(__METHOD__ . ':' . $threadId, fn (): ?array => $this->db->fetch(
             'SELECT * FROM thread_intelligence_jobs WHERE thread_id = ?',
             [$threadId],
-        ));
+        ), ['thread_intelligence_jobs']);
     }
 
     /** @return array<string,mixed>|null */

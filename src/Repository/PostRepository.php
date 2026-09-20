@@ -209,25 +209,44 @@ final class PostRepository
      */
     public function pageOfPost(int $threadId, int $postId, int $perPage, bool $includeDeleted = false): int
     {
-        $perPage = max(1, $perPage);
-        $deletedClause = $includeDeleted ? '' : ' AND is_deleted = 0';
-        $target = $this->db->fetch(
-            'SELECT created_at, id FROM posts WHERE id = ? AND thread_id = ?' . $deletedClause . ' AND is_pending = 0',
-            [$postId, $threadId],
-        );
-        if ($target === null) {
-            return 1;
+        return $this->pagesOfPosts($threadId, [$postId], $perPage, $includeDeleted)[$postId];
+    }
+
+    /**
+     * Resolve a bounded set of post links in one exchange, using the same
+     * chronological stream and missing/hidden fallback as pageOfPost().
+     *
+     * @param list<int> $postIds
+     * @return array<int,int> post id => 1-based page
+     */
+    public function pagesOfPosts(int $threadId, array $postIds, int $perPage, bool $includeDeleted = false): array
+    {
+        $postIds = array_values(array_unique(array_map('intval', $postIds)));
+        if ($postIds === []) {
+            return [];
         }
-        // Rank = count of visible posts up to and including the target in render
-        // order; its page is ceil(rank / perPage). Native prepares (emulation off)
-        // forbid reusing a named placeholder, so created_at is bound twice.
-        $rank = (int) $this->db->fetchValue(
-            'SELECT COUNT(*) FROM posts
-             WHERE thread_id = :tid' . $deletedClause . ' AND is_pending = 0
-               AND (created_at < :ca1 OR (created_at = :ca2 AND id <= :pid))',
-            ['tid' => $threadId, 'ca1' => (string) $target['created_at'], 'ca2' => (string) $target['created_at'], 'pid' => $postId],
+        $perPage = max(1, $perPage);
+        $pages = array_fill_keys($postIds, 1);
+        $targetDeleted = $includeDeleted ? '' : ' AND target.is_deleted = 0';
+        $rankDeleted = $includeDeleted ? '' : ' AND ranked.is_deleted = 0';
+        $placeholders = implode(',', array_fill(0, count($postIds), '?'));
+        $rows = $this->db->fetchAll(
+            'SELECT target.id,
+                    (SELECT COUNT(*) FROM posts ranked
+                     WHERE ranked.thread_id = target.thread_id' . $rankDeleted . '
+                       AND ranked.is_pending = 0
+                       AND (ranked.created_at < target.created_at
+                            OR (ranked.created_at = target.created_at AND ranked.id <= target.id))
+                    ) AS post_rank
+             FROM posts target
+             WHERE target.thread_id = ? AND target.id IN (' . $placeholders . ')'
+                . $targetDeleted . ' AND target.is_pending = 0',
+            [$threadId, ...$postIds],
         );
-        return max(1, (int) ceil($rank / $perPage));
+        foreach ($rows as $row) {
+            $pages[(int) $row['id']] = max(1, (int) ceil((int) $row['post_rank'] / $perPage));
+        }
+        return $pages;
     }
 
     /**

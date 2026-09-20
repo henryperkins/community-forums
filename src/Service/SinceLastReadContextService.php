@@ -89,6 +89,7 @@ final class SinceLastReadContextService
                 generated_at = UTC_TIMESTAMP(),
                 expires_at = VALUES(expires_at)',
             [$userId, $threadId, $fromPostId, $toPostId, $postCount, $contextText],
+            ['since_last_read_context'],
         );
 
         return [

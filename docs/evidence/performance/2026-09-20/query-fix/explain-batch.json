@@ -1,0 +1,403 @@
+{
+    "database_engine": "11.8.6-MariaDB-5ubuntu0.1 from Ubuntu",
+    "fixture_posts": 1001,
+    "target_posts": 6,
+    "scope": "Local MariaDB rollback fixtures; not a production timing measurement.",
+    "plans": {
+        "member": {
+            "queries": 1,
+            "pages": [
+                5,
+                13,
+                22,
+                30,
+                1,
+                43
+            ],
+            "sql": "SELECT target.id,\n                    (SELECT COUNT(*) FROM posts ranked\n                     WHERE ranked.thread_id = target.thread_id AND ranked.is_deleted = 0\n                       AND ranked.is_pending = 0\n                       AND (ranked.created_at < target.created_at\n                            OR (ranked.created_at = target.created_at AND ranked.id <= target.id))\n                    ) AS post_rank\n             FROM posts target\n             WHERE target.thread_id = ? AND target.id IN (?,?,?,?,?,?) AND target.is_deleted = 0 AND target.is_pending = 0",
+            "explain": {
+                "query_block": {
+                    "select_id": 1,
+                    "cost": 0.00842576,
+                    "nested_loop": [
+                        {
+                            "table": {
+                                "table_name": "target",
+                                "access_type": "ref",
+                                "possible_keys": [
+                                    "PRIMARY",
+                                    "idx_posts_thread",
+                                    "idx_posts_pending",
+                                    "idx_posts_wiki",
+                                    "idx_posts_thread_read"
+                                ],
+                                "key": "idx_posts_pending",
+                                "key_length": "9",
+                                "used_key_parts": [
+                                    "is_pending",
+                                    "thread_id"
+                                ],
+                                "ref": [
+                                    "const",
+                                    "const"
+                                ],
+                                "loops": 1,
+                                "rows": 6,
+                                "cost": 0.00842576,
+                                "filtered": 100,
+                                "index_condition": "target.`id` in (339,539,739,939,1139,1237)",
+                                "attached_condition": "target.is_deleted = 0"
+                            }
+                        }
+                    ],
+                    "subqueries": [
+                        {
+                            "subquery_cache": {
+                                "state": "uninitialized",
+                                "query_block": {
+                                    "select_id": 2,
+                                    "cost": 0.001792605,
+                                    "nested_loop": [
+                                        {
+                                            "table": {
+                                                "table_name": "ranked",
+                                                "access_type": "ref",
+                                                "possible_keys": [
+                                                    "PRIMARY",
+                                                    "idx_posts_thread",
+                                                    "idx_posts_pending",
+                                                    "idx_posts_wiki",
+                                                    "idx_posts_thread_read"
+                                                ],
+                                                "key": "idx_posts_thread_read",
+                                                "key_length": "10",
+                                                "used_key_parts": [
+                                                    "thread_id",
+                                                    "is_deleted",
+                                                    "is_pending"
+                                                ],
+                                                "ref": [
+                                                    "retroboards_test.target.thread_id",
+                                                    "const",
+                                                    "const"
+                                                ],
+                                                "loops": 1,
+                                                "rows": 1,
+                                                "cost": 0.001792605,
+                                                "filtered": 100,
+                                                "attached_condition": "ranked.created_at < target.created_at or ranked.created_at = target.created_at and ranked.`id` <= target.`id`",
+                                                "using_index": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "analyze": {
+                "query_optimization": {
+                    "r_total_time_ms": 0.075890362
+                },
+                "query_block": {
+                    "select_id": 1,
+                    "cost": 0.00842576,
+                    "r_loops": 1,
+                    "r_total_time_ms": 2.057127517,
+                    "nested_loop": [
+                        {
+                            "table": {
+                                "table_name": "target",
+                                "access_type": "ref",
+                                "possible_keys": [
+                                    "PRIMARY",
+                                    "idx_posts_thread",
+                                    "idx_posts_pending",
+                                    "idx_posts_wiki",
+                                    "idx_posts_thread_read"
+                                ],
+                                "key": "idx_posts_pending",
+                                "key_length": "9",
+                                "used_key_parts": [
+                                    "is_pending",
+                                    "thread_id"
+                                ],
+                                "ref": [
+                                    "const",
+                                    "const"
+                                ],
+                                "loops": 1,
+                                "r_loops": 1,
+                                "rows": 6,
+                                "r_index_rows": 943,
+                                "r_rows": 5,
+                                "cost": 0.00842576,
+                                "r_table_time_ms": 0.069087021,
+                                "r_other_time_ms": 0.015994875,
+                                "r_engine_stats": {
+                                    "pages_accessed": 36
+                                },
+                                "filtered": 100,
+                                "r_total_filtered": 0.530222694,
+                                "index_condition": "target.`id` in (339,539,739,939,1139,1237)",
+                                "r_icp_filtered": 0.530222694,
+                                "attached_condition": "target.is_deleted = 0",
+                                "r_filtered": 100
+                            }
+                        }
+                    ],
+                    "subqueries": [
+                        {
+                            "subquery_cache": {
+                                "r_loops": 5,
+                                "r_hit_ratio": 0,
+                                "query_block": {
+                                    "select_id": 2,
+                                    "cost": 0.001792605,
+                                    "r_loops": 5,
+                                    "r_total_time_ms": 1.965884484,
+                                    "nested_loop": [
+                                        {
+                                            "table": {
+                                                "table_name": "ranked",
+                                                "access_type": "ref",
+                                                "possible_keys": [
+                                                    "PRIMARY",
+                                                    "idx_posts_thread",
+                                                    "idx_posts_pending",
+                                                    "idx_posts_wiki",
+                                                    "idx_posts_thread_read"
+                                                ],
+                                                "key": "idx_posts_thread_read",
+                                                "key_length": "10",
+                                                "used_key_parts": [
+                                                    "thread_id",
+                                                    "is_deleted",
+                                                    "is_pending"
+                                                ],
+                                                "ref": [
+                                                    "retroboards_test.target.thread_id",
+                                                    "const",
+                                                    "const"
+                                                ],
+                                                "loops": 1,
+                                                "r_loops": 5,
+                                                "rows": 1,
+                                                "r_rows": 848,
+                                                "cost": 0.001792605,
+                                                "r_table_time_ms": 1.773153268,
+                                                "r_other_time_ms": 0.18968075,
+                                                "r_engine_stats": {
+                                                    "pages_accessed": 8508
+                                                },
+                                                "filtered": 100,
+                                                "r_total_filtered": 52.02830189,
+                                                "attached_condition": "ranked.created_at < target.created_at or ranked.created_at = target.created_at and ranked.`id` <= target.`id`",
+                                                "r_filtered": 52.02830189,
+                                                "using_index": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "staff": {
+            "queries": 1,
+            "pages": [
+                5,
+                15,
+                24,
+                33,
+                1,
+                48
+            ],
+            "sql": "SELECT target.id,\n                    (SELECT COUNT(*) FROM posts ranked\n                     WHERE ranked.thread_id = target.thread_id\n                       AND ranked.is_pending = 0\n                       AND (ranked.created_at < target.created_at\n                            OR (ranked.created_at = target.created_at AND ranked.id <= target.id))\n                    ) AS post_rank\n             FROM posts target\n             WHERE target.thread_id = ? AND target.id IN (?,?,?,?,?,?) AND target.is_pending = 0",
+            "explain": {
+                "query_block": {
+                    "select_id": 1,
+                    "cost": 0.00842576,
+                    "nested_loop": [
+                        {
+                            "table": {
+                                "table_name": "target",
+                                "access_type": "ref",
+                                "possible_keys": [
+                                    "PRIMARY",
+                                    "idx_posts_thread",
+                                    "idx_posts_pending",
+                                    "idx_posts_wiki",
+                                    "idx_posts_thread_read"
+                                ],
+                                "key": "idx_posts_pending",
+                                "key_length": "9",
+                                "used_key_parts": [
+                                    "is_pending",
+                                    "thread_id"
+                                ],
+                                "ref": [
+                                    "const",
+                                    "const"
+                                ],
+                                "loops": 1,
+                                "rows": 6,
+                                "cost": 0.00842576,
+                                "filtered": 100,
+                                "index_condition": "target.`id` in (339,539,739,939,1139,1237)"
+                            }
+                        }
+                    ],
+                    "subqueries": [
+                        {
+                            "subquery_cache": {
+                                "state": "uninitialized",
+                                "query_block": {
+                                    "select_id": 2,
+                                    "cost": 0.001792605,
+                                    "nested_loop": [
+                                        {
+                                            "table": {
+                                                "table_name": "ranked",
+                                                "access_type": "ref",
+                                                "possible_keys": [
+                                                    "PRIMARY",
+                                                    "idx_posts_thread",
+                                                    "idx_posts_pending",
+                                                    "idx_posts_wiki",
+                                                    "idx_posts_thread_read"
+                                                ],
+                                                "key": "idx_posts_thread_read",
+                                                "key_length": "8",
+                                                "used_key_parts": [
+                                                    "thread_id"
+                                                ],
+                                                "ref": [
+                                                    "retroboards_test.target.thread_id"
+                                                ],
+                                                "loops": 1,
+                                                "rows": 1,
+                                                "cost": 0.001792605,
+                                                "filtered": 94.20579529,
+                                                "attached_condition": "ranked.is_pending = 0 and (ranked.created_at < target.created_at or ranked.created_at = target.created_at and ranked.`id` <= target.`id`)",
+                                                "using_index": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "analyze": {
+                "query_optimization": {
+                    "r_total_time_ms": 0.068334439
+                },
+                "query_block": {
+                    "select_id": 1,
+                    "cost": 0.00842576,
+                    "r_loops": 1,
+                    "r_total_time_ms": 2.404328682,
+                    "nested_loop": [
+                        {
+                            "table": {
+                                "table_name": "target",
+                                "access_type": "ref",
+                                "possible_keys": [
+                                    "PRIMARY",
+                                    "idx_posts_thread",
+                                    "idx_posts_pending",
+                                    "idx_posts_wiki",
+                                    "idx_posts_thread_read"
+                                ],
+                                "key": "idx_posts_pending",
+                                "key_length": "9",
+                                "used_key_parts": [
+                                    "is_pending",
+                                    "thread_id"
+                                ],
+                                "ref": [
+                                    "const",
+                                    "const"
+                                ],
+                                "loops": 1,
+                                "r_loops": 1,
+                                "rows": 6,
+                                "r_index_rows": 943,
+                                "r_rows": 5,
+                                "cost": 0.00842576,
+                                "r_table_time_ms": 0.078439106,
+                                "r_other_time_ms": 0.014710468,
+                                "r_engine_stats": {
+                                    "pages_accessed": 37
+                                },
+                                "filtered": 100,
+                                "r_total_filtered": 0.530222694,
+                                "index_condition": "target.`id` in (339,539,739,939,1139,1237)",
+                                "r_icp_filtered": 0.530222694,
+                                "r_filtered": 100
+                            }
+                        }
+                    ],
+                    "subqueries": [
+                        {
+                            "subquery_cache": {
+                                "r_loops": 5,
+                                "r_hit_ratio": 0,
+                                "query_block": {
+                                    "select_id": 2,
+                                    "cost": 0.001792605,
+                                    "r_loops": 5,
+                                    "r_total_time_ms": 2.305479554,
+                                    "nested_loop": [
+                                        {
+                                            "table": {
+                                                "table_name": "ranked",
+                                                "access_type": "ref",
+                                                "possible_keys": [
+                                                    "PRIMARY",
+                                                    "idx_posts_thread",
+                                                    "idx_posts_pending",
+                                                    "idx_posts_wiki",
+                                                    "idx_posts_thread_read"
+                                                ],
+                                                "key": "idx_posts_thread_read",
+                                                "key_length": "8",
+                                                "used_key_parts": [
+                                                    "thread_id"
+                                                ],
+                                                "ref": [
+                                                    "retroboards_test.target.thread_id"
+                                                ],
+                                                "loops": 1,
+                                                "r_loops": 5,
+                                                "rows": 1,
+                                                "r_rows": 1001,
+                                                "cost": 0.001792605,
+                                                "r_table_time_ms": 2.030907562,
+                                                "r_other_time_ms": 0.271631905,
+                                                "r_engine_stats": {
+                                                    "pages_accessed": 10038
+                                                },
+                                                "filtered": 94.20579529,
+                                                "r_total_filtered": 49.01098901,
+                                                "attached_condition": "ranked.is_pending = 0 and (ranked.created_at < target.created_at or ranked.created_at = target.created_at and ranked.`id` <= target.`id`)",
+                                                "r_filtered": 49.01098901,
+                                                "using_index": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "remaining_fixture_posts": 0
+}

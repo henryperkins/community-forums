@@ -7,6 +7,8 @@ namespace App\Service;
 use App\Core\Database;
 use App\Core\FeatureFlags;
 use App\Domain\User;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\SettingRepository;
 use App\Security\AuthorityGate;
 use App\Security\Cap;
@@ -30,19 +32,18 @@ final class NotificationVisibilityService
             return $this->scopes[$viewer->id()];
         }
         if ($fresh) {
+            // Delivery-time checks must bypass both this scope and any shared
+            // repository snapshot, including changes made outside this request.
+            $this->db->clearRequestCache();
             $this->flags->invalidate();
         }
         $features = $this->flags->all();
         $scope = [
             'user_id' => $viewer->id(),
             'is_admin' => $viewer->isAdmin(),
-            'member_board_ids' => array_map('intval', array_column($this->db->fetchAll(
-                'SELECT board_id FROM board_members WHERE user_id = ?', [$viewer->id()],
-            ), 'board_id')),
+            'member_board_ids' => (new BoardMemberRepository($this->db))->boardIdsFor($viewer->id()),
             // Read authority must not consume WriteGate (suspended assigned moderators can read).
-            'assigned_board_ids' => array_map('intval', array_column($this->db->fetchAll(
-                'SELECT board_id FROM board_moderators WHERE user_id = ?', [$viewer->id()],
-            ), 'board_id')),
+            'assigned_board_ids' => (new BoardModeratorRepository($this->db))->boardsFor($viewer->id()),
             'features' => $features,
             // This is the site probe used by ReportService::queueModel via BoardAuthority.
             'may_review_dm_reports' => !empty($features['moderation_queue'])
