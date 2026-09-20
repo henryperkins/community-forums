@@ -26,6 +26,7 @@ for (const suite of suites) {
 const evidenceRoot = path.resolve(root, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/unified-notifications-and-settings');
 const scratch = fs.mkdtempSync(path.join(root, 'storage/notifications-settings-e2e-'));
 const results = [];
+let completed = false;
 fs.mkdirSync(evidenceRoot, { recursive: true });
 
 function run(command, args, env, suite, project) {
@@ -54,12 +55,19 @@ try {
         PACKAGES_STORAGE_PATH: path.join(runScratch, 'packages'),
         UPLOADS_PATH: path.join(runScratch, 'media'),
         RB_EVIDENCE_DIR: capturePath,
+        PLAYWRIGHT_JSON_OUTPUT_NAME: path.join(capturePath, 'playwright-results.json'),
       };
       run('bash', ['prepare.sh'], env, suite, project);
-      run('npx', ['playwright', 'test', `${suite}.spec.ts`, `--project=${project}`], env, suite, project);
+      run('npx', ['playwright', 'test', `${suite}.spec.ts`, `--project=${project}`, '--reporter=list,json'], env, suite, project);
     }
   }
+  completed = true;
 } finally {
-  fs.writeFileSync(path.join(evidenceRoot, 'browser-results.json'), `${JSON.stringify({ database, origin: baseURL.origin, results }, null, 2)}\n`);
-  fs.rmSync(scratch, { recursive: true, force: true });
+  try {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  } finally {
+    fs.writeFileSync(path.join(evidenceRoot, 'browser-results.json'), `${JSON.stringify({
+      database, origin: baseURL.origin, completed, scratch_removed: !fs.existsSync(scratch), results,
+    }, null, 2)}\n`);
+  }
 }

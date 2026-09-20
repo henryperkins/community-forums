@@ -101,6 +101,7 @@ test('TOTP enroll, second-factor login, and disable all work without JavaScript'
   await page.screenshot({ path: shot('totp-02-recovery-codes', testInfo.project.name), fullPage: true });
 
   await waitForFreshTotpStep();
+  await page.locator('.identity-menu > summary').click();
   await page.click('form[action="/logout"] button[type="submit"]');
   await page.goto(`${BASE}/login`);
   await page.fill('input[name="email"]', 'alice@retro.test');

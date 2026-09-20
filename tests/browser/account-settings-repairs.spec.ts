@@ -119,11 +119,16 @@ test.describe('account settings repairs without JavaScript', () => {
     const secret = await page.getByLabel('Authenticator secret', { exact: true }).inputValue();
     const confirm = page.locator('form[action="/settings/security/totp/confirm"]');
     await confirm.locator('[name="current_password"]').fill('password123');
-    await confirm.locator('[name="totp_code"]').fill('000000');
     // A non-numeric code deterministically fails regardless of the current TOTP.
-    const response = await post(page, '/settings/security/totp/confirm', { current_password: 'password123', totp_code: 'invalid' });
+    await confirm.locator('[name="totp_code"]').fill('invalid');
+    const [response] = await Promise.all([
+      page.waitForResponse((result) => result.request().method() === 'POST' && result.url().endsWith('/settings/security/totp/confirm')),
+      confirm.locator('button[type="submit"]').click(),
+    ]);
     expect(response.status()).toBe(422);
-    expect((await response.text()).includes('action="/settings/security/totp/confirm"')).toBe(true);
+    await expect(confirm).toBeVisible();
+    // Establish a GET before reloading: reloading a POST re-submits that action.
+    await page.goto('/settings/security');
     await page.reload();
     await expect(confirm).toBeVisible();
     await expect(confirm.locator('[name="current_password"]')).toHaveValue('');
@@ -138,6 +143,7 @@ test.describe('account settings repairs without JavaScript', () => {
     await confirm.locator('[name="totp_code"]').fill(code);
     await confirm.locator('button[type="submit"]').click();
     await expect(page.locator('ul.code-list code')).toHaveCount(10);
+    await page.goto('/settings/security');
     await page.reload();
     await expect(page.locator('ul.code-list code')).toHaveCount(0);
     await expect(confirm).toHaveCount(0);
@@ -151,6 +157,7 @@ test.describe('account settings repairs without JavaScript', () => {
     await enroll.locator('button[type="submit"]').click();
     const original = await page.getByLabel('Authenticator secret', { exact: true }).inputValue();
     expect((await post(page, '/settings/security/totp/enroll', { current_password: 'incorrect' })).status()).toBe(422);
+    await page.goto('/settings/security');
     await page.reload();
     await expect(page.locator('form[action="/settings/security/totp/confirm"]')).toBeVisible();
     await expect(enroll).toBeVisible();
@@ -158,6 +165,7 @@ test.describe('account settings repairs without JavaScript', () => {
     await enroll.getByRole('button', { name: /restart setup/i }).click();
     const renewed = await page.getByLabel('Authenticator secret', { exact: true }).inputValue();
     expect(renewed !== original, 'Explicit restart replaces the pending secret').toBe(true);
+    await page.goto('/settings/security');
     await page.reload();
     await expect(page.getByLabel('Authenticator secret', { exact: true })).toHaveCount(0);
     await expect(page.locator('form[action="/settings/security/totp/confirm"]')).toBeVisible();
@@ -169,8 +177,8 @@ test.describe('account settings repairs without JavaScript', () => {
     fixture('passwordless');
     await page.goto('/settings/account/lifecycle');
     await expect(page.locator('input[name="current_password"]')).toHaveCount(0);
-    await expect(page.locator('a[href="/settings/security#set-password"]')).toBeVisible();
-    await page.goto('/settings/security');
+    await page.locator('a[href="/settings/security#set-password"]').first().click();
+    await expect(page).toHaveURL(/\/settings\/security#set-password$/);
     const form = page.locator('form[action="/settings/security/set-password"]');
     await expect(form).toBeVisible();
     await expect(page.locator('input[name="current_password"]')).toHaveCount(0);

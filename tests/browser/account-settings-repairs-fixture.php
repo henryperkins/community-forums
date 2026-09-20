@@ -141,10 +141,13 @@ if ($command === 'reset') {
                 'sources' => ['subscriptions' => [['target_type' => 'thread', 'target_id' => $threadId]], 'saved_feeds' => []],
             ];
             $deliveries = new \App\Repository\EmailDeliveryRepository($db);
+            $malformed = $payload;
+            $malformed['window_start_utc'] .= "\0";
             foreach ([
                 'Replayable digest' => ['failed', 'Captured transport failed', $payload],
                 'Suppressed digest' => ['suppressed', 'recipient_paused', $payload],
-                'Invalid digest' => ['failed', 'invalid_digest_payload', ['version' => 99]],
+                // A previously exhausted parser error must not crash the operator page.
+                'Invalid digest' => ['failed', 'Previous worker date parse failure', $malformed],
                 'Legacy digest' => ['failed', 'unreplayable_legacy_digest', null],
             ] as $subject => [$status, $reason, $body]) {
                 $id = $deliveries->enqueue($uid, 'settings-repair@retro.test', 'digest', $subject, null, $body);
