@@ -322,7 +322,7 @@ The recurring silhouette is the **left rule**: a 3px vertical band on the leadin
 
 ## Components
 
-The everyday register is **plain**: quiet surfaces, hairline borders, restrained radii, and Marcellus labels. This is the system default and the direction of travel.
+The register is **plain**: quiet surfaces, hairline borders, restrained radii, and Marcellus labels. Since 2026-09-13 it is the system's only geometry — the ornamented surfaces differ in ink, never in the shape of a corner.
 
 ### Buttons
 
@@ -352,7 +352,7 @@ The everyday register is **plain**: quiet surfaces, hairline borders, restrained
 
 ### Inputs and fields
 
-- **Style:** raised parchment, 1.5px `--border-soft`, 7px radius, `--shadow-inset`, set in the body serif at inherited size and padded `9px 11px`. A search field takes the pill variant on the sunken page colour.
+- **Style:** raised parchment, 1.5px `--border-soft`, 7px radius, `--shadow-inset`, set in the body serif at inherited size and padded `9px 11px`. A search field takes the pill variant on the sunken page colour. Until 2026-09-13 the application stylesheet overrode this with a 1px `--border` hairline at 6px and no inset, and — because `app.css` is unlayered — that is what actually painted on every `<input>` and `<select>`, while `<textarea>` got the spec. There is now **one** field register (ADR 0034).
 - **Focus:** the gold halo — border shifts to `gold-400`, a 2px evergreen outline at 1px offset, and a layered `0 0 0 3px` gold focus ring over the inset. Focus is unmistakable and warm rather than the browser default.
 - **Labels:** Marcellus at 0.82rem, muted ink, 5px above the control.
 - **Errors:** rust text at 0.85rem directly beneath the field, with underlined inline links.
@@ -375,11 +375,15 @@ The system's most-repeated object and the place its character is clearest. A par
 
 A tinted ground with legible dark ink, rotating through ten variants across evergreen, river, gold, mist and parchment — so a list of members is quietly varied without anyone being assigned a "colour". 36px default, 26–64px by context, always a circle, always Marcellus. The `--gilt` inner ring marks the precious ones.
 
-### Legacy: the lapidary register
+### The lapidary register, and the chamfer that is gone from it
 
-An ornamented treatment — chamfered octagonal frames drawn as eight background-gradient layers with a matching `clip-path`, doubled gold rules, diamond bullets, set-gem checkboxes, engraved panel headings. It currently dresses **13 of 13 account templates and 5 of 6 auth templates**, and **none** of the forum surfaces, admin (0/45), or moderation (0/4).
+The ornamented treatment that dresses the account templates and five of the six auth screens — gold-ruled parchment frames, engraved panel headings, gold row dots. It is **ink, not geometry**: an engraved frame is the same box as a plain one, drawn in gold.
 
-**This is drift, not doctrine.** The plain register above is the system default. The lapidary treatment is expensive to maintain (each state restates eight gradient layers), it cannot carry an outer focus ring because `clip-path` cuts everything outside the octagon, and it makes two surfaces of one product look like two products. Treat it as legacy: do not extend it, and prefer the plain equivalent whenever an engraved component is touched.
+It was not always. Until **2026-09-13** these frames cut their corners at 45°, an octagon made from a `clip-path` plus eight background-gradient layers standing in for a border, with a second inset octagon on `.scribe-panel` and `.auth-card` as a doubled rule. That chamfer is removed (**ADR 0033**). It was expensive — every state restated all eight layers — and it was actively harmful: a `clip-path` cuts everything outside the octagon, so the outer focus ring on an engraved field, a choice card and a search well had *never rendered*, and the octagon on `/compose` flooded the title field solid gold on focus.
+
+Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-engraved`, `.scribe-panel`, `.field-row`, `.choice-card`, and the `.search-query-well` trio. Each keeps its ink and its padding, and the corner becomes `--radius-md` or `--radius-lg`. Five of the six now draw their edge as a real 1–1.5px border; the trio is the exception and always was — it draws its edge as `inset 0 0 0 1.5px` over `border: 0`, which is fine, because an inset ring follows a radius where it could not follow a chamfer.
+
+**Do not reintroduce a cut corner, or a rotated square.** A frame is a border and a radius; a marker is a dot. The same pass turned the diamond `.row-bullet` and the `.choice-card` selected-marker into dots and deleted the orphaned set-gem toggles from the application stylesheet, so the register now carries no angular geometry at all — `clip-path: polygon` and `rotate(45deg)` both appear zero times in `app.css`, and a test holds them there. The treatment is still legacy in the sense that it should not spread to new surfaces, but it no longer makes two surfaces of one product a different shape.
 
 ## Do's and Don'ts
 
@@ -401,8 +405,8 @@ An ornamented treatment — chamfered octagonal frames drawn as eight background
 - **Don't** use gold as a background for anything larger than a chip, and don't use two accents — the palette has exactly one.
 - **Don't** put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)
 - **Don't** paint directly from a primitive scale token in application CSS.
-- **Don't** round anything holding content past 12px, and don't make a button or card pill-shaped.
+- **Don't** round anything holding content past 12px, and don't make a button or card pill-shaped. *Two live exceptions are unresolved rather than sanctioned — `.star-btn`/`.topic-tools-open` and `.board-mute-toggle` are buttons wearing pills because the handoff canvases draw them that way while this document and `components.css` say 7px. ADR 0034 records the conflict; it needs a ruling, not a sweep.*
 - **Don't** use a pure-black shadow, or add elevation to something that is merely at rest.
-- **Don't** extend the chamfered lapidary register to new surfaces; it is legacy and shrinking.
+- **Don't** cut a corner. No `clip-path` octagons, no frame whose edge is drawn as background-gradient layers — a frame is a real border plus a radius, and a `clip-path` on a control silently eats its outer focus ring. Don't extend the lapidary register to new surfaces either; it is legacy and shrinking.
 - **Don't** invent a new breakpoint. 860px collapses the shell and 900px wraps the admin chrome; reuse them.
 - **Don't** rename the forum lexicon. Reply is **counsel**, reputation is **regard**, badges are **marks of esteem**, like is **commend** — this vocabulary is a binding brand commitment recorded in `PRODUCT.md`.

@@ -599,72 +599,38 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 .input-pill { border-radius: var(--radius-pill); background: var(--surface-page); padding: 8px 15px; }
 
-/* ── Chamfered frames ─────────────────────────────────────────────────────
-   ONE closed outline per frame, drawn as eight background layers: four corner
-   tiles carry the diagonal run of the rule, four stretched layers carry the
-   straight runs and stop exactly at the chamfer tangents. (An inset box-shadow
-   cannot do this — it follows the border BOX, so its runs shot past the tangents
-   and the clip cut them into stubs, which is what read as "disconnected
-   corners".) The diagonal band starts at chamfer × √½ so it meets the straight
-   runs edge-to-edge; states restate the layers in their own colour. */
+/* ── Engraved frames ──────────────────────────────────────────────────────
+   These frames used to cut their corners at 45°: a clip-path octagon whose
+   edge was drawn as eight background layers, every one of them restated by
+   every state. The chamfer was retired on 2026-09-13 (ADR 0033) — corners are
+   ordinary radii now and the edge is a real border, so a state changes one
+   colour instead of ten declarations, and the outer focus ring the clip-path
+   used to cut away renders again. The register keeps its gold ink; only the
+   cut geometry is gone. */
 
-/* Engraved field — a chamfered parchment well with a gold rule; the
-   lapidary register of .input / .textarea (see "Lapidary register" below). */
+/* Engraved field — a parchment well with a gold rule; the lapidary register
+   of .input / .textarea (see "Lapidary register" below). */
 .input-engraved, .textarea-engraved {
-    border: 0;
+    border: 1.5px solid var(--gold-200);
+    border-radius: var(--radius-md);
     background-color: var(--surface-page);
-    background-image:
-        linear-gradient(135deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(225deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(45deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(315deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 9px 0, 9px 100%, 0 9px, 100% 9px;
-    background-size:
-        9px 9px, 9px 9px, 9px 9px, 9px 9px,
-        calc(100% - 18px) 1.5px, calc(100% - 18px) 1.5px,
-        1.5px calc(100% - 18px), 1.5px calc(100% - 18px);
-    background-repeat: no-repeat;
-    clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
     box-shadow: var(--shadow-inset);
 }
 .input-engraved:focus, .textarea-engraved:focus {
-    outline: 0;
-    background-image:
-        linear-gradient(135deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(225deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(45deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(315deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500));
-    background-repeat: no-repeat;
+    border-color: var(--gold-500);
+    outline: 2px solid var(--accent); outline-offset: 1px;
+    box-shadow: var(--shadow-inset), 0 0 0 3px var(--focus-ring);
 }
 /* Invalid — client-side (:user-invalid, after a real edit and blur) and
-   server-rejected (.is-invalid, set from aria-invalid). These frames set
-   `border: 0` and draw their edge as background layers, so the border-color
-   rule the field guides suggest is invisible here: the eight layers have to be
-   restated in danger ink, and the inset depth restated with them or a focused
-   errored well silently flattens. Colour is never the only signal — the label
-   restates the fault in words. */
+   server-rejected (.is-invalid, set from aria-invalid). One border-colour
+   change plus a danger halo; the halo is what carries the state at a glance
+   now that the edge is a hairline rather than a gold band. Colour is never
+   the only signal — the label restates the fault in words. */
 .input-engraved:user-invalid, .textarea-engraved:user-invalid,
 .input-engraved.is-invalid, .textarea-engraved.is-invalid,
 .input-engraved[aria-invalid="true"], .textarea-engraved[aria-invalid="true"] {
-    background-image:
-        linear-gradient(135deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(225deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(45deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(315deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(var(--danger), var(--danger)),
-        linear-gradient(var(--danger), var(--danger)),
-        linear-gradient(var(--danger), var(--danger)),
-        linear-gradient(var(--danger), var(--danger));
-    background-repeat: no-repeat;
-    box-shadow: var(--shadow-inset);
+    border-color: var(--danger);
+    box-shadow: var(--shadow-inset), 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
 }
 .field { display: block; margin-bottom: 14px; }
 /* One grid cell holds an errored control and its message. A bare .field-error
@@ -699,86 +665,32 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* ── Choice card (theme / density radio) ─────────────────────────────────── */
 .choice-card {
     position: relative; display: block; padding: 13px 15px; cursor: pointer;
-    border: 0;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-lg);
     background-color: var(--surface-raised);
-    background-image:
-        linear-gradient(135deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(225deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(45deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(315deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(var(--border-soft), var(--border-soft)),
-        linear-gradient(var(--border-soft), var(--border-soft)),
-        linear-gradient(var(--border-soft), var(--border-soft)),
-        linear-gradient(var(--border-soft), var(--border-soft));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
-    background-size:
-        11px 11px, 11px 11px, 11px 11px, 11px 11px,
-        calc(100% - 22px) 1.5px, calc(100% - 22px) 1.5px,
-        1.5px calc(100% - 22px), 1.5px calc(100% - 22px);
-    background-repeat: no-repeat;
-    clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px), calc(100% - 11px) 100%, 11px 100%, 0 calc(100% - 11px), 0 11px);
-    transition: background-color var(--dur-fast) var(--ease-calm);
+    transition: border-color var(--dur-fast) var(--ease-calm), background-color var(--dur-fast) var(--ease-calm);
 }
-.choice-card:hover {
-    background-image:
-        linear-gradient(135deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(225deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(45deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(315deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(var(--border-strong), var(--border-strong)),
-        linear-gradient(var(--border-strong), var(--border-strong)),
-        linear-gradient(var(--border-strong), var(--border-strong)),
-        linear-gradient(var(--border-strong), var(--border-strong));
-    background-repeat: no-repeat;
-}
+.choice-card:hover { border-color: var(--border-strong); }
 .choice-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+/* The selected-state marker: a dot, not a diamond (ADR 0033). It reads as the
+   unread dot the rest of the system already uses, and its offsets no longer
+   have to dodge an 11px chamfer. */
 .choice-card::after {
-    content: ""; position: absolute; top: 11px; right: 12px; width: 7px; height: 7px;
-    background: var(--gold-400); transform: rotate(45deg); opacity: .3;
+    content: ""; position: absolute; top: 12px; right: 13px; width: 7px; height: 7px;
+    background: var(--gold-400); border-radius: 50%; opacity: .3;
     transition: opacity var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
 }
-/* Checked & focus thicken and gild the same closed outline. An outer focus ring
-   is impossible here — clip-path cuts everything outside the octagon — so focus
-   is carried by the 2px accent rule itself. */
+/* Checked takes the accent rule. Focus takes a real outer ring again — the
+   clip-path that used to cut it away is gone. */
 .choice-card:has(input:checked) {
+    border-color: var(--accent);
     background-color: var(--brand-subtle);
-    background-image:
-        linear-gradient(135deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(225deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(45deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(315deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
-    background-size:
-        11px 11px, 11px 11px, 11px 11px, 11px 11px,
-        calc(100% - 22px) 2px, calc(100% - 22px) 2px,
-        2px calc(100% - 22px), 2px calc(100% - 22px);
-    background-repeat: no-repeat;
 }
 .choice-card:has(input:checked)::after { opacity: 1; background: var(--gold-500); }
-.choice-card:focus-within {
-    background-image:
-        linear-gradient(135deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(225deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(45deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(315deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
-    background-size:
-        11px 11px, 11px 11px, 11px 11px, 11px 11px,
-        calc(100% - 22px) 2px, calc(100% - 22px) 2px,
-        2px calc(100% - 22px), 2px calc(100% - 22px);
-    background-repeat: no-repeat;
-}
+.choice-card:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .choice-card-title { display: block; font-family: var(--font-label); letter-spacing: .04em; font-size: .82rem; color: var(--text-strong); }
 .choice-card-desc { display: block; font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
-.theme-swatch { display: flex; height: 30px; border-radius: var(--radius-sm); overflow: hidden; box-shadow: inset 0 0 0 1px var(--border-hair); margin-bottom: 9px; }
+.theme-swatch { display: flex; height: 30px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-hair); margin-bottom: 9px; }
 .theme-swatch span { flex: 1; }
 .theme-swatch .sw-accent { flex: 0 0 8px; }
 .swatch-parchment .sw-bg { background: var(--parchment-200); } .swatch-parchment .sw-card { background: var(--parchment-50); } .swatch-parchment .sw-accent { background: var(--gold-500); }
@@ -787,52 +699,18 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* ══ Lapidary register — the council's engraved console ══════════════════
    An ornamented form treatment drawn from the stone-and-gold control panels of
-   the inspiration boards: chamfered parchment frames with a doubled gold rule,
-   diamond bullets, and set-gem checks. For ceremonial surfaces (settings
-   covers, seals); the plain controls above remain the everyday default. */
+   the inspiration boards: gold-ruled parchment frames, diamond bullets, and
+   set-gem checks. For ceremonial surfaces (settings covers, seals); the plain
+   controls above remain the everyday default. The chamfered corners and the
+   doubled inner rule that once distinguished it were retired on 2026-09-13
+   (ADR 0033) — the register is a matter of ink now, not of geometry. */
 
-/* Engraved panel — a chamfered parchment frame with a doubled gold rule. */
+/* Engraved panel — a parchment frame with a gold rule. */
 .scribe-panel {
     position: relative; padding: 22px 24px;
-    border: 0;
+    border: 1.5px solid var(--gold-400);
+    border-radius: var(--radius-lg);
     background-color: var(--surface-raised);
-    background-image:
-        linear-gradient(135deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(225deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(45deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(315deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 14px 0, 14px 100%, 0 14px, 100% 14px;
-    background-size:
-        14px 14px, 14px 14px, 14px 14px, 14px 14px,
-        calc(100% - 28px) 1.5px, calc(100% - 28px) 1.5px,
-        1.5px calc(100% - 28px), 1.5px calc(100% - 28px);
-    background-repeat: no-repeat;
-    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
-}
-/* The doubled rule: a second, parallel octagon inset 4.5px. Offsetting an
-   octagon inward by d shortens its chamfer by d(√2−1) — 14 − 1.86 ≈ 12.1px —
-   so the inner rule stays truly parallel to the outer one at the diagonals. */
-.scribe-panel::before {
-    content: ""; position: absolute; inset: 4.5px; pointer-events: none;
-    background-image:
-        linear-gradient(135deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(225deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(45deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(315deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 12.1px 0, 12.1px 100%, 0 12.1px, 100% 12.1px;
-    background-size:
-        12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px,
-        calc(100% - 24.2px) 1px, calc(100% - 24.2px) 1px,
-        1px calc(100% - 24.2px), 1px calc(100% - 24.2px);
-    background-repeat: no-repeat;
 }
 .scribe-panel-head {
     display: flex; align-items: center; gap: 11px; margin: 0 0 15px;
@@ -841,48 +719,24 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 .scribe-panel-head::after { content: ""; height: 1px; background: var(--gold-200); flex: 1; }
 
-/* Engraved field row — a chamfered inset well with a diamond bullet. */
+/* Engraved field row — an inset well with a diamond bullet. */
 .field-row {
     display: flex; align-items: center; gap: 11px; padding: 10px 14px;
-    border: 0;
+    border: 1px solid var(--gold-200);
+    border-radius: var(--radius-md);
     background-color: var(--surface-page);
-    background-image:
-        linear-gradient(135deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(225deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(45deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(315deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
-    background-size:
-        8px 8px, 8px 8px, 8px 8px, 8px 8px,
-        calc(100% - 16px) 1px, calc(100% - 16px) 1px,
-        1px calc(100% - 16px), 1px calc(100% - 16px);
-    background-repeat: no-repeat;
-    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
     box-shadow: var(--shadow-inset);
 }
 .field-row + .field-row { margin-top: 9px; }
+/* The rule gilds rather than thickens: a width change here would reflow the
+   row's content on every focus. */
 .field-row:focus-within {
-    background-image:
-        linear-gradient(135deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(225deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(45deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(315deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
-    background-size:
-        8px 8px, 8px 8px, 8px 8px, 8px 8px,
-        calc(100% - 16px) 1.5px, calc(100% - 16px) 1.5px,
-        1.5px calc(100% - 16px), 1.5px calc(100% - 16px);
-    background-repeat: no-repeat;
+    border-color: var(--gold-500);
+    box-shadow: var(--shadow-inset), 0 0 0 3px var(--focus-ring);
 }
-.field-row .row-bullet { flex: 0 0 auto; width: 8px; height: 8px; background: var(--gold-500); transform: rotate(45deg); }
+/* A dot, not a diamond. The rotated square went with the chamfer (ADR 0033):
+   the register is gold ink now, and carries no angular geometry. */
+.field-row .row-bullet { flex: 0 0 auto; width: 7px; height: 7px; background: var(--gold-500); border-radius: 50%; }
 .field-row .row-input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-family: var(--font-body); color: var(--text); outline: none; }
 .field-row .row-input::placeholder { color: var(--text-faint); }
 .field-row .row-mark { flex: 0 0 auto; color: var(--gold-ink); display: inline-flex; }
@@ -962,7 +816,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .admin-tier { display: flex; gap: 4px; padding: 0 26px 9px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border-soft) transparent; }
 .admin-tier::-webkit-scrollbar { height: 4px; }
 .admin-tier::-webkit-scrollbar-track { background: transparent; }
-.admin-tier::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 999px; }
+.admin-tier::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: var(--radius-pill); }
 .admin-tier-item { flex: none; white-space: nowrap; padding: 6px 10px; border: 0; border-radius: var(--radius-md); background: transparent; font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none; cursor: pointer; }
 .admin-tier-item:hover { color: var(--text-strong); background: var(--surface-sunken); }
 .admin-tier-item.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); font-weight: var(--weight-medium); cursor: default; }
@@ -999,12 +853,12 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* No template behind it yet — legible, but plainly not a destination. */
 .forum-bar-surface.is-inert { color: var(--text-faint); cursor: default; }
 .forum-bar-surface.is-inert:hover { background: transparent; color: var(--text-faint); }
-.forum-bar-count { padding: 0 6px; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .64rem; }
+.forum-bar-count { padding: 0 6px; border-radius: var(--radius-pill); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .64rem; }
 /* The search control is one element in two builds — a button when the surface
    owns a palette, a link when it hands off to /search. Identical either way:
    the member is reaching for the same 34px pill in the same place. */
 .forum-bar-searchwrap { position: relative; flex: 0 1 300px; min-width: 180px; display: inline-flex; }
-.forum-bar-search { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; box-sizing: border-box; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: 999px; color: var(--text-faint); text-align: left; text-decoration: none; cursor: pointer; font: inherit; }
+.forum-bar-search { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; box-sizing: border-box; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-pill); color: var(--text-faint); text-align: left; text-decoration: none; cursor: pointer; font: inherit; }
 .forum-bar-search:hover { border-color: var(--border-soft); }
 .forum-bar-search-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-label); font-size: .76rem; color: var(--text-faint); }
 .forum-bar-kbd { margin-left: auto; font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint); }
@@ -1059,11 +913,11 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .board-rail-item:hover { background: var(--surface-page); color: var(--text-body); }
 .board-rail-item.is-active { border-left-color: var(--gold-500); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
 .board-rail-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.board-rail-unread { flex: none; padding: 0 6px; text-align: center; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .66rem; }
+.board-rail-unread { flex: none; padding: 0 6px; text-align: center; border-radius: var(--radius-pill); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .66rem; }
 .board-rail-item.is-locked { color: var(--text-faint); cursor: default; }
 .board-rail-lock { flex: none; }
 .board-rail-note { flex: none; font-family: var(--font-mono); font-size: .62rem; }
-.board-rail-tag { flex: none; padding: 1px 7px; border: 1px solid var(--border-hair); border-radius: 999px; font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+.board-rail-tag { flex: none; padding: 1px 7px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
 .board-rail-foot { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-hair); }
 @media (max-width: 900px) {
     .board-rail { flex-basis: 208px; padding: 14px 8px 24px; }
@@ -1217,7 +1071,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .post-body > :first-child { margin-top: 0; }
 .post-body > :last-child { margin-bottom: 0; }
 .post-body blockquote { margin: 8px 0; padding: 4px 14px; border-left: 2px solid var(--rule-gold); color: var(--text-strong); font-style: italic; }
-.post-body code { background: var(--surface-sunken); padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); font-size: .9em; }
+.post-body code { background: var(--surface-sunken); padding: 1px 5px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: .9em; }
 .post-op .monogram, .post-accepted .monogram { box-shadow: var(--gilt); }
 .post-avatar { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 0 0 auto; width: 56px; }
 .post-avatar > .monogram, .post-avatar > .avatar-wrap > .monogram { width: 56px; height: 56px; font-size: 1.25rem; }
@@ -1282,7 +1136,6 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    clip-path: none;
 }
 .composer-box .composer-input:focus { border: 0; outline: 0; box-shadow: none; }
 .composer-box > .field-error { margin: 0; padding: 8px 12px 0; }
@@ -1405,7 +1258,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     background: var(--surface-sunken);
     padding: 6px;
 }
-.composer-upload-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); }
+.composer-upload-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); }
 .composer-upload-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; min-width: 0; }
 .composer-upload-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-size: .82rem; font-weight: var(--weight-semibold); }
 .composer-upload-status { min-width: 0; overflow-wrap: anywhere; color: var(--text-muted); font-size: .78rem; }
@@ -1539,15 +1392,15 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .composer-suggestion-popover[hidden] { display: none; }
 .composer-slash-menu { display: flex; flex-wrap: wrap; gap: 6px; }
 .composer-slash-command,
-.composer-slash-gif { font: inherit; color: var(--text); cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); padding: 6px 9px; }
+.composer-slash-gif { font: inherit; color: var(--text); cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); padding: 6px 9px; }
 .composer-slash-command:hover,
 .composer-slash-gif:hover { background: var(--surface-3); }
 .composer-slash-command[aria-selected="true"],
 .composer-slash-gif[aria-selected="true"] { background: var(--surface-3); outline: 2px solid var(--accent); outline-offset: -2px; }
 .composer-slash-status { margin: 0; padding: 5px 9px; color: var(--text-muted); }
 .composer-slash-gif { display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 8px; text-align: left; }
-.composer-slash-gif img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
-.composer-reference-option { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; border: 0; background: transparent; color: var(--text); text-align: left; padding: 7px 9px; border-radius: 6px; }
+.composer-slash-gif img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border); }
+.composer-reference-option { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; border: 0; background: transparent; color: var(--text); text-align: left; padding: 7px 9px; border-radius: var(--radius-md); }
 .composer-reference-option[aria-selected="true"],
 .composer-reference-option:hover { background: var(--surface-3); }
 .composer-reference-option .badge { grid-row: span 2; align-self: center; }
@@ -1731,7 +1584,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 .presence-count {
     display: inline-flex; align-items: center; justify-content: center; min-width: 20px;
-    padding: 1px 6px; border-radius: 999px; background: var(--surface-done);
+    padding: 1px 6px; border-radius: var(--radius-pill); background: var(--surface-done);
     color: var(--on-done); font-family: var(--font-mono); font-size: .66rem; letter-spacing: 0;
 }
 .presence-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -1795,7 +1648,7 @@ a.presence-person:hover { background: var(--surface-sunken); color: var(--text-s
 .presence-all:hover { color: var(--accent); }
 .presence-row.is-loading .presence-person { pointer-events: none; }
 .presence-skeleton-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-sunken); animation: presencePulse 1.6s var(--ease-calm) infinite; }
-.presence-skeleton-bar { height: 9px; border-radius: 999px; background: var(--surface-sunken); animation: presencePulse 1.6s var(--ease-calm) infinite; }
+.presence-skeleton-bar { height: 9px; border-radius: var(--radius-pill); background: var(--surface-sunken); animation: presencePulse 1.6s var(--ease-calm) infinite; }
 @keyframes presencePulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 
 /* Directory grid — the same rows, laid out wide (members page). */
@@ -3088,7 +2941,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     outline: 0;
     background: var(--surface-raised);
     box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);
-    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    border-radius: var(--radius-md);
     color: var(--text-strong);
     caret-color: var(--gold-600);
     font-family: var(--font-body);
@@ -3214,7 +3067,12 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     right: 13px;
     width: 14px;
     height: 14px;
-    color: var(--gold-600);
+    /* --gold-600 is a primitive: it does not flip, so this chevron stayed
+       day-gold at night and measured 2.97:1 on --surface-raised in the day
+       register (WCAG 2.2 SC 1.4.11 wants 3:1 for a control affordance).
+       --gold-ink is the flipping semantic the system reserves for small gold
+       marks: 5.49:1 by day, 7.30:1 by night. */
+    color: var(--gold-ink);
     pointer-events: none;
     transform: translateY(-50%);
 }

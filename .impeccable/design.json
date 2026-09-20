@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-27T09:33:57Z",
+  "generatedAt": "2026-09-13T00:00:00Z",
   "title": "Design System: RetroBoards — Imladris",
   "extensions": {
     "colorMeta": {
@@ -221,7 +221,7 @@
       "Don't paint directly from a primitive scale token in application CSS.",
       "Don't round anything holding content past 12px, and don't make a button or card pill-shaped.",
       "Don't use a pure-black shadow, or add elevation to something that is merely at rest.",
-      "Don't extend the chamfered lapidary register to new surfaces; it is legacy and shrinking.",
+      "Don't cut a corner. No clip-path octagons, no frame whose edge is drawn as background-gradient layers — a frame is a real border plus a radius, and a clip-path on a control silently eats its outer focus ring. Don't extend the lapidary register to new surfaces either; it is legacy and shrinking.",
       "Don't invent a new breakpoint. 860px collapses the shell and 900px wraps the admin chrome; reuse them.",
       "Don't rename the forum lexicon. Reply is counsel, reputation is regard, badges are marks of esteem, like is commend — this vocabulary is a binding brand commitment recorded in PRODUCT.md."
     ]

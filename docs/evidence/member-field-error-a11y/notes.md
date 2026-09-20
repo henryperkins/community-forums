@@ -2,8 +2,8 @@
 
 Status: complete for the member/auth/composer field-error pass.
 
-Captured 2026-08-09 against the real PHP application and a freshly seeded browser
-database (`retroboards_e2e`), with `prepare.sh` re-seeding exactly as `npm run
+Refreshed 2026-09-20 against the real PHP application and a freshly seeded browser
+database (`retroboards_chamfer_review_e2e`), with `prepare.sh` re-seeding exactly as `npm run
 evidence` does. Spec: `tests/browser/field-error-a11y.spec.ts` (desktop 1280×800
 and mobile 390×844).
 
@@ -41,10 +41,14 @@ in Website (passes the input's own `type=url` constraint, fails the server's
 
 `:user-invalid` after real keystrokes and a blur — no round-trip involved.
 
-- `.input-engraved` sets `border: 0` and draws its edge with an inset `box-shadow`
-  under a `clip-path`, so the `border-color` rule the guides suggest would have been
-  **invisible** on every auth and account field. The capture shows the restated
-  shadow, asserted against the pristine value.
+- `.input-engraved` now carries a real rounded border (ADR 0033). The invalid
+  state uses `border-color: var(--danger)` plus a danger halo, and the spec reads
+  border, shadow and outline together. These refreshed captures show that frame.
+- Historically the edge moved from an inset ring to background-gradient layers
+  under a clip-path, leaving the invalid shadow identical to the pristine one.
+  The old shadow-only assertion stayed red until ADR 0033. The repaired spec is
+  now reached by `npm run evidence:chamfer` and the CI evidence chain; all six
+  desktop/mobile images were regenerated in this review correction.
 - The label reads "Website — check this field": colour is never the only indicator,
   and with no JS in this path that generated text is also the only signal a screen
   reader gets for the client-side state.
@@ -60,7 +64,15 @@ in Website (passes the input's own `type=url` constraint, fails the server's
   pane does not shift sideways once it grows past the fold.
 - The document never scrolls horizontally at 390px.
 
-## Regression runs
+## Refresh verification (2026-09-20)
+
+- `npm run evidence:chamfer`: 66 passed, including all 6 desktop/mobile tests
+  in `field-error-a11y.spec.ts`; all six PNGs in this directory were refreshed.
+- Full PHPUnit suite: 2780 tests, 20348 assertions, no failures; 6 deprecation
+  notices and 1 skip. The test process used an explicitly unconfigured mail
+  transport. See `../chamfer-removal/notes.md` for commands and cleanup.
+
+## Original regression runs (2026-08-09)
 
 - `vendor/bin/phpunit` — 2609 tests, 18935 assertions, 0 failures (2 pre-existing skips).
 - `playwright test composer-shell composer-expansion account-console` — 55 passed.

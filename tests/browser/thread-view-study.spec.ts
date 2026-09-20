@@ -936,11 +936,18 @@ test('a bare reaction chip drops the orphaned name separator', async ({ page }, 
   }
 });
 
+// Until 2026-09-13 the engraved frame was a clip-path octagon whose edge was
+// eight background-gradient layers, so this probe counted layers and matched
+// --danger inside backgroundImage. ADR 0033 retired the chamfer: the edge is a
+// real border, so the danger state is an honest border-color plus a halo.
 test('server-invalid engraved controls receive the effective danger frame', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'cascade is viewport-independent');
   await page.goto('/login');
   const input = page.locator('.input-engraved').first();
-  const before = await input.evaluate((element) => getComputedStyle(element).backgroundImage);
+  const before = await input.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return `${style.borderColor}|${style.boxShadow}`;
+  });
   const result = await input.evaluate((element) => {
     element.setAttribute('aria-invalid', 'true');
     const probe = document.createElement('span');
@@ -948,12 +955,18 @@ test('server-invalid engraved controls receive the effective danger frame', asyn
     document.body.appendChild(probe);
     const danger = getComputedStyle(probe).color;
     probe.remove();
-    const image = getComputedStyle(element).backgroundImage;
-    return { image, danger, layers: (image.match(/linear-gradient/g) ?? []).length };
+    const style = getComputedStyle(element);
+    return {
+      frame: `${style.borderColor}|${style.boxShadow}`,
+      border: style.borderColor,
+      width: style.borderTopWidth,
+      danger,
+    };
   });
-  expect(result.image).not.toBe(before);
-  expect(result.image.replace(/\s/g, '')).toContain(result.danger.replace(/\s/g, ''));
-  expect(result.layers).toBeGreaterThanOrEqual(8);
+  expect(result.frame).not.toBe(before);
+  expect(result.border.replace(/\s/g, '')).toBe(result.danger.replace(/\s/g, ''));
+  // A colour is only a frame if the edge it paints has width.
+  expect(Number.parseFloat(result.width)).toBeGreaterThan(0);
 });
 
 /**

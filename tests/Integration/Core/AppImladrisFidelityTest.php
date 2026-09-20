@@ -358,14 +358,41 @@ final class AppImladrisFidelityTest extends TestCase
         self::assertStringNotContainsString('Vilya', $boards);
     }
 
-    public function test_lapidary_toggle_css_covers_gem_variants_and_captions(): void
+    /**
+     * Slice 16 unified every boolean on the design system's Switch, which left
+     * the lapidary toggle register in app.css with zero template consumers —
+     * ADR 0024's closeout recorded that as C-50 and deferred deleting it. This
+     * assertion used to require those selectors to be PRESENT, which pinned dead
+     * CSS in place. ADR 0033 deletes the register from the application
+     * stylesheet, so the check inverts: the application must not carry a boolean
+     * idiom nothing renders, and must not reintroduce the gem glyph's polygon.
+     *
+     * The design system keeps its own copy — `.gem-*` is still a documented
+     * component there with a gallery card — so this is scoped to app.css only.
+     */
+    public function test_the_orphaned_lapidary_toggle_register_is_gone_from_the_application_css(): void
     {
         $css = file_get_contents(__DIR__ . '/../../../public/assets/app.css');
         self::assertIsString($css);
 
-        foreach (['.toggle-stack', '.gem-leaf', '.gem-gold', '.gem-river', '.gem-sub'] as $selector) {
-            self::assertStringContainsString($selector, $css);
+        // Every check below reads declarations, not prose: the comment that
+        // records this removal necessarily names the selectors it removed.
+        $declarations = preg_replace('#/\*.*?\*/#s', '', $css);
+        self::assertIsString($declarations);
+
+        foreach (['.gem-field', '.gem-check', '.toggle-stack', '.gem-leaf', '.gem-gold', '.gem-river', '.gem-sub'] as $selector) {
+            self::assertStringNotContainsString(
+                $selector,
+                $declarations,
+                $selector . ' has no template consumer; it must not return to app.css.',
+            );
         }
+
+        // The gem glyph was the last clip-path polygon in the application
+        // stylesheet, and the diamond bullets the last rotated squares.
+        // ADR 0033: a corner is a radius, and ornament is not a polygon.
+        self::assertStringNotContainsString('clip-path: polygon', $declarations);
+        self::assertStringNotContainsString('rotate(45deg)', $declarations);
     }
 
     public function test_reading_surfaces_keep_the_reading_shell_while_search_owns_its_top_level_surface(): void

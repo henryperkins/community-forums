@@ -485,3 +485,123 @@ The bundled `components/presence/PresenceList.prompt.md` is preserved exactly,
 including its older location/loading examples. The bundle README's explicit
 deferrals and ADR 0031 supersede those examples for production; the discrepancy
 is recorded in ADR 0032 rather than silently shipping the sample behavior.
+
+## 2026-09-13 — the chamfer is removed; the mirror now diverges from upstream on six frames (ADR 0033)
+
+This supersedes the geometry half of the 2026-08-09 entry above. That entry is
+still the correct record of *why* the eight-layer construction existed — keep it
+— but its construction no longer ships, and its three cascade hazards are gone
+with it:
+
+- "An inset box-shadow cannot draw this outline" — moot. There is no octagon, so
+  the outline is a border again.
+- "`background:` shorthand resets the eight layers" — moot for the frames, and
+  it was not a theoretical hazard: `.compose-title-input` and
+  `.compose-board-select` set the shorthand, `.input-engraved:focus` re-supplied
+  `background-image` at equal specificity without restoring
+  `background-position`/`background-size`, and both controls painted **solid
+  `--gold-500` on focus** on `/compose`. Removing the layers fixes it.
+- "An outer focus ring is impossible under `clip-path`" — moot, and this was the
+  more serious of the two. `.input-engraved`, `.choice-card` and
+  `.search-query-well` each declared `0 0 0 3px var(--focus-ring)` that had never
+  once rendered.
+
+**What changed in `components.css`.** Six frames, ink and padding unchanged,
+geometry replaced by a border and a radius: `.input-engraved`/`.textarea-engraved`
+(9px octagon → `1.5px var(--gold-200)` on `--radius-md`), `.scribe-panel` (14px
+octagon + the `inset: 4.5px` doubled rule → `1.5px var(--gold-400)` on
+`--radius-lg`, no shadow), `.field-row` (8px octagon → `1px var(--gold-200)` on
+`--radius-md`), `.choice-card` (11px octagon → `1.5px var(--border-soft)` on
+`--radius-lg`), and the bridge trio `.search-query-well, .compose-title-input,
+.compose-board-select` (clip → `border-radius: var(--radius-md)`, the inset ring
+untouched). `.variant-auth .auth-card` has no mirror copy and changed in
+`app.css` only. The now-vestigial `clip-path: none` reset on
+`.composer-box .composer-input` is dropped from both files.
+
+**The bridge held.** The trio sits inside the 2026-08-27 production-transfer
+markers, which `AppImladrisFidelityTest` pins byte-for-byte against `app.css`.
+The same one-line substitution was made in both files and the substring check
+passes. The block stays token-only — `color-mix()` is fine there, literal
+colours are not.
+
+**Deliberate divergence from upstream, for the next sync.** The design canvases
+still carry the chamfer: nineteen inline `clip-path: polygon(8px …)` in
+`templates/account-settings/AccountSettings.dc.html`, two in `templates/compose/`,
+two in `templates/reading-rooms/` and one in `templates/search/` — twenty-four in
+all — plus `templates/member-surfaces/README.md:228` and the `ui_kits/` copies.
+All are left alone, for two different reasons, which is worth keeping straight:
+
+- Everything under `templates/` is upstream's record of what was designed **and**
+  sits inside `design_surface.roots`, so editing it moves
+  `config/imladris-design-baseline.json` for a change that paints nothing.
+- The `ui_kits/` copies are **outside** `design_surface.roots` (the roots are
+  `templates` and `components` only), so they move no digest. They are left alone
+  because `RETIRED.md` governs them: `ui_kits/settings` is retired into
+  `templates/account-settings` and its binding rule is "do not hand-sync changes
+  into them". `ui_kits/auth` is *not* retired, so its `kit.css:30` chamfer and its
+  README's "lapidary engraved inputs" line are genuinely stale — a small, separate
+  correction, deliberately not bundled into a diff that is otherwise about
+  production CSS.
+**Consequence: a future bundle will offer the eight-layer frames back. Refuse
+those hunks.** The chamfer is a local removal, recorded here and in ADR 0033,
+not an upstream one. Note also that the canvases specify an **8px** chamfer where
+production used **9px** — the two were never reconciled, and now never need to be.
+
+**A second, narrower divergence: the set-gem toggles.** `.gem-field`,
+`.gem-check`, `.toggle-stack` and the four jewel tones are **deleted from
+`public/assets/app.css`** and **kept here**. That is deliberate and is not a
+retirement of the component. Slice 16 unified every boolean in production on the
+design system's Switch, which left those declarations in the application
+stylesheet with zero template consumers — ADR 0024's closeout recorded it as
+C-50 and deferred it — and the gem glyph's `clip-path: polygon(50% 0, 60% 40%,
+…)` was the last polygon in the file. The design system still documents the
+component and renders it in `components/forms/forms.card.html`, so removing it
+from `components.css` would leave a gallery card painting bare checkboxes for no
+production gain. Production deletes dead CSS; the mirror keeps the component.
+
+The same pass turned the two live rotated squares into dots in **both** files —
+`.field-row .row-bullet` and `.choice-card::after` — because those do render, and
+a register that forbids a cut corner while still pinning a diamond to one is not
+a register. `.choice-card::after` also loses the offsets that were tuned to dodge
+the 11px chamfer (`top: 11px; right: 12px` → `12px/13px`).
+
+**Baselines.** `components.css` sits at the mirror root, outside
+`design_surface.roots`, so the design digest did not move — verified unchanged at
+`548996ef…` before and after. The application digest did move, because
+`public/assets/app.css` changed; it was refreshed on `main` together with the
+regenerated `resources/imladris/manifest.json`, per ADR 0024 obligation 4.
+
+**Order of operations, since this bites every time.** `build()` calls
+`expectedFiles()` first, and that throws the moment `templates/` or
+`public/assets/` drift from the runtime baseline — and `check()` returns early on
+that throw, masking any "Generated file is stale" error behind it. So the mirror
+edit and `composer build:imladris` must both land **before** `app.css` is
+touched. That order was followed here: mirror → build → check (green) → `app.css`
+→ digest → rebuild → check (green).
+
+## 2026-09-13 — the border tokens, and one bridge edit (ADR 0034)
+
+The second half of the border audit. Almost all of it is application-only, but
+two things touch this mirror:
+
+**`components.css` token spellings.** Thirteen raw pixel radii become the tokens
+they already equalled (`999px` → `--radius-pill`, `6px`/`7px` → `--radius-md`,
+`4px` → `--radius-sm`), and `.theme-swatch` swaps an inset ring for the real
+border `app.css` had always drawn there — a source/production divergence, closed
+in the source's favour. Three of the thirteen carry a real +1px delta (6px → 7px,
+on the composer's slash/GIF/reference popovers); they are taken deliberately so
+the composer popovers sit on the scale.
+
+**One bridge edit.** `.compose-board-select-wrap > .icon` was painted
+`--gold-600`, a primitive that does not flip: **2.97:1** on `--surface-raised` in
+the light register, against the 3:1 WCAG 2.2 asks of a control affordance. It
+takes `--gold-ink` instead — 5.49:1 by day, 7.30:1 by night. This rule lives
+inside the 2026-08-27 production-transfer block, so the identical bytes, comment
+included, were written to both files and the substring gate re-checked. Keep hex
+out of that comment: the tokens-only ban matches inside comments too.
+
+**Not done, on purpose.** The blanket `appearance: none` + baked data-URI chevron
+on `.admin-console select.input, .settings-pane select.input` is register-blind
+for the same reason, but it is application-only and its removal would break
+`admin-remediation.spec.ts` (which pins that element's computed style) and orphan
+four padding gutters. ADR 0034 records it as a follow-up.

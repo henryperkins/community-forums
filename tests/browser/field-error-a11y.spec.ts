@@ -10,8 +10,9 @@ import path from 'node:path';
  *
  *  - autofocus actually lands on the errored control after a server re-render,
  *  - :user-invalid paints before any round-trip, and carries a non-colour
- *    indicator (the engraved inputs draw their edge with an inset box-shadow,
- *    so a border-color rule would have been invisible),
+ *    indicator (until ADR 0033 the engraved inputs had border:0 and drew their
+ *    edge as gradient layers under a clip-path, so this watched the wrong
+ *    property; the frame is a real border now and the check reads all three),
  *  - the shell's scroll-padding and gutter reservations resolve to real values.
  */
 
@@ -35,6 +36,8 @@ async function login(page: Page): Promise<void> {
 }
 
 async function shot(page: Page, name: string, testInfo = test.info()): Promise<void> {
+  // Preserve the errored field's focus, but keep sticky chrome at the page top.
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, testInfo.project.name, `${name}.png`),
     fullPage: true,
@@ -92,8 +95,18 @@ test.describe('member field errors', () => {
     await login(page);
     await page.goto('/settings/account');
 
+    // Read the whole frame, not one property of it. Watching box-shadow alone
+    // was right when this was written — the edge was a clip-path octagon and an
+    // inset shadow was the one part of it the clip did not cut. The 2026-08-09
+    // rewrite moved the edge to background layers and left :user-invalid
+    // restating the identical --shadow-inset, so this assertion went red and
+    // stayed red until ADR 0033. The frame is a real border now.
+    const frame = (el: HTMLElement) => {
+      const style = getComputedStyle(el);
+      return `${style.borderColor}|${style.boxShadow}|${style.outlineColor}`;
+    };
     const website = page.locator('input[name="website"]');
-    const pristine = await website.evaluate((el) => getComputedStyle(el).boxShadow);
+    const pristine = await website.evaluate(frame);
 
     // Real keystrokes, then blur: :user-invalid deliberately does not match
     // until the member has actually interacted with the control.
@@ -104,9 +117,7 @@ test.describe('member field errors', () => {
     await expect(website).toHaveJSProperty('validity.valid', false);
     expect(await website.evaluate((el) => el.matches(':user-invalid'))).toBe(true);
 
-    // .input-engraved has border:0 and draws its edge with an inset box-shadow,
-    // so this is the assertion that a border-color rule would have failed.
-    const invalid = await website.evaluate((el) => getComputedStyle(el).boxShadow);
+    const invalid = await website.evaluate(frame);
     expect(invalid).not.toBe(pristine);
 
     // Never colour alone — the label carries a text indicator, which is also

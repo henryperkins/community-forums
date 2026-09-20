@@ -83,7 +83,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .pill {
     background: var(--surface-3);
     color: var(--text-muted);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 2px 10px;
     font-size: .8rem;
 }
@@ -131,7 +131,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     text-transform: uppercase;
     background: var(--surface-3);
     color: var(--text-muted);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     padding: 1px 6px;
     margin-left: 4px;
 }
@@ -139,7 +139,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     font-size: .68rem;
     background: var(--accent);
     color: var(--accent-contrast);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     padding: 1px 6px;
     margin-right: 4px;
     vertical-align: middle;
@@ -226,14 +226,28 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 .linkbtn.danger { color: var(--danger); }
 .inline { display: inline; }
+/* The one field frame. DESIGN.md "Inputs and fields": raised parchment, 1.5px
+   --border-soft, a 7px radius and --shadow-inset, padded 9px 11px. This rule is
+   UNLAYERED, so it beats the identical .input rule the design system ships in
+   @layer imladris.components (public/assets/imladris.css) — which is why it has
+   to CARRY the system values rather than a legacy frame. Until 2026-09-13 it
+   carried `1px solid var(--border)` at 6px on --surface: the system's default
+   hairline (--border is the legacy alias for --parchment-300 = --border-hair),
+   not a control frame, and DESIGN.md is explicit that interactive controls step
+   up to 1.5px "so the outline reads as an affordance". Only
+   `.composer-input, textarea.input` below upgraded anything, and it is scoped to
+   textareas, so an <input class="input"> and a <textarea class="input"> in one
+   form wore two different registers. Do not reintroduce a --border/6px field
+   here; a surface that needs a flatter field overrides it in its own block. */
 .input, .composer-input {
     width: 100%;
     padding: 9px 11px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
     font: inherit;
-    background: var(--surface);
+    background: var(--surface-raised);
     color: var(--text);
+    box-shadow: var(--shadow-inset);
 }
 .input-narrow { width: 80px; }
 .composer-input { resize: vertical; font-family: var(--font); }
@@ -487,7 +501,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .formatted-content code {
     padding: .1em .35em;
     border: 1px solid var(--border-strong);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background: var(--surface-sunken);
     font-family: var(--font-mono);
     font-size: .875em;
@@ -563,7 +577,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .page {
     padding: 5px 10px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: var(--surface);
     color: var(--text);
 }
@@ -590,11 +604,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .admin-board-actions { display: flex; gap: 12px; align-items: center; }
 .audit { width: 100%; border-collapse: collapse; font-size: .88rem; table-layout: fixed; }
 .audit th, .audit td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; overflow-wrap: anywhere; }
-.audit code { background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
+.audit code { background: var(--surface-3); padding: 1px 5px; border-radius: var(--radius-sm); }
 
 /* Destructive-action confirmation pages (structure delete/archive/unarchive). */
 .confirm-card { max-width: 640px; }
-.confirm-card code { background: var(--surface-3); padding: 1px 6px; border-radius: 4px; }
+.confirm-card code { background: var(--surface-3); padding: 1px 6px; border-radius: var(--radius-sm); }
 .impact-list { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 12px 0 16px; }
 .impact-list dt { color: var(--text-muted); font-size: .88rem; }
 .impact-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
@@ -610,7 +624,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .reaction {
     display: inline-flex; align-items: center; gap: 4px;
     font: inherit; font-size: .85rem; line-height: 1;
-    padding: 4px 8px; border: 1px solid var(--border); border-radius: 999px;
+    padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-pill);
     background: var(--surface); color: var(--text); cursor: pointer;
 }
 .reaction:hover { background: var(--surface-3); }
@@ -654,7 +668,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
        red alert badge — kept in sync with the Imladris topbar rule below so the
        two .bell-count definitions can't disagree (handoff §10: gold = unread). */
     position: absolute; top: -4px; right: -8px; min-width: 16px; height: 16px;
-    padding: 0 4px; border-radius: 8px; background: var(--accent-2); color: var(--ink-900);
+    padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--ink-900);
     font-size: 11px; line-height: 16px; text-align: center; font-weight: 700;
 }
 .notif-list { list-style: none; padding: 0; margin: 12px 0 0; }
@@ -685,7 +699,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* Badges */
 .profile-badges { margin: 16px 0; }
 .badge-row { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 8px 0 0; }
-.badge-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font-size: .85rem; }
+.badge-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); font-size: .85rem; }
 .badge-icon { font-size: 1rem; }
 .badge-solved { background: var(--surface-raised); color: var(--on-done); border-color: var(--green-200); }
 .post-accepted {
@@ -800,6 +814,14 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     --star: var(--gold-400);
     --presence: var(--green-400);
     --focus-ring: rgba(210,176,98,.75);
+    /* Restated in BOTH dark registers on purpose. imladris.css declares --scrim
+       under [data-theme="dark"] only and carries no [data-theme="system"] block,
+       so a member on the default `system` theme with a dark OS was getting the
+       LIGHT scrim behind every overlay. Declaring it in one block alone would
+       swap that bug for an asymmetry — which is exactly what
+       ImladrisRuntimeAssetTest::test_both_application_dark_registers_declare_the_same_tokens
+       exists to catch. Same value as imladris.css's twilight scrim. */
+    --scrim: rgba(9,13,17,.58);
 }
 @media (prefers-color-scheme: dark) {
     [data-theme="system"] {
@@ -843,6 +865,8 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
         --star: var(--gold-400);
         --presence: var(--green-400);
         --focus-ring: rgba(210,176,98,.75);
+        /* See the twilight block above: this is the audience that needed it. */
+        --scrim: rgba(9,13,17,.58);
     }
 }
 
@@ -874,7 +898,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .spoiler {
     background: var(--text);
     color: transparent;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     padding: 0 2px;
 }
@@ -909,7 +933,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    clip-path: none;
 }
 .composer-box .composer-input:focus { border: 0; outline: 0; box-shadow: none; }
 .composer-box > .field-error { margin: 0; padding: 8px 12px 0; }
@@ -951,6 +974,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     border: 0;
     border-radius: 0;
     background: transparent;
+    /* The box owns the inset (see .composer-box above), so the header field must
+       not restate the one it now inherits from the base .input rule — two insets
+       print a shading band under the header hairline and the composer stops
+       reading as one surface. Zeroing border/radius/background is not enough. */
+    box-shadow: none;
     font-weight: var(--weight-semibold);
 }
 .composer-header > .input:focus { outline: 0; box-shadow: none; }
@@ -1089,7 +1117,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 /* The thumbnail is [hidden] until the upload resolves, so pin the meta block to
    the flexible track instead of letting it auto-place into the 48px thumb track. */
-.composer-upload-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); }
+.composer-upload-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); }
 .composer-upload-meta { grid-column: 2; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; min-width: 0; }
 .composer-upload-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-size: .82rem; font-weight: var(--weight-semibold); }
 .composer-upload-status { min-width: 0; overflow-wrap: anywhere; color: var(--text-muted); font-size: .78rem; }
@@ -1256,15 +1284,15 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-suggestion-popover[hidden] { display: none; }
 .composer-slash-menu { display: flex; flex-wrap: wrap; gap: 6px; }
 .composer-slash-command,
-.composer-slash-gif { font: inherit; color: var(--text); cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); padding: 6px 9px; }
+.composer-slash-gif { font: inherit; color: var(--text); cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); padding: 6px 9px; }
 .composer-slash-command:hover,
 .composer-slash-gif:hover { background: var(--surface-3); }
 .composer-slash-command[aria-selected="true"],
 .composer-slash-gif[aria-selected="true"] { background: var(--surface-3); outline: 2px solid var(--accent); outline-offset: -2px; }
 .composer-slash-status { margin: 0; padding: 5px 9px; color: var(--text-muted); }
 .composer-slash-gif { display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 8px; text-align: left; }
-.composer-slash-gif img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
-.composer-reference-option { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; border: 0; background: transparent; color: var(--text); text-align: left; padding: 7px 9px; border-radius: 6px; }
+.composer-slash-gif img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border); }
+.composer-reference-option { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; border: 0; background: transparent; color: var(--text); text-align: left; padding: 7px 9px; border-radius: var(--radius-md); }
 .composer-reference-option[aria-selected="true"],
 .composer-reference-option:hover { background: var(--surface-3); }
 .composer-reference-option .badge { grid-row: span 2; align-self: center; }
@@ -1442,7 +1470,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .tour-popover p { margin: 0 0 12px; color: var(--text-muted); }
 .tour-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
 .tour-actions .tour-progress { margin-right: auto; color: var(--text-muted); font-size: 0.85em; }
-.tour-highlight { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.tour-highlight { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
 [data-reduced-motion="1"] .tour-popover { box-shadow: none; }
 .subnav-action { align-self: center; }
 
@@ -1452,8 +1480,8 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     align-items: center;
     gap: .75rem;
     padding: .6rem 1rem;
-    background: var(--accent, #2f6fed);
-    color: #fff;
+    background: var(--accent);
+    color: var(--accent-contrast);
 }
 .site-announcement-message { margin: 0; flex: 1; }
 .site-announcement-dismiss {
@@ -1596,7 +1624,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .input:focus, textarea:focus, select:focus {
     border-color: var(--gold-400);
     outline: 2px solid var(--accent); outline-offset: 1px;  /* high-contrast (>=3:1) focus ring */
-    box-shadow: 0 0 0 3px var(--focus-ring);                /* gold halo, decorative reinforcement */
+    /* Layered OVER the inset, per DESIGN.md "Inputs and fields" -> Focus. The
+       halo alone would replace the base field's inset for exactly as long as the
+       field is focused — the same failure the .input-engraved:focus comment
+       below records and restates the inset to avoid. */
+    box-shadow: var(--shadow-inset), 0 0 0 3px var(--focus-ring);
 }
 .composer-label { font-family: var(--font-label); letter-spacing: .03em; color: var(--text-muted); }
 
@@ -1683,7 +1715,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .has-js .main { width: 100%; }
     .nav-scrim:not([hidden]) {
         position: fixed; inset: 0; top: var(--topbar-h);
-        background: rgba(22, 29, 36, .5); z-index: 55;
+        background: var(--scrim); z-index: 55;
     }
 
     /* The inbox's own phone rules now collapse at 1279px, not 860 — where the
@@ -2155,9 +2187,16 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .profile-pager-label { font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint); }
 .profile-pager .is-disabled { opacity: .45; pointer-events: none; }
 
+/* The empty-state frame. Dashed is the system's word for an absence ("dashed
+   borders mean locked, empty, or archived"); the token and the radius are the
+   CONTAINER's, not a control's — 1px --border-hair at 12px, per DESIGN.md
+   "Cards and containers". --border-soft belongs to the control register, which
+   DESIGN.md spends on a secondary button and on a field. Shared with
+   .content-empty-state and .living-brief-empty, and with .org-empty at
+   --radius-md, where a nested one-line note sits inside an --radius-lg card. */
 .profile-panel-empty {
     padding: 44px 26px; text-align: center; color: var(--text-muted); background: var(--surface-raised);
-    border: 1px dashed var(--border-soft); border-radius: var(--radius-lg);
+    border: 1px dashed var(--border-hair); border-radius: var(--radius-lg);
 }
 .profile-panel-empty h2 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; line-height: 1.25; font-weight: var(--weight-medium); color: var(--text-strong); }
 .profile-panel-empty p { margin: 7px auto 0; max-width: 42ch; font-size: .95rem; line-height: 1.5; }
@@ -2240,7 +2279,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .composer-cancel { display: none; }
 .has-js .composer-details[open]::before {
     content: ""; position: fixed; inset: 0; z-index: 80;
-    background: rgba(22, 29, 36, .42); backdrop-filter: blur(2px);
+    background: var(--scrim); backdrop-filter: blur(2px);
 }
 .has-js .composer-details[open] > .composer {
     position: fixed; z-index: 81; top: 50%; left: 50%;
@@ -2331,59 +2370,21 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     line-height: 1;
     letter-spacing: .005em;
 }
-/* Same chamfered-frame construction as .input-engraved below — see the long
-   note there. This one had the defect at its most visible: the doubled rule's
-   inner ring ran along each straight edge and stopped dead at the tangent, so
-   every auth screen showed a card whose second line never turned the corner. */
+/* The seal card. It carried a chamfered octagon plus a second, parallel
+   octagon on a ::before at inset:5px — the "doubled gold rule". Both are gone
+   (ADR 0033); the frame is one gold hairline on a 12px radius, and the card's
+   lift off the twilight stage is still --shadow-xl rather than an outline,
+   because .auth-stage clips (overflow: hidden at .auth-stage). */
 .variant-auth .auth-card {
     position: relative;
     width: 100%;
     max-width: 432px;
     margin: 0;
-    border: 0;
-    border-radius: 0;
     padding: 30px 30px 26px;
-    background-color: var(--surface-raised);
-    background-image:
-        linear-gradient(135deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
-        linear-gradient(225deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
-        linear-gradient(45deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
-        linear-gradient(315deg, transparent 0 11.014px, var(--gold-400) 11.014px 12.814px, transparent 12.814px),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 16px 0, 16px 100%, 0 16px, 100% 16px;
-    background-size:
-        16px 16px, 16px 16px, 16px 16px, 16px 16px,
-        calc(100% - 32px) 1.5px, calc(100% - 32px) 1.5px,
-        1.5px calc(100% - 32px), 1.5px calc(100% - 32px);
-    background-repeat: no-repeat;
-    clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
+    border: 1.5px solid var(--gold-400);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
     box-shadow: var(--shadow-xl);
-}
-/* The inner ring, 1px at 5px inset: 16 − 5(√2−1) ≈ 13.93px of chamfer keeps it
-   parallel to the outer octagon through the diagonals. */
-.variant-auth .auth-card::before {
-    content: "";
-    position: absolute;
-    inset: 5px;
-    pointer-events: none;
-    background-image:
-        linear-gradient(135deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
-        linear-gradient(225deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
-        linear-gradient(45deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
-        linear-gradient(315deg, transparent 0 9.55px, var(--gold-200) 9.55px 10.85px, transparent 10.85px),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 13.93px 0, 13.93px 100%, 0 13.93px, 100% 13.93px;
-    background-size:
-        13.93px 13.93px, 13.93px 13.93px, 13.93px 13.93px, 13.93px 13.93px,
-        calc(100% - 27.86px) 1px, calc(100% - 27.86px) 1px,
-        1px calc(100% - 27.86px), 1px calc(100% - 27.86px);
-    background-repeat: no-repeat;
 }
 .variant-auth .auth-card.wide {
     max-width: 520px;
@@ -2435,68 +2436,51 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     text-align: center;
     margin: 0 0 14px;
 }
-/* ── Chamfered frames ─────────────────────────────────────────────────────
-   ONE closed outline per frame, drawn as eight background layers: four corner
-   tiles carry the diagonal run of the rule, four stretched layers carry the
-   straight runs and stop exactly at the chamfer tangents.
+/* ── Engraved frames ──────────────────────────────────────────────────────
+   These five frames used to cut their corners at 45°. The edge was a clip-path
+   octagon whose outline could not be a border — a border follows the border
+   BOX, so the clip sliced its runs into stubs — and was therefore drawn as
+   eight background layers, four corner tiles plus four stretched edges, every
+   one of them restated by every state.
 
-   An inset box-shadow cannot do this. It follows the border BOX, so its straight
-   runs shot past the tangents and into the corner, where the clip-path sliced
-   them off — four strokes with stubbed ends instead of one closed octagon. That
-   is the "disconnected corners" report.
-
-   The diagonal band starts at chamfer × √½ (less 0.3px of bleed against
-   antialiasing seams) so band and straight run meet edge-to-edge; states restate
-   the same eight layers in their own colour. Geometry is kept identical to
-   docs/design-system/imladris/components.css — the design system carries the
-   same five frames, and these are the production copies that actually paint. */
+   The chamfer was retired on 2026-09-13 (ADR 0033). A radius needs no clip, so
+   the edge is a real border again: a state changes one colour instead of ten
+   declarations, the outer focus ring the clip-path silently ate is back, and
+   the frames differ from the plain register only in ink. Geometry is kept in
+   step with docs/design-system/imladris/components.css, which carries the same
+   frames; these are the production copies that actually paint. */
+/* `textarea.textarea-engraved` is type-qualified on purpose, and only here. The
+   engraved frame used to be drawn with `clip-path` + `background-image`, which
+   nothing else in this file sets, so a bare class selector was enough to win.
+   A real border is not so lucky: `.composer-input, textarea.input` above reaches
+   (0,1,1) and would outrank a bare `.textarea-engraved` at (0,1,0) — which is
+   exactly what /appeals renders (`<textarea class="input textarea-engraved">`),
+   so its appeal reasons would take --border-soft on --surface-raised while the
+   engraved inputs beside them stayed gold. The qualified selector ties at
+   (0,1,1) and wins on source order. The design system needs no such qualifier:
+   it has no `textarea.input` rule, so its copy stays a bare class list. */
 .input-engraved,
 .textarea-engraved,
+textarea.textarea-engraved,
 .dm-form:not(.composer-shell) .composer-input {
-    border: 0;
+    border: 1.5px solid var(--gold-200);
+    border-radius: var(--radius-md);
     background-color: var(--surface-page);
-    background-image:
-        linear-gradient(135deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(225deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(45deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(315deg, transparent 0 6.064px, var(--gold-200) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 9px 0, 9px 100%, 0 9px, 100% 9px;
-    background-size:
-        9px 9px, 9px 9px, 9px 9px, 9px 9px,
-        calc(100% - 18px) 1.5px, calc(100% - 18px) 1.5px,
-        1.5px calc(100% - 18px), 1.5px calc(100% - 18px);
-    background-repeat: no-repeat;
-    clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
     box-shadow: var(--shadow-inset);
 }
-/* No outer focus ring here: clip-path cuts everything outside the octagon, so
-   the 0 0 0 3px var(--focus-ring) this rule used to carry had never rendered.
-   Focus is carried by the rule itself going to --gold-500, which is visible.
-
-   box-shadow still has to be restated. The generic .input:focus above matches at
-   the same (0,2,0) and sets the outer ring alone, so leaving it out here would
-   let it win and cost the well its inset depth for exactly as long as it is
-   focused. Same reason the :user-invalid rule below restates it. */
+/* The outer ring renders now. .input:focus above already supplies the accent
+   outline and the gold halo, but it sets `box-shadow` alone — matching at the
+   same (0,2,0), it would cost the well its inset depth for exactly as long as
+   it is focused. So the halo is restated here on top of the inset, and the
+   rule goes to --gold-500. Same reason the :user-invalid rule below restates
+   it. */
 .input-engraved:focus,
 .textarea-engraved:focus,
 .dm-form:not(.composer-shell) .composer-input:focus {
-    outline: 0;
-    border-color: transparent;
-    box-shadow: var(--shadow-inset);
-    background-image:
-        linear-gradient(135deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(225deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(45deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(315deg, transparent 0 6.064px, var(--gold-500) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500));
-    background-repeat: no-repeat;
+    border-color: var(--gold-500);
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    box-shadow: var(--shadow-inset), 0 0 0 3px var(--focus-ring);
 }
 
 /* ── Client-side validity ─────────────────────────────────────────────────
@@ -2521,32 +2505,22 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .row-input[aria-invalid="true"] {
     border-color: var(--danger);
 }
-/* .input-engraved has border:0 and draws its edge as eight background layers
-   under a clip-path, so border-color alone would be invisible on every auth
-   and account field. Restate the eight layers in --danger instead.
+/* .input-engraved carries a real border now, so the generic border-color rule
+   above would very nearly do — but it does not restate box-shadow, and at the
+   same (0,2,0) it would strip the well's inset depth. Restate both, and add
+   the danger halo so the state survives a colour-blind read at a glance and
+   so :user-invalid changes more than one property.
 
-   One rule covers the focused invalid field too. The separate :user-invalid:focus
-   rule that used to follow differed only by an outer 0 0 0 3px var(--focus-ring),
-   which the clip-path had always cut away; with that gone the two were identical.
-   This still wins over :focus on a focused invalid field — both match at (0,2,0)
-   and, as the note above says, source order settles it. */
+   One rule covers the focused invalid field too: it sits below :focus, both
+   match at (0,2,0), and source order settles it. */
 .input-engraved:user-invalid,
 .textarea-engraved:user-invalid,
 .input-engraved.is-invalid,
 .textarea-engraved.is-invalid,
 .input-engraved[aria-invalid="true"],
 .textarea-engraved[aria-invalid="true"] {
-    box-shadow: var(--shadow-inset);
-    background-image:
-        linear-gradient(135deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(225deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(45deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(315deg, transparent 0 6.064px, var(--danger) 6.064px 7.864px, transparent 7.864px),
-        linear-gradient(var(--danger), var(--danger)),
-        linear-gradient(var(--danger), var(--danger)),
-        linear-gradient(var(--danger), var(--danger)),
-        linear-gradient(var(--danger), var(--danger));
-    background-repeat: no-repeat;
+    border-color: var(--danger);
+    box-shadow: var(--shadow-inset), 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
 }
 /* Never colour alone. .field is <label class="field"><span>Label</span><input>,
    so :has() reaches the label text to carry a non-colour second indicator —
@@ -2806,52 +2780,16 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     gap: 14px;
     width: 100%;
 }
+/* The account panel. It carried a 14px chamfered octagon plus a second,
+   parallel octagon on a ::before at inset:4.5px. Both are gone (ADR 0033): one
+   gold hairline on a 12px radius. No box-shadow — DESIGN.md asks for a
+   hairline before a shadow, and a panel at rest is not elevated. */
 .scribe-panel {
     position: relative;
     padding: 22px 24px;
-    border: 0;
+    border: 1.5px solid var(--gold-400);
+    border-radius: var(--radius-lg);
     background-color: var(--surface-raised);
-    background-image:
-        linear-gradient(135deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(225deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(45deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(315deg, transparent 0 9.6px, var(--gold-400) 9.6px 11.4px, transparent 11.4px),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400)),
-        linear-gradient(var(--gold-400), var(--gold-400));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 14px 0, 14px 100%, 0 14px, 100% 14px;
-    background-size:
-        14px 14px, 14px 14px, 14px 14px, 14px 14px,
-        calc(100% - 28px) 1.5px, calc(100% - 28px) 1.5px,
-        1.5px calc(100% - 28px), 1.5px calc(100% - 28px);
-    background-repeat: no-repeat;
-    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
-}
-/* The doubled rule: a second, parallel octagon inset 4.5px. Offsetting an
-   octagon inward by d shortens its chamfer by d(√2−1) — 14 − 1.86 ≈ 12.1px — so
-   the inner rule stays truly parallel to the outer one through the diagonals,
-   which the old triple inset box-shadow did not. */
-.scribe-panel::before {
-    content: "";
-    position: absolute;
-    inset: 4.5px;
-    pointer-events: none;
-    background-image:
-        linear-gradient(135deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(225deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(45deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(315deg, transparent 0 8.256px, var(--gold-200) 8.256px 9.556px, transparent 9.556px),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 12.1px 0, 12.1px 100%, 0 12.1px, 100% 12.1px;
-    background-size:
-        12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px, 12.1px 12.1px,
-        calc(100% - 24.2px) 1px, calc(100% - 24.2px) 1px,
-        1px calc(100% - 24.2px), 1px calc(100% - 24.2px);
-    background-repeat: no-repeat;
 }
 .scribe-panel-head {
     display: flex;
@@ -2881,59 +2819,35 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     gap: 7px;
     align-items: flex-start;
 }
-/* The rule is background layers now, and background-image does not animate, so
-   the box-shadow transition this rule carried no longer has anything to ease. */
 .field-row {
     display: flex;
     align-items: center;
     gap: 11px;
     padding: 10px 14px;
-    border: 0;
+    border: 1px solid var(--gold-200);
+    border-radius: var(--radius-md);
     background-color: var(--surface-page);
-    background-image:
-        linear-gradient(135deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(225deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(45deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(315deg, transparent 0 5.357px, var(--gold-200) 5.357px 6.657px, transparent 6.657px),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200)),
-        linear-gradient(var(--gold-200), var(--gold-200));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
-    background-size:
-        8px 8px, 8px 8px, 8px 8px, 8px 8px,
-        calc(100% - 16px) 1px, calc(100% - 16px) 1px,
-        1px calc(100% - 16px), 1px calc(100% - 16px);
-    background-repeat: no-repeat;
-    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
     box-shadow: var(--shadow-inset);
 }
 .field-row + .field-row {
     margin-top: 9px;
 }
+/* The rule gilds rather than thickens: the row holds a borderless .row-input
+   with outline:none, so the row itself is the focus indicator — but a width
+   change here would reflow its content on every focus. Colour plus the halo
+   instead. */
 .field-row:focus-within {
-    background-image:
-        linear-gradient(135deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(225deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(45deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(315deg, transparent 0 5.357px, var(--gold-500) 5.357px 7.157px, transparent 7.157px),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500)),
-        linear-gradient(var(--gold-500), var(--gold-500));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 8px 0, 8px 100%, 0 8px, 100% 8px;
-    background-size:
-        8px 8px, 8px 8px, 8px 8px, 8px 8px,
-        calc(100% - 16px) 1.5px, calc(100% - 16px) 1.5px,
-        1.5px calc(100% - 16px), 1.5px calc(100% - 16px);
-    background-repeat: no-repeat;
+    border-color: var(--gold-500);
+    box-shadow: var(--shadow-inset), 0 0 0 3px var(--focus-ring);
 }
+/* A dot, not a diamond. The rotated square went with the chamfer (ADR 0033):
+   the register is gold ink now, and carries no angular geometry. */
 .field-row .row-bullet {
     flex: 0 0 auto;
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     background: var(--gold-500);
-    transform: rotate(45deg);
+    border-radius: 50%;
 }
 .field-row .row-input {
     flex: 1;
@@ -2953,87 +2867,18 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     color: var(--gold-ink);
     display: inline-flex;
 }
-.gem-field {
-    display: inline-flex;
-    align-items: center;
-    gap: 11px;
-    cursor: pointer;
-    font-family: var(--font-body);
-    color: var(--text-body);
-}
-.gem-check {
-    appearance: none;
-    -webkit-appearance: none;
-    flex: 0 0 auto;
-    position: relative;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    background: var(--surface-page);
-    border: 1.5px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-inset);
-    display: inline-grid;
-    place-content: center;
-}
-.gem-check::before {
-    content: "";
-    width: 11px;
-    height: 11px;
-    background: var(--gold-600);
-    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
-    transform: scale(0);
-    transition: transform var(--dur-base) var(--ease-calm);
-}
-.gem-check:checked {
-    border-color: var(--gold-500);
-    background: var(--gold-100);
-}
-.gem-check:checked::before {
-    transform: scale(1);
-}
-	.gem-check:focus-visible {
-	    outline: 2px solid var(--accent);
-	    outline-offset: 2px;
-	}
-	.toggle-stack {
-	    display: flex;
-	    flex-direction: column;
-	    gap: 10px;
-	    margin: 2px 0 6px;
-	}
-	.toggle-stack .gem-field {
-	    display: flex;
-	    align-items: flex-start;
-	    margin-bottom: 0;
-	}
-	.gem-field > span {
-	    display: flex;
-	    flex-direction: column;
-	    gap: 2px;
-	}
-	.gem-check.gem-leaf::before { background: var(--leaf); }
-	.gem-check.gem-leaf:checked {
-	    border-color: var(--leaf);
-	    background: var(--green-100);
-	}
-	.gem-check.gem-gold::before { background: var(--gold-600); }
-	.gem-check.gem-gold:checked {
-	    border-color: var(--gold-500);
-	    background: var(--gold-100);
-	}
-	.gem-check.gem-river::before { background: var(--river-500); }
-	.gem-check.gem-river:checked {
-	    border-color: var(--river-500);
-	    background: var(--river-100);
-	}
-	.gem-sub {
-	    display: block;
-	    margin-top: 2px;
-	    font-size: .82rem;
-	    line-height: 1.35;
-	    color: var(--text-muted);
-	}
+/* The lapidary toggle register — .gem-field/.gem-check/.toggle-stack and the
+   four jewel tones — is deleted here (ADR 0033). Slice 16 unified every boolean
+   on the design system's Switch and left these declarations behind with zero
+   template consumers; ADR 0024's closeout recorded that as C-50 and deferred it.
+   Nothing rendered them (AppImladrisFidelityTest asserts no pane emits a gem
+   checkbox, account-console.spec.ts asserts the locator is empty), and the gem
+   glyph was the last `clip-path: polygon` in this file.
+
+   The design system keeps its copy: `.gem-*` is still a documented component
+   there with its own gallery card (components/forms/forms.card.html). This is a
+   production deletion of dead CSS, not a retirement of the component — the same
+   divergence the chamfer removal records in LOCAL_RECONCILIATION.md. */
 
 	/* — Admin console: the operator's own shell (ADMIN.md §9.2, ADR 0024). —
 	   Two ranks of navigation, kept apart on purpose: the area tier is a pill row
@@ -3562,6 +3407,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     border-radius: var(--radius-md);
     background: var(--surface-page);
     font-size: .92rem;
+    box-shadow: none;
 }
 .admin-overview-audit .input:focus-visible {
     border-color: var(--gold-500);
@@ -3844,28 +3690,10 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .user-directory .user-link {
     text-decoration: underline;
 }
-.bulk-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 14px;
-    margin-top: 14px;
-    padding: 12px 14px;
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-}
-.bulk-bar legend {
-    font-family: var(--font-label);
-    font-size: .82rem;
-    color: var(--text-muted);
-    padding: 0 6px;
-}
-.bulk-bar .field {
-    margin: 0;
-}
-.bulk-bar[disabled] {
-    opacity: .65;
-}
+/* The `.bulk-bar` family was deleted here (ADR 0034): no template, script or
+   test emitted it, and it was the only dashed frame in the file on a raw 10px
+   radius and the legacy --border alias. The live bulk-action bar is
+   `.member-directory-bulk-bar`, which is a different class and is untouched. */
 .admin-pane h2,
 .admin-console .card > h2:first-child {
     font-size: 1.25rem;
@@ -4227,7 +4055,8 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .admin-console .admin-content .content-empty-state {
     margin: 0;
     padding: 52px 26px;
-    border: 1px dashed var(--border-soft);
+    /* The shared empty-state frame; rationale at .profile-panel-empty. */
+    border: 1px dashed var(--border-hair);
     border-radius: var(--radius-lg);
     background: var(--surface-raised);
     text-align: center;
@@ -4288,6 +4117,10 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     color: var(--text-strong);
     font-family: var(--font-display);
     font-size: 1.15rem;
+}
+/* Operator fields stay flat at rest; focus adds only the halo (ADR 0034). */
+.admin-console .admin-content .input {
+    box-shadow: none;
 }
 .admin-console .admin-content input.input:focus,
 .admin-console .admin-content select.input:focus,
@@ -5192,6 +5025,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     color: var(--text-body);
     font-family: var(--font-body);
     font-size: .92rem;
+    box-shadow: none;
 }
 .admin-console .admin-roles .role-form-label .input:focus {
     border-color: var(--gold-500);
@@ -7475,7 +7309,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     position: fixed;
     inset: 0;
     z-index: 80;
-    background: rgba(22, 29, 36, .42);
+    background: var(--scrim);
     backdrop-filter: blur(2px);
 }
 .has-js .dm-compose-details[open] > .dm-dialog {
@@ -8076,7 +7910,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
    in the .input-engraved rules instead of restating the eight rule layers a
    third time. It reaches here at (0,3,0), which clears both `.composer-input,
    textarea.input` and `.composer-box .composer-input` wherever they are
-   declared. Search "Chamfered frames" to edit it. */
+   declared. Search "Engraved frames" to edit it. */
 .dm-empty {
     flex: 1;
     display: flex;
@@ -9064,84 +8898,28 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 .compose-page .checkline { display: flex; align-items: flex-start; gap: 9px; font-family: var(--font-body); font-size: .92rem; color: var(--text-body); line-height: 1.5; }
 .compose-page .checkline input { margin-top: 4px; flex: 0 0 auto; }
 .compose-page .md-hint { font-family: var(--font-body); font-size: .9rem; color: var(--text-faint); line-height: 1.5; margin: 0; }
-.compose-page .md-hint code { font-family: var(--font-mono); font-size: .85em; background: var(--surface-sunken); padding: 1px 5px; border-radius: 4px; }
+.compose-page .md-hint code { font-family: var(--font-mono); font-size: .85em; background: var(--surface-sunken); padding: 1px 5px; border-radius: var(--radius-sm); }
 
-/* Every state below must use background-color, never the background shorthand:
-   the shorthand resets background-image and would wipe the eight rule layers. */
-.choice-card {
-    border: 0;
-    border-radius: 0;
-    background-color: var(--surface-raised);
-    background-image:
-        linear-gradient(135deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(225deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(45deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(315deg, transparent 0 7.478px, var(--border-soft) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(var(--border-soft), var(--border-soft)),
-        linear-gradient(var(--border-soft), var(--border-soft)),
-        linear-gradient(var(--border-soft), var(--border-soft)),
-        linear-gradient(var(--border-soft), var(--border-soft));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
-    background-size:
-        11px 11px, 11px 11px, 11px 11px, 11px 11px,
-        calc(100% - 22px) 1.5px, calc(100% - 22px) 1.5px,
-        1.5px calc(100% - 22px), 1.5px calc(100% - 22px);
-    background-repeat: no-repeat;
-    clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px), calc(100% - 11px) 100%, 11px 100%, 0 calc(100% - 11px), 0 11px);
-    transition: background-color var(--dur-fast) var(--ease-calm);
-}
-.choice-card:hover {
-    background-image:
-        linear-gradient(135deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(225deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(45deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(315deg, transparent 0 7.478px, var(--border-strong) 7.478px 9.278px, transparent 9.278px),
-        linear-gradient(var(--border-strong), var(--border-strong)),
-        linear-gradient(var(--border-strong), var(--border-strong)),
-        linear-gradient(var(--border-strong), var(--border-strong)),
-        linear-gradient(var(--border-strong), var(--border-strong));
-    background-repeat: no-repeat;
-}
+/* The 11px chamfer this surface used to override .choice-card with is gone
+   (ADR 0033). The plain definition further up the file — 1.5px --border-soft
+   on a 12px radius, --border-strong on hover, --accent when checked, and a
+   real outline on :focus-within — is the whole paint again. */
+/* The selected-state marker: a dot, not a diamond (ADR 0033). It reads as the
+   unread dot the rest of the system already uses, and its offsets no longer
+   have to dodge an 11px chamfer. */
 .choice-card::after {
     content: "";
     position: absolute;
-    top: 11px;
-    right: 12px;
+    top: 12px;
+    right: 13px;
     width: 7px;
     height: 7px;
     background: var(--gold-400);
-    transform: rotate(45deg);
+    border-radius: 50%;
     opacity: .3;
     transition: opacity var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
 }
-/* Checked and focus thicken and gild the same closed outline. An outer focus
-   ring is impossible here — clip-path cuts everything outside the octagon, so
-   the 0 0 0 3px var(--focus-ring) :focus-within used to carry had never
-   rendered — so focus is carried by the 2px accent rule, which is visible. */
-.choice-card:has(input:checked),
-.choice-card:focus-within {
-    /* The superseded .choice-card block near the top of this file still sets
-       box-shadow: inset 0 0 0 1px var(--accent) on the checked state. It matches
-       at the same (0,2,1) and only loses the properties restated here, so
-       without this it would keep drawing a border-box inset ring under the
-       clip-path — the stubbed corners, back again on every checked card. */
-    box-shadow: none;
-    background-image:
-        linear-gradient(135deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(225deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(45deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(315deg, transparent 0 7.478px, var(--accent) 7.478px 9.778px, transparent 9.778px),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent));
-    background-position: 0 0, 100% 0, 0 100%, 100% 100%, 11px 0, 11px 100%, 0 11px, 100% 11px;
-    background-size:
-        11px 11px, 11px 11px, 11px 11px, 11px 11px,
-        calc(100% - 22px) 2px, calc(100% - 22px) 2px,
-        2px calc(100% - 22px), 2px calc(100% - 22px);
-    background-repeat: no-repeat;
-}
+
 .choice-card:has(input:checked) { background-color: var(--brand-subtle); }
 .choice-card:has(input:checked)::after { opacity: 1; background: var(--gold-500); }
 .switch {
@@ -9207,7 +8985,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 .feature-status-dot {
     width: 9px;
     height: 9px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     flex: none;
     background: var(--border-strong);
 }
@@ -9374,76 +9152,12 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
     margin-top: 8px;
 }
 
-.wf-bar {
-    gap: 10px;
-    border-left: 3px solid var(--rule-gold);
-}
-.wf-bar-label {
-    font-family: var(--font-label);
-    font-size: .7rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--gold-ink);
-}
-.wf-actions {
-    gap: 10px 22px;
-}
-.wf-actions > form,
-.wf-actions > form.inline {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-.wf-actions .input-small {
-    width: auto;
-    min-width: 128px;
-}
-.wf-btn {
-    display: inline-flex;
-    align-items: center;
-    min-height: 30px;
-    padding: 5px 10px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-pill);
-    background: var(--surface-raised);
-}
-span.wf-btn {
-    color: var(--text-muted);
-}
-.wf-history {
-    margin-top: 6px;
-    padding-left: 13px;
-    border-left: 3px solid var(--rule-gold);
-    font-size: .85rem;
-}
-.wf-history > summary {
-    font-family: var(--font-label);
-    font-size: .7rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--gold-ink);
-    cursor: pointer;
-}
-.wf-history-list {
-    margin: 6px 0 0;
-    padding-left: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.wf-history-item {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: baseline;
-}
-.wf-history-actor {
-    font-weight: 600;
-}
-.wf-history-reason {
-    color: var(--text-muted);
-}
+/* The `.wf-*` family (the workflow action bar, its buttons and its history
+   list) was deleted here: no template, script or test emits any of it. It also
+   carried the one genuine pill-radius violation in the file — `.wf-btn` is a
+   button by name and by role, DESIGN.md reserves the pill for tokens, and the
+   design system's own mock for this class
+   (feature-ui/moderation/index.html) draws it on a plain radius. */
 
 /* The poll is a sunken panel, not a raised card with a gold rule down its edge
    (ThreadView.dc.html:453). Raised-on-raised put it at the same elevation as the
@@ -10162,7 +9876,7 @@ span.wf-btn {
         position: fixed;
         inset: var(--topbar-h) 0 0 0;
         z-index: 54;
-        background: rgba(22, 29, 36, .42);
+        background: var(--scrim);
     }
 }
 @media (max-width: 1399px) and (prefers-reduced-motion: no-preference) {
@@ -10777,7 +10491,7 @@ body.thread-restructure-open { overflow: hidden; }
     position: fixed;
     inset: 0;
     z-index: 79;
-    background: rgba(22,29,36,.42);
+    background: var(--scrim);
     backdrop-filter: blur(2px);
 }
 .topic-tools-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px 14px; border-bottom: 1px solid var(--border-hair); }
@@ -11065,7 +10779,7 @@ body.thread-restructure-open { overflow: hidden; }
     position: fixed;
     inset: 0;
     z-index: 100;
-    background: rgba(22,29,36,.42);
+    background: var(--scrim);
     backdrop-filter: blur(3px);
 }
 [data-thread-enhanced="1"] .thread-restructure > summary { display: none; }
@@ -12338,7 +12052,7 @@ body.thread-restructure-open { overflow: hidden; }
 .member-invitations-status {
     display: inline-block;
     padding: 1px 9px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--surface-sunken);
     color: var(--text-muted);
     font-family: var(--font-label);
@@ -13114,6 +12828,7 @@ body.thread-restructure-open { overflow: hidden; }
     background: var(--surface-page);
     font-size: .92rem;
     color: var(--text-body);
+    box-shadow: none;
 }
 .admin-console .admin-features .input:focus {
     outline: none;
@@ -14107,7 +13822,7 @@ a.account-row-name:hover {
     display: inline-flex;
     flex: 0 0 auto;
     padding: 2px 11px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--green-200);
     background: var(--surface-done);
     color: var(--on-done);
@@ -14311,7 +14026,7 @@ a.account-row-name:hover {
 .account-draft-chip {
     display: inline-flex;
     padding: 2px 9px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--river-200);
     background: var(--surface-info);
     color: var(--on-info);
@@ -15757,7 +15472,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     outline: 0;
     background: var(--surface-raised);
     box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);
-    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    border-radius: var(--radius-md);
     color: var(--text-strong);
     caret-color: var(--gold-600);
     font-family: var(--font-body);
@@ -15883,7 +15598,12 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     right: 13px;
     width: 14px;
     height: 14px;
-    color: var(--gold-600);
+    /* --gold-600 is a primitive: it does not flip, so this chevron stayed
+       day-gold at night and measured 2.97:1 on --surface-raised in the day
+       register (WCAG 2.2 SC 1.4.11 wants 3:1 for a control affordance).
+       --gold-ink is the flipping semantic the system reserves for small gold
+       marks: 5.49:1 by day, 7.30:1 by night. */
+    color: var(--gold-ink);
     pointer-events: none;
     transform: translateY(-50%);
 }
@@ -16320,10 +16040,10 @@ a.presence-person:hover { text-decoration: none; }
 .users-online-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0 6px; }
 .users-online-filters {
     display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px;
-    background: var(--surface-sunken); border-radius: 999px;
+    background: var(--surface-sunken); border-radius: var(--radius-pill);
 }
 .users-online-filter {
-    display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 14px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 14px; border-radius: var(--radius-pill);
     color: var(--text-muted); font-family: var(--font-label); font-size: .76rem;
     letter-spacing: .03em; text-decoration: none;
 }
@@ -16338,7 +16058,7 @@ a.presence-person:hover { text-decoration: none; }
 .users-online-field-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-faint); pointer-events: none; }
 .users-online-search input[type="search"] {
     width: 100%; padding: 8px 12px 8px 33px; box-sizing: border-box;
-    border: 1px solid var(--border-soft); border-radius: 999px; background: var(--surface-raised);
+    border: 1px solid var(--border-soft); border-radius: var(--radius-pill); background: var(--surface-raised);
     font-family: var(--font-body); font-size: .93rem; color: var(--text-body);
 }
 .users-online-search input[type="search"]:focus { outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring); }
