@@ -52,6 +52,10 @@ final class NotificationController extends Controller
 
         return Response::json([
             'unread' => $page['unread'],
+            'dm_unread' => $this->container->get(FeatureFlags::class)->enabled('dms')
+                ? $this->container->get(\App\Repository\ConversationRepository::class)->unreadConversationCount(
+                    $user->id(),
+                ) : 0,
             'items' => $items,
         ]);
     }

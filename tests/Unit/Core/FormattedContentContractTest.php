@@ -18,7 +18,7 @@ final class FormattedContentContractTest extends TestCase
         );
         self::assertStringContainsString(
             'class="dm-body formatted-content"',
-            (string) file_get_contents($root . '/templates/dm/show.php'),
+            (string) file_get_contents($root . '/templates/partials/dm_messages.php'),
         );
         self::assertStringContainsString(
             'class="post-body formatted-content"',

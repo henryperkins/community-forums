@@ -26,7 +26,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
 <aside class="dm-inforail" id="dm-rail" aria-label="<?= $e($railLabel) ?>">
     <div class="dm-rail-head">
         <span class="eyebrow"><?= $e($railLabel) ?></span>
-        <button type="button" class="dm-iconbtn" data-rail-close aria-label="Close details"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
+        <a href="#" class="dm-iconbtn" data-rail-close aria-label="Close details"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
     </div>
 
     <div class="dm-rail-body">
@@ -56,7 +56,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                             <?= $this->partial('partials/monogram', ['name' => $pName, 'username' => (string) $p['username']]) ?>
                             <span class="m-id">
                                 <span class="m-name"><?= $e($pName) ?><?= $pMe ? ' (you)' : '' ?></span>
-                                <span class="m-handle">@<?= $e($p['username']) ?></span>
+                                <span class="m-handle">@<?= $e($p['username']) ?><?= $this->partial('partials/dm_presence', ['user_id' => $p['user_id'], 'state' => $presence_states[(int) $p['user_id']] ?? 'offline']) ?></span>
                             </span>
                             <?php if ($pOwner): ?>
                                 <span class="m-role">Owner</span>
@@ -123,6 +123,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                 <?= $this->partial('partials/monogram', ['name' => $railOtherName, 'username' => $railOtherUser !== '' ? $railOtherUser : $railOtherName, 'gilt' => true]) ?>
                 <h2 class="dm-rail-name"><?= $e($railOtherName) ?></h2>
                 <?php if ($railOtherUser !== ''): ?><span class="dm-rail-handle">@<?= $e($railOtherUser) ?></span><?php endif; ?>
+                <?= $this->partial('partials/dm_presence', ['user_id' => $other['id'] ?? 0, 'state' => $presence_states[(int) ($other['id'] ?? 0)] ?? 'offline']) ?>
                 <span class="dm-tier-pill"><?= $e($railRole) ?></span>
             </div>
 
@@ -133,7 +134,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                         <li><span class="k">Joined</span><span class="v"><?= $e(human_datetime($other['created_at'])) ?></span></li>
                     <?php endif; ?>
                     <?php if ($other !== null && isset($other['reputation'])): ?>
-                        <li><span class="k">Reputation</span><span class="v"><?= (int) $other['reputation'] ?></span></li>
+                        <li><span class="k">Regard</span><span class="v"><?= (int) $other['reputation'] ?></span></li>
                     <?php endif; ?>
                 </ul>
             </div>

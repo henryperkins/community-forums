@@ -82,4 +82,19 @@ final class DmMessageRepository
     {
         return (int) $this->db->fetchValue('SELECT COALESCE(MAX(id), 0) FROM dm_messages WHERE conversation_id = ?', [$conversationId]);
     }
+
+    /** @return list<array<string,mixed>> Bounded incremental read inside the active membership interval. */
+    public function afterForUser(int $conversationId, int $userId, int $after): array
+    {
+        return $this->db->fetchAll(
+            'SELECT m.*, u.username AS author_username, u.display_name AS author_display_name
+             FROM conversation_participants cp
+             JOIN dm_messages m ON m.conversation_id = cp.conversation_id
+                AND m.id > cp.joined_after_message_id AND m.id > ?
+             JOIN users u ON u.id = m.user_id
+             WHERE cp.conversation_id = ? AND cp.user_id = ? AND cp.left_at IS NULL
+             ORDER BY m.id ASC LIMIT 50',
+            [max(0, $after), $conversationId, $userId],
+        );
+    }
 }

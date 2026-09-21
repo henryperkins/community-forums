@@ -34,6 +34,7 @@ $moderationAccess = is_array($moderation_access ?? null) ? $moderation_access : 
 $moderationReportCount = (int) ($moderationAccess['report_count'] ?? 0);
 $inboxCount = (int) ($inbox_unread_count ?? 0);
 $notificationCount = $current_user !== null && !empty($features['notifications']) ? $notification_unread() : 0;
+$dmCount = isset($dm_unread) && is_callable($dm_unread) ? $dm_unread() : 0;
 $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationCount . ' unread' : 'Notifications';
 ?>
 <header class="forum-bar">
@@ -79,9 +80,9 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
         <?php endif; ?>
         <?php if ($current_user !== null && !empty($features['dms'])): ?>
             <?php if ($isMessages): ?>
-                <a data-primary-route="messages" class="forum-bar-surface is-active" href="/messages" aria-current="page">Messages</a>
+                <a data-primary-route="messages" class="forum-bar-surface is-active" href="/messages" aria-current="page">Messages<span class="forum-bar-count" data-dm-unread-count aria-label="<?= $dmCount ?> unread conversations"<?= $dmCount === 0 ? ' hidden' : '' ?>><?= $dmCount > 99 ? '99+' : $dmCount ?></span></a>
             <?php else: ?>
-                <a data-primary-route="messages" class="forum-bar-surface" href="/messages">Messages</a>
+                <a data-primary-route="messages" class="forum-bar-surface" href="/messages">Messages<span class="forum-bar-count" data-dm-unread-count aria-label="<?= $dmCount ?> unread conversations"<?= $dmCount === 0 ? ' hidden' : '' ?>><?= $dmCount > 99 ? '99+' : $dmCount ?></span></a>
             <?php endif; ?>
         <?php endif; ?>
     </nav>

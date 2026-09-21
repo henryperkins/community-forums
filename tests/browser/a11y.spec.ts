@@ -384,13 +384,15 @@ test('group DM surfaces have no serious axe violations (compose, rail, report)',
   // form open.
   await login(page, 'alice@retro.test');
   await visit(page, '/messages/new');
-  await expect(page.locator('.dm-compose input[name="title"]')).toBeVisible();
+  await expect(page.locator('.dm-compose input[name="title"]')).toBeHidden();
   await expectNoSeriousA11yViolations(page, info, '.dm-compose');
 
-  await page.fill('input[name="to"]', 'bob, carol');
+  await page.fill('.dm-compose .dm-to-input', 'bob, carol');
+  await page.locator('.dm-compose .dm-to-input').press(',');
+  await expect(page.locator('.dm-compose input[name="title"]')).toBeVisible();
   await page.fill('.dm-compose input[name="title"]', 'A11y counsel');
-  await page.fill('.dm-form textarea[name="body"]', 'Scanning the group reading room.');
-  await page.locator('.dm-form button[type="submit"]').click();
+  await page.fill('.dm-compose .dm-form textarea[name="body"]', 'Scanning the group reading room.');
+  await page.locator('.dm-compose .dm-form button[type="submit"]').click();
   await page.waitForURL(/\/messages\/\d+/);
   const convPath = new URL(page.url()).pathname;
 
@@ -404,6 +406,9 @@ test('group DM surfaces have no serious axe violations (compose, rail, report)',
   // reading room with the reason form open.
   await login(page, 'bob@retro.test');
   await visit(page, convPath);
+  if (await page.locator('[data-rail-toggle]').getAttribute('aria-expanded') === 'true') {
+    await page.locator('[data-rail-close]').click();
+  }
   const line = page.locator('.dm-group:not(.mine) .dm-line').first();
   await line.locator('.dm-line-menu summary').click();
   await expect(line.locator('.dm-report-form')).toBeVisible();

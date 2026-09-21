@@ -6,38 +6,29 @@ $dmNewInstance = 'dm-new-page';
 $dmNewFirstRecipient = trim(explode(',', (string) $to, 2)[0]);
 $dmNewRecipientLabel = ltrim($dmNewFirstRecipient, '@');
 $dmNewPlaceholder = 'Message @' . ($dmNewRecipientLabel !== '' ? $dmNewRecipientLabel : 'recipient') . '…';
-$dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInstance): void {
+$dmNewShowAvatars = $show_avatars ?? true;
+$dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInstance, $dmNewShowAvatars): void {
     echo $this->partial('partials/dm_compose_fields', [
         'to' => $to,
         'title' => $title ?? '',
         'errors' => $errors,
         'allow_groups' => $allowGroups ?? false,
         'instance_id' => $dmNewInstance,
+        'show_avatars' => $dmNewShowAvatars,
     ]);
 };
 ?>
 <div class="dm-shell reading">
-    <aside class="dm-listpane dm-return-pane" aria-label="Messages">
-        <header class="dm-listpane-head">
-            <div class="dm-listpane-top">
-                <span>
-                    <span class="eyebrow">Private counsel</span>
-                    <h1>Messages</h1>
-                </span>
-            </div>
-        </header>
-        <div class="dm-empty-inner dm-return-copy">
-            <span class="star" aria-hidden="true">✦</span>
-            <p><a href="/messages">Back to all messages</a></p>
-        </div>
-    </aside>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'allow_groups' => $allowGroups ?? false, 'show_avatars' => $dmNewShowAvatars]) ?>
 
     <section class="dm-threadpane">
+        <header class="dm-thread-head dm-thread-head-compose">
+            <a class="dm-back" href="/messages" aria-label="Back to messages"><?= $this->partial('partials/icon', ['name' => 'chevron-left']) ?></a>
+            <div class="dm-thread-id"><div><span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span><h1 class="dm-thread-title">New message</h1></div></div>
+        </header>
         <div class="dm-compose">
             <div class="dm-compose-wrap">
-                <p class="breadcrumb"><a href="/messages">← Messages</a></p>
-                <span class="eyebrow">Private counsel</span>
-                <h1>New message</h1>
+                <?php if (!empty($new_user_throttled)): ?><p class="dm-empty-note">New accounts can reply to messages they receive. To start a conversation, make your first post or come back later.</p><?php endif; ?>
 
                 <?= $this->partial('partials/composer_shell', [
                     'action' => '/messages',

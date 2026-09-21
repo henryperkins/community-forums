@@ -7318,8 +7318,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .dm-compose-details [data-close-compose] { display: none; }
 .has-js .dm-compose-details .dm-dialog-close[data-close-compose] { display: inline-flex; }
 .has-js .dm-compose-details .btn[data-close-compose] { display: inline-block; }
-.dm-rail-head [data-rail-close] { display: none; }
-.has-js .dm-rail-head [data-rail-close] { display: inline-flex; }
+.dm-rail-head [data-rail-close] { display: inline-flex; }
 .dm-dialog-body {
     padding: 6px 22px 8px;
     display: flex;
@@ -16131,3 +16130,211 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
 .notification-count { display: inline-block; min-width: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--ink-900); font-size: 11px; line-height: 16px; text-align: center; font-weight: 700; }
 [data-notification-count][hidden] { display: none; }
 [data-notification-heading] [data-notification-count]::after { content: " unread"; }
+
+/* Messages refinement — committed reference: .impeccable/mocks/messages/. */
+
+.dm-shell {
+    --dm-ground: color-mix(in srgb, var(--info) 11%, var(--surface-page));
+    --dm-raised: color-mix(in srgb, var(--info) 6%, var(--surface-raised));
+    --dm-sunken: color-mix(in srgb, var(--info) 14%, var(--surface-sunken));
+    --dm-accent: var(--info);
+    --dm-accent-soft: color-mix(in srgb, var(--info) 16%, var(--surface-raised));
+    --dm-accent-line: color-mix(in srgb, var(--info) 45%, var(--border-hair));
+    --dm-accent-ink: var(--on-info, var(--info));
+    --dm-active-wash: color-mix(in srgb, var(--info) 18%, var(--surface-raised));
+    --dm-focus-ring: 0 0 0 3px color-mix(in srgb, var(--info) 24%, transparent);
+    /* The room is height-bounded: the stream scrolls inside it and the composer
+       docks at the bottom, which is also what lets the new-messages pill work. */
+    height: calc(100dvh - var(--topbar-h));
+    min-height: 0;
+}
+.dm-listpane, .dm-threadpane, .dm-inforail { min-height: 0; }
+@media (min-width: 901px) {
+    .dm-shell { grid-template-columns: minmax(272px, 312px) minmax(0, 1fr); }
+}
+
+/* ── The rail is on demand at every width ─────────────────────────────── */
+@media (min-width: 1400px) {
+    .dm-shell.has-rail { grid-template-columns: minmax(272px, 312px) minmax(0, 1fr); }
+    .dm-shell.has-rail .dm-inforail { display: none; }
+    .dm-shell.has-rail.rail-open { grid-template-columns: minmax(272px, 300px) minmax(0, 1fr) minmax(264px, 300px); }
+    .dm-shell.has-rail.rail-open .dm-inforail { display: flex; }
+}
+/* With the board rail open there is no room for a third column until ~1700px:
+   the rail stays a drawer over the conversation, as it is below 1400px. */
+@media (min-width: 1400px) and (max-width: 1699px) {
+    .is-rail-open .dm-shell.has-rail.rail-open { grid-template-columns: minmax(272px, 312px) minmax(0, 1fr); }
+    .is-rail-open .dm-shell.has-rail.rail-open .dm-inforail {
+        position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: min(340px, 92vw); z-index: 55;
+        box-shadow: var(--shadow-xl); transform: translateX(0);
+    }
+    .is-rail-open .dm-shell.has-rail.rail-open .dm-rail-scrim { display: block; position: fixed; inset: var(--topbar-h) 0 0 0; z-index: 54; background: var(--scrim); }
+}
+@media (max-width: 1399px) {
+    .dm-shell.has-rail.rail-open .dm-inforail { transform: translateX(0); }
+    .dm-shell.has-rail.rail-open .dm-rail-scrim { display: block; position: fixed; inset: var(--topbar-h) 0 0 0; z-index: 54; background: var(--scrim); }
+}
+
+/* ── The conversation takes the measure ───────────────────────────────── */
+.dm-scroll { padding: 22px 32px 24px; }
+.dm-scroll-inner { max-width: 760px; }
+.dm-group { max-width: 88%; }
+.dm-group.mine .dm-msgs { max-width: 100%; min-width: 0; }
+.dm-body :not(pre) > code { word-break: normal; overflow-wrap: anywhere; }
+.dm-body pre { max-width: 100%; overflow-x: auto; }
+
+/* ── List rows: name first, a short time, one-line preview ────────────── */
+.dm-listpane-top { align-items: center; }
+.dm-listpane-head h1 { font-size: 1.6rem; }
+.dm-listpane-filters .pill { min-height: 34px; display: inline-flex; align-items: center; padding: 0 13px; }
+.dm-row { gap: 2px 11px; padding: 10px 12px; }
+.dm-time { font-size: .69rem; letter-spacing: .01em; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.dm-preview-you { font-family: var(--font-label); font-size: .69rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-right: 2px; }
+.dm-row.is-unread .dm-preview-you { color: var(--text-muted); }
+.dm-row.is-unread .dm-preview { grid-column: 2; }
+.dm-filter-n { margin-left: 6px; font-family: var(--font-mono); font-size: .69rem; color: var(--dm-accent-ink); }
+.dm-filter-n:empty { display: none; }
+.dm-listpane-filters .pill.is-active .dm-filter-n { color: inherit; }
+.dm-unread-dot { background: var(--dm-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--info) 22%, transparent); }
+
+/* ── Header: identity, presence, one lock eyebrow ─────────────────────── */
+.dm-thread-sub { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-presence { display: inline-flex; align-items: center; gap: 5px; vertical-align: baseline; }
+.dm-presence .presence-dot-bare { width: 7px; height: 7px; flex: 0 0 auto; }
+.dm-thread-head-compose .dm-thread-title { font-size: 1.28rem; }
+.dm-menu-pop { display: flex; }
+
+/* ── Stream: dividers, run headers, the new-messages rule, the pill ───── */
+.dm-day { margin: 18px 2px 10px; font-size: .69rem; }
+.dm-day > span { white-space: nowrap; }
+.dm-day-begin { margin-top: 4px; margin-bottom: 2px; gap: 8px; }
+.dm-day-begin .icon { width: 12px; height: 12px; flex: 0 0 auto; }
+.dm-begin-note { text-align: center; font-family: var(--font-body); font-size: .88rem; color: var(--text-faint); margin: 0 0 4px; }
+.dm-day-new { color: var(--dm-accent-ink); }
+.dm-day-new::before, .dm-day-new::after { background: var(--dm-accent-line); }
+.dm-ghead { gap: 8px; }
+.dm-name { font-size: .72rem; }
+.dm-ghead .dm-gtime { font-size: .69rem; font-variant-numeric: tabular-nums; }
+.dm-rank { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .08em; font-size: .69rem; color: var(--gold-ink); background: var(--gold-soft); border: 1px solid var(--rule-gold); border-radius: var(--radius-pill); padding: 1px 7px; line-height: 1.3; }
+.dm-receipt { font-size: .69rem; }
+.dm-scroll { position: relative; }
+.dm-newpill {
+    position: sticky; bottom: 6px; align-self: center; margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px 7px 11px;
+    border: 0; border-radius: var(--radius-pill); cursor: pointer;
+    background: var(--surface-inverse); color: var(--text-inverse);
+    box-shadow: var(--shadow-lg);
+    font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
+}
+.dm-newpill .icon { width: 14px; height: 14px; }
+.dm-newpill:hover { background: var(--brand); color: var(--surface-raised); }
+.dm-events > summary { display: inline-flex; align-items: center; gap: 6px; }
+.dm-events > summary .icon { width: 13px; height: 13px; }
+
+/* ── Rail: presence and the members' leaves ───────────────────────────── */
+.dm-rail-presence { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: .72rem; color: var(--text-muted); }
+.dm-rail-presence .presence-dot-bare { width: 7px; height: 7px; }
+.dm-member { position: relative; }
+.dm-member .avatar-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
+.dm-member .avatar-wrap .presence-dot { position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; box-shadow: 0 0 0 2px var(--dm-ground); }
+.dm-member .m-handle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-member .m-role { font-size: .69rem; }
+.dm-rail-sec h3, .dm-member .m-role { color: var(--dm-accent-ink); }
+/* Owner tools overlay the row so a hidden pair of buttons never steals width. */
+.dm-member-tools { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); margin: 0; padding-left: 10px; background: linear-gradient(90deg, transparent, var(--dm-ground) 18%); }
+.dm-linkbtn { font-size: .69rem; min-height: 24px; padding: 2px 6px; }
+
+/* ── Recipient picker: chips in the engraved field, suggestions in flow ── */
+.dm-to-field-wrap { display: flex; flex-direction: column; gap: 6px; }
+.dm-to-field-wrap .field-label { font-family: var(--font-label); font-size: .82rem; color: var(--text-muted); }
+.dm-to-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; min-height: 44px; cursor: text; }
+.dm-to-field.is-focus { border-color: var(--dm-accent-line); outline: 0; box-shadow: var(--shadow-inset), var(--dm-focus-ring); }
+.dm-to-field.is-invalid { border-color: var(--danger); }
+.dm-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 2px 2px 3px; border-radius: var(--radius-pill); background: var(--dm-sunken); border: 1px solid var(--dm-accent-line); font-family: var(--font-body); font-size: .94rem; line-height: 1; color: var(--text-strong); }
+.dm-chip-mono { width: 20px; height: 20px; font-size: .5rem; }
+.dm-chip-x { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: none; color: var(--text-muted); cursor: pointer; }
+.dm-chip-x .icon { width: 12px; height: 12px; }
+.dm-chip-x:hover { background: var(--surface-raised); color: var(--danger); }
+.dm-chip.is-invalid { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, var(--surface-raised)); }
+.dm-to-input { flex: 1 1 140px; min-width: 120px; border: 0; background: none; font: inherit; font-family: var(--font-body); font-size: 1rem; color: var(--text-body); outline: none; padding: 4px 2px; box-shadow: none; }
+.dm-to-input::placeholder { color: var(--text-faint); }
+.dm-suggest { flex: 1 0 100%; list-style: none; margin: 2px -2px 0; padding: 4px 0 0; border-top: 1px solid var(--border-hair); display: flex; flex-direction: column; gap: 2px; }
+.dm-suggest-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer; min-height: 40px; }
+.dm-suggest-row.is-active, .dm-suggest-row:hover { background: var(--dm-active-wash); }
+.dm-suggest-row .monogram { width: 28px; height: 28px; font-size: .62rem; }
+.dm-suggest-id { display: flex; flex-direction: column; min-width: 0; }
+.dm-suggest-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1rem; line-height: 1.15; color: var(--text-strong); }
+.dm-suggest-sub { font-family: var(--font-mono); font-size: .69rem; color: var(--text-muted); }
+.dm-dialog-body .field-hint { margin: 0; }
+.dm-dialog-body .field-error { margin: 0; }
+/* The message box sits inside the dialog's padded body, edge to edge with the fields. */
+.dm-dialog .composer-box { margin: 0 22px; }
+.dm-dialog .composer-meta-row { margin: 4px 22px 16px; }
+
+/* ── Empty states ─────────────────────────────────────────────────────── */
+.dm-empty-star { color: var(--star); opacity: .75; }
+.dm-empty-inner h2 { margin-top: 10px; }
+.dm-empty-inner .btn { margin-top: 6px; }
+.dm-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0 0; }
+.dm-empty-note { display: flex; align-items: flex-start; gap: 8px; text-align: left; font-size: .9rem; line-height: 1.5; color: var(--text-muted); background: var(--dm-ground); border: 1px solid var(--border-hair); border-radius: var(--radius-md); padding: 10px 12px; margin: 14px 0 0; }
+.dm-empty-note .icon { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 4px; color: var(--dm-accent-ink); }
+.dm-list-empty-first { padding: 34px 22px; text-align: left; }
+.dm-list-empty-first p { margin: 0; color: var(--text-body); }
+.dm-list-empty-first .dm-list-empty-sub { margin-top: 6px; font-size: .9rem; color: var(--text-muted); }
+.dm-list-empty-first .dm-empty-actions { justify-content: flex-start; }
+@media (min-width: 901px) { .dm-list-empty-first .dm-empty-actions, .dm-list-empty-first .dm-empty-note { display: none; } }
+
+/* ── The standalone New message page is the reading room ──────────────── */
+.dm-compose { padding: 26px 32px 40px; }
+.dm-compose-wrap { max-width: 640px; }
+
+/* ── Twilight: the one control that failed 3:1 ────────────────────────── */
+[data-theme="dark"] .dm-shell .dm-new-btn { color: var(--accent); border-color: var(--border-strong); }
+
+/* ── Touch: hover-revealed controls must exist without hover ──────────── */
+@media (hover: none) {
+    .dm-line-menu { opacity: 1; }
+    .dm-member-tools { opacity: 1; }
+    .dm-dotbtn { width: 28px; height: 28px; }
+}
+
+@media (max-width: 900px) {
+    .dm-shell, .dm-shell.has-rail { width: auto; margin-inline: -14px; }
+    /* Presence drops under the count rather than vanishing behind an ellipsis. */
+    .dm-thread-sub { white-space: normal; overflow: visible; text-overflow: clip; }
+    .dm-scroll { padding: 16px 16px 18px; }
+    .dm-group { max-width: 92%; }
+    .dm-compose { padding: 18px 16px 32px; }
+}
+
+/* The enhanced toggle and the no-JS anchor share the same open state.
+   Closed rails leave the focus order entirely. */
+.dm-shell.has-rail:not(.rail-open):not(:has(.dm-inforail:target)) .dm-inforail { display: none; }
+.dm-shell.has-rail:has(.dm-inforail:target) .dm-inforail { display: flex; transform: none; }
+.dm-thread-head, .dm-composer { flex-shrink: 0; }
+.dm-compose { overflow-y: auto; }
+[data-dm-messages] { display: flex; flex-direction: column; gap: 3px; }
+.dm-newpill[hidden], .dm-presence[hidden], [data-dm-receipt][hidden],
+[data-dm-group-title][hidden], .dm-suggest[hidden], [data-dm-unread-count][hidden] { display: none; }
+.dm-to-chips { display: contents; }
+.dm-day time { white-space: nowrap; }
+.dm-to-field > .dm-to-input { border: 0; box-shadow: none; background: transparent; outline: none; }
+.dm-suggest-row { width: 100%; border: 0; background: transparent; text-align: left; }
+.dm-to-field-wrap .dm-suggest { width: 100%; }
+.dm-presence.is-online .presence-dot-bare { background: var(--success); }
+.dm-presence.is-away .presence-dot-bare { background: var(--warning); }
+.dm-newpill { z-index: 1; }
+@media (min-width: 1400px) {
+    .dm-shell.has-rail:has(.dm-inforail:target) { grid-template-columns: minmax(272px, 300px) minmax(0, 1fr) minmax(264px, 300px); }
+}
+@media (min-width: 1400px) and (max-width: 1699px) {
+    .is-rail-open .dm-shell.has-rail:has(.dm-inforail:target) { grid-template-columns: minmax(272px, 312px) minmax(0, 1fr); }
+    .is-rail-open .dm-shell.has-rail:has(.dm-inforail:target) .dm-inforail {
+        position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: min(340px, 92vw); z-index: 55; box-shadow: var(--shadow-xl);
+    }
+    .is-rail-open .dm-inforail:target + .dm-rail-scrim { display: block; position: fixed; inset: var(--topbar-h) 0 0; z-index: 54; background: var(--scrim); }
+}
+@media (hover: none) {
+    .dm-member-tools { position: static; transform: none; flex-wrap: wrap; background: var(--dm-ground); padding: 0; }
+    .dm-member { flex-wrap: wrap; }
+}

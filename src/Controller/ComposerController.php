@@ -51,6 +51,9 @@ final class ComposerController extends Controller
         $trigger = (string) $request->query('trigger', '');
         $q = (string) $request->query('q', '');
         $context = (string) $request->query('context', '');
+        if ($context === 'dm-recipient' && !$flags->enabled('dms')) {
+            throw new NotFoundException('Not found.');
+        }
         $targetId = (int) $request->query('target_id', 0);
 
         if (!in_array($trigger, ['@', '#', ':'], true)) {

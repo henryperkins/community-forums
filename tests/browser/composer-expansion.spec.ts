@@ -524,12 +524,13 @@ test('DM and edit mounts keep working through the shared-shell change', async ({
 
   await page.goto('/messages/new?to=bob');
   await dismissTour(page);
-  const dm = page.locator('form.composer-shell[data-composer-context="dm"]').first();
+  const dm = page.locator('.dm-compose form.composer-shell[data-composer-context="dm"]');
   await expect(dm).toBeVisible();
   await expect(dm).not.toHaveAttribute('data-composer-dock', '1');
   await expect(dm.getByRole('button', { name: 'Minimize reply' })).toHaveCount(0);
   const recipient = dm.locator('input[name="to"]');
-  await expect(recipient).toBeVisible();
+  await expect(dm.locator('.dm-to-input')).toBeVisible();
+  await expect(dm.locator('.dm-chip')).toContainText('bob');
   await expect(recipient).toHaveValue('bob');
   const dmBody = dm.locator('.wysiwyg-composer .ProseMirror');
   await dmBody.click();

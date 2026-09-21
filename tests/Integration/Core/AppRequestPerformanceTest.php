@@ -58,7 +58,8 @@ final class AppRequestPerformanceTest extends TestCase
         $this->users()->updateLastSeen((int) $viewer['id']);
         $this->actingAs($viewer);
 
-        foreach (['/presence' => 6, '/notifications/bell' => 9] as $path => $budget) {
+        // The bell now carries the Messages count: one bounded unread query.
+        foreach (['/presence' => 6, '/notifications/bell' => 10] as $path => $budget) {
             $response = $this->measured($path);
             self::assertSame(200, $response->status());
             self::assertSame('application/json; charset=UTF-8', $response->getHeader('Content-Type'));
@@ -108,7 +109,8 @@ final class AppRequestPerformanceTest extends TestCase
             ));
         }
         self::assertSame($counts[0], $counts[1], 'One and six unread items must use the same number of database exchanges.');
-        self::assertLessThanOrEqual(53, $counts[1]);
+        // The server-rendered Messages badge adds one query, never one per item.
+        self::assertLessThanOrEqual(54, $counts[1]);
     }
 
     public function test_cookie_free_guest_reads_and_guest_forms_keep_csrf_protection(): void

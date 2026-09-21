@@ -361,7 +361,7 @@ final class DirectMessageService
     }
 
     /** Anti-spam: brand-new accounts (no posts, very young) cannot start new DMs. */
-    private function isThrottledNewUser(User $sender): bool
+    public function isThrottledNewUser(User $sender): bool
     {
         if ($sender->isAdmin() || $sender->isModerator()) {
             return false;

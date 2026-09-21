@@ -208,7 +208,8 @@ final class ConversationRepository
     public function participants(int $conversationId): array
     {
         return $this->db->fetchAll(
-            'SELECT cp.*, u.username, u.display_name
+            'SELECT cp.*, u.username, u.display_name, u.status, u.show_presence,
+                    u.profile_visibility, u.last_seen_at
              FROM conversation_participants cp
              JOIN users u ON u.id = cp.user_id
              WHERE cp.conversation_id = ?

@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
+use App\Core\ForbiddenException;
+use App\Core\View;
+use App\Security\Csrf;
+use App\Security\WriteGate;
+use App\Service\ConversationReadService;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
@@ -37,8 +42,7 @@ final class ConversationController extends Controller
         $filter = $request->query('filter', 'all') === 'unread' ? 'unread' : 'all';
         $rawQ = $request->query('q', '');
         $q = is_string($rawQ) ? trim($rawQ) : '';
-        $conversations = $this->container->get(ConversationRepository::class)
-            ->listForUser($user->id(), $q !== '' ? $q : null);
+        $conversations = $this->container->get(ConversationRepository::class)->listForUser($user->id(), $q !== '' ? $q : null);
         if ($filter === 'unread') {
             $conversations = array_values(array_filter(
                 $conversations,
@@ -47,6 +51,8 @@ final class ConversationController extends Controller
         }
         return $this->view('dm/index', [
             'conversations' => $conversations,
+            'first_run' => $conversations === [] && $filter === 'all' && $q === '',
+            'new_user_throttled' => $this->container->get(DirectMessageService::class)->isThrottledNewUser($user),
             'filter' => $filter,
             'q' => $q,
             'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
@@ -57,7 +63,8 @@ final class ConversationController extends Controller
     public function newForm(Request $request): Response
     {
         $user = $this->requireDms();
-        $to = trim((string) $request->query('to', ''));
+        $rawTo = $request->query('to', '');
+        $to = is_string($rawTo) ? trim($rawTo) : '';
         $allowGroups = $this->container->get(FeatureFlags::class)->enabled('group_dms');
         return $this->view('dm/new', [
             'to' => $to,
@@ -65,6 +72,8 @@ final class ConversationController extends Controller
             'errors' => [],
             'body' => '',
             'allowGroups' => $allowGroups,
+            'conversations' => $this->container->get(ConversationRepository::class)->listForUser($user->id()),
+            'new_user_throttled' => $this->container->get(DirectMessageService::class)->isThrottledNewUser($user),
             'show_avatars' => $this->showAvatars($user),
         ]);
     }
@@ -73,6 +82,7 @@ final class ConversationController extends Controller
     {
         $user = $this->requireDms();
         $this->throttle($request, $user);
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
 
         $allowGroups = $this->container->get(FeatureFlags::class)->enabled('group_dms');
         $to = trim((string) $request->str('to'));
@@ -94,15 +104,20 @@ final class ConversationController extends Controller
             $result = $isDirect
                 ? $service->start($user, $recipientIds[0], $body, $request->post('idempotency_key'))
                 : $service->startGroup($user, $recipientIds, $title, $body, $request->post('idempotency_key'));
-        } catch (ValidationException $e) {
-            return $this->view('dm/new', [
-                'to' => $to,
-                'title' => $title,
-                'errors' => $e->errors,
-                'body' => $body,
-                'allowGroups' => $allowGroups,
+        } catch (ValidationException | ForbiddenException $e) {
+            $errors = $e instanceof ValidationException ? $e->errors : ['to' => $e->getMessage()];
+            $data = [
+                'to' => $to, 'title' => $title, 'errors' => $errors, 'body' => $body,
+                'allowGroups' => $allowGroups, 'allow_groups' => $allowGroups,
+                'conversations' => $this->container->get(ConversationRepository::class)->listForUser($user->id()),
+                'new_user_throttled' => $this->container->get(DirectMessageService::class)->isThrottledNewUser($user),
                 'show_avatars' => $this->showAvatars($user),
-            ], 422);
+            ];
+            if ($request->post('origin') === 'dialog') {
+                $data['compose'] = ['to' => $to, 'title' => $title, 'body' => $body, 'errors' => $errors, 'open' => true];
+                return $this->view('dm/index', $data, 422);
+            }
+            return $this->view('dm/new', $data, 422);
         }
         $this->discardServerDraftFor($user, $request->path());
         return $this->redirect('/messages/' . $result['conversation_id']);
@@ -169,20 +184,23 @@ final class ConversationController extends Controller
         $isGroup = (string) ($conversation['kind'] ?? 'direct') === 'group';
         $isOwner = $isGroup && (int) ($conversation['owner_user_id'] ?? 0) === $user->id();
 
+        $participants = $convRepo->participants($conversationId);
         return $this->view('dm/show', array_merge([
+            'presence_states' => $this->container->get(ConversationReadService::class)->presence($user, $participants),
+            'joined_after_message_id' => (int) ($membership['joined_after_message_id'] ?? 0),
             'conversation' => $conversation,
             'conversation_id' => $conversationId,
             'is_group' => $isGroup,
             'is_owner' => $isOwner,
             'can_reply' => $convRepo->isParticipant($conversationId, $user->id()),
-            'participants' => $isGroup ? $convRepo->participants($conversationId) : [],
+            'participants' => $participants,
             'events' => $isGroup ? $convRepo->events($conversationId, 20) : [],
             'messages' => $messages,
             'reference_cards' => $referenceCards,
             'other' => $other,
             // The list is the always-present left column of the reading room, and
             // the details rail needs the viewer's mute + block state (additive reads).
-            'conversations' => $convRepo->listForUser($user->id()),
+            'conversations' => $this->container->get(ConversationRepository::class)->listForUser($user->id()),
             'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
             'muted' => (($membership['notification_mode'] ?? 'normal') === 'muted'),
             'other_is_blocked' => (!$isGroup && $otherId !== null)
@@ -205,6 +223,7 @@ final class ConversationController extends Controller
     {
         $user = $this->requireDms();
         $this->throttle($request, $user);
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
         $conversationId = (int) ($params['id'] ?? 0);
         $body = (string) $request->post('body', '');
 
@@ -215,14 +234,38 @@ final class ConversationController extends Controller
                 $body,
                 $request->post('idempotency_key'),
             );
-        } catch (ValidationException $e) {
+        } catch (ValidationException | ForbiddenException $e) {
             return $this->renderConversation($request, $user, $conversationId, [
-                'errors' => $e->errors,
+                'errors' => $e instanceof ValidationException ? $e->errors : ['body' => $e->getMessage()],
                 'body' => $body,
             ], 422);
         }
         $this->discardServerDraftFor($user, $request->path());
         return $this->redirect('/messages/' . $conversationId);
+    }
+
+    /** CSRF-protected because reading advances a participant's watermark. */
+    public function poll(Request $request, array $params): Response
+    {
+        $user = $this->requireDms();
+        $result = $this->container->get(ConversationReadService::class)->poll(
+            $user, (int) ($params['id'] ?? 0), max(0, (int) $request->post('after', 0)),
+        );
+        $cards = [];
+        if ($result['messages'] !== [] && $this->container->get(FeatureFlags::class)->enabled('content_references')) {
+            $cards = $this->container->get(ContentReferenceService::class)->cardsForSources(
+                'dm_message', array_column($result['messages'], 'id'), $user,
+            );
+        }
+        // JSON fragments need no global navigation, board or presence-roster reads.
+        $view = clone $this->container->get(View::class);
+        $view->beforeRender(static function (): void {});
+        $view->share(['current_user' => $user, 'csrf_token' => fn (): string => $this->container->get(Csrf::class)->token()]);
+        $result['html'] = $result['messages'] === [] ? '' : $view->partial('partials/dm_messages', $result + [
+            'reasons' => self::REASONS, 'reference_cards' => $cards,
+        ]);
+        unset($result['messages'], $result['participants']);
+        return Response::json($result)->header('Cache-Control', 'private, no-store');
     }
 
     /** @param array<string,string> $params */

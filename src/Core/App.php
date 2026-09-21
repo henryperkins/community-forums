@@ -878,6 +878,13 @@ final class App
             'request_path' => $request->path(),
             'nav' => $nav,
             'inbox_unread_count' => $inboxUnreadCount,
+            'dm_unread' => static function () use ($container, $session, $features): int {
+                try {
+                    $viewer = $session->user();
+                    return $viewer === null || empty($features['dms']) ? 0
+                        : $container->get(ConversationRepository::class)->unreadConversationCount($viewer->id());
+                } catch (Throwable) { return 0; }
+            },
             'notification_unread' => static function () use ($container, $session, $features): int {
                 static $count = null;
                 if ($count !== null) { return $count; }
@@ -1158,6 +1165,11 @@ final class App
         $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
         $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));
         $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));
+        $c->bind(\App\Service\ConversationReadService::class, fn (Container $c) => new \App\Service\ConversationReadService(
+            $c->get(Database::class), $c->get(ConversationRepository::class), $c->get(DmMessageRepository::class),
+            $c->get(BlockRepository::class), $c->get(FeatureFlags::class),
+            $c->get(PresenceService::class), $c->get(WriteGate::class), $c->get(Markdown::class),
+        ));
         $c->bind(DmMessageRepository::class, fn (Container $c) => new DmMessageRepository($c->get(Database::class)));
         $c->bind(ReportRepository::class, fn (Container $c) => new ReportRepository($c->get(Database::class)));
         $c->bind(ThreadAssignmentRepository::class, fn (Container $c) => new ThreadAssignmentRepository($c->get(Database::class)));
@@ -2488,6 +2500,7 @@ final class App
         $r->post('/messages', [ConversationController::class, 'create']);
         $r->get('/messages/{id}', [ConversationController::class, 'show']);
         $r->post('/messages/{id}', [ConversationController::class, 'reply']);
+        $r->post('/messages/{id}/poll', [ConversationController::class, 'poll']);
         $r->post('/messages/{id}/members', [ConversationController::class, 'addMember']);
         $r->post('/messages/{id}/members/remove', [ConversationController::class, 'removeMember']);
         $r->post('/messages/{id}/rename', [ConversationController::class, 'rename']);

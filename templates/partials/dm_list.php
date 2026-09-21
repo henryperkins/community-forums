@@ -14,6 +14,10 @@ $dmActiveId = (int) ($active_id ?? 0);
 $dmConversations = $conversations ?? [];
 $dmQ = trim((string) ($q ?? ''));
 $dmAllowGroups = !empty($allow_groups);
+$dmShowAvatars = $show_avatars ?? true;
+$dmCompose = $compose ?? [];
+$dmComposeErrors = $dmCompose['errors'] ?? [];
+$dmUnreadCount = count(array_filter($dmConversations, static fn ($row) => !empty($row['is_unread'])));
 // The pills keep an applied search; with no search they stay byte-identical
 // to the long-pinned hrefs.
 $dmAllHref = '/messages' . ($dmQ !== '' ? '?q=' . urlencode($dmQ) : '');
@@ -26,7 +30,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                 <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
                 <h1>Messages</h1>
             </span>
-            <details class="dm-compose-details">
+            <details class="dm-compose-details"<?= !empty($dmCompose['open']) ? ' open' : '' ?>>
                 <summary class="dm-new-btn" aria-label="New message" title="New message"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></summary>
                 <div class="dm-dialog" aria-labelledby="dm-compose-title">
                     <div class="dm-dialog-head">
@@ -35,14 +39,15 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                     </div>
                     <?php
                     $dmDialogInstance = 'dm-new-dialog';
-                    $dmDialogWrapper = function () use ($dmAllowGroups, $dmDialogInstance): void {
-                        ?><div class="dm-dialog-body"><?php
+                    $dmDialogWrapper = function () use ($dmAllowGroups, $dmDialogInstance, $dmCompose, $dmComposeErrors, $dmShowAvatars): void {
+                        ?><div class="dm-dialog-body"><input type="hidden" name="origin" value="dialog"><?php
                         echo $this->partial('partials/dm_compose_fields', [
-                            'to' => '',
-                            'title' => '',
-                            'errors' => [],
+                            'to' => $dmCompose['to'] ?? '',
+                            'title' => $dmCompose['title'] ?? '',
+                            'errors' => $dmComposeErrors,
                             'allow_groups' => $dmAllowGroups,
                             'instance_id' => $dmDialogInstance,
+                            'show_avatars' => $dmShowAvatars,
                         ]);
                         ?></div><?php
                     };
@@ -53,11 +58,14 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                     <?= $this->partial('partials/composer_shell', [
                         'action' => '/messages',
                         'context' => 'dm',
+                        'no_wysiwyg' => true,
                         'target_id' => 0,
                         'instance_id' => $dmDialogInstance,
                         'placeholder' => 'Message @recipient…',
                         'maxlength' => 5000,
-                        'body_value' => '',
+                        'body_value' => $dmCompose['body'] ?? '',
+                        'body_error' => $dmComposeErrors['body'] ?? '',
+                        'body_error_focus' => array_key_first($dmComposeErrors) === 'body',
                         'submit_label' => 'Send',
                         'form_class' => 'dm-form',
                         'identity' => [
@@ -65,8 +73,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                             'username' => $current_user->username(),
                             'show_avatar' => $show_avatars ?? true,
                         ],
-                        'no_wysiwyg' => true,
-                        'wrapper_slot' => $dmDialogWrapper,
+                                                'wrapper_slot' => $dmDialogWrapper,
                         'before_submit_slot' => $dmDialogBeforeSubmit,
                     ]) ?>
                 </div>
@@ -79,12 +86,18 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
         </form>
         <nav class="dm-listpane-filters" aria-label="Message filters">
             <a class="pill<?= $dmFilter === 'all' ? ' is-active' : '' ?>" href="<?= $e($dmAllHref) ?>"<?= $dmFilter === 'all' ? ' aria-current="page"' : '' ?>>All</a>
-            <a class="pill<?= $dmFilter === 'unread' ? ' is-active' : '' ?>" href="<?= $e($dmUnreadHref) ?>"<?= $dmFilter === 'unread' ? ' aria-current="page"' : '' ?>>Unread</a>
+            <a class="pill<?= $dmFilter === 'unread' ? ' is-active' : '' ?>" href="<?= $e($dmUnreadHref) ?>"<?= $dmFilter === 'unread' ? ' aria-current="page"' : '' ?>>Unread<span class="dm-filter-n"><?= $dmUnreadCount > 0 ? $dmUnreadCount : '' ?></span></a>
         </nav>
     </header>
 
-    <?php if (empty($dmConversations)): ?>
-        <p class="dm-list-empty"><?= $dmQ !== '' ? 'No letters match your search.' : ($dmFilter === 'unread' ? 'No unread conversations.' : 'No conversations yet.') ?></p>
+    <?php if (!empty($first_run)): ?>
+        <div class="dm-list-empty dm-list-empty-first">
+            <p>No conversations yet.</p>
+            <p class="dm-list-empty-sub">When a member writes to you, or you write to them, the exchange will keep here.</p>
+            <?= $this->partial('partials/dm_empty_actions', ['new_user_throttled' => $new_user_throttled ?? false]) ?>
+        </div>
+    <?php elseif (empty($dmConversations)): ?>
+        <p class="dm-list-empty"><?= $dmQ !== '' ? 'No conversations match your search.' : ($dmFilter === 'unread' ? 'No unread conversations.' : 'No conversations yet.') ?></p>
     <?php else: ?>
         <ul class="dm-list">
             <?php foreach ($dmConversations as $c): ?>
@@ -92,7 +105,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                 $cid = (int) $c['conversation_id'];
                 $isGroup = ($c['kind'] ?? 'direct') === 'group';
                 $rowName = $isGroup
-                    ? (($c['title'] ?? '') !== '' ? $c['title'] : 'Group conversation')
+                    ? (($c['title'] ?? '') !== '' ? $c['title'] : (($c['participant_names'] ?? '') ?: 'Group conversation'))
                     : (($c['other_display_name'] ?? '') !== '' ? $c['other_display_name'] : $c['other_username']);
                 $seed = $isGroup ? ('group-' . $cid) : (string) $c['other_username'];
                 ?>
@@ -100,8 +113,8 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                     <a class="dm-row dm-link<?= $cid === $dmActiveId ? ' active' : '' ?><?= !empty($c['is_unread']) ? ' is-unread' : '' ?>" href="/messages/<?= $cid ?>"<?= $cid === $dmActiveId ? ' aria-current="page"' : '' ?>>
                         <?= $this->partial('partials/monogram', ['name' => $rowName, 'username' => $seed, 'gilt' => $isGroup]) ?>
                         <span class="dm-row-top"><span class="dm-other"><?= $e($rowName) ?></span></span>
-                        <span class="dm-time"><?= $e(human_datetime($c['last_message_at'] ?? null)) ?></span>
-                        <span class="dm-preview"><?= $e(mb_strimwidth((string) ($c['last_body'] ?? ''), 0, 120, '…')) ?></span>
+                        <?= $this->partial('partials/dm_time', ['at' => $c['last_message_at'] ?? null, 'class' => 'dm-time']) ?>
+                        <span class="dm-preview"><?php if ((int) ($c['last_sender_id'] ?? 0) === $current_user->id()): ?><span class="dm-preview-you">You:</span> <?php endif; ?><?= $e(mb_strimwidth((string) ($c['last_body'] ?? ''), 0, 120, '…')) ?></span>
                         <?php if (!empty($c['is_unread'])): ?><span class="dm-unread-dot" aria-label="Unread"></span><?php endif; ?>
                     </a>
                 </li>

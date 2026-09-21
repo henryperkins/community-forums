@@ -103,6 +103,25 @@ final class UserRepository
         );
     }
 
+    /** @return list<array<string,mixed>> Apply recipient eligibility before limiting suggestions. */
+    public function suggestDmRecipients(string $query, int $viewerId, bool $isAdmin): array
+    {
+        $prefix = addcslashes($query, '\\%_') . '%';
+        return $this->db->fetchAll(
+            "SELECT u.id, u.username, u.display_name, u.role, u.status
+             FROM users u
+             WHERE u.status = 'active' AND u.id <> ?
+               AND (u.suspended_until IS NULL OR u.suspended_until <= UTC_TIMESTAMP())
+               AND (u.username LIKE ? OR u.display_name LIKE ?)
+               AND NOT EXISTS (SELECT 1 FROM blocks b
+                   WHERE (b.user_id = ? AND b.blocked_user_id = u.id)
+                      OR (b.blocked_user_id = ? AND b.user_id = u.id))"
+                . ($isAdmin ? '' : " AND u.allow_dms <> 'none'")
+                . ' ORDER BY u.username ASC LIMIT 20',
+            [$viewerId, $prefix, $prefix, $viewerId, $viewerId],
+        );
+    }
+
     /**
      * @param list<int> $ids
      * @return array<int,array{email:string,status:string}> id => contact

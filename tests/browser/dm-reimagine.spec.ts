@@ -22,7 +22,7 @@ import path from 'node:path';
  * shared evidence DB via DB_DATABASE — see the npm/run command in the PR notes.
  */
 
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/dm-reimagine/phase1');
+const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/dm-reimagine/phase4/legacy-regression');
 
 function ensureDir(): void {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
@@ -48,9 +48,9 @@ async function login(page: Page, email: string): Promise<void> {
 /** Start a DM (no-JS form post) and return the /messages/{id} path it redirects to. */
 async function startDm(page: Page, to: string, body: string): Promise<string> {
   await page.goto('/messages/new');
-  await page.fill('input[name="to"]', to);
-  await page.fill('textarea[name="body"]', body);
-  await page.getByRole('button', { name: 'Send message' }).click();
+  await page.fill('.dm-compose .dm-to-input', to);
+  await page.fill('.dm-compose textarea[name="body"]', body);
+  await page.locator('.dm-compose .composer-send').click();
   await page.waitForURL(/\/messages\/\d+/);
   return new URL(page.url()).pathname;
 }
@@ -146,17 +146,18 @@ test('DM reading room: rail toggle, menu dismissal, mobile drawer (JS enhancemen
   test.skip(info.project.name !== 'desktop', 'Exercised at the desktop viewport; the mobile drawer is checked via an explicit narrow context below.');
   ensureDir();
 
-  const wideCtx = await browser.newContext({ baseURL: baseURL!, viewport: { width: 1440, height: 900 } });
+  const wideCtx = await browser.newContext({ baseURL: baseURL!, viewport: { width: 1800, height: 1000 } });
   const wide = await wideCtx.newPage();
   await login(wide, 'alice@retro.test');
   const convB = await startDm(wide, 'bob', 'A note for the rail-toggle evidence run.');
   await wide.goto(convB);
 
-  // ── Wide (>=1400px): the rail toggle collapses the third column and the
-  //    preference survives a reload (localStorage) ──────────────────────────
+  // ── Wide: closed by default, then an explicit third-column choice persists.
   const railToggle = wide.locator('[data-rail-toggle]');
+  await expect(wide.locator('.dm-inforail')).toBeHidden();
+  await expect(railToggle).toHaveAttribute('aria-expanded', 'false');
+  await railToggle.click();
   await expect(wide.locator('.dm-inforail')).toBeVisible();
-  await expect(railToggle).toHaveAttribute('aria-expanded', 'true');
   await railToggle.click();
   await expect(wide.locator('.dm-inforail')).toBeHidden();
   await expect(railToggle).toHaveAttribute('aria-expanded', 'false');

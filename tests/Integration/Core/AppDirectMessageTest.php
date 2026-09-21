@@ -310,7 +310,7 @@ final class AppDirectMessageTest extends TestCase
         $res = $this->get('/messages', ['q' => '%']);
         $this->assertStatus(200, $res);
         $this->assertDontSeeText($res, 'Wildcard Alfa');
-        $this->assertSeeText($res, 'No letters match your search.');
+        $this->assertSeeText($res, 'No conversations match your search.');
     }
 
     public function test_direct_conversation_read_receipt_flips_from_delivered_to_read(): void
@@ -334,13 +334,17 @@ final class AppDirectMessageTest extends TestCase
         self::assertStringContainsString('Read</span>', $after->body());
         self::assertStringNotContainsString('Delivered</span>', $after->body());
 
-        // Bob replies — the newest letter is his, so Alice's view shows no receipt.
+        // Bob replies — Alice's last own letter retains its receipt (Messages brief).
         $this->actingAs($bob);
         $this->post('/messages/' . $convId, ['body' => 'A reply.']);
         $this->actingAs($alice);
         $replied = $this->get('/messages/' . $convId);
         $this->assertStatus(200, $replied);
-        self::assertStringNotContainsString('class="dm-receipt"', $replied->body());
+        self::assertStringContainsString('class="dm-receipt"', $replied->body());
+        $document = new \DOMDocument();
+        @$document->loadHTML($replied->body());
+        $xpath = new \DOMXPath($document);
+        self::assertSame(1, $xpath->query('//div[contains(@class,"dm-group mine")]//span[@class="dm-receipt"]')->length);
     }
 
     public function test_messages_index_renders_search_form_and_compose_dialog(): void

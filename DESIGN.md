@@ -186,7 +186,7 @@ components:
 
 This is a room where people keep counsel together and the record survives the conversation. Warm stone and aged parchment, evergreen boughs at the windows, one thread of mallorn gold catching the candlelight — and, underneath the ceremony, a working table. The register is Tolkien-adjacent without cosplay: considered, literary, quietly premium, and never a toy social app. Where most forum software looks cheap, Imladris is dressed.
 
-Gravity is the point. The whole product is set in serif — four families, no sans anywhere — because a conversation worth keeping for years deserves the typography of a book rather than a chat client. Colour is warm and low-chroma; nothing is neon; the single gold accent is an *indicator*, never a field. Motion is calm and short. Nothing bounces in Rivendell.
+Gravity is the point. The whole product is set in serif — four families, no sans anywhere — because a conversation worth keeping for years deserves the typography of a book rather than a chat client. Colour is warm and low-chroma; nothing is neon; the single gold accent is an *indicator*, never a field, apart from the DM Own-Letter Gold-Wash Exception below. Motion is calm and short. Nothing bounces in Rivendell.
 
 Ceremony is earned, not applied. The hall is dignified, but the table is plain: the everyday controls a member touches a hundred times a day are quiet, legible, and unornamented. Ornament belongs to colophons and footnotes — the marks of esteem, the gilt ring on an accepted answer, the eight-pointed star watermark behind a topic header — not to functional chrome.
 
@@ -211,7 +211,7 @@ Warm, low-chroma, and drawn from a single landscape: parchment and stone for the
 
 ### Secondary
 
-- **Mallorn Gold** (`#C29A44`, `gold-500`): the single accent. Unread dots, active indicators, the commend star, the gilt avatar ring, the focus halo, the gold rule on blockquotes. It marks *where to look*, and it is never a surface.
+- **Mallorn Gold** (`#C29A44`, `gold-500`): the single accent. Unread dots, active indicators, the commend star, the gilt avatar ring, the focus halo, the gold rule on blockquotes. It marks *where to look*, with the DM Own-Letter Gold-Wash Exception below permitting a message surface.
 - **Gold Ink** (`#7E5F22`, `gold-ink`): the darker gold reserved for small text on parchment, where `gold-500` would fail AA. Board hashes, regard counts, engraved panel headings.
 - **Gold Leaf** (`#F4EBCF`, `gold-100`) and **Gilt Edge** (`#EAD9A8`, `gold-200`): the pale golds behind "needs answer" chips, staff badges, and the on-state of a commend.
 
@@ -232,7 +232,9 @@ Status hues are named, not numbered, and each pairs a hue with a wash and an ink
 
 ### Named Rules
 
-**The One Gold Rule.** Mallorn gold is an indicator, never a field. It may be a dot, a rule, a ring, a star, a hairline, or a halo — it may not be the background of anything larger than a chip. *Audit test: if a gold region on screen is bigger than a status chip, it is wrong.*
+**The One Gold Rule.** Mallorn gold is an indicator, never a field. It may be a dot, a rule, a ring, a star, a hairline, or a halo — it may not be the background of anything larger than a chip, apart from the DM Own-Letter Gold-Wash Exception below. *Audit test: outside that exception, if a gold region on screen is bigger than a status chip, it is wrong.*
+
+**The DM Own-Letter Gold-Wash Exception.** In the DM register, "mine" letters wear the gold wash; nothing else on the surface may. This approved exception to the One Gold Rule is limited to the viewer's own message plates. Existing controls retain their established action tokens; the exception grants no other surface a gold wash.
 
 **The Word-and-Colour Rule.** Status is never carried by colour alone. Every state that has a hue also has a word: "Solved", "Needs answer", "Decision", "Locked", "Archived". Colour-blind and monochrome readers lose nothing. *Audit test: cover the screen's colour and the state is still readable.*
 
@@ -402,7 +404,7 @@ Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-en
 
 - **Don't** introduce a sans-serif, a fifth family, or a webfont from a CDN. The CSP is same-origin and the fonts are self-hosted under OFL.
 - **Don't** write an inline `<style>` block, an inline `<script>`, or a `style="…"` attribute. `style-src 'self'` blocks all three, and the page fails silently. *Audit test: `grep -ro 'style="' templates/ | wc -l` must stay at 0.*
-- **Don't** use gold as a background for anything larger than a chip, and don't use two accents — the palette has exactly one.
+- **Don't** use gold as a background for anything larger than a chip outside the DM Own-Letter Gold-Wash Exception, and don't use two accents — the palette has exactly one.
 - **Don't** put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)
 - **Don't** paint directly from a primitive scale token in application CSS.
 - **Don't** round anything holding content past 12px, and don't make a button or card pill-shaped. *Two live exceptions are unresolved rather than sanctioned — `.star-btn`/`.topic-tools-open` and `.board-mute-toggle` are buttons wearing pills because the handoff canvases draw them that way while this document and `components.css` say 7px. ADR 0034 records the conflict; it needs a ruling, not a sweep.*

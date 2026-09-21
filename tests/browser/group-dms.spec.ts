@@ -46,12 +46,7 @@ async function login(page: Page, email: string): Promise<void> {
  * when it is not already in view.
  */
 async function openRail(page: Page): Promise<void> {
-  await page.waitForFunction(() => {
-    const toggle = document.querySelector('[data-rail-toggle]');
-    if (!document.documentElement.classList.contains('has-js') || !toggle) return false;
-    const expanded = toggle.getAttribute('aria-expanded') === 'true';
-    return expanded === (window.location.hash === '#dm-rail');
-  });
+  await expect(page.locator('html')).toHaveClass(/has-js/);
   const rail = page.locator('.dm-inforail');
   const toggle = page.locator('[data-rail-toggle]');
   if (await toggle.getAttribute('aria-expanded') !== 'true') {
@@ -63,16 +58,21 @@ async function openRail(page: Page): Promise<void> {
 
 async function createGroup(page: Page, to: string, title: string, body: string): Promise<string> {
   await page.goto('/messages/new');
-  await page.fill('input[name="to"]', to);
+  const picker = page.locator('.dm-compose .dm-to-input');
+  if (await picker.count()) { await picker.fill(to); await picker.press(','); }
+  else { await page.fill('.dm-compose input[name="to"]', to); }
   await page.fill('.dm-compose input[name="title"]', title);
-  await page.fill('.dm-form textarea[name="body"]', body);
-  await page.locator('.dm-form button[type="submit"]').click();
+  await page.fill('.dm-compose .dm-form textarea[name="body"]', body);
+  await page.locator('.dm-compose .dm-form button[type="submit"]').click();
   await page.waitForURL(/\/messages\/\d+/);
   return new URL(page.url()).pathname;
 }
 
 async function replyInConversation(page: Page, convPath: string, body: string): Promise<void> {
   await page.goto(convPath);
+  if (await page.locator('[data-rail-toggle]').getAttribute('aria-expanded') === 'true') {
+    await page.locator('[data-rail-close]').click();
+  }
   await page.fill('.dm-composer textarea[name="body"]', body);
   await page.locator('.dm-composer button[type="submit"]').click();
   await page.waitForURL(new RegExp(convPath.replace(/\//g, '\\/') + '(\\?|$)'));
@@ -99,13 +99,14 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   // ── Validation keeps the typed draft: an unknown recipient 422-re-renders
   //    the form with the title and body intact (anti-draft-loss) ─────────────
   await page.goto('/messages/new');
-  await page.fill('input[name="to"]', 'bob, no_such_member');
+  await page.fill('.dm-compose .dm-to-input', 'bob, no_such_member');
+  await page.locator('.dm-compose .dm-to-input').press(',');
   await page.fill('.dm-compose input[name="title"]', 'Doomed council');
-  await page.fill('.dm-form textarea[name="body"]', 'This typed draft must survive validation.');
-  await page.locator('.dm-form button[type="submit"]').click();
+  await page.fill('.dm-compose .dm-form textarea[name="body"]', 'This typed draft must survive validation.');
+  await page.locator('.dm-compose .dm-form button[type="submit"]').click();
   await expect(page.locator('.field-error')).toContainText('No member found with the username "no_such_member"');
   await expect(page.locator('.dm-compose input[name="title"]')).toHaveValue('Doomed council');
-  await expect(page.locator('.dm-form textarea[name="body"]')).toHaveValue('This typed draft must survive validation.');
+  await expect(page.locator('.dm-compose .dm-form textarea[name="body"]')).toHaveValue('This typed draft must survive validation.');
   await shot(page, info, 'group-dms-02-validation-draft-preserved');
 
   // ── Owner actions: add a member, rename, and read the group history ───────
@@ -118,9 +119,10 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   await page.fill('.dm-inforail input[name="title"]', 'Launch council — war room');
   await page.locator('.dm-inforail .dm-owner-tool').filter({ has: page.locator('input[name="title"]') }).getByRole('button', { name: 'Rename' }).click();
   await expect(page.locator('.flash')).toContainText('Group renamed.');
-  // After the rename redirect the drawer is closed again: read the group
+  // The explicit details choice persists; close it to read the group
   // history from the thread pane first (an open drawer would cover it at
   // these sub-1400px widths), then reopen the rail for the roster capture.
+  await page.locator('[data-rail-close]').click();
   await page.locator('.dm-events > summary').click();
   await expect(page.locator('.dm-events')).toContainText('member added @dana');
   await expect(page.locator('.dm-events')).toContainText('renamed');
@@ -185,6 +187,9 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   await login(page, 'dana@retro.test');
   await page.goto(convPath);
   const reportedLine = page.locator('.dm-group:not(.mine) .dm-line', { hasText: lateBody });
+  if (await page.locator('[data-rail-toggle]').getAttribute('aria-expanded') === 'true') {
+    await page.locator('[data-rail-close]').click();
+  }
   await reportedLine.locator('.dm-line-menu summary').click();
   await reportedLine.locator('.dm-report-form select[name="reason_code"]').selectOption('spam');
   await reportedLine.locator('.dm-report-form input[name="reason"]').fill('Evidence-run report.');

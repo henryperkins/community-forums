@@ -67,53 +67,59 @@
      *   · 404 stops it permanently. It is the one status that means "gone" and
      *     not "later" — the feature is off, and no amount of waiting fixes it.
      */
-    function shortPoll(url, interval, apply) {
+    function shortPoll(url, interval, apply, options) {
         if (!window.fetch) { return; }
-        var timer = null;
-        var backoff = 0;
-        var stopped = false;
-
-        function schedule(delay) {
-            if (stopped || timer !== null) { return; }
-            timer = window.setTimeout(run, delay);
-        }
+        var timer = null, backoff = 0, stopped = false, busy = false, resume = false;
         function clear() {
             if (timer !== null) { window.clearTimeout(timer); timer = null; }
         }
+        function schedule(delay) {
+            if (!stopped && !document.hidden && timer === null) { timer = window.setTimeout(run, delay); }
+        }
         function run() {
-            timer = null;
+            clear();
             if (stopped || document.hidden) { return; }
-            fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin'
-            }).then(function (r) {
-                if (r.status === 404) { stopped = true; clear(); return null; }
-                if (r.status === 429) { throw new Error('throttled'); }
-                return r.ok ? r.json() : null;
+            if (busy) { resume = true; return; }
+            busy = true;
+            var init = options ? options() : {};
+            init.credentials = 'same-origin';
+            init.headers = Object.assign({ 'X-Requested-With': 'XMLHttpRequest' }, init.headers || {});
+            fetch(typeof url === 'function' ? url() : url, init).then(function (r) {
+                if (r.status === 404) { stopped = true; return null; }
+                if (!r.ok) { throw new Error('poll failed'); }
+                return r.json();
             }).then(function (data) {
-                if (stopped) { return; }
                 backoff = 0;
-                if (data) { apply(data); }
-                schedule(interval);
+                if (!stopped && !document.hidden && data && apply(data) === false) { stopped = true; }
             }).catch(function () {
-                if (stopped) { return; }
                 backoff = backoff === 0 ? interval : Math.min(backoff * 2, 15 * 60000);
-                schedule(backoff);
+            }).finally(function () {
+                busy = false;
+                if (resume) { resume = false; schedule(0); }
+                else { schedule(backoff || interval); }
             });
         }
-
         document.addEventListener('visibilitychange', function () {
-            if (document.hidden) { clear(); return; }
             clear();
-            run();
+            if (!document.hidden) { run(); }
         });
         run();
+    }
+
+    function updateDmCount(value) {
+        var count = Math.max(0, Number(value) || 0);
+        document.querySelectorAll('[data-dm-unread-count]').forEach(function (node) {
+            node.textContent = count > 99 ? '99+' : String(count);
+            node.setAttribute('aria-label', count + ' unread conversation' + (count === 1 ? '' : 's'));
+            node.hidden = count === 0;
+        });
     }
 
     // Notification bell. The bell is a plain link without JS, so this only decorates.
     var bell = document.querySelector('[data-bell]');
     if (bell) {
         shortPoll('/notifications/bell?format=json', 60000, function (data) {
+            if (typeof data.dm_unread === 'number') { updateDmCount(data.dm_unread); }
             var unread = Math.max(0, Number(data.unread) || 0);
             document.querySelectorAll('[data-notification-count]').forEach(function (node) {
                 node.textContent = unread > 99 ? '99+' : String(unread);
@@ -1471,97 +1477,316 @@
         });
     }
 
-    // Messages details rail (Phase 2 reimagine): a real column at wide widths, a
-    // right-edge drawer below ~1400px. Server-rendered as always-visible (wide)
-    // or reachable via the "Members & details" #dm-rail anchor + a CSS :target
-    // rule (narrow) — both work with no JS.
-    //
-    // At narrow widths, :target (i.e. window.location.hash) stays the ONE source
-    // of truth: JS drives it with same-document location.replace instead of layering a
-    // second, independent class — two mechanisms tracking the same "is the
-    // drawer open" fact can only drift (e.g. middle-clicking the "Members &
-    // details" link opens a new tab whose hash the click handler never saw, and
-    // a class-based toggle could then never clear a :target that's still set).
-    // location.replace updates CSS :target without adding a history entry.
-    //
-    // At wide widths there's no anchor/:target involved at all — a plain
-    // .rail-hidden class (persisted in localStorage) is the only mechanism.
+
+    // Messages timestamps share exact UTC instants; only their visible labels
+    // and day boundaries change to the reader's local timezone.
+    function dmDayKey(date) {
+        return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+    }
+    function dmTimeLabel(iso, mode) {
+        var date = new Date(iso), now = new Date();
+        if (!Number.isFinite(date.getTime())) { return ''; }
+        var days = Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())) / 86400000);
+        var dayLabel = days === 0 ? 'Today' : days === 1 ? 'Yesterday' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+        if (mode === 'day') { return dayLabel; }
+        if (mode === 'clock') { return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); }
+        var age = Math.max(0, now - date), n;
+        if (age < 60000) { return 'just now'; }
+        if (age < 3600000) { n = Math.floor(age / 60000); return n + ' minute' + (n === 1 ? '' : 's') + ' ago'; }
+        if (days === 0) { n = Math.floor(age / 3600000); return n + ' hour' + (n === 1 ? '' : 's') + ' ago'; }
+        if (days === 1) { return 'yesterday'; }
+        if (days < 7) { return days + ' days ago'; }
+        return dayLabel;
+    }
+    function localiseDmTimes(root) {
+        root.querySelectorAll('time[data-dm-time]').forEach(function (time) {
+            time.textContent = dmTimeLabel(time.dateTime, time.dataset.dmTime);
+        });
+    }
+    localiseDmTimes(document);
+
+    var dmShell = document.querySelector('.dm-shell');
+    var dmStream = document.querySelector('[data-dm-messages]');
+    var dmScroller = document.querySelector('[data-dm-scroll]');
+    if (dmStream && dmScroller && dmShell) {
+        var dmPill = document.querySelector('[data-dm-newpill]');
+        var dmStatus = document.querySelector('[data-dm-update-status]');
+        var lastId = 0, pendingMessages = 0;
+        dmStream.querySelectorAll('[data-message-id]').forEach(function (line) { lastId = Math.max(lastId, Number(line.dataset.messageId)); });
+        function atDmEnd() { return dmScroller.scrollHeight - dmScroller.scrollTop - dmScroller.clientHeight < 90; }
+        function moveDmReceipt() {
+            var receipt = document.querySelector('[data-dm-receipt]');
+            var own = dmStream.querySelectorAll('.dm-group.mine .dm-line');
+            if (!receipt || !own.length || dmShell.dataset.dmGroup === '1' || dmShell.dataset.dmLatest !== '1') { return; }
+            var lastOwn = own[own.length - 1];
+            if (!receipt.querySelector('.dm-receipt')) {
+                var label = document.createElement('span'); label.className = 'dm-receipt'; label.textContent = 'Delivered'; receipt.appendChild(label);
+            }
+            receipt.dataset.dmReceipt = lastOwn.dataset.messageId;
+            receipt.hidden = false;
+            var after = lastOwn.nextElementSibling;
+            if (after && after.classList.contains('reference-cards')) { after.after(receipt); }
+            else { lastOwn.after(receipt); }
+        }
+        function arrangeDmRuns() {
+            var focused = document.activeElement;
+            var receipt = document.querySelector('[data-dm-receipt]');
+            if (receipt && dmStream.contains(receipt)) { dmStream.after(receipt); }
+            var runs = Array.from(dmStream.querySelectorAll('.dm-group'));
+            if (!runs.length) { return; }
+            var fragment = document.createDocumentFragment(), group = null, messagesBox = null, author = null, day = null;
+            runs.forEach(function (run) {
+                var lines = Array.from(run.querySelectorAll('.dm-line'));
+                lines.forEach(function (line) {
+                    var nextDay = dmDayKey(new Date(line.dataset.createdAt));
+                    if (nextDay !== day) {
+                        var divider = document.createElement('div'); divider.className = 'dm-day'; divider.dataset.dmDay = nextDay;
+                        var time = document.createElement('time'); time.dateTime = line.dataset.createdAt; time.dataset.dmTime = 'day';
+                        time.title = line.dataset.createdAt + ' UTC'; time.textContent = dmTimeLabel(time.dateTime, 'day');
+                        divider.appendChild(time); fragment.appendChild(divider);
+                    }
+                    if (author !== run.dataset.dmAuthor || day !== nextDay) {
+                        group = run.cloneNode(false);
+                        group.dataset.dmDate = nextDay;
+                        var mono = run.querySelector('.dm-mono-col');
+                        if (mono) { group.appendChild(mono.cloneNode(true)); }
+                        messagesBox = document.createElement('div'); messagesBox.className = 'dm-msgs';
+                        var head = run.querySelector('.dm-ghead').cloneNode(true);
+                        var clock = head.querySelector('time'); clock.dateTime = line.dataset.createdAt; clock.title = line.dataset.createdAt + ' UTC';
+                        messagesBox.appendChild(head); group.appendChild(messagesBox); fragment.appendChild(group);
+                    }
+                    var cards = line.nextElementSibling;
+                    messagesBox.appendChild(line);
+                    if (cards && cards.classList.contains('reference-cards')) { messagesBox.appendChild(cards); }
+                    author = run.dataset.dmAuthor; day = nextDay;
+                });
+            });
+            dmStream.replaceChildren(fragment);
+            localiseDmTimes(dmStream);
+            moveDmReceipt();
+            if (focused && focused !== document.body && focused.isConnected) { focused.focus({ preventScroll: true }); }
+        }
+        function bottomDm() {
+            dmScroller.scrollTop = dmScroller.scrollHeight;
+            pendingMessages = 0; dmPill.hidden = true;
+        }
+        arrangeDmRuns();
+        if (dmShell.dataset.dmLatest === '1' && !location.hash.match(/^#m[0-9]+$/)) {
+            bottomDm();
+            if (document.fonts) { document.fonts.ready.then(bottomDm); }
+        }
+        dmPill.addEventListener('click', bottomDm);
+        dmScroller.addEventListener('scroll', function () { if (atDmEnd()) { pendingMessages = 0; dmPill.hidden = true; } });
+        if (dmShell.dataset.dmLatest === '1') {
+            shortPoll('/messages/' + dmShell.dataset.dmConversation + '/poll', 20000, function (data) {
+                var nearEnd = atDmEnd(), oldTop = dmScroller.scrollTop;
+                if (data.html) {
+                    var template = document.createElement('template'); template.innerHTML = data.html;
+                    template.content.querySelectorAll('[data-message-id]').forEach(function (line) {
+                        if (document.getElementById('m' + line.dataset.messageId)) { line.remove(); }
+                        else { pendingMessages++; }
+                    });
+                    var incoming = template.content.querySelectorAll('[data-message-id]').length;
+                    if (incoming) {
+                        dmStream.appendChild(template.content); arrangeDmRuns(); enhanceDmCopy(dmStream);
+                        if (nearEnd) { bottomDm(); }
+                        else {
+                            dmScroller.scrollTop = oldTop; dmPill.hidden = false;
+                            dmPill.querySelector('span').textContent = pendingMessages + ' new message' + (pendingMessages === 1 ? '' : 's');
+                        }
+                        dmStatus.textContent = incoming + ' new message' + (incoming === 1 ? '' : 's') + ' received.';
+                    }
+                }
+                lastId = Math.max(lastId, Number(data.last_id) || 0);
+                var receipt = document.querySelector('[data-dm-receipt]');
+                if (receipt && receipt.dataset.dmReceipt) {
+                    receipt.querySelector('.dm-receipt').textContent = Number(data.other_last_read_message_id) >= Number(receipt.dataset.dmReceipt) ? 'Read' : 'Delivered';
+                }
+                document.querySelectorAll('[data-dm-presence]').forEach(function (node) {
+                    var state = data.presence && data.presence[node.dataset.dmPresence] || 'offline';
+                    node.hidden = state === 'offline';
+                    node.classList.toggle('is-online', state === 'online'); node.classList.toggle('is-away', state === 'away');
+                    node.querySelector('[data-dm-presence-label]').textContent = state === 'online' ? 'Here now' : state === 'away' ? 'Away' : '';
+                });
+                var groupPresence = document.querySelector('[data-dm-group-presence]');
+                if (groupPresence) {
+                    var here = Object.values(data.presence || {}).filter(function (state) { return state === 'online'; }).length;
+                    groupPresence.textContent = here ? ' · ' + here + ' here now' : '';
+                }
+                updateDmCount(data.dm_unread);
+                localiseDmTimes(document);
+            }, function () {
+                var token = dmShell.querySelector('input[name="_token"]');
+                return { method: 'POST', body: new URLSearchParams({ after: String(lastId), _token: token ? token.value : '' }) };
+            });
+        }
+    }
+
+    // The canonical comma-separated field remains the entire no-JS contract.
+    // Enhanced chips and suggestions maintain it synchronously before any send.
+    document.querySelectorAll('[data-dm-picker]').forEach(function (picker) {
+        if (!window.fetch) { return; }
+        var canonical = picker.querySelector('input[name="to"]'), form = picker.closest('form');
+        var chipTemplate = picker.querySelector('[data-dm-chip-template]');
+        var groupTitle = form.querySelector('[data-dm-group-title]');
+        var allowGroups = picker.dataset.dmAllowGroups === '1';
+        var selected = [], matches = [], active = -1, sequence = 0, timer = null, request = null;
+        var field = document.createElement('div'); field.className = 'dm-to-field input input-engraved';
+        var chips = document.createElement('span'); chips.className = 'dm-to-chips'; field.appendChild(chips);
+        var input = document.createElement('input'); input.type = 'text'; input.className = 'dm-to-input';
+        input.autocomplete = 'off'; input.placeholder = 'Name or @username'; input.maxLength = 255;
+        input.id = canonical.id; canonical.id += '-value';
+        ['aria-describedby', 'aria-invalid', 'data-error-focus'].forEach(function (key) {
+            if (canonical.hasAttribute(key)) { input.setAttribute(key, canonical.getAttribute(key)); }
+        });
+        input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'false');
+        var list = document.createElement('ul'); list.className = 'dm-suggest'; list.id = input.id + '-suggestions'; list.setAttribute('role', 'listbox'); list.hidden = true;
+        input.setAttribute('aria-controls', list.id);
+        field.appendChild(input); field.appendChild(list);
+        canonical.type = 'hidden'; canonical.required = false;
+        canonical.after(field);
+        picker.classList.add('dm-to-field-wrap');
+        var status = document.createElement('span'); status.className = 'sr-only'; status.setAttribute('role', 'status'); picker.appendChild(status);
+
+        function sync() {
+            var raw = input.value.trim();
+            canonical.value = selected.map(function (p) { return p.username; }).concat(raw ? [raw] : []).join(', ');
+            if (groupTitle) { groupTitle.hidden = selected.length < 2 && !groupTitle.querySelector('input').value && !groupTitle.querySelector('[aria-invalid]'); }
+        }
+        function close() {
+            list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant');
+        }
+        function renderChips() {
+            chips.replaceChildren();
+            selected.forEach(function (person, index) {
+                var chip = chipTemplate.content.firstElementChild.cloneNode(true);
+                chip.querySelector('[data-chip-name]').textContent = person.name;
+                var mono = chip.querySelector('.monogram');
+                if (mono) { mono.textContent = person.name.split(/\s+/).slice(0, 2).map(function (part) { return part.charAt(0); }).join('').toUpperCase(); }
+                var remove = chip.querySelector('button'); remove.setAttribute('aria-label', 'Remove ' + person.name);
+                remove.addEventListener('click', function () { selected.splice(index, 1); renderChips(); sync(); input.focus(); });
+                chips.appendChild(chip);
+            });
+        }
+        function add(username, name) {
+            username = username.trim().replace(/^@/, '');
+            if (!username) { return; }
+            if (selected.some(function (p) { return p.username.toLowerCase() === username.toLowerCase(); })) { return; }
+            selected.push({ username: username, name: name || username });
+        }
+        canonical.value.split(/[\s,]+/).forEach(function (name) { add(name, name.replace(/^@/, '')); });
+        renderChips(); sync();
+        function choose(index) {
+            var item = matches[index]; if (!item) { return; }
+            add(item.token, item.meta || item.label.replace(/^@/, ''));
+            input.value = ''; sequence++; close(); renderChips(); sync(); input.focus();
+        }
+        function highlight(index) {
+            active = index;
+            list.querySelectorAll('[role="option"]').forEach(function (option, i) {
+                option.classList.toggle('is-active', i === active); option.setAttribute('aria-selected', i === active ? 'true' : 'false');
+            });
+            if (list.children[active]) { input.setAttribute('aria-activedescendant', list.children[active].id); }
+        }
+        input.addEventListener('input', function () {
+            sync(); sequence++; var version = sequence;
+            clearTimeout(timer); if (request) { request.abort(); }
+            var query = input.value.trim().replace(/^@/, ''); close();
+            if (!query || (!allowGroups && selected.length)) { return; }
+            timer = setTimeout(function () {
+                request = new AbortController();
+                fetch('/composer/suggest?' + new URLSearchParams({ trigger: '@', q: query, context: 'dm-recipient' }), { credentials: 'same-origin', signal: request.signal })
+                    .then(function (r) { if (!r.ok) { throw new Error('suggestions unavailable'); } return r.json(); })
+                    .then(function (data) {
+                        if (version !== sequence) { return; }
+                        matches = (data.items || []).filter(function (item) { return !selected.some(function (p) { return '@' + p.username.toLowerCase() === item.token.toLowerCase(); }); });
+                        list.replaceChildren();
+                        matches.forEach(function (item, index) {
+                            var row = document.createElement('li'); row.className = 'dm-suggest-row'; row.id = list.id + '-' + index; row.setAttribute('role', 'option'); row.setAttribute('aria-selected', 'false');
+                            var mono = document.createElement('span'); mono.className = 'monogram'; mono.setAttribute('aria-hidden', 'true'); mono.textContent = (item.meta || item.label.slice(1)).slice(0, 2).toUpperCase();
+                            var identity = document.createElement('span'); identity.className = 'dm-suggest-id';
+                            var name = document.createElement('span'); name.className = 'dm-suggest-name'; name.textContent = item.meta || item.label;
+                            var handle = document.createElement('span'); handle.className = 'dm-suggest-sub'; handle.textContent = item.label;
+                            identity.append(name, handle);
+                            if (picker.dataset.dmAvatars !== '0') { row.appendChild(mono); }
+                            row.appendChild(identity);
+                            row.addEventListener('mousedown', function (e) { e.preventDefault(); });
+                            row.addEventListener('click', function () { choose(index); });
+                            list.appendChild(row);
+                        });
+                        list.hidden = !matches.length; input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
+                        status.textContent = matches.length ? matches.length + ' members found.' : 'No matching members. You can enter a username.';
+                        if (matches.length) { highlight(0); }
+                    }).catch(function (error) {
+                        if (error.name !== 'AbortError' && version === sequence) { status.textContent = 'Suggestions unavailable. Enter a username to continue.'; }
+                    });
+            }, 200);
+        });
+        input.addEventListener('focus', function () { field.classList.add('is-focus'); });
+        input.addEventListener('blur', function () { field.classList.remove('is-focus'); });
+        input.addEventListener('keydown', function (e) {
+            if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !list.hidden) {
+                e.preventDefault(); highlight((active + (e.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length);
+            } else if (e.key === 'Escape') { e.stopPropagation(); sequence++; close(); }
+            else if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                if (!list.hidden && active >= 0) { choose(active); }
+                else {
+                    // A delayed prefix match must not reopen a committed field.
+                    sequence++; clearTimeout(timer);
+                    if (request) { request.abort(); }
+                    input.value.split(/[\s,]+/).forEach(function (name) { add(name); });
+                    input.value = ''; renderChips(); sync(); close();
+                }
+            } else if (e.key === 'Backspace' && input.value === '' && selected.length) { selected.pop(); renderChips(); sync(); }
+        });
+        document.addEventListener('click', function (e) { if (!picker.contains(e.target)) { sequence++; close(); } });
+        form.addEventListener('submit', sync, true);
+    });
+
+    // The anchor is the no-JS fallback at every width; enhancement remembers
+    // an explicit choice and keeps aria state, focus and the drawer in sync.
     var railToggle = document.querySelector('[data-rail-toggle]');
     var dmShell = document.querySelector('.dm-shell');
     if (railToggle && dmShell) {
         var RAIL_KEY = 'rb-dm-rail-collapsed';
-        var railNarrow = function () {
-            return window.matchMedia && window.matchMedia('(max-width: 1399px)').matches;
-        };
-        var setRailButton = function (expanded) {
-            railToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-            railToggle.classList.toggle('is-active', expanded);
-        };
-        var railIsOpen = function () {
-            return railNarrow() ? window.location.hash === '#dm-rail' : !dmShell.classList.contains('rail-hidden');
-        };
-        var openRail = function () {
-            if (railNarrow()) {
-                if (window.location.hash !== '#dm-rail') { window.location.replace('#dm-rail'); }
-            } else {
-                dmShell.classList.remove('rail-hidden');
-                try { window.localStorage.removeItem(RAIL_KEY); } catch (e) { /* ignore */ }
+        var dmRail = document.getElementById('dm-rail');
+        var railIsOpen = function () { return dmShell.classList.contains('rail-open') || location.hash === '#dm-rail'; };
+        var setRail = function (open, persist, restoreFocus) {
+            dmShell.classList.toggle('rail-open', open);
+            if (!open && location.hash === '#dm-rail') { location.replace(location.pathname + location.search); }
+            railToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            railToggle.classList.toggle('is-active', open);
+            if (persist) { try { localStorage.setItem(RAIL_KEY, open ? '0' : '1'); } catch (e) {} }
+            if (restoreFocus) {
+                var close = dmRail.querySelector('[data-rail-close]');
+                (open ? close : railToggle).focus();
             }
-            setRailButton(true);
         };
-        var closeRail = function () {
-            if (railNarrow()) {
-                if (window.location.hash === '#dm-rail') {
-                    window.location.replace(window.location.pathname + window.location.search);
-                }
-            } else {
-                dmShell.classList.add('rail-hidden');
-                try { window.localStorage.setItem(RAIL_KEY, '1'); } catch (e) { /* ignore */ }
-            }
-            setRailButton(false);
-        };
-
-        var storedRailCollapsed = null;
-        try { storedRailCollapsed = window.localStorage.getItem(RAIL_KEY); } catch (e) { storedRailCollapsed = null; }
-        if (!railNarrow() && storedRailCollapsed === '1') { dmShell.classList.add('rail-hidden'); }
-        setRailButton(railIsOpen());   // sync aria-expanded with the actual computed state on load
-
-        railToggle.addEventListener('click', function () {
-            if (railIsOpen()) { closeRail(); } else { openRail(); }
+        var stored = null;
+        try { stored = localStorage.getItem(RAIL_KEY); } catch (e) {}
+        setRail(location.hash === '#dm-rail' || stored === '0', false, false);
+        railToggle.addEventListener('click', function (e) { e.preventDefault(); setRail(!railIsOpen(), true, true); });
+        document.querySelectorAll('[data-rail-close], [data-rail-scrim]').forEach(function (close) {
+            close.addEventListener('click', function (e) { e.preventDefault(); setRail(false, true, true); });
         });
-        var railScrim = document.querySelector('[data-rail-scrim]');
-        if (railScrim) {
-            railScrim.addEventListener('click', function (e) { e.preventDefault(); closeRail(); });
-        }
-        var railClose = document.querySelector('[data-rail-close]');
-        if (railClose) {
-            railClose.addEventListener('click', closeRail);
-        }
+        document.querySelectorAll('[data-dm-rail-open]').forEach(function (opener) {
+            opener.addEventListener('click', function (e) {
+                e.preventDefault(); var menu = opener.closest('details'); if (menu) { menu.open = false; }
+                setRail(true, true, true);
+            });
+        });
+        window.addEventListener('hashchange', function () { setRail(location.hash === '#dm-rail', false, false); });
         document.addEventListener('keydown', function (e) {
-            // Escape peels overlays outermost-first: an open compose dialog or
-            // ··· menu takes the keypress; the rail only closes when it is the
-            // topmost thing open.
-            if (document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
-            if (e.key === 'Escape' && railNarrow() && railIsOpen()) { closeRail(); }
+            if (!railIsOpen() || document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
+            if (e.key === 'Escape') { setRail(false, true, true); }
+            if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') {
+                var nodes = Array.from(dmRail.querySelectorAll('a[href], button, input, select')).filter(function (n) { return !n.disabled && n.getClientRects().length; });
+                var first = nodes[0], last = nodes[nodes.length - 1];
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
         });
-        // The header menu's "Members & details" item shares the #dm-rail anchor
-        // with the no-JS fallback; with JS, open the rail directly and close the
-        // menu instead of navigating.
-        var railOpeners = document.querySelectorAll('[data-dm-rail-open]');
-        for (var ri = 0; ri < railOpeners.length; ri++) {
-            (function (opener) {
-                opener.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    openRail();
-                    var openMenu = opener.closest('details.dm-menu');
-                    if (openMenu) { openMenu.open = false; }
-                });
-            })(railOpeners[ri]);
-        }
-        window.addEventListener('resize', function () { setRailButton(railIsOpen()); });
-        // A back/forward navigation (or another tab's replaceState) can change
-        // the hash without any of the click handlers above running.
-        window.addEventListener('hashchange', function () { setRailButton(railIsOpen()); });
     }
 
     // ··· menus (the header overflow + each message's hover-revealed report
@@ -1570,6 +1795,7 @@
     var dmMenus = document.querySelectorAll('details.dm-menu, details.dm-report');
     if (dmMenus.length) {
         document.addEventListener('click', function (e) {
+            dmMenus = document.querySelectorAll('details.dm-menu, details.dm-report');
             for (var mi = 0; mi < dmMenus.length; mi++) {
                 if (dmMenus[mi].open && !dmMenus[mi].contains(e.target)) { dmMenus[mi].open = false; }
             }
@@ -1578,6 +1804,7 @@
             if (e.key !== 'Escape') { return; }
             // The compose dialog sits above the menus — let its handler take this one.
             if (document.querySelector('details.dm-compose-details[open]')) { return; }
+            dmMenus = document.querySelectorAll('details.dm-menu, details.dm-report');
             for (var ei = 0; ei < dmMenus.length; ei++) {
                 if (dmMenus[ei].open) {
                     var menuTrigger = dmMenus[ei].querySelector('summary');
@@ -1608,7 +1835,7 @@
         };
         dmCompose.addEventListener('toggle', function () {
             if (dmCompose.open) {
-                var toField = dmCompose.querySelector('input[name="to"]');
+                var toField = dmCompose.querySelector('.dm-to-input') || dmCompose.querySelector('input[name="to"]');
                 if (toField) { toField.focus(); }
             }
         });
@@ -1675,11 +1902,13 @@
     // Copy a letter's text from its ··· menu. The clipboard only exists with
     // JS, so the control ships hidden and is revealed here — and only when the
     // API is actually available.
-    var dmCopyButtons = document.querySelectorAll('[data-copy-message]');
+    function enhanceDmCopy(root) {
+    var dmCopyButtons = root.querySelectorAll('[data-copy-message]:not([data-copy-ready])');
     if (dmCopyButtons.length && navigator.clipboard && navigator.clipboard.writeText) {
         for (var cpi = 0; cpi < dmCopyButtons.length; cpi++) {
             (function (copyBtn) {
                 copyBtn.hidden = false;
+                copyBtn.dataset.copyReady = '1';
                 copyBtn.addEventListener('click', function () {
                     var line = copyBtn.closest('.dm-line');
                     var bodyEl = line ? line.querySelector('.dm-body') : null;
@@ -1692,6 +1921,8 @@
             })(dmCopyButtons[cpi]);
         }
     }
+    }
+    enhanceDmCopy(document);
 })();
 
 // --- Admin member directory: bulk selection enhancement ---------------------

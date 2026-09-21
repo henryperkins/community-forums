@@ -74,7 +74,10 @@ final class ComposerSuggestionService
         $participantRanks = $threadId !== null ? $this->posts->nonAnonymousParticipantRanks($threadId) : [];
         $out = [];
 
-        foreach ($this->users->suggestByPrefix($query, 25) as $row) {
+        $candidates = $context === 'dm-recipient'
+            ? $this->users->suggestDmRecipients($query, $viewer->id(), $viewer->isAdmin())
+            : $this->users->suggestByPrefix($query, 25);
+        foreach ($candidates as $row) {
             $username = (string) $row['username'];
             $display = trim((string) ($row['display_name'] ?? ''));
             $rank = 100 + ($participantRanks[(int) $row['id']] ?? 0);
