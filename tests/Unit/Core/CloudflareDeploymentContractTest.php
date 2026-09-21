@@ -19,6 +19,12 @@ final class CloudflareDeploymentContractTest extends TestCase
         self::assertStringContainsString('"max_instances": 1', $config);
         self::assertStringContainsString('"pattern": "forum.candidary.online"', $config);
         self::assertStringContainsString('"custom_domain": true', $config);
+        // boards.hperkins.blog is a Cloudflare for SaaS custom hostname of the
+        // candidary.online zone, routed by hostname only (runbook §16): never a
+        // `*/*` route, which would capture the apex's own Custom Domain.
+        self::assertStringContainsString('"pattern": "boards.hperkins.blog/*"', $config);
+        self::assertStringContainsString('"zone_name": "candidary.online"', $config);
+        self::assertStringNotContainsString('"pattern": "*/*"', $config);
     }
 
     public function test_worker_replaces_untrusted_forwarding_and_passes_runtime_secrets_to_php(): void
