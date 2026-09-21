@@ -49,6 +49,9 @@
 
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ForumContainer"] }],
 
+  // Every hostname listed here other than the APP_URL host is redirected to
+  // APP_URL by worker/canonical.mjs, so a hostname can be attached before the
+  // canonical origin moves to it. Adding boards.hperkins.blog: runbook §16.
   "routes": [{ "pattern": "forum.candidary.online", "custom_domain": true }],
 
   "triggers": {

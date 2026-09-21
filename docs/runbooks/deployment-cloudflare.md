@@ -62,6 +62,9 @@ against the account that owns the zone.
 
 - **Worker** (`worker/index.js`) on a Custom Domain, so all paths route to it.
   It rewrites the client-IP header and forwards every request to the container.
+  It also enforces the single canonical origin: any hostname other than the
+  `APP_URL` host is redirected there (`worker/canonical.mjs`), which is what
+  makes attaching a second hostname safe before the origin moves to it (§16).
 - **Container**: the existing `Dockerfile`, Apache listening on **8080**
   (`deploy/apache-vhost.conf`), addressed as a Durable Object with the fixed id
   `main` — the app is stateful, so every request must land on one instance
@@ -186,7 +189,8 @@ bypass `BoardPolicy` entirely and serve private-board attachments to anyone.
 ## 5. Configure vars and secrets
 
 Edit the `vars` block in `wrangler.jsonc`: `APP_URL`, the `DB_*` host/port/name/
-user, `R2_BUCKET`, `R2_ACCOUNT_ID`, and the `routes` pattern.
+user, `R2_BUCKET`, `R2_ACCOUNT_ID`, and the `routes` pattern. Changing `APP_URL`
+on a live deployment is a canonical-origin move — follow §16, not just this step.
 
 Secrets never go in `wrangler.jsonc`:
 
@@ -779,3 +783,176 @@ Not yet done, tracked here so it is not lost:
   (`script-src 'self'`, no nonce) — disable it in the dashboard or add
   `static.cloudflareinsights.com` to `script-src`; it currently only produces a
   console error.
+
+## 16. Public hostname `boards.hperkins.blog` — plan and state (2026-09-21)
+
+Goal: serve production at `https://boards.hperkins.blog`, with
+`forum.candidary.online` redirecting there. Nothing below has been applied yet;
+this section records the facts, the mechanism, and the order of operations.
+
+### What is true today
+
+- Production is the Worker `retroboards` on the **Custom Domain**
+  `forum.candidary.online` (zone `candidary.online`, account "Henry Flare",
+  `a77e479f6736120eadd99973dbeb705e`). `APP_URL=https://forum.candidary.online`.
+  `workers.dev` and previews are disabled for the Worker, so exactly one
+  hostname reaches it.
+- `hperkins.blog` is **not a Cloudflare zone**. It is registered with
+  WordPress.com (Automattic), uses `ns1/ns2/ns3.wordpress.com`, has **DNSSEC
+  enabled**, and its apex/`www` host the WordPress.com (Atomic) blog. Its zone
+  at WordPress.com holds 14 records that must survive whatever is done:
+  apex `A` ×2 (WordPress.com, protected), `www CNAME hperkins.blog`,
+  `MX 10 mx1.titan.email` / `MX 20 mx2.titan.email`, apex `TXT` SPF
+  (`_spf.wpcloud.com` + `spf.titan.email`), apex `TXT` OpenAI verification,
+  `_dmarc TXT`, `titan1._domainkey TXT` (DKIM), `wpcloud1/2._domainkey CNAME`
+  (DKIM), `mailpoet1/2._domainkey CNAME` (DKIM), `_mailpoet TXT`.
+  `boards.hperkins.blog` does not exist (NXDOMAIN).
+- A Workers Custom Domain requires an **active zone the account owns**
+  ([docs](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)),
+  so `{ "pattern": "boards.hperkins.blog", "custom_domain": true }` cannot be
+  deployed as things stand — a production deploy carrying it would fail.
+- Production data that a canonical-origin move touches (read 2026-09-21):
+  **0 passkeys** (nothing to re-enroll), **3 identity providers** (`google`,
+  `apple`, `github`; all disabled, no client id — no redirect URIs registered
+  anywhere yet), 0 OAuth identities, 2 users. `docs/phase5/canonical-origin-and-rp-id.md` §5
+  is the general procedure; with these numbers it collapses to the steps below.
+
+### The invariant that makes this safe
+
+`worker/canonical.mjs` answers every request whose scheme+host differ from
+`APP_URL` with a `301` (`308` for non-GET) to the same path and query on the
+canonical origin, `Cache-Control: no-store`. Consequences:
+
+- A hostname can be attached **before** `APP_URL` moves: it redirects to the
+  current canonical host, which is also the end-to-end proof that routing and
+  TLS work. After the flip the old hostname redirects to the new one.
+- Nothing is ever served on two hosts, so sessions, CSRF, passkeys (origin
+  check) and OAuth callbacks stay on one origin, and there is no duplicate
+  content.
+- The redirect is never cached, so flipping direction cannot strand a browser
+  in a loop.
+- Certificate-validation paths (`/.well-known/pki-validation/`,
+  `/.well-known/acme-challenge/`, `/.well-known/cf-custom-hostname-challenge/`)
+  on a non-canonical host are passed to the origin pipeline instead of being
+  redirected, because Cloudflare serves the CA's token there and a Worker that
+  redirects `/.well-known/*` breaks issuance and every renewal
+  ([troubleshooting](https://developers.cloudflare.com/ssl/edge-certificates/changing-dcv-method/troubleshooting/)).
+  A Custom Domain re-enters the Worker on `fetch()`, so the pass-through marks
+  the request and lets the app answer (404) the second time.
+
+Pinned by `tests/worker/canonical.test.mjs` and
+`tests/Unit/Core/CloudflareDeploymentContractTest.php`.
+
+### Mechanism B — Cloudflare for SaaS custom hostname (recommended)
+
+Keeps `hperkins.blog` DNS at WordPress.com untouched except for one new record.
+The hostname becomes a *custom hostname* of the `candidary.online` zone and a
+zone **route** sends only that hostname to the Worker
+([Worker as fallback origin](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/start/advanced-settings/worker-as-origin/)).
+
+1. **Enable Cloudflare for SaaS** on `candidary.online`: dashboard → SSL/TLS →
+   Custom Hostnames → Enable. Dashboard only; a non-Enterprise zone must have a
+   payment method on the account (the Workers Paid plan already provides one).
+   Billing is per custom hostname on pay-as-you-go with a free allowance (100
+   at the time of writing — the enable dialog shows the current terms). The API
+   answers `1404 No quota has been allocated` until this is done, which is how
+   the current state was confirmed.
+2. **Fallback origin**: in `candidary.online` DNS add `AAAA saas-fallback 100::`,
+   **proxied** (originless), then set it as the fallback origin
+   (`PUT /zones/973da452ca2467c3b0d6e489839300d2/custom_hostnames/fallback_origin`
+   `{"origin":"saas-fallback.candidary.online"}`) and wait for `active`.
+3. **Route, then deploy**: add to `routes` in `wrangler.jsonc`
+   `{ "pattern": "boards.hperkins.blog/*", "zone_name": "candidary.online" }`
+   and merge. **Never `*/*`**: the apex `candidary.online` is the Custom Domain
+   of the `candidary` Worker, and a zone-wide route runs *ahead* of Custom
+   Domains, so `*/*` would hand that site to `retroboards`, whose canonical
+   redirect would then send it to the forum. The hostname-only route is the
+   documented option for exactly this case.
+4. **Custom hostname**:
+   `POST /zones/973da452ca2467c3b0d6e489839300d2/custom_hostnames`
+   `{"hostname":"boards.hperkins.blog","ssl":{"method":"http","type":"dv","settings":{"min_tls_version":"1.2"}}}`.
+   Hostname ownership can be pre-validated before DNS changes by adding the
+   returned `ownership_verification` TXT (`_cf-custom-hostname.boards`) at
+   WordPress.com; certificate DCV completes automatically over HTTP once the
+   CNAME below exists (the Worker passes the token path through). Do not name a
+   custom hostname after the zone itself.
+5. **DNS at WordPress.com**: add `CNAME boards → saas-fallback.candidary.online`
+   (TTL 300 to start). Nothing else changes; DNSSEC stays on.
+6. **Verify** (hostname `status: active`, `ssl.status: active`, then):
+
+   ```sh
+   curl -sSI https://boards.hperkins.blog/healthz | grep -Ei '^(HTTP|location|cache-control)'
+   # HTTP/2 301 -> location: https://forum.candidary.online/healthz, cache-control: no-store
+   curl -sS https://forum.candidary.online/healthz          # still 200, unchanged
+   ```
+
+Rollback of B at any point: delete the route from `wrangler.jsonc` (deploy),
+delete the custom hostname, delete the CNAME. The blog never noticed.
+
+### Mechanism A — move the `hperkins.blog` zone to Cloudflare, then a Custom Domain
+
+The long-term "everything on Cloudflare" shape, at the price of migrating the
+blog's DNS. Only do this deliberately:
+
+1. Add `hperkins.blog` to the account (Free). Recreate **all 14 records**
+   exactly; the onboarding scan finds the common names but not the
+   `_domainkey` CNAMEs or `_mailpoet` — add them by hand and compare
+   `dig @<new-cloudflare-ns>` against `dig @ns1.wordpress.com` for every name
+   before switching. Keep the apex `A` records and `www` **DNS-only**:
+   WordPress.com's own guidance is to disable the proxy, set SSL to Full
+   (Strict), and re-provision the site certificate afterwards
+   ([WordPress.com: Configure Cloudflare](https://wordpress.com/support/cloudflare-dns/)).
+2. **DNSSEC first.** Disable it at WordPress.com (Upgrades → Domains →
+   hperkins.blog → DNSSEC) and wait for the DS record's TTL to lapse before
+   changing nameservers, or validating resolvers fail the whole domain — blog
+   and mail included. Re-enabling afterwards needs a DS record entered at the
+   WordPress.com registrar for Cloudflare's keys; whether that UI accepts a DS
+   for external nameservers has not been verified.
+3. Change nameservers at WordPress.com (the registrar; `can_manage_name_servers`
+   is true) to the pair Cloudflare assigns the new zone.
+4. Once the zone is **active**, add `{ "pattern": "boards.hperkins.blog",
+   "custom_domain": true }` to `routes` and merge; Workers Builds creates the
+   DNS record and certificate. Verify exactly as in B.6.
+
+Rollback of A: nameservers back to `ns1/ns2/ns3.wordpress.com` (WordPress.com
+keeps its copy of the zone), which is why the records there must not be
+deleted until well after cut-over.
+
+### Then: make `boards.hperkins.blog` canonical
+
+Do this only after B.6 (or A.4) shows the `301`.
+
+1. In `wrangler.jsonc` set `APP_URL` to `https://boards.hperkins.blog`.
+   Consider setting `WEBAUTHN_RP_ID=hperkins.blog` in the same change (it must
+   then also be added to the Worker's `envVars` pass-through): with 0 passkeys
+   enrolled this is free now, and it keeps passkeys valid across any later
+   subdomain move (`docs/runbooks/passkeys.md`).
+2. **Force a container restart in the same merge.** The Containers SDK hands
+   `vars` to the container only at start (§14), and `wrangler.jsonc`,
+   `worker/`, `docs/` and `*.md` are all excluded from the image by
+   `.dockerignore`, so a vars-only merge updates the Worker (the redirect flips
+   immediately) while PHP inside the warm container keeps the old `APP_URL`
+   for email links, the sitemap and the WebAuthn origin. Touch any file in the
+   build context — a comment line in `public/ping.txt` is enough — so the
+   image digest changes and the instance is recreated.
+3. Verify:
+
+   ```sh
+   curl -sSI https://forum.candidary.online/ | grep -Ei '^(HTTP|location)'   # 301 -> https://boards.hperkins.blog/
+   curl -sS  https://boards.hperkins.blog/healthz                             # {"status":"ok","database":"ok"}
+   curl -sS  https://boards.hperkins.blog/sitemap.xml | grep -c boards.hperkins.blog
+   ```
+
+   Sign in on the new host (session cookies are host-bound, so every member
+   signs in once more; nothing is lost), then send a test message from
+   `/admin/email` and confirm the links in it use the new host.
+4. Follow-ups that are currently no-ops but become real as features light up:
+   register `https://boards.hperkins.blog/auth/<provider>/callback` at each
+   OAuth provider before enabling it; passkey re-enrollment (none exist).
+   `MAIL_FROM` stays `noreply@candidary.online` — that sending domain is
+   onboarded with Cloudflare Email, whereas `hperkins.blog`'s SPF/DKIM live at
+   WordPress.com and serve Titan and MailPoet; changing the sender is a
+   separate, deliberate change.
+
+Rollback of the flip: revert `APP_URL` (with another build-context touch).
+The redirect reverses; nothing else moved.
