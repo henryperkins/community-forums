@@ -33,6 +33,29 @@ final class CloudflareDeploymentContractTest extends TestCase
         }
     }
 
+    /**
+     * The app has one canonical origin, APP_URL: sessions, CSRF, passkeys and
+     * OAuth callbacks are all bound to it. Every other hostname that reaches the
+     * Worker must redirect there, which is what makes attaching a hostname
+     * before (or keeping one after) a canonical-origin move safe (runbook §16).
+     * The redirect semantics themselves are covered by tests/worker/canonical.test.mjs.
+     */
+    public function test_worker_redirects_every_non_canonical_hostname_to_app_url(): void
+    {
+        $worker = $this->read('worker/index.js');
+        $canonical = $this->read('worker/canonical.mjs');
+
+        self::assertStringContainsString('import { canonicalRedirect } from "./canonical.mjs"', $worker);
+        // First thing in fetch(): nothing (assets included) is served on a non-canonical host.
+        self::assertMatchesRegularExpression(
+            '/async fetch\(request, env\) \{(?:\s*\/\/[^\n]*)*\s*return canonicalRedirect\(request, env\) \?\? routeRequest\(/',
+            $worker,
+        );
+        self::assertStringContainsString('new URL(String(env?.APP_URL', $canonical);
+        // A cached redirect would loop against the reverse one after APP_URL flips.
+        self::assertStringContainsString('"Cache-Control": "no-store"', $canonical);
+    }
+
     // Asset routing/cache semantics run against actual Requests/Responses and
     // the Workers Assets binding in `npm run test:assets` (tests/worker/).
 

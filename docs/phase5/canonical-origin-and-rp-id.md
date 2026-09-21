@@ -95,6 +95,12 @@ ID. Treat as a planned migration:
 **Subdomain-only move** (same registrable domain, RP ID unchanged): passkeys keep
 working; still do steps 3, 5, 6.
 
+**Edge enforcement (Cloudflare deployment, 2026-09-21):** `worker/canonical.mjs`
+redirects every hostname other than the `APP_URL` host to it, so a new hostname
+can be attached and verified *before* step 3, and the old hostname keeps
+redirecting after it. The operational sequence for the current move is
+`docs/runbooks/deployment-cloudflare.md` §16.
+
 **Lost-domain DR:** if the registrable domain itself is lost, RP ID changes
 unavoidably → same as steps 1–6 on the recovery domain; owner/admin recovery
 follows the `protected_owners` break-glass path (A1 §4.5) if owner sign-in is

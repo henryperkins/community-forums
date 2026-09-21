@@ -1,11 +1,13 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { routeRequest } from "./assets.mjs";
+import { canonicalRedirect } from "./canonical.mjs";
 
 /**
  * RetroBoards front door.
  *
- * The Worker serves the compiled public assets, establishes the trusted client
- * IP, and drives cron workers that would otherwise need a crontab in the image.
+ * The Worker enforces the single canonical origin (APP_URL), serves the compiled
+ * public assets, establishes the trusted client IP, and drives cron workers that
+ * would otherwise need a crontab in the image.
  *
  * Runbook: docs/runbooks/deployment-cloudflare.md
  */
@@ -182,7 +184,9 @@ export class ForumContainer extends Container {
 
 export default {
 	async fetch(request, env) {
-		return routeRequest(request, env, () => fetchForum(request, env));
+		// One canonical origin (APP_URL): every other hostname that reaches this
+		// Worker is redirected there before anything else runs. See canonical.mjs.
+		return canonicalRedirect(request, env) ?? routeRequest(request, env, () => fetchForum(request, env));
 	},
 
 	async scheduled(controller, env, ctx) {
