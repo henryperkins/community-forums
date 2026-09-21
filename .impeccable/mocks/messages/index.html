@@ -1,0 +1,120 @@
+<title>Messages refined</title>
+<link rel="stylesheet" href="assets/imladris.css">
+<style>
+    /* Board chrome paints from Imladris tokens. The mock inside the frame carries
+       its own Day/Twilight register control; the board follows the viewer's theme. */
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+            --surface-page: var(--twilight-900); --surface-raised: var(--twilight-800); --surface-sunken: var(--twilight-700);
+            --border-hair: #36434f; --text-body: #D7DCD2; --text-strong: var(--parchment-50); --text-faint: var(--ink-300);
+            --gold-ink: var(--gold-400); --brand: var(--green-500); --brand-subtle: rgba(78,116,89,.20);
+            --shadow-inset: inset 0 1px 2px rgba(0,0,0,.25);
+        }
+    }
+    html, body { margin: 0; background: var(--surface-page); color: var(--text-body); font-family: var(--font-body); overflow-x: hidden; }
+    .board { display: grid; grid-template-rows: auto 1fr; min-height: 100%; }
+    .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); padding-block: 12px 10px; padding-inline: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+    .bar h1 { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.35rem; margin: 0 6px 0 0; color: var(--text-strong); letter-spacing: -0.01em; text-wrap: balance; }
+    .bar h1 small { display: block; font-family: var(--font-mono); font-size: .66rem; letter-spacing: 0; color: var(--text-faint); margin-top: 2px; }
+    .group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
+    .group > span:first-child { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .6rem; color: var(--gold-ink); }
+    .seg { display: inline-flex; flex-wrap: wrap; padding: 3px; border-radius: var(--radius-pill); background: var(--surface-sunken); border: 1px solid var(--border-hair); box-shadow: var(--shadow-inset); max-width: 100%; }
+    .seg button { border: 0; background: none; padding: 5px 12px; border-radius: var(--radius-pill); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-body); cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--brand); color: var(--surface-raised); }
+    .seg button:focus-visible, .states button:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+    .states { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 0 100%; }
+    .state-select { display: none; flex: 1 0 100%; font: inherit; font-family: var(--font-body); font-size: 1rem; padding: 8px 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border-hair); background: var(--surface-raised); color: var(--text-body); }
+    @media (max-width: 599px) { .bar { position: static; } .states { display: none; } .state-select { display: block; } }
+    .states button { border: 1px solid var(--border-hair); background: var(--surface-raised); padding: 5px 11px; border-radius: var(--radius-pill); font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--text-body); cursor: pointer; box-shadow: var(--shadow-xs); text-align: left; }
+    .states button[aria-pressed="true"] { background: var(--brand-subtle); border-color: var(--brand); color: var(--brand); }
+    .stage { padding-block: 16px 32px; padding-inline: 16px; display: flex; flex-direction: column; gap: 12px; align-items: center; min-width: 0; }
+    .caption { max-width: 76ch; margin: 0; font-size: 1rem; line-height: 1.55; color: var(--text-body); text-align: center; text-wrap: pretty; }
+    .caption strong { font-family: var(--font-label); font-weight: 400; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--gold-ink); margin-right: 8px; }
+    .frame-wrap { width: 100%; max-width: 100%; display: flex; justify-content: center; min-width: 0; }
+    .frame { position: relative; overflow: hidden; border-radius: var(--radius-lg); border: 1px solid var(--border-hair); box-shadow: var(--shadow-md); background: var(--surface-raised); max-width: 100%; }
+    .frame.is-phone { border-radius: 34px; border: 9px solid var(--twilight-800); box-shadow: var(--shadow-lg); }
+    .frame iframe { display: block; border: 0; transform-origin: top left; background: var(--surface-page); }
+    .frame img[hidden] { display: none; }
+    .frame img { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+    .note { font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint); margin: 0; text-align: center; }
+    @media (prefers-reduced-motion: reduce) { .bar { backdrop-filter: none; } }
+</style>
+<div class="board">
+    <header class="bar">
+        <h1>Messages, refined<small>RetroBoards · mock on the live Imladris stylesheet</small></h1>
+        <span class="group"><span>Register</span><span class="seg" role="group" aria-label="Register"><button type="button" id="reg-light" data-register="light" aria-pressed="true">Day</button><button type="button" id="reg-dark" data-register="dark" aria-pressed="false">Twilight</button></span></span>
+        <span class="group"><span>Device</span><span class="seg" role="group" aria-label="Device"><button type="button" id="dev-1440" data-device="1440" aria-pressed="true">Desktop 1440</button><button type="button" id="dev-1280" data-device="1280" aria-pressed="false">Laptop 1280</button><button type="button" id="dev-390" data-device="390" aria-pressed="false">Phone 390</button></span></span>
+        <span class="group"><span>Show</span><span class="seg" role="group" aria-label="Show"><button type="button" id="view-after" data-view="after" aria-pressed="true">Refined</button><button type="button" id="view-before" data-view="before" aria-pressed="false">Today</button></span></span>
+        <nav class="states" aria-label="State"></nav>
+        <select class="state-select" id="state-select" aria-label="State"></select>
+    </header>
+    <section class="stage">
+        <p class="caption" data-caption></p>
+        <div class="frame-wrap"><div class="frame" data-frame><iframe title="Messages mock" data-iframe></iframe><img alt="The incumbent Messages surface, captured on 2026-09-21" data-before hidden></div></div>
+        <p class="note" data-note></p>
+    </section>
+</div>
+<script>
+(function () {
+    var STATES = [{"key":"conversation","title":"Conversation with Bob Brooks","caption":"Rail closed by default; the conversation takes the measure. Presence under the name, day dividers, clock times, one privacy line at the beginning, Read receipt.","before":"d1440-direct-alice.png","beforePhone":"m390-direct-carol.png"},{"key":"conversation-rail","title":"Conversation with Bob Brooks — details open","caption":"The details rail opened on demand: a third column at 1400px and wider, a drawer below. Regard replaces Reputation; presence repeats in the rail.","before":"d1440-direct-alice.png","beforePhone":null},{"key":"conversation-live","title":"Conversation with Bob Brooks — new messages arrived","caption":"Letters that arrive while the tab is open append below a “New” rule; when the reader has scrolled up, a quiet pill above the composer offers the way down.","before":"d1440-direct-alice.png","beforePhone":null},{"key":"group","title":"Rollback drill — wardens","caption":"A group: “4 in counsel · 2 here now”, the members rail with presence and owner tools, the owner rank on the run header, group history as a closed disclosure.","before":"d1440-group-alice-owner.png","beforePhone":"m390-group-carol.png"},{"key":"list","title":"Messages","caption":"The list is a narrow index: names never truncate behind a 25-character stamp; times are elapsed for the last week and short dates beyond; “You:” prefixes your own last word; the Unread filter carries its count; the nav link carries the unread pill.","before":"d1440-index-alice.png","beforePhone":"m390-index-carol-unread.png"},{"key":"compose","title":"Messages — new message","caption":"The recipient picker: members become chips as you type, backed by the composer’s existing suggest endpoint; the group title appears once two members are named; the hidden field keeps the plain comma-separated value so no-JS and the server contract are unchanged.","before":"d1440-index-compose-open.png","beforePhone":"m390-compose-open.png"},{"key":"new","title":"New message","caption":"The standalone page is the reading room with the form in the reading column: the vestigial “Back to all messages” pane is gone.","before":"d1440-new.png","beforePhone":null},{"key":"error","title":"New message — cannot reach this member","caption":"An eligibility failure re-renders the form at 422 with the error under To and the draft intact, instead of a 403 page that loses it.","before":"d1440-new.png","beforePhone":null},{"key":"first-run","title":"Messages — first visit","caption":"First run for a new member: the empty list says what will live here, the pane invites the first message, and the new-account throttle is explained before anyone types.","before":"d1440-index-carol-unread.png","beforePhone":null}];
+    var SIZES = { '1440': [1440, 900], '1280': [1280, 800], '390': [390, 844] };
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var narrow = document.documentElement.clientWidth < 600;
+    var state = { key: STATES[0].key, theme: prefersDark ? 'dark' : 'light', device: narrow ? '390' : '1440', view: 'after' };
+    var select = document.getElementById('state-select');
+    var nav = document.querySelector('.states');
+    var frame = document.querySelector('[data-frame]');
+    var iframe = document.querySelector('[data-iframe]');
+    var before = document.querySelector('[data-before]');
+    var caption = document.querySelector('[data-caption]');
+    var note = document.querySelector('[data-note]');
+
+    STATES.forEach(function (s) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.id = 'state-' + s.key; b.textContent = s.title; b.setAttribute('data-state', s.key); b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function () { state.key = s.key; render(); });
+        nav.appendChild(b);
+        var o = document.createElement('option'); o.value = s.key; o.textContent = s.title; select.appendChild(o);
+    });
+    select.addEventListener('change', function () { state.key = select.value; render(); });
+    document.querySelectorAll('[data-register]').forEach(function (b) { b.addEventListener('click', function () { state.theme = b.getAttribute('data-register'); render(); }); });
+    document.querySelectorAll('[data-device]').forEach(function (b) { b.addEventListener('click', function () { state.device = b.getAttribute('data-device'); render(); }); });
+    document.querySelectorAll('[data-view]').forEach(function (b) { b.addEventListener('click', function () { state.view = b.getAttribute('data-view'); render(); }); });
+
+    function pressed(sel, attr, val) {
+        document.querySelectorAll(sel).forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute(attr) === val ? 'true' : 'false'); });
+    }
+    function fit() {
+        var size = SIZES[state.device];
+        var avail = Math.min(document.documentElement.clientWidth - 32, 1440) - (state.device === '390' ? 18 : 2);
+        var k = Math.min(1, avail / size[0]);
+        iframe.width = size[0]; iframe.height = size[1];
+        iframe.style.width = size[0] + 'px'; iframe.style.height = size[1] + 'px';
+        iframe.style.transform = 'scale(' + k + ')';
+        frame.style.width = Math.round(size[0] * k) + 'px';
+        frame.style.height = Math.round(size[1] * k) + 'px';
+        frame.classList.toggle('is-phone', state.device === '390');
+    }
+    var lastSrc = '';
+    function render() {
+        var s = STATES.filter(function (x) { return x.key === state.key; })[0];
+        pressed('[data-state]', 'data-state', state.key);
+        if (select.value !== state.key) { select.value = state.key; }
+        pressed('[data-register]', 'data-register', state.theme);
+        pressed('[data-device]', 'data-device', state.device);
+        pressed('[data-view]', 'data-view', state.view);
+        var src = 'states/' + s.key + '.html?theme=' + state.theme;
+        if (src !== lastSrc) { iframe.src = src; lastSrc = src; }
+        var img = state.device === '390' ? s.beforePhone : s.before;
+        var showBefore = state.view === 'before' && !!img;
+        if (img) { before.src = 'before/' + img; }
+        before.hidden = !showBefore;
+        iframe.style.visibility = showBefore ? 'hidden' : 'visible';
+        caption.innerHTML = '<strong>' + (showBefore ? 'Today' : 'Refined') + '</strong>' + (showBefore ? 'The incumbent surface as captured on 2026-09-21, for comparison.' : s.caption);
+        note.textContent = state.view === 'before' && !img ? 'No incumbent capture exists for this state at this device; showing the refined mock.' : (state.device === '390' ? 'Phone frame at 390 × 844. The mock scrolls and its controls work.' : 'Frame at ' + state.device + ' wide. The rail toggle, menus, and the compose dialog work in the frame.');
+        fit();
+    }
+    window.addEventListener('resize', fit);
+    render();
+})();
+</script>
