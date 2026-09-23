@@ -645,3 +645,50 @@ The [combined evidence index](../../evidence/unified-notifications-and-settings/
 owns the current implementation status, final build/test results, reviewed
 screenshots and deliberate canonical Notices-image promotion. Earlier phase
 or prototype captures do not stand in for this repair's evidence.
+
+## 2026-09-23 — one topic row, one star (ADR 0036)
+
+The queue row that the member-surfaces transfer added as
+`templates/partials/inbox_thread_row.php` is gone. The inbox now renders the one
+topic row, `templates/partials/thread_row.php`, in a third `presentation`
+(`inbox`), which is what `components/forum/thread-row.card.html` already said
+the row was. The card names the queue's presentation `default`; production names
+it `inbox`, because the shipped queue row follows `ForumInbox.dc.html`'s triage
+geometry (ADR 0029) rather than the card's comfortable one. That is a naming
+difference, not a new component.
+
+**What changed in `components.css`.** Only the 2026-08-27 production-transfer
+block, and only its queue-row rules. Each `.inbox-thread-row` / `.inbox-row-*`
+selector becomes the thread-row vocabulary under the queue's modifier
+(`.thread-row.thread-row-inbox`, `.thread-title-line`, `.thread-title`,
+`.thread-row-chips`, `.thread-snippet`, `.thread-meta`, `.thread-meta-commends`,
+`.thread-row-select`, `.thread-row-star`, `.thread-row-menu`,
+`.thread-row-menu-panel`). Every declared value is unchanged. The queue row now
+carries `.thread-row`, so the block also restates what the generic row and its
+compact register would otherwise paint on it: the status `::before` rule, the
+`overflow: hidden` that cut the no-JavaScript row menu, the flex copy column, and
+the one-line clipped title. `.star-toggle` is the old row-star button's rule
+under the control's own name. Two rules are new: `.star-toggle .icon` sizes the
+glyph to 18px, because the commend star fills less of its box than the
+five-point star did, and `.icon-commend-star.is-outline` draws the unset star.
+The identical bytes went to `public/assets/app.css`, and the block stays
+token-only.
+
+**Order of operations.** The mirror edit and `composer build:imladris` ran with
+the application edits parked (`git stash push -u -- templates public/assets`), as
+the 2026-09-13 entry requires, and `--check` was green before they were restored.
+The design digest did not move: `components.css` sits outside
+`design_surface.roots`.
+
+**Deliberate divergence from upstream.** Production no longer prints ★ or ☆
+anywhere. The design sources still do: `components/forum/ThreadRow.jsx:119`,
+`templates/forum-inbox/ForumInbox.dc.html:196`,
+`templates/account-settings/AccountSettings.dc.html:323`, and the retired
+`ui_kits/reading/ReadingSurfaces.jsx:37` and `ui_kits/settings/SettingsSections.jsx:364`.
+`ThreadView.dc.html:179` itself asks for "the four-point commend star for esteem
+everywhere, never ★ here and ✦", and `components/identity/StarButton.jsx`
+already draws it, so upstream disagrees with itself. All five are left alone for
+the reasons the chamfer entry gives: the first three sit inside
+`design_surface.roots` and paint nothing, and the `ui_kits/` copies are governed
+by `RETIRED.md`. **A future bundle that offers a ★ back into a production-facing
+source should have that hunk refused.**
