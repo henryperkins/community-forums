@@ -1,0 +1,39 @@
+
+Running 16 tests using 1 worker
+
+(node:1382154) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [desktop] › messages-audit-regressions.spec.ts:316:5 › P1-1 compose dialog is modal: aria-modal, Tab and Shift+Tab stay inside, Escape peels list then dialog (2.8s)
+
+  ✓   2 [desktop] › messages-audit-regressions.spec.ts:373:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view (7.6s)
+
+  ✓   3 [desktop] › messages-audit-regressions.spec.ts:461:5 › P1-3 prose links are underlined in letters and posts; image links are not; pagers are controls (1.5s)
+
+  ✓   4 [desktop] › messages-audit-regressions.spec.ts:525:5 › P1-4 OS-dark on the default system theme: the "+" icon clears 3:1, same as explicit twilight (1.9s)
+
+  ✓   5 [desktop] › messages-audit-regressions.spec.ts:545:5 › P1-5 the ··· menu is a plain disclosure: no role="menu", no axe violations while open (1.4s)
+
+  ✓   6 [desktop] › messages-audit-regressions.spec.ts:560:5 › P1-6 filter pills: the selected pill differs from the unselected one by 3:1 in day and carries aria-current (1.7s)
+
+  ✓   7 [desktop] › messages-audit-regressions.spec.ts:590:5 › P2-1 the saved details choice reopens only a column; overlays start closed with the back control reachable (1.4s)
+
+  ✓   8 [desktop] › messages-audit-regressions.spec.ts:645:5 › P2-2 Search and the To chip field wear the shared focus outline on keyboard focus (1.4s)
+
+  ✓   9 [desktop] › messages-audit-regressions.spec.ts:682:5 › P2-3 a group composer addresses the group; a direct one keeps the counterpart (486ms)
+
+  ✓  10 [desktop] › messages-audit-regressions.spec.ts:699:5 › P2-4 touch: every Messages control takes a 44x44 tap (975ms)
+
+  ✓  11 [desktop] › messages-audit-regressions.spec.ts:741:5 › P2-5 twilight: the own-letter edge is register-aware, not the pale day gold (3.0s)
+
+  ✓  12 [desktop] › messages-audit-regressions.spec.ts:771:5 › P2-6 a no-JS reply lands on its letter; a scripted reply stays unanchored at the end (1.9s)
+
+  ✓  13 [desktop] › messages-audit-regressions.spec.ts:817:5 › P3-2 list previews read as words, not Markdown, and the instant filter still matches the raw letter (253ms)
+
+  ✓  14 [desktop] › messages-audit-regressions.spec.ts:836:5 › P3-5 one h1 per page, owner tools name the member, unread leads the row name, the details toggle is a button (883ms)
+
+  ✓  15 [desktop] › messages-audit-regressions.spec.ts:888:5 › P3-6 clocks, titles and the details presence read cleanly (en-US, America/Chicago) (353ms)
+
+  ✓  16 [desktop] › messages-audit-regressions.spec.ts:915:5 › axe: OS-dark system theme and 640x400 zoom over the list and a conversation with the rail and ··· menu open (17.2s)
+
+  16 passed (46.4s)

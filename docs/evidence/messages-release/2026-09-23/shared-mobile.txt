@@ -1,0 +1,41 @@
+
+Running 18 tests using 1 worker
+
+(node:1388009) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [mobile] › composer-expansion.spec.ts:187:7 › reply dock expands on tap and folds back when an empty composer is left (Milkdown) (1.4s)
+
+  ✓   2 [mobile] › composer-expansion.spec.ts:226:7 › empty reply dock folds when focus tabs away, and keeps a draft open (Milkdown) (1.4s)
+
+  ✓   3 [mobile] › composer-expansion.spec.ts:251:7 › composer-owned controls never fold the dock (Milkdown) (1.8s)
+
+  ✓   4 [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (Milkdown) (1.8s)
+
+  ✓   5 [mobile] › composer-expansion.spec.ts:187:7 › reply dock expands on tap and folds back when an empty composer is left (textarea) (832ms)
+
+  ✓   6 [mobile] › composer-expansion.spec.ts:226:7 › empty reply dock folds when focus tabs away, and keeps a draft open (textarea) (1.2s)
+
+  ✓   7 [mobile] › composer-expansion.spec.ts:251:7 › composer-owned controls never fold the dock (textarea) (1.6s)
+
+  ✓   8 [mobile] › composer-expansion.spec.ts:293:7 › minimize folds a draft away without discarding it and reopening restores it (textarea) (1.7s)
+
+  ✓   9 [mobile] › composer-expansion.spec.ts:340:5 › a restored browser-local reply draft opens instead of hiding in the collapsed dock (955ms)
+
+  ✓  10 [mobile] › composer-expansion.spec.ts:365:5 › the reply composer is one framed surface with no nested editor card (916ms)
+
+  ✓  11 [mobile] › composer-expansion.spec.ts:433:5 › an expanded empty reply leaves most of the mobile viewport to the conversation (886ms)
+
+  ✓  12 [mobile] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field (2.1s)
+
+  ✓  13 [mobile] › composer-expansion.spec.ts:498:5 › the editor mode control stays keyboard and screen-reader operable (1.0s)
+
+  ✓  14 [mobile] › composer-expansion.spec.ts:519:5 › DM and edit mounts keep working through the shared-shell change (1.1s)
+
+  ✓  15 [mobile] › composer-expansion.spec.ts:560:5 › the reworked composer surfaces introduce no serious axe violations (2.6s)
+  ✓  16 [mobile] › rich-content.spec.ts:70:5 › rich post semantics stay faithful, accessible, and contained (1.5s)
+  -  17 [mobile] › rich-content.spec.ts:164:5 › rich content remains server-rendered with JavaScript disabled
+  ✓  18 [mobile] › rich-content.spec.ts:183:5 › overflowing code fences are keyboard-operable scroll regions (807ms)
+
+  1 skipped
+  17 passed (24.9s)

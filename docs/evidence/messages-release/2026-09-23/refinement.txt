@@ -1,0 +1,12 @@
+
+Running 5 tests using 1 worker
+
+(node:1383881) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › messages-refinement.spec.ts:34:5 › refined Messages: responsive reading, picker, live incoming counsel, errors and no-JS (26.5s)
+  ✓  2 [desktop] › messages-refinement.spec.ts:149:5 › Messages accessibility in day and twilight, including the recipient picker (3.5s)
+  ✓  3 [desktop] › messages-refinement.spec.ts:167:5 › reference states: group counsel, first visit and list (4.1s)
+  ✓  4 [desktop] › messages-refinement.spec.ts:208:5 › Messages recipient commits discard delayed suggestions (1.4s)
+  ✓  5 [desktop] › messages-refinement.spec.ts:244:5 › conversation poll backs off, pauses while hidden, resumes immediately and stops on 404 (865ms)
+
+  5 passed (37.6s)

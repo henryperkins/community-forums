@@ -1,0 +1,21 @@
+
+Running 8 tests using 1 worker
+
+(node:1367500) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › messages-poll-regressions.spec.ts:42:5 › a late font load leaves a reader who scrolled away where they are (1.1s)
+  ✓  2 [desktop] › messages-poll-regressions.spec.ts:68:5 › a late font load re-bottoms a reader who is still pinned (951ms)
+(node:1367604) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 [desktop] › messages-poll-regressions.spec.ts:42:5 › a late font load leaves a reader who scrolled away where they are (1.0s)
+  ✓  4 [desktop] › messages-poll-regressions.spec.ts:68:5 › a late font load re-bottoms a reader who is still pinned (968ms)
+(node:1367710) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  5 [desktop] › messages-poll-regressions.spec.ts:42:5 › a late font load leaves a reader who scrolled away where they are (1.0s)
+  ✓  6 [desktop] › messages-poll-regressions.spec.ts:68:5 › a late font load re-bottoms a reader who is still pinned (933ms)
+(node:1367813) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  7 [desktop] › messages-poll-regressions.spec.ts:42:5 › a late font load leaves a reader who scrolled away where they are (1.0s)
+  ✓  8 [desktop] › messages-poll-regressions.spec.ts:68:5 › a late font load re-bottoms a reader who is still pinned (969ms)
+
+  8 passed (10.6s)

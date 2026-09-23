@@ -1,0 +1,9 @@
+
+Running 2 tests using 1 worker
+
+(node:1386646) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › group-dms.spec.ts:81:5 › group DMs: create, draft-preserving validation, owner actions, membership intervals, mute/leave, report (6.4s)
+  ✓  2 [desktop] › group-dms.spec.ts:212:5 › group DMs work with JavaScript disabled (create, rail via :target, mute, report) (1.2s)
+
+  2 passed (8.8s)

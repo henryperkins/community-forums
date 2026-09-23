@@ -1,0 +1,20 @@
+
+Running 13 tests using 1 worker
+
+(node:1380129) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › messages-poll-regressions.spec.ts:54:5 › a late font load leaves a reader who scrolled away where they are (1.2s)
+  ✓   2 [desktop] › messages-poll-regressions.spec.ts:72:5 › a late font load re-bottoms a reader who is still pinned (1.1s)
+  ✓   3 [desktop] › messages-poll-regressions.spec.ts:98:5 › a has_more page requests the next page without waiting for the interval (1.1s)
+  ✓   4 [desktop] › messages-poll-regressions.spec.ts:130:5 › a has_more page that does not advance the cursor waits for the interval (1.2s)
+  ✓   5 [desktop] › messages-poll-regressions.spec.ts:151:5 › an unknown recipient focuses the combobox (1.3s)
+  ✓   6 [desktop] › messages-poll-regressions.spec.ts:167:5 › a body error keeps focus on the textarea (837ms)
+  ✓   7 [desktop] › messages-poll-regressions.spec.ts:186:5 › a closed compose dialog is not focused (664ms)
+  ✓   8 [desktop] › messages-poll-regressions.spec.ts:194:5 › the conversation poll waits for Retry-After on a 429 (1.1s)
+  ✓   9 [desktop] › messages-poll-regressions.spec.ts:219:5 › a tab return inside a Retry-After wait does not poll early (1.7s)
+  ✓  10 [desktop] › messages-poll-regressions.spec.ts:256:5 › catch-up yields after twenty immediate follow-ups (1.3s)
+  ✓  11 [desktop] › messages-poll-regressions.spec.ts:280:5 › a return while the throttled request is in flight obeys the deadline (1.1s)
+  ✓  12 [desktop] › messages-poll-regressions.spec.ts:315:5 › catch-up and late fonts preserve a parked reader and the new-message pill (1.2s)
+  ✓  13 [desktop] › messages-poll-regressions.spec.ts:344:5 › a poll can receive its Retry-After deadline from the JSON body (1.1s)
+
+  13 passed (16.4s)
