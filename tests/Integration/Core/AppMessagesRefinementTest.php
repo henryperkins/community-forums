@@ -134,6 +134,25 @@ final class AppMessagesRefinementTest extends TestCase
         }
     }
 
+    public function testPollOfAnExactPageIsComplete(): void
+    {
+        [$alice, $bob, $id] = $this->pair();
+        $messages = new DmMessageRepository($this->db);
+        $ids = [];
+        for ($i = 0; $i < 50; $i++) {
+            $ids[] = $messages->create($id, (int) $bob['id'], 'Letter', '<p>Letter</p>');
+        }
+        $this->actingAs($alice);
+
+        $data = json_decode($this->post('/messages/' . $id . '/poll', ['after' => 0])->body(), true, flags: JSON_THROW_ON_ERROR);
+
+        self::assertSame(50, substr_count($data['html'], 'data-message-id='));
+        self::assertFalse($data['has_more']);
+        self::assertSame($ids[49], $data['last_id']);
+        self::assertSame($ids[49], (int) (new ConversationRepository($this->db))->membership($id, (int) $alice['id'])['last_read_message_id']);
+        self::assertSame(0, $data['dm_unread']);
+    }
+
     public function testPollCapsCatchupAndNeverAcknowledgesAForgedCursor(): void
     {
         [$alice, $bob, $id] = $this->pair();
@@ -149,6 +168,13 @@ final class AppMessagesRefinementTest extends TestCase
         self::assertSame('', $data['html']);
         self::assertSame($ids[49], (int) (new ConversationRepository($this->db))->membership($id, (int) $alice['id'])['last_read_message_id']);
         self::assertSame(1, $data['dm_unread']);
+
+        $next = json_decode($this->post('/messages/' . $id . '/poll', ['after' => $ids[49]])->body(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertFalse($next['has_more']);
+        self::assertSame($ids[50], $next['last_id']);
+        self::assertStringContainsString('id="m' . $ids[50] . '"', $next['html']);
+        self::assertSame(0, $next['dm_unread']);
+        self::assertSame($ids[50], (int) (new ConversationRepository($this->db))->membership($id, (int) $alice['id'])['last_read_message_id']);
     }
 
     public function testPresenceRespectsPrivacyBlocksAndFeatureRollback(): void

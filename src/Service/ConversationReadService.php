@@ -17,6 +17,8 @@ use App\Support\Markdown;
 /** Participant-only incremental reads; no staff bypass. */
 final class ConversationReadService
 {
+    private const POLL_PAGE = 50;
+
     public function __construct(
         private Database $db,
         private ConversationRepository $conversations,
@@ -66,7 +68,11 @@ final class ConversationReadService
             throw new NotFoundException('Conversation not found.');
         }
         $this->writeGate->assertCanWrite($viewer);
-        $messages = $this->messages->afterForUser($conversationId, $viewer->id(), $after);
+        $messages = $this->messages->afterForUser($conversationId, $viewer->id(), $after, self::POLL_PAGE + 1);
+        $hasMore = count($messages) > self::POLL_PAGE;
+        if ($hasMore) {
+            array_pop($messages);
+        }
         // A supplied cursor is never a read watermark; acknowledge only returned
         // rows. markRead is one monotonic UPDATE (GREATEST), so it needs no
         // transaction around it, and the read before it takes no lock.
@@ -85,7 +91,7 @@ final class ConversationReadService
             'other_last_read_message_id' => $group ? null : $this->otherLastReadMessageId($participants, $viewer->id()),
             'presence' => $this->presence($viewer, $participants),
             'dm_unread' => $this->conversations->unreadConversationCount($viewer->id()),
-            'has_more' => count($messages) === 50,
+            'has_more' => $hasMore,
         ];
     }
 
