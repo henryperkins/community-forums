@@ -10,6 +10,9 @@ namespace App\Core;
  */
 final class Request
 {
+    /** Malformed upload metadata, distinct from every PHP upload error. */
+    public const UPLOAD_ERR_INVALID = -1;
+
     /**
      * @param array<string,mixed> $query
      * @param array<string,mixed> $post
@@ -58,13 +61,10 @@ final class Request
      */
     public function file(string $key): ?array
     {
-        $f = $this->files[$key] ?? null;
-        if (!is_array($f) || !isset($f['tmp_name'], $f['error'])) {
+        if ($this->fileError($key) !== UPLOAD_ERR_OK) {
             return null;
         }
-        if ((int) $f['error'] !== UPLOAD_ERR_OK || (string) $f['tmp_name'] === '') {
-            return null;
-        }
+        $f = $this->files[$key];
         return [
             'name' => (string) ($f['name'] ?? ''),
             'type' => (string) ($f['type'] ?? ''),
@@ -72,6 +72,39 @@ final class Request
             'error' => (int) $f['error'],
             'size' => (int) ($f['size'] ?? 0),
         ];
+    }
+
+    public function fileError(string $key): ?int
+    {
+        if (!array_key_exists($key, $this->files)) {
+            return null;
+        }
+        $file = $this->files[$key];
+        if (!is_array($file) || !isset($file['error'], $file['tmp_name'])
+            || !is_int($file['error']) || !is_string($file['tmp_name'])
+            || (isset($file['name']) && !is_string($file['name']))
+            || (isset($file['type']) && !is_string($file['type']))
+            || (isset($file['size']) && (!is_int($file['size']) || $file['size'] < 0))
+            || ($file['error'] === UPLOAD_ERR_OK && $file['tmp_name'] === '')) {
+            return self::UPLOAD_ERR_INVALID;
+        }
+        return $file['error'];
+    }
+
+    /** Only a reliable, bounded Content-Length can diagnose a discarded POST. */
+    public function contentLength(): ?int
+    {
+        $value = $this->server['CONTENT_LENGTH'] ?? null;
+        if (!is_string($value) || !ctype_digit($value)) {
+            return null;
+        }
+        $digits = ltrim($value, '0');
+        $max = (string) PHP_INT_MAX;
+        if (strlen($digits) > strlen($max)
+            || (strlen($digits) === strlen($max) && strcmp($digits, $max) > 0)) {
+            return null;
+        }
+        return (int) $digits;
     }
 
     private static function normalizePath(string $path): string

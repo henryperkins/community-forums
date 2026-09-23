@@ -304,6 +304,10 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
                     'edit_post_id' => $edit_post_id ?? 0,
                     'edit_old' => $edit_old ?? '',
                     'edit_error' => $edit_error ?? '',
+                    'wiki_edit_post_id' => $wiki_edit_post_id ?? 0,
+                    'wiki_edit_old' => $wiki_edit_old ?? '',
+                    'wiki_edit_reason' => $wiki_edit_reason ?? '',
+                    'wiki_edit_error' => $wiki_edit_error ?? '',
                     'unread_count' => (int) ($since_last_read_context['post_count'] ?? 0),
                 ]) ?>
                 <?php if ((int) $p['is_op'] === 1): ?><?= $afterOpeningPost ?><?php $afterOpeningPost = ''; endif; ?>

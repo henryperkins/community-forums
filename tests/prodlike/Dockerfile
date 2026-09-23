@@ -29,6 +29,7 @@ RUN mkdir -p storage/media storage/ratelimit-prodlike \
     && chown -R www-data:www-data storage
 
 COPY tests/prodlike/php.ini /usr/local/etc/php/conf.d/retroboards-prodlike.ini
+COPY deploy/php-uploads.ini /usr/local/etc/php/conf.d/retroboards-uploads.ini
 COPY tests/prodlike/app-entrypoint.sh /usr/local/bin/retroboards-prodlike-entrypoint
 RUN chmod +x /usr/local/bin/retroboards-prodlike-entrypoint
 

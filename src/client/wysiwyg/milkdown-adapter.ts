@@ -3,6 +3,7 @@ import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
 import {
   commonmark,
+  imageSchema,
   toggleEmphasisCommand,
   toggleInlineCodeCommand,
   toggleStrongCommand,
@@ -22,7 +23,7 @@ type FallbackAdapter = {
   replaceSelection(markdown: string): void;
   rememberSelection(): RememberedSelection;
   replaceRememberedSelection(mark: RememberedSelection, markdown: string): void;
-  replacePendingUpload(token: string, markdown: string): boolean;
+  replacePendingUpload(token: string, markdown: string, options?: { signal?: AbortSignal }): Promise<boolean>;
   focus(): void;
   onChange(callback: (markdown: string) => void): void;
   setDisabled(disabled: boolean): void;
@@ -82,6 +83,21 @@ type BareImageMarkdown = {
 
 const MAX_NOTIFYING_MENTIONS = 10;
 const chipPluginKey = 'retroboards-composer-chips';
+
+// Pending upload destinations are transport state, never network image URLs.
+const pendingImageSchema = imageSchema.extendSchema(previous => ctx => {
+  const base = previous(ctx);
+  return {
+    ...base,
+    toDOM(node) {
+      if (/^rbup-[a-z0-9]+-[a-z0-9]+$/.test(String(node.attrs.src || ''))) {
+        return ['span', { class: 'composer-pending-image' }, 'Image attachment pending…'];
+      }
+      return base.toDOM!(node);
+    },
+  };
+});
+const uploadCommonmark = commonmark.filter(plugin => plugin !== imageSchema[0] && plugin !== imageSchema[1]);
 
 function isCodeText(node: ProseMirrorNode, parent: ProseMirrorNode | null): boolean {
   if (parent?.type.spec.code) {
@@ -296,43 +312,44 @@ class MilkdownComposerAdapter {
     this.dirty = true;
     this.ready.then(() => {
       this.editor?.action(insert(markdown));
+      // Upload policy failures can be visible immediately. Persist their marker
+      // to canonical Markdown before a member reloads, not on listener debounce.
+      this.syncRichMarkdown();
     }).catch(() => {
       this.fallback.replaceSelection(markdown);
     });
   }
 
-  replacePendingUpload(token: string, markdown: string): boolean {
-    const replaced = this.fallback.replacePendingUpload(token, markdown);
-    if (replaced) {
+  async replacePendingUpload(token: string, markdown: string, options?: { signal?: AbortSignal }): Promise<boolean> {
+    try {
+      await this.ready;
+      if (this.destroyed || options?.signal?.aborted) return false;
+      if (!this.richMode || this.failed) {
+        const replaced = await this.fallback.replacePendingUpload(token, markdown, options);
+        if (replaced) { this.dirty = true; this.emit(this.textarea.value); }
+        return replaced;
+      }
+      const imageSrc = this.bareImageMarkdown(token)?.src || token;
+      const view = this.currentView();
+      const range = view ? this.findImageRangeBySrc(view, imageSrc) || this.findRecentTextRange(view, token) : null;
+      if (!range || !this.editor || options?.signal?.aborted) return false;
       this.dirty = true;
-      this.emit(this.textarea.value);
-      this.ready.then(() => {
-        this.editor?.action(replaceAll(this.textarea.value, true));
-      }).catch(() => {});
-      return true;
-    }
-    if (!this.richMode || this.failed || this.destroyed) {
+      this.editor.action(ctx => {
+        // No await between cancellation check and the actual transaction.
+        const slice = markdownToSlice(markdown)(ctx);
+        view!.dispatch(closeHistory(view!.state.tr.replace(range.from, range.to, slice)));
+        const image = this.bareImageMarkdown(markdown);
+        if (image) this.clearGeneratedImageTitle(view!, image);
+      });
+      const canonical = this.getMarkdown();
+      this.writeTextarea(canonical);
+      this.emit(canonical);
+      const image = this.bareImageMarkdown(markdown);
+      return image ? this.findImageRangeBySrc(view!, image.src) !== null
+        : !canonical.includes(token);
+    } catch {
       return false;
     }
-    const imageSrc = this.bareImageMarkdown(token)?.src || token;
-    const view = this.currentView();
-    const range = view
-      ? this.findRecentTextRange(view, token) || this.findImageRangeBySrc(view, imageSrc)
-      : null;
-    if (range) {
-      this.replaceEditorRangeWithMarkdown(range, markdown);
-      return true;
-    }
-    this.ready.then(() => {
-      const activeView = this.currentView();
-      const delayedRange = activeView
-        ? this.findRecentTextRange(activeView, token) || this.findImageRangeBySrc(activeView, imageSrc)
-        : null;
-      if (delayedRange) {
-        this.replaceEditorRangeWithMarkdown(delayedRange, markdown);
-      }
-    }).catch(() => {});
-    return true;
   }
 
   focus(): void {
@@ -694,7 +711,8 @@ class MilkdownComposerAdapter {
           this.handleRichMarkdown(markdown);
         });
       })
-      .use(commonmark)
+      .use(uploadCommonmark)
+      .use(pendingImageSchema)
       .use(gfm)
       .use(history)
       .use(richComposerPlugin(this))
@@ -1017,7 +1035,7 @@ class MilkdownComposerAdapter {
   }
 
   private bareImageMarkdown(markdown: string): BareImageMarkdown | null {
-    const match = markdown.match(/^!\[([^\]\n]*)\]\(([^)\s]+)\)$/);
+    const match = markdown.match(/^!\[((?:\\.|[^\]\\\n])*)\]\(([^)\s]+)\)$/);
     if (!match) {
       return null;
     }

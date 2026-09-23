@@ -1,0 +1,36 @@
+[
+  {
+    "kind": "large",
+    "bytes": 3151914,
+    "status": 200,
+    "sha256": "9804c31d113d1ee41892fdd321296054f78c6450cfe2fce6d203942e7c27ec50"
+  },
+  {
+    "kind": "padded PNG",
+    "bytes": 2673378,
+    "status": 200
+  },
+  {
+    "kind": "padded PNG",
+    "bytes": 5242880,
+    "status": 200
+  },
+  {
+    "kind": "padded PNG",
+    "bytes": 5242881,
+    "status": 422,
+    "code": "upload_rejected"
+  },
+  {
+    "kind": "padded PNG",
+    "bytes": 9437184,
+    "status": 413,
+    "code": "upload_too_large"
+  },
+  {
+    "kind": "padded PNG",
+    "bytes": 11534336,
+    "status": 413,
+    "code": "upload_request_too_large"
+  }
+]

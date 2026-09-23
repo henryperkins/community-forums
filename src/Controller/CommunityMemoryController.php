@@ -138,17 +138,25 @@ final class CommunityMemoryController extends Controller
         $user = $this->requireUser();
         $postId = (int) ($params['id'] ?? 0);
         $post = $this->postOrFail($postId);
-        return $this->run(
-            fn () => $this->container->get(CommunityMemoryService::class)->editWiki(
+        try {
+            $this->container->get(CommunityMemoryService::class)->editWiki(
                 $user,
                 $postId,
                 (string) $request->post('body', ''),
                 (string) $request->post('reason', ''),
                 $request->post('idempotency_key'),
-            ),
-            $this->threadUrl((int) $post['thread_id']) . '#p' . $postId,
-            'Wiki post updated.',
-        );
+            );
+        } catch (ValidationException $e) {
+            $thread = $this->container->get(\App\Service\ThreadReadService::class)->loadForUser($user, (int) $post['thread_id']);
+            return (new ThreadController($this->container))->renderThread($request, $thread, [
+                'wiki_edit_post_id' => $postId,
+                'wiki_edit_old' => (string) $request->post('body', ''),
+                'wiki_edit_reason' => (string) $request->post('reason', ''),
+                'wiki_edit_error' => $e->first(),
+            ])->withStatus(422);
+        }
+        $thread = $this->container->get(ThreadRepository::class)->find((int) $post['thread_id']);
+        return $this->redirectWithFlash($this->postLocation((int) $post['thread_id'], (string) ($thread['slug'] ?? ''), $postId), 'Wiki post updated.');
     }
 
     /** @param array<string,string> $params */

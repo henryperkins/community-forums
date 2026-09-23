@@ -24,7 +24,8 @@
     "evidence:prodlike": "npm run prepare-db:prodlike && bash prodlike-env.sh playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts",
     "evidence:dark:prodlike": "RB_BROWSER_DARK_SURFACES=1 npm run prepare-db:prodlike && RB_BROWSER_DARK_SURFACES=1 bash prodlike-env.sh playwright test server-drafts.spec.ts",
     "a11y:prodlike": "RB_BROWSER_DARK_SURFACES=1 npm run prepare-db:prodlike && RB_BROWSER_DARK_SURFACES=1 bash prodlike-env.sh playwright test a11y.spec.ts",
-    "test": "playwright test"
+    "test": "playwright test",
+    "evidence:uploads": "bash ../../tests/uploads/run.sh"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",

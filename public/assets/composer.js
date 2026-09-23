@@ -157,8 +157,15 @@
         this.ta.selectionEnd = mark.end;
         this.replaceSelection(markdown);
     };
-    TextareaComposerAdapter.prototype.replacePendingUpload = function (token, markdown) {
-        return replaceOnce(this.ta, token, markdown);
+    TextareaComposerAdapter.prototype.replacePendingUpload = function (token, markdown, options) {
+        if (this.form._rbComposerDestroyed || (options && options.signal && options.signal.aborted)) { return Promise.resolve(false); }
+        var tokenImage = composerImageReferences(token)[0];
+        var src = tokenImage ? tokenImage.src : token;
+        var ref = composerImageReferences(this.ta.value).find(function (item) { return item.src === src; });
+        if (!ref) { return Promise.resolve(false); }
+        this.ta.value = this.ta.value.slice(0, ref.index) + markdown + this.ta.value.slice(ref.index + ref.markdown.length);
+        this.ta.dispatchEvent(new Event('input', { bubbles: true }));
+        return Promise.resolve(true);
     };
     TextareaComposerAdapter.prototype.focus = function () { this.ta.focus(); };
     TextareaComposerAdapter.prototype.onChange = function (callback) { this.changeHandlers.push(callback); };
@@ -1196,201 +1203,367 @@
         adapter.setMarkdown(v.slice(0, insertAt) + moving + v.slice(insertAt));
         return true;
     }
-    function uploadCard(form, adapter, file, placeholder) {
-        var tray = uploadTray(form);
-        var card = document.createElement('div');
-        card.className = 'composer-upload-chip composer-upload-card is-uploading';
-        var preview = document.createElement('img');
-        preview.className = 'composer-upload-thumb';
-        preview.alt = '';
-        preview.hidden = true;
-        var meta = document.createElement('div');
-        meta.className = 'composer-upload-meta';
-        var name = document.createElement('div');
-        name.className = 'composer-upload-name';
-        name.textContent = file && file.name ? file.name : 'image';
-        var status = document.createElement('div');
-        status.className = 'composer-upload-status';
-        status.textContent = 'Uploading ' + (file && file.name ? file.name : 'image') + '...';
-        var progress = document.createElement('progress');
-        progress.max = 100;
-        progress.value = 0;
-        var alt = document.createElement('input');
-        alt.type = 'text';
-        alt.className = 'input input-small';
-        alt.placeholder = 'Alt text';
-        alt.setAttribute('aria-label', 'Image alt text');
-        alt.disabled = true;
-        var actions = document.createElement('div');
-        actions.className = 'composer-upload-actions';
-        var up = document.createElement('button');
-        up.type = 'button';
-        up.className = 'btn btn-secondary btn-small';
-        up.textContent = 'Up';
-        var down = document.createElement('button');
-        down.type = 'button';
-        down.className = 'btn btn-secondary btn-small';
-        down.textContent = 'Down';
-        var remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'btn btn-secondary btn-small';
-        remove.textContent = 'Remove';
-        actions.appendChild(up);
-        actions.appendChild(down);
-        actions.appendChild(remove);
-        meta.appendChild(name);
-        meta.appendChild(status);
-        meta.appendChild(progress);
-        meta.appendChild(alt);
-        meta.appendChild(actions);
-        card.appendChild(preview);
-        card.appendChild(meta);
-        tray.appendChild(card);
-        card._rbMarkdown = '';
-        function activeAdapter() { return form._rbComposerAdapter || adapter; }
-        remove.addEventListener('click', function () {
-            activeAdapter().replacePendingUpload(card._rbMarkdown || placeholder, '');
-            card.remove();
-        });
-        up.addEventListener('click', function () {
-            var prev = card.previousElementSibling;
-            if (prev && moveMarkdownSnippet(activeAdapter(), card._rbMarkdown, prev._rbMarkdown || '', true)) {
-                card.parentNode.insertBefore(card, prev);
+    // A scanner for our image references, not a client Markdown renderer. Keep
+    // offsets intact while excluding code; the server AST guard is authoritative.
+    function composerImageReferences(markdown) {
+        function mask(value) { return value.replace(/[^\n]/g, ' '); }
+        var fence = null;
+        var source = markdown.split('\n').map(function (line) {
+            // Recognize code inside quote/list containers without changing the
+            // source offsets used for canonical replacement.
+            var content = line, quoteDepth = 0, quote;
+            while ((quote = content.match(/^ {0,3}>[ \t]?/))) {
+                content = content.slice(quote[0].length); quoteDepth++;
             }
-        });
-        down.addEventListener('click', function () {
-            var next = card.nextElementSibling;
-            if (next && moveMarkdownSnippet(activeAdapter(), card._rbMarkdown, next._rbMarkdown || '', false)) {
-                card.parentNode.insertBefore(next, card);
+            if (fence && (fence.quoteDepth !== quoteDepth
+                || (content.trim() && content.match(/^ */)[0].length < fence.indent))) { fence = null; }
+            if (fence) {
+                if (new RegExp('^ {0,3}' + fence.char + '{' + fence.length + ',}\\s*$').test(content.slice(fence.indent))) { fence = null; }
+                return mask(line);
             }
-        });
-        alt.addEventListener('input', function () {
-            if (!card._rbUrl || !card._rbMarkdown) { return; }
-            var next = imageMarkdown(card._rbUrl, alt.value);
-            if (activeAdapter().replacePendingUpload(card._rbMarkdown, next)) {
-                card._rbMarkdown = next;
-                preview.alt = alt.value;
-            }
-        });
-        return {
-            progress: function (pct) { progress.value = Math.max(0, Math.min(100, pct)); },
-            complete: function (json) {
-                var markdown = imageMarkdown(json.url, '');
-                activeAdapter().replacePendingUpload(placeholder, markdown);
-                card._rbUrl = json.url;
-                card._rbMarkdown = markdown;
-                preview.src = json.url;
-                preview.alt = '';
-                preview.hidden = false;
-                alt.disabled = false;
-                progress.value = 100;
-                status.textContent = 'Uploaded image ' + json.width + 'x' + json.height + '.';
-                card.classList.remove('is-uploading');
-                card.classList.add('is-complete');
-            },
-            fail: function (message) {
-                activeAdapter().replacePendingUpload(placeholder, '');
-                progress.remove();
-                alt.disabled = true;
-                status.textContent = message || 'Upload failed.';
-                card.classList.remove('is-uploading');
-                card.classList.add('is-failed');
-            }
-        };
-    }
-    function uploadImage(form, adapter, file) {
-        var data = new FormData();
-        data.append('_token', tokenField(form));
-        data.append('image', file);
-        data.append('purpose', uploadPurpose(form));
-        // Unique per upload so several images pasted/dropped at once each resolve
-        // into their OWN marker — String.replace(str) only swaps the first match.
-        var token = 'rbup-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-        var placeholder = '![uploading…](' + token + ')';
-        (form._rbComposerAdapter || adapter).insertMarkdown(placeholder);
-        var card = uploadCard(form, adapter, file, placeholder);
-        var xhr = new XMLHttpRequest();
-        trackComposerRequest(form, xhr);
-        xhr.open('POST', '/upload');
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.upload.onprogress = function (e) {
-            if (e.lengthComputable) { card.progress((e.loaded / e.total) * 95); }
-        };
-        xhr.onload = function () {
-            untrackComposerRequest(form, xhr);
-            if (form._rbComposerDestroyed) { return; }
-            var j = null;
-            try { j = JSON.parse(xhr.responseText || '{}'); } catch (e) {}
-            if (xhr.status >= 200 && xhr.status < 300 && j && j.ok) {
-                card.complete(j);
-            } else {
-                card.fail((j && j.error) || 'Upload failed.');
-            }
-        };
-        xhr.onerror = function () {
-            untrackComposerRequest(form, xhr);
-            if (!form._rbComposerDestroyed) { card.fail('Upload failed. Check your connection and try again.'); }
-        };
-        xhr.send(data);
+            var list = content.match(/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/);
+            var indent = list ? list[0].length : 0;
+            var opening = content.slice(indent).match(/^ {0,3}(`{3,}|~{3,})/);
+            if (opening) { fence = { char: opening[1][0], length: opening[1].length, quoteDepth: quoteDepth, indent: indent }; return mask(line); }
+            return /^( {4}|\t)/.test(content) ? mask(line) : line;
+        }).join('\n').replace(/(`+)([\s\S]*?)\1(?!`)/g, mask);
+        var result = [];
+        var pattern = /!\[((?:\\.|[^\]\\])*)\]\(\s*<?([^\s)>]+)>?(?:\s+["'][^"']*["'])?\s*\)/g;
+        var match;
+        while ((match = pattern.exec(source))) {
+            var slashCount = 0;
+            for (var pos = match.index - 1; pos >= 0 && source[pos] === '\\'; pos--) { slashCount++; }
+            if (slashCount % 2) { continue; }
+            result.push({ src: match[2], markdown: markdown.slice(match.index, pattern.lastIndex), index: match.index,
+                alt: match[1].replace(/\\([\\\[\]])/g, '$1') });
+        }
+        return result;
     }
     function wireUploads(form, adapter) {
-        if (!uploadTray(form)) { return; }
+        var tray = uploadTray(form);
+        if (!tray || form._rbUploadController) { return; }
+        var records = [];
+        var destroyed = false;
+        var pendingChoice = null;
+        var maximum = Number(form.getAttribute('data-upload-max-bytes')) || 5242880;
+        var summary = shellPart(form, '[data-composer-upload-summary]');
+        var hint = shellPart(form, '[data-composer-upload-hint]');
+        if (hint) { hint.hidden = false; }
+        function active() { return form._rbComposerAdapter || adapter; }
+        function references() { return composerImageReferences(active().getMarkdown()); }
+        function reference(src) { return references().find(function (item) { return item.src === src; }); }
+        function blocking(record) { return record.state !== 'ready' && record.state !== 'removed'; }
+        function message() {
+            return records.some(function (record) { return record.state === 'failed'; })
+                ? 'An image needs attention. Retry, choose another image, or remove it before sending.'
+                : 'Wait for attached images to finish, or remove them before sending.';
+        }
+        function notifyState() {
+            var blocked = records.some(blocking);
+            if (summary) { summary.textContent = blocked ? message() : ''; summary.hidden = !blocked; }
+            form.dispatchEvent(new Event('retroboards:uploads-change'));
+        }
+        function invalidate(record) {
+            record.generation++;
+            record.attempt.abort();
+            if (record.xhr) { record.xhr.abort(); untrackComposerRequest(form, record.xhr); record.xhr = null; }
+            clearTimeout(record.retryTimer);
+        }
+        function live(record, generation) {
+            return !destroyed && !form._rbComposerDestroyed && record.state !== 'removed'
+                && record.generation === generation && !record.attempt.signal.aborted;
+        }
+        function render(record) {
+            var ready = record.state === 'ready';
+            var failed = record.state === 'failed';
+            record.card.classList.toggle('is-complete', ready);
+            record.card.classList.toggle('is-failed', failed);
+            record.card.classList.toggle('is-uploading', !ready && !failed);
+            record.card.dataset.uploadState = record.state;
+            record.card._rbMarkdown = record.markdown || '';
+            record.status.textContent = record.error || (ready ? 'Uploaded image ' + record.media.width + 'x' + record.media.height + '.'
+                : record.state === 'removing' ? 'Removing image…'
+                : record.state === 'verifying' ? 'Loading image preview…'
+                : record.state === 'inserting' ? 'Adding image…' : 'Uploading ' + record.name + '…');
+            record.progress.hidden = ready || failed || record.state === 'removing';
+            record.alt.disabled = !record.media || !['ready', 'inserting'].includes(record.state);
+            record.up.disabled = record.down.disabled = !ready;
+            record.remove.disabled = record.state === 'removing';
+            record.remove.setAttribute('aria-label', 'Remove ' + record.name);
+            record.recover.hidden = !failed;
+            record.recover.textContent = record.recovery === 'choose' ? 'Choose image' : record.recovery === 'remove' ? 'Retry removal' : 'Retry';
+            record.recover.setAttribute('aria-label', record.recover.textContent + ' ' + record.name);
+            record.recover.disabled = Date.now() < record.retryAt;
+            record.recover.setAttribute('aria-describedby', record.status.id);
+            if (failed && record.recover.disabled) {
+                record.status.textContent += ' Retry available in ' + Math.ceil((record.retryAt - Date.now()) / 1000) + ' seconds.';
+                clearTimeout(record.retryTimer);
+                record.retryTimer = setTimeout(function () {
+                    if (!destroyed && record.state === 'failed') { render(record); }
+                }, Math.min(record.retryAt - Date.now(), 2147483647));
+            }
+            notifyState();
+        }
+        function fail(record, text, recovery) {
+            invalidate(record);
+            record.state = 'failed'; record.error = text; record.recovery = recovery || (record.file ? 'retry' : 'choose');
+            render(record);
+        }
+        function node(tag, className, text) {
+            var element = document.createElement(tag);
+            element.className = className;
+            if (text) { element.textContent = text; }
+            return element;
+        }
+        function button(text) {
+            var element = node('button', 'btn btn-secondary btn-small', text);
+            element.type = 'button'; return element;
+        }
+        function create(file, restored) {
+            var token = restored ? restored.src : 'rbup-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+            var record = { id: token, token: token, marker: restored ? restored.markdown : imageMarkdown(token, 'uploading…'),
+                name: file && file.name || 'interrupted image', file: file, state: 'uploading', generation: 0,
+                attempt: new AbortController(), xhr: null, media: null, markdown: '', error: '', retryAt: 0,
+                recovery: file ? 'retry' : 'choose', edits: Promise.resolve(), altGeneration: 0 };
+            record.card = node('div', 'composer-upload-chip composer-upload-card is-uploading');
+            record.preview = node('img', 'composer-upload-thumb'); record.preview.alt = ''; record.preview.hidden = true;
+            var meta = node('div', 'composer-upload-meta');
+            record.label = node('div', 'composer-upload-name', record.name);
+            record.status = node('div', 'composer-upload-status'); record.status.id = token + '-status';
+            record.progress = document.createElement('progress'); record.progress.max = 100; record.progress.value = 0;
+            record.progress.setAttribute('aria-label', 'Upload progress for ' + record.name);
+            record.alt = node('input', 'input input-small'); record.alt.type = 'text'; record.alt.placeholder = 'Alt text';
+            record.alt.setAttribute('aria-label', 'Image alt text'); record.alt.disabled = true;
+            var actions = node('div', 'composer-upload-actions');
+            record.up = button('Up'); record.down = button('Down'); record.recover = button('Retry'); record.remove = button('Remove');
+            actions.append(record.up, record.down, record.recover, record.remove);
+            meta.append(record.label, record.status, record.progress, record.alt, actions);
+            record.card.append(record.preview, meta); tray.append(record.card);
+            records.push(record);
+            record.remove.addEventListener('click', function () { remove(record.id); });
+            record.recover.addEventListener('click', function () {
+                if (record.recovery === 'choose') { pendingChoice = record; input.multiple = false; input.click(); }
+                else { retry(record.id); }
+            });
+            function move(before) {
+                if (record.state !== 'ready') { return; }
+                var sibling = before ? record.card.previousElementSibling : record.card.nextElementSibling;
+                if (sibling && sibling.dataset.uploadState === 'ready'
+                    && moveMarkdownSnippet(active(), record.markdown, sibling._rbMarkdown || '', before)) {
+                    if (before) { tray.insertBefore(record.card, sibling); } else { tray.insertBefore(sibling, record.card); }
+                }
+            }
+            record.up.addEventListener('click', function () { move(true); });
+            record.down.addEventListener('click', function () { move(false); });
+            record.alt.addEventListener('input', function () {
+                if (!record.media || !['ready', 'inserting'].includes(record.state)) { return; }
+                var value = record.alt.value, revision = ++record.altGeneration, generation = record.generation;
+                record.state = 'inserting'; render(record);
+                record.edits = record.edits.then(async function () {
+                    if (!live(record, generation)) { return; }
+                    var current = reference(record.media.url);
+                    var markdown = imageMarkdown(record.media.url, value);
+                    var replaced = current && await active().replacePendingUpload(current.markdown, markdown, { signal: record.attempt.signal });
+                    if (!live(record, generation)) { return; }
+                    if (!replaced) { fail(record, 'The image description could not be saved. Retry or remove the image.'); return; }
+                    record.markdown = markdown; record.preview.alt = value;
+                    if (revision === record.altGeneration) { record.state = 'ready'; render(record); }
+                }).catch(function () { if (live(record, generation)) { fail(record, 'The image description could not be saved. Retry or remove the image.'); } });
+            });
+            render(record);
+            return record;
+        }
+        async function remove(id) {
+            var record = records.find(function (item) { return item.id === id; });
+            if (!record || record.state === 'removed' || record.state === 'removing') { return; }
+            invalidate(record); record.attempt = new AbortController();
+            var generation = record.generation;
+            record.state = 'removing'; record.error = ''; render(record);
+            try {
+                var sources = [record.token];
+                if (record.media) { sources.push(record.media.url); }
+                for (var src of sources) {
+                    // Awaiting the adapter also waits for a queued initial insertion.
+                    await active().replacePendingUpload(reference(src)?.markdown || imageMarkdown(src, 'uploading…'), '', { signal: record.attempt.signal });
+                    if (!live(record, generation)) { return; }
+                    if (reference(src)) { fail(record, 'The image could not be removed. Retry removal before sending.', 'remove'); return; }
+                }
+                record.state = 'removed'; record.card.remove(); notifyState();
+                active().focus();
+            } catch (error) {
+                if (live(record, generation)) { fail(record, 'The image could not be removed. Retry removal before sending.', 'remove'); }
+            }
+        }
+        function loadPreview(record, generation) {
+            return new Promise(function (resolve) {
+                var preview = record.preview, signal = record.attempt.signal, settled = false;
+                // WebKit retains a failed image request when src is assigned the
+                // same value. Reset the element so an explicit retry reloads it.
+                preview.removeAttribute('src');
+                var timer = setTimeout(function () { finish(false); }, 30000);
+                function cancelled() { finish(false); }
+                function finish(ok) {
+                    if (settled) { return; }
+                    settled = true; clearTimeout(timer);
+                    signal.removeEventListener('abort', cancelled);
+                    preview.onload = preview.onerror = null;
+                    resolve(ok && live(record, generation));
+                }
+                signal.addEventListener('abort', cancelled, { once: true });
+                preview.onload = function () { finish(preview.naturalWidth > 0 && preview.naturalHeight > 0); };
+                preview.onerror = function () { finish(false); };
+                preview.hidden = false;
+                preview.src = record.media.url;
+            });
+        }
+        async function commit(record, generation) {
+            if (!live(record, generation)) { return; }
+            // Keep the unfinished marker in every saved draft until the image
+            // can load. A reload during a failed/pending preview must recover
+            // its attachment intent and continue blocking publication.
+            record.state = 'verifying'; render(record);
+            var loaded = await loadPreview(record, generation);
+            if (!live(record, generation)) { return; }
+            if (!loaded) { fail(record, 'The image uploaded, but its preview could not be loaded. Retry or remove it.'); return; }
+            record.state = 'inserting'; render(record);
+            var markdown = imageMarkdown(record.media.url, record.alt.value);
+            var existing = reference(record.media.url);
+            var replaced = existing || await active().replacePendingUpload(record.marker, markdown, { signal: record.attempt.signal });
+            if (!live(record, generation)) { return; }
+            if (!replaced) { fail(record, 'The image uploaded, but could not be added. Retry or remove it.'); return; }
+            record.markdown = reference(record.media.url)?.markdown || markdown;
+            record.progress.value = 100; record.state = 'ready'; record.error = ''; render(record);
+        }
+        function validSuccess(json) {
+            if (!json || json.ok !== true || !Number.isSafeInteger(json.id) || json.id <= 0
+                || !Number.isInteger(json.width) || json.width <= 0 || !Number.isInteger(json.height) || json.height <= 0
+                || typeof json.url !== 'string') { return false; }
+            try {
+                var url = new URL(json.url, window.location.origin);
+                return url.origin === window.location.origin && url.pathname === '/media/' + json.id && !url.search && !url.hash;
+            } catch (error) { return false; }
+        }
+        function transfer(record) {
+            invalidate(record); record.attempt = new AbortController();
+            var generation = record.generation;
+            record.error = ''; record.state = 'uploading'; record.retryAt = 0; render(record);
+            var file = record.file;
+            if (!file) { fail(record, 'This upload was interrupted. Choose the image again or remove it.', 'choose'); return; }
+            // Keep the attachment intent in the draft even when local policy
+            // rejects the selected file. File bytes themselves are never saved.
+            if (!reference(record.token)) { active().insertMarkdown(record.marker); }
+            if (file.size > maximum) {
+                fail(record, 'Choose an image up to ' + (maximum / 1048576).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' MiB.', 'choose'); return;
+            }
+            if (!/^(image\/(png|jpeg|gif|webp))$/i.test(file.type || '') && !/\.(png|jpe?g|gif|webp)$/i.test(file.name || '')) {
+                fail(record, 'Choose a JPEG, PNG, GIF, or WebP image. HEIC and AVIF are not supported.', 'choose'); return;
+            }
+            var data = new FormData();
+            data.append('_token', tokenField(form)); data.append('image', file); data.append('purpose', uploadPurpose(form));
+            var xhr = record.xhr = new XMLHttpRequest();
+            trackComposerRequest(form, xhr);
+            xhr.open('POST', '/upload'); xhr.timeout = 120000;
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.upload.onprogress = function (event) {
+                if (!live(record, generation) || !event.lengthComputable) { return; }
+                record.progress.value = Math.min(95, event.loaded / event.total * 95);
+                if (event.loaded >= event.total) { record.status.textContent = 'Processing image…'; }
+            };
+            xhr.onload = function () {
+                untrackComposerRequest(form, xhr);
+                if (!live(record, generation)) { return; }
+                record.xhr = null;
+                var json = null;
+                try { json = JSON.parse(xhr.responseText); } catch (error) {}
+                if (xhr.status >= 200 && xhr.status < 300 && validSuccess(json)) {
+                    record.media = { id: json.id, url: '/media/' + json.id, width: json.width, height: json.height };
+                    commit(record, generation).catch(function () { if (live(record, generation)) { fail(record, 'The image could not be added. Retry or remove it.'); } });
+                    return;
+                }
+                var text = json && typeof json.error === 'string' ? json.error : '';
+                if (xhr.status === 429) {
+                    var delay = xhr.getResponseHeader('Retry-After') || '';
+                    record.retryAt = /^\d+$/.test(delay) ? Date.now() + Number(delay) * 1000 : Date.parse(delay) || 0;
+                    text = text || 'Too many uploads. Wait before retrying, or remove this image.';
+                } else if (xhr.status === 413) { text = text || 'This image exceeds the server upload limit. Choose a smaller image.'; }
+                else if (xhr.status === 401 || xhr.status === 403 || /\/login(?:[?#]|$)/.test(xhr.responseURL || '')) {
+                    text = text || 'Your sign-in or form has expired. Keep your draft, then sign in or reload before retrying.';
+                }
+                var recovery = xhr.status === 413 || (json && json.code === 'upload_rejected') ? 'choose' : null;
+                fail(record, text || 'The server could not accept the image. Retry or remove it.', recovery);
+            };
+            xhr.onerror = xhr.ontimeout = function () {
+                if (live(record, generation)) { fail(record, 'Upload interrupted. Check your connection, then retry or remove it.'); }
+            };
+            xhr.onabort = function () { untrackComposerRequest(form, xhr); };
+            xhr.send(data);
+        }
+        async function retry(id) {
+            var record = records.find(function (item) { return item.id === id; });
+            if (!record || record.state !== 'failed' || Date.now() < record.retryAt) { return; }
+            if (record.recovery === 'remove') { await remove(id); return; }
+            if (record.media) {
+                invalidate(record); record.attempt = new AbortController(); record.error = '';
+                // An explicit retry may reinsert a deleted marker at the current caret.
+                if (!reference(record.media.url) && !reference(record.token)) { active().insertMarkdown(record.marker); }
+                await commit(record, record.generation);
+            } else if (record.file) { transfer(record); }
+        }
+        function reconcile(markdown) {
+            if (destroyed) { return; }
+            var refs = composerImageReferences(typeof markdown === 'string' ? markdown : active().getMarkdown());
+            refs.forEach(function (ref) {
+                if (/^rbup-[a-z0-9]+-[a-z0-9]+$/.test(ref.src)
+                    && !records.some(function (record) { return record.state !== 'removed' && record.token === ref.src; })) {
+                    fail(create(null, ref), 'This upload was interrupted. Choose the image again or remove it.', 'choose');
+                }
+            });
+            records.forEach(function (record) {
+                if (record.state !== 'ready') { return; }
+                var ref = refs.find(function (item) { return item.src === record.media.url; });
+                if (!ref) {
+                    invalidate(record); record.state = 'removed'; record.card.remove(); notifyState();
+                } else {
+                    record.markdown = ref.markdown; record.card._rbMarkdown = ref.markdown;
+                    if (document.activeElement !== record.alt) { record.alt.value = ref.alt; }
+                }
+            });
+        }
+        form._rbUploadController = {
+            blocksSubmit: function () { return records.some(blocking); }, message: message, remove: remove, retry: retry,
+            destroy: function () { destroyed = true; records.forEach(invalidate); }
+        };
+        addCleanup(form, function () { form._rbUploadController.destroy(); form._rbUploadController = null; });
+        adapter.onChange(reconcile);
+        reconcile(active().getMarkdown());
+        function queue(files) { Array.from(files).forEach(function (file) { transfer(create(file)); }); }
         var ta = adapter.ta;
-        var targets = adapterEventTargets(adapter, ta, 'uploadTargets');
-        function queueImageFiles(files) {
-            for (var i = 0; i < files.length; i++) {
-                if (files[i] && files[i].type && files[i].type.indexOf('image/') === 0) {
-                    uploadImage(form, adapter, files[i]);
-                }
-            }
-        }
-        function onPaste(e) {
-            var items = (e.clipboardData || {}).items || [];
-            var files = [];
-            for (var i = 0; i < items.length; i++) {
-                if (items[i].type && items[i].type.indexOf('image/') === 0) {
-                    var file = items[i].getAsFile();
-                    if (file) { files.push(file); }
-                }
-            }
-            if (files.length) {
-                e.preventDefault();
-                queueImageFiles(files);
-            }
-        }
-        function onDrop(e) {
-            var files = (e.dataTransfer || {}).files || [];
-            if (!files.length) { return; }
-            e.preventDefault();
-            queueImageFiles(files);
-        }
-        targets.forEach(function (target) {
-            target.addEventListener('paste', onPaste, target !== ta);
-            target.addEventListener('dragover', function (e) { e.preventDefault(); }, target !== ta);
-            target.addEventListener('drop', onDrop, target !== ta);
+        adapterEventTargets(adapter, ta, 'uploadTargets').forEach(function (target) {
+            listenWithCleanup(form, target, 'paste', function (event) {
+                var files = Array.from((event.clipboardData || {}).items || []).filter(function (item) { return item.kind === 'file'; })
+                    .map(function (item) { return item.getAsFile(); }).filter(Boolean);
+                if (files.length) { event.preventDefault(); queue(files); }
+            }, target !== ta);
+            listenWithCleanup(form, target, 'dragover', function (event) { event.preventDefault(); }, target !== ta);
+            listenWithCleanup(form, target, 'drop', function (event) {
+                var files = (event.dataTransfer || {}).files || [];
+                if (files.length) { event.preventDefault(); queue(files); }
+            }, target !== ta);
         });
-
         var actionSlot = shellPart(form, '[data-composer-actions-start-slot]');
-        if (!actionSlot) { return; }
-        var input = document.createElement('input');
-        input.type = 'file';
-        input.hidden = true;
-        input.multiple = true;
-        input.accept = '.png,.jpg,.jpeg,.webp,.gif';
-        input.setAttribute('data-composer-upload-input', '');
-        var attach = document.createElement('button');
-        attach.type = 'button';
-        attach.className = 'composer-attach-toggle';
-        attach.textContent = '＋';
-        attach.setAttribute('aria-label', 'Attach images');
-        attach.setAttribute('title', 'Attach images');
-        attach.addEventListener('click', function () { input.click(); });
+        var input = document.createElement('input'); input.type = 'file'; input.hidden = true; input.multiple = true;
+        input.accept = '.png,.jpg,.jpeg,.webp,.gif'; input.setAttribute('data-composer-upload-input', '');
+        var attach = node('button', 'composer-attach-toggle', '＋'); attach.type = 'button';
+        attach.setAttribute('aria-label', 'Attach images'); attach.setAttribute('data-tip', 'Attach images');
+        attach.addEventListener('click', function () { pendingChoice = null; input.multiple = true; input.click(); });
         input.addEventListener('change', function () {
-            queueImageFiles(input.files || []);
-            input.value = '';
+            if (pendingChoice && input.files.length) {
+                var record = pendingChoice; record.file = input.files[0]; record.name = record.file.name || 'image';
+                record.label.textContent = record.name; transfer(record);
+            } else { queue(input.files || []); }
+            pendingChoice = null; input.value = ''; input.multiple = true;
         });
-        actionSlot.insertBefore(input, actionSlot.firstChild);
-        actionSlot.insertBefore(attach, actionSlot.firstChild);
+        if (actionSlot) { actionSlot.prepend(attach, input); }
     }
 
     // ---- Slash inserts + GIPHY picker (Phase 4 carryover) ----------------
@@ -2492,11 +2665,16 @@
     }
     function requestComposerSubmit(form) {
         if (form._rbSubmitting) { return false; }
+        if (form._rbUploadController && form._rbUploadController.blocksSubmit()) {
+            var status = shellPart(form, '[data-composer-submit-status]');
+            if (status) { status.textContent = form._rbUploadController.message(); }
+            return false;
+        }
         var send = shellPart(form, '.composer-send');
         if (send && send.disabled) { return false; }
         if (typeof form.requestSubmit === 'function') { form.requestSubmit(); }
         else if (send) { send.click(); }
-        else { form.submit(); }
+        else { return false; }
         return true;
     }
     function wireKeys(form, adapter, prefs) {
@@ -2564,7 +2742,8 @@
             return active && typeof active.getMarkdown === 'function' ? active.getMarkdown() : ta.value;
         }
         function update() {
-            send.disabled = !!form._rbSubmitting || markdown().trim() === '';
+            send.disabled = !!form._rbSubmitting || markdown().trim() === ''
+                || !!(form._rbUploadController && form._rbUploadController.blocksSubmit());
         }
         function attach(nextAdapter) {
             if (!nextAdapter || typeof nextAdapter.onChange !== 'function' || attached.indexOf(nextAdapter) !== -1) {
@@ -2576,7 +2755,14 @@
             update();
         }
 
+        listenWithCleanup(form, form, 'retroboards:uploads-change', update);
         form.addEventListener('submit', function (event) {
+            if (form._rbUploadController && form._rbUploadController.blocksSubmit()) {
+                event.preventDefault(); event.stopImmediatePropagation();
+                if (status) { status.textContent = form._rbUploadController.message(); }
+                update();
+                return;
+            }
             if (form._rbSubmitting) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
@@ -2596,7 +2782,7 @@
             form.setAttribute('aria-busy', 'true');
             form.classList.add('is-submitting');
             if (status) { status.textContent = 'Sending…'; }
-        });
+        }, true);
 
         attach(adapter);
         form._rbSubmitController = { attach: attach };

@@ -857,6 +857,8 @@ final class PostingService
             $errors['body'] = 'Write something before posting.';
         } elseif (mb_strlen($body) > (int) $this->config->get('limits.post_body_max', 20000)) {
             $errors['body'] = 'Your post is too long.';
+        } elseif (\App\Support\PendingUploadGuard::containsPendingImage($body)) {
+            $errors['body'] = \App\Support\PendingUploadGuard::MESSAGE;
         }
 
         // Enforce the per-post image ceiling (uploads.per_post_max) before any

@@ -328,12 +328,13 @@ test('rich upload reordering is preserved in canonical Markdown on submit', asyn
   test.skip(info.project.name !== 'desktop', 'rich upload ordering is verified once');
   setWysiwygComposer(true);
   let uploadId = 9100;
+  await page.route(/\/media\/910[12]$/, route => route.fulfill({ contentType: 'image/png', body: Buffer.from(PNG_1X1, 'base64') }));
   await page.route('**/upload', async (route) => {
     uploadId++;
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ok: true, url: `/media/${uploadId}`, width: 1, height: 1 }),
+      body: JSON.stringify({ ok: true, id: uploadId, url: `/media/${uploadId}`, width: 1, height: 1 }),
     });
   });
   await login(page, 'bob@retro.test');

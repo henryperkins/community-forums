@@ -210,6 +210,10 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
             'edit_post_id' => $edit_post_id ?? 0,
             'edit_old' => $edit_old ?? '',
             'edit_error' => $edit_error ?? '',
+            'wiki_edit_post_id' => $wiki_edit_post_id ?? 0,
+            'wiki_edit_old' => $wiki_edit_old ?? '',
+            'wiki_edit_reason' => $wiki_edit_reason ?? '',
+            'wiki_edit_error' => $wiki_edit_error ?? '',
         ]) ?>
     </div>
 </article>

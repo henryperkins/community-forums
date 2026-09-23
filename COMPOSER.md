@@ -1,6 +1,6 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.10 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-09
+**Status:** v0.11 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
@@ -190,6 +190,18 @@ Identical across all four contexts (DMs can attach too); a board may tighten lim
 | **Link unfurl / embeds** | Shipped 2026-08-09 (ADR 0025, `link_previews` default-ON). A posted URL is unfurled **server-side** into a link card under the post — never by the reader's browser. Gated three ways: the feature flag, the per-board opt-in (`boards.link_previews_enabled`, ADMIN.md §4.2), and an SSRF host allowlist that is empty by default; public boards only, and **never** direct messages. The author can remove the card from their own post, and that removal is sticky across edits. `image_url` is captured but deliberately not rendered — see ADR 0025. | P2 |
 
 All media references live in the Markdown as standard image/link syntax; an `attachments` table (§16) tracks the uploaded files for ownership, limits, and moderation.
+
+### 7.1 Upload readiness and recovery
+
+The image policy defaults to **5 MiB (5,242,880 bytes)** per JPEG, PNG, GIF, or WebP image. The composer shows the configured limit. Empty browser MIME metadata is permitted for a supported filename; the server always sniffs and re-encodes the contents. Unsupported formats, oversized inputs, and processing failures produce a visible failed attachment.
+
+Each selected image progresses through upload, preview verification, and canonical Markdown insertion. The pending marker stays in the draft until verification succeeds, so reloading during a failed or unfinished preview cannot lose the recovery state. Only a committed `/media/{id}` reference with a loaded preview is ready. Send, keyboard shortcuts, and enhanced form submission stay blocked while any selected image is unfinished, failed, or being removed. Completion never sends automatically. Blocking preserves text, wrapper fields, drafts, and the idempotency key.
+
+Transient failures offer **Retry** while the browser still has the file. Retrying an accepted image reuses its attachment ID for insertion or preview recovery. Policy failures and restored drafts offer **Choose image**. **Remove** cancels that image's work and removes its Markdown before unblocking; failed cleanup remains visible and retryable. Concurrent images, mode switches, navigation, and late callbacks must not restore a removed image or change another form. Alt changes and reordering preserve canonical Markdown.
+
+Drafts retain unfinished attachment intent, without storing binary files. Reload reconstructs an interrupted-image card requiring reselection or removal. Pending rich-editor placeholders do not fetch temporary URLs. Final server writes reject unfinished image destinations using the Markdown AST, including reference-style syntax; literal text and code examples remain valid. The shared contract includes new topics, replies, post/wiki edits, and existing DM/group-DM creation/reply routes. Wiki validation returns 422 with the body and reason preserved and finalizes new images transactionally.
+
+The file picker, paste, and drop are JavaScript enhancements. Without JavaScript or with a failed rich-editor load, the ordinary Markdown form and existing media references remain usable. No-JS file selection is not implemented. ADR 0020's unrelated deferrals remain unchanged. Runtime limits and the failure taxonomy are documented in the [deployment runbook](docs/runbooks/deployment-cloudflare.md#image-upload-runtime-and-diagnostics); verification and external gaps are recorded in [upload evidence](docs/evidence/image-upload-reliability/README.md).
 
 ## 8. Drafts & Autosave
 
@@ -411,6 +423,7 @@ CREATE TABLE attachments (
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.11 | 2026-09-23 | Upload readiness, explicit failure recovery, interrupted drafts, cancellation, server pending-image validation, and wiki attachment finalization. Local evidence is separate from production/device verification. |
 | v0.1 | 2026-06-19 | Initial composer design. One shared component across New Thread / Reply / DM (+ edit) with an identical feature surface; **hybrid live-Markdown** editing model (resolves PRODUCT_DESIGN.md markup question); toolbar; full keyboard shortcuts (Cmd/Ctrl+K reconciled); mentions/emoji/references; attachments/images/embeds; drafts & autosave; submission/feedback + edit mode + error taxonomy; preview; validation/limits/safety; accessibility & i18n; responsive/mobile; architecture (one component + mount config, hybrid editor, progressive enhancement); the unified feature-surface matrix; `attachments` schema; phasing & open questions. |
 | v0.2 | 2026-06-19 | Framework integration: resolved the editor engine to a **spike ladder — Milkdown first**, then Tiptap/ProseMirror, then CodeMirror/ink-mde (§14.2). Added non-negotiables: **reject editor-specific canonical storage**, **Markdown round-trip fixtures** in acceptance tests, and "the composer is an input system, not a mini document editor." |
 | v0.3 | 2026-06-26 | Wording/citation fixes: corrected the **Drafts** sidebar quick-filter cross-ref **§6.2 → §5.2/§6.5** (§8); reframed post **idempotency** as a **short-lived/transient dedupe** (double-submit + brief client retries, not durable persistence), with a durable post-idempotency column **foreshadowed in SCHEMA §8, not yet committed** (§9.2/§11/§14.3). |

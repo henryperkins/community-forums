@@ -38,6 +38,8 @@ final class CommunityMemoryService
         private ?AuthorityGate $authority = null,
         private ?ThreadIntelligenceQueue $threadIntelligence = null,
         private ?IdempotencyRepository $idempotency = null,
+        private ?\App\Repository\AttachmentRepository $attachments = null,
+        private int $maxImages = 10,
     ) {
     }
 
@@ -236,6 +238,12 @@ final class CommunityMemoryService
         if ($body === '') {
             throw new ValidationException(['body' => 'Wiki body cannot be empty.']);
         }
+        if (\App\Support\PendingUploadGuard::containsPendingImage($body)) {
+            throw new ValidationException(['body' => \App\Support\PendingUploadGuard::MESSAGE], ['body' => $body]);
+        }
+        if ($this->maxImages > 0 && count(AttachmentService::referencedIds($body)) > $this->maxImages) {
+            throw new ValidationException(['body' => "You can attach at most {$this->maxImages} images to a post."], ['body' => $body]);
+        }
         $html = $this->markdown->render($body);
         $threadId = (int) $post['thread_id'];
         $idemKey = $this->idempotency?->hash($idempotencyToken);
@@ -253,6 +261,11 @@ final class CommunityMemoryService
                 }
                 $this->recordRevision($postId, $actor->id(), $body, $html, $reason);
                 $this->posts->update($postId, $body, $html, $actor->id());
+                if ($this->attachments !== null) {
+                    $context = $this->posts->findWithContext($postId);
+                    $this->attachments->finalizeForPost($actor->id(), $postId, AttachmentService::referencedIds($body),
+                        ($context['board_visibility'] ?? '') === 'public' ? 'public' : 'private');
+                }
                 $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_WIKI_EDITED);
             });
         } catch (DuplicateSubmissionException) {

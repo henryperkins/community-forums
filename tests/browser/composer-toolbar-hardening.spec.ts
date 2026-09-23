@@ -229,6 +229,7 @@ const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
 
 test('upload card does not change height while the upload is in flight', async ({ page }, info) => {
+  await page.route('**/media/777', route => route.fulfill({ contentType: 'image/png', body: Buffer.from(PNG_1X1, 'base64') }));
   setWysiwygComposer(false);
   // Hold the response open so the in-flight state can actually be measured.
   await page.route('**/upload', async (route) => {
@@ -270,6 +271,7 @@ test('upload card does not change height while the upload is in flight', async (
 });
 
 test('a second in-flight upload stacks without disturbing the first card', async ({ page }, info) => {
+  await page.route(/\/media\/80[12]$/, route => route.fulfill({ contentType: 'image/png', body: Buffer.from(PNG_1X1, 'base64') }));
   test.skip(info.project.name !== 'desktop', 'stacking geometry verified once');
   setWysiwygComposer(false);
   let n = 0;

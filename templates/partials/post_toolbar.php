@@ -137,12 +137,14 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
 <?php endif; ?>
 
 <?php if ($canWiki && !empty($p['is_wiki'])): ?>
+    <?php $editingWiki = (int) ($wiki_edit_post_id ?? 0) === (int) $p['id']; ?>
     <div class="post-actions">
-        <details class="post-edit">
+        <details class="post-edit"<?= $editingWiki ? ' open' : '' ?>>
             <summary class="linkbtn">Edit wiki</summary>
             <?php
-            $wikiReasonSlot = function (): void {
-                ?><input type="text" name="reason" class="input" maxlength="255" placeholder="Reason"><?php
+            $wikiReason = $editingWiki ? (string) ($wiki_edit_reason ?? '') : '';
+            $wikiReasonSlot = function () use ($wikiReason, $e): void {
+                ?><input type="text" name="reason" class="input" maxlength="255" placeholder="Reason" aria-label="Reason for wiki edit" value="<?= $e($wikiReason) ?>"><?php
             };
             ?>
             <?= $this->partial('partials/composer_shell', [
@@ -152,7 +154,8 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
                 'instance_id' => 'wiki-post-' . (int) $p['id'],
                 'placeholder' => 'Edit wiki content…',
                 'maxlength' => 20000,
-                'body_value' => (string) $p['body'],
+                'body_value' => $editingWiki ? (string) ($wiki_edit_old ?? '') : (string) $p['body'],
+                'body_error' => $editingWiki ? (string) ($wiki_edit_error ?? '') : '',
                 'submit_label' => 'Save wiki edit',
                 'no_draft' => true,
                 'below_input_slot' => $wikiReasonSlot,

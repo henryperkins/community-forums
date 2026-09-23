@@ -1,0 +1,52 @@
+name: retroboards-upload-check
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: upload-http-local
+      MARIADB_DATABASE: retroboards_upload_http
+      MARIADB_USER: upload_http
+      MARIADB_PASSWORD: upload-http-local
+    ports:
+      - '127.0.0.1:3334:3306'
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 2s
+      timeout: 2s
+      retries: 40
+  app:
+    image: ${RB_UPLOAD_IMAGE:-retroboards:upload-reliability}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:8024:8080'
+    environment:
+      APP_ENV: test
+      APP_URL: http://127.0.0.1:8024
+      APP_KEY: '0000000000000000000000000000000000000000000000000000000000000000'
+      DB_HOST: db
+      DB_PORT: '3306'
+      DB_DATABASE: retroboards_upload_http
+      DB_USERNAME: upload_http
+      DB_PASSWORD: upload-http-local
+      RUN_MIGRATIONS: 'true'
+      SESSION_SECURE: 'false'
+      MAIL_DRIVER: array
+      MAIL_FROM: ''
+      UPLOADS_PATH: /data/media
+      RATELIMIT_PATH: /data/ratelimit
+      PACKAGES_STORAGE_PATH: /data/packages
+    volumes:
+      - media:/data
+      - ../browser:/var/www/html/tests/browser:ro
+    healthcheck:
+      test: ['CMD', 'curl', '--fail', '--silent', 'http://127.0.0.1:8080/healthz']
+      interval: 2s
+      timeout: 5s
+      retries: 40
+volumes:
+  database:
+  media:

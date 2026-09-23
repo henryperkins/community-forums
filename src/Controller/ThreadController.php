@@ -111,7 +111,7 @@ final class ThreadController extends Controller
         //
         // Resolve the unread location before markRead() even for an explicit page:
         // it supplies the visible boundary marker as well as the redirect target.
-        $editPostId = (int) ($extra['edit_post_id'] ?? 0);
+        $editPostId = (int) ($extra['edit_post_id'] ?? $extra['wiki_edit_post_id'] ?? 0);
         $renderPage = (int) ($extra['render_page'] ?? 0);
         $firstUnread = $this->firstUnreadLocation($thread, $user, $postRepo, $perPage, $includeDeleted);
         if (
@@ -539,6 +539,10 @@ final class ThreadController extends Controller
             'edit_post_id' => 0,
             'edit_old' => '',
             'edit_error' => '',
+            'wiki_edit_post_id' => 0,
+            'wiki_edit_old' => '',
+            'wiki_edit_reason' => '',
+            'wiki_edit_error' => '',
         ], $extra));
     }
 

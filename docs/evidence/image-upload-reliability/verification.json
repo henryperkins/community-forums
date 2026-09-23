@@ -1,0 +1,203 @@
+{
+  "verified_at_utc": "2026-09-23T10:11:29+00:00",
+  "status": "local implementation verified; production release pending",
+  "branch": "fix/image-upload-reliability",
+  "base_commit": "12db98218655833ed1be9563e1738be2f8da037e",
+  "committed": false,
+  "source_inventory": "source-inventory.json",
+  "source_inventory_sha256": "a43c64dc9f9ea2aceb074e43367e7382d38534d9a50708e59d995756d74c0116",
+  "production_image_built_locally": "sha256:d9d5359aefbad7d9642e6242c5839ac0eeb3196375cfbf77aa0e0504313efe18",
+  "runtime_limits": {
+    "php": "8.2.33",
+    "file_bytes": 8388608,
+    "post_bytes": 10485760,
+    "application_bytes": 5242880
+  },
+  "baseline": {
+    "image": "sha256:e2d888e10434ed002ad1febbae6eb52256f88e9f74ce0479b4c2d3ae72ce2020",
+    "limits": {
+      "php": "8.2.33",
+      "file_bytes": 2097152,
+      "post_bytes": 8388608,
+      "application_bytes": 5242880
+    },
+    "runtime_limit_probe_exit": 1,
+    "http_fixture": {
+      "format": "PNG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 3151914,
+      "sha256": "9804c31d113d1ee41892fdd321296054f78c6450cfe2fce6d203942e7c27ec50"
+    },
+    "asserted_response": {
+      "status": 422,
+      "error": "No image was uploaded."
+    },
+    "expected_failure_test_result": "baseline/desktop-results.txt",
+    "note": "The expected-rejection test passed; this is a reproduced defect, not a repaired baseline. Baseline-only local volume ownership preparation made the upload route reachable."
+  },
+  "phpunit": {
+    "command": "composer test",
+    "database": "retroboards_upload_test",
+    "runtime": "PHP 8.5.4",
+    "exit_code": 0,
+    "tests": 3024,
+    "assertions": 22928,
+    "failures": 0,
+    "deprecations": 6,
+    "skipped": 2,
+    "baseline_deprecations": 6,
+    "baseline_skipped": 2
+  },
+  "assets": {
+    "commands": [
+      "npm run build",
+      "npm run check:assets",
+      "npm run test:assets"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "tests_passed": 15
+  },
+  "imladris": {
+    "commands": [
+      "composer build:imladris",
+      "composer verify:imladris"
+    ],
+    "exit_codes": [
+      0,
+      0
+    ],
+    "tests": 24,
+    "assertions": 296
+  },
+  "upload_browser_matrix": {
+    "command": "bash tests/uploads/run.sh",
+    "exit_code": 0,
+    "passed": 141,
+    "projects": [
+      {
+        "project": "desktop",
+        "engine": "Chromium",
+        "viewport": [
+          1280,
+          800
+        ],
+        "passed": 47,
+        "failed": 0,
+        "skipped": 0,
+        "controlled_response_cases": 39,
+        "real_http_cases": 8,
+        "result": "desktop-results.txt"
+      },
+      {
+        "project": "mobile",
+        "engine": "Chromium",
+        "viewport": [
+          390,
+          844
+        ],
+        "passed": 47,
+        "failed": 0,
+        "skipped": 0,
+        "controlled_response_cases": 39,
+        "real_http_cases": 8,
+        "result": "mobile-results.txt"
+      },
+      {
+        "project": "webkit-mobile",
+        "engine": "WebKit",
+        "viewport": [
+          390,
+          844
+        ],
+        "passed": 47,
+        "failed": 0,
+        "skipped": 0,
+        "controlled_response_cases": 39,
+        "real_http_cases": 8,
+        "result": "webkit-mobile-results.txt"
+      }
+    ]
+  },
+  "legacy_browser_matrix": {
+    "specs": [
+      "composer-shell.spec.ts",
+      "composer-expansion.spec.ts",
+      "composer-toolbar-hardening.spec.ts",
+      "wysiwyg-composer.spec.ts",
+      "group-dms.spec.ts",
+      "server-drafts.spec.ts"
+    ],
+    "preparation": "tests/browser/prepare.sh before each project and independently seeded slice",
+    "database": "retroboards_upload_browser",
+    "desktop": {
+      "main_passed": 59,
+      "server_drafts_passed": 5,
+      "total_passed": 64,
+      "declared_viewport_skips": 15,
+      "exit_codes": [
+        0,
+        0
+      ]
+    },
+    "mobile": {
+      "main_passed": 49,
+      "server_drafts_passed": 5,
+      "total_passed": 54,
+      "declared_viewport_skips": 25,
+      "exit_codes": [
+        0,
+        0
+      ]
+    }
+  },
+  "review": {
+    "method": "fresh read-only reviewer; one author fix pass with failing-then-passing regressions; no second review",
+    "critical": 0,
+    "important_fixed": [
+      "Pending or failed preview intent survives draft reload by verifying before canonical insertion.",
+      "Literal code in quote/list containers does not create interrupted upload cards."
+    ],
+    "important_regressions_before_fix": 6,
+    "additional_regression": {
+      "finding": "CSS made a completed card hidden Retry action visible.",
+      "test": "reverse completion preserves identically named images and failure recovery",
+      "before_fix_failures": 6,
+      "after_fix_passed": 6,
+      "included_in_final_matrix": true
+    },
+    "deferred_minor": [
+      "Hand-authored reference-style pending images have no client recovery card; server preserves input with 422, and source mode supports manual correction/removal."
+    ],
+    "declined_to_judge": []
+  },
+  "cleanup": {
+    "compose_containers_remaining": 0,
+    "compose_volumes_remaining": 0,
+    "dedicated_unit_container_removed": true,
+    "dedicated_unit_volume_removed": true,
+    "synthetic_host_storage_files_removed": 34,
+    "legacy_tracked_screenshots_restored": true,
+    "automatic_browser_artifacts_removed": true,
+    "main_checkout_source_unchanged": true,
+    "scratch_ledger_retained": "Uncommitted worktree; preserve implementation and test history until integration."
+  },
+  "boundaries_not_claimed": [
+    "Actual iPhone Safari photo-library selection, interruption and recovery.",
+    "Native WebKit XHR timeout; intercepted WebKit test dispatches the timeout event. Chromium covers native timeout.",
+    "Actual interrupted Apache transfer for UPLOAD_ERR_PARTIAL; classification is tested with synthetic request/file entries.",
+    "Production deployment, running PHP limits, asset hashes or member journey.",
+    "Production R2 object/mount/restart durability; local Docker volume only.",
+    "CI execution; workflow and triggers are configured but no remote run was invoked.",
+    "Previously accepted production upload loss remains unconfirmed; no historical content rewrite."
+  ],
+  "integrity_checks": {
+    "git_diff_check_exit": 0,
+    "shell_syntax_exit": 0,
+    "new_php_helper_and_fixture_lints_exit": 0
+  }
+}

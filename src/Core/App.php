@@ -477,6 +477,21 @@ final class App
                 return $this->redirect('/');
             }
 
+            // PHP can discard an oversized multipart body, including its CSRF
+            // token. Reject it explicitly; this never authorizes a write.
+            $postCap = \App\Support\UploadLimits::phpBytes(ini_get('post_max_size'));
+            $length = $request->contentLength();
+            if ($request->isPost() && in_array($path, ['/upload', '/upload/file'], true)
+                && $postCap !== null && $length !== null && $length > $postCap) {
+                $max = (int) $this->config->get('uploads.max_bytes', 5242880);
+                return Response::json([
+                    'ok' => false,
+                    'code' => 'upload_request_too_large',
+                    'error' => 'The upload request is too large. Choose a file up to ' . \App\Support\UploadLimits::label($max) . '.',
+                    'max_bytes' => $max,
+                ], 413);
+            }
+
             // CSRF on every state-changing request, except the OAuth provider
             // callback — that POST originates cross-site from the provider and is
             // protected by the signed `state` cookie instead of a form token.
@@ -907,6 +922,7 @@ final class App
             },
             'rail_avatars' => $railAvatars,
             'features' => $features,
+            'upload_max_bytes' => (int) $this->config->get('uploads.max_bytes', 5242880),
             'oauth_providers' => $oauthProviders,
             'passkeys_usable' => $passkeysUsable,
             'appearance' => $appearance,
@@ -1690,6 +1706,8 @@ final class App
             $c->get(AuthorityGate::class),
             $c->get(ThreadIntelligenceQueue::class),
             $c->get(IdempotencyRepository::class),
+            $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
+            (int) $config->get('uploads.per_post_max', 10),
         ));
 
         // Session + CSRF.

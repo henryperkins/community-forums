@@ -76,8 +76,10 @@ $shellBodyErrorId = 'composer-body-error-' . $shellInstance;
 $shellAnonymousId = 'composer-anonymous-' . $shellInstance;
 $shellAnonymousDisclosureId = 'composer-anonymous-disclosure-' . $shellInstance;
 $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
+$shellUploadStatusId = 'composer-upload-summary-' . $shellInstance;
+$shellUploadMax = max(1, (int) ($upload_max_bytes ?? 5242880));
 ?>
-<form class="<?= $e($shellClasses) ?>" method="post" action="<?= $e($shellAction) ?>" data-composer-context="<?= $e($shellContext) ?>" data-composer-target-id="<?= $shellTargetId ?>" data-composer-instance="<?= $e($shellInstance) ?>"<?= $shellFormId !== '' ? ' id="' . $e($shellFormId) . '"' : '' ?><?= $shellNoDraft ? ' data-no-draft' : '' ?><?= $shellNoWysiwyg ? ' data-no-wysiwyg' : '' ?><?= $shellThreadComposer ? ' data-thread-composer' : '' ?>>
+<form class="<?= $e($shellClasses) ?>" method="post" action="<?= $e($shellAction) ?>" data-upload-max-bytes="<?= $shellUploadMax ?>" data-composer-context="<?= $e($shellContext) ?>" data-composer-target-id="<?= $shellTargetId ?>" data-composer-instance="<?= $e($shellInstance) ?>"<?= $shellFormId !== '' ? ' id="' . $e($shellFormId) . '"' : '' ?><?= $shellNoDraft ? ' data-no-draft' : '' ?><?= $shellNoWysiwyg ? ' data-no-wysiwyg' : '' ?><?= $shellThreadComposer ? ' data-thread-composer' : '' ?>>
     <?= $this->csrfField() ?>
     <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
     <?php foreach ($shellHiddenFields as $hiddenName => $hiddenValue): ?>
@@ -101,6 +103,7 @@ $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
         <textarea class="composer-input" id="<?= $e($shellBodyId) ?>" name="<?= $e($shellBodyName) ?>" rows="4" maxlength="<?= $shellMaxlength ?>" placeholder="<?= $e($shellPlaceholder) ?>"<?= $shellBodyError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($shellBodyErrorId) . '"' . ($shellBodyErrorFocus ? ' autofocus' : '') : '' ?> required><?= $e($shellBodyValue) ?></textarea>
         <?php if ($shellBelowInputSlot !== null): ?><?php $shellBelowInputSlot(); ?><?php endif; ?>
         <div class="composer-upload-tray" data-composer-upload-tray aria-live="polite"></div>
+        <p class="composer-upload-summary" id="<?= $e($shellUploadStatusId) ?>" data-composer-upload-summary hidden></p>
         <div class="composer-actions-bar">
             <div class="composer-actions-start">
                 <span data-composer-actions-start-slot></span>
@@ -125,13 +128,14 @@ $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
             <div class="composer-actions-end">
                 <span data-composer-actions-end-slot></span>
                 <?php if ($shellBeforeSubmitSlot !== null): ?><?php $shellBeforeSubmitSlot(); ?><?php endif; ?>
-                <button type="submit" class="btn composer-send" aria-label="<?= $e($shellSubmitLabel) ?>">
+                <button type="submit" class="btn composer-send" aria-label="<?= $e($shellSubmitLabel) ?>" aria-describedby="<?= $e($shellUploadStatusId) ?>">
                     <?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?>
                 </button>
             </div>
         </div>
     </div>
     <div class="composer-meta-row">
+        <span class="composer-upload-hint" data-composer-upload-hint hidden>Up to <?= $e(\App\Support\UploadLimits::label($shellUploadMax)) ?> per image</span>
         <span class="composer-meta-draft" data-composer-draft-slot></span>
         <?php if ($shellAllowAnonymous): ?><span class="composer-anonymous-disclosure" id="<?= $e($shellAnonymousDisclosureId) ?>" data-compose-anonymous<?= $shellAnonymousHidden ? ' hidden' : '' ?>><?= $e($shellAnonymousDisclosure) ?></span><?php endif; ?>
         <span class="composer-meta-count" data-composer-counter-slot></span>

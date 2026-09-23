@@ -1,5 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
 
 /**
  * Browser-evidence harness for RetroBoards Gate A.
@@ -13,6 +14,12 @@ import path from 'node:path';
  */
 
 const repoRoot = path.resolve(__dirname, '..', '..');
+const uploadIni = readFileSync(path.join(repoRoot, 'deploy/php-uploads.ini'), 'utf8');
+const uploadArgs = ['upload_max_filesize', 'post_max_size', 'display_errors', 'display_startup_errors', 'log_errors'].map(key => {
+  const value = uploadIni.match(new RegExp(`^${key}=([0-9A-Za-z]+)$`, 'm'))?.[1];
+  if (!value) throw new Error(`Missing upload transport setting: ${key}`);
+  return `-d ${key}=${value}`;
+}).join(' ');
 const PORT = Number(process.env.E2E_PORT ?? 8011);
 // WebAuthn treats localhost as a development exception, while 127.0.0.1 is
 // rejected as an invalid RP ID by Chromium's real credential APIs.
@@ -54,7 +61,7 @@ export default defineConfig({
   // The app uses HTTP locally, so the session cookie must not require Secure; mail
   // is captured in-memory. The DB is already migrated + seeded by prepare.sh.
   webServer: skipWebServer ? undefined : {
-    command: `php -S ${serverHost}:${serverPort} -t public public/index.php`,
+    command: `php ${uploadArgs} -S ${serverHost}:${serverPort} -t public public/index.php`,
     cwd: repoRoot,
     env: {
       ...inheritedEnv,

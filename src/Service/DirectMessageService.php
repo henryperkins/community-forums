@@ -388,6 +388,9 @@ final class DirectMessageService
         if (mb_strlen($body) > self::BODY_MAX) {
             throw new ValidationException(['body' => 'Your message is too long.']);
         }
+        if (\App\Support\PendingUploadGuard::containsPendingImage($body)) {
+            throw new ValidationException(['body' => \App\Support\PendingUploadGuard::MESSAGE], ['body' => $body]);
+        }
         return $body;
     }
 

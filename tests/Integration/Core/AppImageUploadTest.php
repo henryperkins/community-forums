@@ -268,6 +268,29 @@ final class AppImageUploadTest extends TestCase
         }
     }
 
+    public function test_reencoding_expansion_keeps_the_configured_output_cap(): void
+    {
+        $this->actingAs($this->makeUser(['username' => 'expansion']));
+        $image = imagecreatetruecolor(64, 64);
+        for ($y = 0; $y < 64; $y++) {
+            for ($x = 0; $x < 64; $x++) {
+                imagesetpixel($image, $x, $y, (($x * 47 + $y * 13) % 256) << 16
+                    | (($x * 7 + $y * 83) % 256) << 8 | (($x * 91 + $y * 53) % 256));
+            }
+        }
+        ob_start(); imagejpeg($image, null, 1); $bytes = (string) ob_get_clean();
+        $config = $this->config->all();
+        $config['uploads']['max_bytes'] = strlen($bytes);
+        $this->app = new \App\Core\App(new \App\Core\Config($config), $this->db, $this->rateLimiter);
+        $response = $this->postFile('/upload', 'image', $this->fakeUpload($bytes, 'small.jpg', 'image/jpeg'));
+        $this->assertStatus(422, $response);
+        $json = json_decode($response->body(), true);
+        self::assertSame('upload_rejected', $json['code']);
+        self::assertSame(strlen($bytes), $json['max_bytes']);
+        self::assertStringContainsString('after processing', $json['error']);
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM attachments'));
+    }
+
     public function test_write_failure_is_reported_without_creating_attachment_row(): void
     {
         $user = $this->makeUser(['username' => 'writefail']);

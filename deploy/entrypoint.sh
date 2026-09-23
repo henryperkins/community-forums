@@ -49,7 +49,7 @@ mkdir -p "$DATA_DIR/media" "$DATA_DIR/packages" "$DATA_DIR/ratelimit"
 
 # chown across a FUSE mount is pointless (ownership is fixed by the uid/gid
 # mount options) and slow, so only touch permissions on a real filesystem.
-if ! grep -qs " ${DATA_DIR} " /proc/mounts; then
+if [ -z "${R2_BUCKET:-}" ]; then
     chown -R www-data:www-data "$DATA_DIR"
 fi
 

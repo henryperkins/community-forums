@@ -21,6 +21,7 @@ final class ValidationException extends RuntimeException
         public readonly array $errors,
         public readonly array $old = [],
         string $message = 'The submitted data was invalid.',
+        public readonly ?string $errorCode = null,
     ) {
         parent::__construct($message);
     }

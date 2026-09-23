@@ -7,6 +7,11 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - 'Dockerfile'
+      - 'deploy/**'
+      - 'tests/uploads/**'
+      - 'tests/prodlike/php.ini'
+      - 'config/config.php'
       - 'src/**'
       - 'templates/**'
       - 'public/**'
@@ -119,4 +124,32 @@ jobs:
             docs/evidence/browser/**/*.png
             docs/evidence/browser/.artifacts/**
             docs/evidence/unified-notifications-and-settings/**
+          if-no-files-found: error
+
+  upload-http:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, dom, gd, fileinfo, sodium, curl
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install upload evidence dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          cd tests/browser
+          npm ci
+          npx playwright install --with-deps chromium webkit
+      - name: Verify production-image multipart uploads and composer recovery
+        run: bash tests/uploads/run.sh
+      - name: Upload sanitized upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-upload-reliability
+          path: docs/evidence/image-upload-reliability/
           if-no-files-found: error

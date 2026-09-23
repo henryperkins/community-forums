@@ -19,6 +19,8 @@ RUN mkdir -p config && npm run build
 # ---------------------------------------------------------------------------
 FROM php:8.2-apache-bookworm AS phpbase
 
+COPY deploy/php-uploads.ini /usr/local/etc/php/conf.d/retroboards-uploads.ini
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libcurl4-openssl-dev \

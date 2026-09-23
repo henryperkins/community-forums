@@ -1,0 +1,413 @@
+{
+  "base_commit": "12db98218655833ed1be9563e1738be2f8da037e",
+  "branch": "fix/image-upload-reliability",
+  "committed": false,
+  "description": "Exact changed implementation, test, configuration and generated asset bytes. Evidence and the plan are excluded to avoid circular artifact hashes.",
+  "files": [
+    {
+      "path": ".dockerignore",
+      "change": "modified",
+      "sha256": "1fdb9b811e7c554c6e70e39ae6139bed8ecd9abf1280f220d63accd5aa8b582f",
+      "bytes": 272,
+      "executable": false
+    },
+    {
+      "path": ".github/workflows/browser-evidence.yml",
+      "change": "modified",
+      "sha256": "a659eac950cd7125d847c85ae4f3f78752ba45deeefa97e6c4a68a78879bf792",
+      "bytes": 5336,
+      "executable": false
+    },
+    {
+      "path": "COMPOSER.md",
+      "change": "modified",
+      "sha256": "5238e6822b01812224f97e67310ad37bcc8c1a17366dd4514ed5a2abd97e6abf",
+      "bytes": 40974,
+      "executable": false
+    },
+    {
+      "path": "Dockerfile",
+      "change": "modified",
+      "sha256": "3f1e9e5863958fa16516a280a266f24aac8dbf8bafda2ad4051db9831f0016c8",
+      "bytes": 4478,
+      "executable": false
+    },
+    {
+      "path": "config/assets.json",
+      "change": "modified",
+      "sha256": "5e6132830839390f6090261acceff19892d295553dd672b9d8fd8a92c4efb48b",
+      "bytes": 11183,
+      "executable": false
+    },
+    {
+      "path": "config/imladris-runtime-baseline.json",
+      "change": "modified",
+      "sha256": "c51329942a7b5e0d56344db249b0d56ec53da75aff741fb228d56d992290ae63",
+      "bytes": 555,
+      "executable": false
+    },
+    {
+      "path": "deploy/entrypoint.sh",
+      "change": "modified",
+      "sha256": "7d07328b769ace0c8535a9c9c2a81a90e22489dbfa92d96bf616eb72483abba8",
+      "bytes": 3587,
+      "executable": false
+    },
+    {
+      "path": "deploy/php-uploads.ini",
+      "change": "added",
+      "sha256": "fe49582bbe7bd2bd579aca664681fc50f67cecf8d294c7f21d9365253b082bd2",
+      "bytes": 330,
+      "executable": false
+    },
+    {
+      "path": "docs/runbooks/deployment-cloudflare.md",
+      "change": "modified",
+      "sha256": "798565b8c2c2163d2c8ebacef6e97cd9a80feffaf987e4cc58e52d8f3e5192d5",
+      "bytes": 56266,
+      "executable": false
+    },
+    {
+      "path": "public/assets/app.css",
+      "change": "modified",
+      "sha256": "a8c64513887bbd0192e52233f29dc25ac96f8f3015b9c59990604ae8f0c0f0cd",
+      "bytes": 575491,
+      "executable": false
+    },
+    {
+      "path": "public/assets/composer.js",
+      "change": "modified",
+      "sha256": "16f6461ce88a71c73b390075c5f902c7983d3998bedb0cd7dbdbf2299ad930ae",
+      "bytes": 143487,
+      "executable": false
+    },
+    {
+      "path": "public/assets/dist/app-style-B5vTvxOi.css",
+      "change": "deleted"
+    },
+    {
+      "path": "public/assets/dist/app-style-DURDR401.css",
+      "change": "added",
+      "sha256": "8870a182f1216d67fd1f1b034c96ea5bfd17336be4c037a519f017564f349798",
+      "bytes": 388677,
+      "executable": false
+    },
+    {
+      "path": "public/assets/dist/composer-afe872655b72f60d.js",
+      "change": "added",
+      "sha256": "afe872655b72f60dcedc1e6e077b8f2bb410aeeea4409178d9ddb412ab1a9f32",
+      "bytes": 63058,
+      "executable": false
+    },
+    {
+      "path": "public/assets/dist/composer-f3e62b94e026dd13.js",
+      "change": "deleted"
+    },
+    {
+      "path": "public/assets/dist/milkdown-adapter-B36_3vOz.js",
+      "change": "added",
+      "sha256": "156e7142326caf8b6fcb4cd4d903fa219ef445c7a3821f224ec33a2938bf478e",
+      "bytes": 465671,
+      "executable": false
+    },
+    {
+      "path": "public/assets/dist/milkdown-adapter-DbFcQ9eR.js",
+      "change": "deleted"
+    },
+    {
+      "path": "public/assets/dist/wysiwyg-composer-BDzu1ong.js",
+      "change": "deleted"
+    },
+    {
+      "path": "public/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
+      "change": "added",
+      "sha256": "606c893af7fee8d37f1a2694cf7368e8e219a8c4cc0760c0246cbed5b45e377d",
+      "bytes": 1399,
+      "executable": false
+    },
+    {
+      "path": "public/assets/dist/wysiwyg-composer-BqYYcGYs.css",
+      "change": "deleted"
+    },
+    {
+      "path": "public/assets/dist/wysiwyg-composer-DJaHQYS-.css",
+      "change": "added",
+      "sha256": "b3eb1ac0d75f87c64a319344d15d2e3b2ceee1b9dbf68247af912bb74779a3b2",
+      "bytes": 650,
+      "executable": false
+    },
+    {
+      "path": "resources/imladris/manifest.json",
+      "change": "modified",
+      "sha256": "c12a7a8982c80002d8c474347ee3699567936901e0ee5e5c69f4a095d27b8cf3",
+      "bytes": 2449,
+      "executable": false
+    },
+    {
+      "path": "src/Controller/CommunityMemoryController.php",
+      "change": "modified",
+      "sha256": "542b2d435c1665e0a4230d575157a2595c9de9273f9e1f58fa214366885c368a",
+      "bytes": 8115,
+      "executable": false
+    },
+    {
+      "path": "src/Controller/MediaController.php",
+      "change": "modified",
+      "sha256": "78a1c4f93caa39003c537a5b26337bca879f4dde1f4ed6d6b258fd1cd80580ab",
+      "bytes": 13266,
+      "executable": false
+    },
+    {
+      "path": "src/Controller/ThreadController.php",
+      "change": "modified",
+      "sha256": "4a7dbf18903c2ab8a858e948198e1e15d8f30bfec2793e00300504d0500a796a",
+      "bytes": 29155,
+      "executable": false
+    },
+    {
+      "path": "src/Core/App.php",
+      "change": "modified",
+      "sha256": "f4c288d1b11879bf87fcffd347b371ec45b112e44d58d7bc9ffcb5f978190cfc",
+      "bytes": 151744,
+      "executable": false
+    },
+    {
+      "path": "src/Core/Request.php",
+      "change": "modified",
+      "sha256": "433ec08198d24c04eb7361c17f56b953d69c92284fde55d3e89d6d84bdc9edeb",
+      "bytes": 6829,
+      "executable": false
+    },
+    {
+      "path": "src/Core/ValidationException.php",
+      "change": "modified",
+      "sha256": "7ce85fb9076ca93d8fcb8a8498f87dc2ebb857adbf7148c0e86054b3292a60b8",
+      "bytes": 961,
+      "executable": false
+    },
+    {
+      "path": "src/Service/AttachmentService.php",
+      "change": "modified",
+      "sha256": "c634af0bb43d97d6ef1e8ab18699c58562e447db13a28f307625bec7e2430355",
+      "bytes": 12312,
+      "executable": false
+    },
+    {
+      "path": "src/Service/CommunityMemoryService.php",
+      "change": "modified",
+      "sha256": "00b7adb383106dc8c677b8e1cbd8f0edb6f9a61ed64d50aeeb1740bd264d4e86",
+      "bytes": 20700,
+      "executable": false
+    },
+    {
+      "path": "src/Service/DirectMessageService.php",
+      "change": "modified",
+      "sha256": "e8e3c1a19a407c8591ee2a39c17d50a967c3bf0cfb47e2ffd6107822be019926",
+      "bytes": 19994,
+      "executable": false
+    },
+    {
+      "path": "src/Service/PostingService.php",
+      "change": "modified",
+      "sha256": "2ad7125a1c0939c54b47577981fce46a0b0d4025551d99ec89eb689405e16f39",
+      "bytes": 42721,
+      "executable": false
+    },
+    {
+      "path": "src/Support/PendingUploadGuard.php",
+      "change": "added",
+      "sha256": "dc552b4b50d279c05e801aa52a0e0ed7f9a2003d22255884ee3fece090b87620",
+      "bytes": 1030,
+      "executable": false
+    },
+    {
+      "path": "src/Support/UploadLimits.php",
+      "change": "added",
+      "sha256": "43e9ae7ce30299244a9d122c67da6e4e259aff442d93f9919163b3ad4db4f378",
+      "bytes": 1125,
+      "executable": false
+    },
+    {
+      "path": "src/client/wysiwyg/milkdown-adapter.ts",
+      "change": "modified",
+      "sha256": "f9b65105f730a40a680e4b58d7073450cb5763939a4d0715927ccd0123b5e46c",
+      "bytes": 35511,
+      "executable": false
+    },
+    {
+      "path": "src/client/wysiwyg/styles.css",
+      "change": "modified",
+      "sha256": "0c8ad48cb58a378cd429b5a2df6cd400a5eba7ce254e718fb685960bbf7a5f4b",
+      "bytes": 1140,
+      "executable": false
+    },
+    {
+      "path": "templates/partials/composer_shell.php",
+      "change": "modified",
+      "sha256": "144a06e727d7b4b0dc0cf2bbc553477b0836a0ec674a08ac1d9d40df4ec32e68",
+      "bytes": 9812,
+      "executable": false
+    },
+    {
+      "path": "templates/partials/post.php",
+      "change": "modified",
+      "sha256": "a237317ce7164100c434f2dd6b5f313e53cbb96d0d78bd4bc93f61d479880459",
+      "bytes": 15355,
+      "executable": false
+    },
+    {
+      "path": "templates/partials/post_toolbar.php",
+      "change": "modified",
+      "sha256": "ccb47b04cb9f4f5d9e6dbb79a9775e4cea517510838d526b793a153c2316b35c",
+      "bytes": 12122,
+      "executable": false
+    },
+    {
+      "path": "templates/thread.php",
+      "change": "modified",
+      "sha256": "cd3b0267c646917dfba5ce87241aa51ee1cb58879b9f22ee5094c54be72eb2aa",
+      "bytes": 23537,
+      "executable": false
+    },
+    {
+      "path": "tests/Integration/Core/AppImageUploadTest.php",
+      "change": "modified",
+      "sha256": "35c8fd4ea68a7ac58dcd50c86f87dd276394ece50e9e7ef5ced666bb8041620f",
+      "bytes": 15134,
+      "executable": false
+    },
+    {
+      "path": "tests/Integration/Core/AppPendingUploadTest.php",
+      "change": "added",
+      "sha256": "b8584d1afa8a4d227c2b0cdbaa8cd0e3616a4866446fb8da8f4f558ade13f796",
+      "bytes": 5752,
+      "executable": false
+    },
+    {
+      "path": "tests/Integration/Core/AppUploadErrorsTest.php",
+      "change": "added",
+      "sha256": "69fec3f0c268457ddf3afcd072aeaee0cb4b930f4b065a2e936c848cdea73673",
+      "bytes": 3603,
+      "executable": false
+    },
+    {
+      "path": "tests/Unit/Composer/PendingUploadGuardTest.php",
+      "change": "added",
+      "sha256": "707ea5d2e6151d7ba73461f5cc2905b384f7a73e828b2e5d561b6b5e2ca2255c",
+      "bytes": 1189,
+      "executable": false
+    },
+    {
+      "path": "tests/Unit/Core/RequestUploadTest.php",
+      "change": "added",
+      "sha256": "4b66fac87e6bd7e8f5ef7bcc559507e348fa2dda18163e18d670e42cb3f1f4a6",
+      "bytes": 2308,
+      "executable": false
+    },
+    {
+      "path": "tests/Unit/Support/UploadLimitsTest.php",
+      "change": "added",
+      "sha256": "25ddc4117ea0165583b106426ebbde034a444870d884350c579be5b113144bf5",
+      "bytes": 891,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/composer-toolbar-hardening.spec.ts",
+      "change": "modified",
+      "sha256": "486c9ba49502b62f9bf1611393d074a168da53ebad365e7e27e322b6c472693d",
+      "bytes": 16779,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/composer-upload-reliability.spec.ts",
+      "change": "added",
+      "sha256": "449522e9fab439a5016d29826f0380e9b98ce0bb095f2fafc697c35b919aaf34",
+      "bytes": 27613,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/package.json",
+      "change": "modified",
+      "sha256": "f6a38517e84925eb42fd4105c6059ffad41a4030e2327791c3c440a342ace2b1",
+      "bytes": 3581,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/playwright.config.ts",
+      "change": "modified",
+      "sha256": "406834199fbfce0648038b242e3ca126a3d598044567ade5c4f95547614072a3",
+      "bytes": 3991,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/playwright.uploads.config.ts",
+      "change": "added",
+      "sha256": "9984f93a01bb881b772565d3d8b6b81cea4c184c4e68913774b15c3fec145efc",
+      "bytes": 605,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/upload-fixture.php",
+      "change": "added",
+      "sha256": "6d1286d805bca3845db8551487ce3e658da39f0c28890ec099405d0589973090",
+      "bytes": 4921,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/upload-http.spec.ts",
+      "change": "added",
+      "sha256": "f4bef273a55bc21b463da422420ba726384d5955c5ca3eabc6536c990d86e961",
+      "bytes": 13902,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/upload-support.ts",
+      "change": "added",
+      "sha256": "0a170edbb90e603c0c12db9c6b92cd79a95bca7413e8396f119cdd5cc37acd44",
+      "bytes": 2641,
+      "executable": false
+    },
+    {
+      "path": "tests/browser/wysiwyg-composer.spec.ts",
+      "change": "modified",
+      "sha256": "883232bbe7203e6bcac5b4aea0e11b599781f228ae5853a937598f2a9510111c",
+      "bytes": 42709,
+      "executable": false
+    },
+    {
+      "path": "tests/prodlike/Dockerfile",
+      "change": "modified",
+      "sha256": "f700942b05bd1374f56d3076c950aa09243313ca649138e92e9b5987748fa83f",
+      "bytes": 1249,
+      "executable": false
+    },
+    {
+      "path": "tests/prodlike/php.ini",
+      "change": "modified",
+      "sha256": "0cab6850d4c7a7ae7359bb0e85cbfb91822213f090efe925fb43b40262e46fd2",
+      "bytes": 100,
+      "executable": false
+    },
+    {
+      "path": "tests/uploads/compose.yml",
+      "change": "added",
+      "sha256": "15713d7b1f589033d32e1b946487c6d135d6b93701cdf052fbc60df6965cef24",
+      "bytes": 1454,
+      "executable": false
+    },
+    {
+      "path": "tests/uploads/fixtures.php",
+      "change": "added",
+      "sha256": "99ed17f6452cd85730af382269aa53a940570f94bf728f1d6f252a158f1ff43c",
+      "bytes": 1862,
+      "executable": false
+    },
+    {
+      "path": "tests/uploads/run.sh",
+      "change": "added",
+      "sha256": "9055b0b532c7a3de76d107f01b7a84119608df302bc27544e11f2d713f6e1134",
+      "bytes": 4079,
+      "executable": true
+    }
+  ]
+}

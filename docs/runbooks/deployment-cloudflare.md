@@ -350,6 +350,33 @@ Two things to know about `exec()`: it starts with an almost empty environment
 `/proc/1/environ` when you need the real `DB_*` values; and `output()` returns
 **ArrayBuffers**, which need a `TextDecoder`.
 
+### Image upload runtime and diagnostics
+
+`deploy/php-uploads.ini` is shared by the root Apache image, the production-like image, and the ordinary browser server. PHP accepts files up to **8 MiB** and whole POST bodies up to **10 MiB**, leaving multipart headroom above the application's default **5 MiB** image policy. Raising `UPLOADS_MAX_BYTES` requires coordinated PHP and upstream limits. Keep diagnostic warnings in server logs (`display_errors=Off`, `log_errors=On`) so PHP's pre-dispatch oversized-body warning cannot corrupt the JSON response.
+
+Rebuild and release the application image and composer assets together through the existing Workers Builds workflow. Changing static assets alone cannot repair a PHP upload ceiling. The entrypoint gives local `/data` volumes to the Apache user; R2 mounts retain their configured mount ownership.
+
+From an authorized container shell in `/var/www/html`, inspect only numeric limits:
+
+```bash
+php -r 'require "vendor/autoload.php"; $c=App\Core\Config::fromFile("config/config.php"); $f=App\Support\UploadLimits::phpBytes(ini_get("upload_max_filesize")); $p=App\Support\UploadLimits::phpBytes(ini_get("post_max_size")); $a=(int)$c->get("uploads.max_bytes"); echo json_encode(["file_bytes"=>$f,"post_bytes"=>$p,"application_bytes"=>$a]),PHP_EOL; exit(($f===null||$f>=$a)&&($p===null||$p>max($a,$f??$a))?0:1);'
+```
+
+CLI output confirms the shared INI, while real multipart requests confirm the Apache boundary. Do not publish phpinfo or environment dumps. Run `bash tests/uploads/run.sh` locally for the complete production-image gate; it owns the `retroboards-upload-check` Compose project, disposable database, local media volume, and ports 3334/8024. `--keep` retains only that fixture for diagnosis; clean it with `docker compose -p retroboards-upload-check -f tests/uploads/compose.yml down --volumes`. Install browser dependencies with `npm ci` in `tests/browser` and `npx playwright install --with-deps chromium webkit` first.
+
+| HTTP / code | Meaning and recovery |
+|---|---|
+| 413 / `upload_too_large` | PHP rejected an individual file; choose a smaller image or report a mismatched server limit. |
+| 413 / `upload_request_too_large` | Reliable request length exceeded PHP's whole-body cap; this rejection occurs before missing CSRF fields could mislabel it. |
+| 422 / `upload_missing`, `upload_invalid` | Missing or malformed multipart file field; select the image again. |
+| 422 / `upload_incomplete` | PHP reported a partial transfer; retry. |
+| 422 / `upload_rejected` | Application size, type, dimensions, pixel, decoding, or re-encoding policy rejected the image. |
+| 503 / `upload_unavailable` | PHP temporary storage, attachment storage, or disk-pressure failure; retry after service recovery. |
+
+Responses preserve `ok`/`error` and add `code`/`max_bytes`. Ordinary authentication, CSRF, and 429 responses retain their existing behavior; the composer also handles HTML errors, dropped networks, timeouts, and `Retry-After`. Infrastructure logs contain route, code, status, and numeric limits only. Never add filenames, request bytes, member content, cookies, or credentials to diagnostics.
+
+Local evidence proves a Docker-volume restart, not R2 durability or an actual iPhone. After a separately authorized release, verify production PHP settings and asset hashes, upload a synthetic 2.55–3 MiB photo, publish/reload it, verify current reader permissions and R2 persistence across the deployment's container replacement, and repeat photo-library selection and recovery on iPhone Safari. Preserve database/media objects during rollback; this repair has no schema migration or historical-content rewrite.
+
 ## 7. Fix the client IP (do not skip)
 
 `RateLimitService` keys per-IP, and `App\Security\ClientIdentifier` only honours

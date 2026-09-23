@@ -59,14 +59,14 @@ final class AttachmentService
     public function storeUpload(int $userId, array $file, string $purpose = 'post'): array
     {
         if ((int) $file['size'] > $this->maxBytes) {
-            throw new ValidationException(['image' => 'That image is too large.']);
+            throw new ValidationException(['image' => 'That image is too large. Choose an image up to ' . \App\Support\UploadLimits::label($this->maxBytes) . '.']);
         }
         $bytes = @file_get_contents($file['tmp_name']);
         if ($bytes === false || $bytes === '') {
-            throw new ValidationException(['image' => 'The upload could not be read.']);
+            throw new ValidationException(['image' => 'The upload could not be read.'], errorCode: 'upload_unavailable');
         }
         if (strlen($bytes) > $this->maxBytes) {
-            throw new ValidationException(['image' => 'That image is too large.']);
+            throw new ValidationException(['image' => 'That image is too large. Choose an image up to ' . \App\Support\UploadLimits::label($this->maxBytes) . '.']);
         }
 
         // Content sniff — the client-sent type and filename are never trusted.
@@ -102,7 +102,7 @@ final class AttachmentService
         // The re-encoded bytes must also respect the size cap (a small input can
         // expand on re-encode); keeps on-disk size within the same ceiling.
         if (strlen($out) > $this->maxBytes) {
-            throw new ValidationException(['image' => 'That image is too large after processing.']);
+            throw new ValidationException(['image' => 'That image exceeds ' . \App\Support\UploadLimits::label($this->maxBytes) . ' after processing. Choose a smaller image.']);
         }
 
         $sha = hash('sha256', $out);
@@ -306,11 +306,11 @@ final class AttachmentService
         if ($this->minFreeBytes > 0) {
             $free = @disk_free_space($dir);
             if ($free === false || $free < ($this->minFreeBytes + strlen($bytes))) {
-                throw new ValidationException(['image' => 'The image store is temporarily full. Please try again later.']);
+                throw new ValidationException(['image' => 'The image store is temporarily full. Please try again later.'], errorCode: 'upload_unavailable');
             }
         }
         if (@file_put_contents($path, $bytes) === false) {
-            throw new ValidationException(['image' => 'The image could not be stored. Please try again.']);
+            throw new ValidationException(['image' => 'The image could not be stored. Please try again.'], errorCode: 'upload_unavailable');
         }
     }
 }

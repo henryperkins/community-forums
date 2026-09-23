@@ -45,16 +45,17 @@ final class MediaController extends Controller
             }
         }
 
-        $file = $request->file('image');
-        if ($file === null) {
-            return Response::json(['ok' => false, 'error' => 'No image was uploaded.'], 422);
+        if (($failure = $this->uploadIntakeFailure($request, 'image')) !== null) {
+            return $failure;
         }
+        $file = $request->file('image');
 
         $purpose = $request->str('purpose') === 'dm' ? 'dm' : 'post';
         try {
             $row = $this->container->get(AttachmentService::class)->storeUpload($user->id(), $file, $purpose);
         } catch (ValidationException $e) {
-            return Response::json(['ok' => false, 'error' => $e->first()], 422);
+            if ($e->errorCode === 'upload_unavailable') { return $this->uploadUnavailable($request); }
+            return $this->uploadFailure('upload_rejected', $e->first(), 422);
         }
 
         return Response::json([
@@ -76,16 +77,17 @@ final class MediaController extends Controller
         }
         $this->container->get(RateLimitService::class)->enforce('upload', $request, $user);
 
-        $file = $request->file('file');
-        if ($file === null) {
-            return Response::json(['ok' => false, 'error' => 'No file was uploaded.'], 422);
+        if (($failure = $this->uploadIntakeFailure($request, 'file')) !== null) {
+            return $failure;
         }
+        $file = $request->file('file');
 
         $purpose = $request->str('purpose') === 'dm' ? 'dm' : 'post';
         try {
             $row = $this->container->get(AttachmentService::class)->storeFileUpload($user->id(), $file, $purpose);
         } catch (ValidationException $e) {
-            return Response::json(['ok' => false, 'error' => $e->first()], 422);
+            if ($e->errorCode === 'upload_unavailable') { return $this->uploadUnavailable($request); }
+            return $this->uploadFailure('upload_rejected', $e->first(), 422);
         }
 
         $url = '/media/' . (int) $row['id'] . '/download';
@@ -97,6 +99,39 @@ final class MediaController extends Controller
             'markdown' => '[' . $name . '](' . $url . ')',
             'scan_status' => (string) ($row['scan_status'] ?? 'pending'),
         ]);
+    }
+
+    private function uploadIntakeFailure(Request $request, string $field): ?Response
+    {
+        $error = $request->fileError($field);
+        $limit = \App\Support\UploadLimits::label((int) $this->config()->get('uploads.max_bytes', 5242880));
+        return match ($error) {
+            UPLOAD_ERR_OK => null,
+            null, UPLOAD_ERR_NO_FILE => $this->uploadFailure('upload_missing', 'Choose a file to upload.', 422),
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => $this->uploadFailure('upload_too_large', 'The server rejected this file size. Choose a file up to ' . $limit . '; if it is already smaller, report this upload problem.', 413),
+            UPLOAD_ERR_PARTIAL => $this->uploadFailure('upload_incomplete', 'The upload was interrupted. Retry or remove it.', 422),
+            UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE, UPLOAD_ERR_EXTENSION => $this->uploadUnavailable($request),
+            default => $this->uploadFailure('upload_invalid', 'The upload could not be accepted. Choose the file again.', 422),
+        };
+    }
+
+    private function uploadUnavailable(Request $request): Response
+    {
+        error_log('[RetroBoards] ' . json_encode([
+            'route' => $request->path(), 'code' => 'upload_unavailable', 'status' => 503,
+            'max_bytes' => (int) $this->config()->get('uploads.max_bytes', 5242880),
+            'php_file_bytes' => \App\Support\UploadLimits::phpBytes(ini_get('upload_max_filesize')),
+            'php_post_bytes' => \App\Support\UploadLimits::phpBytes(ini_get('post_max_size')),
+        ]));
+        return $this->uploadFailure('upload_unavailable', 'Uploads are temporarily unavailable. Retry later or remove this file.', 503);
+    }
+
+    private function uploadFailure(string $code, string $error, int $status): Response
+    {
+        return Response::json([
+            'ok' => false, 'error' => $error, 'code' => $code,
+            'max_bytes' => (int) $this->config()->get('uploads.max_bytes', 5242880),
+        ], $status);
     }
 
     /** @param array<string,string> $params */
