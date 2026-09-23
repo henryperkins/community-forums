@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file is the **canonical agent guidance** for this repository — every tool (Claude Code, Codex, Copilot, opencode, Cursor, …) reads it. The other rule files are pointers or scoped addenda to it, never a second source: `CLAUDE.md` imports this file; `database/CLAUDE.md` and `tests/CLAUDE.md` are directory-scoped addenda; `.github/copilot-instructions.md` points here.
 
 ## What this is
 
@@ -15,13 +15,15 @@ This repo is spec-driven. Before changing behavior, find the authoritative doc �
 3. **`SCHEMA.md`** — final consolidated table shapes + the per-phase build cut (§6). *Hand-maintained and can lag the migrations — a column documented here may not yet exist in the DB. Verify against `database/migrations/`.*
 4. **`USER.md` / `ADMIN.md` / `COMMUNITY.md` / `COMPOSER.md`** — the member / operator / community-layer / composer surface specs.
 
-`README.md` is an orientation pointer, **not** authoritative. There are no Cursor/Copilot rule files.
+**Two files, one word.** `PRODUCT_DESIGN.md` (renamed from `DESIGN.md` on 2026-08-27) owns product and technical truth and is cited as `PRODUCT_DESIGN §N`. Root **`DESIGN.md`** is a separate, narrower document — the **Imladris visual design system** (tokens, type, components, visual guardrails) in the portable DESIGN.md format, with its machine-readable extensions in `.impeccable/design.json`. It is authoritative on *visual* decisions only and sits below `PRODUCT_DESIGN.md` on everything else. `PRODUCT.md` holds durable product context (users, positioning, constraints, brand commitments) for design tooling.
+
+`README.md` is an orientation pointer, **not** authoritative.
 
 Two process rules that are easy to violate:
-- **"Done" requires evidence (PRODUCT_DESIGN §13).** Adding a column/table is *not* shipping a feature — behavior must be enforced and tested. UI-visible work needs Playwright/browser evidence *in addition to* PHPUnit. "Inert schema is not evidence."
+- **"Done" requires evidence (PRODUCT_DESIGN §13).** Adding a column/table is *not* shipping a feature — behavior must be enforced and tested. UI-visible work needs Playwright/browser evidence *in addition* to PHPUnit. "Inert schema is not evidence."
 - **`P0`–`P3` are MoSCoW priority tiers, not phase numbers** (DECISIONS §2). A `P3` item can ship in any later phase. Only when a doc clearly writes `P1…P7` as a sequence does it mean Phase 1…7.
 
-Delivery is sequenced in seven **phases** (`PHASE_N_PLAN.md`), each a "release train" split into **Gate A** (minimum release) and **Gate B** (extended slice) with entry/exit gates and a carryover ledger. Deferrals are recorded in `docs/adr/000N-*.md` (never silently dropped); proof artifacts live in `docs/evidence/`. Current state is in `PHASE_5_STATUS.md`; prior phases are archived in `docs/history/PHASE_1-4_HISTORY.md`.
+Delivery is sequenced in seven **phases** (`PHASE_N_PLAN.md`), each a "release train" split into **Gate A** (minimum release) and **Gate B** (extended slice) with entry/exit gates and a carryover ledger. Deferrals are recorded in `docs/adr/000N-*.md` (never silently dropped); proof artifacts live in `docs/evidence/`. Current state is in `PHASE_5_STATUS.md`; prior phases are archived in `docs/history/PHASE_1-4_HISTORY.md`. Design-decision archives for shipped work live in `docs/superpowers/` (indexed by its `README.md`).
 
 ## Commands
 
@@ -37,21 +39,12 @@ composer test                                            # full suite (alias for
 vendor/bin/phpunit --testsuite unit                      # or: integration
 vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php          # one file
 vendor/bin/phpunit --filter test_tags_flag_gates_public_and_admin_tag_routes   # one method
-# Tests run against DB_TEST_DATABASE (default retroboards_test); bootstrap.php drops + re-migrates it on every run.
+# Tests run against DB_TEST_DATABASE (default retroboards_test); bootstrap.php reuses the schema via a
+# migration fingerprint and only rebuilds when migrations changed — force with RB_TEST_FRESH=1 (also the
+# recovery from an interrupted run's committed rows). Parallel sessions: use a private DB_TEST_DATABASE.
 
-# Migrations / data integrity
-php bin/console migrate:status        # show applied vs pending
-php bin/console migrate:fresh         # DROP ALL TABLES + re-migrate (destructive)
-php bin/console repair                # recompute every denormalized counter + reputation from authoritative rows
-php bin/console verify:upgrade        # rehearse an additive upgrade on a scratch DB (destructive; refuses APP_ENV=production)
-
-# Background workers (run on cron)
-php bin/console worker:email          # drain instant notification-email queue
-php bin/console worker:digest         # send due daily digests
-php bin/console worker:purge-ips      # anonymise captured IPs older than retention window
-php bin/console worker:attachments    # sweep orphaned / deleted-parent uploads
-php bin/console worker:registry-refresh   # fetch+verify signed registry snapshots/advisories (no-op while package_registry is dark)
-php bin/console worker:packages       # verify installed package digests, enforce advisories/blocklist, purge retained uninstalls
+# Everything else (migrate:*, repair*, verify:*, every worker:* cron job) is listed with descriptions by
+# `php bin/console`. migrate:fresh drops all tables; verify:upgrade is destructive and refuses APP_ENV=production.
 
 # Browser evidence + backup rehearsal (separate throwaway DBs)
 cd tests/browser && npm install && npx playwright install --with-deps chromium && npm run evidence
@@ -109,21 +102,21 @@ Invariants to preserve:
 - `AntiAbuseService` is a separate content-scoring layer (not the auth gate): moderators are exempt, it defaults to `observe` mode (clamped per operator mode, capped at `hold` — never auto-blocks by default), and every decision writes a `moderation_log` audit row.
 
 ### Feature flags & replaceable seams (`src/Core/FeatureFlags.php`)
-Every post-MVP subsystem is gated by a flag. `DEFAULTS` map + a `features` JSON override in `settings`. **Phase 2/3 flags default ON; Phase 4 Gate A defaults are mixed**: `topic_workflow` graduated to default-ON on 2026-07-01 (see `docs/runbooks/topic_workflow.md`); `tags`, `expanded_feeds`, and `reputation_ledger` graduated to default-ON on 2026-07-01 (see `docs/runbooks/phase4-tags-feeds-reputation.md`); `badge_rules` graduated to default-ON on 2026-07-02 (see `docs/runbooks/badge_rules.md`); `wysiwyg_composer` (Phase 5 composer stream) graduated to default-ON on 2026-07-02 (see `docs/runbooks/wysiwyg_composer.md`); `content_references` graduated to default-ON on 2026-07-02; `appeals` graduated to default-ON on 2026-07-02 (see `docs/runbooks/appeals.md`); the Phase 4 carryovers `polls`, `custom_emoji`, `slash_giphy`, `split_merge`, `profile_media`, `board_folders`, `bookmark_folders`, `saved_feeds`, `custom_profile_fields`, and `account_lifecycle` are default-ON (graduated 2026-06-30 → 2026-07-03); Phase 5 Gate A/B2 flags `package_registry`, `package_themes`, `capabilities`, `passkeys`, `provider_registry`, `invitations`, `service_secrets`, `api_tokens`, `webhooks`, and `first_party_hooks` graduated to default-ON on 2026-07-09 (ADR 0018); Thread Intelligence flags `community_memory` and `automated_context` graduated together to default-ON on 2026-07-12 (see `docs/runbooks/thread_intelligence.md`); `group_dms` graduated to default-ON on 2026-07-18 (see `docs/runbooks/group_dms.md` and `docs/adr/0022-group-dms-enablement.md`); `link_previews` graduated to default-ON on 2026-08-09 (see `docs/runbooks/link_previews.md` and `docs/adr/0025-link-previews-enablement.md` — **available** does not mean fetching: it stays inert until an operator opts a board in via `boards.link_previews_enabled` AND allowlists a host, so the flag flip is a no-op on upgrade); exactly `custom_css`, `expanded_files`, `server_extensions`, `governance`, `service_principals`, and `verified_links` remain default OFF. `enabled('typo')` returns `false` (fails dark). Flags gate **availability only** — staged-rollout posture (anti-abuse mode) lives in config, not flags. New subsystems ship behind a flag defaulting dark, route-gated, with a regression test asserting they're dark (`tests/Integration/Core/AppFeatureFlagTest.php`).
+Every post-MVP subsystem is gated by a flag. `DEFAULTS` map + a `features` JSON override in `settings`. Each flag's current default is in `DEFAULTS`; its rollout history is in its runbook/ADR (`docs/runbooks/`, `docs/adr/`), rollback mechanics in `docs/runbooks/operations.md` §2. `link_previews` being **available** does not mean fetching: it stays inert until an operator opts a board in via `boards.link_previews_enabled` AND allowlists a host. `enabled('typo')` returns `false` (fails dark). Flags gate **availability only** — staged-rollout posture (anti-abuse mode) lives in config, not flags. New subsystems ship behind a flag defaulting dark, route-gated, with a regression test asserting they're dark (`tests/Integration/Core/AppFeatureFlagTest.php`).
 
 **Replaceable-interface seams** (DECISIONS §2) — swap by rebinding the interface in `App.php`, never touch callers: `Mailer` (`SendmailMailer`/`ArrayMailer`), `SearchService` (`MysqlSearchService` — impls **must** apply the read gate), `FeedService`, `SpamScorer` (`NullSpamScorer` abstains). Email **fails closed**: no `From` configured ⇒ email skipped, in-app notifications still deliver.
 
 ### Database & migrations
-File-based runner (`src/Core/Migrator.php`). A migration is `database/migrations/NNNN_name.php` that **`return`s an anonymous class with `up(\PDO)`/`down(\PDO)`**, ordered by the zero-padded 4-digit prefix, tracked in `schema_migrations`. **To add one: use the next number (currently `0049`)**, write DDL in a `<<<'SQL'` nowdoc, make `up()` additive (drop FKs before columns in `down()`), then `php bin/console migrate`. Migrations are **additive-only / forward-only**; `migrate:rollback` cascades through *all* migrations and is greenfield-only. Data seeds live inside a numbered migration using `INSERT IGNORE` (pattern: `0040_seed_badges.php`). After landing a schema migration, hand-update `SCHEMA.md` (shape + §9 changelog + version bump).
+File-based runner (`src/Core/Migrator.php`): a migration is `database/migrations/NNNN_name.php` that **`return`s an anonymous class with `up(\PDO)`/`down(\PDO)`**. Migrations are **additive-only / forward-only**; `migrate:rollback` cascades through *all* migrations and is greenfield-only. **Before writing one, read `database/CLAUDE.md`** — next-number rule, `<<<'SQL'` nowdoc DDL, information_schema-guarded Vitess-safe `ALTER`s, seed pattern, and the `SCHEMA.md` upkeep rule.
 
 PDO is configured `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, and **emulated prepares by default** to avoid a separate prepare round trip. `DB_EMULATE_PREPARES=false` restores native prepares. Keep queries compatible with either mode: **never bind `LIMIT`/`OFFSET`** (cast to int + concatenate after clamping) and **never reuse a named placeholder twice** (give it two names). Multi-statement execution is disabled. Use UTC everywhere (`UTC_TIMESTAMP()` / `gmdate()`); IPs are stored packed via `inet_pton` into `VARBINARY(16)`.
 
 ### Views & progressive enhancement (`src/Core/View.php`, `templates/`, `public/assets/`)
-Plain-PHP templates rendered with `$this` bound to the `View`; globals + per-render data are `extract()`ed. **Single-level layout**: a leaf template calls `$this->layout('layout')` + `$this->section(...)`; `templates/layout.php` is the one shell (three-pane `variant=app` vs centered `variant=plain` for auth/setup/errors). Escape output with `$this->e()` / the `$e` closure; the **only** sanctioned raw echo is pre-sanitized HTML (`$p['body_html']`, sanitized at write time by `App\Support\Markdown`). Emit CSRF with `$this->csrfField()`. Global template helpers (`mask_author`, `human_datetime`, `monogram_*`) are autoloaded functions in `src/Support/helpers.php`.
+Plain-PHP templates rendered with `$this` bound to the `View`; globals + per-render data are `extract()`ed. **Single-level layout**: a leaf template calls `$this->layout('layout')` + `$this->section(...)`; `templates/layout.php` is the one shell (three-pane `variant=app` vs centered `variant=plain` for auth/setup/errors). The member chrome — `partials/topbar.php` and `partials/sidebar.php` — renders the design system's `ForumNav` / `BoardRail` / `PresenceList` in their own class vocabulary (`.forum-bar*`, `.board-rail*`, `.presence-*`), styled by the generated `imladris.css`; `app.css`'s "Member chrome" block carries only what that layer cannot express, and an unlayered `app.css` rule beats a layered one regardless of specificity, so hand properties back with `revert-layer` rather than restating them (ADR 0032). Escape output with `$this->e()` / the `$e` closure; the **only** sanctioned raw echo is pre-sanitized HTML (`$p['body_html']`, sanitized at write time by `App\Support\Markdown`). Emit CSRF with `$this->csrfField()`. Global template helpers (`mask_author`, `human_datetime`, `monogram_*`) are autoloaded functions in `src/Support/helpers.php`.
 
 JS (`app.js`, `composer.js`, `tour.js`) is **strictly progressive enhancement** — every flow must work as server-rendered HTML+forms first; JS only decorates via specific JSON endpoints (`/composer/preview`, `/notifications/bell`, `/presence`, `/upload`, `/onboarding/*`) and hooks via `data-*` attributes. Live composer preview re-uses the **exact same server render pipeline** (no client Markdown engine). Theming is flash-free (server stamps `data-theme/density/...` on `<html>`); operator branding is a separate generated `/brand.css` overriding `--accent` tokens. Anonymous authorship is masked at **render** time, never stored masked. Short-polling only (DECISIONS) — no WebSockets.
 
-### Testing (`tests/`, `tests/Support/TestCase.php`)
-Integration tests extend `Tests\Support\TestCase`, which drives the real kernel in-process via `App::handle()` as a cookie-jar HTTP client (`get`/`post`/`postFile`/`actingAs`), with seeding helpers (`makeUser`/`makeAdmin`/`makeBoard`/`makeThread`) and CSRF handled automatically. **Per-test isolation is one DB transaction rolled back in tearDown — there are no savepoints, so code that "rolls back" inside its own transaction does NOT undo rows in tests; assert observable HTTP behavior, not row counts.** Unit tests extend PHPUnit's `TestCase` directly. PHPUnit is **strict** (`failOnWarning`, `failOnRisky`, `beStrictAboutOutputDuringTests`): every test needs ≥1 assertion, no stray `echo`/`var_dump`, no PHP warnings — any of these turns a green run red. Repositories are `final`; exercise the real test DB rather than mocking.
+**CSS/visual changes are regression-sensitive** (ADRs 0033, 0036, 0037): state the intended rules in your response before editing styles, keep new styling token-first, and pin UI-visible changes with browser evidence per PRODUCT_DESIGN §13.
 
-## Imported Claude Cowork project instructions
+### Testing (`tests/`, `tests/Support/TestCase.php`)
+Integration tests extend `Tests\Support\TestCase`, which drives the real kernel in-process via `App::handle()` as a cookie-jar HTTP client (`get`/`post`/`postFile`/`actingAs`), with seeding helpers (`makeUser`/`makeAdmin`/`makeBoard`/`makeThread`) and CSRF handled automatically. **Per-test isolation is one DB transaction rolled back in tearDown — there are no savepoints, so code that "rolls back" inside its own transaction does NOT undo rows in tests; assert observable HTTP behavior, not row counts.** Unit tests extend PHPUnit's `TestCase` directly. PHPUnit is **strict** (`failOnWarning`, `failOnRisky`, `beStrictAboutOutputDuringTests`): every test needs ≥1 assertion, no stray `echo`/`var_dump`, no PHP warnings — any of these turns a green run red. Repositories are `final`; exercise the real test DB rather than mocking. **Before writing or debugging a test, read `tests/CLAUDE.md`.**

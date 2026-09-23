@@ -182,6 +182,17 @@ P5-16 closeout evidence is collected and indexed at `docs/evidence/phase5/gate-a
 - Regression and route evidence: full PHPUnit passed at 1831 tests / 9396 assertions across fresh schema and two reused-schema runs; focused route-permission matrix passed at 240 tests / 2139 assertions; all-flags-off and package-execution-disabled pins passed.
 - Defect sweep evidence: no open critical/high Gate A defects remain; security-focused regression passed at 330 tests / 2150 assertions.
 
+## Documentation consolidation (2026-09-23)
+
+Deduplicated and de-staled the documentation tree with **no code-behavior change**.
+
+- **`AGENTS.md` is the single canonical agent guidance.** It absorbed the fresher corrections that had drifted into `CLAUDE.md` only (test-schema fingerprint reuse + `RB_TEST_FRESH=1`; the `php bin/console` inventory in place of the drifting worker list; the `DEFAULTS`/runbook pointer in place of the flag-graduation chronicle; the `DESIGN.md` vs `PRODUCT_DESIGN.md` vs `PRODUCT.md` distinction; the member-chrome `revert-layer` note, ADR 0032) and kept the kernel pipeline, DI, routing, migration, and testing detail. `CLAUDE.md` is now a pointer importing `AGENTS.md` (the `database/` and `tests/` scoped addenda are intact and now cite `AGENTS.md`); `.github/copilot-instructions.md` points there too, replacing a digest whose `EMULATE_PREPARES=false` claim was wrong for this codebase (emulated prepares are the default).
+- **`README.md` status banners collapsed to pointers.** The Phase 5 Gate A and Thread Intelligence evidence figures duplicated `docs/evidence/phase5/gate-a-closeout.md`, ADRs 0017–0019, and the runbook, and had drifted behind `PHASE_5_STATUS.md`. The quick-start section no longer claims "the 10 Phase-1 migrations".
+- **Root `design-qa.md` relocated** to `docs/evidence/imladris-forum-surfaces-production/design-qa.md` — the completed QA sign-off record now sits beside the captures it certifies (links made directory-relative); nothing referenced it at the root.
+- **`docs/superpowers/README.md` index completed** — 21 missing entries (2026-07-19 → 2026-09-23, the two design-only specs, and the `imladris-admin-account-stage1/` working suite) added, and the 2026-07-09 consolidation note now records that post-07-09 entries pair a plan with a sibling spec in `specs/`.
+- **`docs/tech-debt/2026-07-frontend.md` re-checked** in a dated addendum: items 1 and 5 resolved; 2 largely addressed (CI evidence set widened); 3 partially (the JS counter single-sources the textarea's own `maxlength`; template literals remain); 4 resolved at the code level (lazy WYSIWYG load); 6–12 not re-verified, open as recorded.
+- **Mirror tidy:** `docs/design-system/imladris/_scratch/production-inventory-notes.md` — a Stage-1 execution plan the mirror changelog already records as "fully carried out" — moved into `_archive/` (noted in `LOCAL_RECONCILIATION.md`). Retired kits, `RUNTIME_CONTRACT.md`/`PRODUCTION_PARITY.md`, `_archive/` handoffs, and `uploads/` are deliberately retained per the sync-drift doctrine in `LOCAL_RECONCILIATION.md` (`uploads/` is pinned by `ImladrisRuntimeAssetTest`).
+
 ## Documentation consolidation (2026-07-09)
 
 Consolidated the documentation tree with **no code-behavior change** (comment-only source edits). A full grep sweep repointed every **path- and link-form** citation on the live/authoritative surface (spec chain, ADRs, evidence, tests, code) to the new locations:

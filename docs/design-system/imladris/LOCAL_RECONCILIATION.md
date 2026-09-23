@@ -3,6 +3,11 @@
 Imported from `imladris-design-system.zip` with SHA-256
 `2ee3201e3bfcaa82ed371af8709fd0737a54c69332119d006f6f0a51aa57dbeb`.
 
+**Local tidy 2026-09-23:** `_scratch/production-inventory-notes.md` — the Stage-1
+execution plan the changelog already records as "fully carried out", referenced
+nowhere else — moved to `_archive/production-inventory-notes.md` and the empty
+`_scratch/` removed. No synced or generated artifact changed.
+
 The bundle inspected RetroBoards at `4efe4e33`. The consuming application was
 at `6d81da590a12bd09bb8d0e282c042aa03d755a94`, whose only UI-contract delta was
 the read-only readiness classification on `/admin/features`.

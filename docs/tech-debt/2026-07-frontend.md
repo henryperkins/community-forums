@@ -2,6 +2,14 @@
 
 **Date:** 2026-07-11 · **Scope:** `public/assets/` (JS + CSS), `templates/`, their build/CI wiring · **Method:** full read of app.js / composer.js / tour.js / passkeys.js / layout + key templates; grep sweeps for CSP, escaping, duplication; CSS token/dead-selector sampling; CI workflow inspection.
 
+> **Re-check 2026-09-23** (spot verification in code, no full re-audit):
+> - **#1 resolved** — core assets are cache-busted (`?v=` via `$assetUrl` in `templates/layout.php`).
+> - **#2 largely addressed** — `npm run evidence` now runs the broad spec set (composer shell/expansion/toolbar, admin features/remediation/dashboard, group DMs, invitations, providers, API tokens, thread-intelligence, link-previews, unified-chrome, chamfer, field-error, thread-view-study…) and the CI workflow additionally runs `evidence:notifications-settings`. Standalone scripts (`evidence:passkeys`, `evidence:profiles`, …) still live outside the CI run.
+> - **#3 partially resolved** — the JS counter now reads the textarea's own `maxlength` (`buildCounter`, `composer.js`), so DM composers no longer display a false limit; but template `maxlength` values are still literal `20000` (`partials/composer.php`, `compose.php`) rather than fed from `limits.post_body_max`, so the operator-config half remains open.
+> - **#4 resolved at the code level** — the WYSIWYG bundle loads lazily (`data-wysiwyg-src` + dynamic `import()` in `composer.js`), so guests no longer download it; an explicit guest no-fetch Playwright assertion was not found in the spec set, so pin it if the page-weight guarantee must be enforced.
+> - **#5 resolved** — the inbox reading pane re-enhances injected composers via `RetroBoardsComposer.enhanceWithin` (`app.js`).
+> - Items **6–12 were not re-verified** and remain open as recorded below.
+
 **Scoring:** Priority = (Impact + Risk) × (6 − Effort), each 1–5. Higher = do sooner.
 
 ## What is healthy (don't spend time here)

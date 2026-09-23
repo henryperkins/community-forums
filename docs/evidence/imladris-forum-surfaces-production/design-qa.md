@@ -20,7 +20,7 @@ Profile evidence: `docs/evidence/imladris-profile-production/`.
 
 **Full-view and focused evidence**
 
-- Full-route sheets: [desktop index](docs/evidence/imladris-forum-surfaces-production/comparisons/forum-index.png), [desktop board](docs/evidence/imladris-forum-surfaces-production/comparisons/board.png), [desktop thread](docs/evidence/imladris-forum-surfaces-production/comparisons/thread.png), [mobile index](docs/evidence/imladris-forum-surfaces-production/comparisons/forum-index-mobile.png), [mobile board](docs/evidence/imladris-forum-surfaces-production/comparisons/board-mobile.png), and [mobile thread](docs/evidence/imladris-forum-surfaces-production/comparisons/thread-mobile.png).
+- Full-route sheets: [desktop index](comparisons/forum-index.png), [desktop board](comparisons/board.png), [desktop thread](comparisons/thread.png), [mobile index](comparisons/forum-index-mobile.png), [mobile board](comparisons/board-mobile.png), and [mobile thread](comparisons/thread-mobile.png).
 - Focused review used the standalone light/dark production captures, especially the board identity band and mobile thread header/poll/composer. No extra crop was needed because these regions are legible at original resolution in the full-page artifacts.
 - Fonts/typography: display serif, body serif, label capitals, monospace metadata, hierarchy, weights, wrapping, and line height follow the approved visual language.
 - Spacing/layout: route shell, content widths, identity-band containment, vertical rhythm, mobile stacking, target sizes, and absence of horizontal overflow were checked.

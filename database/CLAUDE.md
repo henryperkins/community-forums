@@ -1,0 +1,5 @@
+# database/ — writing migrations
+
+Loaded when working under `database/`. The root guidance (`AGENTS.md`, imported by the root `CLAUDE.md`) still owns the rule that migrations are additive-only / forward-only.
+
+**To add a migration: use the next 4-digit number in `database/migrations/`**, write DDL in a `<<<'SQL'` nowdoc, make `up()` additive (drop FKs before columns in `down()`), then `php bin/console migrate`. `bin/console migrate*` connects through `Database::migrationPdo()` (a `MigrationPdo`) whose statements retry across Vitess's asynchronous schema propagation — inert on MariaDB/MySQL — and any `ALTER` on a pre-existing table should be `information_schema`-guarded so a run that died half-way converges instead of replaying the `ALTER` (pattern: `0048`, `0079`; see `docs/runbooks/deployment-cloudflare.md` §3). Data seeds live inside a numbered migration using `INSERT IGNORE` (pattern: `0040_seed_badges.php`). After landing a schema migration, hand-update `SCHEMA.md` (shape + §9 changelog + version bump).
