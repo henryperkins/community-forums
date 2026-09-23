@@ -312,7 +312,7 @@ final class AppInboxMemberSurfaceTest extends TestCase
 
         $this->assertStatus(200, $response);
         self::assertMatchesRegularExpression(
-            '/<li class="[^"]*\bis-unread\b[^"]*" data-inbox-row data-thread-id="' . $threadId . '" data-inbox-unread="0"/',
+            '/<li class="[^"]*\bthread-unread\b[^"]*" data-inbox-row data-thread-id="' . $threadId . '" data-inbox-unread="0"/',
             $response->body(),
         );
     }

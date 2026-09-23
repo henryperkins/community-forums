@@ -1979,7 +1979,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     box-shadow: var(--shadow-lg);
 }
 .has-js .inbox-scope-menu[open] > .inbox-scope-menu-panel,
-.has-js .inbox-row-menu[open] > .inbox-row-menu-panel {
+.has-js .thread-row-menu[open] > .thread-row-menu-panel {
     position: fixed;
     top: 0;
     right: auto;
@@ -1988,7 +1988,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     visibility: hidden;
 }
 .has-js .inbox-scope-menu[data-inbox-menu-positioned="1"] > .inbox-scope-menu-panel,
-.has-js .inbox-row-menu[data-inbox-menu-positioned="1"] > .inbox-row-menu-panel { visibility: visible; }
+.has-js .thread-row-menu[data-inbox-menu-positioned="1"] > .thread-row-menu-panel { visibility: visible; }
 .inbox-scope-group-label {
     padding: 9px 10px 4px;
     color: var(--text-faint);
@@ -2102,59 +2102,69 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     padding: 0;
     list-style: none;
 }
-.inbox-thread-row {
+/* The queue presentation of the one topic row (partials/thread_row.php). The
+   generic .thread-row rules belong to the default presentation, and several reach
+   this row too: the status left-rule, an overflow clip that cuts the row menu
+   when JavaScript is off, and the compact register's single-line title. So the
+   queue restates the geometry it keeps (ForumInbox.dc.html, ADR 0029), weighted
+   to hold against them. */
+.thread-row.thread-row-inbox {
     position: relative;
     display: flex;
     min-width: 0;
     align-items: flex-start;
     gap: 10px;
     padding: 8px 12px;
+    overflow: visible;
     border-bottom: 1px solid var(--border-hair);
     border-left: 2px solid transparent;
     border-radius: var(--radius-md);
     transition: background var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm);
 }
-.inbox-thread-row:hover { background: var(--surface-raised); }
-.inbox-thread-row.is-active {
+.thread-row-inbox::before { content: none; }
+.thread-row-inbox:hover { background: var(--surface-raised); }
+.thread-row-inbox.is-active {
     border-left-color: var(--gold-500);
     background: var(--brand-subtle);
 }
-.inbox-thread-row.is-cursor {
+.thread-row-inbox.is-cursor {
     box-shadow: inset 0 0 0 1px var(--gold-500);
 }
-.inbox-row-select {
+.thread-row-select {
     display: inline-flex;
     width: 16px;
     min-height: 28px;
     flex: 0 0 16px;
     align-items: center;
 }
-.inbox-row-select input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
-.inbox-thread-row .unread-slot {
+.thread-row-select input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.thread-row-inbox .unread-slot {
     display: inline-flex;
     width: 7px;
     min-height: 28px;
     flex: 0 0 7px;
     align-items: center;
 }
-.inbox-thread-row .unread-dot { width: 7px; height: 7px; }
-.inbox-thread-row > .monogram,
-.inbox-thread-row > .avatar-wrap .monogram {
+.thread-row-inbox .unread-dot { width: 7px; height: 7px; }
+.thread-row.thread-row-inbox > .monogram,
+.thread-row.thread-row-inbox > .avatar-wrap .monogram {
     width: 28px;
     height: 28px;
     flex: 0 0 auto;
     font-size: .66rem;
 }
-.inbox-row-main { min-width: 0; flex: 1; }
-.inbox-row-heading {
+.thread-row-inbox .thread-row-main { display: block; min-width: 0; flex: 1; }
+.thread-row-inbox .thread-title-line {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: 2px 9px;
 }
-.inbox-row-title {
+.thread-row-inbox .thread-title {
     order: 1;
+    flex: 0 1 auto;
     min-width: 0;
+    overflow: visible;
     color: var(--text-strong);
     font-family: var(--font-display);
     font-size: 1.06rem;
@@ -2162,16 +2172,20 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     letter-spacing: -0.005em;
     line-height: 1.3;
     text-decoration: none;
+    text-overflow: clip;
+    white-space: normal;
     text-wrap: pretty;
 }
-.inbox-row-title:hover { color: var(--accent); text-decoration: none; }
-.inbox-row-chips {
+.thread-row-inbox .thread-title:hover { color: var(--accent); text-decoration: none; }
+.thread-row-inbox .thread-row-chips {
     order: 2;
     display: inline-flex;
+    flex: 0 1 auto;
     flex-wrap: wrap;
     gap: 5px;
+    margin-bottom: 0;
 }
-.inbox-row-chips .chip {
+.thread-row-inbox .thread-row-chips .chip {
     padding: 1px 7px;
     font-size: .56rem;
     letter-spacing: .14em;
@@ -2181,7 +2195,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
    than the uppercase status pills beside it (ForumInbox.dc.html:176). The class
    had no rules at all, so it inherited the evergreen status pill and shouted a
    sentence. */
-.inbox-row-chips .chip-reason {
+.thread-row-inbox .thread-row-chips .chip-reason {
     border-color: var(--gold-200);
     background: var(--gold-soft);
     color: var(--gold-ink);
@@ -2189,7 +2203,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     letter-spacing: .08em;
     text-transform: none;
 }
-.inbox-row-chips .icon { width: 9px; height: 9px; }
+.thread-row-inbox .thread-row-chips .icon { width: 9px; height: 9px; }
 /* `.chip svg` paints every mark as a stroked Lucide glyph, and CSS outranks the
    presentation attributes the filled brand stars carry — so the commend star
    inside a chip was drawn hollow, at a stroke width of 2 in a 0-100 viewBox. */
@@ -2197,7 +2211,11 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .chip .icon-commend-star,
 .badge .icon-eight-point-star,
 .chip .icon-eight-point-star { fill: currentColor; stroke: none; }
-.inbox-row-snippet {
+/* The commend star is the one esteem glyph. In outline it is the unset state of
+   a control that sets it, so a toggle's two states differ in shape as well as
+   in ink: the two inks it moves between are close in lightness. */
+.icon-commend-star.is-outline { fill: none; stroke: currentColor; stroke-width: 7; stroke-linejoin: round; }
+.thread-row-inbox .thread-snippet {
     display: -webkit-box;
     margin: 3px 0 0;
     overflow: hidden;
@@ -2207,7 +2225,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
 }
-.inbox-row-meta {
+.thread-row-inbox .thread-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -2216,6 +2234,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     color: var(--text-faint);
     font-family: var(--font-mono);
     font-size: .7rem;
+    letter-spacing: normal;
     line-height: 1.35;
     white-space: nowrap;
 }
@@ -2223,23 +2242,25 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
    design gives it Bruinen where every other link wears evergreen - the one
    place --artifact-link is spent (ForumInbox.dc.html:187 and 268, the same
    choice Search.dc.html:187 makes). */
-.inbox-row-meta a,
+.thread-row-inbox .thread-meta a,
 .inbox-preview-kicker a { color: var(--artifact-link); text-decoration: none; }
-.inbox-row-meta a:hover,
+.thread-row-inbox .thread-meta a:hover,
 .inbox-preview-kicker a:hover { text-decoration: underline; }
 /* Commends are the Commended order's own column of numbers. Printed in every
    order they were a fourth statistic competing with the reply count for the
    same line, and the meta wrapped (ForumInbox.dc.html:190, showCommends). */
-.inbox-row-commends {
+.thread-row-inbox .thread-meta-commends {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     color: var(--gold-ink);
 }
-.inbox-row-commends .icon { width: 9px; height: 9px; }
-.inbox-row-star { margin: 0; }
-.inbox-row-star button,
-.inbox-row-menu > summary {
+.thread-row-inbox .thread-meta-commends .icon { width: 9px; height: 9px; }
+.thread-row-inbox .thread-row-star { margin: 0; }
+/* The icon size of the one star control (partials/star_toggle.php) shares the
+   row menu's square. */
+.star-toggle,
+.thread-row-menu > summary {
     display: inline-flex;
     width: 28px;
     height: 28px;
@@ -2252,13 +2273,14 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     color: var(--text-faint);
     cursor: pointer;
 }
-.inbox-row-star button:hover,
-.inbox-row-menu > summary:hover { background: var(--surface-sunken); color: var(--text-body); }
-.inbox-row-star button[aria-pressed="true"] { color: var(--gold-ink); }
-.inbox-row-menu { position: relative; }
-.inbox-row-menu > summary { list-style: none; }
-.inbox-row-menu > summary::-webkit-details-marker { display: none; }
-.inbox-row-menu-panel {
+.star-toggle:hover,
+.thread-row-menu > summary:hover { background: var(--surface-sunken); color: var(--text-body); }
+.star-toggle[aria-pressed="true"] { color: var(--gold-ink); }
+.star-toggle .icon { width: 18px; height: 18px; }
+.thread-row-menu { position: relative; }
+.thread-row-menu > summary { list-style: none; }
+.thread-row-menu > summary::-webkit-details-marker { display: none; }
+.thread-row-menu-panel {
     position: absolute;
     z-index: 42;
     top: calc(100% + 4px);
@@ -2271,7 +2293,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     background: var(--surface-raised);
     box-shadow: var(--shadow-lg);
 }
-.inbox-row-menu-panel button {
+.thread-row-menu-panel button {
     width: 100%;
     min-height: 32px;
     padding: 6px 8px;
@@ -2284,13 +2306,13 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     text-align: left;
     cursor: pointer;
 }
-.inbox-row-menu-panel button:hover { background: var(--surface-sunken); }
+.thread-row-menu-panel button:hover { background: var(--surface-sunken); }
 .inbox-shown-count { margin: 22px 0 0; font-size: .74rem; }
 
-[data-density="compact"] .inbox-thread-row { gap: 9px; padding-top: 4px; padding-bottom: 4px; }
-[data-density="compact"] .inbox-row-title { margin-top: 0; font-size: .99rem; }
-[data-density="compact"] .inbox-row-meta { margin-top: 1px; font-size: .67rem; }
-[data-density="compact"] .inbox-row-snippet { display: none; }
+[data-density="compact"] .thread-row-inbox { gap: 9px; padding-top: 4px; padding-bottom: 4px; }
+[data-density="compact"] .thread-row-inbox .thread-title { margin-top: 0; font-size: .99rem; }
+[data-density="compact"] .thread-row-inbox .thread-meta { margin-top: 1px; font-size: .67rem; }
+[data-density="compact"] .thread-row-inbox .thread-snippet { display: none; }
 
 .inbox-reading {
     display: none;
@@ -2678,9 +2700,9 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .forum-directory__tabs a:focus-visible,
 .directory-viewbar a:focus-visible,
 .directory-viewbar button:focus-visible,
-.inbox-row-title:focus-visible,
-.inbox-row-star button:focus-visible,
-.inbox-row-menu > summary:focus-visible,
+.thread-row-inbox .thread-title:focus-visible,
+.star-toggle:focus-visible,
+.thread-row-menu > summary:focus-visible,
 .inbox-scope-menu > summary:focus-visible,
 .search-view-bar a:focus-visible {
     outline: 2px solid var(--accent);
@@ -2729,8 +2751,8 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .forum-directory__tabs { margin-bottom: 24px; }
     .inbox-list { padding: 22px 16px 34px; }
     .inbox-reading > [data-inbox-reading-content] { padding: 20px 18px 62px; }
-    .inbox-thread-row { padding-inline: 6px; }
-    .inbox-row-snippet { display: none; }
+    .thread-row.thread-row-inbox { padding-inline: 6px; }
+    .thread-row-inbox .thread-snippet { display: none; }
 }
 @media (max-width: 760px) {
     .forum-directory__hero h1 { font-size: 2.1rem; }
@@ -2813,11 +2835,11 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .inbox-view-bar { gap-inline: 8px; }
     .inbox-mark-all { margin-left: 0; }
     .inbox-density { flex-basis: 100%; }
-    .inbox-thread-row > .monogram,
-    .inbox-thread-row > .avatar-wrap { display: none; }
-    .inbox-row-meta { font-size: .65rem; }
-    .inbox-row-star button,
-    .inbox-row-menu > summary { width: 34px; height: 34px; }
+    .thread-row-inbox > .monogram,
+    .thread-row-inbox > .avatar-wrap { display: none; }
+    .thread-row-inbox .thread-meta { font-size: .65rem; }
+    .star-toggle,
+    .thread-row-menu > summary { width: 34px; height: 34px; }
     .search-input-row { flex-direction: column; }
     .search-input-row .btn { min-height: 44px; }
     .search-order-options { margin-left: 0; }
@@ -2828,11 +2850,11 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .forum-directory__tabs a { font-size: .78rem; }
     .forum-directory__stats { gap: 4px 10px; }
     .forum-directory__stats span + span::before { margin-right: 7px; }
-    .inbox-row-select { width: 18px; flex-basis: 18px; }
+    .thread-row-select { width: 18px; flex-basis: 18px; }
     /* The dot stays. It is the queue's primary signal and the only unread cue a
-       row carries - .is-unread styles nothing - so hiding it to buy 17px left an
-       unread-triage surface with no way to see what is unread on a phone. */
-    .inbox-row-chips { flex-basis: 100%; }
+       row carries - the queue's title keeps one weight - so hiding it to buy 17px
+       left an unread-triage surface with no way to see what is unread on a phone. */
+    .thread-row-inbox .thread-row-chips { flex-basis: 100%; }
     .compose-topic-form .composer-actions-bar { flex-wrap: wrap; }
     .compose-topic-form .composer-actions-start {
         flex: 1 1 100%;
@@ -2848,7 +2870,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 }
 @media (prefers-reduced-motion: reduce) {
     .forum-directory__board-row > a,
-    .inbox-thread-row,
+    .thread-row.thread-row-inbox,
     .composer-box { transition: none; }
     .composer-shell.is-submitting .composer-send .icon { animation: none; }
 }

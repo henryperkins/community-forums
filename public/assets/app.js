@@ -940,10 +940,10 @@
             if (generation === inboxRequestGeneration && inboxRequest === request) { inboxRequest = null; }
         };
         var allRows = function () { return inboxList.querySelectorAll('[data-inbox-row]'); };
-        var linkIn = function (row) { return row ? row.querySelector('.inbox-row-title') : null; };
+        var linkIn = function (row) { return row ? row.querySelector('[data-inbox-preview-url]') : null; };
         var rowForId = function (id) { return /^\d+$/.test(String(id || '')) ? inboxList.querySelector('[data-thread-id="' + id + '"]') : null; };
         var clearInboxMenuPosition = function (menu) {
-            var panel = menu.querySelector('.inbox-scope-menu-panel, .inbox-row-menu-panel');
+            var panel = menu.querySelector('.inbox-scope-menu-panel, .thread-row-menu-panel');
             menu.removeAttribute('data-inbox-menu-positioned');
             if (!panel) { return; }
             panel.style.removeProperty('left');
@@ -951,7 +951,7 @@
         };
         var positionInboxMenu = function (menu) {
             var trigger = menu.querySelector(':scope > summary');
-            var panel = menu.querySelector('.inbox-scope-menu-panel, .inbox-row-menu-panel');
+            var panel = menu.querySelector('.inbox-scope-menu-panel, .thread-row-menu-panel');
             if (!menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
             var margin = 8;
             var gap = menu.matches('[data-inbox-scope-menu]') ? 7 : 4;
@@ -1043,10 +1043,10 @@
         };
         var reconcileReadRow = function (sourceLink) {
             var row = sourceLink && sourceLink.closest ? sourceLink.closest('[data-inbox-row]') : null;
-            if (!row || !row.classList.contains('is-unread')) { return; }
+            if (!row || !row.classList.contains('thread-unread')) { return; }
             var queueUnread = row.getAttribute('data-inbox-unread') === '1';
             row.setAttribute('data-inbox-unread', '0');
-            row.classList.remove('is-unread');
+            row.classList.remove('thread-unread');
             var dot = row.querySelector('.unread-dot');
             if (dot) { dot.remove(); }
             if (queueUnread) {
@@ -1169,7 +1169,7 @@
 
             document.addEventListener('scroll', function () { closeInboxMenus(false); }, { capture: true, passive: true });
             inboxList.addEventListener('click', function (event) {
-                var link = event.target.closest ? event.target.closest('.inbox-row-title') : null;
+                var link = event.target.closest ? event.target.closest('[data-inbox-preview-url]') : null;
                 if (!link || !inboxList.contains(link)) { return; }
                 if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return; }
                 event.preventDefault();

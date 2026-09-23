@@ -149,7 +149,7 @@ async function expectInboxContent(page: Page, project: 'desktop' | 'mobile'): Pr
   const inbox = page.locator('[data-inbox]');
   const scopeMenu = inbox.locator('.inbox-scope-menu');
   const activeFilter = scopeMenu.locator('.inbox-scope-menu-panel a.is-active');
-  const topic = inbox.locator('[data-inbox-list] .inbox-row-title').first();
+  const topic = inbox.locator('[data-inbox-list] .thread-title').first();
   await expect(inbox).toBeVisible();
   await expect(inbox.locator('[data-inbox-list]')).toBeVisible();
   await expect(scopeMenu.locator('.inbox-scope-menu-panel a')).not.toHaveCount(0);

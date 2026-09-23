@@ -41,7 +41,7 @@ foreach (($groups ?? []) as $group) {
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="board_id" value="<?= (int) $b['id'] ?>">
                                 <input type="hidden" name="pref" value="favorite">
-                                <button class="linkbtn<?= $isFav ? ' btn-on' : '' ?>" type="submit"><span class="board-pref-star" aria-hidden="true"><?= $isFav ? '★' : '☆' ?></span> <?= $isFav ? 'Favorited' : 'Favorite' ?></button>
+                                <button class="linkbtn<?= $isFav ? ' btn-on' : '' ?>" type="submit"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'board-pref-star' . ($isFav ? '' : ' is-outline')]) ?> <?= $isFav ? 'Favorited' : 'Favorite' ?></button>
                             </form>
                             <form class="inline" method="post" action="/settings/boards/toggle">
                                 <?= $this->csrfField() ?>

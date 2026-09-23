@@ -194,7 +194,7 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
 
   const lastRowMenu = page.locator('[data-inbox-row-menu]').last();
   await lastRowMenu.locator('summary').click();
-  const rowMenuPanel = lastRowMenu.locator('.inbox-row-menu-panel');
+  const rowMenuPanel = lastRowMenu.locator('.thread-row-menu-panel');
   await expect(rowMenuPanel).toBeVisible();
   await expect(rowMenuPanel).toHaveCSS('position', 'fixed');
   const rowMenuBox = await rowMenuPanel.boundingBox();
@@ -227,7 +227,7 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
     await expect(page.locator('[data-inbox-thread-list]')).toBeInViewport();
   }
 
-  const available = page.locator('[data-inbox-row] .inbox-row-title').last();
+  const available = page.locator('[data-inbox-row] .thread-title').last();
   const canonical = await available.getAttribute('href');
   await page.route('**/inbox/preview/*', (route) => route.fulfill({ status: 503, body: 'unavailable' }));
   await available.click();
@@ -344,7 +344,7 @@ test('member surfaces keep their no-JavaScript routes and forms', async ({ brows
   await expect(nojs).toHaveURL(/\/compose\?board=feedback$/);
 
   await nojs.goto('/inbox?scope=starred&order=active');
-  const topic = nojs.locator('[data-inbox-row] .inbox-row-title').first();
+  const topic = nojs.locator('[data-inbox-row] .thread-title').first();
   const href = await topic.getAttribute('href');
   await topic.click();
   await expect(nojs).toHaveURL(new RegExp(href!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
