@@ -51,8 +51,15 @@
 
   // Every hostname listed here other than the APP_URL host is redirected to
   // APP_URL by worker/canonical.mjs, so a hostname can be attached before the
-  // canonical origin moves to it. Adding boards.hperkins.blog: runbook §16.
-  "routes": [{ "pattern": "forum.candidary.online", "custom_domain": true }],
+  // canonical origin moves to it (runbook §16).
+  "routes": [
+    { "pattern": "forum.candidary.online", "custom_domain": true },
+    // boards.hperkins.blog is a Cloudflare for SaaS custom hostname of this
+    // zone (its DNS stays at WordPress.com), so it is a zone route, not a
+    // Custom Domain. Hostname-only on purpose: a `*/*` route would run ahead
+    // of the `candidary` Worker's Custom Domain on the apex and capture it.
+    { "pattern": "boards.hperkins.blog/*", "zone_name": "candidary.online" }
+  ],
 
   "triggers": {
     "crons": [
