@@ -1,0 +1,115 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: <checkout>/phpunit.xml
+
+.............................................................   61 / 2979 (  2%)
+......................................................DD.....  122 / 2979 (  4%)
+.............................................................  183 / 2979 (  6%)
+.............................................................  244 / 2979 (  8%)
+.............................................................  305 / 2979 ( 10%)
+.............................................................  366 / 2979 ( 12%)
+.............................................................  427 / 2979 ( 14%)
+.......................DD....................................  488 / 2979 ( 16%)
+.............................................................  549 / 2979 ( 18%)
+.............................................................  610 / 2979 ( 20%)
+.............................................................  671 / 2979 ( 22%)
+.............................................................  732 / 2979 ( 24%)
+....................................................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....  793 / 2979 ( 26%)
+.............................................................  854 / 2979 ( 28%)
+.............................................................  915 / 2979 ( 30%)
+.............................................................  976 / 2979 ( 32%)
+............................................................. 1037 / 2979 ( 34%)
+............................................................. 1098 / 2979 ( 36%)
+............................................................. 1159 / 2979 ( 38%)
+............................................................. 1220 / 2979 ( 40%)
+............................................................. 1281 / 2979 ( 43%)
+..............................................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+............... 1342 / 2979 ( 45%)
+............................................................. 1403 / 2979 ( 47%)
+............................................................. 1464 / 2979 ( 49%)
+............................................................. 1525 / 2979 ( 51%)
+............................................................. 1586 / 2979 ( 53%)
+............................................................. 1647 / 2979 ( 55%)
+............................................................. 1708 / 2979 ( 57%)
+............................................................. 1769 / 2979 ( 59%)
+............................................................. 1830 / 2979 ( 61%)
+............................................................. 1891 / 2979 ( 63%)
+............................................................. 1952 / 2979 ( 65%)
+............................................................. 2013 / 2979 ( 67%)
+............................................................. 2074 / 2979 ( 69%)
+...........D....................S............................ 2135 / 2979 ( 71%)
+............................................................. 2196 / 2979 ( 73%)
+............................................................. 2257 / 2979 ( 75%)
+............................................................. 2318 / 2979 ( 77%)
+............................................................. 2379 / 2979 ( 79%)
+............................................................. 2440 / 2979 ( 81%)
+............................................................. 2501 / 2979 ( 83%)
+............................................................. 2562 / 2979 ( 86%)
+............................................................. 2623 / 2979 ( 88%)
+........................................D.................... 2684 / 2979 ( 90%)
+............................................................. 2745 / 2979 ( 92%)
+............................................................. 2806 / 2979 ( 94%)
+............................................................. 2867 / 2979 ( 96%)
+............................................................. 2928 / 2979 ( 98%)
+...................................................           2979 / 2979 (100%)
+
+Time: 01:23.019, Memory: 90.50 MB
+
+6 tests triggered 6 PHP deprecations:
+
+1) <checkout>/tests/Unit/Core/DatabaseTlsTest.php:49
+Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_are_empty_when_managed_database_tls_is_disabled
+  <checkout>/tests/Unit/Core/DatabaseTlsTest.php:14
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  <checkout>/tests/Unit/Core/DatabaseTlsTest.php:22
+
+2) <checkout>/tests/Unit/Core/DatabaseTlsTest.php:38
+Constant PDO::MYSQL_ATTR_SSL_CA is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_CA instead
+
+3) <checkout>/tests/Unit/Core/DatabaseTlsTest.php:39
+Constant PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT instead
+
+4) <checkout>/src/Core/Database.php:135
+Constant PDO::MYSQL_ATTR_SSL_CA is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_CA instead
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  <checkout>/tests/Unit/Core/DatabaseTlsTest.php:22
+
+5) <checkout>/src/Core/Database.php:141
+Constant PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT instead
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  <checkout>/tests/Unit/Core/DatabaseTlsTest.php:22
+
+6) <checkout>/src/Service/Packages/ThemeAssetScanner.php:68
+Function imagedestroy() is deprecated since 8.5, as it has no effect since PHP 8.0
+
+Triggered by:
+
+* Tests\Integration\Core\AppThemePackageTest::test_theme_asset_route_serves_neutralized_bytes
+  <checkout>/tests/Integration/Core/AppThemePackageTest.php:152
+
+* Tests\Integration\Service\ThemeBuildServiceTest::test_built_css_has_no_external_urls_and_assets_are_stored
+  <checkout>/tests/Integration/Service/ThemeBuildServiceTest.php:41
+
+* Tests\Unit\Service\Packages\ThemeAssetScannerTest::test_polyglot_payload_is_destroyed_by_reencode
+  <checkout>/tests/Unit/Service/Packages/ThemeAssetScannerTest.php:34
+
+* Tests\Unit\Service\Packages\ThemeAssetScannerTest::test_valid_png_is_reencoded_and_digest_pinned
+  <checkout>/tests/Unit/Service/Packages/ThemeAssetScannerTest.php:23
+
+OK, but there were issues!
+Tests: 2979, Assertions: 22482, Deprecations: 6, Skipped: 1.

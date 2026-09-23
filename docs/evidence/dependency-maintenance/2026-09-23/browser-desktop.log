@@ -1,0 +1,10 @@
+
+Running 3 tests using 1 worker
+
+(node:1358753) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › rich-content.spec.ts:70:5 › rich post semantics stay faithful, accessible, and contained (1.7s)
+  ✓  2 [desktop] › rich-content.spec.ts:164:5 › rich content remains server-rendered with JavaScript disabled (575ms)
+  ✓  3 [desktop] › rich-content.spec.ts:183:5 › overflowing code fences are keyboard-operable scroll regions (786ms)
+
+  3 passed (4.4s)
