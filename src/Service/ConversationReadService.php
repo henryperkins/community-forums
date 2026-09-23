@@ -17,6 +17,8 @@ use App\Support\Markdown;
 /** Participant-only incremental reads; no staff bypass. */
 final class ConversationReadService
 {
+    private const POLL_PAGE = 50;
+
     public function __construct(
         private Database $db,
         private ConversationRepository $conversations,
@@ -44,39 +46,72 @@ final class ConversationReadService
         return $states;
     }
 
+    /**
+     * One tick of the open conversation's short poll. Beyond the kernel's
+     * session reads it costs the conversation row, one participants read (the
+     * gate, the rank pill, presence and the receipt watermark all come from
+     * it), the after-id read, the presence block map and the nav count. A tick
+     * that finds nothing new writes nothing: no transaction, no watermark.
+     */
     public function poll(User $viewer, int $conversationId, int $after): array
     {
         if (!$this->flags->enabled('dms')) { throw new NotFoundException(); }
         $conversation = $this->conversations->find($conversationId);
-        $membership = $this->conversations->membership($conversationId, $viewer->id());
+        $participants = $conversation === null ? [] : $this->conversations->participants($conversationId);
+        $membership = null;
+        foreach ($participants as $participant) {
+            if ((int) $participant['user_id'] === $viewer->id()) { $membership = $participant; break; }
+        }
         $group = ($conversation['kind'] ?? 'direct') === 'group';
         if ($conversation === null || $membership === null || $membership['left_at'] !== null
             || ($group && !$this->flags->enabled('group_dms'))) {
             throw new NotFoundException('Conversation not found.');
         }
         $this->writeGate->assertCanWrite($viewer);
-        $messages = $this->db->transaction(function () use ($viewer, $conversationId, $after): array {
-            $rows = $this->messages->afterForUser($conversationId, $viewer->id(), $after);
-            // A supplied cursor is never a read watermark; acknowledge only returned rows.
-            if ($rows !== []) {
-                $this->conversations->markRead($conversationId, $viewer->id(), (int) end($rows)['id']);
-            }
-            return $rows;
-        });
+        $messages = $this->messages->afterForUser($conversationId, $viewer->id(), $after, self::POLL_PAGE + 1);
+        $hasMore = count($messages) > self::POLL_PAGE;
+        if ($hasMore) {
+            array_pop($messages);
+        }
+        // A supplied cursor is never a read watermark; acknowledge only returned
+        // rows. markRead is one monotonic UPDATE (GREATEST), so it needs no
+        // transaction around it, and the read before it takes no lock.
+        if ($messages !== []) {
+            $this->conversations->markRead($conversationId, $viewer->id(), (int) end($messages)['id']);
+        }
         foreach ($messages as &$message) {
             if (trim((string) $message['body_html']) === '') {
                 $message['body_html'] = $this->markdown->render($message['body'], ['link_mentions' => true]);
             }
         }
         unset($message);
-        $participants = $this->conversations->participants($conversationId);
         return [
             'messages' => $messages, 'participants' => $participants, 'is_group' => $group,
             'last_id' => $messages !== [] ? (int) end($messages)['id'] : max(0, $after),
-            'other_last_read_message_id' => $group ? null : $this->conversations->otherLastReadMessageId($conversationId, $viewer->id()),
+            'other_last_read_message_id' => $group ? null : $this->otherLastReadMessageId($participants, $viewer->id()),
             'presence' => $this->presence($viewer, $participants),
             'dm_unread' => $this->conversations->unreadConversationCount($viewer->id()),
-            'has_more' => count($messages) === 50,
+            'has_more' => $hasMore,
         ];
+    }
+
+    /**
+     * ConversationRepository::otherLastReadMessageId() answered from rows the
+     * poll already holds: the lowest-id active counterpart's watermark. The
+     * viewer's own row may predate this tick's markRead; it is never read here.
+     *
+     * @param list<array<string,mixed>> $participants
+     */
+    private function otherLastReadMessageId(array $participants, int $viewerId): ?int
+    {
+        $other = null;
+        foreach ($participants as $participant) {
+            $id = (int) $participant['user_id'];
+            if ($id !== $viewerId && $participant['left_at'] === null && ($other === null || $id < (int) $other['user_id'])) {
+                $other = $participant;
+            }
+        }
+        $value = $other['last_read_message_id'] ?? null;
+        return $value === null ? null : (int) $value;
     }
 }

@@ -1,0 +1,10 @@
+
+Running 3 tests using 1 worker
+
+(node:1381712) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › notifications-unified.spec.ts:165:5 › polling synchronizes every badge without replacing focused notification rows (1.0s)
+  ✓  2 [desktop] › notifications-unified.spec.ts:198:5 › guests and disabled notifications make no bell request and 404 stops polling (827ms)
+  ✓  3 [desktop] › notifications-unified.spec.ts:285:5 › polling pauses while hidden and backs off after throttling (866ms)
+
+  3 passed (4.0s)

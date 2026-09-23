@@ -1,0 +1,60 @@
+
+> test:assets
+> node --test tests/worker/*.test.mjs
+
+✔ the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses (218.925355ms)
+✔ fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable (25.034519ms)
+✔ only the genuine current version makes source asset URLs immutable (0.73965ms)
+✔ conditional requests retain 304 and validators, and HEAD retains its empty body (0.560592ms)
+✔ range responses and their status survive without exposing Set-Cookie (0.310666ms)
+✔ missing/private assets and unsupported methods never fall through to PHP or an SPA (0.427605ms)
+✔ branding, package themes and application routes retain dynamic response semantics (0.590112ms)
+✔ published manifest names only verified asset bytes and font preload matches emitted CSS (14.586043ms)
+✔ requests on the canonical origin pass through untouched (21.82114ms)
+✔ any other hostname is redirected to the same path and query on the canonical origin (1.127605ms)
+✔ plain http on the canonical host is upgraded to the canonical scheme (0.293876ms)
+✔ unsafe methods keep their method and body through a 308 (1.783838ms)
+✔ a stray request port is dropped and a non-default canonical port is carried over (0.376735ms)
+✔ loopback hosts (wrangler dev) and an unusable APP_URL fail open (0.962637ms)
+✔ certificate-validation paths on a non-canonical host go to the origin instead of redirecting (1.577729ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 513.854826
+
+> check:assets
+> node bin/build-assets.mjs --check
+
+vite v8.1.3 building client environment for production...
+[2K
+transforming...✓ 865 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../../../../tmp/retroboards-assets-bFtQyr/.vite/manifest.json                                   5.13 kB │ gzip:   0.72 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/marcellus-latin-400-normal-86dSXJnk.woff2            14.55 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/jetbrains-mono-latin-400-normal-V6pRDFza.woff2       21.16 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/eb-garamond-latin-400-normal-DSJrtJSV.woff2          21.70 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2       21.83 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2       21.86 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/eb-garamond-latin-400-italic-KGnr19QW.woff2          22.17 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/cormorant-garamond-latin-700-normal-DajfzrDU.woff2   22.34 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2   22.87 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/eb-garamond-latin-500-normal-LNvnJ-zC.woff2          23.01 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/eb-garamond-latin-600-normal-CdfBH7_K.woff2          23.11 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2   23.31 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/cormorant-garamond-latin-600-normal-Co1r35X9.woff2   23.39 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/eb-garamond-latin-500-italic-DW_HNewX.woff2          23.61 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2   23.66 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2   23.92 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/wysiwyg-composer-BqYYcGYs.css                         0.51 kB │ gzip:   0.32 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/imladris-style-BCCSHjuG.css                         102.69 kB │ gzip:  17.54 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/app-style-B5vTvxOi.css                              388.36 kB │ gzip:  58.98 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/wysiwyg-composer-BDzu1ong.js                          1.39 kB │ gzip:   0.79 kB
+../../../../../../tmp/retroboards-assets-bFtQyr/milkdown-adapter-DbFcQ9eR.js                        465.23 kB │ gzip: 139.38 kB
+
+✓ built in 321ms
+Generated assets and manifest are current.

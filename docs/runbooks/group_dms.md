@@ -109,9 +109,12 @@ messages themselves are the problem.
   single DM message or dissolve a group; for a hostile room, suspend the
   accounts driving it (members can mute/leave on their own).
 - **Rate limits:** message sends share the `dm` policy (default 20 per 10
-  minutes per account) and reports the `dm_report` policy (default 10 per 10
-  minutes) — both in `config/config.php` `rate_limits`. Tighten `dm` during a
-  spam wave before reaching for the flag.
+  minutes per account), the open-conversation poll uses `dm_poll` (default
+  120 per 5 minutes per account), and reports use `dm_report` (default 10 per
+  10 minutes) — all in `config/config.php` `rate_limits`. Tighten `dm` during
+  a spam wave of sends. Tighten `dm_poll` when a client is hammering
+  `POST /messages/{id}/poll`. The two buckets are independent, so tightening
+  one does not slow the other.
 - **Escalation ladder:** tighten `rate_limits.dm` → suspend the abusive
   accounts → `features.group_dms=false` (stops new rooms/roster changes,
   preserves evidence) → `features.dms=false` (all messaging dark) as the last

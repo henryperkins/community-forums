@@ -6,6 +6,10 @@
  * body error, actions, CSRF token, and idempotency token.
  *
  * Params: to, title, errors, allow_groups, instance_id.
+ *
+ * Both mounts also carry land=letter inside <noscript>: a send made without
+ * scripting lands on the letter it started (#m{id}); a scripted one is pinned
+ * to the end by app.js.
  */
 $cfTo = (string) ($to ?? '');
 $cfTitle = (string) ($title ?? '');
@@ -19,6 +23,7 @@ $cfTitleId = 'dm-title-' . $cfInstance;
 $cfToErrId = 'dm-to-error-' . $cfInstance;
 $cfTitleErrId = 'dm-title-error-' . $cfInstance;
 ?>
+<noscript hidden><input type="hidden" name="land" value="letter"></noscript>
 <div data-dm-picker data-dm-allow-groups="<?= $cfGroups ? '1' : '0' ?>" data-dm-avatars="<?= ($show_avatars ?? true) ? '1' : '0' ?>">
 <div class="field">
     <label for="<?= $e($cfToId) ?>">To</label>

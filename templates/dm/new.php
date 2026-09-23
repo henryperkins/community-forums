@@ -3,9 +3,16 @@
 $this->layout('layout');
 $this->section('title', 'New message');
 $dmNewInstance = 'dm-new-page';
-$dmNewFirstRecipient = trim(explode(',', (string) $to, 2)[0]);
-$dmNewRecipientLabel = ltrim($dmNewFirstRecipient, '@');
-$dmNewPlaceholder = 'Message @' . ($dmNewRecipientLabel !== '' ? $dmNewRecipientLabel : 'recipient') . '…';
+// Split the way ConversationController::resolveRecipients() does, so a
+// prefilled or re-rendered group is addressed as a group, not by its first name.
+$dmNewRecipients = array_values(array_filter(array_map(
+    static fn (string $name): string => ltrim($name, '@'),
+    preg_split('/[\s,]+/', trim((string) $to)) ?: [],
+), static fn (string $name): bool => $name !== ''));
+$dmNewRecipientLabel = $dmNewRecipients[0] ?? '';
+$dmNewPlaceholder = count($dmNewRecipients) > 1 || trim((string) ($title ?? '')) !== ''
+    ? 'Message the group…'
+    : 'Message @' . ($dmNewRecipientLabel !== '' ? $dmNewRecipientLabel : 'recipient') . '…';
 $dmNewShowAvatars = $show_avatars ?? true;
 $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInstance, $dmNewShowAvatars): void {
     echo $this->partial('partials/dm_compose_fields', [
@@ -19,7 +26,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
 };
 ?>
 <div class="dm-shell reading">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'allow_groups' => $allowGroups ?? false, 'show_avatars' => $dmNewShowAvatars]) ?>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'allow_groups' => $allowGroups ?? false, 'show_avatars' => $dmNewShowAvatars, 'heading_tag' => 'h2']) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head dm-thread-head-compose">

@@ -18,7 +18,7 @@ $this->layout('layout');
 $this->section('title', $title);
 ?>
 <div class="dm-shell reading has-rail" data-dm-conversation="<?= (int) $conversation_id ?>" data-dm-latest="<?= (int) $page === (int) $pages && !empty($can_reply) ? '1' : '0' ?>" data-dm-viewer="<?= $current_user->id() ?>" data-dm-group="<?= !empty($is_group) ? '1' : '0' ?>" data-dm-other="<?= (int) ($other['id'] ?? 0) ?>">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id, 'allow_groups' => $allow_groups ?? false, 'show_avatars' => $show_avatars ?? true]) ?>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id, 'allow_groups' => $allow_groups ?? false, 'show_avatars' => $show_avatars ?? true, 'heading_tag' => 'h2']) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head">
@@ -46,10 +46,10 @@ $this->section('title', $title);
                 </div>
             </div>
             <div class="dm-thread-actions">
-                <a href="#dm-rail" class="dm-iconbtn" data-rail-toggle aria-controls="dm-rail" aria-expanded="false" aria-label="<?= $e($railLabel) ?>"><?= $this->partial('partials/icon', ['name' => $railIcon]) ?></a>
+                <a href="#dm-rail" class="dm-iconbtn" data-rail-toggle aria-controls="dm-rail" aria-label="<?= $e($railLabel) ?>"><?= $this->partial('partials/icon', ['name' => $railIcon]) ?></a>
                 <details class="dm-menu">
                     <summary class="dm-iconbtn" aria-label="More actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
-                    <div class="dm-menu-pop" role="menu">
+                    <div class="dm-menu-pop">
                         <form method="post" action="/messages/<?= (int) $conversation_id ?>/mute">
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="muted" value="<?= !empty($muted) ? '0' : '1' ?>">
@@ -119,23 +119,31 @@ $this->section('title', $title);
             $dmConversationRecipient = $other !== null && (string) ($other['username'] ?? '') !== ''
                 ? (string) $other['username']
                 : 'recipient';
+            // A group is addressed as a whole, never by whichever member sorts first.
+            $dmComposerPlaceholder = !empty($is_group) ? 'Message the group…' : 'Message @' . $dmConversationRecipient . '…';
             ?>
             <?= $this->partial('partials/composer_shell', [
                 'action' => '/messages/' . $dmConversationId,
                 'context' => 'dm',
                 'target_id' => $dmConversationId,
                 'instance_id' => 'dm-conversation-' . $dmConversationId,
-                'placeholder' => 'Message @' . $dmConversationRecipient . '…',
+                'placeholder' => $dmComposerPlaceholder,
                 'maxlength' => 5000,
                 'body_value' => (string) ($body ?? ''),
                 'submit_label' => 'Send',
                 'form_class' => 'dm-composer',
+                // The dock rests as one row on phones; a 422 re-render opens it
+                // on the preserved draft, as the thread reply dock does.
+                'expanded' => !empty($errors) || trim((string) ($body ?? '')) !== '',
                 'body_error' => (string) ($errors['body'] ?? ''),
                 'identity' => [
                     'display_name' => $current_user->displayName(),
                     'username' => $current_user->username(),
                     'show_avatar' => $show_avatars ?? true,
                 ],
+                // Present only without scripting: that send lands on its letter
+                // (#m{id}); a scripted send is pinned to the end by app.js.
+                'wrapper_slot' => static function (): void { ?><noscript hidden><input type="hidden" name="land" value="letter"></noscript><?php },
             ]) ?>
         <?php else: ?>
             <div class="joinbar">You are no longer an active participant in this conversation.</div>

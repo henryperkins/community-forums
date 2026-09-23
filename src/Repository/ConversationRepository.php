@@ -261,7 +261,7 @@ final class ConversationRepository
                     (SELECT GROUP_CONCAT(COALESCE(NULLIF(gu.display_name, \'\'), gu.username) ORDER BY gu.username SEPARATOR \', \')
                      FROM conversation_participants gp JOIN users gu ON gu.id = gp.user_id
                      WHERE gp.conversation_id = c.id AND gp.left_at IS NULL AND gp.user_id <> me.user_id) AS participant_names,
-                    lm.id AS last_message_id, lm.body AS last_body, lm.user_id AS last_sender_id,
+                    lm.id AS last_message_id, lm.body AS last_body, lm.body_html AS last_body_html, lm.user_id AS last_sender_id,
                     (lm.id IS NOT NULL AND lm.user_id <> me.user_id
                         AND (me.last_read_message_id IS NULL OR lm.id > me.last_read_message_id)) AS is_unread
              FROM conversation_participants me

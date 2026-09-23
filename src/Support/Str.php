@@ -57,6 +57,28 @@ final class Str
         return mb_strtoupper($letters, 'UTF-8');
     }
 
+    /**
+     * The words of sanitised body HTML (Markdown::render output) as one line of
+     * plain text: images become their alt text, block boundaries become spaces,
+     * entities decode and whitespace collapses. No Markdown punctuation survives
+     * because none reaches body_html. The result is unescaped — escape on output.
+     */
+    public static function plainText(string $html): string
+    {
+        // strip_tags() would drop an image's words; keep its alt, re-encoded so
+        // a literal "<" in the alt survives strip_tags() and decodes below.
+        $text = preg_replace_callback('/<img\b[^>]*>/i', static function (array $img): string {
+            $alt = preg_match('/\salt="([^"]*)"/i', $img[0], $match) === 1
+                ? html_entity_decode($match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')
+                : '';
+            return ' ' . htmlspecialchars($alt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ' ';
+        }, $html) ?? $html;
+        // The renderer emits "</p><pre>" with no whitespace between blocks.
+        $text = preg_replace('~<(?:/?(?:p|div|pre|blockquote|ul|ol|li|h[1-6]|table|thead|tbody|tfoot|tr|th|td)|br|hr)\b[^>]*>~i', ' $0', $text) ?? $text;
+        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+    }
+
     /** Plain-text snippet (no markdown/html) capped at $length chars. */
     public static function snippet(string $text, int $length = 140): string
     {

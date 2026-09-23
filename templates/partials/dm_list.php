@@ -7,7 +7,9 @@
  *
  * Params: conversations (list rows), filter ('all'|'unread'), active_id (the
  * open conversation id, marked .active), q (applied search term), allow_groups
- * (group_dms flag, gates the compose dialog's group fields) — all optional.
+ * (group_dms flag, gates the compose dialog's group fields), heading_tag ('h1'
+ * on /messages where the list is the page; 'h2' beside a conversation or the
+ * new-message form, whose own heading is the page's one h1) — all optional.
  */
 $dmFilter = ($filter ?? 'all') === 'unread' ? 'unread' : 'all';
 $dmActiveId = (int) ($active_id ?? 0);
@@ -18,6 +20,7 @@ $dmShowAvatars = $show_avatars ?? true;
 $dmCompose = $compose ?? [];
 $dmComposeErrors = $dmCompose['errors'] ?? [];
 $dmUnreadCount = count(array_filter($dmConversations, static fn ($row) => !empty($row['is_unread'])));
+$dmHeadingTag = ($heading_tag ?? 'h1') === 'h2' ? 'h2' : 'h1';
 // The pills keep an applied search; with no search they stay byte-identical
 // to the long-pinned hrefs.
 $dmAllHref = '/messages' . ($dmQ !== '' ? '?q=' . urlencode($dmQ) : '');
@@ -28,7 +31,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
         <div class="dm-listpane-top">
             <span>
                 <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
-                <h1>Messages</h1>
+                <<?= $dmHeadingTag ?> class="dm-listpane-title">Messages</<?= $dmHeadingTag ?>>
             </span>
             <details class="dm-compose-details"<?= !empty($dmCompose['open']) ? ' open' : '' ?>>
                 <summary class="dm-new-btn" aria-label="New message" title="New message"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></summary>
@@ -108,14 +111,24 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                     ? (($c['title'] ?? '') !== '' ? $c['title'] : (($c['participant_names'] ?? '') ?: 'Group conversation'))
                     : (($c['other_display_name'] ?? '') !== '' ? $c['other_display_name'] : $c['other_username']);
                 $seed = $isGroup ? ('group-' . $cid) : (string) $c['other_username'];
+                // The preview is the letter's words, not its Markdown: derived from
+                // the sanitised body_html (the raw body only for a row without one).
+                $rowRaw = (string) ($c['last_body'] ?? '');
+                $rowPreview = trim((string) ($c['last_body_html'] ?? '')) !== ''
+                    ? \App\Support\Str::plainText((string) $c['last_body_html'])
+                    : $rowRaw;
+                // The instant filter also reads the raw letter's opening (link URLs,
+                // Markdown), which the server's ?q= LIKE matches; only when it differs.
+                $rowSearch = $rowRaw !== $rowPreview ? mb_strimwidth($rowRaw, 0, 120, '') : '';
                 ?>
-                <li>
+                <li<?= $rowSearch !== '' ? ' data-dm-search-text="' . $e($rowSearch) . '"' : '' ?>>
                     <a class="dm-row dm-link<?= $cid === $dmActiveId ? ' active' : '' ?><?= !empty($c['is_unread']) ? ' is-unread' : '' ?>" href="/messages/<?= $cid ?>"<?= $cid === $dmActiveId ? ' aria-current="page"' : '' ?>>
+                        <?php if (!empty($c['is_unread'])): ?><span class="sr-only">Unread. </span><?php endif; ?>
                         <?= $this->partial('partials/monogram', ['name' => $rowName, 'username' => $seed, 'gilt' => $isGroup]) ?>
                         <span class="dm-row-top"><span class="dm-other"><?= $e($rowName) ?></span></span>
                         <?= $this->partial('partials/dm_time', ['at' => $c['last_message_at'] ?? null, 'class' => 'dm-time']) ?>
-                        <span class="dm-preview"><?php if ((int) ($c['last_sender_id'] ?? 0) === $current_user->id()): ?><span class="dm-preview-you">You:</span> <?php endif; ?><?= $e(mb_strimwidth((string) ($c['last_body'] ?? ''), 0, 120, '…')) ?></span>
-                        <?php if (!empty($c['is_unread'])): ?><span class="dm-unread-dot" aria-label="Unread"></span><?php endif; ?>
+                        <span class="dm-preview"><?php if ((int) ($c['last_sender_id'] ?? 0) === $current_user->id()): ?><span class="dm-preview-you">You:</span> <?php endif; ?><?= $e(mb_strimwidth($rowPreview, 0, 120, '…')) ?></span>
+                        <?php if (!empty($c['is_unread'])): ?><span class="dm-unread-dot" aria-hidden="true"></span><?php endif; ?>
                     </a>
                 </li>
             <?php endforeach; ?>
