@@ -307,7 +307,7 @@ final class AdminUserBulkTest extends TestCase
         $first = $this->get('/admin/users', ['q' => 'pageruser']);
         $this->assertStatus(200, $first);
         $this->assertSeeText($first, 'pageruser00');
-        self::assertMatchesRegularExpression('/<span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Next<\/span>/', $first->body());
+        self::assertMatchesRegularExpression('/<span class="pager-control is-disabled" aria-disabled="true">Next<\/span>/', $first->body());
 
         // Past-the-end page renders empty without error.
         $second = $this->get('/admin/users', ['q' => 'pageruser', 'page' => '1']);
@@ -357,8 +357,8 @@ final class AdminUserBulkTest extends TestCase
         $this->assertSeeText($res, '8,740');
         $this->assertSeeText($res, '1,204');
         $this->assertSeeText($res, 'None selected');
-        self::assertMatchesRegularExpression('/<span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Previous<\/span>/', $res->body());
-        self::assertMatchesRegularExpression('/<span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Next<\/span>/', $res->body());
+        self::assertMatchesRegularExpression('/<span class="pager-control is-disabled" aria-disabled="true">Previous<\/span>/', $res->body());
+        self::assertMatchesRegularExpression('/<span class="pager-control is-disabled" aria-disabled="true">Next<\/span>/', $res->body());
         $this->assertSeeText($res, (string) $suspended['username']);
     }
 

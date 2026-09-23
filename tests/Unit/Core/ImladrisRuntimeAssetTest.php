@@ -259,17 +259,23 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertMatchesRegularExpression('/color:\s*var\(--on-pending\)/', $state);
         self::assertMatchesRegularExpression('/display:\s*none/', $rule('.admin-console .state::before'));
         self::assertMatchesRegularExpression(
-            '/\.admin-console \.state-active\s*,\s*\.admin-console \.state-sent\s*\{[^}]*background:\s*var\(--surface-done\)[^}]*color:\s*var\(--on-done\)/s',
+            '/\.admin-console \.state-active\s*,\s*\.admin-console \.state-sent\s*,\s*\.admin-console \.state-done\s*\{[^}]*background:\s*var\(--surface-done\)[^}]*color:\s*var\(--on-done\)/s',
             $css,
         );
         self::assertMatchesRegularExpression(
-            '/\.admin-console \.state-queued[^}]*\.admin-console \.state-scheduled\s*\{[^}]*background:\s*var\(--surface-review\)[^}]*color:\s*var\(--on-review\)/s',
+            '/\.admin-console \.state-queued[^}]*\.admin-console \.state-scheduled\s*,\s*\.admin-console \.state-review\s*\{[^}]*background:\s*var\(--surface-review\)[^}]*color:\s*var\(--on-review\)/s',
             $css,
         );
         self::assertMatchesRegularExpression(
-            '/\.admin-console \.state-revoked[^}]*\.admin-console \.state-expired\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--rust\) 12%, var\(--surface-raised\)\)[^}]*color:\s*var\(--danger\)/s',
+            '/\.admin-console \.state-revoked[^}]*\.admin-console \.state-expired\s*,\s*\.admin-console \.state-danger\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--rust\) 12%, var\(--surface-raised\)\)[^}]*color:\s*var\(--danger\)/s',
             $css,
         );
+
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-sunken\)[^}]*color:\s*var\(--text-muted\)/s', $rule('.admin-console .state-muted'));
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-staff\)[^}]*color:\s*var\(--on-staff\)/s', $rule('.admin-console .state-staff'));
+        foreach (['.features-pill', '.packages-pill', '.member-invitations-status', '.features-override-pill', '.pill-danger'] as $retired) {
+            self::assertStringNotContainsString($retired, $css, $retired . ' was folded into the console status pill');
+        }
 
         foreach (['.state-empty', '.admin-console .pager', '.admin-console .filter-actions',
             '.admin-console .confirm-card', '.admin-console .impact-list', '.admin-console .callout',

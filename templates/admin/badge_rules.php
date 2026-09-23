@@ -71,7 +71,7 @@ $this->section('variant', 'admin');
                             <span class="features-rule-star" aria-hidden="true">&#10022;</span>
                             <strong class="features-rule-name"><?= $e($ruleName) ?></strong>
                             <span class="features-rule-meta"><?= $e($rule['rule_type']) ?> &ge; <?= (int) $rule['threshold'] ?><?= !empty($rule['board_name']) ? ' · ' . $e($rule['board_name']) : '' ?></span>
-                            <span class="features-pill <?= $ruleEnabled ? 'is-on' : 'is-off' ?>"><?= $ruleEnabled ? 'Enabled' : 'Disabled' ?></span>
+                            <span class="state <?= $ruleEnabled ? 'state-done' : 'state-muted' ?>"><?= $ruleEnabled ? 'Enabled' : 'Disabled' ?></span>
                             <?php // copy: the design's action order is Preview · Backfill · {toggle} · Revoke.
                                   // constraint C-11: Preview is a GET link; every mutation is a POST form
                                   // carrying csrfField() with a row-scoped aria-label. ?>

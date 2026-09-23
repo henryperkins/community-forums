@@ -113,7 +113,7 @@ test('link preview console reports its gates and drives the allowlist and board 
   const boardRow = page
     .locator('.link-preview-board-table tr')
     .filter({ has: page.locator('code', { hasText: '/c/general' }) });
-  await expect(boardRow.locator('.features-pill')).toHaveText('On');
+  await expect(boardRow.locator('.state')).toHaveText('On');
 
   // Queue health: the seeded fetched + blocked rows are both classified, and the
   // blocked row explains itself without a second click.

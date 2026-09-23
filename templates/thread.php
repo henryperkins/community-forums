@@ -115,15 +115,11 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
         </div>
         <div class="thread-facts-actions">
         <?php if (($engagement ?? false) && $current_user !== null && !empty($can_write)): ?>
-            <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
-                <?= $this->csrfField() ?>
-                <input type="hidden" name="return" value="<?= $e($threadPageUrl) ?>">
-                <?php /* One esteem glyph in the system: the four-point commend star that
-                         already marks regard and the accepted answer. ★/☆ beside ✦ was two
-                         glyphs for one idea. The label keeps its own <span> so the button's
-                         accessible name is exactly "Star" / "Starred". */ ?>
-                <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>"><?= $this->partial('partials/icon', ['name' => 'commend-star']) ?><span><?= ($is_starred ?? false) ? 'Starred' : 'Star' ?></span></button>
-            </form>
+            <?= $this->partial('partials/star_toggle', [
+                'thread_id' => (int) $thread['id'],
+                'starred' => $is_starred ?? false,
+                'return_to' => $threadPageUrl,
+            ]) ?>
         <?php endif; ?>
         <?php if ($hasTopicTools): ?>
             <a class="topic-tools-open" data-topic-tools-fallback href="#topic-tools-<?= (int) $thread['id'] ?>"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></a>

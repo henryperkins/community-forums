@@ -24,10 +24,7 @@ $verb = $isSuspend ? 'Suspend' : 'Warn';
 $this->section('title', $verb . ' members');
 ?>
 <?= $this->partial('admin/_member_tabs', ['active' => 'directory', 'pane_class' => 'member-bulk-confirm']) ?>
-    <a class="admin-back member-bulk-back" href="/admin/users">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        All members
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/users', 'label' => 'All members', 'class' => 'admin-back member-bulk-back']) ?>
 
     <section class="card member-bulk-card">
         <h2><?= $verb ?> <?= $count ?> member<?= $count === 1 ? '' : 's' ?></h2>

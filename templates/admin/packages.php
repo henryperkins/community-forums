@@ -47,9 +47,9 @@ $this->section('variant', 'admin');
                     <td class="packages-col-nowrap"><?= $e($p['type']) ?></td>
                     <td class="packages-col-nowrap">
                         <?php if ($state === null): ?><span class="packages-none">&mdash;</span>
-                        <?php elseif ($state === 'enabled'): ?><span class="packages-pill is-install">Enabled</span>
-                        <?php elseif ($state === 'installed'): ?><span class="packages-pill is-install">Installed</span>
-                        <?php else: ?><span class="packages-pill is-install"><?= $e(ucfirst((string) $state)) ?></span><?php endif; ?>
+                        <?php elseif ($state === 'enabled'): ?><span class="state state-done">Enabled</span>
+                        <?php elseif ($state === 'installed'): ?><span class="state state-done">Installed</span>
+                        <?php else: ?><span class="state state-done"><?= $e(ucfirst((string) $state)) ?></span><?php endif; ?>
                     </td>
                     <td class="packages-col-nowrap"><code class="packages-mono"><?= $e($p['trust_class']) ?></code></td>
                     <td class="packages-col-nowrap"><?= $p['latest'] !== null ? '<span class="packages-mono">' . $e($p['latest']['version']) . '</span>' : '<span class="packages-none">none stable</span>' ?></td>
@@ -57,15 +57,15 @@ $this->section('variant', 'admin');
                         <?php // feature-added: the design has no third state. Production
                               // distinguishes "no declared range" from "incompatible". ?>
                         <?php if ($p['compatible'] === null): ?><span class="packages-none">n/a</span>
-                        <?php elseif ($p['compatible']): ?><span class="packages-pill is-done">compatible</span>
-                        <?php else: ?><span class="packages-pill is-review">incompatible</span><?php endif; ?>
+                        <?php elseif ($p['compatible']): ?><span class="state state-done">compatible</span>
+                        <?php else: ?><span class="state state-review">incompatible</span><?php endif; ?>
                     </td>
                     <td class="packages-col-nowrap">
                         <?php // feature-changed FC-22: the design collapses these to one signal.
                               // A local block and an upstream advisory are independent facts and
                               // both stay. ?>
-                        <?php if ($p['blocked']): ?><span class="packages-pill is-danger">locally blocked</span><?php endif; ?>
-                        <?php if ($p['advisory_status'] !== 'none'): ?><span class="packages-pill is-danger"><?= $e($p['advisory_status']) ?></span>
+                        <?php if ($p['blocked']): ?><span class="state state-danger">locally blocked</span><?php endif; ?>
+                        <?php if ($p['advisory_status'] !== 'none'): ?><span class="state state-danger"><?= $e($p['advisory_status']) ?></span>
                         <?php elseif (!$p['blocked']): ?><span class="packages-none">none</span><?php endif; ?>
                     </td>
                     <td class="packages-col-actions"><a class="packages-rowbtn" href="/admin/packages/<?= (int) $p['id'] ?>">Details</a></td>

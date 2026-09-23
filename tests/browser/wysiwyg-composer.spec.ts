@@ -242,7 +242,7 @@ test('pages without a composer do not fetch Milkdown, including a later inbox in
   await visit(page, '/inbox?scope=all');
   await expect(page.locator('form.composer')).toHaveCount(0);
   expect(chunks).toEqual([]);
-  await page.locator('.inbox-row-title').first().click();
+  await page.locator('[data-inbox-row] .thread-title').first().click();
   const form = page.locator('.inbox-reading form.composer');
   const editor = form.locator('.wysiwyg-composer .ProseMirror');
   await expect(editor).toBeVisible();

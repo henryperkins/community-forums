@@ -74,7 +74,7 @@ $this->section('variant', 'admin');
                                 <td class="features-emoji-name"><?= $e($emoji['name']) ?></td>
                                 <td><code class="features-emoji-path"><?= $e($emoji['image_path']) ?></code></td>
                                 <td class="features-emoji-reactions"><?= !empty($emoji['allow_reactions']) ? 'Allowed' : 'Post rendering only' ?></td>
-                                <td><span class="features-pill <?= !empty($emoji['is_enabled']) ? 'is-on' : 'is-off' ?>"><?= !empty($emoji['is_enabled']) ? 'Enabled' : 'Disabled' ?></span></td>
+                                <td><span class="state <?= !empty($emoji['is_enabled']) ? 'state-done' : 'state-muted' ?>"><?= !empty($emoji['is_enabled']) ? 'Enabled' : 'Disabled' ?></span></td>
                                 <td class="features-col-actions">
                                     <?php // feature-added: the design repeats a bare "Enable"/"Disable" on every
                                           // row. Production names the row it acts on (ADR 0023 §5). ?>

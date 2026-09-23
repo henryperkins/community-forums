@@ -5,10 +5,7 @@ $this->section('title', 'Disable ' . ($row['display_name'] ?? 'provider'));
 $this->section('variant', 'admin');
 ?>
 <?= $this->partial('admin/_console', ['area' => 'integrations', 'tab' => 'providers', 'pane_class' => 'admin-integrations integrations-provider-disable']) ?>
-    <a class="admin-back" href="/admin/providers">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        Sign-in providers
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/providers', 'label' => 'Sign-in providers']) ?>
     <h2 class="admin-record-title">Before you disable <?= $e($row['display_name']) ?></h2>
     <section class="card provider-disable-card">
         <p class="provider-disable-blurb">Disabling removes <strong><?= $e($row['display_name']) ?></strong> from sign-in and

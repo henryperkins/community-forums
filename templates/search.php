@@ -30,7 +30,7 @@ $orderCopy = $order === 'newest' ? 'newest first' : 'by relevance';
             <input type="hidden" name="scope" value="<?= $e($scope) ?>">
             <input type="hidden" name="order" value="<?= $e($order) ?>">
             <p class="search-query-help muted" id="search-query-help">Use at least three characters.</p>
-            <?php if ($error !== null): ?><p class="form-error" id="search-query-error" role="alert"><?= $e($error) ?></p><?php endif; ?>
+            <?php if ($error !== null): ?><p class="field-error" id="search-query-error" role="alert"><?= $e($error) ?></p><?php endif; ?>
         </form>
 
         <nav class="search-view-bar" aria-label="Search view">

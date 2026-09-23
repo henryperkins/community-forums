@@ -88,8 +88,9 @@ $available = array_fill_keys($scopes, true);
             <label class="inbox-select-all"><input type="checkbox" data-inbox-select-all> <span>Select all on screen</span></label>
             <ul class="inbox-thread-list" data-inbox-thread-list>
                 <?php foreach ($threads as $thread): ?>
-                    <?= $this->partial('partials/inbox_thread_row', [
+                    <?= $this->partial('partials/thread_row', [
                         't' => $thread,
+                        'presentation' => 'inbox',
                         'return_to' => $currentUrl,
                         'order' => $order,
                         'workflow_enabled' => !empty($features['topic_workflow']),

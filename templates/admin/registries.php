@@ -26,7 +26,7 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
         <div class="packages-card-head">
             <h2 class="packages-section-title is-md"><?= $e($reg['display_name']) ?></h2>
             <code class="packages-uid"><?= $e($reg['source_id']) ?></code>
-            <?= ((int) $reg['is_enabled']) === 1 ? '<span class="packages-pill is-done">enabled</span>' : '<span class="packages-pill is-off">disabled</span>' ?>
+            <?= ((int) $reg['is_enabled']) === 1 ? '<span class="state state-done">enabled</span>' : '<span class="state state-muted">disabled</span>' ?>
             <?php // feature-added: disabling takes no password, enabling requires one. The
                   // asymmetry is deliberate (the safe direction is free) and is now evident
                   // from the absent field rather than a parenthetical in the button. ?>

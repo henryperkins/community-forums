@@ -404,7 +404,7 @@ echo json_encode($fixture, JSON_THROW_ON_ERROR);
     await expect(railCount).toHaveText('99+');
 
     for (const remaining of [101, 100, 99]) {
-      await page.locator('[data-inbox-row] .inbox-row-title').first().click();
+      await page.locator('[data-inbox-row] .thread-title').first().click();
       await expect(page.locator('[data-inbox-preview]')).toBeVisible();
       await expect(count).toHaveAttribute('data-inbox-unread-count', String(remaining));
       await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
@@ -433,7 +433,7 @@ foreach (array_slice($threads, 2) as $thread) {
     await page.goto('/inbox?scope=unread&order=newest');
     await expect(count).toHaveText('2');
     for (const remaining of [1, 0]) {
-      await page.locator('[data-inbox-row] .inbox-row-title').first().click();
+      await page.locator('[data-inbox-row] .thread-title').first().click();
       await expect(page.locator('[data-inbox-preview]')).toBeVisible();
       await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
       if (remaining === 1) {

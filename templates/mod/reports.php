@@ -106,13 +106,11 @@ $staleBefore = time() - 86400;
                 <?php endforeach; ?>
             </ul>
             <p class="muted"><?= $total ?> report<?= $total === 1 ? '' : 's' ?> in scope.</p>
-            <nav class="pager" aria-label="Pagination">
-                <?php if ($page > 0): ?>
-                    <a class="btn btn-small" href="/mod/reports?<?= $e(http_build_query($pagerBase + ['page' => $page - 1])) ?>">Previous</a>
-                <?php endif; ?>
-                <?php if (!empty($has_next)): ?>
-                    <a class="btn btn-small" href="/mod/reports?<?= $e(http_build_query($pagerBase + ['page' => $page + 1])) ?>">Next</a>
-                <?php endif; ?>
-            </nav>
+            <?php /* The queue pages from 0 and knows only whether another page exists. */ ?>
+            <?= $this->partial('partials/pager', [
+                'page' => $page + 1,
+                'has_next' => !empty($has_next),
+                'href' => static fn (int $target): string => '/mod/reports?' . http_build_query($pagerBase + ['page' => $target - 1]),
+            ]) ?>
         <?php endif; ?>
 <?= $this->partial('admin/_console_end') ?>

@@ -9,10 +9,7 @@ $errorContext = $error_context ?? null;
 $isActive = ((int) $webhook['is_active']) === 1;
 ?>
 <?= $this->partial('admin/_console', ['area' => 'integrations', 'tab' => 'webhooks', 'pane_class' => 'admin-integrations integrations-webhook-detail']) ?>
-    <a class="admin-back" href="/admin/webhooks">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        All endpoints
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/webhooks', 'label' => 'All endpoints']) ?>
     <h2 class="admin-record-title"><?= $e($webhook['name']) ?></h2>
     <?php if (!empty($new_secret)): ?>
         <div class="flash flash-secret" role="status">

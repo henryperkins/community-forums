@@ -207,7 +207,7 @@ test('tag catalogue search, sorting, unfiltered merge targets, pager, and empty 
   await expect(page.locator('.content-tag-result-count')).toContainText(/1\d tags/);
   await expect(page.locator('.content-tag-row')).toHaveCount(8);
   await expect(page.locator('.content-tag-uses').first()).toHaveText(/\d+ uses/);
-  await expect(page.locator('.content-tag-pager .pager-label')).toHaveText(/Page 1 of [2-9]/);
+  await expect(page.locator('.pager-label')).toHaveText(/Page 1 of [2-9]/);
   const nextHref = await page.getByRole('link', { name: 'Next tag page' }).getAttribute('href');
   expect(nextHref).toContain('sort=usage');
   expect(nextHref).toContain('page=2');

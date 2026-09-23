@@ -12,15 +12,12 @@ $keyFormOpen = !empty($pubErrors['key_id']) || !empty($pubErrors['public_key']);
 $rotateFormOpen = !empty($pubErrors['envelope']) || !empty($pubErrors['rotation']);
 ?>
 <?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages', 'pane_class' => 'admin-packages packages-publisher']) ?>
-    <a class="admin-back" href="/admin/packages/security">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        Security response
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/packages/security', 'label' => 'Security response']) ?>
     <?php // copy: the chips move out of the <h2> so they stop polluting the heading name. ?>
     <div class="packages-card-head">
         <h2 class="admin-record-title"><?= $e($publisher['display_name']) ?></h2>
-        <span class="packages-pill is-off"><?= $e($publisher['status']) ?></span>
-        <?= $publisher['verified_at'] !== null ? '<span class="packages-pill is-done">verified</span>' : '' ?>
+        <span class="state state-muted"><?= $e($publisher['status']) ?></span>
+        <?= $publisher['verified_at'] !== null ? '<span class="state state-done">verified</span>' : '' ?>
     </div>
     <p class="packages-lead"><code class="packages-uid"><?= $e($publisher['publisher_uid']) ?></code> Trust changes require your password. Suspension force-disables every install of this publisher's packages; reinstatement never silently re-enables them.</p>
 
@@ -125,7 +122,7 @@ $rotateFormOpen = !empty($pubErrors['envelope']) || !empty($pubErrors['rotation'
         <?php foreach ($packages as $package): ?>
             <div class="packages-card-head">
                 <code class="packages-rule-id"><?= $e($package['package_uid']) ?></code>
-                <span class="packages-pill is-off"><?= $e($package['advisory_status']) ?></span>
+                <span class="state state-muted"><?= $e($package['advisory_status']) ?></span>
             </div>
             <ul class="packages-rule-list">
             <?php foreach ($package['decisions'] as $decision): ?>

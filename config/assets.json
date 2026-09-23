@@ -1,9 +1,9 @@
 {
-  "version": "4593a6c4f1836d2c",
+  "version": "c0ef93fd3b2ba613",
   "urls": {
-    "app.css": "/assets/dist/app-style-DURDR401.css",
-    "imladris.css": "/assets/dist/imladris-style-BCCSHjuG.css",
-    "app.js": "/assets/dist/app-1890d488300e8451.js",
+    "app.css": "/assets/dist/app-style-Dn8vhGo0.css",
+    "imladris.css": "/assets/dist/imladris-style-Cw9wS_6P.css",
+    "app.js": "/assets/dist/app-d15064d393ba91eb.js",
     "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
     "passkeys.js": "/assets/dist/passkeys-45dd692ca9028436.js",
     "tour.js": "/assets/dist/tour-7cdbe315501e3843.js",
@@ -27,23 +27,23 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "a8c64513887bbd0192e52233f29dc25ac96f8f3015b9c59990604ae8f0c0f0cd",
+      "sha256": "2f436cc9822799fb96cac5979fcb3c24e7d08ae7cab9fc57f1409e896b4f84bb",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "81c88bf6db492f7454c5635b65f9549c7576031986b2f455d2b802d27a68c7c2",
+      "sha256": "036ed1a8348b3b50193c56c8e55951f2e640f54f23faadfa184dba51a51ae4b0",
       "immutable": false
     },
     "/assets/composer.js": {
       "sha256": "16f6461ce88a71c73b390075c5f902c7983d3998bedb0cd7dbdbf2299ad930ae",
       "immutable": false
     },
-    "/assets/dist/app-1890d488300e8451.js": {
-      "sha256": "1890d488300e8451d4ec9b44feb3dc670105f1b78fc5e9f13142f6f4dfc2da29",
+    "/assets/dist/app-d15064d393ba91eb.js": {
+      "sha256": "d15064d393ba91ebfe25e9db035b031623e4965bc1e8834b4e034e5edc285f2e",
       "immutable": true
     },
-    "/assets/dist/app-style-DURDR401.css": {
-      "sha256": "8870a182f1216d67fd1f1b034c96ea5bfd17336be4c037a519f017564f349798",
+    "/assets/dist/app-style-Dn8vhGo0.css": {
+      "sha256": "66911e69c0b154e1db763ac21de0abbb27268b5578ddedf9af8147f72dfff9e1",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {
@@ -94,8 +94,8 @@
       "sha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
       "immutable": true
     },
-    "/assets/dist/imladris-style-BCCSHjuG.css": {
-      "sha256": "37fef07d72002756ef75c4c2dc2aa2493201317f9cf78b693505a6914e1bf02e",
+    "/assets/dist/imladris-style-Cw9wS_6P.css": {
+      "sha256": "391ba6f3eca73eb0d3c3e6e500a4a2cc720aaf657ba766a43db1568fc7348280",
       "immutable": true
     },
     "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2": {
@@ -215,7 +215,7 @@
       "immutable": false
     },
     "/assets/imladris.css": {
-      "sha256": "9349f13093050fd00c6b04469805d7b39be475b9933ce5ac046aaf1658500867",
+      "sha256": "6f34d4cf0de79cc4b2ec10545a0c37b9daec5ad4e2ef0970c73845754d8b37fd",
       "immutable": false
     },
     "/assets/passkeys.js": {

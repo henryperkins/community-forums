@@ -218,7 +218,7 @@ final class AppAdminThreadIntelligenceTest extends TestCase
         $body = $this->get('/admin/thread-intelligence')->body();
 
         self::assertMatchesRegularExpression(
-            '~<div class="ti-evidence-empty state-empty">\s*<h3>No generation attempts</h3>\s*<p>No generation attempts have been recorded\.</p>\s*</div>~s',
+            '~<section class="state-empty">\s*<h3>No generation attempts</h3>\s*<p>No generation attempts have been recorded\.</p>\s*</section>~s',
             $body,
         );
         self::assertStringContainsString('class="ti-evidence-count">0 runs</span>', $body);

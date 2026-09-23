@@ -80,7 +80,7 @@ test('the inclusion cue is gold and in sentence case, unlike the status pills', 
   await setAppearance(page, 'density', 'compact');
   await page.goto('/inbox?scope=for_you&order=active');
 
-  const reason = page.locator('.inbox-row-chips .chip-reason').first();
+  const reason = page.locator('[data-inbox-row] .thread-row-chips .chip-reason').first();
   await expect(reason).toBeVisible();
   const seen = await reason.evaluate((el) => {
     const s = getComputedStyle(el);
@@ -92,7 +92,7 @@ test('the inclusion cue is gold and in sentence case, unlike the status pills', 
   expect(seen.color).toBe('rgb(126, 95, 34)');
 
   // A status pill on the same row keeps the lapidary uppercase register.
-  const status = page.locator('.inbox-row-chips .chip-pinned, .inbox-row-chips .chip-decision_made').first();
+  const status = page.locator('[data-inbox-row] .thread-row-chips .chip-pinned, [data-inbox-row] .thread-row-chips .chip-decision_made').first();
   await expect(status).toHaveCSS('text-transform', 'uppercase');
 
   // And the brand star inside the cue is filled, not the hollow Lucide stroke
@@ -138,13 +138,13 @@ test('commends appear in the commended order and nowhere else', async ({ page })
   await page.setViewportSize({ width: 1440, height: 1200 });
   await signIn(page);
   await page.goto('/inbox?scope=for_you&order=active');
-  await expect(page.locator('.inbox-row-commends')).toHaveCount(0);
+  await expect(page.locator('[data-inbox-row] .thread-meta-commends')).toHaveCount(0);
 
   await page.goto('/inbox?scope=for_you&order=commended');
-  await expect(page.locator('.inbox-row-commends').first()).toBeVisible();
+  await expect(page.locator('[data-inbox-row] .thread-meta-commends').first()).toBeVisible();
 
   // One line, still: the meta row must not have wrapped.
-  const meta = page.locator('.inbox-row-meta').first();
+  const meta = page.locator('[data-inbox-row] .thread-meta').first();
   const box = (await meta.boundingBox())!;
   const lineHeight = await meta.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
   expect(box.height).toBeLessThan(lineHeight * 1.8);
@@ -162,7 +162,7 @@ test('the board reference is Bruinen, and legible in both registers', async ({ p
   await signIn(page);
 
   await page.goto('/inbox?scope=for_you&order=active');
-  const link = page.locator('.inbox-row-meta a').first();
+  const link = page.locator('[data-inbox-row] .thread-meta a').first();
   await expect(link).toHaveCSS('color', 'rgb(63, 110, 137)');
   let seen = await link.evaluate((el) => ({
     fg: getComputedStyle(el).color,
@@ -173,7 +173,7 @@ test('the board reference is Bruinen, and legible in both registers', async ({ p
   await setAppearance(page, 'theme', 'dark');
   await page.goto('/inbox?scope=for_you&order=active');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  seen = await page.locator('.inbox-row-meta a').first().evaluate((el) => ({
+  seen = await page.locator('[data-inbox-row] .thread-meta a').first().evaluate((el) => ({
     fg: getComputedStyle(el).color,
     bg: getComputedStyle(el.closest('.inbox-list') as HTMLElement).backgroundColor,
   }));
@@ -193,7 +193,7 @@ test('the reading pane names the topic author and leads with the opening post', 
   await page.setViewportSize({ width: 1440, height: 1200 });
   await signIn(page);
   await page.goto('/inbox?scope=for_you&order=active');
-  await page.locator('.inbox-row-title').first().click();
+  await page.locator('[data-inbox-row] .thread-title').first().click();
 
   const pane = page.locator('.inbox-reading');
   await expect(pane.locator('.inbox-preview-author')).toBeVisible();
@@ -241,7 +241,7 @@ test('an anonymously opened topic is masked in the reading pane', async ({ page 
     has: page.getByText('A question I would rather not sign'),
   }).first();
   await expect(row).toBeVisible();
-  await row.locator('.inbox-row-title').click();
+  await row.locator('.thread-title').click();
 
   const pane = page.locator('.inbox-reading');
   await expect(pane.locator('.inbox-preview-author')).toHaveText('Anonymous');
@@ -338,9 +338,9 @@ test('compact density applies the register the design states', async ({ page }) 
 
   const seen = await page.locator('[data-inbox-row]').first().evaluate((el) => {
     const row = getComputedStyle(el);
-    const title = getComputedStyle(el.querySelector('.inbox-row-title')!);
-    const meta = getComputedStyle(el.querySelector('.inbox-row-meta')!);
-    const chips = getComputedStyle(el.querySelector('.inbox-row-chips')!);
+    const title = getComputedStyle(el.querySelector('.thread-title')!);
+    const meta = getComputedStyle(el.querySelector('.thread-meta')!);
+    const chips = getComputedStyle(el.querySelector('.thread-row-chips')!);
     return {
       pad: row.paddingTop, gap: row.gap, title: title.fontSize,
       metaTop: meta.marginTop, metaSize: meta.fontSize, chipGap: chips.gap,
@@ -353,18 +353,18 @@ test('compact density applies the register the design states', async ({ page }) 
   expect(seen.metaSize).toBe('10.72px'); // .67rem
   expect(seen.chipGap).toBe('5px');
 
-  await expect(page.locator('.inbox-row-snippet').first()).toBeHidden();
+  await expect(page.locator('[data-inbox-row] .thread-snippet').first()).toBeHidden();
 
   await setAppearance(page, 'density', 'comfortable');
   await page.goto('/inbox?scope=for_you&order=active');
-  await expect(page.locator('.inbox-row-snippet').first()).toBeVisible();
+  await expect(page.locator('[data-inbox-row] .thread-snippet').first()).toBeVisible();
   await page.screenshot({ path: shot('08-queue-comfortable.png') });
   await setAppearance(page, 'density', 'compact');
 });
 
 /**
- * On a phone the dot is the only unread cue a row has — `.is-unread` styles
- * nothing — so hiding it left an unread-triage surface with no unread signal.
+ * On a phone the dot is the only unread cue a row has — the queue's title keeps
+ * one weight — so hiding it left an unread-triage surface with no unread signal.
  */
 test('the unread dot survives on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });

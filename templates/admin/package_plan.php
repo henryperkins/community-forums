@@ -8,10 +8,7 @@ $this->section('title', 'Install plan: ' . $package['name']);
 $this->section('variant', 'admin');
 ?>
 <?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages', 'pane_class' => 'admin-packages packages-plan']) ?>
-    <a class="admin-back" href="/admin/packages">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        Package catalogue
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/packages', 'label' => 'Package catalogue']) ?>
     <h2 class="admin-record-title">Install plan &mdash; <?= $e($package['name']) ?> <?= $e($release['version']) ?></h2>
     <?php foreach (($errors ?? []) as $err): ?>
         <p class="callout callout-danger packages-refusal" role="alert"><?= $e($err) ?></p>
@@ -42,7 +39,7 @@ $this->section('variant', 'admin');
             <div><dt class="packages-fact-term">Digest</dt><dd class="packages-fact-value is-mono"><?= $e($release['digest']) ?></dd></div>
             <div><dt class="packages-fact-term">Registry</dt><dd class="packages-fact-value"><?= $plan['registry'] !== null ? $e($plan['registry']['source_id']) : 'local' ?></dd></div>
             <div><dt class="packages-fact-term">Review</dt><dd class="packages-fact-value"><?= $e($release['review_status']) ?></dd></div>
-            <div><dt class="packages-fact-term">Compatibility</dt><dd class="packages-fact-value"><?= $plan['compatible'] === true ? '<span class="packages-pill is-done">compatible</span>' : '<span class="packages-pill is-review">incompatible</span>' ?></dd></div>
+            <div><dt class="packages-fact-term">Compatibility</dt><dd class="packages-fact-value"><?= $plan['compatible'] === true ? '<span class="state state-done">compatible</span>' : '<span class="state state-review">incompatible</span>' ?></dd></div>
         </dl>
 
         <h3 class="packages-eyebrow">Permission preview</h3>

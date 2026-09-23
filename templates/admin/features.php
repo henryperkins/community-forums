@@ -67,7 +67,7 @@
                                       // express. The full strings stay; only the chrome is the design's. ?>
                                 <td><span class="features-effective <?= !empty($row['effective']) ? 'is-on' : 'is-off' ?>"><span class="features-dot" aria-hidden="true"></span><?= $e((string) $row['effective_text']) ?></span></td>
                                 <td class="features-default"><?= $e((string) $row['default_text']) ?></td>
-                                <td><?php if ($row['override_class'] === 'state-pending'): ?><span class="features-override-none"><?= $e((string) $row['override_text']) ?></span><?php else: ?><span class="features-override-pill"><?= $e((string) $row['override_text']) ?></span><?php endif; ?></td>
+                                <td><?php if ($row['override_class'] === 'state-pending'): ?><span class="features-override-none"><?= $e((string) $row['override_text']) ?></span><?php else: ?><span class="state state-staff"><?= $e((string) $row['override_text']) ?></span><?php endif; ?></td>
                                 <td class="features-rollback"><?= $e((string) $row['rollback']) ?></td>
                                 <td class="features-readiness">
                                     <?php if (!empty($row['readiness_status'])): ?>

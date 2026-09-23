@@ -97,7 +97,7 @@ async function login(page: Page): Promise<void> {
 async function openShortcutInboxTopic(page: Page) {
   const link = page.locator('[data-inbox-list] [data-inbox-row]')
     .filter({ hasText: 'Share your favourite keyboard shortcuts' })
-    .locator('.inbox-row-title');
+    .locator('.thread-title');
   await expect(link).toHaveCount(1);
   await link.click();
   const reading = page.locator('[data-inbox-reading]');
@@ -123,7 +123,7 @@ test('responsive Inbox opens a topic in place and mobile Back restores its link'
   const inbox = page.locator('[data-inbox]');
   const list = inbox.locator('[data-inbox-list]');
   const reading = inbox.locator('[data-inbox-reading]');
-  const topic = list.locator('.inbox-row-title').first();
+  const topic = list.locator('.thread-title').first();
   const topicHref = await topic.getAttribute('href');
   expect(topicHref).toMatch(/^\/t\/\d+/);
 
@@ -170,7 +170,7 @@ test('Inbox preserves the latest selection when an older topic fetch finishes la
   test.skip(info.project.name !== 'desktop', 'request ordering is verified once');
   await login(page);
 
-  const links = page.locator('[data-inbox-list] .inbox-row-title');
+  const links = page.locator('[data-inbox-list] .thread-title');
   const first = links.nth(0);
   const second = links.nth(1);
   const firstHref = await first.getAttribute('href');
@@ -229,13 +229,13 @@ test('Inbox opening reconciles an unread row and its count', async ({ page }, in
   const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
   const badge = page.locator('[data-inbox] [data-inbox-unread-count]');
   await expect(row).toHaveCount(1);
-  await expect(row).toHaveClass(/\bis-unread\b/);
+  await expect(row).toHaveClass(/\bthread-unread\b/);
   await expect(row).toHaveAttribute('data-inbox-unread', '1');
   await expect(row.locator('.unread-dot')).toHaveCount(1);
   const before = Number(await badge.getAttribute('data-inbox-unread-count'));
   expect(before).toBeGreaterThan(0);
 
-  await row.locator('.inbox-row-title').click();
+  await row.locator('.thread-title').click();
   await expect(page.locator('[data-inbox-preview]')).toBeVisible();
   await expect(row).toHaveCount(0);
   if (before === 1) {
@@ -259,14 +259,14 @@ test('Inbox opening a muted unread row leaves the queue badge unchanged', async 
     const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
     const badge = page.locator('[data-inbox] [data-inbox-unread-count]');
     await expect(row).toHaveCount(1);
-    await expect(row).toHaveClass(/\bis-unread\b/);
+    await expect(row).toHaveClass(/\bthread-unread\b/);
     await expect(row).not.toHaveAttribute('data-inbox-unread', '1');
     const before = Number(await badge.getAttribute('data-inbox-unread-count'));
     expect(before).toBeGreaterThan(0);
 
-    await row.locator('.inbox-row-title').click();
+    await row.locator('.thread-title').click();
     await expect(page.locator('[data-inbox-preview]')).toBeVisible();
-    await expect(row).not.toHaveClass(/\bis-unread\b/);
+    await expect(row).not.toHaveClass(/\bthread-unread\b/);
     await expect(row.locator('.unread-dot')).toHaveCount(0);
     await expect(badge).toHaveAttribute('data-inbox-unread-count', String(before));
   } finally {
@@ -283,7 +283,7 @@ test('Inbox Forward reloads a read queue topic in the reading pane', async ({ pa
 
   const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
   await expect(row).toHaveCount(1);
-  await row.locator('.inbox-row-title').click();
+  await row.locator('.thread-title').click();
   await expect(page.locator('[data-inbox-preview]')).toBeVisible();
   await expect(row).toHaveCount(0);
 
@@ -369,7 +369,7 @@ test('Inbox replacement destroys the previous composer lifecycle before enhancin
     }
   });
 
-  const nextTopic = page.locator('[data-inbox-list] [data-inbox-row]:not(.is-active) .inbox-row-title').first();
+  const nextTopic = page.locator('[data-inbox-list] [data-inbox-row]:not(.is-active) .thread-title').first();
   await expect(nextTopic).toBeVisible();
   const previousUrl = page.url();
   await nextTopic.click();
@@ -445,7 +445,7 @@ test('mobile preview keeps its reply composer contained and expands it on focus'
   test.skip(info.project.name !== 'mobile', 'mobile preview composer contract');
   await login(page);
 
-  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
+  await page.locator('[data-inbox-list] .thread-title').first().click();
   const preview = page.locator('[data-inbox-preview]');
   const composer = preview.locator('.reply-composer');
   await expect(preview).toBeVisible();
@@ -466,7 +466,7 @@ test('direct mobile Inbox URLs open the conversation state', async ({ page }, in
   test.skip(info.project.name !== 'mobile', 'mobile direct-link contract');
   await login(page);
 
-  const topic = page.locator('[data-inbox-list] .inbox-row-title').first();
+  const topic = page.locator('[data-inbox-list] .thread-title').first();
   const href = await topic.getAttribute('href');
   const id = href?.match(/^\/t\/(\d+)/)?.[1];
   expect(id).toBeTruthy();
@@ -489,7 +489,7 @@ test('failed Inbox fetches fall back to the canonical topic route', async ({ pag
     await route.continue();
   });
 
-  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
+  await page.locator('[data-inbox-list] .thread-title').first().click();
   await expect(page).toHaveURL(/\/t\/\d+/);
   await expect(page.locator('.thread-conversation')).toBeVisible();
 });
@@ -500,7 +500,7 @@ test('canonical mobile composer keeps formatting and anonymous controls containe
 
   const generalTopic = page.locator('[data-inbox-list] [data-inbox-row]')
     .filter({ hasText: 'Share your favourite keyboard shortcuts' })
-    .locator('.inbox-row-title');
+    .locator('.thread-title');
   await expect(generalTopic).toHaveCount(1);
   await page.goto((await generalTopic.getAttribute('href'))!);
 
@@ -539,7 +539,7 @@ test('canonical mobile composer keeps formatting and anonymous controls containe
 
 test('parchment and twilight preserve the Inbox layout', async ({ page }) => {
   await login(page);
-  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
+  await page.locator('[data-inbox-list] .thread-title').first().click();
   await expect(page.locator('[data-inbox-preview]')).toBeVisible();
 
   const measure = async (theme: 'light' | 'dark') => {
@@ -571,7 +571,7 @@ test('parchment and twilight preserve the Inbox layout', async ({ page }) => {
 test('Inbox and preview composer have no serious or critical axe violations', async ({ page }) => {
   await login(page);
   await expectNoSeriousA11yViolations(page, '[data-inbox]');
-  await page.locator('[data-inbox-list] .inbox-row-title').first().click();
+  await page.locator('[data-inbox-list] .thread-title').first().click();
   await expect(page.locator('[data-inbox-preview]')).toBeVisible();
   await expectNoSeriousA11yViolations(page, '[data-inbox-preview]');
 });
@@ -593,7 +593,7 @@ test('the no-JavaScript 390px journey keeps disclosure and submits the server re
 
     const topic = page.locator('[data-inbox-list] [data-inbox-row]')
       .filter({ hasText: 'Share your favourite keyboard shortcuts' })
-      .locator('.inbox-row-title');
+      .locator('.thread-title');
     const href = await topic.getAttribute('href');
     await topic.click();
     await expect(page).toHaveURL(new RegExp(`${href!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));

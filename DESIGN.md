@@ -274,7 +274,7 @@ A full-height application shell of three columns plus a top bar. The rails are f
 
 The three panes map to real URLs rather than to client state: `/` is the forum index, `/inbox` the personalised topic inbox, `/c/{slug}` a board's fixed-order list, `/t/{id}-{slug}` the conversation. Navigation is server-rendered; JavaScript decorates.
 
-**Density is a first-class axis, not a preference toggle bolted on.** The topic list ships three presentations from the same markup: *comfortable* (a parchment card per row with avatar, byline, chips, two-line snippet, meta), *compact* (one ruled scannable line, snippet hidden, author folded into the meta), and *board* (a ruled entry on a 64px minimum floor with activity in a right-hand rail and no board label, because a board does not label itself). A long title wraps and the row grows — 64px is a minimum, never a crop.
+**Density is a first-class axis, not a preference toggle bolted on.** A topic list in a page reads at two densities from the same markup: *comfortable* (a parchment card per row with avatar, byline, chips, two-line snippet, meta) and *compact* (one ruled scannable line, snippet hidden, author folded into the meta). The board and the inbox are **presentations**, not densities, and keep their own geometry at either density: the *board* is a ruled entry on a 64px minimum floor with activity in a right-hand rail and no board label, because a board does not label itself; the *queue* is a ruled triage row that leads with the reason a topic is there. A long title wraps and the row grows — 64px is a minimum, never a crop.
 
 **Spacing** runs on a 4px base: 4, 8, 12, 16, 24, 32, 48, 112px. Cards are padded 18px, thread rows 14/16px, posts 18/20px, and the gap between rows is 10px in comfortable and zero in the ruled densities, where a hairline does the separating.
 
@@ -343,6 +343,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Pills** are the larger, quieter status token: `2px 10px`, 0.72rem, sunken parchment.
 - **Tags** are the smallest: `2px 8px`, 0.6rem, 0.08em tracking, for board and meta labels.
 - **Tier markers** (`Member · Veteran · Loremaster · Legend`) are 0.58rem caps at 0.11em, each tier taking its own hue: gold for Legend, evergreen for Loremaster, river for Veteran, neutral for Member.
+- **The console status pill** is `.state`: `1px 9px`, Marcellus at 0.66rem, sentence or token case as written. A lifecycle word keys its tone (`state-active`, `state-revoked`), and any other label names one (`state-done`, `state-review`, `state-danger`, `state-muted`, `state-staff`). Outside the console the same class is a dot and a word. A new status is a tone on `.state`, never a new `*-pill` class (ADR 0037).
 
 ### Cards and containers
 
@@ -373,9 +374,30 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 
 The system's most-repeated object and the place its character is clearest. A parchment card with a 3px status left-rule, a 44px monogram, a Cormorant byline, status chips, a Cormorant title at 1.2rem, a two-line clamped snippet in muted ink, and a Marcellus meta line with a gold-ink board hash. Unread state is carried by a **gold dot with a 2px translucent gold halo** plus a border shift to `green-200` and a semibold title — three quiet signals rather than one loud one. Selected state washes the row in `--brand-subtle` and turns the left rule leaf-green. Hover lifts 1px to `--shadow-md`.
 
+It is **one partial** (`templates/partials/thread_row.php`) with a `presentation` axis — `default` for a list inside a page, `board` for the canonical index, `inbox` for the personal queue — and never a second row object (ADR 0036). Topic facts read identically in every presentation: the status word from the ledger, last activity as elapsed time on a `<time>` carrying the exact instant, a snooze as a date. Viewer facts render everywhere too, loud in the queue and quiet on the index. The queue's selection box, star toggle and row menu are slots on the row. Each presentation is styled under its own modifier, and restates what it keeps against the generic row and compact rules, which belong to the default list.
+
+### The star
+
+A topic star is a personal bookmark, and its word is **Star** / **Starred** — not Commend, which is the reaction. It has one glyph, the four-point **commend star** (`partials/icon`, `commend-star`), and one control in two sizes (`templates/partials/star_toggle.php`): the labelled pill in a topic's head, and a 28px icon toggle in a queue row whose accessible name carries the topic's title and whose state is `aria-pressed`. The toggle draws the star in outline until it is set and filled once it is, because `--text-faint` and `--gold-ink` are too close in lightness for ink alone to carry the state. Where the star is a marker rather than a control, as on the board index, it is the same glyph in `--star` with `role="img"` and the name "Starred". A board favourite uses the same outline/filled grammar.
+
 ### Signature: the monogram
 
 A tinted ground with legible dark ink, rotating through ten variants across evergreen, river, gold, mist and parchment — so a list of members is quietly varied without anyone being assigned a "colour". 36px default, 26–64px by context, always a circle, always Marcellus. The `--gilt` inner ring marks the precious ones.
+
+### Shared components
+
+When a job already has a shared component, use it. A variant is a parameter or a tone, not a new class (ADR 0036, ADR 0037).
+
+- **Topic row** — `partials/thread_row.php`, with a `presentation` of `default`, `board` or `inbox`.
+- **Star** — `partials/star_toggle.php`, as the labelled pill or the icon toggle.
+- **Console pager** — `partials/pager.php`, for a known page count or only "is there another page?", with a URL builder for routes that count from 0.
+- **Empty state** — `partials/empty_state.php`: a heading, a sentence, and at most one action.
+- **Back link** — `partials/back_link.php`, with one 13px chevron.
+- **Alert plate** — `.callout`, in info, `callout-review` or `callout-danger`, on member and operator surfaces alike. A field's own error is `.field-error` beneath it.
+- **Status token** — `.chip` for topic status, and `.state` for console status (above).
+- **Glyphs and identity** — `partials/icon.php` and `partials/monogram.php`.
+
+Families that still have more than one implementation are listed, ranked, in ADR 0037.
 
 ### The lapidary register, and the chamfer that is gone from it
 
@@ -406,6 +428,7 @@ Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-en
 - **Don't** write an inline `<style>` block, an inline `<script>`, or a `style="…"` attribute. `style-src 'self'` blocks all three, and the page fails silently. *Audit test: `grep -ro 'style="' templates/ | wc -l` must stay at 0.*
 - **Don't** use gold as a background for anything larger than a chip outside the DM Own-Letter Gold-Wash Exception, and don't use two accents — the palette has exactly one.
 - **Don't** put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)
+- **Don't** print ★ or ☆. The commend star, drawn with `partials/icon`, is the one esteem glyph; `templates/` holds the characters at zero and a test holds them there.
 - **Don't** paint directly from a primitive scale token in application CSS.
 - **Don't** round anything holding content past 12px, and don't make a button or card pill-shaped. *Two live exceptions are unresolved rather than sanctioned — `.star-btn`/`.topic-tools-open` and `.board-mute-toggle` are buttons wearing pills because the handoff canvases draw them that way while this document and `components.css` say 7px. The Messages room adds two more to the same open question (2026-09-23): `.dm-newpill`, the "New messages" button, which the committed Messages mock draws as a pill; and the room's toast flash (`.main > .flash:has(+ .dm-shell)`), a `role="status"` notice rather than a button, but a pill-shaped plate holding a sentence. ADR 0034 records the conflict (the Messages pair in its 2026-09-23 addendum); it needs a ruling, not a sweep.*
 - **Don't** use a pure-black shadow, or add elevation to something that is merely at rest.

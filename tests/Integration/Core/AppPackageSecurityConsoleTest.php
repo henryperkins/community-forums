@@ -51,13 +51,14 @@ final class AppPackageSecurityConsoleTest extends TestCase
     {
         // .pill-admin is the accent-filled operator chip and carries three distinct
         // meanings across 41 call sites; the ledger forbids recolouring it. Slice 14
-        // reclassified the armed brake to .pill-danger instead, and this is that
-        // decision's regression guard — in both brake states.
+        // reclassified the armed brake, and it now wears the console's status pill.
+        // This is that decision's regression guard — in both brake states.
         $this->actingAs($this->admin);
 
         $live = $this->get('/admin/packages/security');
         $this->assertStatus(200, $live);
         self::assertStringNotContainsString('pill-admin', $live->body());
+        self::assertStringContainsString('<span class="state state-done">live</span>', $live->body());
 
         $this->assertRedirectContains($this->post('/admin/packages/security/execution', [
             'disabled' => '1',
@@ -66,7 +67,7 @@ final class AppPackageSecurityConsoleTest extends TestCase
 
         $armed = $this->get('/admin/packages/security');
         $this->assertStatus(200, $armed);
-        self::assertStringContainsString('class="pill pill-danger"', $armed->body());
+        self::assertStringContainsString('<span class="state state-danger">disabled</span>', $armed->body());
         self::assertStringNotContainsString('pill-admin', $armed->body());
     }
 

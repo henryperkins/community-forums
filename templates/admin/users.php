@@ -182,10 +182,10 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
             </div>
 
             <?php if ($users === []): ?>
-                <div class="member-directory-empty">
-                    <h3>No members match these filters</h3>
-                    <p>Reset the filters to see the whole directory.</p>
-                </div>
+                <?= $this->partial('partials/empty_state', [
+                    'heading' => 'No members match these filters',
+                    'message' => 'Reset the filters to see the whole directory.',
+                ]) ?>
             <?php endif; ?>
         </section>
 
@@ -205,16 +205,10 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
         </fieldset>
     </form>
 
-    <nav class="pager member-directory-pager" aria-label="Pagination">
-        <?php if ($page > 0): ?>
-            <a class="pager-control member-directory-pager-control" href="/admin/users?<?= $e(http_build_query(array_merge($base, ['page' => $page - 1]))) ?>">Previous</a>
-        <?php else: ?>
-            <span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Previous</span>
-        <?php endif; ?>
-        <?php if ($hasNext): ?>
-            <a class="pager-control member-directory-pager-control" href="/admin/users?<?= $e(http_build_query(array_merge($base, ['page' => $page + 1]))) ?>">Next</a>
-        <?php else: ?>
-            <span class="pager-control member-directory-pager-control is-disabled" aria-disabled="true">Next</span>
-        <?php endif; ?>
-    </nav>
+    <?php /* The directory pages from 0 and knows only whether another page exists. */ ?>
+    <?= $this->partial('partials/pager', [
+        'page' => $page + 1,
+        'has_next' => $hasNext,
+        'href' => static fn (int $target): string => '/admin/users?' . http_build_query(array_merge($base, ['page' => $target - 1])),
+    ]) ?>
 <?= $this->partial('admin/_console_end') ?>

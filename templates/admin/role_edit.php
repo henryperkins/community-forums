@@ -31,10 +31,7 @@ foreach ($catalogue as $capKey => $capMeta) {
 ksort($groupedCatalogue);
 ?>
 <?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles', 'pane_class' => 'admin-roles admin-role-record']) ?>
-    <a class="admin-back" href="/admin/roles">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        All roles
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/roles', 'label' => 'All roles']) ?>
     <div class="role-record-heading">
         <h2 class="admin-record-title"><?= $e($role['name']) ?></h2>
         <span>v<?= (int) $role['version'] ?></span>

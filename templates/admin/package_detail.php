@@ -32,10 +32,7 @@ foreach ($installed_permissions as $permission) {
 $isInstalled = $installed !== null && $installedState !== 'uninstalled';
 ?>
 <?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages', 'pane_class' => 'admin-packages packages-detail']) ?>
-    <a class="admin-back" href="/admin/packages">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        Package catalogue
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/packages', 'label' => 'Package catalogue']) ?>
     <h2 class="admin-record-title"><?= $e($package['name']) ?></h2>
     <p class="packages-record-uid"><?= $e($package['package_uid']) ?></p>
     <?php // The only surface for keyless service refusals — a server-side enable
@@ -207,11 +204,11 @@ $isInstalled = $installed !== null && $installedState !== 'uninstalled';
                 <tr>
                     <td class="packages-col-nowrap"><span class="packages-mono"><?= $e($r['version']) ?></span></td>
                     <td class="packages-col-nowrap"><?= $e($r['channel']) ?></td>
-                    <td class="packages-col-nowrap"><code class="packages-mono"><?= $e(substr((string) $r['digest'], 0, 16)) ?>…</code><?= $r['blocked'] ? ' <span class="packages-pill is-danger">blocked</span>' : '' ?></td>
+                    <td class="packages-col-nowrap"><code class="packages-mono"><?= $e(substr((string) $r['digest'], 0, 16)) ?>…</code><?= $r['blocked'] ? ' <span class="state state-danger">blocked</span>' : '' ?></td>
                     <td><?= $r['signed_key_id'] !== null ? '<code class="packages-mono">' . $e($r['signed_key_id']) . '</code>' : '<span class="packages-none">snapshot-listed</span>' ?></td>
                     <td class="packages-col-nowrap">
                         <code class="packages-mono"><?= $e($r['core_min'] ?? '*') ?> &ndash; <?= $e($r['core_max'] ?? '*') ?></code>
-                        <?= $r['compatible'] ? '<span class="packages-pill is-done">compatible</span>' : '<span class="packages-pill is-review">incompatible</span>' ?>
+                        <?= $r['compatible'] ? '<span class="state state-done">compatible</span>' : '<span class="state state-review">incompatible</span>' ?>
                     </td>
                     <td><?= $e($r['review_status']) ?></td>
                     <td><?= $e($r['advisory_status']) ?></td>
@@ -239,9 +236,9 @@ $isInstalled = $installed !== null && $installedState !== 'uninstalled';
                         </span>
                         <span class="packages-rule-meta"><?= $e($permission['risk_class']) ?></span>
                         <?php if ((int) $permission['granted'] === 1): ?>
-                            <span class="packages-pill is-done">granted</span>
+                            <span class="state state-done">granted</span>
                         <?php else: ?>
-                            <span class="packages-pill is-review">pending</span>
+                            <span class="state state-review">pending</span>
                         <?php endif; ?>
                     </li>
                     <?php endforeach; ?>

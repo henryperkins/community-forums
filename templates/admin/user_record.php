@@ -25,10 +25,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
 };
 ?>
 <?= $this->partial('admin/_member_tabs', ['active' => 'directory', 'pane_class' => 'member-record']) ?>
-        <a class="admin-back member-record-back" href="/admin/users">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-            All members
-        </a>
+        <?= $this->partial('partials/back_link', ['href' => '/admin/users', 'label' => 'All members', 'class' => 'admin-back member-record-back']) ?>
 
         <div class="member-record-identity">
             <span class="member-record-monogram">

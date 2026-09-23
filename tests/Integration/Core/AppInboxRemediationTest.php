@@ -49,12 +49,12 @@ final class AppInboxRemediationTest extends TestCase
 
         foreach ([
             // The two that had no rules whatsoever.
-            '.inbox-row-chips .chip-reason', '.inbox-empty-state',
+            '.thread-row-inbox .thread-row-chips .chip-reason', '.inbox-empty-state',
             // The reading pane's new anatomy.
             '.inbox-preview-attribution', '.inbox-preview-author', '.inbox-preview-tier',
             '.inbox-preview-lede', '.inbox-preview-count', '.inbox-preview-open',
             // The row and the bar.
-            '.inbox-row-commends', '.inbox-view-bar', '.inbox-density', '.inbox-key-hint',
+            '.thread-row-inbox .thread-meta-commends', '.inbox-view-bar', '.inbox-density', '.inbox-key-hint',
             '.inbox-select-all', '.inbox-thread-list', '.inbox-empty', '.inbox-empty-title',
         ] as $selector) {
             self::assertStringContainsString($selector, $css, $selector . ' has no rule in app.css');
@@ -98,7 +98,7 @@ final class AppInboxRemediationTest extends TestCase
         self::assertIsString($css);
         self::assertIsString($tokens);
 
-        self::assertStringContainsString('.inbox-row-meta a,', $css);
+        self::assertStringContainsString('.thread-row-inbox .thread-meta a,', $css);
         self::assertStringContainsString('color: var(--artifact-link)', $css);
         self::assertStringContainsString('--artifact-link: var(--river-500)', $tokens);
         self::assertStringContainsString('--artifact-link: var(--river-200)', $tokens);
@@ -142,10 +142,10 @@ final class AppInboxRemediationTest extends TestCase
 
         $active = $this->get('/inbox', ['scope' => 'starred', 'order' => 'active'])->body();
         self::assertStringContainsString('A commended topic', $active);
-        self::assertStringNotContainsString('inbox-row-commends', $active);
+        self::assertStringNotContainsString('thread-meta-commends', $active);
 
         $commended = $this->get('/inbox', ['scope' => 'starred', 'order' => 'commended'])->body();
-        self::assertStringContainsString('inbox-row-commends', $commended);
+        self::assertStringContainsString('thread-meta-commends', $commended);
     }
 
     /**

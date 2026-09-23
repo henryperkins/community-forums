@@ -221,7 +221,7 @@ test('the publisher record copies the head chips, key table and re-openable disc
   await expectPackagesArea(page, 'Packages');
 
   await expect(page.locator('.packages-card-head h2.admin-record-title')).toBeVisible();
-  await expect(page.locator('.packages-card-head .packages-pill').first()).toBeVisible();
+  await expect(page.locator('.packages-card-head .state').first()).toBeVisible();
   await expect(page.locator('table.registry-keys-table')).toBeVisible();
   await expect(page.locator('details.packages-disclosure')).toHaveCount(2);
 

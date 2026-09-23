@@ -136,19 +136,13 @@ $pageQuery = static fn (int $value): array => array_replace($baseQuery, ['page' 
         <?php endif; ?>
 
         <?php if ($pageCount > 1): ?>
-            <nav class="pager content-tag-pager" aria-label="Tag catalogue pages">
-                <?php if ($page > 1): ?>
-                    <a class="pager-control" href="<?= $e($queryHref($pageQuery($page - 1))) ?>" aria-label="Previous tag page">Previous</a>
-                <?php else: ?>
-                    <span class="pager-control is-disabled" aria-disabled="true">Previous</span>
-                <?php endif; ?>
-                <span class="pager-label">Page <?= $page ?> of <?= $pageCount ?></span>
-                <?php if ($page < $pageCount): ?>
-                    <a class="pager-control" href="<?= $e($queryHref($pageQuery($page + 1))) ?>" aria-label="Next tag page">Next</a>
-                <?php else: ?>
-                    <span class="pager-control is-disabled" aria-disabled="true">Next</span>
-                <?php endif; ?>
-            </nav>
+            <?= $this->partial('partials/pager', [
+                'page' => $page,
+                'total_pages' => $pageCount,
+                'href' => static fn (int $target): string => $queryHref($pageQuery($target)),
+                'aria_label' => 'Tag catalogue pages',
+                'noun' => 'tag',
+            ]) ?>
         <?php endif; ?>
     </section>
 <?= $this->partial('admin/_console_end') ?>
