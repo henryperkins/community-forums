@@ -1,8 +1,14 @@
 # RetroBoards — UI kit
 
+> **Reference-only survey, not a current executable UI.** The preview bundle it
+> depended on was retired on 2026-08-27. Inbox, Conversation, and Profile are
+> superseded by `templates/forum-inbox/`, `templates/thread-view/`, and
+> `templates/user-profile/`; the Leaderboard remains the only screen without an
+> owning template. Do not use this kit as production behavior or hand-sync it.
+
 A high-fidelity, interactive recreation of **RetroBoards**, the Community Inbox, rendered in the **Imladris** design language. It composes the design-system primitives (`window.ImladrisDesignSystem_c3e027`) — it does not re-implement them.
 
-Open **`index.html`**. The product layout (shell chrome, rail, panes, profile cover, leaderboard) lives in **`kit.css`**; the reusable primitives come from the system's `styles.css` + `_ds_bundle.js`.
+The historical `index.html` is retained as source provenance. It depended on the retired `_ds_bundle.js` and is not executable in this mirror. The product layout was a survey; the reusable primitives remain in `styles.css` and `components.css`.
 
 ## What it shows
 
@@ -16,7 +22,7 @@ Plus two more product screens, reachable from the rail / identity:
 - **Profile** — the twilight identity cover (gilt avatar, tier pill, regard, Follow / Message), **Marks of esteem** (including a locked one), and tabbed activity.
 - **Top contributors** — the leaderboard (roman-numeral top-3 cards, then compact rows) with the italic footnote.
 
-## What's interactive (faked)
+## Historical prototype interactions (not runnable here)
 
 - Click a topic to open it in the reading pane; click the brand or rail to navigate.
 - **Hall / Watch** switches comfortable ↔ compact density; sort + filter tabs filter the list live.
@@ -27,7 +33,7 @@ All state is in-memory React; there is no backend. Seed content lives in `data.j
 
 ## Files
 
-- `index.html` — mounts the app; loads `styles.css`, `kit.css`, React + Babel, `_ds_bundle.js`, `data.js`, then the screens.
+- `index.html` — historical app mount; it refers to the retired `_ds_bundle.js` and is not runnable in this mirror.
 - `kit.css` — product-screen layout (shell, top bar, rail, inbox panes, conversation header, profile cover, leaderboard, responsive collapse).
 - `data.js` — seed council (users, boards, threads, posts, leaderboard, badges) on `window.RB`.
 - `Topbar.jsx` · `Rail.jsx` · `Inbox.jsx` · `Conversation.jsx` · `Profile.jsx` · `Leaderboard.jsx` · `App.jsx` — the screens (loaded via Babel; they share scope on `window.RB*`).

@@ -1,58 +1,53 @@
-# Production — the runtime contract and the parity matrix
+# Production contract and design ownership
 
-Two things live here: **what consuming the Imladris system means** (the rules a consumer must honour), and **which production surface each part of the system represents** (the parity matrix). Feature-flag truth itself lives in `production-contract.json`; the inspected commit lives in `manifest.json`.
+This file is the maintained consumer contract for Imladris. The system owns
+presentation; RetroBoards owns behavior. When they differ, resolve product and
+technical questions through `DECISIONS.md` → `PRODUCT_DESIGN.md` → `SCHEMA.md`
+→ the surface specs → accepted ADRs and current application contracts/tests.
+Imladris references never remove, downgrade, or enable a product feature.
 
----
+## Runtime contract
 
-## Part 1 — Runtime contract
+- **Server-rendered first.** PHP templates and real URLs own the experience.
+  Every flow must work with JavaScript disabled; external same-origin JS may
+  decorate it through the existing endpoints and `data-*` hooks.
+- **Strict CSP.** Production styles and scripts are external and same-origin;
+  no inline `<script>`, `<style>`, `style=` attribute, or CDN font/runtime is
+  valid production markup. The generated CSS and fonts are self-hosted.
+- **Design previews are not application runtime.** React components, imported
+  UI kits, and `.dc.html` loaders are source references unless a reproducible
+  upstream compiler is brought into this repository. See `PREVIEW_STATUS.md`.
+- **Composer.** `COMPOSER.md` owns the current four-mount contract. Canonical
+  content is Markdown; the server-rendered textarea remains the submit source
+  and no-JS/kill-switch fallback. Full-navigation submit, per-render
+  idempotency, and draft behavior are specified there and in ADRs 0013/0020.
+- **Tokens and themes.** Production CSS consumes semantic tokens so the
+  parchment/twilight registers switch consistently. Application-owned behavior
+  and compatibility rules remain in `public/assets/app.css`; the generated
+  Imladris layer is built from the allowlisted resources and mirror sources.
+- **Content voice and iconography.** UI chrome uses sentence case, the council
+  lexicon, Lucide line icons, and the two established brand stars. Status is a
+  word plus color; authored-content emoji remain supported.
 
-Governing rule: **the design system owns presentation; RetroBoards owns behavior.** Conflicts resolve in this order: DECISIONS.md → product/surface specs → accepted ADRs → application contracts/tests → Imladris references. The system never removes, downgrades, enables, or redefines a forum feature; missing design coverage is added *here* before application adoption.
+## Current ownership and status sources
 
-### Constraint class (from the app at commit `4efe4e33`)
-- **CSP**: `default-src 'self'; base-uri 'self'; form-action 'self'; script-src 'self'; style-src 'self'` (+ `img-src 'self' data:`). No CDN of any kind. Previews and artifacts must work self-hosted; `tokens/fonts.css` therefore declares `@font-face` over bundled WOFF2 (`assets/fonts/`, OFL licenses alongside) — never `@import` from a font CDN.
-- **Progressive enhancement**: every surface works with no JavaScript; a `has-js` class gates enhancements. Designs must include the no-JS state (e.g. the composer's plain Markdown textarea) — never JS-only anatomy.
-- **Server-rendered**: vanilla PHP templates; the React primitives in `components/` are **design previews only**, never production implementation guidance.
+| Question | Maintained source |
+|---|---|
+| Which design artifact represents a production screen? | [`github.md`](github.md) screen map, interpreted with [`LOCAL_RECONCILIATION.md`](LOCAL_RECONCILIATION.md) for local adaptations and held-back upstream changes. |
+| Which feature flags are currently available/default-on? | `src/Core/FeatureFlags.php` (`DEFAULTS`), the owning ADR, and the feature runbook. The imported `production-contract.json` is an inspection snapshot from 2026-07-14, not live application status. |
+| Which commit was inspected when this mirror was imported? | `manifest.json` and the provenance section in `README.md`; this is mirror provenance, not the current application commit. |
+| Can an imported preview be executed here? | [`PREVIEW_STATUS.md`](PREVIEW_STATUS.md). |
+| What was retired or superseded in the mirror? | [`RETIRED.md`](RETIRED.md) and [`CHANGELOG.md`](CHANGELOG.md). |
 
-### The composer (COMPOSER.md v0.8, ADR 0013/0020)
-One shared shell, four mounts (reply / new_thread / dm / edit), identical feature surface. Canonical content is **Markdown in the textarea**; WYSIWYG mounts over it when `rich_composer` + `wysiwyg_composer` are on. Every form carries a CSRF `_token` and a fresh server-rendered `idempotency_key`. Send is a full navigation (no optimistic send — ADR 0020). Desktop Enter-to-send is context-aware (off in list/quote/code); Cmd/Ctrl+Enter always sends; touch soft-Enter = newline. Drafts persist locally per context key + `server_drafts` sync. The former "Posting as" strip / text-button toolbar anatomy is superseded (v0.7) and must not reappear.
+The design mirror last synced its upstream screen map on 2026-09-12. Local
+application reconciliations and production-transfer updates are recorded
+chronologically in `LOCAL_RECONCILIATION.md`; do not infer runtime parity from
+an old inspected-commit table.
 
-### Theming
-Light (parchment) is default; twilight is `[data-theme="dark"]`; system theme follows `prefers-color-scheme`. Consume **semantic tokens** (`--surface-raised`, `--brand`, `--accent-2`, `--on-done`, `--text-body`…), never raw primitives, so the register flips for free. `--text-body` is a **color**; the body font size is `--text-size-body`.
+## Retired duplicate contracts
 
-### Emoji
-Decorative/status emoji in UI chrome: prohibited (status = word + colour). Authored-content emoji and the composer's emoji tooling (`:` autocomplete, picker dialog, custom emoji, GIPHY slash where configured): supported product features.
-
-### Flags
-Feature-flag truth lives in `production-contract.json`. Reserved-dark features (`server_extensions`, `governance`, `service_principals`, `verified_links`) receive **no invented UI** — only the disabled admin-nav entry that exists in production.
-
----
-
-## Part 2 — Parity matrix (RetroBoards @ `4efe4e33`, main, 2026-07-14)
-
-Classification: **core** (unflagged) · **GA** (flag default-on) · **dark** (implemented, default-off) · **reserved** (Gate B — no invented UI). DS column: where the surface is represented; *behavior-only* = no visual anatomy of its own (contracts, keys, headers). Every production surface is now represented or classified behavior-only — `manifest.json → unresolved_gaps` is `[]`.
-
-| Surface | Routes / templates | Class | DS representation |
-|---|---|---|---|
-| Shell: topbar, rail, inbox panes | `home`, `inbox`, `layout`, partials `topbar` `sidebar` | core | `components/forum/ForumNav` + `BoardRail` and `components/presence/PresenceList`, rendered verbatim by `partials/topbar` / `sidebar` in the design's vocabulary (ADR 0032); `templates/forum-inbox` + thread-view template; `ui_kits/retroboards` is a survey only |
-| Boards, folders, saved feeds, bookmark folders | `board`, `feed`; `board_folders` `saved_feeds` `expanded_feeds` `bookmark_folders` | GA | `feature-ui/rail/` (one spec per flag) + `feature-ui/organize/` (the gathered surface). **No template owns this surface** — see `REDUNDANCY-AUDIT.md` §3 |
-| Topic / posts / post toolbar | `thread`, partials `post` `post_toolbar` `thread_row` | core | `Post` + `ThreadRow` (one row, `presentation="default" \| "board"`, mirroring the partial), thread-view template |
-| Composer (all 4 mounts) | partials `composer_shell` `composer` `new_thread_form` `dm_compose_fields` | core + `rich_composer` `wysiwyg_composer` `drafts` `server_drafts` `uploads` `custom_emoji` `slash_giphy` GA | `Composer` component + `components.css` shell block (verbatim CSS); states: toolbar/overflow, uploads, draft+conflict, preview, anonymous, error, submitting, locked |
-| Reactions, stars, solved, regard | in `post`/`thread` | GA (`engagement`) | `CommendStar`, post specimens |
-| Topic workflow, tags, split/merge | `tags/*`, mod tools partials; `topic_workflow` `tags` `split_merge` | GA | `templates/thread-view` — tag reads + composer tag input; assign / snooze / escalate; the split-or-merge modal |
-| Polls | in thread + composer; `polls` | GA | `templates/thread-view` — choose-one, results, hidden-until-voted, close poll |
-| Thread Intelligence (Living Briefs, memory, references, related) | partials `living_brief` `thread_memory_tools`; `community_memory` `automated_context` `content_references` | GA | `templates/living-brief` (the three provenance postures) + thread-view template; operator controls in `templates/admin-settings` |
-| Link previews · expanded files · group DMs · custom CSS | behind flags | **dark** | custom CSS in `templates/admin-appearance` (behind its acknowledgement); others behavior-only until surfaced |
-| Search, notifications, announcements, presence | `search` `notifications` partial `announcement_banner`; flags GA | GA | `templates/board-index` (search + notices), `templates/users-online` + `components/presence/`, `templates/admin-notifications` (announcements) |
-| DMs | `dm/index` `new` `show` | GA | kit conversation + Composer dm mount |
-| Feeds, follows, badges, reputation, leaderboard | `leaderboard`, partials `badges`; `badge_rules` `reputation_ledger` GA | GA | `feature-ui/rail/` (saved feeds), `templates/admin-features` (badge rules), `templates/user-profile` (regard + marks of esteem); the leaderboard lives **only** in `ui_kits/retroboards` — no template yet |
-| Profiles (+gated), preferences, account lifecycle | `profile/*`, `account/*` (13 templates); `account_lifecycle` `custom_profile_fields` `profile_media` GA | GA/core | `templates/user-profile`, `templates/account-settings` · `ui_kits/system` (profile-gated) |
-| Auth: login, register, forgot/reset, MFA, verify, passkeys | `auth/*`, `passkeys.js` | core | `ui_kits/auth` — login, passkey sign-in, step-up, register, invited registration, forgot, reset, MFA, verify |
-| OAuth, invitations, providers | `oauth` `invitations` `provider_registry` GA | GA | `templates/admin-integrations` (sign-in providers + the disable path), `templates/admin-members` (invitations); `ui_kits/auth` OAuth buttons |
-| Moderation: reports, approvals, appeals, anti-abuse | `mod/*`, `appeals/index`; `moderation_queue` `appeals` `anti_abuse` GA | GA | kit mod screens |
-| Admin: dashboard, features, TI, structure, users, branding, tags, badges, email, announcements | `admin/*` | core/GA | the ten `templates/admin-*` templates, unified by `components/admin/AdminNav` — each carries its own drill-ins and validation |
-| Platform: packages, themes, API tokens, webhooks, service secrets, hooks | `admin/*`; P5 Gate A flags GA | GA | `templates/admin-packages` (catalogue → plan → consent → enable, registry trust), `templates/admin-integrations` (tokens, webhooks, sign-in), `templates/admin-appearance` (themes + safe mode) |
-| Extensions · governance · service principals · verified links | `admin/extensions` disabled entry | **reserved** | disabled nav entry only — by rule |
-| Setup wizard, errors (incl. DB-down), privacy, unsubscribe, health, SEO | `setup/wizard`, `errors/error`, `privacy`, `unsubscribe` | core | `ui_kits/system` (setup wizard, error incl. database-down, privacy, unsubscribe); health/SEO behavior-only |
-| CSRF, idempotency, sessions, rate limits | app-wide | core | behavior-only (Part 1 above) |
-
-**Superseded anatomy check**: no "Posting as" strip, text-button toolbar, or standalone textarea/action-row composer remains in source or previews (verified by grep, 2026-07-14).
+`RUNTIME_CONTRACT.md` and `PRODUCTION_PARITY.md` are compatibility pointers to
+this file. Do not add a second runtime contract or a separately maintained
+production parity matrix there. Current behavior is verified in the application
+and its tests; this mirror's ownership map and local deviations are recorded
+above.

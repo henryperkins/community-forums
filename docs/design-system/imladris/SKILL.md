@@ -15,7 +15,7 @@ If the user invokes this skill without any other guidance, ask them what they wa
 - `styles.css` — the single entry point. Link it and you inherit all tokens, fonts, and base styles. It `@import`s `tokens/*.css` (colour, type, fonts, space) and `components.css`.
 - `components/<group>/` — reusable React reference source (`.jsx` + `.d.ts` + `.prompt.md`). The stale `_ds_bundle.js` preview output is retired in this repository; compile the JSX in a consuming app or the upstream authoring environment. Read each `.prompt.md` for usage.
 - `guidelines/*.card.html` — foundation specimens (colour, type, spacing, brand) you can open to see real values.
-- `ui_kits/<product>/` — interactive recreations of the product, the best reference for how surfaces compose. `retroboards/` (Council Inbox, Profile, Leaderboard), `settings/` (the account console — and the showcase of the lapidary forms register), `auth/` (the login/register/reset/MFA/verify gate), `admin/` (the operator's console — dashboard, structure, users, email, webhooks, branding…).
+- `ui_kits/<product>/` — imported authoring references, not current production implementations. `auth/`, `dm/`, `mod/`, and `system/` remain useful where no owning template exists. `retroboards/` is a source-only survey: Inbox, Conversation, and Profile are superseded by route templates; Leaderboard has no template. `admin/`, `settings/`, and `reading/` are retired upstream and kept only as mirror references. See `RETIRED.md` and the README in each kit before using one.
 - `assets/` — `elven-star.svg` (house mark), `commend-star.svg` (esteem mark), `brand/` mood imagery.
 
 ## The short version

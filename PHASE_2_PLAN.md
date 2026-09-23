@@ -3,7 +3,7 @@
 **Owner:** Henry  
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
 **Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns the final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  
-**Status context:** Phase 1 is **not yet built** — it is the prerequisite for Phase 2. Phase 2 is the next planned product slice and starts only after Phase 1 is implemented and accepted.
+**Status context:** Phases 1 and 2 are complete. This file preserves the original Phase 2 release-train plan and acceptance criteria; the accepted phase history is in `docs/history/PHASE_1-4_HISTORY.md`. The entry gate and workstream statuses below describe the plan-time baseline, not current work.
 
 **Entry gate — Phase 1 must be built and closed first.** Phase 2 may begin only once Phase 1's definition of done is green with evidence (auth/session/CSRF; posting create/read/edit/delete; first-run admin + inline moderation; suspended/banned write-gates) and the Phase 1 schema is migrated and seeded per SCHEMA §6 (`users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`). Phase 2 begins only on that green baseline. _(Phases 3–7 carry this as their own "## 2. Entry gate"; Phase 2 keeps it inline here to avoid renumbering its sections.)_
 

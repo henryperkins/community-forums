@@ -1,5 +1,7 @@
 # RetroBoards Admin Dashboard UI audit
 
+> **Historical pre-remediation audit.** Its findings are a 2026-07-18 snapshot, not an active backlog. Dispositions and verification are in [`docs/history/admin-dashboard-ui-remediation-2026-07-18.md`](../../docs/history/admin-dashboard-ui-remediation-2026-07-18.md) and [`docs/history/admin-ux-remediation-2026-07-18.md`](../../docs/history/admin-ux-remediation-2026-07-18.md).
+
 Date: 2026-07-18  
 Environment: seeded `retroboards_e2e` database, authenticated test administrator, Chrome  
 Viewports: 1280 x 800 desktop and 390 x 844 mobile  

@@ -1,10 +1,10 @@
 # Retired artifacts still present in this mirror
 
-**Recorded 2026-08-03.** This mirror (`docs/design-system/imladris/`) is a local
-copy of the live Claude Design project `c3e02753-607c-40b6-994c-9ba1a65bb367`.
-The folders below **no longer exist upstream** — the live project deleted them —
-but they are deliberately **kept on disk here** rather than deleted, so that
-in-flight work and old links do not break mid-migration.
+**Recorded 2026-08-03; reconciled 2026-09-23.** This mirror
+(`docs/design-system/imladris/`) is a local copy of the Claude Design project
+`c3e02753-607c-40b6-994c-9ba1a65bb367`. Some artifacts below no longer exist
+upstream. This mirror retains source-only copies or small README stubs where
+older evidence and imported links still point; they are not current owners.
 
 **They are reference-only.** Do not build against them, do not cite them as the
 owner of a surface, and do not hand-sync changes into them. The authoritative
@@ -16,16 +16,15 @@ four superseded artifacts out"*.
 
 ## `ui_kits/admin/` — retired upstream 2026-08-03
 
-9 files: `AdminApp.jsx` · `AdminPackages.jsx` · `AdminParity.jsx` ·
-`AdminSections.jsx` · `data.js` · `parity-data.js` · `index.html` · `kit.css` ·
-`README.md`.
+The local mirror now retains only `README.md`, which points here. The eight
+interactive kit files are no longer vendored; their upstream directory was
+retired when the production templates became the screen owners.
 
 **Superseded by:** the ten `templates/admin-*` templates, unified by
 `components/admin/AdminNav` (`ADMIN_AREAS`). Its own README had already said
 "SUPERSEDED by templates" and mapped all ten destinations.
 
-Two things moved off it when it was retired, and both matter to anyone reading
-the old kit:
+The old kit's surface ownership moved to the templates when it was retired:
 
 - `PRODUCTION.md`'s **OAuth / invitations / providers** row no longer names this
   kit. Sign-in providers (and the disable path) belong to
@@ -60,7 +59,8 @@ carries every surface these three specified:
 Upstream's rule: a flag belongs on the surface it changes, not in a gallery
 beside it. `feature-ui/` upstream is now a **two-card flag ledger** — `rail/`
 and `organize/` only — and those two are the one surface in the system with **no
-owning template** (`REDUNDANCY-AUDIT.md` §3, still open by choice).
+owning template** (`REDUNDANCY-AUDIT.md` §3, still open by choice). The local
+mirror retains the older polls/tags/moderation previews as reference copies.
 
 ---
 

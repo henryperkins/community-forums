@@ -1,8 +1,10 @@
 # Phase 4 Carryover Partial Stopping Point
 
 Date: 2026-06-30
-Branch: current closeout train
+Snapshot branch: current closeout train (2026-06-30)
 Base: `main`
+
+> **Historical stopping-point record.** The partial implementation and test results below describe that 2026-06-30 branch only. Later dispositions are recorded in `docs/history/PHASE_1-4_HISTORY.md` and ADRs 0002/0003/0019.
 
 This branch is a partial implementation of ADR 0003 carryovers. It does not
 replace the existing Phase 4 "accepted with deferrals" status, and it does not
@@ -98,7 +100,7 @@ Focused regression for this increment:
   `docs/evidence/browser/{desktop,mobile}/26-slash-menu.png` and
   `docs/evidence/browser/{desktop,mobile}/27-giphy-inserted.png`.
 
-Full regression for the current checkout:
+Full regression for the 2026-06-30 checkout:
 
 - `RB_TEST_FRESH=1 composer test` -> 803 tests / 3236 assertions, green.
 - `cd tests/browser && npm run evidence` -> 27 passed / 1 skipped across 28

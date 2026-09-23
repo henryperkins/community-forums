@@ -94,9 +94,11 @@ mirror reading as more authoritative than it is.
   returns only the file itself) and nothing should: production ships no JSX, and the
   design-system React is never built here. It is kept — deleting a mirrored file only
   creates sync drift, and it will be re-added on the next sync — but it is recorded here
-  as **inert by design** so it stops reading as unenforced enforcement. The same applies
-  to `PRODUCTION_PARITY.md` and `RUNTIME_CONTRACT.md`: prose contracts, no enforcing code.
-  What *is* enforced lives in `ImladrisAssetBuilder` and `ImladrisRuntimeAssetTest`.
+   as **inert by design** so it stops reading as unenforced enforcement. The old
+   `PRODUCTION_PARITY.md` and `RUNTIME_CONTRACT.md` contents are now compatibility
+   pointers to `PRODUCTION.md`; current flag truth comes from `FeatureFlags::DEFAULTS`
+   and runbooks, not the imported JSON snapshot. What *is* enforced lives in
+   `ImladrisAssetBuilder` and `ImladrisRuntimeAssetTest`.
 
 ## 2026-08-08 — the design screens are now digested
 

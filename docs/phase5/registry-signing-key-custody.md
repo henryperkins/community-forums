@@ -1,9 +1,8 @@
 # A4 — Registry signing-key custody & rotation runbook (Phase 5 entry-gate artifact)
 
 **Date:** 2026-06-30
-**Status:** Recorded as the A4 entry-gate artifact required by `PHASE_5_PLAN.md`
-§2/§7 (#1); operationalizes ADR 0004 **D2**. **Pending product-owner sign-off**
-on the rotation cadence and the key custodian (§7).
+**Status:** Recorded and owner-approved 2026-06-30; accepted as the A4 entry-gate
+artifact in ADR 0012 on 2026-07-01. It operationalizes ADR 0004 **D2**.
 **Precedence:** subordinate to `DECISIONS.md` → `PRODUCT_DESIGN.md` → ADR 0004 (**D2**).
 
 > **Scope.** This runbook covers the **package-registry / publisher signing trust

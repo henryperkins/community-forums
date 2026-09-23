@@ -3,7 +3,7 @@
 **Owner:** Henry  
 **Plan type:** Delivery baseline and formal closeout  
 **Source of truth:** `PRODUCT_DESIGN.md`, with `DECISIONS.md` authoritative where documents conflict. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  
-**Status context:** **Nothing is built yet** — there is no code, schema, or tests on disk; the project is at the planning stage. This plan is the **build-and-acceptance checklist** for Phase 1: follow it in sequence to implement the MVP, then use its definition of done and evidence policy to accept the result.
+**Status context:** **Phase 1 is complete.** This file preserves the original build-and-acceptance checklist; the phase closeout and current historical evidence live in `docs/history/PHASE_1-4_HISTORY.md`. Workstream labels below are the planning-time snapshot, not current task status.
 
 ## 1. Phase objective
 
@@ -78,7 +78,7 @@ The following must not delay Phase 1 acceptance:
 - The configurable/tunable anti-spam + rate-limit service (per-action limits, new-user throttles, link/word filters, spam scoring) — deferred to Phase 3 (P3-05). Phase 1 ships only the baseline auth/posting limits listed in scope above.
 - Email-verification-gated first post — lands in Phase 2 alongside email verification and fan-out (Phase 1 defers all email). Until then, first-post spam is mitigated by the Phase 1 baseline rate limits and inline moderation.
 
-> **Decision (2026-06-26):** PRODUCT_DESIGN §11 marks rate limiting, the first-post email gate, and security headers as **P0**, but no phase previously owned them for the MVP (the configurable limiter is Phase 3 / P3-05, and the email gate needs Phase 2 email). To avoid shipping public auth with no brute-force protection, *baseline* login/registration rate limiting and security headers are pulled into Phase 1 (see P1-03). The *configurable* anti-spam service (P3-05) and the *email-verification* first-post gate (Phase 2) stay deferred because they depend on infrastructure not built in Phase 1 (a tunable limiter; email delivery). Note: these baseline items are **P0 and part of Phase 1's build scope** (like everything else in this phase — nothing is built yet). Flip any of these if you'd rather sequence differently.
+> **Historical decision (2026-06-26):** PRODUCT_DESIGN §11 marked rate limiting, the first-post email gate, and security headers as **P0**, but no phase previously owned them for the MVP. Baseline login/registration rate limiting and security headers were pulled into Phase 1; configurable anti-abuse remained Phase 3, and the email-verification first-post gate remained Phase 2. This records the sequencing decision at plan time; Phase 1 is now complete.
 
 ## 4. Delivery workstreams
 

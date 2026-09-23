@@ -2,7 +2,7 @@
 
 **Owner:** Henry  
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
-**Plan status:** **Draft — execution is gated by formal Phase 4 closeout and Milestone 0 trust-model approval**  
+**Plan status:** **Gate A accepted and default-on; Gate B remains reserved.** Current workstream state and evidence are in `PHASE_5_STATUS.md`; acceptance and rollout decisions are in ADRs 0012, 0017, and 0018.
 **Prepared:** 2026-06-25  
 **Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
 

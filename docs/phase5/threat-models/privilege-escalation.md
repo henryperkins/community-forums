@@ -1,6 +1,8 @@
 # Phase 5 threat model - Privilege escalation
 
-**Status:** Recorded 2026-07-01 - pending owner review
+**Status:** Gate A risk record accepted 2026-07-09 (ADR 0017). The Gate B
+governance scenario remains a reserved delivery item; the 2026-07-01 review
+date and fixture ownership below are historical.
 **Sources:** PHASE_5_PLAN section 9 built-in role parity, custom role, grantor authority, state precedence, private read gate, temporary grant, role edit, simulator, and last-owner scenarios; section 12 role risks; `docs/phase5/capability-taxonomy.md`.
 **Fixture index:** `fixtures.json`, enforced by `tests/Unit/Core/ThreatModelIndexTest.php`.
 

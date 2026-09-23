@@ -6,15 +6,15 @@ Where most forum software looks cheap, RetroBoards is dressed in Imladris: **par
 
 > *Status is verified, not asserted; outcomes resolve into artifacts; testimony never outranks the work.*
 
-This project is the **source of truth** for tokens, component source, foundation specimens, and high-fidelity product references. Everything visual derives from CSS variables on `styles.css`. The formerly checked-in `_ds_bundle.js` preview output was retired on 2026-08-27 because this repository has no reproducible compiler for it and its compiled code had drifted from the JSX. Production never loaded it. See `PREVIEW_STATUS.md` before trying to execute an imported React preview.
+This project is the **source of truth** for Imladris design tokens, component source, foundation specimens, and high-fidelity product references. Everything visual derives from CSS variables on `styles.css`. The formerly checked-in `_ds_bundle.js` preview output was retired on 2026-08-27 because this repository has no reproducible compiler for it and its compiled code had drifted from the JSX. Production never loaded it. See `PREVIEW_STATUS.md` before trying to execute an imported React preview.
 
-**Also at the root:** `PRODUCTION.md` (the runtime contract consumers must honour + the production parity matrix) · `production-contract.json` (feature-flag truth) · `manifest.json` (inspected commit, open gaps) · `imladris-spec.md` (the distilled implementation spec: status taxonomy, button and monogram anatomy) · `SKILL.md` · `CHANGELOG.md`.
+**Also at the root:** `PRODUCTION.md` (runtime contract and source map) · `production-contract.json` (imported flag-classification snapshot; verify live defaults in `src/Core/FeatureFlags.php`) · `manifest.json` (mirror provenance) · `imladris-spec.md` (the distilled implementation spec: status taxonomy, button and monogram anatomy) · `SKILL.md` · `CHANGELOG.md`.
 
 ---
 
 ## Sources
 
-Built by reading the product's own code. The authoritative material, in **`henryperkins/community-forums`** (vanilla PHP + MySQL, server-rendered) at commit **`4efe4e33`** (main, 2026-07-14 — see `manifest.json`):
+Originally built by reading the product's own code at commit **`4efe4e33`** (main, 2026-07-14 — see `manifest.json`). That commit is mirror provenance, not the current application state; see `github.md` and `LOCAL_RECONCILIATION.md` for subsequent syncs and local production adaptations.
 
 - `public/assets/app.css` — the **authoritative token + component CSS**, transcribed into `tokens/` and `components.css`, values unchanged.
 - `templates/partials/*.php` — the real markup (topbar, sidebar, thread_row, post, monogram) the React primitives recreate.
@@ -114,16 +114,18 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 - **Operator surfaces** — ten `admin-*` templates, all wearing `AdminNav`: `admin-overview` (dashboard & audit) · `admin-content` (boards & tags) · `admin-members` (members & invitations) · `admin-people` (roles & capabilities) · `admin-features` (features & badges) · `admin-settings` (settings & Thread Intelligence) · `admin-appearance` (branding & themes) · `admin-notifications` (email & announcements) · `admin-packages` (packages & registries) · `admin-integrations` (tokens, webhooks & sign-in).
 - **Document** — `engineering-handoff`: a long-form reference built from `components/doc/` — cover, numbered sections, figure slots, callouts, spec tables, with a Parchment / Twilight tweak.
 
-**Feature activation** (`feature-ui/` — one designed surface per GA flag, indexed at `feature-ui/index.html`)
+**Feature activation** (`feature-ui/` — imported gallery references; several areas were retired or superseded, see `RETIRED.md` and the current ownership map in `PRODUCTION.md`)
 - `polls/` · `tags/` · `rail/` (board folders, saved feeds, expanded feeds, bookmark folders) · `organize/` (the same rail features gathered into the one surface a member works in) · `moderation/` (workflow bar, split & merge). `shared/` holds their common chrome.
 
-**UI kits** (`ui_kits/<product>/` — imported authoring references; source remains inspectable, but bundle-dependent interaction requires the upstream compiler)
+**UI kits** (`ui_kits/<product>/` — imported authoring references; source remains inspectable, but bundle-dependent interaction requires the upstream compiler. Retired kits remain reference-only; see `RETIRED.md`.)
 - `retroboards/` — the **Council Inbox**: the three-pane shell, member/guest split, twilight Profile, Top contributors.
 - `auth/` — the **gate**: login, passkeys, register, forgot, reset, MFA, email-verify, OAuth, colophon.
 - `dm/` — **private counsel**: one reading room in the cool Bruinen register with a lock signature — grouped letters, overflow controls, the new-message dialog, read receipts.
 - `mod/` — **the warden's table**: reports queue, approval hold, appeals review, and the member's own appeal view, with live counts in the subnav.
-- `admin/` — the **operator's console**, scoped to drill-ins with no template of their own (user records, API tokens, webhooks, registry trust, providers, the reserved extensions entry). The `admin-*` templates own the rest; the console links out rather than keeping a second copy.
 - `system/` — setup wizard, error states (including database-down), privacy, unsubscribe, profile-gated.
+
+The former `ui_kits/admin/` is retired upstream; the local README is a pointer.
+Production operator surfaces are owned by the ten `templates/admin-*` screens.
 
 ---
 

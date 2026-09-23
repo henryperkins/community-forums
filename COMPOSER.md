@@ -1,7 +1,7 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.11 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
-**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
+**Status:** v0.12 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
 
@@ -14,7 +14,7 @@ One component, four mounts. The composer has three primary contexts, plus **Edit
 
 Everything the input can do — formatting, shortcuts, mentions, media, drafts, validation — is **the same in all four**. The only differences are the thin wrapper around the input (a title field for New Thread, a recipient for DM) and a few context-scoped limits. This doc specifies the input itself, exhaustively, and defines that unified contract (§15).
 
-> **Editing model decision:** **WYSIWYG over canonical Markdown** — the enhanced surface is Milkdown, mounted only when `rich_composer` and `wysiwyg_composer` are both enabled. The server-rendered `<textarea>` remains the submit source, source-mode editor, and no-JS/kill-switch fallback. This resolves PRODUCT_DESIGN.md open question #2 and is recorded in ADR 0013.
+> **Editing model decision:** **WYSIWYG over canonical Markdown** — the enhanced surface is Milkdown, mounted only when `rich_composer` and `wysiwyg_composer` are both enabled. The server-rendered `<textarea>` remains the submit source, source-mode editor, and no-JS/kill-switch fallback. This implements the Markdown decision in DECISIONS §3 #2 and is recorded in ADR 0013.
 
 ## Contents
 
@@ -34,7 +34,7 @@ Everything the input can do — formatting, shortcuts, mentions, media, drafts, 
 14. Architecture & Implementation
 15. Unified Feature-Surface Matrix
 16. Cross-Doc Deltas & Schema
-17. Phasing & Open Questions
+17. Phasing & decision records
 18. Changelog
 
 ---
@@ -213,7 +213,7 @@ The file picker, paste, and drop are JavaScript enhancements. Without JavaScript
 - **Restored on mount**, **cleared on successful send.** Survives reload, navigation, and crashes. A subtle "Draft saved" indicator confirms.
 - The **"Drafts"** sidebar quick-filter (PRODUCT_DESIGN §5.2/§6.5) lists active drafts with their context + a preview; click to resume in the right composer.
 - **Signed-out** users' drafts still save locally; after sign-in, offer to restore the text into the composer.
-- **Server-side draft sync** across devices (a `drafts` table) is **P2**; v1 is local-only. When it lands, a local/remote divergence prompts a choose-which.
+- **Server-side draft sync** complements local recovery for authenticated members through the `server_drafts` table and is default-on. A revision conflict presents both copies for an explicit choice; disabling `server_drafts` leaves local recovery available. See `docs/runbooks/server_drafts.md`.
 
 ## 9. Submission & Feedback
 
@@ -389,40 +389,32 @@ CREATE TABLE attachments (
 ```
 
 - **`posts.body` already stores Markdown** (canonical) and **`posts.body_html`** the cached sanitised render (PRODUCT_DESIGN.md §8) — no change needed; this doc just fixes the markup *flavour* as Markdown.
-- **Drafts** are local (`localStorage`) in v1; an optional **`drafts`** table (`user_id`, `context_type`, `context_id`, `title`, `body`, `updated_at`) backs cross-device sync at **P2**.
+- **Drafts** always keep a local `localStorage` recovery copy. Authenticated cross-device sync uses `server_drafts` (`user_id`, `context_key`, `revision`, `title`, `body`, `metadata`, `updated_at`, `expires_at`), default-on and independently reversible through the feature flag.
 - **Mentions** are parsed at submit; an optional `post_mentions` lookup table can speed "who was mentioned" queries if needed (P2).
 - **Content references** use `content_references.target_type ENUM('board','thread','post','tag')`; migration `0071_content_reference_tags` added `tag` so WYSIWYG `#` tag suggestions and `/tags/{slug}` links can resolve through the same read-gated reference-card path.
 
-## 17. Phasing & Open Questions
+## 17. Phasing & decision records
 
-### 17.1 Phasing
+### 17.1 Original priority allocation
 
-> **Priority tier ≠ delivery phase (DECISIONS §2).** The P0/P1/P2 below are *priority* tiers. In **delivery** terms: **Phase 1** ships the no-JS `<textarea>` Markdown baseline (server-rendered + sanitised render, edit reuse); **Phase 2** adds **@mentions** (parse-on-submit notifications + autocomplete) and the **DM** mount; the **unified rich `Composer`** (toolbar, source mode, localStorage Drafts/recovery, preview, and the §15 "identical everywhere" surface) is delivered in **Phase 3 Gate A** (PHASE_3_PLAN); **server-side draft sync** is Phase 3 Gate B; the Milkdown WYSIWYG adapter (ADR 0013) shipped deploy-dark behind `wysiwyg_composer` and graduated to **default-ON on 2026-07-02**. Optimistic send/reconcile remains deferred in ADR 0020. A P0-tier composer feature is therefore MVP-critical *in priority* but may be delivered through staged flags rather than Phase 1.
+> **Priority tier ≠ delivery phase (DECISIONS §2).** The P0/P1/P2 labels below preserve the original priority rationale; current feature availability is owned by `FeatureFlags::DEFAULTS` and the feature runbooks. In delivery terms, Phase 1 shipped the no-JS `<textarea>` Markdown baseline; Phase 2 added @mentions and the DM mount; and Phase 3 delivered the unified rich Composer plus server-side draft sync. The Milkdown WYSIWYG adapter (ADR 0013) and `server_drafts` graduated to default-on on 2026-07-02. Optimistic send/reconcile remains deferred in ADR 0020.
 
 - **P0** — the shared `Composer` + Markdown editing core (bold/italic/strike/inline-code/quote/lists/links), Enter-to-send + core shortcuts, **drafts** (localStorage), validation, signed-out join-bar, **edit reuse**, the no-JS/source-mode `<textarea>` fallback, and the accessibility baseline. **Optimistic send + rollback remains a P0-priority follow-up, not a shipped behavior** (ADR 0020).
 - **P1** — @mentions + emoji picker, **image upload/paste/drag**, code blocks (+language), limited headings, spoilers, **preview toggle**, toolbar overflow, board-aware limits, character counter, content-filter integration.
-- **P2** — file attachments, link unfurl/embeds, tables, task lists, `#board` references, **server draft sync**, custom emoji, a slash-command (`/`) menu, GIFs/polls.
+- **P2** — file attachments, link unfurl/embeds, tables, task lists, `#board` references, custom emoji, a slash-command (`/`) menu, GIFs/polls.
 
-### 17.2 Open questions
+### 17.2 Decision records
 
-> **Resolved in [DECISIONS.md](DECISIONS.md) §6.** Retained below for context.
-
-| # | Question | Owner | Blocking? |
-|---|---|---|---|
-| 1 | Editor library. **Resolved:** Milkdown selected in ADR 0013 for the optional WYSIWYG layer; keep Tiptap/ProseMirror and CodeMirror/ink-mde as fallback options only if future acceptance gates fail. | Eng | No |
-| 2 | Global send default: Enter-to-send vs `Cmd/Ctrl+Enter` (user-overridable either way). | Product | P0 |
-| 3 | Heading levels allowed in posts: none / `##`–`###` only / all. | Product | P1 |
-| 4 | Tables in v1 or P2. | Product / Eng | P1 |
-| 5 | Embeds/unfurl: fetch server-side (SSRF/privacy), which providers, opt-in per board? | Eng / Henry | P2 |
-| 6 | Attachment storage/CDN + max sizes/types. | Henry / Eng | P1 |
-| 7 | Slash-command (`/`) insert menu — include or skip? | Product | P2 |
-| 8 | Per-post mention cap value. | Product | P1 |
-| 9 | Server-side draft sync — when? | Eng | P2 |
+The original composer question register is consolidated in
+[DECISIONS.md](DECISIONS.md) §6. Current implementation and rollout decisions
+are recorded by the owning ADR and runbook; proposed work belongs in a new ADR.
+This surface specification has no separate decision backlog.
 
 ## 18. Changelog
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.12 | 2026-09-23 | Replaced obsolete local-only-draft and Phase 3 planning language with the shipped `server_drafts` contract. Consolidated the original question register into DECISIONS and ADRs. |
 | v0.11 | 2026-09-23 | Upload readiness, explicit failure recovery, interrupted drafts, cancellation, server pending-image validation, and wiki attachment finalization. Local evidence is separate from production/device verification. |
 | v0.1 | 2026-06-19 | Initial composer design. One shared component across New Thread / Reply / DM (+ edit) with an identical feature surface; **hybrid live-Markdown** editing model (resolves PRODUCT_DESIGN.md markup question); toolbar; full keyboard shortcuts (Cmd/Ctrl+K reconciled); mentions/emoji/references; attachments/images/embeds; drafts & autosave; submission/feedback + edit mode + error taxonomy; preview; validation/limits/safety; accessibility & i18n; responsive/mobile; architecture (one component + mount config, hybrid editor, progressive enhancement); the unified feature-surface matrix; `attachments` schema; phasing & open questions. |
 | v0.2 | 2026-06-19 | Framework integration: resolved the editor engine to a **spike ladder — Milkdown first**, then Tiptap/ProseMirror, then CodeMirror/ink-mde (§14.2). Added non-negotiables: **reject editor-specific canonical storage**, **Markdown round-trip fixtures** in acceptance tests, and "the composer is an input system, not a mini document editor." |

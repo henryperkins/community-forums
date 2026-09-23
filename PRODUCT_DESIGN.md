@@ -1,6 +1,6 @@
 # RetroBoards — Product & Technical Design Document
 
-**Status:** v0.16 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-02
+**Status:** v0.19 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
 **Stack:** PHP + MySQL (server-rendered) with progressive-enhancement JavaScript
 **This document is the source of truth.** When a decision changes, update it here first. Code, tickets, and mockups defer to this file.
 
@@ -23,7 +23,7 @@ The durable unit is the **topic**: the inbox is personal, the topic is durable, 
 ## How to use this document
 
 - **Priorities** use MoSCoW-style tags: **P0** (must-have, MVP cannot ship without it), **P1** (should-have, fast follow), **P2** (could-have / future, design for it but don't build yet).
-- **Build status** tags: `Done (mockup)` = exists in the front-end prototype only; `Planned` = specified, not built; `Live` = built and shipped on the real stack.
+- **Build status** tags in the feature catalog are the **2026-06-26 planning snapshot**, not a current release ledger. For current availability, use `PRODUCT.md`, `src/Core/FeatureFlags.php`, and the relevant runbook; for delivery status, use the phase plans and `PHASE_5_STATUS.md`.
 - Sections 1–7 are the product spec. Sections 8–11 are the technical design. Sections 12–16 are planning and reference.
 
 ---
@@ -43,7 +43,7 @@ The durable unit is the **topic**: the inbox is personal, the topic is durable, 
 11. Non-Functional Requirements
 12. Success Metrics
 13. Roadmap & Phasing
-14. Open Questions
+14. Decision records
 15. Glossary
 16. Changelog
 
@@ -59,7 +59,7 @@ The product maps classic forum concepts onto familiar messaging-app patterns:
 - **Threads → an email-style inbox** in the middle column (subject, author, snippet, time, reply count, unread/star).
 - **Posts → a chat-style message stream** on the right, with a composer pinned to the bottom.
 
-Two front-end explorations are **planned as Phase 0 artifacts** (not yet created — see §13). The **hybrid app** (`app.html` + `app.css`) is the chosen direction; the **retro tribute** (`index.html`, `board.html`, `thread.html`, `styles.css`) is kept as reference and a possible optional theme. Working brand name is **"RetroBoards"** — a placeholder, swappable throughout.
+The original front-end explorations (`app.html` + `app.css`, and the retro tribute pages) were proposed as Phase 0 artifacts but were **not created**. Phase 1 proceeded directly as a server-rendered PHP application; the live visual system is documented in root `DESIGN.md` and `docs/design-system/imladris/`. The working brand name **"RetroBoards"** remains a placeholder, swappable throughout.
 
 ## 2. Goals & Non-Goals
 
@@ -155,7 +155,7 @@ The mockup is seeded with gaming-community sample content to evoke the reference
 
 ## 6. Feature Catalog
 
-Legend: **Priority** = P0 / P1 / P2 / P3 (MoSCoW tiers, not delivery phases — DECISIONS §2). **Status** = `Done (mockup)`, `Planned`, `Live`. **Reality check (2026‑06‑26): nothing is built and no mockup artifacts exist yet, so every row below is effectively `Planned`.**
+Legend: **Priority** = P0 / P1 / P2 / P3 (MoSCoW tiers, not delivery phases — DECISIONS §2). The **Status** column records the original 2026-06-26 planning snapshot only; it is not current implementation status. Current availability and delivery evidence are tracked in `PRODUCT.md`, the phase records, and each feature's runbook/ADR.
 
 ### 6.1 Navigation & Layout
 
@@ -885,95 +885,31 @@ Targets are set after a baseline (the install is new). Use a "success" and a "st
 
 ## 13. Roadmap & Phasing
 
-**Phase 0 — Mockups — ⬜ Not started.** Retro tribute and the chosen hybrid app (logged-in/out states), front-end only — not yet created.
+**Delivery source of truth:** the seven `PHASE_N_PLAN.md` files own the release-train scope and gates; `docs/history/PHASE_1-4_HISTORY.md` and `PHASE_5_STATUS.md` record completed/current status. The Phase 1–3 bullets and the §13.1 crosswalk in the original 2026-06 roadmap were planning snapshots and are superseded by those records.
 
-**Phase 0 artifacts (planned):** the mockup files (`app.html`, `app.css`, `index.html`, `board.html`, `thread.html`, `styles.css`) are **not yet created**; once they exist, visual changes should include browser screenshots or Playwright/browser smoke.
+| Delivery phase | Focus | Current status |
+|---|---|---|
+| 1 | MVP backend | Complete; acceptance evidence is indexed in `docs/history/PHASE_1-4_HISTORY.md`. |
+| 2 | Community essentials | Complete; acceptance and carryovers are recorded in `docs/history/PHASE_1-4_HISTORY.md`. |
+| 3 | Polish, trust & scale | Complete with explicit deferrals; see Phase 3 history and ADR 0002. |
+| 4 | Advanced community & content | Gate A accepted; Thread Intelligence follow-on accepted; remaining carryovers are recorded in ADRs 0003/0019. |
+| 5 | Ecosystem, identity & governance | Gate A accepted and default-on; Gate B remains reserved. Current status: `PHASE_5_STATUS.md`. |
+| 6 | Realtime & scale | Capacity-triggered; entry gates and triggers are in `PHASE_6_PLAN.md`. |
+| 7 | Platform expansion | Future strategy-gated phase; scope and decisions are in `PHASE_7_PLAN.md`. |
 
-**Phase 1 — MVP backend (P0). _Definition of done: a real user can register, log in, read boards, start a thread, and reply — server-rendered._**
+P0–P3 remain priority tiers, orthogonal to delivery phases (DECISIONS §2). The current completion-evidence policy remains binding: behavior must be enforced and tested; UI-visible work also needs browser evidence.
 
-The core forum flow is **not yet built** — auth, posting, and the first admin/operator slice are all planned for Phase 1; no code exists on the stack yet.
+### 13.1 Original strategic crosswalk
 
-**Completion-evidence rule:** anything marked `Live` must be accompanied by the tests, smoke checks, or Playwright/browser verification that prove the claim. UI-visible work needs browser verification in addition to server-side tests.
+The initial 2026-06 crosswalk translated an adjacent project's feature sequence into RetroBoards' first three delivery phases. It is retained only as historical rationale; the seven phase plans above supersede its assignments and status. Composer-specific delivery details remain in `COMPOSER.md` §17, and the v1 boundary remains defined in DECISIONS §7.
 
-- MySQL schema (§8) + migrations + seed (categories/boards). **Planned.**
-- Auth: register, login, logout, sessions, CSRF (acceptance criteria in §6.6). **Planned.**
-- Basic account settings + public profile: `/settings/account`, `/settings/security`, and `/u/{username}`. **Planned.**
-- Boards/categories rendered from DB; first-run setup creates the first admin, site name, and starter boards; admin launch slice covers create/edit/hide/delete-empty plus site naming. Full board/category reorder and board archive remain follow-up work, scheduled for **Phase 2** (ADMIN §11).
-- Threads + posts: create, read (paginated), edit/delete own, soft delete. **Planned.**
-- Admin inline moderation: pin/unpin, lock/unlock threads, soft-delete any post — every action audited to `moderation_log`. **Planned.**
-- Account-state write gate: suspended users keep login + read but are 403-blocked on every write; stale sessions for banned users are blocked the same way. **Planned.**
-- Post rendering + sanitisation; guest read-only with join-bar. **Planned.**
-- Wire the mockup as templates (§9.3). **Planned.**
+## 14. Decision records
 
-**Phase 1 target evidence (to be produced — none exists yet)**
-
-| Phase 1 slice | Target proof |
-|---|---|
-| Schema/foundation/read path | `composer test`; migration and seeder integration tests; `/healthz` HTTP smoke returning `200` with DB `ok`. |
-| Auth/session/CSRF | `tests/Integration/Controller/AuthControllerTest.php`; `tests/Integration/Core/AppTest.php`; Playwright/browser smoke for `/login` and `/register`. |
-| Basic account settings/public profile | `tests/Integration/Core/AppUserSettingsTest.php`; `tests/Unit/Core/LayoutRenderTest.php`; full `composer test`. |
-| Posting/edit/delete | `tests/Integration/Core/AppPostingTest.php`; thread/post controller, service, and repository integration tests; full `composer test`. |
-| First-run setup | `tests/Integration/Core/AppSetupTest.php`; `tests/Integration/Service/SetupServiceTest.php`; HTTP smoke for `/setup` before/after initialization. |
-| Admin board/category/settings | `tests/Integration/Core/AppAdminTest.php`; category/board/settings repository tests; admin HTTP/browser smoke as an authenticated admin. |
-| Inline moderation/write gates/private reads | `tests/Integration/Core/AppModerationTest.php`; `tests/Integration/Core/AppWriteGateTest.php`; `tests/Integration/Core/AppPrivateBoardAccessTest.php`. |
-| Server-rendered shell/theme wiring | layout/view unit tests; Playwright/browser smoke on auth and app routes when UI-visible changes land. |
-
-**Phase 2 — Community essentials (P1).**
-
-- Reactions, stars, subscriptions (persisted) + unread tracking.
-- Notifications + @mentions; bell inbox.
-- Search (MySQL FULLTEXT).
-- Direct messages (persisted).
-- Moderation: pin/lock/move, soft-delete any, reports queue, per-board moderators, audit log.
-- Profiles & reputation (post counts, ranks).
-- Community identity — the lightweight community-pass slice: following/followers + Following feed, the fixed badge set, accepted/"solved" answers, cosmetic titles, and an all-time leaderboard. _(Time-windowed leaderboards, admin-defined custom badges, and custom roles stay deferred to Phase 4+ — see §13.1 and DECISIONS §7.)_
-- Presence / "who's online" via short-polling + `users.last_seen_at` (per §13.1).
-
-**Phase 3 — Polish & scale (P1/P2).**
-
-- Settings & preferences (appearance/reading/composing); server-side draft sync. _(Notification preferences moved to Phase 2; localStorage drafts ship Phase 1–2 — COMPOSER.md.)_
-- Rich composer: chosen markup, spoilers, attachments.
-- Configurable rate limiting / anti-spam hardening (tunable per-action limits, new-user throttles, spam scoring). _(Baseline auth/registration rate limiting and security headers ship in **Phase 1** as P0 — see §11; presence / "who's online" moved to Phase 2 — see §13.1.)_
-- Performance/caching pass; accessibility audit; SEO polish.
-- Admin branding (retire the "RetroBoards" placeholder).
-
-**Later (P2).** Retro theme as a toggle; plugin/theme system; real-time ("live") via SSE/WebSockets; PWA / mobile; data import from existing forums; multi-community; i18n.
-
-> **Delivery phasing:** This three-phase view is strategic. Execution is sequenced across **seven delivery phases** (PHASE_1 through PHASE_7): **Phase 1** MVP, **Phase 2** community essentials, **Phase 3** polish/trust/scale, **Phase 4** advanced community & content, **Phase 5** ecosystem/identity/governance, **Phase 6** realtime & scale, **Phase 7** platform expansion — the last five subdivide "Phase 3" and "Later (P2)" above. SCHEMA.md §6 holds the per-table phase cut.
-
-### 13.1 Folded-in feature plan (v0.2)
-
-Features adopted from the adjacent project, mapped onto our phases (translated to PHP/MySQL):
-
-- **Their Phase 1 — mobile polish, global search, sort tabs** → our **Phase 2** (search needs the FULLTEXT indexes and a live inbox). Mobile drawer/FAB/tap-targets land alongside.
-- **Their Phase 2 — composer.** Phase 1 ships the **no-JS server-rendered Markdown posting box** (`<textarea>` + sanitised render, edit/delete); Phase 2 adds **@mentions** and the **DM** mount. The **unified rich hybrid-Markdown composer** (Milkdown spike, toolbar, live formatting, optimistic send, localStorage Drafts/recovery, preview) is **Phase 3 Gate A** (COMPOSER.md §17.1, PHASE_3_PLAN). COMPOSER's P0/P1/P2 are *priority* tiers, not phases (DECISIONS §2), so a "P0" composer feature is MVP-critical in priority but delivered with the Phase 3 composer.
-- **Their Phase 3 — notifications (in-app + email) + subscriptions** → our **Phase 2** (largest backend change; requires the email domain set up — ADMIN.md §7).
-- **Their Phase 4 — new-user product tour** → our **Phase 3** (needs the final DOM to target).
-- **Private messaging** → **Phase 2** (confirmed in scope, §6.8).
-- **Who's-online / presence** → **Phase 2** (§6.15).
-- **Community pass — lightweight slice** → **Phase 2** (§6.16, COMMUNITY.md §14.1): simple reputation, following/followers + Following feed, the fixed badge set, accepted/"solved" answers, cosmetic titles, and an all-time leaderboard. Only the heavier slice defers (to Phase 4): time-windowed leaderboards, admin-defined custom badges, and custom roles (DECISIONS §7).
-
-## 14. Open Questions
-
-> **Resolved in [DECISIONS.md](DECISIONS.md)** (the authoritative decisions log). The table below is retained for context; see DECISIONS.md §3 for the rulings.
-
-| # | Question | Owner | Blocking? |
-|---|---|---|---|
-| 1 | Framework: vanilla PHP + micro-router, or Slim/Laravel? | Eng | Phase 1 start |
-| 2 | Post markup. **Resolved: hybrid live-Markdown** (Markdown canonical) — COMPOSER.md. | Product + Eng | **Resolved** |
-| 3 | Unread model: per-thread `last_read_post_id` (chosen) vs per-post receipts — confirm it scales for our sizes. | Eng | Phase 2 |
-| 4 | "Live" feel: polling vs SSE vs WebSockets, and when. | Eng | Phase 2/3 |
-| 5 | Search: stay on MySQL FULLTEXT or adopt Meilisearch/Elastic later? | Eng | Phase 2 |
-| 6 | DMs in Phase 2 or defer to keep MVP lean? | Product | Phase 2 |
-| 7 | Email provider for verification/notifications. | Henry | Phase 1/2 |
-| 8 | Hosting target (shared host vs VPS vs container) — affects deploy & sessions. | Henry | Phase 1 |
-| 9 | Keep the retro look as a switchable theme, or reference only? | Product | Phase 3 |
-| 10 | Single community in v1, or design for multi-community now? | Product | Phase 1 (architectural) |
-| 11 | Anonymous/guest posting ever, or always require an account? | Product | Phase 1 |
-| 12 | Stack divergence: adjacent build is Postgres/Supabase/React/Lovable; these docs stay **PHP/MySQL (translate)** — confirmed. Revisit only if we consolidate stacks. | Henry | **Resolved** |
-| 13 | Realtime mechanism for the notification bell + presence: SSE vs short-polling vs WebSockets (ties to Q4). | Eng | Phase 2 |
-| 14 | Notification fan-out: app-layer in the write transaction (chosen) vs DB triggers — confirm at scale. | Eng | Phase 2 |
-| 15 | Reputation input: single aggregate of all reactions received (chosen) vs a dedicated "Like". | Product | Phase 2 |
+The original product-question register is consolidated in
+[DECISIONS.md](DECISIONS.md) §§3–8, which records both the selected behavior
+and the original delivery timing. New product choices belong in a dated ADR;
+Phase 6 and 7 strategy decisions remain in their respective delivery plans.
+This document has no separate decision backlog.
 
 ## 15. Glossary
 
@@ -993,6 +929,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.19 | 2026-09-23 | Consolidated stale status and decision material. The feature catalogue and original roadmap are explicitly historical planning records; the delivery table now points to the seven phase records. Removed the duplicate original-question register in favor of DECISIONS and ADRs. |
 | v0.18 | 2026-09-12 | §6.15 presence marked Live and corrected: the four shipped rows were still listed "Planned", the roster is split into here-now and stepped-away against two configured windows, the rail badge counts here-now only, and one rule ladder (flag → status → presence toggle → profile visibility → recency → blocks) now serves the rail, the roll, the JSON feed and the profile dot. Added the deferred member-directory row. See ADR 0031. |
 | v0.17 | 2026-08-27 | Adopted the approved member-surface ownership model: `/` is place, `/inbox` is attention, Search and Compose are top-level routes, cross-surface travel moved to the topbar, and the shared rail now owns only boards plus public presence. Preserved `/feed` as a separate personalized Following surface in secondary identity navigation and bounded the Inbox preview beneath canonical topics. |
 | v0.16 | 2026-08-02 | Clarified the shell and URL roles for the Forum Index, personalized Inbox, board topic list, and canonical conversation. Board topic lists now have a fixed pinned-then-activity order; Newest and Unanswered are Inbox filters. |

@@ -1,6 +1,7 @@
 # Phase 5 threat model - Identity and account takeover
 
-**Status:** Recorded 2026-07-01 - pending owner review
+**Status:** Gate A risk record accepted 2026-07-09 (ADR 0017). The 2026-07-01
+review date and fixture ownership below are historical.
 **Sources:** PHASE_5_PLAN section 9 passkey and provider scenarios; section 12 identity risks; ADR 0004 D6-D8; `docs/phase5/canonical-origin-and-rp-id.md`.
 **Fixture index:** `fixtures.json`, enforced by `tests/Unit/Core/ThreatModelIndexTest.php`.
 

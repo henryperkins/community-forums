@@ -1,13 +1,15 @@
 # RetroBoards — User Account, Preferences & Profile Design
 
-**Status:** v0.12 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-02
-**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) and [ADMIN.md](ADMIN.md).** PRODUCT_DESIGN.md is the source of truth; ADMIN.md owns the operator surface; **this doc owns the member's own surface** — how a person signs in, configures their account, tailors their experience, and presents themselves. Same conventions (P0/P1/P2/P3; `Done (mockup)` / `Planned` / `Live`; InnoDB / `utf8mb4`).
+**Status:** v0.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) and [ADMIN.md](ADMIN.md).** PRODUCT_DESIGN.md is the source of truth; ADMIN.md owns the operator surface; **this doc owns the member's own surface** — how a person signs in, configures their account, tailors their experience, and presents themselves. Same conventions (P0/P1/P2/P3; InnoDB / `utf8mb4`).
+
+> Older phase assignments in this design are scope history, not a live status ledger. Current shipped capability and open carryovers are in `PRODUCT.md`, `PHASE_5_STATUS.md`, and the relevant ADR/runbook.
 
 ## Scope
 
 In scope: **third-party login**, **account settings** (security, email/password, sessions, data), **user preferences** (theme, reading options, board organization, bookmarks, notifications, privacy), and **user profiles** (avatars, signatures, bio, title).
 
-**Explicitly deferred to the upcoming "community" pass** (the third beat): reputation systems, badges/trophies, following/followers, activity feeds and leaderboards, social graph, trust levels. This doc designs the *individual's* surface; the community pass designs how individuals relate. Where a profile element foreshadows community features (e.g. rank/title), it is stubbed here and finished there.
+The community layer (reputation, marks of esteem, follows, feeds, and leaderboards) is owned by `COMMUNITY.md`; those features are no longer a future pass. This doc owns the member's individual account, preference, identity, and profile surfaces.
 
 > **Naming:** **Resolved (v0.4): the role is "User"** across all docs (PRODUCT_DESIGN.md updated to match); "member" appears only casually in prose.
 
@@ -21,7 +23,7 @@ In scope: **third-party login**, **account settings** (security, email/password,
 6. Key Flows
 7. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
 8. Roadmap Delta (user/account phasing)
-9. Open Questions
+9. Decision records
 10. Changelog
 
 ---
@@ -36,11 +38,11 @@ The member surface has three jobs: **get you in** (low-friction, trustworthy aut
 
 | Method | Priority | Status | Notes |
 |---|---|---|---|
-| Email + password | P0 | Planned | Baseline, specified in PRODUCT_DESIGN.md §6.6. Argon2id hashing. |
-| **Sign in with Google** | P1 | Planned | OIDC. Email provided + verified. |
-| **Sign in with Apple** | P1 | Planned | OIDC. Private-relay email; name/email returned **only on first authorization**. |
-| **Sign in with GitHub** | P1 | Planned | OAuth2. Email may be private/unverified — must request `user:email` and check. |
-| Passkeys / WebAuthn | P2 | Planned | Modern passwordless; later. |
+| Email + password | P0 | Live | Baseline; Argon2id hashing. |
+| **Sign in with Google** | P1 | Live | OIDC. Email provided + verified. |
+| **Sign in with Apple** | P1 | Live | OIDC. Private-relay email; name/email returned **only on first authorization**. |
+| **Sign in with GitHub** | P1 | Live | OAuth2. Email may be private/unverified — must request `user:email` and check. |
+| Passkeys / WebAuthn | P2 | Live | Modern passwordless; operator-reversible through the `passkeys` feature flag. |
 
 Email/password remains available even when OAuth exists, so no member is locked to a provider.
 
@@ -542,36 +544,20 @@ CREATE TABLE username_history (
 
 ## 8. Roadmap Delta (user/account phasing)
 
-Mapped onto PRODUCT_DESIGN.md §13 (whose strategic "Phase 3" and "Later (P2)" buckets subdivide into delivery Phases 3–7 — see SCHEMA §6):
+The original member-surface phase allocation is superseded by the seven delivery plans. Phases 1–4 are recorded as complete in `docs/history/PHASE_1-4_HISTORY.md`; Phase 5 Gate A status and the remaining member carryovers are in `PHASE_5_STATUS.md` and ADR 0035. Phase 6/7 work is defined in `PHASE_6_PLAN.md` and `PHASE_7_PLAN.md`. Use those records rather than treating the original plan text as current implementation status.
 
-- **Phase 1 (MVP) — planned, not yet built.** Email/password auth and the first member account slice: `/settings/account` updates display name, bio, and location; `/settings/security` changes password; `/u/{username}` renders a basic public profile with join date, post count, and reputation. The `verifications` table and `users.email_verified_at` ship in Phase 1, but the password-reset and change-email-verification *flows* are scheduled for **Phase 2** (sending requires the Phase 2 email worker); avatars, signatures, privacy controls, and reading prefs remain later work.
-- **Phase 2 (community essentials window).** **Password-reset and registration email-verification flows** (email worker online); **OAuth (Google/Apple/GitHub)** + Connections/linking (`oauth_identities`); **board organization** (favorite/mute/reorder, `user_board_prefs`); **Saved** view; **notification preferences** matrix; **privacy** prefs + **block list** (`blocks`); **device-management UI** + security activity over the Phase 1 `sessions` table (revoke / log-out-everywhere); self-serve export/delete.
-- **Phase 3 (polish).** 2FA/TOTP; **avatar uploads + Gravatar** (both ride the Phase 3 `attachments` pipeline — SCHEMA §6; monogram in Phase 1, OAuth-import with OAuth in Phase 2); bookmark folders; retro skin per-user; advanced composing prefs; deactivate (vs delete); custom profile fields (with ADMIN).
-- **Later — delivery Phase 5 (ecosystem & identity).** Passkeys/WebAuthn; additional OAuth providers (generic OIDC); verified website links; richer custom fields. _(Priority tier P2; see PHASE_5_PLAN and PRODUCT_DESIGN §13.)_
+## 9. Decision records
 
-## 9. Open Questions
-
-> **Resolved in [DECISIONS.md](DECISIONS.md) §5.** Retained below for context.
-
-| # | Question | Owner | Blocking? |
-|---|---|---|---|
-| 1 | Provider set **Google / Apple / GitHub** confirmed for v1 (others later)? | Product | **Decided** — locked |
-| 2 | Username **changes**: allowed at all, and cadence + redirect/reservation policy? | Product | Phase 1 |
-| 3 | Treat Apple **private-relay** address as the email of record; what do we display? | Eng / Product | Phase 2 |
-| 4 | **Avatar uploads** in Phase 1, or monogram-only first (defer upload moderation/storage)? | Product / Eng | Decided — monogram P1; Gravatar + uploads **Phase 3** (DECISIONS §5 #4) |
-| 5 | Signature: new-user threshold value; allow an image at all? | Product | Phase 1 |
-| 6 | Default **profile visibility**: public vs members-only? | Product | Decided — public (DECISIONS §5 #6) |
-| 7 | Default **presence/online** visibility: on or off? | Product | Decided — on, user can hide (DECISIONS §5 #7) |
-| 8 | Default **Allow-DMs**: everyone vs members? | Product | Decided — members (DECISIONS §5 #8) |
-| 9 | Ship the **`sessions`** table in Phase 1 to enable device management early, or defer to Phase 2? | Eng | Decided — table Phase 1 (SCHEMA §7 #7); device UI Phase 2 |
-| 10 | **Emailless OAuth accounts** (Apple hide-email / GitHub no email): require an email for recovery, or allow without? | Product / Eng | Phase 2 |
-| 11 | Keep both **username + display name**, or username only? | Product | Phase 1 |
-| 12 | **2FA** timing — when? | Product / Eng | Decided — P3 / **Phase 3** (DECISIONS §5 #12) |
+The original member-account question register is consolidated in
+[DECISIONS.md](DECISIONS.md) §5. Current implementation and rollout decisions
+are recorded by the owning ADR and runbook; proposed work belongs in a new ADR.
+This surface specification has no separate decision backlog.
 
 ## 10. Changelog
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.13 | 2026-09-23 | Replaced the obsolete member-account phase roadmap and original-question register with the phase, ADR, and runbook records that now own status and decisions. |
 | v0.12 | 2026-08-02 | Removed the Default thread sort/Most replies preference. Board topic lists are fixed to pinned then latest activity; Newest and Unanswered are Inbox filters. |
 | v0.11 | 2026-07-12 | Added §4.9 with Living Brief reading, processor disclosure, access-gated provenance, retention, and last-good behavior; reconciled the joint default-on graduation of both Thread Intelligence flags and their independent rollback pins. |
 | v0.10 | 2026-06-26 | Wording/citation pass: dropped digest **"weekly"** cadence (§4.6 — daily-only per SCHEMA `subscriptions.frequency`); dropped **"optional"** from the Phase-1 `sessions` table (§3.3); fixed SCHEMA citations **§7.7 → §7 #7** (§7.3, §9 row 9); settled §4.5 default post format to **Markdown-canonical** (DECISIONS §3 #2, dropped the BBCode either/or); §5.5 title/rank now **reputation/post-count thresholds, admin-overridable** (COMMUNITY §8, DECISIONS §8). |

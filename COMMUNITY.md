@@ -1,7 +1,9 @@
 # RetroBoards — Community Layer Design
 
-**Status:** v0.3 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-12
-**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md).** This is the third "pass" — the **community / social layer** that earlier docs deferred. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; vanilla PHP + MySQL, server-rendered + progressive enhancement).
+**Status:** v0.5 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md).** This document owns the **community / social layer**: connection and discovery around durable topics. Same conventions (P0/P1/P2; vanilla PHP + MySQL, server-rendered + progressive enhancement).
+
+> The original phase assignments are scope history, not a live status ledger. Current shipped capability and open carryovers are in `PRODUCT.md`, `PHASE_5_STATUS.md`, and the relevant ADR/runbook.
 
 ## Scope & stance
 
@@ -15,7 +17,7 @@ This layer is deliberately **lightweight and Twitter-like** (Henry's call), not 
 - **No rich badge taxonomy, no point store, no streaks/loss mechanics.** A small set of honest badges only.
 - **No competitive pressure by default.** Leaderboards are light and opt-out; nothing shames low activity.
 
-> This pass finalises the stubs other docs left open: reputation (PRODUCT_DESIGN.md §6.16), profile rank/badges (USER.md §5.1, §5.5), and the "community memory" gestures (PRODUCT_DESIGN.md §6.18).
+> The original community design pass finalized the stubs other docs left open: reputation (PRODUCT_DESIGN.md §6.16), profile rank/badges (USER.md §5.1, §5.5), and the "community memory" gestures (PRODUCT_DESIGN.md §6.18). Their delivery status is recorded in the phase history and current status documents.
 
 ## Contents
 
@@ -32,7 +34,7 @@ This layer is deliberately **lightweight and Twitter-like** (Henry's call), not 
 11. Data Model
 12. Permissions & Trust (what we intentionally don't gate)
 13. Cross-Doc Deltas
-14. Phasing & Open Questions
+14. Phasing & remaining product choices
 15. Changelog
 
 ---
@@ -280,7 +282,7 @@ To be explicit: **there are no Discourse-style trust levels.** Reputation, title
 - **ADMIN.md** — reputation/badges/leaderboards add moderation levers (§10 here) but **no** new role gating; §3.10 owns Thread Intelligence operator and curator recovery.
 - **Schema** — new: `follows`, `badges`, `user_badges`, `reputation_events` (optional); `threads.accepted_answer_post_id`.
 
-## 14. Phasing & Open Questions
+## 14. Phasing & remaining product choices
 
 ### 14.1 Phasing
 
@@ -292,19 +294,18 @@ implementation now exist. ADR 0019's follow-on graduation made both owning
 feature defaults `true` on 2026-07-12 without rewriting the original Phase 4
 acceptance boundary.
 
-### 14.2 Open questions
+### 14.2 Remaining product choices
 
 | # | Question | Owner | Lean |
 |---|---|---|---|
 | 1 | Reputation-milestone notifications ("you hit 100 likes")? | Product | Skip / opt-in (humane) |
-| 2 | Titles derived from reputation, post-count, or both? | Product | **Resolved** (§8) — reputation/post-count thresholds, admin-overridable |
-| 3 | Who can mark a thread "solved"? | Product | **Resolved** — OP + moderators (built in Phase 2; PHASE_2_PLAN §6) |
-| 4 | Following feed: new threads + authored posts only, or every reply? | Product | New threads + authored posts (less noise) |
+| 2 | Following feed: new threads + authored posts only, or every reply? | Product | New threads + authored posts (less noise) |
 
 ## 15. Changelog
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.5 | 2026-09-23 | Consolidated obsolete phase-status language, corrected the header to include the already-recorded v0.4 change, and retained only the two unassigned product choices in §14.2. |
 | v0.4 | 2026-08-27 | Settled the shared-shell placement of the retained Following feed: `/feed` remains a separate personalized discovery surface in identity/secondary navigation; Inbox is topbar-primary; the board rail contains only boards plus public presence. |
 | v0.3 | 2026-07-12 | Added §1.1 and reconciled the Living Brief member and curator workflows, processor boundary, provenance, retention, last-good behavior, and joint default-on graduation with independent rollback pins. |
 | v0.2 | 2026-06-26 | Consistency pass: relabeled §14.1 "P1/P2" with their delivery phases (P1 priority → Phase 2, P2 priority → Phase 4+) to remove the priority-vs-phase ambiguity; marked §14.2 rows 2 (titles) and 3 (who marks "solved") **Resolved**, matching §8 and the Phase 2 build (DECISIONS §8 updated to match). |

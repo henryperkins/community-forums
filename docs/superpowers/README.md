@@ -4,6 +4,8 @@ This directory is the **design-decision archive** for RetroBoards: the brainstor
 
 **Consolidated 2026-07-09:** the *then-existing* `plans/` + `specs/` split was collapsed — each design spec was merged into its paired implementation plan (the doc now carries an *Archived design record* note and holds design + plan + review in one file), the five WYSIWYG docs merged into one, and `specs/` was emptied. **Entries dated 2026-07-09 and later returned to the paired layout** — an implementation plan in `plans/` with its design spec as a sibling in `specs/` (the table's last column says which). Archived entries retain their original internal references (to since-moved status docs, etc.) as historical records; they are not repointed.
 
+Plans in this index are frozen design/implementation records, not a live task board. Their unchecked boxes, branch names, and test totals describe their original work session; current status belongs in the phase status/history, ADRs, and evidence indexes.
+
 | Date | Document | Title | Spec merged in |
 |---|---|---|:--:|
 | 2026-06-28 | [`2026-06-28-api-tokens.md`](plans/2026-06-28-api-tokens.md) | API Tokens (read-only slice) — design spec + implementation plan | ✓ |
@@ -43,12 +45,8 @@ This directory is the **design-decision archive** for RetroBoards: the brainstor
 | 2026-08-03 | [`2026-08-03-imladris-admin-account-adoption.md`](plans/2026-08-03-imladris-admin-account-adoption.md) | Imladris → production: admin & account surface adoption — Stage 1 (inventory & comparison) | — |
 | 2026-08-03 | [`2026-08-03-imladris-admin-account-ledger.md`](plans/2026-08-03-imladris-admin-account-ledger.md) | LEDGER — consolidated deviation ledger (Stage 1, Imladris admin/account migration) | — |
 | 2026-08-03 | [`specs/2026-08-03-board-topic-density-remediation-design.md`](specs/2026-08-03-board-topic-density-remediation-design.md) | Board Topic Density Remediation Design (design spec only) | — |
-| 2026-08-03 | [`2026-08-03-forum-index-thread-remediation-checklist.md`](plans/2026-08-03-forum-index-thread-remediation-checklist.md) | Forum Index and Thread Remediation Implementation Plan | — |
 | 2026-08-03 | [`2026-08-03-thread-content-presentation-remediation.md`](plans/2026-08-03-thread-content-presentation-remediation.md) | Thread Content Presentation Remediation Implementation Plan | spec in [`specs/`](specs/2026-08-03-thread-content-presentation-remediation-design.md) |
-| 2026-08-04 | [`2026-08-04-imladris-admin-account-HANDOFF.md`](plans/2026-08-04-imladris-admin-account-HANDOFF.md) | HANDOFF — Imladris admin/account migration, resuming at Slice 2's evidence | — |
-| 2026-08-06 | [`2026-08-06-imladris-admin-account-HANDOFF.md`](plans/2026-08-06-imladris-admin-account-HANDOFF.md) | HANDOFF — finish `feat/imladris-admin-account` and merge it into main | — |
 | 2026-08-08 | [`2026-08-08-admin-ui-audit-remediation.md`](plans/2026-08-08-admin-ui-audit-remediation.md) | Admin UI Audit Remediation Implementation Plan | spec in [`specs/`](specs/2026-08-08-admin-ui-audit-remediation-design.md) |
-| 2026-08-08 | [`2026-08-08-imladris-admin-account-HANDOFF.md`](plans/2026-08-08-imladris-admin-account-HANDOFF.md) | HANDOFF — finish `feat/imladris-admin-account` (slices 16–19) and merge | — |
 | 2026-08-26 | [`2026-08-26-living-brief-redesign.md`](plans/2026-08-26-living-brief-redesign.md) | Living Brief Redesign Implementation Plan | spec in [`specs/`](specs/2026-08-26-living-brief-redesign-design.md) |
 | 2026-08-27 | [`2026-08-27-thread-view-p0-p1-remediation.md`](plans/2026-08-27-thread-view-p0-p1-remediation.md) | Thread View P0/P1 Remediation Implementation Plan | spec in [`specs/`](specs/2026-08-27-thread-view-p0-p1-remediation-design.md) |
 | 2026-08-27 | [`2026-08-27-member-surfaces-production-transfer.md`](plans/2026-08-27-member-surfaces-production-transfer.md) | Member Surfaces Production Transfer Implementation Plan | spec in [`specs/`](specs/2026-08-27-member-surfaces-production-transfer-design.md) |

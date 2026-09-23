@@ -2,10 +2,12 @@
 
 Updated: 2026-07-01
 
+> **Historical acceptance snapshot.** The test counts, flag defaults, and remaining-evidence notes below describe the 2026-07-01 Gate A record. Phase 4's later status and closeout evidence are in `docs/history/PHASE_1-4_HISTORY.md#phase-4-status` and `docs/evidence/phase4-closeout/`.
+
 ## Automated Tests
 
 - Accepted Gate A baseline: `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green.
-- Current checkout: `composer test` → 866 tests / 4519 assertions, green.
+- Checkout at evidence capture: `composer test` → 866 tests / 4519 assertions, green.
 - `./vendor/bin/phpunit tests/Unit/SanitizationTest.php` → table rendering is sanitized.
 - `./vendor/bin/phpunit tests/Integration/Core/AppPhase4GateATest.php` → topic workflow, staff-set status protection, group-DM intervals/reports/account-state/report throttle, advanced Markdown, board/tag follows, board tag/wiki toggles, tag merge/visibility/hidden-write gating, reputation ledger window/delete/restore/rebuild, legacy repair-to-ledger compatibility, remove-follower, summary source/retire/restore, and wiki revert coverage.
 - `./vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php` → `topic_workflow`, `tags`, `expanded_feeds`, and `reputation_ledger` default on and remain rollback-safe through the `features` override; non-graduated Gate A flags remain default-dark.
@@ -35,8 +37,9 @@ Updated: 2026-07-01
 ## Design-System and Runbook References
 
 - Imported Imladris design system: `docs/design-system/imladris/README.md`.
-- Activated surface map: `docs/design-system/imladris/ACTIVATED_FEATURES.md`
-  (`tags`, `expanded_feeds`, `reputation_ledger`).
+- Current design ownership map: `docs/design-system/imladris/github.md` and
+  `docs/design-system/imladris/PRODUCTION.md`. The historical activation table
+  formerly linked here is retired; current flag defaults live in `FeatureFlags`.
 - Operations runbook: `docs/runbooks/phase4-tags-feeds-reputation.md`.
 
 ## Remaining Evidence Gaps

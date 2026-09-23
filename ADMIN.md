@@ -1,7 +1,9 @@
 # RetroBoards — Admin & Moderation Design
 
-**Status:** v0.16 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-09
-**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, PRODUCT_DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; `Done (mockup)` / `Planned` / `Live` status; InnoDB / `utf8mb4`).
+**Status:** v0.17 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, PRODUCT_DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; InnoDB / `utf8mb4`).
+
+> Older phase assignments in this design are scope history, not a live status ledger. Current shipped capability and open carryovers are in `PRODUCT.md`, `PHASE_5_STATUS.md`, and the relevant ADR/runbook.
 
 ## Scope
 
@@ -20,7 +22,7 @@ This document breaks down the operator side of RetroBoards: **roles & permission
 9. Admin Settings UX / UI
 10. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
 11. Roadmap Delta (admin/mod phasing)
-12. Open Questions
+12. Decision records
 13. Changelog
 
 ---
@@ -624,9 +626,9 @@ with JavaScript disabled.
 
 ### 9.5 First-run setup wizard
 
-**Phase 1 subset (planned):** on a fresh migrated install, normal routes redirect to `/setup` until the operator creates the first **Admin**, sets the community **name/brand**, and picks a **starter set** of categories/boards. The wizard uses the Phase 1 auth/session/CSRF services and writes only to the `users`, `settings`, `categories`, and `boards` tables. Everything it sets is editable later in Settings.
+**Phase 1 setup scope (delivered):** on a fresh migrated install, normal routes redirect to `/setup` until the operator creates the first **Admin**, sets the community name, and picks starter categories/boards. The wizard uses the auth/session/CSRF services and writes to `users`, `settings`, `categories`, and `boards`. Everything it sets is editable later in the Console.
 
-**Deferred:** email/domain configuration and registration mode (open / approval / invite) stay in the later admin/settings slice because those enforcement paths do not exist yet.
+**Post-setup configuration:** general, registration, moderation, and email operations are managed on their owning Console pages. Registration currently supports `open`, `closed`, and `invite`; approval-based registration is not implemented. Email transport/domain readiness is described in the email operations runbook.
 
 ## 10. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
 
@@ -815,34 +817,20 @@ CREATE TABLE email_deliveries (
 
 ## 11. Roadmap Delta (admin/mod phasing)
 
-Mapped onto PRODUCT_DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" buckets subdivide into delivery Phases 3–7 — see SCHEMA §6):
+This section's original phase assignments are superseded by the seven delivery plans. Phases 1–4 are recorded as complete in `docs/history/PHASE_1-4_HISTORY.md`; Phase 5 Gate A status, Gate B reserves, and accepted deferrals are in `PHASE_5_STATUS.md`, `PHASE_5_PLAN.md`, and `docs/adr/`. Phase 6/7 scope is in `PHASE_6_PLAN.md` and `PHASE_7_PLAN.md`. Use those records for current status; the surface requirements above remain the behavioral specification.
 
-- **Phase 1 (MVP) — planned, not yet built.** Seed roles (Admin / User / Guest); a **first-run setup wizard** for creating the first admin, setting the community name, and creating starter categories/boards on a fresh migrated install. Admin board & category CRUD in a minimal **`/admin` console** (create/edit/hide/admin-only private visibility/delete-empty, with slug-change 301 redirects that respect the same read gate before redirecting) alongside **site naming** and a **baseline audit feed**. **Inline moderation**: admins can pin/unpin and lock/unlock threads and soft-delete any post from the thread view, with every action audited to `moderation_log`. **Suspended/banned user write gating**: suspended users keep login + read access but are blocked (403) from creating threads, replying, editing, or deleting; stale sessions for banned users are likewise blocked at write time. **Target evidence (to be created):** `tests/Integration/Core/AppSetupTest.php`, `tests/Integration/Service/SetupServiceTest.php`, `tests/Integration/Core/AppAdminTest.php`, `tests/Integration/Core/AppModerationTest.php`, `tests/Integration/Core/AppWriteGateTest.php`, `tests/Integration/Core/AppPrivateBoardAccessTest.php`, plus HTTP/browser smoke on `/setup`, `/admin`, and authenticated admin flows.
-- **Phase 2 (community essentials).** Moderator role + per-board assignment; **flagging + reports queue**; full content & user moderation actions; audit-log UI; **user management** screen; board visibility (hidden/private) + `board_members`; **in-app notifications + the full notification-preference matrix and timezone-aware daily digests** (the email worker comes online here — see USER §4.6); **password-reset and registration email-verification flows**; email templates; **admin announcements/broadcast** (site banner + opt-in broadcast notification/email, §7.4); **reporter outcome-notifications** ("notify me of the outcome", §3.1); **board/category drag-reorder and board archive** (§4.4–§4.5 — deferred from the Phase 1 minimal console). _(Theming/branding, outbound webhooks, and spam integration moved to Phase 3 — see §11 Phase 3.)_
-- **Phase 3 (polish & scale).** **Branding/theming (brand + dark mode) and retro skin / custom CSS**; automation rules (filters, throttles, approval queues); **spam-scoring integration**; appeals; **internal plugin/hook system GA** + first-party integrations; **outbound webhooks (durable delivery)** + admin API & tokens; advanced privacy flows (export/delete); category-scoped mods; **IP-capture retention/purge job** (90-day purge + anonymise of login/post IPs, §5.5 — the `sessions.ip`/`posts.ip` seam). _(Notification matrix + digests moved to Phase 2.)_
-- **Later — delivery Phases 5–7.** Public plugin ecosystem + sandbox/review (**Phase 5**); granular custom roles (**Phase 5**); multi-community administration (**Phase 7**). _(Priority tier P2; see PHASE_5_PLAN / PHASE_7_PLAN and PRODUCT_DESIGN §13.)_
+## 12. Decision records
 
-## 12. Open Questions
-
-> **Resolved in [DECISIONS.md](DECISIONS.md) §4.** Retained below for context.
-
-| # | Question | Owner | Blocking? |
-|---|---|---|---|
-| 1 | **Anonymous** = masked identity for logged-in Users (recommended) vs. guests posting without an account? | Product | §1.3, schema — Phase 2 |
-| 2 | Standardise role naming: **"User"** (this doc) vs "Member" (PRODUCT_DESIGN.md). | Product / docs | Low, do soon |
-| 3 | Confirm fixed roles for v1 (no granular custom roles until P2). | Product | Phase 1 |
-| 4 | Plugin runtime & **sandbox/review** model before any third-party plugins. | Eng | Blocks public ecosystem (P2) |
-| 5 | Do we store IP addresses at all, and for how long? (Ban-evasion vs privacy.) | Henry / legal | Phase 2 privacy |
-| 6 | Appeals: in scope for v1+1, and how lightweight? | Product | Phase 3 |
-| 7 | Default registration/approval model (open / approval / invite; first-post approval?). | Product | Phase 1/2 |
-| 8 | Suspension modelling: `users.status` + `suspended_until` vs. unify everything in `bans`. | Eng | Phase 2 |
-| 9 | Moderator scope at launch: board-only, or also category-scoped? | Product / Eng | Decided — board-scoped v1; category-scoped **Phase 3** (DECISIONS §4 #9) |
-| 10 | Webhooks + admin API in Phase 3, or pull earlier for "mod alerts in Slack"? | Eng | Decided — **Phase 3** (DECISIONS §4 #10; webhooks P2-priority, admin API P3-priority, both deliver in Phase 3 per §11) |
+The original operator-question register is consolidated in
+[DECISIONS.md](DECISIONS.md) §4. Current implementation and rollout decisions
+are recorded by the owning ADR and runbook; proposed work belongs in a new ADR.
+This surface specification has no separate decision backlog.
 
 ## 13. Changelog
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.17 | 2026-09-23 | Replaced the obsolete phase roadmap and original-question register with links to the phase, ADR, and runbook records that now own status and decisions. Updated first-run setup and post-setup registration language to the delivered Console behavior. |
 | v0.16 | 2026-08-09 | Link previews completed and enabled (ADR 0025): §4.2 gains the **Unfurl link previews** per-board setting (`boards.link_previews_enabled`, DECISIONS §6 #5, default off; storable on any board but inert unless the board is public); §9.2 adds **Link previews** as a fourth tab in the Features area; §9.3 describes the `/admin/link-previews` console (queue tiles, host allowlist, kill switch, per-board opt-in, per-row refresh/purge, all audited — refresh deliberately unavailable on an author-removed row). Operator runbook: `docs/runbooks/link_previews.md`. |
 | v0.15 | 2026-07-18 | PR #44 safety remediation deviations recorded (ADR 0021): §3.4 "Add mod note" is admin-only in the shipped implementation (globally-scoped `user_notes` under any-board-mod read over-disclosed); §4.4 board delete ships as hard-DELETE-with-forced-move inside one locking transaction (every thread row moves, slugs un-reserve via cascade) with soft-delete + reserved slugs still deferred as ADR 0021 item 10. |
 | v0.14 | 2026-07-12 | Added §3.10 for Thread Intelligence health, recovery, curator, provenance/retention, and data-preserving rollback workflows; linked the canonical runbook, recorded the selected live-eval contract, and reconciled the joint default-on graduation with independent rollback pins. |

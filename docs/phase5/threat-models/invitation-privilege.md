@@ -1,6 +1,8 @@
 # Phase 5 threat model - Invitation privilege
 
-**Status:** Recorded 2026-07-01 - pending owner review; all seven fixtures implemented Inc 9 (2026-07-08, see `fixtures.json`), defaults decision accepted (`docs/phase5/invitation-defaults.md`)
+**Status:** Gate A risk record accepted 2026-07-09 (ADR 0017). All seven
+fixtures were implemented in Inc 9 (2026-07-08, see `fixtures.json`), and the
+defaults decision is accepted in `docs/phase5/invitation-defaults.md`.
 **Sources:** PHASE_5_PLAN section 9 invitation create/revoke/redeem/bind/expire/use-limit/abuse/no-privilege-escalation scenarios; section 12 invitation risks.
 **Fixture index:** `fixtures.json`, enforced by `tests/Unit/Core/ThreatModelIndexTest.php`.
 

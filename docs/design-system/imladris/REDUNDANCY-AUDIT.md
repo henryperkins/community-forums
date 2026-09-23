@@ -1,10 +1,11 @@
-# Redundancy audit — 2026-08-03
+# Redundancy audit — 2026-08-03 (historical)
 
-> **Status:** findings 1 and 2 executed 2026-08-03 — `ui_kits/admin/` and
-> `feature-ui/{polls,tags,moderation}/` removed, all citing docs repointed.
-> Finding 4 partly executed: the per-screen supersession is recorded, but the kit
-> stays until a leaderboard template exists. Finding 3 and the provenance fix:
-> provenance done, §3 open by choice.
+> **Status:** Historical recommendations, not an active task list. Findings 1 and
+> 2 were retired upstream on 2026-08-03; this local mirror keeps source copies or
+> README stubs for provenance. Finding 4 is now documented per screen in the
+> `ui_kits/retroboards/README.md`; the leaderboard still has no owning template.
+> Finding 3 remains an unowned rail/organize surface by choice. Current ownership
+> and flag status are in `PRODUCTION.md`, `github.md`, and `LOCAL_RECONCILIATION.md`.
 
 Three families of artifact describe the same product: **19 `templates/`** (the owned,
 shipped DC artifacts), **6 `ui_kits/`** (React survey kits), **6 `feature-ui/`**
@@ -101,11 +102,12 @@ shell alongside `components/forum/*` and thread-view.
 `Leaderboard.jsx` is the only screen here with no template — the same shape of
 gap as finding 3.
 
-**Recommend** — give it the `ui_kits/admin` treatment: a README that says
-superseded-except-leaderboard and names the owning template per screen. Then
-promote the leaderboard to a template and retire the kit. Do **not** converge the
-kit's profile cover by hand; it is a survey, and hand-syncing two copies of one
-screen is what produced the divergence.
+**Disposition (2026-09-23)** — the kit README now marks Inbox, Conversation,
+and Profile as superseded by their owning templates and identifies Leaderboard
+as the only screen without a template. The kit remains a source-only survey;
+promoting Leaderboard to a template is separate product work. Do **not** converge
+the kit's profile cover by hand; hand-syncing two copies of one screen is what
+produced the divergence.
 
 ---
 
@@ -146,7 +148,7 @@ make two.
 | 1 | `ui_kits/admin/` | Retire; repoint PRODUCTION row 50; re-file ADR gap | 9 |
 | 2 | `feature-ui/{polls,tags,moderation}/` | Fold into `templates/thread-view` | ~8 |
 | 3 | `feature-ui/rail/` | Drop, keep `organize/`; promote to a template | ~2 |
-| 4 | `ui_kits/retroboards/` | Mark superseded per screen; promote leaderboard | 11 |
+| 4 | `ui_kits/retroboards/` | Mark superseded per screen; leaderboard remains unowned | 11 |
 | — | `manifest.json` provenance | Defer to `github.md` | 1 |
 
 Findings 1, 2, and 4 remove description without removing coverage. Finding 3

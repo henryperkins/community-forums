@@ -1,7 +1,9 @@
 # RetroBoards — Decisions Log
 
-**Status:** v1.6 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-09
+**Status:** v1.7 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
 **This file settles the open questions** across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md), and [COMMUNITY.md](COMMUNITY.md). Where a doc's "Open Questions" section lists an item, the resolution here is authoritative. Decisions are either **[Henry]** (an explicit choice) or **[Rec]** (a recommended default — easily changed, with rationale).
+
+> This log records product choices and the original v1 deferrals; it is not a current implementation ledger. Many items deferred from v1 later shipped. Current availability is recorded in `PRODUCT.md`, `PHASE_5_STATUS.md`, `FeatureFlags::DEFAULTS`, and feature runbooks. New carryovers and proposed dispositions may be recorded in later ADRs.
 
 ## 1. Confirmed by Henry
 
@@ -30,7 +32,7 @@
 | Search | **MySQL FULLTEXT** (swap to Meilisearch later, behind a search interface) |
 | Realtime | **Short-polling** for the bell + presence; SSE later if needed; no WebSockets in v1 |
 | Media storage | **Local disk** on the VPS (non-exec path) behind a storage interface (S3/CDN later) |
-| Sessions | PHP native sessions **+ a `sessions` table** (device list / log-out-everywhere) |
+| Sessions | **Database-backed opaque-token sessions**; the cookie holds a random token and the database stores its SHA-256 hash (`Session` / `SessionRepository`) |
 | Thread intelligence | **Evidence-bound AI Living Briefs for public threads**, generated asynchronously and auto-published after local validation; curator edits remain authoritative input to later refreshes, last-good output survives failures, and member-visible provenance links back to source posts |
 | AI processing | **Environment-configured third-party processing through replaceable interfaces**; public post text only, no account/private/moderation metadata, no raw prompt/response retention, no automatic premium-model fallback, and deterministic non-AI behavior when credentials are absent |
 
@@ -58,7 +60,7 @@
 | 9 | Retro theme toggle | **P2 optional skin** [Rec] | The preserved `styles.css` as a switchable theme; not v1. |
 | 10 | Single vs multi-community | **Single per install (v1)**; multi-tenant P2 [Rec] | Avoid `tenant_id` everywhere now; design doesn't preclude it. |
 | 11 | Anonymous/guest posting | **Account required to post**; "Anonymous" = masked logged-in User where a board allows [Henry/Rec] | No unaccountable guest posting; accountability preserved. |
-| 12 | Stack divergence (adjacent Postgres/React build) | **Stay PHP/MySQL; translate** [Henry] | Resolved (PRODUCT_DESIGN §14 Q12); revisit only if stacks consolidate. |
+| 12 | Stack divergence (adjacent Postgres/React build) | **Stay PHP/MySQL; translate** [Henry] | Resolved in the original product-question register; revisit only if stacks consolidate. |
 | 13 | Realtime mechanism | **Short-polling** (see #4) [Rec] | One mechanism for bell + presence. |
 | 14 | Notification fan-out | **App-layer, in the write transaction + queue worker** [Rec] | Portable; no DB-trigger lock-in; the VPS runs the worker. |
 | 15 | Reputation input | **Σ reactions received (+1 each); no separate Like** [Rec] | Simplest, reuses existing reactions; see COMMUNITY.md §2. |
@@ -107,22 +109,23 @@
 | 6 | Attachment storage | **Local disk on the VPS (non-exec path) behind a storage interface; 5MB/image; png/jpg/webp/gif** [Rec] | Simple v1; S3/CDN swaps in later. |
 | 7 | Slash-command menu | **P2** [Rec] | Pleasant, not core. |
 | 8 | Per-post mention cap | **10** [Rec] | Curbs mention-spam. |
-| 9 | Server-side draft sync | **P2** (localStorage v1) [Rec] | Drafts already survive locally. |
+| 9 | Server-side draft sync | **P2 priority; delivered in Phase 3 and default-on** [Rec] | Browser-local drafts remain the independent recovery fallback. |
 
 ## 7. Deferred — decided as P2 / P3 / later (not open)
 
-These are **settled as future work**, intentionally out of v1: multi-community/multi-tenant · public plugin marketplace + sandbox/review · Meilisearch/Elastic search · CDN / object storage · 2FA / passkeys · WebSockets real-time · admin REST API · community memory (summaries, related topics, wiki posts, topic split/merge) · time-windowed leaderboards · admin-defined custom badges and custom roles.
+These were **settled as future work at the time of the original v1 decision**, intentionally out of the Phase 1–2 release: multi-community/multi-tenant · public plugin marketplace + sandbox/review · Meilisearch/Elastic search · CDN / object storage · 2FA / passkeys · WebSockets real-time · admin REST API · community memory (summaries, related topics, wiki posts, topic split/merge) · time-windowed leaderboards · admin-defined custom badges and custom roles. Some later shipped in Phases 3–5; this list preserves original sequencing, not current availability.
 
 Here **"v1" means the Phase 1–2 initial release** (MVP core + community essentials); *"out of v1"* means *not in that first release*, **not** *never*. Most of these are sequenced into a later delivery phase rather than dropped: **2FA, appeals, admin REST API, retro skin, and category-scoped mods → Phase 3**; **time-windowed leaderboards and admin-defined custom badges → Phase 4**; **custom roles, passkeys/WebAuthn, and the public plugin marketplace + sandbox/review → Phase 5**; **Meilisearch and CDN/object storage → Phase 6** (SSE realtime also lands in Phase 6; full WebSockets stay deferred); **multi-community/multi-tenant, PWA, forum imports, and i18n → Phase 7, with separately-approved public federation also gated in Phase 7 (Gate B)** (see the PHASE_*_PLAN docs and SCHEMA §6). The manual community-memory foundation remains Phase 4 work; its follow-on AI Thread Intelligence graduation is separately approved and gated by ADR 0019 rather than silently inheriting the original Phase 4 human-only acceptance. Only items with no committed delivery phase are genuinely open.
 
 ## 8. What's still genuinely open (minor, decide during build)
 
-Only small product-flavour calls remain (COMMUNITY.md §14.2), each with a lean already noted: reputation-milestone notifications (lean: skip/opt-in) and whether the Following feed includes every reply (lean: new threads + authored posts only). _(Title source and who-can-mark-"solved" are now settled — reputation/post-count-derived admin-overridable titles, and OP + moderators, respectively; see COMMUNITY §8 and the Phase 2 plan.)_ Plus the **email provider pick**, deferred until sending matters — when chosen it must support **bounce/complaint webhooks** and solid transactional deliverability (SMTP works in the meantime). Nothing here blocks starting Phase 1.
+The original minor open questions were reputation-milestone notifications (lean: skip/opt-in), whether the Following feed includes every reply (lean: new threads + authored posts only), and the **email provider pick** (must support bounce/complaint webhooks and solid transactional deliverability; SMTP is the current transport seam). This is not an exhaustive current gap register: later product-surface gaps and proposed dispositions are recorded in ADRs, including [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md). Title source and who-can-mark-"solved" are settled in COMMUNITY §8 and the Phase 2 record.
 
 ## 9. Changelog
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.7 | 2026-09-23 | Clarified that §7 records original v1 deferrals rather than current shipped status; pointed current availability and later carryovers to the live status/ADR records. Corrected the session architecture to the shipped database-backed opaque-token contract. |
 | v1.6 | 2026-07-09 | Accepted the bounded Thread Intelligence graduation decision: AI-generated Living Briefs for eligible public threads may auto-publish after local validation/moderation; personal return context remains deterministic; failures preserve last-good output; public-source provenance is member-readable; raw provider content and credentials are not retained. Added `ThreadIntelligenceProvider`, `ThreadIntelligenceOutputModerator`, and `OpenAiTransport` to the replaceable seam registry and linked ADR 0019's narrow Phase 4 supersession. |
 | v1.5 | 2026-06-26 | Cross-doc review pass: §7 added **public federation** to the Phase 7 deferred-work map (it was only in PHASE_7_PLAN / SCHEMA §6). Companion fixes landed elsewhere — SCHEMA (`notifications.'announcement'` + announcements storage; default-collapsed flag; de-referenced the missing auth-design doc), DESIGN (sessions-table-ships-Phase-1 wording; mockup-status; composer phasing), COMPOSER (priority-tier→delivery-phase map), and the Phase 1/2/3/6/7 plans (Phase-1 rate-limit store; stale `sessions.ip` note; Phase-2 column enumeration + announcement storage; Phase-3 plugins/webhooks/api_tokens create-not-extend; README authority; Phase-7 draft/SSE conditionality). Added `README.md` as a thin orientation pointer. |
 | v1.4 | 2026-06-26 | Resolved the avatar/Gravatar phase conflict in §5 #4: **monogram P1; OAuth avatar-import P2; Gravatar + uploads P3** (was "Gravatar/OAuth-import in P1"), aligning DECISIONS to USER §8/§9 and docs/history/PHASE_1_MIGRATIONS.md. |

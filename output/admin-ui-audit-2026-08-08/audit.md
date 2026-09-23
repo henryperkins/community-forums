@@ -1,5 +1,7 @@
 # RetroBoards admin UI review
 
+> **Historical pre-remediation audit.** Findings describe the 2026-08-08 baseline, not current behavior. The completed disposition and verification are in [`docs/evidence/admin-ui-audit-remediation-2026-08-08/verification.md`](../../docs/evidence/admin-ui-audit-remediation-2026-08-08/verification.md).
+
 Captured: 2026-08-08 against a freshly seeded local `retroboards_e2e` environment.
 
 ## Scope

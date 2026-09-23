@@ -27,7 +27,7 @@ The first-unread member thread also requests the lazy editor entry at 3,567.7 ms
 
 The dominant included local thread layout shift is 0.087002 when the composer dock shrinks from 207.75 to 67 pixels at 7,065 ms, after editor hydration. `composer.js:2764-2767` waits for the adapter before enhancing the form; `composer.js:2670` applies the dock marker only during the eventual expansion setup; `app.css:1825-1854` applies the compact geometry. The six late font loads contribute only about 0.000626 to their own CLS window. An earlier raw 0.640335 entry in the first visit has `hadRecentInput: true` and is excluded by the CLS calculation; it is preserved in the raw file. Reserving compatible dock geometry earlier is a layout-stability candidate, with **zero established LCP saving** and a regression risk to no-JS behavior and editor-failure fallback. It would need mobile no-JS, failed-entry/failed-adapter, restored draft, keyboard, and dock-expansion verification. No behavior was changed.
 
-## Code facts checked against current checkout
+## Code facts checked against the 2026-09-20 source snapshot
 
 `templates/layout.php:49-53` declares the two core stylesheets, a 517-byte minified editor stylesheet whenever WYSIWYG is enabled, optional package-theme CSS, and optional dynamic brand CSS. The third tiny editor stylesheet is distinct from the two core payloads. `/brand.css` emits `public, max-age=300` without ETag in `src/Controller/BrandingController.php:29-69`; this is a conditional risk, not evidence that production currently waits on it.
 

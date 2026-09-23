@@ -5,9 +5,8 @@
   "inspected_branch": "main",
   "inspected_commit": "4efe4e33db6475ce9c59190ba82c72cbd7d4b868",
   "inspected_at": "2026-07-14",
-  "contract": "production-contract.json",
-  "parity": "PRODUCTION_PARITY.md",
-  "runtime_contract": "RUNTIME_CONTRACT.md",
+  "production": "production-contract.json",
+  "production_doc": "PRODUCTION.md",
   "changelog": "CHANGELOG.md",
   "unresolved_gaps": []
 }

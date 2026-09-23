@@ -10,9 +10,9 @@ default-on availability on 2026-07-01:
 - `reputation_ledger` - idempotent `reputation_events`, week/month/all-time
   leaderboard windows, and board-scoped leaderboard filtering.
 
-All three remain reversible through the `features` setting. The Imladris design
-reference for these activated surfaces lives in
-`docs/design-system/imladris/ACTIVATED_FEATURES.md`.
+All three remain reversible through the `features` setting. Current Imladris
+surface ownership is mapped in `docs/design-system/imladris/github.md`; the
+runtime/design ownership contract is `docs/design-system/imladris/PRODUCTION.md`.
 
 > Golden rule: for a logic defect, disable the smallest affected flag first,
 > confirm the rest of the forum still serves, then investigate. These rollbacks

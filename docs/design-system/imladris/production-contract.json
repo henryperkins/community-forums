@@ -15,7 +15,8 @@
   },
   "composer": { "spec": "COMPOSER.md v0.8", "mounts": ["reply", "new_thread", "dm", "edit"], "canonical": "markdown", "adr": ["0013", "0020"], "superseded_anatomy_present": false },
   "surface_specs": ["USER.md", "ADMIN.md", "COMMUNITY.md", "COMPOSER.md"],
-  "surfaces_doc": "PRODUCTION_PARITY.md",
-  "contract_doc": "RUNTIME_CONTRACT.md",
+  "production_doc": "PRODUCTION.md",
+  "surface_map_doc": "github.md",
+  "flag_status_note": "Imported classification snapshot; verify current defaults in src/Core/FeatureFlags.php and feature runbooks.",
   "unresolved_gaps": []
 }

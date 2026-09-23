@@ -2,6 +2,8 @@
 
 **Date:** 2026-07-11 · **Scope:** `public/assets/` (JS + CSS), `templates/`, their build/CI wiring · **Method:** full read of app.js / composer.js / tour.js / passkeys.js / layout + key templates; grep sweeps for CSP, escaping, duplication; CSS token/dead-selector sampling; CI workflow inspection.
 
+> **Historical audit, not an active backlog.** The ranking and week-by-week schedule below record the 2026-07-11 review. Only the dispositions in the dated 2026-09-23 re-check are current; items 6–12 were not re-verified and must not be treated as confirmed current defects.
+
 > **Re-check 2026-09-23** (spot verification in code, no full re-audit):
 > - **#1 resolved** — core assets are cache-busted (`?v=` via `$assetUrl` in `templates/layout.php`).
 > - **#2 largely addressed** — `npm run evidence` now runs the broad spec set (composer shell/expansion/toolbar, admin features/remediation/dashboard, group DMs, invitations, providers, API tokens, thread-intelligence, link-previews, unified-chrome, chamfer, field-error, thread-view-study…) and the CI workflow additionally runs `evidence:notifications-settings`. Standalone scripts (`evidence:passkeys`, `evidence:profiles`, …) still live outside the CI run.
@@ -10,7 +12,7 @@
 > - **#5 resolved** — the inbox reading pane re-enhances injected composers via `RetroBoardsComposer.enhanceWithin` (`app.js`).
 > - Items **6–12 were not re-verified** and remain open as recorded below.
 
-**Scoring:** Priority = (Impact + Risk) × (6 − Effort), each 1–5. Higher = do sooner.
+**Historical scoring:** Priority = (Impact + Risk) × (6 − Effort), each 1–5. The ranking was for the 2026-07-11 review, not a current schedule.
 
 ## What is healthy (don't spend time here)
 
@@ -36,7 +38,7 @@ The strict-CSP discipline holds: zero inline `style=` attributes and zero inline
 ## Detail
 
 ### 1. No cache-busting on core assets — priority 35
-`templates/layout.php:40,79–83` emit bare `/assets/app.css`, `/assets/app.js`, `/assets/composer.js`, `/assets/wysiwyg-composer.js`. The repo already solves this correctly for packaged themes (`/theme/{css_digest}.css` with `public, max-age=31536000, immutable`, per `docs/phase5/registry-protocol.md`), so core assets are the inconsistent holdout. Consequence for operators today: either no long-lived caching (repeat downloads of ~196 KB gz per cold page), or — if they add nginx cache headers, which the theme pipeline encourages — stale JS/CSS after an upgrade. Under strict CSP there is no inline fallback, so a stale `composer.js` against new server HTML degrades silently.
+At the 2026-07-11 audit, `templates/layout.php:40,79–83` emitted bare `/assets/app.css`, `/assets/app.js`, `/assets/composer.js`, and `/assets/wysiwyg-composer.js`. The repo already solved this correctly for packaged themes (`/theme/{css_digest}.css` with `public, max-age=31536000, immutable`, per `docs/phase5/registry-protocol.md`), so core assets were the inconsistent holdout. The risk at that time was either no long-lived caching (repeat downloads of ~196 KB gz per cold page), or stale JS/CSS after an upgrade if an operator added nginx cache headers. Under strict CSP there was no inline fallback, so a stale `composer.js` against new server HTML degraded silently.
 **Fix:** stamp `?v=` from the app version (or `filemtime`) in one place in `layout.php`; document a long-cache header in the ops runbook. One-file change.
 **Why now:** cheapest item on the list and it protects every future frontend deploy, including the fixes below.
 
@@ -83,7 +85,7 @@ Confirmed dead in `app.css` (no reference in templates/JS/src): the `feature-are
 ### 12. app.js grab-bag — priority 12
 15 unrelated features in one 531-line IIFE; DM-only code (rail, menus, compose, search, copy, flash — ~260 lines) parses on every page. More important than size: implicit cross-file ordering contracts documented only in comments (composer.js must own Enter before app.js could; slash-menu keydown must register before `wireKeys`; Escape layering between rail/menus/compose is hand-sequenced across files). Cheap mitigation now, split later if it grows: keep the comments (they're good), add a `docs/` note naming the contracts, and prefer delegated handlers for any new DM feature so pane-swap patterns stay safe.
 
-## Phased remediation (alongside feature work)
+## Original suggested grouping (2026-07-11; not a current schedule)
 
 **Phase A — this week, no product-code risk (items 1, 2, 3, 7, 10; ~1–2 days).** Asset versioning, CI spec + `check:wysiwyg` wiring, body-limit single-sourcing, fallback warning, z-index tokens. All are one-file or CI-only changes; #2 must land first since it is the safety net for everything else.
 

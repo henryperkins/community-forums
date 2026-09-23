@@ -36,8 +36,9 @@ Load only what the surface needs; do not dump the whole tree.
 | Source                                                                                                                              | Use for                                                                                           |
 | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `DECISIONS.md`; matching surface specs in `USER.md` / `ADMIN.md` / `COMPOSER.md` / `COMMUNITY.md` / `PRODUCT_DESIGN.md`; accepted ADRs      | Locked product decisions, IA, behavior, and required states                                       |
-| `docs/design-system/imladris/RUNTIME_CONTRACT.md`                                                                                   | CSP, PE, theming, emoji, composer shell, and the consumer constraint class                        |
-| `docs/design-system/imladris/production-contract.json` + `docs/design-system/imladris/PRODUCTION_PARITY.md`                         | Current flag truth, surface classification, production ↔ DS mapping, and reserved-dark boundaries |
+| `docs/design-system/imladris/PRODUCTION.md`                                                                                         | CSP, PE, theming, composer contract, and links to maintained ownership/status sources              |
+| `src/Core/FeatureFlags.php` + owning runbook/ADR                                                                                     | Current flag defaults, rollout behavior, and reserved-dark boundaries                              |
+| `docs/design-system/imladris/github.md` + `LOCAL_RECONCILIATION.md`                                                                  | Design screen map, mirror sync state, local adaptations, and held-back upstream changes            |
 | Live PHP under `templates/` + partials; `public/assets/app.css`; generated `public/assets/imladris.css`; existing external JS hooks | Actual markup, class names, tokens, cascade, and enhancement contracts — **implementation truth** |
 
 ### Visual target

@@ -2,7 +2,7 @@
 
 **Owner:** Henry  
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
-**Plan status:** **Draft — execution is gated by formal Phase 2 closeout**  
+**Plan status:** **Historical plan — Phase 3 closeout is complete** (`docs/history/PHASE_1-4_HISTORY.md`; evidence in `docs/evidence/phase3-closeout.md`)
 **Prepared:** 2026-06-25  
 **Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.
 

@@ -1,9 +1,10 @@
 # A5 — Canonical origin & WebAuthn RP ID (Phase 5 entry-gate artifact)
 
 **Date:** 2026-06-30
-**Status:** Recorded as the A5 entry-gate artifact required by `PHASE_5_PLAN.md`
-§2/§7 (and §5 #28); operationalizes ADR 0004 **D6**. **Pending product-owner
-sign-off** on the self-host framing (§6).
+**Status:** Recorded and owner-approved 2026-06-30; accepted as the A5 entry-gate
+artifact in ADR 0012 on 2026-07-01. It operationalizes ADR 0004 **D6**. The
+later implementation refinement to RP-ID resolution is recorded separately in
+`PHASE_5_STATUS.md`.
 **Precedence:** subordinate to `DECISIONS.md` → `PRODUCT_DESIGN.md` → ADR 0004 (**D6**).
 
 > **Self-hostable framing.** RetroBoards runs on a single VPS per operator, so

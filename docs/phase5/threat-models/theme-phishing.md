@@ -1,6 +1,7 @@
 # Phase 5 threat model - Theme phishing
 
-**Status:** Recorded 2026-07-01 - pending owner review
+**Status:** Gate A risk record accepted 2026-07-09 (ADR 0017). The 2026-07-01
+review date and fixture ownership below are historical.
 **Sources:** PHASE_5_PLAN section 9 theme verification, preview isolation, CSP/cache, safe mode, rollback scenarios; section 12 UI and theme risks.
 **Fixture index:** `fixtures.json`, enforced by `tests/Unit/Core/ThreatModelIndexTest.php`.
 

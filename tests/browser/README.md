@@ -40,7 +40,7 @@ Written to `docs/evidence/browser/<viewport>/<page>.png`:
 | 23 | Admin webhook delivery log after `topic.created` worker delivery |
 
 Additional evidence journeys append or reuse later numeric prefixes as the
-harness grows. The current branch also captures:
+harness grows. It also captures:
 
 - `20-announcement-banner`, `21-announcement-dismissed`
 - `20-structure-before`, `21-structure-after-move`, `22-board-archived-readonly`, `23-board-unarchived`
