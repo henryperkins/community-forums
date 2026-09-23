@@ -11,13 +11,13 @@ $registerFirstFocus = $errors === [] ? ' autofocus' : '';
     <span class="auth-eyebrow">Take a seat at the table</span>
     <h1>Create your account</h1>
     <?php if (($registration_mode ?? 'open') === 'closed'): ?>
-        <p class="notice" role="status">New sign-ups are currently closed. Please check back later or contact an administrator.</p>
+        <p class="callout callout-review" role="status">New sign-ups are currently closed. Please check back later or contact an administrator.</p>
     <?php elseif (!empty($errors['invite'])): ?>
-        <p class="notice" role="alert"><?= $e($errors['invite']) ?></p>
+        <p class="callout callout-danger" role="alert"><?= $e($errors['invite']) ?></p>
     <?php elseif (($registration_mode ?? 'open') === 'invite' && empty($invite_valid)): ?>
-        <p class="notice" role="status">Registration is by invitation only. Use your invitation link to sign up.</p>
+        <p class="callout" role="status">Registration is by invitation only. Use your invitation link to sign up.</p>
     <?php elseif (!empty($invite_valid)): ?>
-        <p class="notice" role="status">You’ve been invited to join this community. Complete the form to accept your invitation.</p>
+        <p class="callout" role="status">You’ve been invited to join this community. Complete the form to accept your invitation.</p>
     <?php endif; ?>
     <?php if (empty($registration_blocked)): ?>
     <form method="post" action="/register" class="auth-form">

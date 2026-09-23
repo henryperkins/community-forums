@@ -24,7 +24,7 @@
              data-login-url="/login/passkey"
              hidden>
             <button type="button" class="btn btn-secondary" data-passkey-signin-btn>Sign in with a passkey</button>
-            <p class="form-error" data-passkey-signin-error hidden></p>
+            <p class="field-error" data-passkey-signin-error hidden></p>
         </div>
     <?php endif; ?>
     <?php if (!empty($oauth_providers)): ?>

@@ -2568,7 +2568,7 @@ textarea.textarea-engraved,
    shared rule instead of per-surface patches, so the next muted-prose link
    ships compliant by default. */
 .auth-links a,
-.notice a,
+.callout a,
 .muted a,
 .empty a {
     text-decoration: underline;
@@ -3968,6 +3968,9 @@ textarea.textarea-engraved,
     font-family: var(--font-mono);
     font-size: .78rem;
 }
+/* The one alert plate, on member and operator surfaces alike. The console
+   selector stays in each list so its rules keep the weight they had. */
+.callout,
 .admin-console .callout {
     margin: 12px 0;
     padding: 11px 14px;
@@ -3979,12 +3982,14 @@ textarea.textarea-engraved,
     line-height: 1.5;
     text-wrap: pretty;
 }
+.callout-review,
 .admin-console .callout-review {
     border-color: var(--gold-200);
     border-left-color: var(--warning);
     background: var(--surface-review);
     color: var(--on-review);
 }
+.callout-danger,
 .admin-console .callout-danger {
     border-color: color-mix(in srgb, var(--rust) 35%, transparent);
     border-left-color: var(--rust);
