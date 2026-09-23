@@ -2,8 +2,7 @@
   "name": "RetroBoards",
   "user": "ubuntu",
   "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
+    "dockerfile": "Dockerfile"
   },
   "install": "bash .cursor/install.sh",
   "start": "bash .cursor/start.sh",
@@ -13,5 +12,10 @@
       "command": "bash .cursor/start.sh && php -S 0.0.0.0:8000 -t public public/index.php"
     }
   ],
-  "ports": [8000]
+  "ports": [
+    {
+      "name": "web server",
+      "port": 8000
+    }
+  ]
 }
