@@ -343,6 +343,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Pills** are the larger, quieter status token: `2px 10px`, 0.72rem, sunken parchment.
 - **Tags** are the smallest: `2px 8px`, 0.6rem, 0.08em tracking, for board and meta labels.
 - **Tier markers** (`Member · Veteran · Loremaster · Legend`) are 0.58rem caps at 0.11em, each tier taking its own hue: gold for Legend, evergreen for Loremaster, river for Veteran, neutral for Member.
+- **The console status pill** is `.state`: `1px 9px`, Marcellus at 0.66rem, sentence or token case as written. A lifecycle word keys its tone (`state-active`, `state-revoked`), and any other label names one (`state-done`, `state-review`, `state-danger`, `state-muted`, `state-staff`). Outside the console the same class is a dot and a word. A new status is a tone on `.state`, never a new `*-pill` class (ADR 0037).
 
 ### Cards and containers
 
@@ -382,6 +383,21 @@ A topic star is a personal bookmark, and its word is **Star** / **Starred** — 
 ### Signature: the monogram
 
 A tinted ground with legible dark ink, rotating through ten variants across evergreen, river, gold, mist and parchment — so a list of members is quietly varied without anyone being assigned a "colour". 36px default, 26–64px by context, always a circle, always Marcellus. The `--gilt` inner ring marks the precious ones.
+
+### Shared components
+
+When a job already has a shared component, use it. A variant is a parameter or a tone, not a new class (ADR 0036, ADR 0037).
+
+- **Topic row** — `partials/thread_row.php`, with a `presentation` of `default`, `board` or `inbox`.
+- **Star** — `partials/star_toggle.php`, as the labelled pill or the icon toggle.
+- **Console pager** — `partials/pager.php`, for a known page count or only "is there another page?", with a URL builder for routes that count from 0.
+- **Empty state** — `partials/empty_state.php`: a heading, a sentence, and at most one action.
+- **Back link** — `partials/back_link.php`, with one 13px chevron.
+- **Alert plate** — `.callout`, in info, `callout-review` or `callout-danger`, on member and operator surfaces alike. A field's own error is `.field-error` beneath it.
+- **Status token** — `.chip` for topic status, and `.state` for console status (above).
+- **Glyphs and identity** — `partials/icon.php` and `partials/monogram.php`.
+
+Families that still have more than one implementation are listed, ranked, in ADR 0037.
 
 ### The lapidary register, and the chamfer that is gone from it
 
