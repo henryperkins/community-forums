@@ -79,6 +79,7 @@ $daysValue = array_key_exists('expires_in_days', $inviteOld) ? (string) $inviteO
                             <tbody>
                             <?php foreach ($rows as $row): ?>
                                 <?php $inviteStatus = strtolower((string) $row['status']); ?>
+                                <?php $inviteTone = match ($inviteStatus) { 'active' => 'state-active', 'revoked' => 'state-revoked', default => 'state-muted' }; ?>
                                 <tr>
                                     <td class="member-invitations-created"><?= $e(human_datetime((string) $row['created_at'])) ?></td>
                                     <td class="member-invitations-by"><?= $e($row['creator_username'] ?? 'system') ?></td>
@@ -89,7 +90,7 @@ $daysValue = array_key_exists('expires_in_days', $inviteOld) ? (string) $inviteO
                                     </td>
                                     <td class="member-invitations-uses"><?= (int) $row['used_count'] ?>/<?= (int) $row['max_uses'] ?></td>
                                     <td class="member-invitations-expires"><?= $row['expires_at'] !== null ? $e(human_datetime((string) $row['expires_at'])) : '—' ?></td>
-                                    <td><span class="member-invitations-status is-<?= $e($inviteStatus) ?>"><?= $e($inviteStatus) ?></span></td>
+                                    <td><span class="state <?= $inviteTone ?>"><?= $e($inviteStatus) ?></span></td>
                                     <td class="member-invitations-actions">
                                         <?php if ($inviteStatus === 'active'): ?>
                                             <form method="post" action="/admin/invitations/<?= (int) $row['id'] ?>/revoke" class="inline-form">

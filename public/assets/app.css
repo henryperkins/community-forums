@@ -3069,6 +3069,7 @@ textarea.textarea-engraved,
     text-decoration: none;
 }
 .admin-back:hover { color: var(--accent); text-decoration: none; }
+.admin-back .icon { width: 13px; height: 13px; }
 .admin-record-title {
     margin: 6px 0 0;
     font-family: var(--font-display);
@@ -4896,9 +4897,6 @@ textarea.textarea-engraved,
     color: var(--text-muted);
     font-size: .93rem;
 }
-.admin-console .admin-content .content-tag-pager {
-    margin-top: 16px;
-}
 
 /* — Admin people: AdminPeople.dc.html body adoption (Slice 7). —
    The shared console owns the area heading and tabs. These rules copy the
@@ -5645,7 +5643,6 @@ textarea.textarea-engraved,
         margin-left: 0;
     }
     .admin-overview-audit .filter-actions .btn,
-    .admin-overview-audit .pager-control,
     .admin-overview-audit .state-empty a {
         display: inline-flex;
         align-items: center;
@@ -5766,8 +5763,7 @@ textarea.textarea-engraved,
     .admin-console .admin-content .content-tag-enabled,
     .admin-console .admin-content .content-tag-save,
     .admin-console .admin-content .content-tag-merge .input,
-    .admin-console .admin-content .content-tag-merge .content-board-action,
-    .admin-console .admin-content .content-tag-pager .pager-control {
+    .admin-console .admin-content .content-tag-merge .content-board-action {
         min-height: 44px;
     }
     .admin-console .admin-content .content-tag-update,
@@ -5805,6 +5801,7 @@ textarea.textarea-engraved,
     .admin-console .pager {
         flex-wrap: wrap;
     }
+    .admin-console .pager-control { min-height: 44px; }
 }
 @media (max-width: 520px) {
 }
@@ -5854,15 +5851,18 @@ textarea.textarea-engraved,
     flex: 0 0 auto;
 }
 .state-active::before,
-.state-sent::before {
+.state-sent::before,
+.state-done::before {
     background: var(--leaf);
 }
 .state-paused::before,
 .state-queued::before,
 .state-pending::before,
-.state-suspended::before {
+.state-suspended::before,
+.state-review::before {
     background: var(--amber);
 }
+.state-danger::before,
 .state-revoked::before,
 .state-failed::before,
 .state-bounced::before,
@@ -5871,6 +5871,13 @@ textarea.textarea-engraved,
 .state-deactivated::before {
     background: var(--rust);
 }
+/* The console's one status pill. A lifecycle word keys its tone (state-active,
+   state-revoked); a label that is not a lifecycle word names the tone it wants
+   (state-done, state-review, state-danger, state-muted, state-staff). The
+   feature, package, invitation and override pills were copies of this rule
+   under four names. Every tone is a flipping semantic pair: the design's
+   fixed-ramp inks for the install chip (C-49) and the override chip (C-45)
+   measured 1.10:1 and 3.55:1 in one register or the other. */
 .admin-console .state {
     gap: 0;
     padding: 1px 9px;
@@ -5879,12 +5886,14 @@ textarea.textarea-engraved,
     color: var(--on-pending);
     font-size: .66rem;
     letter-spacing: .06em;
+    white-space: nowrap;
 }
 .admin-console .state::before {
     display: none;
 }
 .admin-console .state-active,
-.admin-console .state-sent {
+.admin-console .state-sent,
+.admin-console .state-done {
     background: var(--surface-done);
     color: var(--on-done);
 }
@@ -5892,7 +5901,8 @@ textarea.textarea-engraved,
 .admin-console .state-pending,
 .admin-console .state-paused,
 .admin-console .state-suspended,
-.admin-console .state-scheduled {
+.admin-console .state-scheduled,
+.admin-console .state-review {
     background: var(--surface-review);
     color: var(--on-review);
 }
@@ -5902,9 +5912,18 @@ textarea.textarea-engraved,
 .admin-console .state-complained,
 .admin-console .state-banned,
 .admin-console .state-deactivated,
-.admin-console .state-expired {
+.admin-console .state-expired,
+.admin-console .state-danger {
     background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
     color: var(--danger);
+}
+.admin-console .state-muted {
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+}
+.admin-console .state-staff {
+    background: var(--surface-staff);
+    color: var(--on-staff);
 }
 /* Role chips for the admin roster + user record: Marcellus uppercase pill,
    gilt for admin, evergreen for moderator, muted for plain members. */
@@ -10060,16 +10079,6 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
     font-size: .74rem;
     letter-spacing: .04em;
 }
-.thread-intelligence-admin .ti-evidence-empty {
-    padding: 34px 20px;
-}
-.thread-intelligence-admin .ti-evidence-empty h3 {
-    font-size: 1.15rem;
-}
-.thread-intelligence-admin .ti-evidence-empty p {
-    margin-top: 6px;
-    font-size: .92rem;
-}
 .thread-intelligence-admin .ti-evidence-time {
     color: var(--text-faint);
     font-family: var(--font-mono);
@@ -11440,22 +11449,6 @@ body.thread-restructure-open { overflow: hidden; }
     color: var(--text-muted);
     font-size: .88rem;
 }
-.member-directory-empty {
-    padding: 44px 20px;
-    text-align: center;
-}
-.member-directory-empty h3 {
-    margin: 0;
-    color: var(--text-strong);
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    font-weight: 500;
-}
-.member-directory-empty p {
-    margin: 6px 0 0;
-    color: var(--text-muted);
-    font-size: .93rem;
-}
 .member-directory-bulk-bar {
     display: flex;
     flex-wrap: wrap;
@@ -11500,15 +11493,6 @@ body.thread-restructure-open { overflow: hidden; }
     margin: 2px 0 0;
     color: var(--text-muted);
     font-size: .88rem;
-}
-.admin-console .member-directory-pager {
-    justify-content: flex-start;
-    gap: 9px;
-    margin-top: 18px;
-}
-.admin-console .member-directory-pager-control {
-    min-height: 32px;
-    padding: 6px 14px;
 }
 .admin-console .member-bulk-back {
     margin-bottom: 14px;
@@ -12247,8 +12231,7 @@ body.thread-restructure-open { overflow: hidden; }
 .admin-console .member-invitations-table td.member-invitations-expires,
 .admin-console .member-invitations-table td.member-invitations-uses,
 .admin-console .member-invitations-table td.member-invitations-by,
-.admin-console .member-invitations-table td.member-invitations-actions,
-.admin-console .member-invitations-table .member-invitations-status {
+.admin-console .member-invitations-table td.member-invitations-actions {
     white-space: nowrap;
 }
 .admin-console .member-invitations-table td.member-invitations-created {
@@ -12263,24 +12246,6 @@ body.thread-restructure-open { overflow: hidden; }
 .admin-console .member-invitations-table td.member-invitations-expires {
     color: var(--text-muted);
     font-size: .88rem;
-}
-.member-invitations-status {
-    display: inline-block;
-    padding: 1px 9px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-sunken);
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .66rem;
-    letter-spacing: .06em;
-}
-.member-invitations-status.is-active {
-    background: var(--surface-done);
-    color: var(--on-done);
-}
-.member-invitations-status.is-revoked {
-    background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised));
-    color: var(--danger);
 }
 
 @media (max-width: 860px) {
@@ -12933,20 +12898,6 @@ body.thread-restructure-open { overflow: hidden; }
     font-size: .78rem;
     color: var(--text-muted);
 }
-/* C-45: the design pairs --gold-100 with --gold-700, a fixed-ramp pair that
-   does not flip and measures 3.55:1 in the light register — below AA for the
-   .66rem label. --surface-staff/--on-staff is the gilt semantic pair and
-   measures 6.25:1 light, flipping correctly in twilight. */
-.features-override-pill {
-    display: inline-block;
-    padding: 1px 9px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-staff);
-    color: var(--on-staff);
-    font-family: var(--font-label);
-    font-size: .66rem;
-    letter-spacing: .06em;
-}
 .features-override-none {
     color: var(--text-faint);
     font-size: .86rem;
@@ -13171,20 +13122,6 @@ body.thread-restructure-open { overflow: hidden; }
     text-decoration: none;
 }
 
-/* Title-case status labels, so the lower-case-token .state vocabulary is not
-   the right primitive. Both variants take a flipping semantic pair. */
-.features-pill {
-    display: inline-block;
-    padding: 1px 9px;
-    border-radius: var(--radius-pill);
-    font-family: var(--font-label);
-    font-size: .66rem;
-    letter-spacing: .06em;
-    white-space: nowrap;
-}
-.features-pill.is-on { background: var(--surface-done); color: var(--on-done); }
-.features-pill.is-off { background: var(--surface-sunken); color: var(--text-muted); }
-
 .features-empty {
     margin: 0;
     padding: 40px 0;
@@ -13388,7 +13325,7 @@ body.thread-restructure-open { overflow: hidden; }
    design is inline style= throughout; under style-src 'self' every rule lands
    here as a class. Scoped .admin-console (or .admin-console .admin-packages for
    form/input overrides) so the forum surfaces are untouched. .pill-admin is NOT
-   touched (C-07): the emergency brake takes the new .pill-danger instead. */
+   touched (C-07): the emergency brake takes the console's status pill instead. */
 
 /* ---- Shared geometry ---- */
 .packages-intro-row {
@@ -13497,36 +13434,6 @@ body.thread-restructure-open { overflow: hidden; }
 .admin-console .card.packages-record-card.is-narrow { max-width: 660px; }
 .admin-console .card.packages-registry-card,
 .admin-console .card.packages-brake-card { padding: 20px 22px; }
-
-/* ---- Chips ---- */
-.packages-pill {
-    display: inline-block;
-    padding: 1px 9px;
-    border-radius: var(--radius-pill);
-    font-family: var(--font-label);
-    font-size: .66rem;
-    letter-spacing: .06em;
-    white-space: nowrap;
-}
-.packages-pill.is-done { background: var(--surface-done); color: var(--on-done); }
-.packages-pill.is-review { background: var(--surface-review); color: var(--on-review); }
-/* C-49: the design inks the install-state chip --green-800 on --brand-subtle.
-   --brand-subtle flips for dark while the ramp ink does not: measured 10.08:1
-   light but 1.10:1 in twilight. --surface-done/--on-done is the pair the design
-   itself uses for the sibling compatibility chip and measures 10.08 / 7.71. */
-.packages-pill.is-install { background: var(--surface-done); color: var(--on-done); }
-.packages-pill.is-off { background: var(--surface-sunken); color: var(--text-muted); }
-.packages-pill.is-danger {
-    background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised));
-    color: var(--danger);
-}
-/* A new house sibling of .pill-admin, which is never recoloured: it is the
-   accent-filled operator chip and carries three different meanings across 41
-   call sites. */
-.pill-danger {
-    background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised));
-    color: var(--danger);
-}
 
 /* ---- Tables ---- */
 .admin-console .packages-table {
@@ -13894,26 +13801,13 @@ body.thread-restructure-open { overflow: hidden; }
    components pinned by AppImladrisFidelityTest — never convert their heading
    element to a <span>, and never fork their skin here. */
 
-/* The design's Enabled chip for a live second factor (:154). --surface-done /
-   --on-done is the flipping semantic pair; the design's own border sits on
-   --green-200, which is a fixed ramp value, so the chip takes the pair only. */
+/* The live second factor's Enabled chip (:154) is .account-state-chip. */
 .totp-state {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 9px;
     margin: 0 0 6px;
-}
-.totp-state-pill {
-    display: inline-flex;
-    padding: 2px 11px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-done);
-    color: var(--on-done);
-    font-family: var(--font-label);
-    font-size: .6rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
 }
 .totp-codes-head {
     margin: 12px 0 9px;
@@ -14029,16 +13923,15 @@ a.account-row-name:hover {
     height: 30px;
     font-size: .74rem;
 }
-/* `Connected` (:398) and `This device` (:419) carry the design's done pair, not
-   a bare `.pill`. Measured 10.08:1 light / 7.71:1 twilight — the same pair
-   Slice 14 adopted for C-49, and the reason those two chips stop being an AA
-   risk in the twilight register. */
+/* One account-state chip: `Connected` (:398), `This device` (:419) and a live
+   second factor's `Enabled` (:154). The design's done pair, measured 10.08:1
+   light / 7.71:1 twilight. The design also rings it in --green-200, a fixed
+   ramp value that does not flip, so the chip takes the pair only. */
 .account-state-chip {
     display: inline-flex;
     flex: 0 0 auto;
     padding: 2px 11px;
     border-radius: var(--radius-pill);
-    border: 1px solid var(--green-200);
     background: var(--surface-done);
     color: var(--on-done);
     font-family: var(--font-label);

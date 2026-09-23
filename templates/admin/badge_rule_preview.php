@@ -5,10 +5,7 @@ $this->section('title', 'Badge rule preview');
 $this->section('variant', 'admin');
 ?>
 <?= $this->partial('admin/_console', ['area' => 'features', 'tab' => 'badge_rules', 'pane_class' => 'admin-features features-badge-rule-preview']) ?>
-    <a class="admin-back" href="/admin/badge-rules">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        Back to badge rules
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/badge-rules', 'label' => 'Back to badge rules']) ?>
     <?php // feature-added: the design's preview is an in-place column swap with no record
           // title. Production is a real route, so the drill-in keeps its own h2 while the
           // Badge rules tab stays lit (FC-12). ?>

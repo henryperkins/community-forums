@@ -5,20 +5,17 @@ $this->section('title', 'Package security response');
 $this->section('variant', 'admin');
 ?>
 <?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages', 'pane_class' => 'admin-packages packages-security']) ?>
-    <a class="admin-back" href="/admin/packages">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        Package catalogue
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/packages', 'label' => 'Package catalogue']) ?>
     <h2 class="admin-record-title">Package security response</h2>
 
     <section class="card packages-brake-card">
-        <?php // constraint C-07: the chip is reclassified to .pill-danger. .pill-admin is
-              // the accent-filled operator chip and carries three different meanings across
+        <?php // constraint C-07: the chip is the console's status pill, never .pill-admin,
+              // the accent-filled operator chip that carries three different meanings across
               // 41 call sites — recolouring it here would change all of them. The chip also
               // moves out of the <h2> so it stops polluting the accessible heading name. ?>
         <div class="packages-card-head">
             <h2 class="packages-section-title is-lg">Emergency execution brake</h2>
-            <?= $execution_disabled ? '<span class="pill pill-danger">disabled</span>' : '<span class="pill packages-pill is-done">live</span>' ?>
+            <?= $execution_disabled ? '<span class="state state-danger">disabled</span>' : '<span class="state state-done">live</span>' ?>
         </div>
         <?php // feature-changed: the design drops "applies regardless of the package flag"
               // from the engaged blurb. Carrying it in both branches is deliberate — the

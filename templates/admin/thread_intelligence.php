@@ -145,10 +145,10 @@
                     <span class="ti-evidence-count"><?= $evidenceCount ?> run<?= $evidenceCount === 1 ? '' : 's' ?></span>
                 </div>
             <?php if (empty($dashboard['recent_generations'])): ?>
-                <div class="ti-evidence-empty state-empty">
-                    <h3>No generation attempts</h3>
-                    <p>No generation attempts have been recorded.</p>
-                </div>
+                <?= $this->partial('partials/empty_state', [
+                    'heading' => 'No generation attempts',
+                    'message' => 'No generation attempts have been recorded.',
+                ]) ?>
             <?php else: ?>
                 <div class="table-scroll table-scroll-wide" tabindex="0" role="region" aria-label="Recent redacted generation attempts">
                     <table class="audit">

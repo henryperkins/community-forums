@@ -152,9 +152,9 @@ final class AppInvitationsTest extends TestCase
         self::assertSame(1, substr_count($body, 'aria-label="Issued invitations"'));
         self::assertStringContainsString('<th scope="col">By</th>', $body);
         self::assertStringContainsString('<span class="sr-only">Actions</span>', $body);
-        self::assertStringContainsString('class="member-invitations-status is-active">active</span>', $body);
-        self::assertStringContainsString('class="member-invitations-status is-revoked">revoked</span>', $body);
-        self::assertMatchesRegularExpression('~is-revoked.*?<td class="member-invitations-actions">\s*—\s*</td>~s', $body);
+        self::assertStringContainsString('class="state state-active">active</span>', $body);
+        self::assertStringContainsString('class="state state-revoked">revoked</span>', $body);
+        self::assertMatchesRegularExpression('~state-revoked.*?<td class="member-invitations-actions">\s*—\s*</td>~s', $body);
         self::assertMatchesRegularExpression(
             '~<form[^>]+action="/admin/invitations/\d+/revoke".*?name="_token".*?<button class="linkbtn danger" type="submit">Revoke</button>~s',
             $body,

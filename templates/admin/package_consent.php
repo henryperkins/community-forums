@@ -9,10 +9,7 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
 $this->section('variant', 'admin');
 ?>
 <?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages', 'pane_class' => 'admin-packages packages-consent']) ?>
-    <a class="admin-back" href="/admin/packages">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        Package catalogue
-    </a>
+    <?= $this->partial('partials/back_link', ['href' => '/admin/packages', 'label' => 'Package catalogue']) ?>
     <h2 class="admin-record-title"><?= $isUpdate ? 'Approve update to ' . $e($target['version']) : 'Consent to permissions' ?></h2>
     <p class="packages-lead">Granting is per-permission and audited. A package cannot be enabled while any grant is pending.</p>
     <?php foreach (($errors ?? []) as $err): ?>

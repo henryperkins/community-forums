@@ -58,9 +58,9 @@
                         <?php // The design inks "ok" with --success at .72rem, which measures
                               // 4.45:1 in twilight. --on-done is the AA-safe success ink. ?>
                         <?php if ((string) $run['status'] === 'ok'): ?>
-                            <span class="packages-pill is-done">ok</span>
+                            <span class="state state-done">ok</span>
                         <?php else: ?>
-                            <span class="packages-pill is-danger"><?= $e((string) $run['status']) ?></span>
+                            <span class="state state-danger"><?= $e((string) $run['status']) ?></span>
                         <?php endif; ?>
                         <span class="packages-rule-when"><?= $e(human_datetime((string) $run['finished_at'])) ?></span>
                     </span>

@@ -112,7 +112,10 @@ final class AppReportQueueTest extends TestCase
         $first = $this->get('/mod/reports', ['board_id' => (string) (int) $this->board['id']]);
         $this->assertStatus(200, $first);
         $this->assertSeeText($first, '50');
-        $this->assertDontSeeText($first, 'Next');
+        // The console pager states the unavailable move as a disabled control,
+        // never as a link that leads to an empty page.
+        self::assertStringNotContainsString('>Next</a>', $first->body());
+        self::assertStringContainsString('<span class="pager-control is-disabled" aria-disabled="true">Next</span>', $first->body());
 
         $second = $this->get('/mod/reports', ['board_id' => (string) (int) $this->board['id'], 'page' => '1']);
         $this->assertStatus(200, $second);

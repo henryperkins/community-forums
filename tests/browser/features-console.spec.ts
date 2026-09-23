@@ -208,7 +208,7 @@ test('badge rules copies the two-up create card, rule rows and action order in e
   // Rules are created inert, so the first row offers Enable, and the design's
   // action order is Preview · Backfill · {toggle} · Revoke awards.
   const row = page.locator('.features-rule-list > li').first();
-  await expect(row.locator('.features-pill')).toHaveText('Disabled');
+  await expect(row.locator('.state')).toHaveText('Disabled');
   await expect(row.locator('.features-rule-star')).toHaveAttribute('aria-hidden', 'true');
   const actions = row.locator('.features-rowbtn');
   await expect(actions).toHaveText(['Preview', 'Backfill', 'Enable', 'Revoke awards']);
@@ -290,7 +290,7 @@ test('the custom emoji catalogue copies the switch, chip and status pills in eve
   const code = await createEmoji(page, 'party');
   const row = page.locator('.features-emoji-table tbody tr').filter({ hasText: `:${code}:` });
   await expect(row.locator('.features-emoji-chip img')).toHaveAttribute('alt', `:${code}:`);
-  await expect(row.locator('.features-pill')).toHaveText('Enabled');
+  await expect(row.locator('.state')).toHaveText('Enabled');
   await expect(row.getByRole('button', { name: `Disable the :${code}: emoji` })).toBeVisible();
   // The catalogue section is unheaded; the scroll region is the one named region.
   await expect(page.getByRole('heading', { level: 2, name: 'Catalogue' })).toHaveCount(0);
@@ -356,7 +356,7 @@ test('every features route stays whole with JavaScript disabled', async ({ brows
     const code = await createEmoji(page, `nojs${info.project.name}`);
     await expectFeaturesArea(page, 'Custom emoji');
     const row = page.locator('.features-emoji-table tbody tr').filter({ hasText: `:${code}:` });
-    await expect(row.locator('.features-pill')).toHaveText('Enabled');
+    await expect(row.locator('.state')).toHaveText('Enabled');
     // The switch submitted its value with no JavaScript in the page.
     await expect(row.locator('.features-emoji-reactions')).toHaveText('Allowed');
     await expectNoDocumentOverflow(page);

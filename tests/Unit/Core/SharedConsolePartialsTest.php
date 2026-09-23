@@ -60,6 +60,39 @@ final class SharedConsolePartialsTest extends TestCase
         self::assertStringNotContainsString('href="/admin/users?page=3"', $last);
     }
 
+    public function test_pager_serves_lists_that_only_know_whether_another_page_exists(): void
+    {
+        $view = new View(self::TEMPLATES);
+        // A 0-based route: the caller maps the pager's 1-based page to its own.
+        $href = static fn (int $target): string => '/mod/reports?' . http_build_query(['status' => 'open', 'page' => $target - 1]);
+
+        $firstWithMore = $view->partial('partials/pager', ['page' => 1, 'has_next' => true, 'href' => $href]);
+        self::assertStringContainsString('<span class="pager-control is-disabled" aria-disabled="true">Previous</span>', $firstWithMore);
+        self::assertStringContainsString('<span class="pager-label">Page 1</span>', $firstWithMore);
+        self::assertStringContainsString('<a class="pager-control" href="/mod/reports?status=open&amp;page=1">Next</a>', $firstWithMore);
+
+        $lastOfUnknown = $view->partial('partials/pager', ['page' => 3, 'has_next' => false, 'href' => $href]);
+        self::assertStringContainsString('<a class="pager-control" href="/mod/reports?status=open&amp;page=1">Previous</a>', $lastOfUnknown);
+        self::assertStringContainsString('<span class="pager-label">Page 3</span>', $lastOfUnknown);
+        self::assertStringContainsString('<span class="pager-control is-disabled" aria-disabled="true">Next</span>', $lastOfUnknown);
+    }
+
+    public function test_pager_names_each_control_when_given_a_noun(): void
+    {
+        $view = new View(self::TEMPLATES);
+        $html = $view->partial('partials/pager', [
+            'page' => 2,
+            'total_pages' => 3,
+            'path' => '/admin/tags',
+            'aria_label' => 'Tag catalogue pages',
+            'noun' => 'tag',
+        ]);
+
+        self::assertStringContainsString('<nav class="pager" aria-label="Tag catalogue pages">', $html);
+        self::assertStringContainsString('<a class="pager-control" href="/admin/tags?page=1" aria-label="Previous tag page">Previous</a>', $html);
+        self::assertStringContainsString('<a class="pager-control" href="/admin/tags?page=3" aria-label="Next tag page">Next</a>', $html);
+    }
+
     public function test_back_link_escapes_values_and_reuses_the_decorative_chevron_icon(): void
     {
         self::assertFileExists(self::TEMPLATES . '/partials/back_link.php');

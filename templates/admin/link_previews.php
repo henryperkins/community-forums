@@ -107,13 +107,13 @@ $statusClass = [
                                 <td><strong><?= $e((string) $board['name']) ?></strong> <code>/c/<?= $e((string) $board['slug']) ?></code></td>
                                 <td>
                                     <?php if (!empty($board['effective'])): ?>
-                                        <span class="features-pill is-on">On</span>
+                                        <span class="state state-done">On</span>
                                     <?php elseif (!empty($board['enabled'])): ?>
                                         <?php // Opted in but not public: previews are never fetched for a
                                               // non-public board, so say inert rather than On. ?>
-                                        <span class="features-pill is-off">Inert (<?= $e((string) $board['visibility']) ?> board)</span>
+                                        <span class="state state-muted">Inert (<?= $e((string) $board['visibility']) ?> board)</span>
                                     <?php else: ?>
-                                        <span class="features-pill is-off">Off</span>
+                                        <span class="state state-muted">Off</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="features-col-actions">

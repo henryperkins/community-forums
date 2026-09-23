@@ -100,7 +100,7 @@ $secPanelFocus = $secOrphaned === [];
     <section class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Two-factor authentication</h2>
         <?php if (!empty($totp['enabled'])): ?>
-            <p class="totp-state"><span class="totp-state-pill">Enabled</span> <span class="muted"><?= (int) $totp['unused_recovery_codes'] ?> recovery code<?= (int) $totp['unused_recovery_codes'] === 1 ? '' : 's' ?> remaining &mdash; each works once.</span></p>
+            <p class="totp-state"><span class="account-state-chip">Enabled</span> <span class="muted"><?= (int) $totp['unused_recovery_codes'] ?> recovery code<?= (int) $totp['unused_recovery_codes'] === 1 ? '' : 's' ?> remaining &mdash; each works once.</span></p>
         <?php elseif (!empty($totp['pending'])): ?>
             <p class="muted">Enrollment started. Verify a code to finish enabling two-factor authentication.</p>
         <?php else: ?>
