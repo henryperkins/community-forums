@@ -6,8 +6,8 @@ reactivate**, and a **deletion request** with a 30-day grace window that a
 scheduled worker later turns into an anonymizing **purge**). **Default-ON as of
 2026-07-02** (the `account_lifecycle` flag graduated out of deploy-dark); fully
 reversible via the `features` override. Follows the same conventions as
-`docs/runbooks/operations.md` §2 and mirrors `docs/runbooks/server_drafts.md` /
-`docs/runbooks/badge_rules.md`.
+`docs/runbooks/operations.md` §2. The 2026-09-20 lifecycle-restriction repair's
+release diagnostics and moderation precedence are recorded here too.
 
 > **Golden rule:** for any defect in the member-facing flows (export leak, a
 > bad deactivate/delete transition), **disable the `account_lifecycle` flag
@@ -43,6 +43,67 @@ Routes (all member-scoped; every POST is CSRF-protected):
 
 **Not gated by this flag** (they stay live when it is off): the core profile
 editor at `GET/POST /settings/account`, and the scheduled purge worker.
+
+## Pre-release restriction reconciliation
+
+Before releasing the 2026-09-20 lifecycle repair, run these **read-only**
+diagnostics against the deployment database. Save the counts and reviewed IDs
+with the release record. An empty test schema is not evidence about existing
+member accounts.
+
+```sql
+-- Accounts whose cached active state disagrees with durable restrictions.
+SELECT u.id, u.status, u.suspended_until,
+       EXISTS (
+           SELECT 1 FROM bans b
+           WHERE b.user_id = u.id AND b.scope = 'site' AND b.lifted_at IS NULL
+             AND (b.expires_at IS NULL OR b.expires_at > UTC_TIMESTAMP())
+       ) AS live_site_restriction,
+       EXISTS (
+           SELECT 1 FROM account_deletion_requests d
+           WHERE d.user_id = u.id AND d.status = 'pending'
+       ) AS pending_deletion
+FROM users u
+WHERE (u.status = 'active' OR (
+           u.status = 'suspended' AND u.suspended_until <= UTC_TIMESTAMP()
+      ))
+  AND (
+      EXISTS (
+          SELECT 1 FROM bans b
+          WHERE b.user_id = u.id AND b.scope = 'site' AND b.lifted_at IS NULL
+            AND (b.expires_at IS NULL OR b.expires_at > UTC_TIMESTAMP())
+      )
+      OR EXISTS (
+          SELECT 1 FROM account_deletion_requests d
+          WHERE d.user_id = u.id AND d.status = 'pending'
+      )
+  )
+ORDER BY u.id;
+
+-- Pending requests outside the ordinary deletion/moderation states need review.
+SELECT d.id AS request_id, d.user_id, d.purge_after, u.status
+FROM account_deletion_requests d
+JOIN users u ON u.id = d.user_id
+WHERE d.status = 'pending'
+  AND u.status NOT IN ('pending_deletion', 'banned', 'suspended')
+ORDER BY d.user_id, d.id;
+```
+
+Every returned row requires targeted reconciliation before release. Inspect
+the member's moderation history, live site restrictions, and deletion-request
+audit history. Preserve independent restrictions: full site bans remain
+banned; post restrictions retain their actual expiry (NULL means indefinite).
+Restore a deletion hold only when its durable request is confirmed intended;
+a canceled request stays canceled. Record reviewed IDs, justification, and
+resulting status in an operator audit entry. Perform corrections in a
+transaction, locking shared protected-owner and active-admin rowsets first
+when an owner could be lost, then the target user, pending requests, and site
+restrictions, each in ascending ID order. Never blanket-reactivate accounts.
+
+The repair prevents new self-service bypasses but does not rewrite legacy
+inconsistencies automatically. Normal writes still use cached account state;
+recovery refuses a live site restriction even when that cache says active, and
+cancellation removes only the deletion request.
 
 ## Roll back / re-enable
 
@@ -84,8 +145,12 @@ elapsed (up to `limit`, default 100), and for each one, **inside its own
 transaction**:
 
 1. **Defence in depth:** re-reads `users.status` and **skips** any account that is
-   no longer `pending_deletion` (reactivated, cancelled, or a status desync) — a
-   non-`pending_deletion` account is **never** anonymized.
+   no longer in `pending_deletion`, `banned`, or `suspended`. It locks and
+   rechecks the **same pending request ID and its current deadline** before
+   purging. A later ban/suspension cannot strand a due deletion, and a canceled
+   request cannot be purged even if the cached user status still says
+   `pending_deletion`. Legacy cached-active or deactivated accounts with a
+   pending request are skipped for targeted reconciliation, not anonymized.
 2. Marks the request purged, deletes PII/linkage rows (sessions, verifications,
    OAuth identities, preferences, board/bookmark folders, profile fields, saved
    feeds, subscriptions, notifications, TOTP/recovery/MFA, server drafts, follows,
@@ -109,15 +174,27 @@ It prints `Account purge: anonymised N due deletion(s).` and exits 0.
 - **Deactivation is reversible.** A deactivated account can still sign in and read
   but is **write-blocked** by `WriteGate` and is hidden from
   presence/leaderboards/follow-suggestions. The lifecycle page and the reactivate
-  action stay reachable in-session (they are not `WriteGate`-guarded), and
-  deactivating **revokes all other sessions** but keeps the current one.
+  action stay reachable in-session (they are not `WriteGate`-guarded); reactivation
+  requires no pending deletion or live site restriction. Deactivating **revokes
+  all other sessions** but keeps the current one.
 - **Deletion is a scheduled purge, not a hard delete.** A request starts a
   **30-day grace** window during which the account is `pending_deletion` (also
   write-blocked, other sessions revoked) and the member — or an admin — can
-  **cancel** and return to `active`. Public post bodies are **preserved** under
-  the Deleted-user identity (thread integrity + accepted-answer state survive);
-  only PII is purged. Re-requesting after a cancel is allowed (a fresh
-  `pending` row); requesting while one is already pending is a no-op.
+  **cancel**. Cancellation removes the deletion hold, but preserves any live
+  ban/suspension instead of unconditionally returning to `active`. Public post
+  bodies are **preserved** under the Deleted-user identity (thread integrity +
+  accepted-answer state survive); only PII is purged. Re-requesting after a
+  cancel is allowed (a fresh `pending` row) if the account has no live site
+  restriction; requesting while one is already pending is a no-op.
+- **Moderation and lifecycle are independent.** A suspension imposed during
+  deletion grace or self-deactivation retains the `pending_deletion` or
+  `deactivated` cached hold; the site restriction and its expiry still block
+  early recovery. Expiry or a moderation lift does not restore ordinary writes
+  through those lifecycle holds. The member must explicitly cancel deletion or
+  reactivate when eligible. An existing full site ban takes precedence over a
+  new suspension, including when only its durable restriction record survives
+  and the cached status is stale; the ban is not downgraded to a timed
+  suspension. Accounts with only a timed suspension still auto-expire normally.
 - **Final-admin guard.** The last remaining active admin cannot deactivate or
   request deletion until another active admin exists (`422` with "Add another
   active admin…"). This mirrors the owner/last-admin protection elsewhere.
@@ -140,18 +217,47 @@ It prints `Account purge: anonymised N due deletion(s).` and exits 0.
   gone). On corruption, disable the flag, pause the purge cron, and restore from
   backup.
 
+## Two-connection rehearsal
+
+Use an empty, explicitly provisioned schema named
+`retroboards_unified_lifecycle_race` accessible by the configured DB user:
+
+```bash
+DB_LIFECYCLE_RACE_DATABASE=retroboards_unified_lifecycle_race \
+  MAIL_DRIVER=sendmail MAIL_FROM='' php tests/concurrency/account-lifecycle.php
+```
+
+The standalone test applies additive migrations only to that fixed schema,
+creates committed uniquely named members, starts a separate PHP process for
+the competing service call, observes its `FOR UPDATE` query before committing
+the first transaction, and records child exit codes and final write-gate
+outcomes. It runs both commit orders for deactivate/ban and cancellation/ban,
+plus two owner deactivations. Cleanup deletes only IDs created by that
+invocation. The ordinary PHPUnit transaction harness cannot provide this
+concurrency evidence.
+
+The combined notification repair also checks that restricted signed-in members
+can reduce their own delivery preferences (N2), and that a real purge's
+NULL-recipient outbox row is suppressed as `recipient_missing` while a later
+valid row reaches the captured `ArrayMailer` (N3). See the
+[combined evidence index](../evidence/unified-notifications-and-settings/README.md);
+do not drain these fixtures into a real mail transport.
+
 ## Acceptance evidence
 
 - **PHPUnit:** `tests/Integration/Core/AppAccountLifecycleTest.php` — exercises the
   shipped default (no override): export-without-secrets (+ `405` on GET),
   reversible deactivate/reactivate, grace-period cancel, final-admin guard,
-  anonymizing purge with PII removal, and the not-`pending_deletion` skip;
+  anonymizing purge with PII removal, and the legacy cached-active skip. The
+  2026-09-20 repair additionally covers restriction precedence, cancellation
+  after moderation, timed expiry, canceled-request safety and ban-surviving
+  purge; the two-connection rehearsal above covers the competing writes;
   `tests/Integration/Core/AppFeatureFlagTest.php` —
   `test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible`
   (default-on plus operator rollback: every lifecycle route 404 when disabled,
   core profile editing stays up; its still-dark cross-check now uses
-  `link_previews` — appeals graduated to default-on on 2026-07-02 and
-  `group_dms` on 2026-07-18).
+  `expanded_files` — appeals, `group_dms`, and `link_previews` have since
+  graduated).
 - **Browser:** `docs/evidence/browser/{desktop,mobile}/35-account-lifecycle.png`
   (the active-state lifecycle page: export + deactivate + delete sections) and
   `36-account-deletion-scheduled.png` (the danger-zone grace/cancel state), driven

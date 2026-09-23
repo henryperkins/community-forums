@@ -2,9 +2,18 @@
 
 **Date:** 2026-06-30
 
-This note records an engineering audit of Phase 6 readiness across the current
-repository. It is not a product-owner acceptance record, and it does not replace
-`PHASE_6_PLAN.md` or any future `PHASE_6_STATUS.md` closeout artifact.
+> **Historical snapshot, not current readiness.** Phase 5 Gate A was accepted
+> and its flags defaulted on 2026-07-09 ([ADR 0017](../adr/0017-phase-5-gate-a-closeout.md),
+> [ADR 0018](../adr/0018-phase-5-gate-a-default-on.md)), superseding this
+> audit's claims that Gate A work was still pending. Line numbers, flag states,
+> and "current" assertions below describe only the 2026-06-30 checkout. For
+> today's phase entry requirements, consult [Phase 6 plan](../../PHASE_6_PLAN.md)
+> and [Phase 5 status](../../PHASE_5_STATUS.md); Gate A acceptance alone does
+> not establish Phase 6 readiness.
+
+This note records an engineering audit of Phase 6 readiness as of its date. It
+is not a product-owner acceptance record and does not replace the phase plan
+or a future `PHASE_6_STATUS.md` closeout artifact.
 
 ## Scope
 

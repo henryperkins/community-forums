@@ -136,8 +136,15 @@ Visit `https://<app>.fly.dev/setup` over HTTPS and create the initial admin
 account **promptly** — until it is completed the gate is open to anyone who
 reaches the app. Once an admin exists, `/setup` stops being served.
 
-Then work through the staged enablement order in
-`docs/runbooks/operations.md` §8 rather than turning everything on at once.
+Accepted feature flags default on for a new install. After setup, review
+`/admin/features` for effective flags and any operator configuration still
+required, then schedule the workers for the subsystems you intend to operate
+(see [operations](operations.md), [notification/email delivery](unified-notifications.md),
+and the relevant per-feature runbooks). To hold a default-on subsystem back,
+set a merge-preserving `features.<flag>=false` override as described in
+[operations §2](operations.md). The original Phase 2 launch order is retained
+in [PHASE_2_PLAN.md](../../PHASE_2_PLAN.md) §12 as history, not a new-install
+checklist.
 
 ## 6. Known caveats
 

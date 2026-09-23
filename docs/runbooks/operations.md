@@ -1,8 +1,8 @@
-# RetroBoards — Phase 2 Operations Runbook
+# RetroBoards — Operations Runbook
 
-Documented operating procedures required by `PHASE_2_PLAN.md` §10 (observability
-and operating requirements) and §12 (staged release and rollback). All commands
-run from the project root on the VPS. `bin/console help` lists every command.
+Cross-phase operating procedures, first established for `PHASE_2_PLAN.md` §10
+(observability) and §12 (staged release and rollback). All commands run from
+the project root on the VPS. `php bin/console` lists every command.
 
 For the Fly.io deployment (`fly.toml`, `Dockerfile`, `deploy/`) — MySQL/MariaDB
 provisioning, secrets, the release command, and first-run setup — see
@@ -76,65 +76,20 @@ done — so an upgrade never silently starts new outbound traffic.
 
 ## 3. Email operations
 
-- **Pause workers:** stop the `worker:email` / `worker:digest` cron to preserve
-  queued jobs. Disabling email availability also gates notification content;
-  draining unavailable content records terminal suppression.
-- **Drain the outbox:** `php bin/console worker:email [limit]` drains instant,
-  digest, announcement (`system`), and operator test jobs, oldest first in bounded
-  batches. `php bin/console worker:digest` schedules due local-date windows and
-  drains digest retries even when no new recipient is due. Both share one lock.
-- **Durable digests:** scheduling fixes the UTC window, upper post ID and original
-  source selection, then inserts the job and advances the watermark atomically.
-  Cron may run after the preferred local hour. NULL/empty zones use UTC; invalid
-  zones increment `invalid_timezone` without consuming the window. DST gaps run
-  afterward and folds schedule once. Paused, suppressed, banned and empty windows
-  are consumed without catch-up mail. Retries reload recipient state, access,
-  blocks, preferences and source settings; they never expand the original window.
-- **Automatic retry/backoff:** transient failures remain `queued` until attempts
-  are exhausted: five attempts by default, with delays of 5 minutes, 15 minutes,
-  1 hour, then 6 hours. CLI reports sent, suppressed, retrying, failed and skipped
-  counts; the digest command also reports scheduled (`queued`) and empty windows.
-  `/admin/email` and CSV include attempts, last attempt, next retry and reason.
-- **Replay failed sends:** fix the transport, then use `/admin/email` to requeue
-  individual replayable Failed jobs and drain again. Suppressed is terminal;
-  malformed `invalid_digest_payload` and `unreplayable_legacy_digest` failures
-  cannot be requeued through either the UI or its POST route. Do not bulk-update
-  statuses with SQL: that bypasses eligibility and replay classification.
-- **Truthful outcomes:** only transport success sets Sent, `sent_at`, and message
-  ID. Missing/deleted/banned recipients, paused delivery, suppression, disabled
-  digests or unavailable content record terminal Suppressed with a reason in
-  `error`, no message ID and no sent timestamp. Operator diagnostics retain their
-  explicit test-message contract. Clearing address suppression enables future
-  eligible jobs, not replay of opted-out activity; member recovery is deferred.
-- **Sender/domain blocking:** scheduling happens before transport checks. Empty
-  `MAIL_FROM` reports `blocked_reason=sender_unconfigured`. Required SPF/DKIM
-  verification reports `blocked_reason=domain_unverified` until `/admin/email`
-  shows pass for both. Use **Refresh SPF/DKIM status** after DNS changes. A block
-  leaves jobs queued, consumes no attempt and preserves payload and prior error.
-  Configure the sender/domain, then drain the existing jobs.
-- **Duplicate boundary:** the unique keys prevent duplicate scheduling and the
-  advisory lock prevents concurrent draining. SMTP success followed by a process
-  or database failure before recording success can still duplicate a later
-  attempt; exactly-once external mail delivery is not guaranteed.
+The current worker, digest, sender/domain, retry, replay, and suppression
+procedures live in [Unified notifications and account settings](unified-notifications.md).
+To pause delivery without discarding queued work, stop both `worker:email` and
+`worker:digest` cron commands. A feature-flag rollback changes content
+eligibility; it is not a substitute for pausing the workers.
 
 ## 3a. Account deletion grace (ADR 0006)
 
-Self-serve account deletion is a 30-day reversible grace: a request flips the
-account to `pending_deletion` and schedules a purge; cancelling reactivates it.
-A cron worker completes due deletions by anonymising PII (email, profile,
-sessions, DMs). Nothing purges until the grace window elapses, and the purge
-never touches an account whose status is no longer `pending_deletion`.
-
-- **Run the purge on cron** (same cadence as `worker:purge-ips`):
-  ```bash
-  php bin/console worker:purge-accounts [limit]   # default 100; idempotent + audited
-  ```
-- The `account_lifecycle` flag gates the member-facing export/deactivate/delete
-  routes. It **graduated to default-on on 2026-07-02** (reversible via the
-  `features` override); see `docs/runbooks/account_lifecycle.md`. With the worker
-  unscheduled, deletion requests never complete. Note the worker itself does
-  **not** read the flag, so disabling the flag does not stop in-flight purges —
-  pause this cron to halt them.
+The [account lifecycle runbook](account_lifecycle.md) owns the 30-day grace,
+moderation/deletion precedence, pre-release reconciliation, and
+`worker:purge-accounts [limit]` procedure. The `account_lifecycle` flag gates
+member actions, **not** the purge worker: pause its cron to halt purges of
+already-due pending requests. A later ban or suspension does not cancel a
+durable deletion request; cancellation preserves any live restriction.
 
 ## 4. Counter & reputation reconciliation
 
@@ -171,10 +126,14 @@ ALTER TABLE posts DROP INDEX ft_posts_body, ADD FULLTEXT KEY ft_posts_body (body
 php bin/console migrate:status     # show applied/pending
 php bin/console migrate            # apply pending (additive)
 php bin/console verify:upgrade     # DESTRUCTIVE rehearsal on a SCRATCH db:
-                                   # Phase 1 → seed → Phase 2, assert no data loss
+                                   # Phase 1 → seeded fixture → latest migrations
 ```
 
-Run `verify:upgrade` against a copy of production data before a real upgrade.
+`verify:upgrade` drops **all tables** in its configured database, then creates
+and checks a synthetic populated Phase 1 fixture. Run it only on a dedicated
+throwaway schema; it does not verify a production-data copy. To rehearse an
+upgrade with real data, restore a backup into a separate database and run
+`php bin/console migrate` there, checking the restored content afterward.
 Deploy schema before the application code that uses it.
 
 ## 7. Restore from backup
@@ -202,17 +161,7 @@ restore into a fresh one, and assert per-table row count + `CHECKSUM TABLE` matc
 the schema is complete, and the app boots). Evidence:
 `docs/evidence/backup-restore/`.
 
-## 8. Staged enablement order (new install / first Phase 2 rollout)
-
-1. Deploy additive migrations + dark backend code with Phase 2 flags off.
-2. Enable read/star + reactions; validate reputation/counter reconciliation.
-3. Enable in-app subscriptions/notifications + short-polling (email still paused).
-4. Start the worker with test recipients, then enable instant email, then digests.
-5. Enable mentions, search, DMs, and reports/moderation in separate flag changes.
-6. Accept Gate A, then enable follows/feed, badges/solved, OAuth, and presence
-   incrementally for Gate B.
-
-## 9. Presence (ADR 0031)
+## 8. Presence (ADR 0031)
 
 ### Tuning
 

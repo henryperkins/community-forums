@@ -128,11 +128,11 @@ not additional browser tests. The final reviewer inspected this correction.
 
 External OAuth authorization, actual email delivery and production deployment
 were not exercised. Legacy inconsistent lifecycle rows require the targeted
-operator reconciliation described in the runbook. Member security history,
-email discovery, username editing, the last-20 dropdown and the full notification
-control matrix remain explicit carryovers; this repair does not claim them as
-shipped. Native zoom and operating-system tab switching were not manipulated;
-the browser tests document their reflow/visibility simulations.
+operator [reconciliation in the account lifecycle runbook](../../runbooks/account_lifecycle.md#pre-release-restriction-reconciliation).
+Member security history, email discovery, username editing, the last-20
+dropdown and the full notification control matrix remain explicit carryovers,
+not shipped in this repair. Native zoom and operating-system tab switching were
+not manipulated; the browser tests document their reflow/visibility simulations.
 
 ## Evidence isolation
 

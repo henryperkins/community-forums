@@ -248,16 +248,19 @@ removal were built. Two dark carryovers remain in the order above:
      `tests/browser/a11y.spec.ts`; operator runbook `docs/runbooks/badge_rules.md`.
 4. **`account_lifecycle`** — ✓ **Graduated 2026-07-02 (default-ON).** Self-serve
    JSON export, reversible deactivate/reactivate, deletion request with 30-day
-   grace and cancel, then purge/anonymization via `worker:purge-accounts` (refuses
-   accounts no longer `pending_deletion`); mutations run in transactions
-   (2026-06-30 hardening); policy ADR 0006.
+   grace and cancel, then purge/anonymization via `worker:purge-accounts`;
+   mutations run in transactions (2026-06-30 hardening); policy ADR 0006.
+   The 2026-09-20 repair lets a due, still-pending request survive a later ban
+   or suspension; canceled requests and legacy cached-active/deactivated
+   anomalies do not purge. The current procedure is in
+   `docs/runbooks/account_lifecycle.md`.
    - Evidence completed: `AppAccountLifecycleTest` (now exercises the shipped
      default — export-without-secrets, deactivate/reactivate, grace cancel,
-     final-admin guard, anonymizing purge, and the not-`pending_deletion` skip);
+     final-admin guard, anonymizing purge, and the cached-active anomaly skip);
      `AppFeatureFlagTest` covers it via `test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible`
      (default-on plus operator rollback to 404; its dark cross-check now uses
-     `link_previews` — appeals graduated 2026-07-02 and `group_dms`
-     2026-07-18); the `phase 4 account lifecycle` Playwright
+     `expanded_files` — appeals, `group_dms`, and `link_previews` have since
+     graduated); the `phase 4 account lifecycle` Playwright
      journey drives export→deactivate→reactivate→request→cancel through the no-JS
      forms (dedicated `dana` account), capturing `35-account-lifecycle` +
      `36-account-deletion-scheduled` on desktop + mobile; `/settings/account/lifecycle`

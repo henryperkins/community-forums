@@ -10,9 +10,11 @@ and [0035](../adr/0035-member-settings-completion-carryovers.md).
 ## Release sequence
 
 1. Quiesce both notification cron commands, `worker:email` and `worker:digest`,
-   and wait for running invocations to exit. Retain all outbox rows.
+   and wait for running invocations to exit. Retain all outbox rows. Disabling
+   the email feature instead can make queued content ineligible and terminally
+   suppressed on drain; it is not a transport pause.
 2. Run the read-only diagnostics in
-   [Account lifecycle restrictions](account-lifecycle-restrictions.md).
+   [Account lifecycle: pre-release restriction reconciliation](account_lifecycle.md#pre-release-restriction-reconciliation).
    Reconcile each inconsistent account deliberately before release; never
    blanket-reactivate accounts with live restrictions or deletion requests.
 3. Deploy the coherent services, command bindings, templates, JavaScript, and
@@ -32,15 +34,27 @@ or to bulk requeue suppressed jobs.
 Digest scheduling records a fixed UTC window, source IDs/filters, and a maximum
 post ID. It commits the outbox row and scheduling watermark together before
 checking transport readiness. Payloads contain no rendered private titles or
-message bodies. A member with no stored timezone uses UTC. A scheduler run at
-or after the selected local hour can schedule that calendar day's digest;
-repeated runs do not create another recipient/day job.
+message bodies. NULL/empty timezones use UTC; an invalid timezone increments
+`invalid_timezone` without consuming the window. A scheduler run at or after
+the selected local hour can schedule that calendar day's digest (after a DST
+gap, or once in a repeated hour). Paused, suppressed, banned and empty windows
+are consumed without catch-up mail; repeated runs do not create another
+recipient/day job.
 
-Both commands use the shared drainer. `worker:email` drains supported kinds;
-`worker:digest` schedules and drains digests, including older due retries. An
-unconfigured sender or blocked domain is a global transport condition: it does
-not consume an attempt or overwrite a job's reason. Sender failures leave
-durable work to retry.
+Both commands use the same advisory-locked drainer.
+`php bin/console worker:email [limit]` drains due instant, digest,
+announcement (`system`), and operator test jobs in bounded batches;
+`worker:digest` schedules and drains digests, including older due retries. A
+transient send failure leaves the row queued until attempts are exhausted:
+five attempts by default, with delays of 5 minutes, 15 minutes, 1 hour, then
+6 hours. The CLI reports sent, suppressed, retrying, failed and skipped
+counts; the digest command also reports scheduled and empty windows.
+
+An unconfigured sender (`MAIL_FROM` absent, `blocked_reason=sender_unconfigured`)
+or a required-but-unverified SPF/DKIM domain (`domain_unverified`) is a global
+transport block: it consumes no attempt and preserves queued jobs, payloads,
+and prior errors. `/admin/email` reports domain status; use **Refresh SPF/DKIM
+status** after DNS changes. Configure the sender/domain, then drain again.
 
 Digest counters include decisions made while scheduling and draining. A member
 whose new window is suppressed and whose older queued retry is suppressed can
@@ -49,15 +63,23 @@ count persisted jobs; they are the source for queue-size monitoring.
 
 Each attempt reloads the recipient and current permissions, account state,
 source settings, blocks, and suppression state. Purged/missing recipients do
-not abort the batch. Only a successful transport call produces `sent`.
-Privacy or preference suppression is terminal; invalid digest payloads are
-permanent failures. Operator requeue is reserved for supported, valid failed
-jobs. Do not use blanket SQL to requeue terminal rows.
+not abort the batch. Only a successful transport call produces `sent`,
+`sent_at`, and a message ID; suppression keeps a reason without a sent
+timestamp or message ID. Privacy or preference suppression is terminal;
+`invalid_digest_payload`, `unreplayable_legacy_digest`, and `unsupported_kind`
+are permanent failures. `/admin/email` and its CSV report attempts, last
+attempt, next retry and reason. After fixing a transient failure, requeue
+individual replayable Failed jobs there and drain again. Do not use blanket
+SQL to requeue terminal rows. Clearing address suppression allows future
+eligible mail, not replay of opted-out activity. Operator test sends retain
+their separate contract: member pause and address suppression do not gate
+them, but missing or banned recipients still do.
 
-An SMTP server can accept a message immediately before the process crashes
-without recording success. A later retry can then duplicate that message.
-The database and SMTP do not share a transaction; durable retries are not an
-exactly-once delivery guarantee.
+Idempotency keys prevent duplicate scheduling, and the advisory lock prevents
+concurrent drains. An SMTP server can accept a message immediately before the
+process crashes without recording success; a later retry can then duplicate
+that message. The database and SMTP do not share a transaction; durable
+retries are not an exactly-once delivery guarantee.
 
 ## Member controls and recovery
 
