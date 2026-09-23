@@ -24,7 +24,7 @@
 - CSRF stays on `POST /messages/{id}/poll`. GET stays 405. No new CSRF exemption.
 - `RateLimitService::enforce()` fails open on an unknown policy name. `dm_poll` must be a real entry in `config/config.php` `rate_limits`.
 - `dm` stays `[20, 600]` and remains the send/create bucket. `dm_poll` is `[120, 300]`: one open conversation polls every 20 seconds (15 requests per 300 seconds per tab); 120 covers several tabs plus the client catch-up burst below. Do not point `poll` at `dm`.
-- Client catch-up burst cap is 20 immediate follow-ups (1,000 messages at 50 per page). The 21st page waits the normal 20-second interval, then another burst is allowed.
+- Client catch-up burst cap is 20 immediate follow-ups after the initial request (up to 1,050 messages at 50 per page). The 22nd page waits the normal 20-second interval, then another burst is allowed.
 - Poll page size is 50 returned rows. The repository reads 51. The extra row is a probe: it is dropped before `markRead`, and the next poll with `after` set to the last returned id delivers it.
 - `markRead` only runs when at least one row is returned, and only with that last returned id. A forged or future `after` still acknowledges nothing.
 - Membership, join boundary, blocks, opt-out, `group_dms` rollback, and `WriteGate` behavior stay as they are. `poll` still calls `requireDms()` before the limiter, so a guest is redirected to login and a dark `dms` flag is 404 without spending a bucket.
@@ -71,7 +71,7 @@ These are the inputs a reasonable member hits that the requirements imply and th
 - Consumes: `DmMessageRepository::afterForUser(int $conversationId, int $userId, int $after): array` and `ConversationRepository::markRead(int $conversationId, int $userId, int $messageId): void`.
 - Produces: `afterForUser(int $conversationId, int $userId, int $after, int $limit = 50): array`. Limit is clamped to `1..51` and interpolated. `ConversationReadService::poll` still returns `has_more`, `last_id`, `html`, `dm_unread`, `presence`, `other_last_read_message_id`. `has_more` is true only when a 51st row existed. `last_id` and `last_read_message_id` are the last returned id.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add this method to `tests/Integration/Core/AppMessagesRefinementTest.php`, next to `testPollCapsCatchupAndNeverAcknowledgesAForgedCursor`:
 
@@ -96,13 +96,13 @@ public function testPollOfAnExactPageIsComplete(): void
 }
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Integration/Core/AppMessagesRefinementTest.php --filter testPollOfAnExactPageIsComplete`
 
 Expected: FAIL. `has_more` is `true` because the current code uses `count($messages) === 50`.
 
-- [ ] **Step 3: Extend the 51-message test so the probe row is delivered next**
+- [x] **Step 3: Extend the 51-message test so the probe row is delivered next**
 
 Inside `testPollCapsCatchupAndNeverAcknowledgesAForgedCursor`, after the `PHP_INT_MAX` assertions, add:
 
@@ -117,7 +117,7 @@ self::assertSame($ids[50], (int) (new ConversationRepository($this->db))->member
 
 This continuation already works before the probe change. It fails if the probe row is acknowledged on the first poll or dropped from the second.
 
-- [ ] **Step 4: Read one extra row and acknowledge only the returned page**
+- [x] **Step 4: Read one extra row and acknowledge only the returned page**
 
 Replace `afterForUser` in `src/Repository/DmMessageRepository.php` with:
 
@@ -174,13 +174,13 @@ Change the returned flag from `count($messages) === 50` to the probe:
 
 Leave `last_id` as the last returned id, or `after` when the page is empty.
 
-- [ ] **Step 5: Run the poll tests**
+- [x] **Step 5: Run the poll tests**
 
 Run: `vendor/bin/phpunit tests/Integration/Core/AppMessagesRefinementTest.php --filter 'testPoll'`
 
 Expected: PASS, including `testPollOfAnExactPageIsComplete`, `testPollCapsCatchupAndNeverAcknowledgesAForgedCursor`, `testPollReturnsOnlyNewVisibleMessagesAndMarksOnlyReturnedMessagesRead`, `testPollDoesNotRevealPrivateCounselToAnOutsiderOrAfterRollback`, and `testPollHonoursGroupJoinBoundaryAndStopsAfterLeavingOrRollback`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Repository/DmMessageRepository.php src/Service/ConversationReadService.php tests/Integration/Core/AppMessagesRefinementTest.php
@@ -202,7 +202,7 @@ git commit -m "fix(messages): treat an exact poll page as complete"
 
 `atDmEnd()` after fonts load is the wrong signal for "the reader never moved." Growing `scrollHeight` leaves `scrollTop` where it was, so a pinned reader looks short of the end until something scrolls them. The pin remembers that they were following.
 
-- [ ] **Step 1: Write the failing browser tests**
+- [x] **Step 1: Write the failing browser tests**
 
 Create `tests/browser/messages-poll-regressions.spec.ts`:
 
@@ -299,13 +299,13 @@ test('a late font load re-bottoms a reader who is still pinned', async ({ page }
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd tests/browser && npx playwright test messages-poll-regressions.spec.ts --project=desktop`
 
 Expected: FAIL. The scrolled-away test sees `scrollTop` jump to the bottom. The pinned test can also fail today if the callback runs `bottomDm` before the growth node is inserted and does not run again; after the pin exists, resolving fonts after the growth node is appended is what re-bottoms. The scrolled-away failure is the gate for this step.
 
-- [ ] **Step 3: Pin the reader, and re-bottom from fonts only while pinned**
+- [x] **Step 3: Pin the reader, and re-bottom from fonts only while pinned**
 
 In `public/assets/app.js`, in the messages closure, add `stickToEnd` next to `pendingMessages` and teach `bottomDm` plus the scroll listener. Replace the initial `bottomDm` / `document.fonts.ready` block.
 
@@ -338,7 +338,7 @@ Keep the existing `moveDmReceipt` and `arrangeDmRuns` functions above this block
 
 A `#m123` hash still skips the initial `bottomDm`, so `stickToEnd` stays false and the font callback does not pull the reader off the anchored message.
 
-- [ ] **Step 4: Rebuild assets and re-run the tests**
+- [x] **Step 4: Rebuild assets and re-run the tests**
 
 Run:
 
@@ -350,7 +350,7 @@ cd tests/browser && npx playwright test messages-poll-regressions.spec.ts --proj
 
 Expected: `check:assets` prints `Generated assets and manifest are current.` Both new tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add public/assets/app.js public/assets/dist config/assets.json tests/browser/messages-poll-regressions.spec.ts
@@ -372,7 +372,7 @@ git commit -m "fix(messages): keep the reading position when fonts finish late"
 
 When the reader is pinned, a partial page still calls `bottomDm()` so the next immediate response is also measured from the end. Skipping `bottomDm` on `has_more` would make the following response look scrolled-away and show the pill in front of a reader who was following.
 
-- [ ] **Step 1: Write the failing drain test**
+- [x] **Step 1: Write the failing drain test**
 
 Append to `tests/browser/messages-poll-regressions.spec.ts`:
 
@@ -417,13 +417,13 @@ test('a has_more page requests the next page without waiting for the interval', 
 });
 ```
 
-- [ ] **Step 2: Run the drain test to verify it fails**
+- [x] **Step 2: Run the drain test to verify it fails**
 
 Run: `cd tests/browser && npx playwright test messages-poll-regressions.spec.ts --project=desktop -g "without waiting"`
 
 Expected: FAIL. `calls` stays `1` until the 20-second interval. The test times out at 3 seconds.
 
-- [ ] **Step 3: Let `apply` choose the next delay**
+- [x] **Step 3: Let `apply` choose the next delay**
 
 Replace `shortPoll` in `public/assets/app.js` with this version. Task 5 adds the 429 branch on top of this function; keep the `nextDelay` behavior exactly.
 
@@ -530,7 +530,7 @@ shortPoll('/messages/' + dmShell.dataset.dmConversation + '/poll', 20000, functi
 
 Declare `var dmBurst = 0;` once, beside `lastId`, not inside the callback.
 
-- [ ] **Step 4: Write the non-advancing cursor lock**
+- [x] **Step 4: Write the non-advancing cursor lock**
 
 Append to the same spec:
 
@@ -559,7 +559,7 @@ test('a has_more page that does not advance the cursor waits for the interval', 
 
 The test starts its own counsel through `startCounsel`, because the browser seed creates no conversations: it must pass when run alone with `-g`, not only after Task 2's tests. `page.clock` is installed after that setup request and before the conversation navigation, matching `conversation poll backs off...`.
 
-- [ ] **Step 5: Rebuild and run the poll specs**
+- [x] **Step 5: Rebuild and run the poll specs**
 
 Run:
 
@@ -571,7 +571,7 @@ cd tests/browser && npx playwright test messages-poll-regressions.spec.ts messag
 
 Expected: PASS. The new drain test reaches 2 calls within 3 seconds. The non-advancing test stays at 1 call across 3 seconds and reaches 2 after the interval. `conversation poll backs off, pauses while hidden, resumes immediately and stops on 404` still passes, because those responses omit `has_more` and `apply` returns `undefined`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add public/assets/app.js public/assets/dist config/assets.json tests/browser/messages-poll-regressions.spec.ts
@@ -591,7 +591,7 @@ git commit -m "fix(messages): load the rest of a poll page immediately"
 - Consumes: `field_attrs()` output on `input[name="to"]`: `autofocus` when `to` is the first error. `data-error-focus` is copied today and is honored if some other render sets it. The label's `for` matches the id the picker moves onto the combobox.
 - Produces: the combobox receives `autofocus` and `.focus()` when the canonical input had `autofocus` or `data-error-focus` and its closest `details` is missing or already `open`. The canonical input no longer has `autofocus` after `type="hidden"`.
 
-- [ ] **Step 1: Write the failing focus test and the two locks**
+- [x] **Step 1: Write the failing focus test and the two locks**
 
 Append to `tests/browser/messages-poll-regressions.spec.ts`:
 
@@ -640,13 +640,13 @@ test('a closed compose dialog is not focused', async ({ page }, info) => {
 
 `DirectMessageService::BODY_MAX` is 5000. Removing `maxlength` in the page is what lets the test submit the 5001st character; the server then returns the body error and `field_attrs()` autofocuses the textarea.
 
-- [ ] **Step 2: Run the unknown-recipient test to verify it fails**
+- [x] **Step 2: Run the unknown-recipient test to verify it fails**
 
 Run: `cd tests/browser && npx playwright test messages-poll-regressions.spec.ts --project=desktop -g "unknown recipient"`
 
 Expected: FAIL. The combobox is not the active element. The hidden `to` input is not focusable, and nothing calls `.focus()` on `.dm-to-input`. The server-rendered `open` attribute does not fire the dialog `toggle` handler.
 
-- [ ] **Step 3: Move autofocus onto the combobox and focus it**
+- [x] **Step 3: Move autofocus onto the combobox and focus it**
 
 In the picker loop, after the existing `aria-describedby` / `aria-invalid` / `data-error-focus` copy and before `canonical.type = 'hidden'`:
 
@@ -667,7 +667,7 @@ if (takeFocus) {
 
 Do not add `autofocus` to the attribute-copy list. That list would copy it and, if the removal ran first, would miss it. The hidden input ends without `autofocus`. A body or title error does not set `takeFocus`, so the browser's autofocus on that other control stands. A closed `details` is not focused, which would pull the dialog open.
 
-- [ ] **Step 4: Rebuild and run the focus tests**
+- [x] **Step 4: Rebuild and run the focus tests**
 
 Run:
 
@@ -679,7 +679,7 @@ cd tests/browser && npx playwright test messages-poll-regressions.spec.ts --proj
 
 Expected: all three PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add public/assets/app.js public/assets/dist config/assets.json tests/browser/messages-poll-regressions.spec.ts
@@ -703,7 +703,7 @@ git commit -m "fix(messages): focus the recipient combobox after a 422"
 - Consumes: `RateLimitService::enforce('dm_poll', Request, User)` and `retryAfter('dm_poll', Request, User): int`. `HttpException` on exhaustion. Task 3's `shortPoll` (`nextDelay`, `backoff`, `schedule`).
 - Produces: `POST /messages/{id}/poll` 429 body `{"error":"rate_limited","retry_after":<seconds>}` with headers `Retry-After`, `Content-Type: application/json`, and `Cache-Control: private, no-store`. `shortPoll` waits `Retry-After` seconds when that header is a positive integer, otherwise `retry_after` in a JSON body, otherwise the existing exponential backoff. The wait is capped at 15 minutes, the same cap as the failure backoff.
 
-- [ ] **Step 1: Write the failing PHP tests**
+- [x] **Step 1: Write the failing PHP tests**
 
 Add to `tests/Integration/Core/AppMessagesRefinementTest.php`:
 
@@ -746,13 +746,13 @@ public function testPollThrottleIsJsonAndDoesNotSpendTheSendBudget(): void
 
 `dirname(__DIR__, 3)` from `tests/Integration/Core` is the repository root, the same path `AppPresenceDirectoryTest` uses. Rebuilding `App` keeps `$this->rateLimiter`, so the second poll sees the first hit.
 
-- [ ] **Step 2: Run the PHP tests to verify they fail**
+- [x] **Step 2: Run the PHP tests to verify they fail**
 
 Run: `vendor/bin/phpunit tests/Integration/Core/AppMessagesRefinementTest.php --filter 'testDmPollRateLimitPolicyIsDeclared|testPollThrottleIsJsonAndDoesNotSpendTheSendBudget'`
 
 Expected: FAIL. `dm_poll` is absent, and the second poll is 200.
 
-- [ ] **Step 3: Declare `dm_poll` and answer the poll in JSON**
+- [x] **Step 3: Declare `dm_poll` and answer the poll in JSON**
 
 In `config/config.php`, immediately after `'dm' => [20, 600],`:
 
@@ -807,13 +807,13 @@ In `docs/runbooks/group_dms.md`, replace the Rate limits bullet with:
 
 Leave the escalation ladder's `rate_limits.dm` step as the send control. The poll is not how a member posts.
 
-- [ ] **Step 4: Run the PHP tests to verify they pass**
+- [x] **Step 4: Run the PHP tests to verify they pass**
 
 Run: `vendor/bin/phpunit tests/Integration/Core/AppMessagesRefinementTest.php --filter 'testDmPollRateLimitPolicyIsDeclared|testPollThrottleIsJsonAndDoesNotSpendTheSendBudget|testPoll'`
 
 Expected: PASS. Also run `vendor/bin/phpunit tests/Integration/Core/AppDirectMessageTest.php --filter testHttpSendUsesCentralDmLimiter` and expect PASS, confirming the send policy is unchanged.
 
-- [ ] **Step 5: Write the failing Retry-After browser test**
+- [x] **Step 5: Write the failing Retry-After browser test**
 
 Append to `tests/browser/messages-poll-regressions.spec.ts`:
 
@@ -883,13 +883,13 @@ test('a tab return inside a Retry-After wait does not poll early', async ({ page
 
 The second test is the case a plain timer test misses: the visibility handler clears the timer and polls at once, which would send the next request about 1 second after a `Retry-After: 30`.
 
-- [ ] **Step 6: Run the Retry-After test to verify it fails**
+- [x] **Step 6: Run the Retry-After test to verify it fails**
 
 Run: `cd tests/browser && npx playwright test messages-poll-regressions.spec.ts --project=desktop -g "Retry-After"`
 
 Expected: both FAIL. With no special 429 handling the first failure backs off by one 20-second interval, so `calls` is already 2 after `runFor(20050)`; and the tab return polls immediately, so `calls` is 2 about 1 second after the 429.
 
-- [ ] **Step 7: Honor `Retry-After` inside `shortPoll`**
+- [x] **Step 7: Honor `Retry-After` inside `shortPoll`**
 
 Replace the `fetch(...).then` status branch inside the Task 3 `shortPoll` with this, and replace its `visibilitychange` listener with the one below. Leave `nextDelay`, the numeric `apply` verdict, the catch backoff, and `schedule` as they are.
 
@@ -949,7 +949,7 @@ document.addEventListener('visibilitychange', function () {
 
 A 429 resolves to `null` instead of throwing, so the catch does not overwrite the delay just chosen. `Date.now()` follows `page.clock`, so the browser tests control the deadline too. A 429 with no numeric `Retry-After` and no JSON `retry_after` still doubles from the interval, which is what `polling pauses while hidden and backs off after throttling` asserts for the bell (60s, then 120s) and what `conversation poll backs off...` asserts for a 503.
 
-- [ ] **Step 8: Rebuild and run the poller tests**
+- [x] **Step 8: Rebuild and run the poller tests**
 
 Run:
 
@@ -961,9 +961,23 @@ cd tests/browser && npx playwright test messages-poll-regressions.spec.ts messag
 
 Expected: PASS, including both new `Retry-After` tests (timer and tab return), `conversation poll backs off, pauses while hidden, resumes immediately and stops on 404`, and `polling pauses while hidden and backs off after throttling`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add config/config.php src/Controller/ConversationController.php public/assets/app.js public/assets/dist config/assets.json docs/runbooks/group_dms.md tests/Integration/Core/AppMessagesRefinementTest.php tests/browser/messages-poll-regressions.spec.ts
 git commit -m "fix(messages): rate-limit the conversation poll separately from sends"
 ```
+
+
+## Execution notes — 2026-09-23
+
+Completed on `fix/messages-release`, based on current main `703aeb60`, after consolidating `messages-audit`, `ma-lay`, and `ma-distill`.
+
+- The audit's transaction-free empty poll and shared participants read were preserved.
+- Fonts, dock resizing and incoming pages share one reading pin. The font promise can resolve before a pending scroll event, so the implementation also checks the current offset against the last followed position. A deterministic regression resolves fonts in the same task as scrolling away.
+- The catch-up cap means an initial request plus 20 immediate follow-ups; the prose above is corrected to match the original algorithm. A browser test pins the limit.
+- The overlong-body test submits the form directly because the existing enhanced Send button correctly disables overlong input. This reaches the real 422 page and verifies textarea focus.
+- Additional checks cover a visible new-message pill during late fonts, Retry-After from JSON, and returning while a throttled request is still in flight.
+- The merger prepares the final Imladris digest for verification and applies its baseline refresh immediately after the merge on main, as ADR 0024 requires.
+
+Final results and any pre-existing deferrals are recorded in `docs/evidence/messages-release/2026-09-23/README.md`.

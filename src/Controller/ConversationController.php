@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Core\FeatureFlags;
 use App\Core\ForbiddenException;
+use App\Core\HttpException;
 use App\Core\View;
 use App\Security\Csrf;
 use App\Security\WriteGate;
@@ -248,6 +249,9 @@ final class ConversationController extends Controller
     public function poll(Request $request, array $params): Response
     {
         $user = $this->requireDms();
+        if ($limited = $this->throttlePoll($request, $user)) {
+            return $limited;
+        }
         $result = $this->container->get(ConversationReadService::class)->poll(
             $user, (int) ($params['id'] ?? 0), max(0, (int) $request->post('after', 0)),
         );
@@ -389,6 +393,21 @@ final class ConversationController extends Controller
     private function throttle(Request $request, User $user): void
     {
         $this->container->get(RateLimitService::class)->enforce('dm', $request, $user);
+    }
+
+    /** Answer the enhanced poll with a usable JSON retry deadline. */
+    private function throttlePoll(Request $request, User $user): ?Response
+    {
+        $limits = $this->container->get(RateLimitService::class);
+        try {
+            $limits->enforce('dm_poll', $request, $user);
+        } catch (HttpException) {
+            $retryAfter = max(1, $limits->retryAfter('dm_poll', $request, $user));
+            return Response::json(['error' => 'rate_limited', 'retry_after' => $retryAfter], 429)
+                ->header('Retry-After', (string) $retryAfter)
+                ->header('Cache-Control', 'private, no-store');
+        }
+        return null;
     }
 
     private function showAvatars(User $user): bool

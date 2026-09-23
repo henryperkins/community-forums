@@ -39,8 +39,7 @@ async function openTallCounsel(page: Page): Promise<string> {
   return route;
 }
 
-test('a late font load leaves a reader who scrolled away where they are', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop');
+async function delayDmFonts(page: Page) {
   await page.addInitScript(() => {
     let resolveReady: () => void = () => {};
     const ready = new Promise<void>(resolve => { resolveReady = resolve; });
@@ -50,13 +49,21 @@ test('a late font load leaves a reader who scrolled away where they are', async 
     });
     (window as unknown as { __resolveDmFonts: () => void }).__resolveDmFonts = () => resolveReady();
   });
+}
+
+test('a late font load leaves a reader who scrolled away where they are', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  await delayDmFonts(page);
   await openTallCounsel(page);
   await page.setViewportSize({ width: 800, height: 420 });
   const scroller = page.locator('[data-dm-scroll]');
   const overflow = await scroller.evaluate(node => node.scrollHeight - node.clientHeight);
   expect(overflow).toBeGreaterThan(120);
-  await scroller.evaluate(node => { node.scrollTop = 0; });
-  await page.evaluate(() => (window as unknown as { __resolveDmFonts: () => void }).__resolveDmFonts());
+  // Resolve in the same task: the scroll event has not been delivered yet.
+  await scroller.evaluate(node => {
+    node.scrollTop = 0;
+    (window as unknown as { __resolveDmFonts: () => void }).__resolveDmFonts();
+  });
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => resolve(undefined))));
   expect(await scroller.evaluate(node => node.scrollTop)).toBe(0);
   await expect(page.locator('[data-dm-newpill]')).toBeHidden();
@@ -64,15 +71,7 @@ test('a late font load leaves a reader who scrolled away where they are', async 
 
 test('a late font load re-bottoms a reader who is still pinned', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop');
-  await page.addInitScript(() => {
-    let resolveReady: () => void = () => {};
-    const ready = new Promise<void>(resolve => { resolveReady = resolve; });
-    Object.defineProperty(Document.prototype, 'fonts', {
-      configurable: true,
-      get: () => ({ ready }),
-    });
-    (window as unknown as { __resolveDmFonts: () => void }).__resolveDmFonts = () => resolveReady();
-  });
+  await delayDmFonts(page);
   await openTallCounsel(page);
   await page.setViewportSize({ width: 800, height: 420 });
   const scroller = page.locator('[data-dm-scroll]');
@@ -192,6 +191,68 @@ test('a closed compose dialog is not focused', async ({ page }, info) => {
   await expect(page.locator('.dm-dialog .dm-to-input')).not.toBeFocused();
 });
 
+test('the conversation poll waits for Retry-After on a 429', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  const href = await startCounsel(page);
+  let calls = 0;
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    if (calls === 1) {
+      await route.fulfill({
+        status: 429,
+        headers: { 'Retry-After': '30', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'rate_limited', retry_after: 30 }),
+      });
+      return;
+    }
+    await route.fulfill({ json: { html: '', presence: {}, dm_unread: 0, last_id: 0, has_more: false } });
+  });
+  await page.clock.install();
+  await page.goto(href);
+  await expect.poll(() => calls).toBe(1);
+  await page.clock.runFor(20050);
+  expect(calls).toBe(1);
+  await page.clock.runFor(10000);
+  await expect.poll(() => calls).toBe(2);
+});
+
+test('a tab return inside a Retry-After wait does not poll early', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  const href = await startCounsel(page);
+  let calls = 0;
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    if (calls === 1) {
+      await route.fulfill({
+        status: 429,
+        headers: { 'Retry-After': '30', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'rate_limited', retry_after: 30 }),
+      });
+      return;
+    }
+    await route.fulfill({ json: { html: '', presence: {}, dm_unread: 0, last_id: 0, has_more: false } });
+  });
+  const setHidden = (hidden: boolean) => page.evaluate(value => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, hidden);
+  await page.clock.install();
+  await page.goto(href);
+  await expect.poll(() => calls).toBe(1);
+  await page.clock.runFor(1000);
+  await setHidden(true);
+  await setHidden(false);
+  await page.clock.runFor(1000);
+  // Real time for a stray request to reach the route before asserting its absence.
+  await page.waitForTimeout(250);
+  expect(calls).toBe(1);
+  await page.clock.runFor(27000);
+  await page.waitForTimeout(250);
+  expect(calls).toBe(1);
+  await page.clock.runFor(1500);
+  await expect.poll(() => calls).toBe(2);
+});
+
 test('catch-up yields after twenty immediate follow-ups', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop');
   const href = await startCounsel(page);
@@ -216,3 +277,87 @@ test('catch-up yields after twenty immediate follow-ups', async ({ page }, info)
   expect(cursors.slice(1).every((cursor, index) => cursor === cursors[index] + 1)).toBe(true);
 });
 
+test('a return while the throttled request is in flight obeys the deadline', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  const href = await startCounsel(page);
+  let calls = 0;
+  let release!: () => void;
+  const responseGate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    if (calls === 1) {
+      await responseGate;
+      await route.fulfill({ status: 429, headers: { 'Retry-After': '30' }, json: { error: 'rate_limited', retry_after: 30 } });
+    } else {
+      await route.fulfill({ json: { html: '', presence: {}, dm_unread: 0, last_id: 0, has_more: false } });
+    }
+  });
+  await page.clock.install();
+  await page.goto(href);
+  await expect.poll(() => calls).toBe(1);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const response = page.waitForResponse(res => res.url().endsWith('/poll') && res.status() === 429);
+  release();
+  await response;
+  await page.clock.runFor(1000);
+  expect(calls).toBe(1);
+  await page.clock.runFor(28000);
+  expect(calls).toBe(1);
+  await page.clock.runFor(1500);
+  await expect.poll(() => calls).toBe(2);
+});
+
+test('catch-up and late fonts preserve a parked reader and the new-message pill', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  await delayDmFonts(page);
+  let release!: () => void;
+  const responseGate = new Promise<void>(resolve => { release = resolve; });
+  let calls = 0;
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    if (calls === 1) await responseGate;
+    const id = 900000 + calls;
+    await route.fulfill({ json: {
+      html: messageHtml(id), last_id: id, has_more: calls === 1,
+      presence: {}, dm_unread: calls === 1 ? 1 : 0, other_last_read_message_id: null,
+    } });
+  });
+  await openTallCounsel(page);
+  const scroller = page.locator('[data-dm-scroll]');
+  await scroller.evaluate(node => { node.scrollTop = 0; });
+  release();
+  await expect(page.locator('#m900002')).toBeAttached();
+  await expect(page.locator('[data-dm-newpill]')).toHaveText(/2 new messages/);
+  const top = await scroller.evaluate(node => node.scrollTop);
+  expect(top).toBe(0);
+  await page.evaluate(() => (window as unknown as { __resolveDmFonts: () => void }).__resolveDmFonts());
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+  expect(await scroller.evaluate(node => node.scrollTop)).toBe(top);
+  await expect(page.locator('[data-dm-newpill]')).toBeVisible();
+});
+
+test('a poll can receive its Retry-After deadline from the JSON body', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  const href = await startCounsel(page);
+  let calls = 0;
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    if (calls === 1) {
+      await route.fulfill({ status: 429, json: { error: 'rate_limited', retry_after: 30 } });
+    } else {
+      await route.fulfill({ json: { html: '', presence: {}, dm_unread: 0, last_id: 0, has_more: false } });
+    }
+  });
+  await page.clock.install();
+  await page.goto(href);
+  await expect.poll(() => calls).toBe(1);
+  await page.clock.runFor(20050);
+  expect(calls).toBe(1);
+  await page.clock.runFor(10000);
+  await expect.poll(() => calls).toBe(2);
+});

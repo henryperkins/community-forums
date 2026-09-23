@@ -69,7 +69,17 @@
      */
     function shortPoll(url, interval, apply, options) {
         if (!window.fetch) { return; }
-        var timer = null, backoff = 0, stopped = false, busy = false, resume = false, nextDelay = interval;
+        var timer = null, backoff = 0, stopped = false, busy = false, resume = false, nextDelay = interval, retryAt = 0;
+        function untilRetry() { return Math.max(0, retryAt - Date.now()); }
+        function retryDelay(response) {
+            var header = parseInt(response.headers.get('Retry-After') || '', 10);
+            if (Number.isFinite(header) && header > 0) { return Math.min(header * 1000, 15 * 60000); }
+            return response.json().then(function (body) {
+                var fromBody = body && Number(body.retry_after);
+                if (Number.isFinite(fromBody) && fromBody > 0) { return Math.min(fromBody * 1000, 15 * 60000); }
+                return 0;
+            }, function () { return 0; });
+        }
         function clear() {
             if (timer !== null) { window.clearTimeout(timer); timer = null; }
         }
@@ -87,10 +97,17 @@
             init.headers = Object.assign({ 'X-Requested-With': 'XMLHttpRequest' }, init.headers || {});
             fetch(typeof url === 'function' ? url() : url, init).then(function (r) {
                 if (r.status === 404) { stopped = true; return null; }
+                if (r.status === 429) {
+                    return Promise.resolve(retryDelay(r)).then(function (wait) {
+                        if (wait > 0) { backoff = wait; retryAt = Date.now() + wait; }
+                        else { backoff = backoff === 0 ? interval : Math.min(backoff * 2, 15 * 60000); }
+                        return null;
+                    });
+                }
                 if (!r.ok) { throw new Error('poll failed'); }
                 return r.json();
             }).then(function (data) {
-                if (data) { backoff = 0; }
+                if (data) { backoff = 0; retryAt = 0; }
                 if (!stopped && !document.hidden && data) {
                     var verdict = apply(data);
                     if (verdict === false) { stopped = true; }
@@ -101,13 +118,16 @@
             }).finally(function () {
                 busy = false;
                 var delay = backoff > 0 ? backoff : nextDelay;
-                if (resume) { resume = false; schedule(0); }
+                // Visibility changes during an in-flight request must also obey 429.
+                if (resume) { resume = false; schedule(untilRetry()); }
                 else { schedule(delay); }
             });
         }
         document.addEventListener('visibilitychange', function () {
             clear();
-            if (!document.hidden) { run(); }
+            if (document.hidden) { return; }
+            var wait = untilRetry();
+            if (wait > 0) { schedule(wait); } else { run(); }
         });
         run();
     }
@@ -1529,9 +1549,17 @@
     if (dmStream && dmScroller && dmShell) {
         var dmPill = document.querySelector('[data-dm-newpill]');
         var dmStatus = document.querySelector('[data-dm-update-status]');
-        var lastId = 0, pendingMessages = 0, stickToEnd = false, dmBurst = 0;
+        var lastId = 0, pendingMessages = 0, stickToEnd = false, dmFollowTop = 0, dmBurst = 0;
         dmStream.querySelectorAll('[data-message-id]').forEach(function (line) { lastId = Math.max(lastId, Number(line.dataset.messageId)); });
         function atDmEnd() { return dmScroller.scrollHeight - dmScroller.scrollTop - dmScroller.clientHeight < 90; }
+        function followingDmEnd() {
+            // A font promise or resize callback can beat delivery of the scroll
+            // event. Notice an upward move now, while allowing the offset to
+            // clamp when the pane grows and to stay put when fonts grow text.
+            var clampedTop = Math.min(dmFollowTop, Math.max(0, dmScroller.scrollHeight - dmScroller.clientHeight));
+            if (stickToEnd && !atDmEnd() && dmScroller.scrollTop < clampedTop - 1) { stickToEnd = false; }
+            return stickToEnd && dmPill.hidden;
+        }
         function moveDmReceipt() {
             var receipt = document.querySelector('[data-dm-receipt]');
             var own = dmStream.querySelectorAll('.dm-group.mine .dm-line');
@@ -1588,6 +1616,7 @@
             dmScroller.scrollTop = dmScroller.scrollHeight;
             pendingMessages = 0; dmPill.hidden = true;
             stickToEnd = true;
+            dmFollowTop = dmScroller.scrollTop;
         }
         arrangeDmRuns();
         var dmPaneHeight = dmScroller.clientHeight;
@@ -1596,13 +1625,13 @@
             // Resizing the dock can snap the offset before ResizeObserver runs.
             // Keep the same reading pin for resize, fonts and incoming pages.
             if (dmScroller.clientHeight === dmPaneHeight) { stickToEnd = atDmEnd(); }
-            if (stickToEnd) { pendingMessages = 0; dmPill.hidden = true; }
+            if (stickToEnd) { dmFollowTop = dmScroller.scrollTop; pendingMessages = 0; dmPill.hidden = true; }
         });
         if (dmShell.dataset.dmLatest === '1' && !location.hash.match(/^#m[0-9]+$/)) {
             bottomDm();
             if (document.fonts) {
                 document.fonts.ready.then(function () {
-                    if (stickToEnd && dmPill.hidden) { bottomDm(); }
+                    if (followingDmEnd()) { bottomDm(); }
                 });
             }
         }
@@ -1613,7 +1642,7 @@
         if (window.ResizeObserver) {
             new ResizeObserver(function () {
                 dmPaneHeight = dmScroller.clientHeight;
-                if (stickToEnd && dmPill.hidden) { bottomDm(); }
+                if (followingDmEnd()) { bottomDm(); }
             }).observe(dmScroller);
         }
         // On a short screen the page scrolls, and the dock opening from one row
@@ -1631,7 +1660,7 @@
         }
         if (dmShell.dataset.dmLatest === '1') {
             shortPoll('/messages/' + dmShell.dataset.dmConversation + '/poll', 20000, function (data) {
-                var follow = stickToEnd, previousId = lastId, oldTop = dmScroller.scrollTop;
+                var follow = followingDmEnd(), previousId = lastId, oldTop = dmScroller.scrollTop;
                 if (data.html) {
                     var template = document.createElement('template'); template.innerHTML = data.html;
                     template.content.querySelectorAll('[data-message-id]').forEach(function (line) {

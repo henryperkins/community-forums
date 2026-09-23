@@ -252,6 +252,9 @@ return [
         'presence' => [120, 300],
         'post' => [30, 600],
         'dm' => [20, 600],
+        // 20-second polling across several tabs plus bounded catch-up bursts.
+        // Reading a conversation must not consume its message-send budget.
+        'dm_poll' => [120, 300],
         'dm_report' => [10, 600],
         'upload' => [40, 3600],
         'composer_preview' => [120, 600],

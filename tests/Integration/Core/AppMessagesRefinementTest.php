@@ -210,4 +210,40 @@ final class AppMessagesRefinementTest extends TestCase
         $this->db->run("UPDATE users SET status = 'suspended' WHERE id = ?", [$alice['id']]);
         self::assertSame(403, $this->post('/messages', ['to' => 'bob', 'body' => 'Cannot send'])->status());
     }
+
+    public function testDmPollRateLimitPolicyIsDeclared(): void
+    {
+        $config = require dirname(__DIR__, 3) . '/config/config.php';
+        self::assertArrayHasKey('dm_poll', $config['rate_limits']);
+        self::assertCount(2, $config['rate_limits']['dm_poll']);
+        [$max, $decay] = $config['rate_limits']['dm_poll'];
+        self::assertGreaterThanOrEqual(60, $max);
+        self::assertSame(300, $decay);
+        self::assertNotSame($config['rate_limits']['dm'], $config['rate_limits']['dm_poll']);
+    }
+
+    public function testPollThrottleIsJsonAndDoesNotSpendTheSendBudget(): void
+    {
+        $items = $this->config->all();
+        $items['rate_limits']['dm_poll'] = [1, 300];
+        $this->config = new \App\Core\Config($items);
+        $this->app = new \App\Core\App($this->config, $this->db, $this->rateLimiter);
+
+        [$alice, $bob, $id] = $this->pair();
+        $this->actingAs($alice);
+        self::assertSame(200, $this->post('/messages/' . $id . '/poll', ['after' => 0])->status());
+
+        $throttled = $this->post('/messages/' . $id . '/poll', ['after' => 0]);
+        self::assertSame(429, $throttled->status());
+        self::assertStringContainsString('application/json', $throttled->headers()['content-type'] ?? '');
+        $payload = json_decode($throttled->body(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('rate_limited', $payload['error']);
+        self::assertGreaterThan(0, $payload['retry_after']);
+        self::assertGreaterThan(0, (int) ($throttled->headers()['retry-after'] ?? 0));
+        self::assertSame('private, no-store', $throttled->headers()['cache-control'] ?? null);
+
+        $sent = $this->post('/messages/' . $id, ['body' => 'Still able to send']);
+        $this->assertRedirectContains($sent, '/messages/' . $id);
+    }
+
 }
