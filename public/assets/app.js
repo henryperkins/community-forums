@@ -1523,7 +1523,7 @@
     if (dmStream && dmScroller && dmShell) {
         var dmPill = document.querySelector('[data-dm-newpill]');
         var dmStatus = document.querySelector('[data-dm-update-status]');
-        var lastId = 0, pendingMessages = 0;
+        var lastId = 0, pendingMessages = 0, stickToEnd = false;
         dmStream.querySelectorAll('[data-message-id]').forEach(function (line) { lastId = Math.max(lastId, Number(line.dataset.messageId)); });
         function atDmEnd() { return dmScroller.scrollHeight - dmScroller.scrollTop - dmScroller.clientHeight < 90; }
         function moveDmReceipt() {
@@ -1581,24 +1581,33 @@
         function bottomDm() {
             dmScroller.scrollTop = dmScroller.scrollHeight;
             pendingMessages = 0; dmPill.hidden = true;
+            stickToEnd = true;
         }
         arrangeDmRuns();
+        var dmPaneHeight = dmScroller.clientHeight;
+        dmPill.addEventListener('click', bottomDm);
+        dmScroller.addEventListener('scroll', function () {
+            // Resizing the dock can snap the offset before ResizeObserver runs.
+            // Keep the same reading pin for resize, fonts and incoming pages.
+            if (dmScroller.clientHeight === dmPaneHeight) { stickToEnd = atDmEnd(); }
+            if (stickToEnd) { pendingMessages = 0; dmPill.hidden = true; }
+        });
         if (dmShell.dataset.dmLatest === '1' && !location.hash.match(/^#m[0-9]+$/)) {
             bottomDm();
-            if (document.fonts) { document.fonts.ready.then(bottomDm); }
+            if (document.fonts) {
+                document.fonts.ready.then(function () {
+                    if (stickToEnd && dmPill.hidden) { bottomDm(); }
+                });
+            }
         }
-        dmPill.addEventListener('click', bottomDm);
-        dmScroller.addEventListener('scroll', function () { if (atDmEnd()) { pendingMessages = 0; dmPill.hidden = true; } });
         // The letters change height without scrolling: the dock opens from one row
         // on phones, grows with a draft, and the soft keyboard takes its share. A
         // reader at the newest letter keeps it in view through all of them. A scroll
         // event the resize itself causes (offset snapping) must not unpin it.
         if (window.ResizeObserver) {
-            var dmPinned = atDmEnd(), dmPaneHeight = dmScroller.clientHeight;
-            dmScroller.addEventListener('scroll', function () { if (dmScroller.clientHeight === dmPaneHeight) { dmPinned = atDmEnd(); } });
             new ResizeObserver(function () {
                 dmPaneHeight = dmScroller.clientHeight;
-                if (dmPinned) { dmScroller.scrollTop = dmScroller.scrollHeight; }
+                if (stickToEnd && dmPill.hidden) { bottomDm(); }
             }).observe(dmScroller);
         }
         // On a short screen the page scrolls, and the dock opening from one row

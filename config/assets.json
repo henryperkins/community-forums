@@ -1,9 +1,9 @@
 {
-  "version": "e11775977fc7876f",
+  "version": "c371580285bd60d7",
   "urls": {
     "app.css": "/assets/dist/app-style-B5vTvxOi.css",
     "imladris.css": "/assets/dist/imladris-style-BCCSHjuG.css",
-    "app.js": "/assets/dist/app-2021ea203ad95356.js",
+    "app.js": "/assets/dist/app-159611cd731575f4.js",
     "composer.js": "/assets/dist/composer-f3e62b94e026dd13.js",
     "passkeys.js": "/assets/dist/passkeys-45dd692ca9028436.js",
     "tour.js": "/assets/dist/tour-7cdbe315501e3843.js",
@@ -31,15 +31,15 @@
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "c0a5e62962c978d0de0feb6950010087f63e632b3f4d2d72389d1f7b1ec875c8",
+      "sha256": "10451db35e15a7b8a291b1ffae7e52e57a50cbe90db544311bb3ad5b7a738e1c",
       "immutable": false
     },
     "/assets/composer.js": {
       "sha256": "a34d59b42115b186b304c9fefb87ccd9d47a9d56adc2b17b7b946c8ddff5990c",
       "immutable": false
     },
-    "/assets/dist/app-2021ea203ad95356.js": {
-      "sha256": "2021ea203ad95356c06f7acf382becbb9232583f5d008f2c27fb2bfa71010f87",
+    "/assets/dist/app-159611cd731575f4.js": {
+      "sha256": "159611cd731575f47d6a30045d08af2dd34fb5b1f723d52c0b5aac0471a373a0",
       "immutable": true
     },
     "/assets/dist/app-style-B5vTvxOi.css": {
