@@ -1,0 +1,13 @@
+{
+  "name": "RetroBoards",
+  "user": "ubuntu",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "php-server",
+      "command": "php -S 0.0.0.0:8000 -t public public/index.php"
+    }
+  ],
+  "ports": [8000]
+}
