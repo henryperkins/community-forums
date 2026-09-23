@@ -2615,7 +2615,9 @@
     // The textarea, the Milkdown document, the local and server drafts, the
     // upload tray, and the editor's rich/source mode are all untouched, so
     // reopening restores the draft exactly as it was left.
-    var DOCK_SELECTOR = '.reply-composer';
+    // A Messages conversation's composer is the same bottom dock; it has no
+    // minimize control, so only the empty/filled rows above apply to it.
+    var DOCK_SELECTOR = '.reply-composer, .dm-composer';
     var dockPointerWatch = false;
 
     function composerIsEmpty(form) {
@@ -2648,7 +2650,8 @@
         // before any focus change, and capture keeps a stopPropagation() inside
         // an unrelated widget from swallowing it.
         document.addEventListener('pointerdown', function (event) {
-            var open = document.querySelectorAll(DOCK_SELECTOR + '.is-expanded[data-composer-dock="1"]');
+            // Only wireExpansion stamps data-composer-dock, so it alone names a dock.
+            var open = document.querySelectorAll('.is-expanded[data-composer-dock="1"]');
             for (var i = 0; i < open.length; i++) {
                 var form = open[i];
                 if (form.contains(event.target)) { continue; }
@@ -2697,6 +2700,9 @@
         }
 
         function collapseIfEmpty() {
+            // A dock showing a validation error stays open: folded, the error
+            // would sit under an empty one-line input with nothing beside it.
+            if (form.querySelector('.field-error, [aria-invalid="true"]')) { return; }
             if (isExpanded() && composerIsEmpty(form)) { form.classList.remove('is-expanded'); }
         }
 

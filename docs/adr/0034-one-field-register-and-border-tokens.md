@@ -178,3 +178,32 @@ notes. The 2026-09-20 review correction adds actual twilight notification-select
 captures and admin rest/focus/blur guards: 66 frame/field-error checks passed,
 26 existing admin checks passed (22 viewport skips), and full PHPUnit completed
 2780 tests without failures (6 deprecations, 1 skip).
+
+## Addendum: two more pills from the Messages room — 2026-09-23
+
+The 2026-09-23 audit of `027d878`, the Messages refinement (finding P3-7,
+`docs/evidence/dm-reimagine/phase5/source-audit-027d878.md`), found two more
+pill-radius declarations with the same problem as the pair in §5. Neither is
+changed here and neither is ruled on; they join the same open question.
+
+- `.dm-newpill`: a real `<button>` ("New messages", `templates/dm/show.php`)
+  at `var(--radius-pill)` in `app.css`'s Messages refinement block, new in
+  `027d878`. The sources disagree in the same way: `DESIGN.md` says a button
+  is 7px, but the committed Messages mock
+  (`.impeccable/mocks/messages/assets/mock.css`, state `conversation-live`)
+  draws it as a pill and the surface brief (`.impeccable/surfaces/messages.md`
+  §5) calls it "a quiet 'New messages' pill". Like the star and mute toggles,
+  it reads as a state ("there is more below") as much as an action.
+- The room's toast flash: `.main > .flash:has(+ .dm-shell)`, which floats the
+  confirmation after a tucked-away action (mute, leave, report) as a toast at
+  the bottom of the screen, at `var(--radius-pill)`. It is not a button:
+  `partials/flash.php` renders a `role="status"` `<div>`, and `app.js` hides
+  it after four seconds. It dates from `c4ff5930` (2026-07-03) and already wore
+  the pill when §5 counted the pill-radius declarations, so it is probably one
+  of the eight "ambiguous" entries that §5 does not list by name; its
+  classification was not recorded. The question it raises is the Twelve-Max
+  Rule's rather than the button rule's: a pill-shaped plate that holds a
+  sentence.
+
+`DESIGN.md`'s Don't list now names both next to `.star-btn`/`.topic-tools-open`
+and `.board-mute-toggle`. The ruling §5 asks for should cover all four.

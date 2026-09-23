@@ -119,10 +119,10 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   await page.fill('.dm-inforail input[name="title"]', 'Launch council — war room');
   await page.locator('.dm-inforail .dm-owner-tool').filter({ has: page.locator('input[name="title"]') }).getByRole('button', { name: 'Rename' }).click();
   await expect(page.locator('.flash')).toContainText('Group renamed.');
-  // The explicit details choice persists; close it to read the group
-  // history from the thread pane first (an open drawer would cover it at
-  // these sub-1400px widths), then reopen the rail for the roster capture.
-  await page.locator('[data-rail-close]').click();
+  // Only a column restores the saved details choice; at these sub-1400px
+  // widths the drawer arrives closed after the redirect, so the group history
+  // in the thread pane is in reach. Then reopen the rail for the roster capture.
+  await expect(page.locator('[data-rail-toggle]')).toHaveAttribute('aria-expanded', 'false');
   await page.locator('.dm-events > summary').click();
   await expect(page.locator('.dm-events')).toContainText('member added @dana');
   await expect(page.locator('.dm-events')).toContainText('renamed');

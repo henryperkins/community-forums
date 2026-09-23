@@ -1,10 +1,10 @@
 {
-  "version": "2cf91f2677e425b7",
+  "version": "e11775977fc7876f",
   "urls": {
-    "app.css": "/assets/dist/app-style-D3jpe2kz.css",
+    "app.css": "/assets/dist/app-style-B5vTvxOi.css",
     "imladris.css": "/assets/dist/imladris-style-BCCSHjuG.css",
-    "app.js": "/assets/dist/app-cf5e17b75386c087.js",
-    "composer.js": "/assets/dist/composer-a2aa3a51baf61349.js",
+    "app.js": "/assets/dist/app-2021ea203ad95356.js",
+    "composer.js": "/assets/dist/composer-f3e62b94e026dd13.js",
     "passkeys.js": "/assets/dist/passkeys-45dd692ca9028436.js",
     "tour.js": "/assets/dist/tour-7cdbe315501e3843.js",
     "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-BDzu1ong.js",
@@ -27,27 +27,27 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "2aebbdfc9eee9a9654e426f5d73987a82d6187cfa720ad7a01381fe900b43842",
+      "sha256": "525e9773d277788cf1c798ce561a1f32ffb1ddac13ed29ac392da51672f9294e",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "133749feaa32f5af34db15a83b1459e2e88265936cf961eb973de3467d3cd088",
+      "sha256": "c0a5e62962c978d0de0feb6950010087f63e632b3f4d2d72389d1f7b1ec875c8",
       "immutable": false
     },
     "/assets/composer.js": {
-      "sha256": "6ca3f68c82d20d276caad4f93777aec28fd24430e9530e41ba3d90db2bb296f6",
+      "sha256": "a34d59b42115b186b304c9fefb87ccd9d47a9d56adc2b17b7b946c8ddff5990c",
       "immutable": false
     },
-    "/assets/dist/app-cf5e17b75386c087.js": {
-      "sha256": "cf5e17b75386c087ee5d703146e02fd36efff9e19b2c045416bff1c1ef00eba0",
+    "/assets/dist/app-2021ea203ad95356.js": {
+      "sha256": "2021ea203ad95356c06f7acf382becbb9232583f5d008f2c27fb2bfa71010f87",
       "immutable": true
     },
-    "/assets/dist/app-style-D3jpe2kz.css": {
-      "sha256": "0b67c868772a94a305861b3010562c0cca02e86537422aceafbbe81bc3fe1919",
+    "/assets/dist/app-style-B5vTvxOi.css": {
+      "sha256": "3712a24d19479530a7b0bc1ca77c29e8246b424ba87f98f8bc5f4c25be7f4736",
       "immutable": true
     },
-    "/assets/dist/composer-a2aa3a51baf61349.js": {
-      "sha256": "a2aa3a51baf613490e1c9cbe216487ac3a778994a6d9e051e576a2045d334efb",
+    "/assets/dist/composer-f3e62b94e026dd13.js": {
+      "sha256": "f3e62b94e026dd134171b5e66ecf137a041777fce7e380742015f1c84959a0fd",
       "immutable": true
     },
     "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2": {

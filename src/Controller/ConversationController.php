@@ -120,7 +120,7 @@ final class ConversationController extends Controller
             return $this->view('dm/new', $data, 422);
         }
         $this->discardServerDraftFor($user, $request->path());
-        return $this->redirect('/messages/' . $result['conversation_id']);
+        return $this->redirect($this->letterLocation($request, (int) $result['conversation_id'], (int) $result['message_id']));
     }
 
     /** @param array<string,string> $params */
@@ -228,7 +228,7 @@ final class ConversationController extends Controller
         $body = (string) $request->post('body', '');
 
         try {
-            $this->container->get(DirectMessageService::class)->reply(
+            $messageId = $this->container->get(DirectMessageService::class)->reply(
                 $user,
                 $conversationId,
                 $body,
@@ -241,7 +241,7 @@ final class ConversationController extends Controller
             ], 422);
         }
         $this->discardServerDraftFor($user, $request->path());
-        return $this->redirect('/messages/' . $conversationId);
+        return $this->redirect($this->letterLocation($request, $conversationId, $messageId));
     }
 
     /** CSRF-protected because reading advances a participant's watermark. */
@@ -347,6 +347,20 @@ final class ConversationController extends Controller
         $message = $this->container->get(DmMessageRepository::class)->find($messageId);
         $convId = $message !== null ? (int) $message['conversation_id'] : 0;
         return $this->redirectWithFlash('/messages/' . $convId, 'Thanks — our moderators will review this message.');
+    }
+
+    /**
+     * Where a sent letter lands: the conversation's default (newest) page, which
+     * holds the letter just sent. A no-JS send (the DM forms carry land=letter
+     * inside <noscript>) anchors on it, since every .dm-line carries id="m{id}"
+     * and nothing else would move that reader off the top of the page. A JS
+     * send stays unanchored: app.js pins it to the end, which a #m fragment
+     * would suppress on this load and on every reload or Back to it.
+     */
+    private function letterLocation(Request $request, int $conversationId, int $messageId): string
+    {
+        $anchor = $messageId > 0 && $request->post('land') === 'letter' ? '#m' . $messageId : '';
+        return '/messages/' . $conversationId . $anchor;
     }
 
     private function requireDms(): User

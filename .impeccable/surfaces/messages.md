@@ -72,3 +72,16 @@ Visual authority is DESIGN.md plus the incumbent Bruinen register already scoped
 5. **Marking read from the poll:** the poll endpoint marks the conversation read to the latest id it returns, exactly as a page view does, so a visible open tab never shows unread for the conversation on screen. Hidden tabs never poll, so they never mark read.
 
 **Evidence the build owes (PRODUCT_DESIGN §13):** PHPUnit for the poll endpoint (participant gate, after-id, join boundary, flag-off 404, marks read), the bell payload key, the presence sub-line (show_presence, blocks, flag off), the suggest filter, and every eligibility 422 re-render; a Playwright slice under a new `docs/evidence/dm-reimagine/` phase covering desktop 1440, laptop 1280 with the rail drawer, mobile 390, twilight, and no-JS; the axe spec extended to the Messages routes.
+
+## 8. Build deviations
+
+Places where the build departs from this brief, recorded rather than decided. The resolved decisions in §7 stand as written; each note below waits on the product owner.
+
+**2026-09-23: a 1700px step for the details rail. Awaiting product-owner confirmation.** Found by the 2026-09-23 audit of `027d878`, finding P3-4 (`docs/evidence/dm-reimagine/phase5/source-audit-027d878.md`).
+
+- *What the brief says:* §4's anti-goals allow no new breakpoint (900 and 1400 are the ones this surface already uses); §6 makes the rail a real third column at 1400px and wider.
+- *What the build does:* the Messages refinement block in `public/assets/app.css` adds `@media (min-width: 1400px) and (max-width: 1699px)` twice, once for the enhanced toggle (`.is-rail-open .dm-shell.has-rail.rail-open`) and once for the no-JS anchor target (`.is-rail-open .dm-shell.has-rail:has(.dm-inforail:target)`). While the member's board rail is open (`body.is-rail-open`, the default), a details rail opened between 1400 and 1699px leaves the room at two columns and floats as the same fixed drawer used below 1400px: pinned to the right edge under the top bar, `min(340px, 92vw)` wide, over a scrim. From 1700px up, or from 1400px up with the board rail closed (⌘B), it is the third column §6 describes.
+- *Why, from the code comment:* "With the board rail open there is no room for a third column until ~1700px: the rail stays a drawer over the conversation, as it is below 1400px." The board rail's width comes out of the same row the list, the conversation and the details rail share.
+- *What a member sees:* at 1440, one of the two desktop widths §4 names, with the board rail open, Details opens over the right-hand side of the conversation instead of beside it. The conversation is still the widest thing on screen (§3), but §6's "real third column at 1400px and wider" holds only with the board rail closed.
+- *Where else it is recorded:* nowhere. DESIGN.md does not describe the Messages room's widths; its Two-Breakpoint Rule asks that a new width be justified in review, and this note is the record of that justification, not its approval. `.impeccable/design.json` lists only the 860, 900 and 760 breakpoints.
+- *Open:* confirming it means amending §4's anti-goal and §6's rail line to name the 1700px step. Declining it means finding another answer to the lack of width the comment describes. Either way, the 1440 evidence should show the confirmed state.

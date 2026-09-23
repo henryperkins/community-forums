@@ -64,16 +64,17 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                                 <span class="m-role left">Left</span>
                             <?php endif; ?>
                             <?php if ($canManage): ?>
+                                <?php /* Names start with the visible words (WCAG 2.5.3) and say which member. */ ?>
                                 <span class="dm-member-tools">
                                     <form class="inline" method="post" action="/messages/<?= $railId ?>/transfer">
                                         <?= $this->csrfField() ?>
                                         <input type="hidden" name="user_id" value="<?= (int) $p['user_id'] ?>">
-                                        <button class="dm-linkbtn" type="submit">Make owner</button>
+                                        <button class="dm-linkbtn" type="submit" aria-label="Make owner: <?= $e($pName) ?>">Make owner</button>
                                     </form>
                                     <form class="inline" method="post" action="/messages/<?= $railId ?>/members/remove">
                                         <?= $this->csrfField() ?>
                                         <input type="hidden" name="user_id" value="<?= (int) $p['user_id'] ?>">
-                                        <button class="dm-linkbtn danger" type="submit">Remove</button>
+                                        <button class="dm-linkbtn danger" type="submit" aria-label="Remove <?= $e($pName) ?>">Remove</button>
                                     </form>
                                 </span>
                             <?php endif; ?>
@@ -123,7 +124,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                 <?= $this->partial('partials/monogram', ['name' => $railOtherName, 'username' => $railOtherUser !== '' ? $railOtherUser : $railOtherName, 'gilt' => true]) ?>
                 <h2 class="dm-rail-name"><?= $e($railOtherName) ?></h2>
                 <?php if ($railOtherUser !== ''): ?><span class="dm-rail-handle">@<?= $e($railOtherUser) ?></span><?php endif; ?>
-                <?= $this->partial('partials/dm_presence', ['user_id' => $other['id'] ?? 0, 'state' => $presence_states[(int) ($other['id'] ?? 0)] ?? 'offline']) ?>
+                <?= $this->partial('partials/dm_presence', ['user_id' => $other['id'] ?? 0, 'state' => $presence_states[(int) ($other['id'] ?? 0)] ?? 'offline', 'separator' => false]) ?>
                 <span class="dm-tier-pill"><?= $e($railRole) ?></span>
             </div>
 

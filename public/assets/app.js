@@ -1483,13 +1483,19 @@
     function dmDayKey(date) {
         return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
     }
+    var dmHour12 = null;
     function dmTimeLabel(iso, mode) {
         var date = new Date(iso), now = new Date();
         if (!Number.isFinite(date.getTime())) { return ''; }
         var days = Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())) / 86400000);
         var dayLabel = days === 0 ? 'Today' : days === 1 ? 'Yesterday' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
         if (mode === 'day') { return dayLabel; }
-        if (mode === 'clock') { return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); }
+        // A 12-hour clock drops the leading zero ("5:40 PM"); a 24-hour one
+        // keeps it ("05:40"), matching the server's UTC fallback.
+        if (mode === 'clock') {
+            if (dmHour12 === null) { dmHour12 = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hour12 !== false; }
+            return date.toLocaleTimeString(undefined, { hour: dmHour12 ? 'numeric' : '2-digit', minute: '2-digit' });
+        }
         var age = Math.max(0, now - date), n;
         if (age < 60000) { return 'just now'; }
         if (age < 3600000) { n = Math.floor(age / 60000); return n + ' minute' + (n === 1 ? '' : 's') + ' ago'; }
@@ -1497,6 +1503,12 @@
         if (days === 1) { return 'yesterday'; }
         if (days < 7) { return days + ' days ago'; }
         return dayLabel;
+    }
+    // The exact instant stays in UTC and names its zone once, the same string
+    // the server puts in each <time title> ("2026-09-21 22:30:00 UTC").
+    function dmExactTitle(iso) {
+        var date = new Date(iso);
+        return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 19).replace('T', ' ') + ' UTC' : '';
     }
     function localiseDmTimes(root) {
         root.querySelectorAll('time[data-dm-time]').forEach(function (time) {
@@ -1542,7 +1554,7 @@
                     if (nextDay !== day) {
                         var divider = document.createElement('div'); divider.className = 'dm-day'; divider.dataset.dmDay = nextDay;
                         var time = document.createElement('time'); time.dateTime = line.dataset.createdAt; time.dataset.dmTime = 'day';
-                        time.title = line.dataset.createdAt + ' UTC'; time.textContent = dmTimeLabel(time.dateTime, 'day');
+                        time.title = dmExactTitle(line.dataset.createdAt); time.textContent = dmTimeLabel(time.dateTime, 'day');
                         divider.appendChild(time); fragment.appendChild(divider);
                     }
                     if (author !== run.dataset.dmAuthor || day !== nextDay) {
@@ -1552,7 +1564,7 @@
                         if (mono) { group.appendChild(mono.cloneNode(true)); }
                         messagesBox = document.createElement('div'); messagesBox.className = 'dm-msgs';
                         var head = run.querySelector('.dm-ghead').cloneNode(true);
-                        var clock = head.querySelector('time'); clock.dateTime = line.dataset.createdAt; clock.title = line.dataset.createdAt + ' UTC';
+                        var clock = head.querySelector('time'); clock.dateTime = line.dataset.createdAt; clock.title = dmExactTitle(line.dataset.createdAt);
                         messagesBox.appendChild(head); group.appendChild(messagesBox); fragment.appendChild(group);
                     }
                     var cards = line.nextElementSibling;
@@ -1577,6 +1589,31 @@
         }
         dmPill.addEventListener('click', bottomDm);
         dmScroller.addEventListener('scroll', function () { if (atDmEnd()) { pendingMessages = 0; dmPill.hidden = true; } });
+        // The letters change height without scrolling: the dock opens from one row
+        // on phones, grows with a draft, and the soft keyboard takes its share. A
+        // reader at the newest letter keeps it in view through all of them. A scroll
+        // event the resize itself causes (offset snapping) must not unpin it.
+        if (window.ResizeObserver) {
+            var dmPinned = atDmEnd(), dmPaneHeight = dmScroller.clientHeight;
+            dmScroller.addEventListener('scroll', function () { if (dmScroller.clientHeight === dmPaneHeight) { dmPinned = atDmEnd(); } });
+            new ResizeObserver(function () {
+                dmPaneHeight = dmScroller.clientHeight;
+                if (dmPinned) { dmScroller.scrollTop = dmScroller.scrollHeight; }
+            }).observe(dmScroller);
+        }
+        // On a short screen the page scrolls, and the dock opening from one row
+        // can push Send and most of the input below the fold. Once the expanded
+        // geometry has applied, bring the whole form into view (nearest, so a
+        // form already in view does not move).
+        var dmDock = dmShell.querySelector('.dm-composer');
+        if (dmDock) {
+            dmDock.addEventListener('focusin', function () {
+                window.requestAnimationFrame(function () {
+                    var box = dmDock.getBoundingClientRect();
+                    if (box.bottom > window.innerHeight || box.top < 0) { dmDock.scrollIntoView({ block: 'nearest' }); }
+                });
+            });
+        }
         if (dmShell.dataset.dmLatest === '1') {
             shortPoll('/messages/' + dmShell.dataset.dmConversation + '/poll', 20000, function (data) {
                 var nearEnd = atDmEnd(), oldTop = dmScroller.scrollTop;
@@ -1727,7 +1764,11 @@
         input.addEventListener('keydown', function (e) {
             if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !list.hidden) {
                 e.preventDefault(); highlight((active + (e.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length);
-            } else if (e.key === 'Escape') { e.stopPropagation(); sequence++; close(); }
+            } else if (e.key === 'Escape') {
+                // An open list owns Escape; with it closed, Escape reaches the compose dialog.
+                if (!list.hidden) { e.stopPropagation(); }
+                sequence++; close();
+            }
             else if (e.key === 'Enter' || e.key === ',') {
                 e.preventDefault();
                 if (!list.hidden && active >= 0) { choose(active); }
@@ -1744,20 +1785,57 @@
         form.addEventListener('submit', sync, true);
     });
 
+    // Tab wraps at the ends of a Messages surface that JS presents as modal
+    // (the rail drawer, the compose dialog). With pullIn, focus that has left
+    // the container, or fallen to <body> after the composer's Escape blur, is
+    // brought back to its first or last control.
+    function dmWrapTab(e, container, pullIn) {
+        if (e.defaultPrevented) { return; }
+        var nodes = Array.from(container.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]')).filter(function (n) {
+            var closed = n.closest('details:not([open])');
+            return n.tabIndex >= 0 && !n.matches(':disabled') && !n.closest('[inert]') && n.getClientRects().length > 0
+                && (!closed || n === closed.querySelector(':scope > summary'));
+        });
+        if (!nodes.length) { return; }
+        var first = nodes[0], last = nodes[nodes.length - 1], active = document.activeElement;
+        if (!container.contains(active)) {
+            if (pullIn) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+        } else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+    }
+
     // The anchor is the no-JS fallback at every width; enhancement remembers
     // an explicit choice and keeps aria state, focus and the drawer in sync.
     var railToggle = document.querySelector('[data-rail-toggle]');
     var dmShell = document.querySelector('.dm-shell');
-    if (railToggle && dmShell) {
+    var dmRail = document.getElementById('dm-rail');
+    if (railToggle && dmShell && dmRail) {
         var RAIL_KEY = 'rb-dm-rail-collapsed';
-        var dmRail = document.getElementById('dm-rail');
         var railIsOpen = function () { return dmShell.classList.contains('rail-open') || location.hash === '#dm-rail'; };
+        // Ask the stylesheet rather than copy its breakpoints: an open rail is
+        // an overlay wherever it is position: fixed (below 1400px, and to 1699px
+        // beside the open board rail). The probe adds and removes the class in
+        // one task, so nothing paints and a hidden rail starts no transition.
+        var railIsOverlay = function () {
+            var probe = !dmShell.classList.contains('rail-open');
+            if (probe) { dmShell.classList.add('rail-open'); }
+            var overlay = getComputedStyle(dmRail).position === 'fixed';
+            if (probe) { dmShell.classList.remove('rail-open'); }
+            return overlay;
+        };
+        var railOverlay = railIsOverlay();
         var setRail = function (open, persist, restoreFocus) {
             dmShell.classList.toggle('rail-open', open);
             if (!open && location.hash === '#dm-rail') { location.replace(location.pathname + location.search); }
             railToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             railToggle.classList.toggle('is-active', open);
-            if (persist) { try { localStorage.setItem(RAIL_KEY, open ? '0' : '1'); } catch (e) {} }
+            // The saved choice is the column's. A drawer or phone overlay is a
+            // passing look, so opening or closing one never changes what the
+            // next page restores as a column.
+            if (persist) {
+                railOverlay = railIsOverlay();
+                if (!railOverlay) { try { localStorage.setItem(RAIL_KEY, open ? '0' : '1'); } catch (e) {} }
+            }
             if (restoreFocus) {
                 var close = dmRail.querySelector('[data-rail-close]');
                 (open ? close : railToggle).focus();
@@ -1765,7 +1843,42 @@
         };
         var stored = null;
         try { stored = localStorage.getItem(RAIL_KEY); } catch (e) {}
-        setRail(location.hash === '#dm-rail' || stored === '0', false, false);
+        // #dm-rail is an explicit request at any width; a remembered choice
+        // only reopens a column, so an overlay always starts closed.
+        setRail(location.hash === '#dm-rail' || (stored === '0' && !railOverlay), false, false);
+        // A column that turns into an overlay (resize, rotation, the board rail
+        // opening beside it) would cover the conversation, and on a phone the
+        // back control, so it closes; the saved column choice stays as it was.
+        if (window.ResizeObserver) {
+            // The rail's breakpoints are viewport widths, and the shell is
+            // capped, so its own width can stay put across them; the board rail
+            // opening beside it changes the shell's width but not the window's.
+            // Both are watched, and only a change in either width re-probes
+            // (a phone's URL bar only changes the height). The first report is
+            // the layout the page loaded with.
+            var railWidths = null;
+            var railWatch = new ResizeObserver(function () {
+                var widths = window.innerWidth + ':' + dmShell.clientWidth, first = railWidths === null;
+                if (widths === railWidths) { return; }
+                railWidths = widths;
+                if (first) { return; }
+                var wasOverlay = railOverlay;
+                railOverlay = railIsOverlay();
+                // A rail held open by a pasted #dm-rail URL is left alone:
+                // clearing that fragment reloads the page, and a resize must not.
+                if (!wasOverlay && railOverlay && location.hash !== '#dm-rail' && railIsOpen()) { setRail(false, false, dmRail.contains(document.activeElement)); }
+            });
+            railWatch.observe(document.documentElement);
+            railWatch.observe(dmShell);
+        }
+        // With JS the anchor is a disclosure button: aria-expanded carries the
+        // state (the .is-active fill shows it), and Space works as on a <button>.
+        railToggle.setAttribute('role', 'button');
+        railToggle.addEventListener('keydown', function (e) {
+            if (e.key !== ' ') { return; }
+            e.preventDefault();
+            if (!e.repeat) { railToggle.click(); }
+        });
         railToggle.addEventListener('click', function (e) { e.preventDefault(); setRail(!railIsOpen(), true, true); });
         document.querySelectorAll('[data-rail-close], [data-rail-scrim]').forEach(function (close) {
             close.addEventListener('click', function (e) { e.preventDefault(); setRail(false, true, true); });
@@ -1780,12 +1893,7 @@
         document.addEventListener('keydown', function (e) {
             if (!railIsOpen() || document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
             if (e.key === 'Escape') { setRail(false, true, true); }
-            if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') {
-                var nodes = Array.from(dmRail.querySelectorAll('a[href], button, input, select')).filter(function (n) { return !n.disabled && n.getClientRects().length; });
-                var first = nodes[0], last = nodes[nodes.length - 1];
-                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-            }
+            if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { dmWrapTab(e, dmRail, false); }
         });
     }
 
@@ -1827,13 +1935,23 @@
         // panel keeps plain details semantics, so the role is stamped here.
         var dmDialogEl = dmCompose.querySelector('.dm-dialog');
         if (dmDialogEl) { dmDialogEl.setAttribute('role', 'dialog'); }
+        // aria-modal holds only while the dialog is open, which is exactly
+        // when the keydown handler below keeps Tab inside it.
+        var markComposeModal = function () {
+            if (!dmDialogEl) { return; }
+            if (dmCompose.open) { dmDialogEl.setAttribute('aria-modal', 'true'); }
+            else { dmDialogEl.removeAttribute('aria-modal'); }
+        };
+        markComposeModal();
         var dmComposeSummary = dmCompose.querySelector('summary');
         var closeCompose = function () {
             if (!dmCompose.open) { return; }
             dmCompose.open = false;
+            markComposeModal();
             if (dmComposeSummary) { dmComposeSummary.focus(); }
         };
         dmCompose.addEventListener('toggle', function () {
+            markComposeModal();
             if (dmCompose.open) {
                 var toField = dmCompose.querySelector('.dm-to-input') || dmCompose.querySelector('input[name="to"]');
                 if (toField) { toField.focus(); }
@@ -1843,7 +1961,13 @@
             if (e.target === dmCompose) { closeCompose(); }
         });
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && dmCompose.open) { closeCompose(); }
+            if (!dmCompose.open) { return; }
+            if (e.key === 'Tab' && dmDialogEl) { dmWrapTab(e, dmDialogEl, true); return; }
+            if (e.key !== 'Escape') { return; }
+            // Escape peels overlays outermost-first, as on the new-topic modal:
+            // an open composer popover owns this keypress, not the dialog.
+            if (dmDialogEl && dmDialogEl.querySelector('.composer-slash-menu:not([hidden]), .composer-reference-menu:not([hidden]), [role="dialog"]:not([hidden])')) { return; }
+            closeCompose();
         });
         var dmComposeClosers = dmCompose.querySelectorAll('[data-close-compose]');
         for (var cci = 0; cci < dmComposeClosers.length; cci++) {
@@ -1863,11 +1987,13 @@
         var dmSearchEmpty = document.querySelector('[data-search-empty]');
         var dmListRows = dmListEl.querySelectorAll('li');
         // Match what the server's LIKE matches — the name and the preview —
-        // not incidental row text like timestamps or the unread label.
+        // not incidental row text like timestamps or the unread label. The
+        // preview shows the letter's words; data-dm-search-text keeps the raw
+        // letter's opening (link URLs, Markdown) that the LIKE also reads.
         var dmRowText = function (li) {
             var name = li.querySelector('.dm-other');
             var preview = li.querySelector('.dm-preview');
-            return ((name ? name.textContent : '') + ' ' + (preview ? preview.textContent : '')).toLowerCase();
+            return ((name ? name.textContent : '') + ' ' + (preview ? preview.textContent : '') + ' ' + (li.dataset.dmSearchText || '')).toLowerCase();
         };
         var dmRowTexts = [];
         for (var rt = 0; rt < dmListRows.length; rt++) { dmRowTexts.push(dmRowText(dmListRows[rt])); }
