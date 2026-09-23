@@ -1549,7 +1549,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .chip-locked,
 .badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
 /* Archived = the ghost of the set: faded, transparent, dashed (§10). */
-.chip-archived { color: var(--ink-400); background: transparent; border-style: dashed; border-color: var(--border-strong); }
+.chip-archived { color: var(--text-faint); background: transparent; border-style: dashed; border-color: var(--border-strong); }
 /* Staff = gold so it never reads as the green OP badge (§10). The pair is semantic,
    not the numbered primitives: --gold-700 on --gold-100 measured 3.55:1 and, because
    the dark register never remaps the numbered golds, shipped a light-register chip on

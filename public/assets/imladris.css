@@ -492,7 +492,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .chip-decision_made { color: var(--green-800); background: var(--brand-subtle);   border-color: var(--green-200); }
 .chip-pinned,
 .chip-locked        { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
-.chip-archived      { color: var(--ink-400); background: transparent; border-style: dashed; border-color: var(--border-strong); }
+.chip-archived      { color: var(--text-faint); background: transparent; border-style: dashed; border-color: var(--border-strong); }
 
 /* ── Generic card ─────────────────────────────────────────────────────────── */
 .card {

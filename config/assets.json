@@ -1,8 +1,8 @@
 {
-  "version": "53ac374967884237",
+  "version": "c0ef93fd3b2ba613",
   "urls": {
-    "app.css": "/assets/dist/app-style-vAW5fDdd.css",
-    "imladris.css": "/assets/dist/imladris-style-C4J4TsAG.css",
+    "app.css": "/assets/dist/app-style-Dn8vhGo0.css",
+    "imladris.css": "/assets/dist/imladris-style-Cw9wS_6P.css",
     "app.js": "/assets/dist/app-d15064d393ba91eb.js",
     "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
     "passkeys.js": "/assets/dist/passkeys-45dd692ca9028436.js",
@@ -27,7 +27,7 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "8c72f7ddb26d2a7e959ca1d094b1ea758d7aea8f2ee9b2c28809d7e2f8a332bb",
+      "sha256": "2f436cc9822799fb96cac5979fcb3c24e7d08ae7cab9fc57f1409e896b4f84bb",
       "immutable": false
     },
     "/assets/app.js": {
@@ -42,8 +42,8 @@
       "sha256": "d15064d393ba91ebfe25e9db035b031623e4965bc1e8834b4e034e5edc285f2e",
       "immutable": true
     },
-    "/assets/dist/app-style-vAW5fDdd.css": {
-      "sha256": "c88a9c21eabb7a9eec032f0be538c27a5e29aa1264b7ac4709246ec195376cdd",
+    "/assets/dist/app-style-Dn8vhGo0.css": {
+      "sha256": "66911e69c0b154e1db763ac21de0abbb27268b5578ddedf9af8147f72dfff9e1",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {
@@ -94,8 +94,8 @@
       "sha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
       "immutable": true
     },
-    "/assets/dist/imladris-style-C4J4TsAG.css": {
-      "sha256": "5ba4e2b3ec63ad1417b1166317db18b8ceb75307bae2f4622b459e527a8341e8",
+    "/assets/dist/imladris-style-Cw9wS_6P.css": {
+      "sha256": "391ba6f3eca73eb0d3c3e6e500a4a2cc720aaf657ba766a43db1568fc7348280",
       "immutable": true
     },
     "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2": {
@@ -215,7 +215,7 @@
       "immutable": false
     },
     "/assets/imladris.css": {
-      "sha256": "0665c81d63439236dc1fa5c909fdac6972936ef25a90a71bd33c3683f16caf48",
+      "sha256": "6f34d4cf0de79cc4b2ec10545a0c37b9daec5ad4e2ef0970c73845754d8b37fd",
       "immutable": false
     },
     "/assets/passkeys.js": {

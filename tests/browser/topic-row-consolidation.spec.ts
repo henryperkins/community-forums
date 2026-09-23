@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { test, expect, Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -43,6 +44,26 @@ async function signIn(page: Page) {
   await page.fill('input[name="password"]', 'password123');
   await page.click('form.auth-form button[type="submit"]');
   await page.waitForURL((u) => !u.pathname.startsWith('/login'));
+}
+
+function setFixtureTopicStatus(status: string): string {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$title = 'Retention windows for anonymised IPs';
+$previous = $db->fetchValue('SELECT status FROM threads WHERE title = ? LIMIT 1', [$title]);
+if ($previous === false) {
+    throw new RuntimeException('Missing archived topic fixture.');
+}
+$db->run('UPDATE threads SET status = ? WHERE title = ?', [$argv[1], $title]);
+echo $previous;
+`;
+  return execFileSync('php', ['-r', php, status], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  }).toString().trim();
 }
 
 async function register(page: Page, density: 'comfortable' | 'compact') {
@@ -91,6 +112,29 @@ test('the queue star is the commend star, outlined until the topic is starred', 
   expect(onGlyph.color).not.toBe(offGlyph.color);
 
   await page.locator('[data-inbox-list]').screenshot({ path: shot(info.project.name, 'queue-stars') });
+});
+
+test('the archived status word is readable in both inbox themes', async ({ page }, info) => {
+  const previous = setFixtureTopicStatus('archived');
+  try {
+    await signIn(page);
+    await page.goto('/inbox?scope=starred');
+
+    const row = page.locator('[data-inbox-row]').filter({ hasText: 'Retention windows for anonymised IPs' });
+    await expect(row.locator('.chip-archived')).toHaveText('Archived');
+
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme);
+      const result = await new AxeBuilder({ page })
+        .include('[data-inbox-row] .chip-archived')
+        .withRules(['color-contrast'])
+        .analyze();
+      expect(result.violations, `${theme} inbox Archived contrast`).toEqual([]);
+      await row.screenshot({ path: shot(info.project.name, `archived-${theme}`) });
+    }
+  } finally {
+    setFixtureTopicStatus(previous);
+  }
 });
 
 test('starring from the queue is a round trip that keeps one glyph and one name', async ({ page }) => {

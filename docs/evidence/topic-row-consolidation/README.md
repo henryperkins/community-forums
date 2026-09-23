@@ -47,6 +47,15 @@ panel geometry are **identical** across all of them. The values that moved:
 `forum-inbox-remediation.spec.ts`, ADR 0029's twelve measured pins, passes on
 the converged row.
 
+## Archived status contrast
+
+The browser spec temporarily marks the starred "Retention windows for anonymised
+IPs" topic Archived, loads `/inbox?scope=starred`, and runs axe's WCAG AA
+text-contrast rule on the real chip in parchment and twilight at desktop and
+390px mobile widths. It restores the topic's original status after each run.
+The chip uses the theme-aware `--text-faint` token in both the application CSS
+and the design-system source.
+
 ## Captures
 
 | file | shows |
@@ -58,6 +67,7 @@ the converged row.
 | `14-star-states-3x-parchment.png`, `15-star-states-3x-twilight.png` | the queue toggle at 3×: outline when unset, filled gold when starred, in both registers |
 | `16-board-favourites-2x.png` | `/settings/boards`: the favourite is the same glyph in outline, where it printed ☆ |
 | `desktop-queue-stars.png`, `mobile-queue-stars.png` | the queue with both toggle states; on a phone the toggle keeps a 34px target |
+| `desktop-archived-light.png`, `desktop-archived-dark.png`, `mobile-archived-light.png`, `mobile-archived-dark.png` | the Archived status word rendered in both themes and viewports after the contrast assertion |
 | `desktop-board-marker.png` | the board's quiet "Starred" marker, the same glyph |
 | `desktop-board-compact.png`, `mobile-board-compact.png` | the compact board, long title wrapped |
 | `desktop-default-list.png` | the tag list's row with elapsed time |
