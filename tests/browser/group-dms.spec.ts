@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
 import path from 'node:path';
 
 /**
@@ -56,13 +56,29 @@ async function openRail(page: Page): Promise<void> {
   await expect(rail).toBeInViewport();
 }
 
+async function fillSource(page: Page, form: Locator, body: string): Promise<void> {
+  // The combined evidence run may have enabled rich editing in an earlier
+  // suite. Select source through the actual control before driving a textarea.
+  const enhanced = /\bhas-js\b/.test(await page.locator('html').getAttribute('class') ?? '');
+  if (enhanced && await page.locator('body').getAttribute('data-wysiwyg-composer') === '1') {
+    const toggle = form.locator('.composer-mode-toggle');
+    await expect(toggle).toBeAttached();
+    if (!await toggle.isVisible()) {
+      await form.locator('.composer-box').click({ position: { x: 40, y: 20 } });
+    }
+    await expect(toggle).toBeVisible();
+    if (await toggle.textContent() === 'Source') { await toggle.click(); }
+  }
+  await form.locator('textarea[name="body"]').fill(body);
+}
+
 async function createGroup(page: Page, to: string, title: string, body: string): Promise<string> {
   await page.goto('/messages/new');
   const picker = page.locator('.dm-compose .dm-to-input');
   if (await picker.count()) { await picker.fill(to); await picker.press(','); }
   else { await page.fill('.dm-compose input[name="to"]', to); }
   await page.fill('.dm-compose input[name="title"]', title);
-  await page.fill('.dm-compose .dm-form textarea[name="body"]', body);
+  await fillSource(page, page.locator('.dm-compose .dm-form'), body);
   await page.locator('.dm-compose .dm-form button[type="submit"]').click();
   await page.waitForURL(/\/messages\/\d+/);
   return new URL(page.url()).pathname;
@@ -73,7 +89,7 @@ async function replyInConversation(page: Page, convPath: string, body: string): 
   if (await page.locator('[data-rail-toggle]').getAttribute('aria-expanded') === 'true') {
     await page.locator('[data-rail-close]').click();
   }
-  await page.fill('.dm-composer textarea[name="body"]', body);
+  await fillSource(page, page.locator('.dm-composer'), body);
   await page.locator('.dm-composer button[type="submit"]').click();
   await page.waitForURL(new RegExp(convPath.replace(/\//g, '\\/') + '(\\?|$)'));
 }
@@ -102,7 +118,7 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   await page.fill('.dm-compose .dm-to-input', 'bob, no_such_member');
   await page.locator('.dm-compose .dm-to-input').press(',');
   await page.fill('.dm-compose input[name="title"]', 'Doomed council');
-  await page.fill('.dm-compose .dm-form textarea[name="body"]', 'This typed draft must survive validation.');
+  await fillSource(page, page.locator('.dm-compose .dm-form'), 'This typed draft must survive validation.');
   await page.locator('.dm-compose .dm-form button[type="submit"]').click();
   await expect(page.locator('.field-error')).toContainText('No member found with the username "no_such_member"');
   await expect(page.locator('.dm-compose input[name="title"]')).toHaveValue('Doomed council');

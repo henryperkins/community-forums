@@ -1,0 +1,33 @@
+
+> check:assets
+> node bin/build-assets.mjs --check
+
+vite v8.1.3 building client environment for production...
+[2K
+transforming...✓ 865 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../tmp/retroboards-assets-Fq2rYt/.vite/manifest.json                                   5.13 kB │ gzip:   0.72 kB
+../../../tmp/retroboards-assets-Fq2rYt/marcellus-latin-400-normal-86dSXJnk.woff2            14.55 kB
+../../../tmp/retroboards-assets-Fq2rYt/jetbrains-mono-latin-400-normal-V6pRDFza.woff2       21.16 kB
+../../../tmp/retroboards-assets-Fq2rYt/eb-garamond-latin-400-normal-DSJrtJSV.woff2          21.70 kB
+../../../tmp/retroboards-assets-Fq2rYt/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2       21.83 kB
+../../../tmp/retroboards-assets-Fq2rYt/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2       21.86 kB
+../../../tmp/retroboards-assets-Fq2rYt/eb-garamond-latin-400-italic-KGnr19QW.woff2          22.17 kB
+../../../tmp/retroboards-assets-Fq2rYt/cormorant-garamond-latin-700-normal-DajfzrDU.woff2   22.34 kB
+../../../tmp/retroboards-assets-Fq2rYt/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2   22.87 kB
+../../../tmp/retroboards-assets-Fq2rYt/eb-garamond-latin-500-normal-LNvnJ-zC.woff2          23.01 kB
+../../../tmp/retroboards-assets-Fq2rYt/eb-garamond-latin-600-normal-CdfBH7_K.woff2          23.11 kB
+../../../tmp/retroboards-assets-Fq2rYt/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2   23.31 kB
+../../../tmp/retroboards-assets-Fq2rYt/cormorant-garamond-latin-600-normal-Co1r35X9.woff2   23.39 kB
+../../../tmp/retroboards-assets-Fq2rYt/eb-garamond-latin-500-italic-DW_HNewX.woff2          23.61 kB
+../../../tmp/retroboards-assets-Fq2rYt/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2   23.66 kB
+../../../tmp/retroboards-assets-Fq2rYt/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2   23.92 kB
+../../../tmp/retroboards-assets-Fq2rYt/wysiwyg-composer-BqYYcGYs.css                         0.51 kB │ gzip:   0.32 kB
+../../../tmp/retroboards-assets-Fq2rYt/imladris-style-BCCSHjuG.css                         102.69 kB │ gzip:  17.54 kB
+../../../tmp/retroboards-assets-Fq2rYt/app-style-B5vTvxOi.css                              388.36 kB │ gzip:  58.98 kB
+../../../tmp/retroboards-assets-Fq2rYt/wysiwyg-composer-BDzu1ong.js                          1.39 kB │ gzip:   0.79 kB
+../../../tmp/retroboards-assets-Fq2rYt/milkdown-adapter-DbFcQ9eR.js                        465.23 kB │ gzip: 139.38 kB
+
+✓ built in 273ms
+Generated assets and manifest are current.

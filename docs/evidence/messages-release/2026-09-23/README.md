@@ -35,6 +35,7 @@ There is no migration or hostname-route change.
 | Group DMs, mobile | 1 passed, 1 viewport skip | [Log](group-mobile.txt) |
 | Shared composer and rich content, desktop | 8 passed, 10 viewport skips | [Log](shared-desktop.txt) |
 | Shared composer and rich content, mobile | 17 passed, 1 viewport skip | [Log](shared-mobile.txt) |
+| Combined composer/group/rich suites after harness repair | 10 desktop passes and 18 mobile passes; 12 viewport skips | [Desktop](combined-desktop.txt), [mobile](combined-mobile.txt) |
 
 The full suite has six existing PHP 8.5 deprecations and one existing skip; the
 clean main baseline had the same issues (2,979 tests, 22,482 assertions). These are
@@ -89,8 +90,10 @@ minor findings. There are no deferred reviewer findings.
   clicking the correctly disabled client Send button cannot exercise that path.
 - The broader combined browser run exposed incompatible fixture assumptions:
   the composer suite enables rich editing, whereas the older group-DM journey
-  drives source textareas. Resetting the fixture between those independent
-  suites produced passing group journeys without a product-code change.
+  drives source textareas. The group-DM test helper now selects Source through
+  the real mode control when needed. The original failing combined command
+  passes on both viewports after this test-only repair, including no-JavaScript
+  behavior. It also passes against the fresh source-mode seed.
 
 Existing product decisions remain recorded in their original sources: mobile
 topbar Messages-link visibility ([ADR 0032](../../../adr/0032-unified-member-chrome.md)
@@ -112,6 +115,14 @@ Per ADR 0024 obligation 4, the final surface digest is prepared and tested here,
 then committed **immediately after the merge on main**. The slice itself leaves
 main's baseline and manifest unchanged. The verified final digest is
 `48aa68e6669922764e09ba14542ccf75f1033178ddb3cc210717a9f1c9c20a72`.
+
+Merged on main as `48c941d4`, followed immediately by baseline refresh
+`4b352728`. All 113 merged files matched the tested release tree. The full suite
+was rerun on main: [PHPUnit](main-phpunit.txt) again passed 3,009 tests / 22,725
+assertions with the same six deprecations and one skip;
+[Imladris](main-imladris.txt) passed 24 / 296 and
+[generated assets](main-assets.txt) remained current. The later group-test helper
+change affects only browser automation and is covered by the combined rerun.
 
 Hostname-route [PR #72](https://github.com/henryperkins/community-forums/pull/72)
 remains open and draft. Its Cloudflare prerequisites are unverified by this work.
