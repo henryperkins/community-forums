@@ -193,6 +193,10 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
   await expect(scope).not.toHaveAttribute('open', '');
 
   const lastRowMenu = page.locator('[data-inbox-row-menu]').last();
+  // The inbox closes an open menu on any scroll, and the scroll a click makes to
+  // reach a row below the fold can land after the toggle. Settle it first.
+  await lastRowMenu.scrollIntoViewIfNeeded();
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await lastRowMenu.locator('summary').click();
   const rowMenuPanel = lastRowMenu.locator('.thread-row-menu-panel');
   await expect(rowMenuPanel).toBeVisible();
