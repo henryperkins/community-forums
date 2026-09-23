@@ -1697,12 +1697,19 @@
         ['aria-describedby', 'aria-invalid', 'data-error-focus'].forEach(function (key) {
             if (canonical.hasAttribute(key)) { input.setAttribute(key, canonical.getAttribute(key)); }
         });
+        var takeFocus = canonical.hasAttribute('autofocus') || canonical.hasAttribute('data-error-focus');
+        canonical.removeAttribute('autofocus');
+        if (takeFocus) { input.setAttribute('autofocus', ''); }
         input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'false');
         var list = document.createElement('ul'); list.className = 'dm-suggest'; list.id = input.id + '-suggestions'; list.setAttribute('role', 'listbox'); list.hidden = true;
         input.setAttribute('aria-controls', list.id);
         field.appendChild(input); field.appendChild(list);
         canonical.type = 'hidden'; canonical.required = false;
         canonical.after(field);
+        if (takeFocus) {
+            var details = input.closest('details');
+            if (!details || details.open) { input.focus(); }
+        }
         picker.classList.add('dm-to-field-wrap');
         var status = document.createElement('span'); status.className = 'sr-only'; status.setAttribute('role', 'status'); picker.appendChild(status);
 
