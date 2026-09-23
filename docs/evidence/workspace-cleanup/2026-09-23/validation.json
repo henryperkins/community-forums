@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-09-23T07:43:57.766024+00:00",
+  "original_files": 86,
+  "retained": 50,
+  "archived": 36,
+  "original_backups_sha256_verified": 86,
+  "destinations_sha256_verified": 86,
+  "malformed_retained_json_or_jsonl": 0,
+  "broken_links_in_curated_reports_and_indexes": 0,
+  "credential_pattern_matches_in_retained_text": 0,
+  "unexpected_untracked_files": 0,
+  "existing_tracked_performance_evidence_changed": false,
+  "production_remeasured_during_organization": false
+}

@@ -1,0 +1,56 @@
+{
+  "checked_at": "2026-09-20T14:55:13.447553+00:00",
+  "commit": "2d925557de4f78753e443caecb7eecb428250171",
+  "base": "https://forum.candidary.online",
+  "manifest_version": "65bc5e0a486cd6dc",
+  "health_status": 200,
+  "home_status": 200,
+  "home_uses_new_css": true,
+  "home_uses_new_js": true,
+  "home_has_native_rail_link": true,
+  "assets": [
+    {
+      "path": "/assets/dist/app-style-BKsusVoz.css",
+      "status": 200,
+      "sha256": "e7f5f0684fdd5b5e2a74f91e4e442a86a85a2fd0bbcdb7d6d36fb14b78d7b079",
+      "matches_committed_bytes": true,
+      "cache_control": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "/assets/dist/imladris-style-BCCSHjuG.css",
+      "status": 200,
+      "sha256": "37fef07d72002756ef75c4c2dc2aa2493201317f9cf78b693505a6914e1bf02e",
+      "matches_committed_bytes": true,
+      "cache_control": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "/assets/dist/app-e8e6836ee9e8fbdf.js",
+      "status": 200,
+      "sha256": "e8e6836ee9e8fbdfbe9c33728c807211e4fd8dc94a5799287daa2c1e7d539513",
+      "matches_committed_bytes": true,
+      "cache_control": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "/assets/dist/composer-a2aa3a51baf61349.js",
+      "status": 200,
+      "sha256": "a2aa3a51baf613490e1c9cbe216487ac3a778994a6d9e051e576a2045d334efb",
+      "matches_committed_bytes": true,
+      "cache_control": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "/assets/dist/wysiwyg-composer-BDzu1ong.js",
+      "status": 200,
+      "sha256": "95b2576f81b46e1e19338c5229c37d1ee71f39117605f9d77b7fefb26a838e30",
+      "matches_committed_bytes": true,
+      "cache_control": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "/assets/dist/milkdown-adapter-DbFcQ9eR.js",
+      "status": 200,
+      "sha256": "cad433eec68bab010b849b026ba9c46dbd983d93657107dba5d0e292b99728f9",
+      "matches_committed_bytes": true,
+      "cache_control": "public, max-age=31536000, immutable"
+    }
+  ],
+  "all_assets_match": true
+}

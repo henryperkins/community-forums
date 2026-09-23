@@ -1,0 +1,30 @@
+{
+  "commit": "2d925557de4f78753e443caecb7eecb428250171",
+  "checks": [
+    {
+      "name": "Workers Builds: retroboards",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://dash.cloudflare.com/a77e479f6736120eadd99973dbeb705e/workers/services/view/retroboards/production/builds/11d47430-bd4c-4797-a6cc-bf836d0f5cac"
+    },
+    {
+      "name": "capture",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/henryperkins/community-forums/actions/runs/35517761819/job/106096472362"
+    }
+  ],
+  "github_browser_job_note": "The job was not started because the account is locked due to a billing issue.",
+  "circleci_note": "CircleCI reports no configuration on this commit and on the previous main commit; unrelated to this release.",
+  "deployment": {
+    "id": "c3431219-c162-497f-86e8-1ab8b3bf9c6b",
+    "created_on": "2026-09-20T14:52:12.181885Z",
+    "versions": [
+      {
+        "version_id": "5a7040fe-fbbe-488b-bfd2-bec025a39327",
+        "percentage": 100
+      }
+    ]
+  },
+  "github_branch_sync": "0\t0"
+}

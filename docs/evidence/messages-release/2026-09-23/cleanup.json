@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-09-23T07:39:36.563190+00:00",
+  "removed_databases": [
+    "retroboards_messages_ship_test",
+    "retroboards_messages_ship_e2e",
+    "retroboards_unified_e2e_messages_ship"
+  ],
+  "removed_specific_grants_for": [
+    "retro@127.0.0.1",
+    "retro@localhost"
+  ],
+  "existing_messages_database_preserved": true,
+  "existing_main_php_server_pid": 90987,
+  "existing_main_php_server_preserved": true,
+  "removed_worktrees": [
+    "messages-audit",
+    "ma-lay",
+    "ma-distill",
+    "messages-release"
+  ],
+  "hostname_route_worktree_retained": true,
+  "recovery_archive": "/home/ubuntu/community-forums-archives/2026-09-23-messages/"
+}

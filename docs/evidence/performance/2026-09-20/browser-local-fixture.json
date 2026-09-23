@@ -1,0 +1,6 @@
+{
+    "database": "retroboards_perf_browser_20260920",
+    "viewer_id": 3,
+    "thread_path": "/t/1-performance-fixture",
+    "fixture": "Three users, one public board, one post, viewer onboarded with fresh presence and session, no thread read state"
+}

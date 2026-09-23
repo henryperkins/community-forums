@@ -1,0 +1,97 @@
+{
+  "captured_at": "2026-09-20T12:41:10.790Z",
+  "results": [
+    {
+      "path": "/zones/973da452ca2467c3b0d6e489839300d2/settings/early_hints",
+      "success": true,
+      "status": 200,
+      "result": {
+        "id": "early_hints",
+        "value": "on",
+        "modified_on": null,
+        "editable": true
+      },
+      "errors": []
+    },
+    {
+      "path": "/zones/973da452ca2467c3b0d6e489839300d2/settings/browser_cache_ttl",
+      "success": true,
+      "status": 200,
+      "result": {
+        "id": "browser_cache_ttl",
+        "value": 14400,
+        "editable": true
+      },
+      "errors": []
+    },
+    {
+      "path": "/zones/973da452ca2467c3b0d6e489839300d2/cache/tiered_cache_smart_topology_enable",
+      "success": true,
+      "status": 200,
+      "result": {
+        "editable": true,
+        "id": "tiered_cache_smart_topology_enable",
+        "modified_on": "2026-08-03T12:58:13.224186Z",
+        "value": "on"
+      },
+      "errors": []
+    },
+    {
+      "path": "/accounts/a77e479f6736120eadd99973dbeb705e/workers/scripts/retroboards/settings",
+      "success": true,
+      "status": 200,
+      "result": {
+        "compatibility_date": "2026-08-03",
+        "bindings": [
+          {
+            "name": "DB_EMULATE_PREPARES",
+            "type": "plain_text",
+            "text": "true"
+          },
+          {
+            "name": "DB_HOST",
+            "type": "plain_text",
+            "text": "gcp-us-central1.connect.psdb.cloud"
+          }
+        ],
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": false,
+            "persist": true,
+            "head_sampling_rate": 1
+          }
+        }
+      },
+      "errors": []
+    },
+    {
+      "path": "/accounts/a77e479f6736120eadd99973dbeb705e/containers/applications",
+      "success": true,
+      "status": 200,
+      "result": [
+        {
+          "id": "a033c1b0-0a55-4af4-a272-6694aa8bfc22",
+          "name": "retroboards-forumcontainer",
+          "instances": 1,
+          "max_instances": 1,
+          "configuration": {
+            "image": "registry.cloudflare.com/a77e479f6736120eadd99973dbeb705e/retroboards-forumcontainer@sha256:4dea5f285b6da8676df99f8be3d9197da6fc209a6a5332f41d3f88cca1dfe1ec",
+            "vcpu": 0.5,
+            "memory": "4GiB"
+          },
+          "scheduling_policy": "default"
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

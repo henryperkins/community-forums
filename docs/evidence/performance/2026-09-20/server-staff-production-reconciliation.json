@@ -1,0 +1,783 @@
+{
+  "source": "production-staff-window-insights.json",
+  "local_trace_source": "server-staff-raw.json",
+  "scope": {
+    "from": "2026-09-20T13:16:44Z",
+    "to": "2026-09-20T13:18:55Z",
+    "cycles": 2,
+    "order": [
+      "staff_home_stale",
+      "staff_thread_direct_repeat",
+      "staff_presence_fresh",
+      "staff_bell_fresh"
+    ],
+    "production_reads_by_this_analysis": 0
+  },
+  "method": "Map each local query call stack to normalized production SQL, including targeted lookups for six patterns omitted by the initial result limit. Account for the explicit thread subscription bypassing board fallback. Every one of the 54 observed pattern counts is exactly conserved across two cycles: 2 x (23 + 57 + 4 + 10) = 188 executions. No production requests, mutations, or credentials were used by this analysis.",
+  "snapshot_completeness": {
+    "limit_per_metric": 20,
+    "selected_patterns": 48,
+    "selected_executions": 176,
+    "selected_server_execution_ms": 406.87,
+    "selected_server_execution_percent": 93.68646224058173,
+    "total_server_execution_ms_inferred_from_percentage_denominator": 434.289,
+    "unselected_server_execution_ms": 27.418999999999983,
+    "initial_union_warning": "The initial 48-pattern union omitted six expected thread patterns; the targeted snapshot confirms all six at two executions each.",
+    "targeted_additional_patterns": 6,
+    "targeted_additional_executions": 12,
+    "targeted_additional_server_execution_ms": 26.768,
+    "combined_patterns": 54,
+    "combined_executions": 188,
+    "combined_server_execution_ms": 433.638,
+    "unreconciled_server_execution_ms_from_percentage_denominator": 0.6510000000000105,
+    "final_status": "All expected application-route query patterns/counts are reconciled. A 0.651 ms difference remains against the aggregate percentage denominator; no request-level attribution is claimed for that difference."
+  },
+  "routes": {
+    "staff_home_stale": {
+      "matched_requests_in_window": 2,
+      "local_query_count": 23,
+      "observed_selected_queries_per_request": 23,
+      "source_expected_queries_with_production_subscription": 23,
+      "query_count_status": "Corroborated: all local patterns present and all window frequencies match.",
+      "summed_pattern_mean_server_ms": 58.74725,
+      "server_time_status": "All local route patterns are present. Pattern-mean allocation across shared query patterns, not direct per-request SQL spans.",
+      "extra_production_transaction_control_exchanges": 0,
+      "matched_queries": [
+        {
+          "local_sequence": 1,
+          "source": "src/Repository/SessionRepository.php:42",
+          "local_sql": "SELECT * FROM sessions WHERE id = ? AND revoked_at IS NULL AND expires_at > UTC_TIMESTAMP()",
+          "production_pattern_id": "2525cc93f1d2",
+          "mean_production_server_ms": 4.261125
+        },
+        {
+          "local_sequence": 2,
+          "source": "src/Repository/UserRepository.php:19",
+          "local_sql": "SELECT * FROM users WHERE id = ?",
+          "production_pattern_id": "51219ff9ab81",
+          "mean_production_server_ms": 2.280125
+        },
+        {
+          "local_sequence": 3,
+          "source": "src/Repository/SessionRepository.php:50",
+          "local_sql": "UPDATE sessions SET last_seen_at = UTC_TIMESTAMP() WHERE id = ?",
+          "production_pattern_id": "9b73d3236f1d",
+          "mean_production_server_ms": 6.6665
+        },
+        {
+          "local_sequence": 4,
+          "source": "src/Repository/SettingRepository.php:85",
+          "local_sql": "SELECT `key`, `value` FROM settings",
+          "production_pattern_id": "93eb8a04b426",
+          "mean_production_server_ms": 1.6438333333333333
+        },
+        {
+          "local_sequence": 5,
+          "source": "src/Repository/UserRepository.php:443",
+          "local_sql": "UPDATE users SET last_seen_at = UTC_TIMESTAMP() WHERE id = ?",
+          "production_pattern_id": "65b8d8492127",
+          "mean_production_server_ms": 6.2285
+        },
+        {
+          "local_sequence": 6,
+          "source": "src/Repository/SettingRepository.php:85",
+          "local_sql": "SELECT `key`, `value` FROM settings",
+          "production_pattern_id": "93eb8a04b426",
+          "mean_production_server_ms": 1.6438333333333333
+        },
+        {
+          "local_sequence": 7,
+          "source": "src/Repository/UserPreferenceRepository.php:25",
+          "local_sql": "SELECT prefs FROM user_preferences WHERE user_id = ?",
+          "production_pattern_id": "868a9b204296",
+          "mean_production_server_ms": 1.9075
+        },
+        {
+          "local_sequence": 8,
+          "source": "src/Repository/BoardMemberRepository.php:51",
+          "local_sql": "SELECT board_id FROM board_members WHERE user_id = ?",
+          "production_pattern_id": "2aa3433073d5",
+          "mean_production_server_ms": 1.8419999999999999
+        },
+        {
+          "local_sequence": 9,
+          "source": "src/Repository/CategoryRepository.php:18",
+          "local_sql": "SELECT * FROM categories ORDER BY position ASC, id ASC",
+          "production_pattern_id": "ccc1ff4c2039",
+          "mean_production_server_ms": 1.8655
+        },
+        {
+          "local_sequence": 10,
+          "source": "src/Repository/BoardRepository.php:18",
+          "local_sql": "SELECT * FROM boards ORDER BY category_id ASC, position ASC, id ASC",
+          "production_pattern_id": "dbefebfef83d",
+          "mean_production_server_ms": 1.76875
+        },
+        {
+          "local_sequence": 11,
+          "source": "src/Repository/ThreadRepository.php:276",
+          "local_sql": "WITH visible_boards AS ( SELECT ? AS board_id, 0 AS ordinal ), reaction_counts AS ( SELECT p.thread_id, COUNT(r.id) AS commend_count FROM posts p JOIN threads scoped ON scoped.id = p.thread_id JOIN visible_boards vb ON vb.board_id = scoped.board_id JOIN reactions r ON r.post_id = p.id AND r.user_id <> p.user_id WHERE p.is_op = 1 AND p.is_deleted = 0 AND p.is_pending = 0 GROUP BY p.thread_id ), base AS ( SELECT t.id, t.board_id, t.title, t.slug, t.created_at, t.last_post_at, t.reply_count, t.status, t.status_changed_at, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role, COALESCE(op.is_anonymous, 0) AS op_is_anonymous, COALESCE(rc.commend_count, 0) AS commend_count, CASE WHEN t.status = 'needs_answer' OR t.reply_count = 0 THEN 1 ELSE 0 END AS is_unanswered, CASE WHEN t.status IN ('solved', 'decision_made') THEN 1 ELSE 0 END AS is_settled FROM threads t JOIN visible_boards vb ON vb.board_id = t.board_id JOIN users u ON u.id = t.user_id -- Anonymity is a property of the OP that survives its -- moderation state, so this join matches the canonical one in -- listBoardRows and does NOT filter on is_deleted/is_pending. -- Filtering here made COALESCE fail OPEN: a thread whose OP -- was soft-deleted lost the row carrying is_anonymous = 1, -- defaulted to 0, and the peek printed the real author of a -- topic that was posted anonymously. LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1 LEFT JOIN reaction_counts rc ON rc.thread_id = t.id WHERE t.is_deleted = 0 AND t.is_pending = 0 ), aggregates AS ( SELECT board_id, MAX(last_post_at) AS latest_activity_at, MAX(created_at) AS newest_thread_at, SUM(is_unanswered) AS unanswered_count, MAX(commend_count) AS top_commend_count, SUM(is_settled) AS settled_count, MAX(CASE WHEN is_settled = 1 THEN COALESCE(status_changed_at, last_post_at) END) AS latest_settled_at FROM base GROUP BY board_id ), ranked AS ( SELECT base.*, ROW_NUMBER() OVER (PARTITION BY board_id ORDER BY last_post_at DESC, id DESC) AS topic_rank FROM base ) SELECT vb.board_id, a.latest_activity_at, a.newest_thread_at, COALESCE(a.unanswered_count, 0) AS unanswered_count, COALESCE(a.top_commend_count, 0) AS top_commend_count, COALESCE(a.settled_count, 0) AS settled_count, a.latest_settled_at, r.id AS thread_id, r.title, r.slug, r.created_at, r.last_post_at, r.reply_count, r.status, r.status_changed_at, r.author_username, r.author_display_name, r.author_role, r.op_is_anonymous, r.commend_count FROM visible_boards vb LEFT JOIN aggregates a ON a.board_id = vb.board_id LEFT JOIN ranked r ON r.board_id = vb.board_id AND r.topic_rank <= 3 AND 1 = 1 ORDER BY vb.ordinal ASC, r.topic_rank ASC",
+          "production_pattern_id": "5eb3fcfdfe39",
+          "mean_production_server_ms": 4.4935
+        },
+        {
+          "local_sequence": 12,
+          "source": "src/Repository/ThreadUserRepository.php:275",
+          "local_sql": "SELECT t.board_id, COUNT(*) AS unread_count FROM threads t JOIN boards b ON b.id = t.board_id LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ? LEFT JOIN posts read_post ON read_post.id = tu.last_read_post_id AND read_post.thread_id = t.id AND read_post.is_deleted = 0 AND read_post.is_pending = 0 LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id WHERE t.is_deleted = 0 AND t.is_pending = 0 AND (1=1) AND (tu.snoozed_until IS NULL OR tu.snoozed_until <= UTC_TIMESTAMP()) AND COALESCE(ubp.is_muted, 0) = 0 AND (CASE WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?) ELSE ( t.last_post_id IS NOT NULL AND ( tu.last_read_post_id IS NULL OR read_post.id IS NULL OR t.last_post_at > read_post.created_at OR (t.last_post_at = read_post.created_at AND t.last_post_id > read_post.id) ) ) END) GROUP BY t.board_id ORDER BY t.board_id",
+          "production_pattern_id": "ca39729c4979",
+          "mean_production_server_ms": 2.5055
+        },
+        {
+          "local_sequence": 13,
+          "source": "src/Repository/PackageThemeRepository.php:110",
+          "local_sql": "SELECT active_build_id, lkg_build_id, activated_at, activated_by FROM theme_state WHERE id = 1",
+          "production_pattern_id": "a4d28ba1c048",
+          "mean_production_server_ms": 1.81425
+        },
+        {
+          "local_sequence": 14,
+          "source": "src/Repository/ReportRepository.php:184",
+          "local_sql": "SELECT COUNT(*) FROM reports WHERE status IN ('open','triaged')",
+          "production_pattern_id": "643a0fcea14b",
+          "mean_production_server_ms": 1.92525
+        },
+        {
+          "local_sequence": 15,
+          "source": "src/Service/NotificationVisibilityService.php:39",
+          "local_sql": "SELECT board_id FROM board_members WHERE user_id = ?",
+          "production_pattern_id": "2aa3433073d5",
+          "mean_production_server_ms": 1.8419999999999999
+        },
+        {
+          "local_sequence": 16,
+          "source": "src/Service/NotificationVisibilityService.php:43",
+          "local_sql": "SELECT board_id FROM board_moderators WHERE user_id = ?",
+          "production_pattern_id": "c44469821594",
+          "mean_production_server_ms": 1.6749166666666666
+        },
+        {
+          "local_sequence": 17,
+          "source": "src/Repository/BoardModeratorRepository.php:50",
+          "local_sql": "SELECT board_id FROM board_moderators WHERE user_id = ?",
+          "production_pattern_id": "c44469821594",
+          "mean_production_server_ms": 1.6749166666666666
+        },
+        {
+          "local_sequence": 18,
+          "source": "src/Repository/RoleAssignmentRepository.php:22",
+          "local_sql": "SELECT ra.*, r.role_key, r.role_rank FROM role_assignments ra JOIN roles r ON r.id = ra.role_id WHERE ra.subject_type = 'user' AND ra.subject_id = ? AND ra.revoked_at IS NULL",
+          "production_pattern_id": "79bba4688af9",
+          "mean_production_server_ms": 1.9016666666666666
+        },
+        {
+          "local_sequence": 19,
+          "source": "src/Repository/RoleCapabilityRepository.php:23",
+          "local_sql": "SELECT c.capability_key, r.role_key FROM role_capabilities rc JOIN roles r ON r.id = rc.role_id JOIN capabilities c ON c.id = rc.capability_id",
+          "production_pattern_id": "b7be6023ebeb",
+          "mean_production_server_ms": 2.19175
+        },
+        {
+          "local_sequence": 20,
+          "source": "src/Repository/NotificationRepository.php:175",
+          "local_sql": "SELECT COUNT(*) FROM notifications n LEFT JOIN users a ON a.id = n.actor_id LEFT JOIN threads t ON t.id = n.thread_id LEFT JOIN boards b ON b.id = t.board_id LEFT JOIN posts pp ON pp.id = n.post_id WHERE n.user_id = ? AND n.is_read = 0 AND (n.type IN ('mod', 'announcement', 'badge') OR (NOT EXISTS (SELECT 1 FROM blocks nb WHERE nb.user_id = n.user_id AND nb.blocked_user_id = n.actor_id) AND NOT EXISTS (SELECT 1 FROM blocks nb2 WHERE nb2.user_id = n.actor_id AND nb2.blocked_user_id = n.user_id))) AND (n.thread_id IS NULL OR (t.id IS NOT NULL AND t.is_deleted = 0 AND t.is_pending = 0 AND b.id IS NOT NULL)) AND (n.post_id IS NULL OR (pp.id IS NOT NULL AND pp.is_deleted = 0 AND pp.is_pending = 0 AND pp.thread_id = t.id)) AND (n.conversation_id IS NULL OR ( EXISTS (SELECT 1 FROM conversations nc WHERE nc.id = n.conversation_id) AND ((n.type = 'mod' AND 1 = 1) OR (n.type = 'dm' AND 1 = 1 AND EXISTS (SELECT 1 FROM conversation_participants cp WHERE cp.conversation_id = n.conversation_id AND cp.user_id = n.user_id AND n.created_at >= cp.joined_at AND (cp.left_at IS NULL OR n.created_at <= cp.left_at) AND (cp.joined_after_message_id = 0 OR EXISTS ( SELECT 1 FROM dm_messages nm WHERE nm.conversation_id = cp.conversation_id AND nm.id > cp.joined_after_message_id AND nm.created_at <= n.created_at AND (cp.left_at IS NULL OR nm.created_at <= cp.left_at) ))))))) AND (n.type <> 'dm' OR (n.conversation_id IS NOT NULL AND 1 = 1)) AND (n.type NOT IN ('reply', 'mention', 'reaction', 'new_post', 'new_thread', 'solved') OR n.thread_id IS NOT NULL)",
+          "production_pattern_id": "d946aa01e71c",
+          "mean_production_server_ms": 3.030666666666667
+        },
+        {
+          "local_sequence": 21,
+          "source": "src/Repository/UserRepository.php:491",
+          "local_sql": "SELECT id, username, display_name, role, status, show_presence, profile_visibility, last_seen_at FROM users WHERE show_presence = 1 AND status <> 'banned' AND last_seen_at IS NOT NULL AND last_seen_at >= ? ORDER BY last_seen_at DESC, id ASC LIMIT 201",
+          "production_pattern_id": "6a7da52d8047",
+          "mean_production_server_ms": 1.8791666666666667
+        },
+        {
+          "local_sequence": 22,
+          "source": "src/Repository/BoardFolderRepository.php:19",
+          "local_sql": "SELECT f.id AS folder_id, f.name AS folder_name, b.id AS board_id, b.name AS board_name, b.slug AS board_slug, b.visibility AS board_visibility FROM board_folders f LEFT JOIN board_folder_boards fb ON fb.folder_id=f.id LEFT JOIN boards b ON b.id=fb.board_id WHERE f.user_id=? ORDER BY f.position,f.id,fb.position,b.name",
+          "production_pattern_id": "a3a064559c7a",
+          "mean_production_server_ms": 1.97425
+        },
+        {
+          "local_sequence": 23,
+          "source": "src/Repository/SavedFeedRepository.php:19",
+          "local_sql": "SELECT * FROM saved_feed_filters WHERE user_id = ? ORDER BY position, id",
+          "production_pattern_id": "4250956952bc",
+          "mean_production_server_ms": 1.73175
+        }
+      ],
+      "missing_expected_queries": [],
+      "production_fixture_differences": []
+    },
+    "staff_thread_direct_repeat": {
+      "matched_requests_in_window": 2,
+      "local_query_count": 58,
+      "observed_selected_queries_per_request": 57,
+      "source_expected_queries_with_production_subscription": 57,
+      "query_count_status": "Corroborated across the original and targeted Insights results: all expected patterns occur twice, except the local board-subscription fallback which production bypasses with an explicit thread subscription.",
+      "summed_pattern_mean_server_ms": 124.4415,
+      "server_time_status": "All production route patterns are present across the original and targeted results. Shared pattern means are allocated to routes; these are not direct per-request SQL spans.",
+      "extra_production_transaction_control_exchanges": 2,
+      "matched_queries": [
+        {
+          "local_sequence": 1,
+          "source": "src/Repository/SessionRepository.php:42",
+          "local_sql": "SELECT * FROM sessions WHERE id = ? AND revoked_at IS NULL AND expires_at > UTC_TIMESTAMP()",
+          "production_pattern_id": "2525cc93f1d2",
+          "mean_production_server_ms": 4.261125
+        },
+        {
+          "local_sequence": 2,
+          "source": "src/Repository/UserRepository.php:19",
+          "local_sql": "SELECT * FROM users WHERE id = ?",
+          "production_pattern_id": "51219ff9ab81",
+          "mean_production_server_ms": 2.280125
+        },
+        {
+          "local_sequence": 3,
+          "source": "src/Repository/SettingRepository.php:85",
+          "local_sql": "SELECT `key`, `value` FROM settings",
+          "production_pattern_id": "93eb8a04b426",
+          "mean_production_server_ms": 1.6438333333333333
+        },
+        {
+          "local_sequence": 4,
+          "source": "src/Repository/ThreadRepository.php:92",
+          "local_sql": "SELECT t.* FROM thread_redirects r JOIN threads t ON t.id = r.canonical_thread_id WHERE r.old_thread_id = ?",
+          "production_pattern_id": "aa7523a15da9",
+          "mean_production_server_ms": 1.978
+        },
+        {
+          "local_sequence": 5,
+          "source": "src/Repository/ThreadRepository.php:74",
+          "local_sql": "SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility, b.post_min_role AS board_post_min_role, b.allow_anonymous AS board_allow_anonymous, b.require_approval AS board_require_approval, b.assignment_mode AS board_assignment_mode, b.tags_enabled AS board_tags_enabled, b.wiki_enabled AS board_wiki_enabled, b.is_archived AS board_is_archived, b.id AS board_id, au.username AS author_username, au.display_name AS author_display_name FROM threads t JOIN boards b ON b.id = t.board_id JOIN users au ON au.id = t.user_id WHERE t.id = ?",
+          "production_pattern_id": "3bd31031f7cb",
+          "mean_production_server_ms": 2.395
+        },
+        {
+          "local_sequence": 6,
+          "source": "src/Repository/BoardMemberRepository.php:51",
+          "local_sql": "SELECT board_id FROM board_members WHERE user_id = ?",
+          "production_pattern_id": "2aa3433073d5",
+          "mean_production_server_ms": 1.8419999999999999
+        },
+        {
+          "local_sequence": 7,
+          "source": "src/Repository/UserPreferenceRepository.php:25",
+          "local_sql": "SELECT prefs FROM user_preferences WHERE user_id = ?",
+          "production_pattern_id": "868a9b204296",
+          "mean_production_server_ms": 1.9075
+        },
+        {
+          "local_sequence": 8,
+          "source": "src/Repository/BoardModeratorRepository.php:50",
+          "local_sql": "SELECT board_id FROM board_moderators WHERE user_id = ?",
+          "production_pattern_id": "c44469821594",
+          "mean_production_server_ms": 1.6749166666666666
+        },
+        {
+          "local_sequence": 9,
+          "source": "src/Repository/RoleAssignmentRepository.php:22",
+          "local_sql": "SELECT ra.*, r.role_key, r.role_rank FROM role_assignments ra JOIN roles r ON r.id = ra.role_id WHERE ra.subject_type = 'user' AND ra.subject_id = ? AND ra.revoked_at IS NULL",
+          "production_pattern_id": "79bba4688af9",
+          "mean_production_server_ms": 1.9016666666666666
+        },
+        {
+          "local_sequence": 10,
+          "source": "src/Repository/BoardRepository.php:35",
+          "local_sql": "SELECT * FROM boards WHERE id = ?",
+          "production_pattern_id": "e66e977711e3",
+          "mean_production_server_ms": 2.196
+        },
+        {
+          "local_sequence": 11,
+          "source": "src/Repository/RoleCapabilityRepository.php:23",
+          "local_sql": "SELECT c.capability_key, r.role_key FROM role_capabilities rc JOIN roles r ON r.id = rc.role_id JOIN capabilities c ON c.id = rc.capability_id",
+          "production_pattern_id": "b7be6023ebeb",
+          "mean_production_server_ms": 2.19175
+        },
+        {
+          "local_sequence": 12,
+          "source": "src/Repository/PostRepository.php:127",
+          "local_sql": "SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_pending = 0",
+          "production_pattern_id": "6e4687547e07",
+          "mean_production_server_ms": 2.2315
+        },
+        {
+          "local_sequence": 13,
+          "source": "src/Repository/PostRepository.php:257",
+          "local_sql": "SELECT unread.id AS post_id, ( SELECT COUNT(*) FROM posts ranked WHERE ranked.thread_id = unread.thread_id AND ranked.is_pending = 0 AND ( ranked.created_at < unread.created_at OR (ranked.created_at = unread.created_at AND ranked.id <= unread.id) ) ) AS post_rank FROM thread_user tu JOIN posts cursor_post ON cursor_post.id = tu.last_read_post_id AND cursor_post.thread_id = tu.thread_id AND cursor_post.is_deleted = 0 AND cursor_post.is_pending = 0 JOIN posts unread ON unread.thread_id = tu.thread_id AND unread.is_deleted = 0 AND unread.is_pending = 0 AND ( unread.created_at > cursor_post.created_at OR (unread.created_at = cursor_post.created_at AND unread.id > cursor_post.id) ) WHERE tu.user_id = :uid AND tu.thread_id = :tid ORDER BY unread.created_at ASC, unread.id ASC LIMIT 1",
+          "production_pattern_id": "3a49652c7dc2",
+          "mean_production_server_ms": 2.835
+        },
+        {
+          "local_sequence": 14,
+          "source": "src/Repository/PostRepository.php:111",
+          "local_sql": "SELECT p.*, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role, u.signature AS author_signature, u.reputation AS author_reputation, u.title AS author_title FROM posts p JOIN users u ON u.id = p.user_id WHERE p.thread_id = :thread_id AND p.is_pending = 0 ORDER BY p.created_at ASC, p.id ASC LIMIT 20 OFFSET 0",
+          "production_pattern_id": "1197cb0b48e4",
+          "mean_production_server_ms": 2.447
+        },
+        {
+          "local_sequence": 15,
+          "source": "src/Repository/PostRepository.php:144",
+          "local_sql": "SELECT u.id AS user_id, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role, MIN(p.created_at) AS first_at FROM posts p JOIN users u ON u.id = p.user_id WHERE p.thread_id = ? AND p.is_deleted = 0 AND p.is_pending = 0 AND p.is_anonymous = 0 GROUP BY u.id, u.username, u.display_name, u.role ORDER BY first_at ASC, u.id ASC LIMIT 5",
+          "production_pattern_id": "1ebe69766766",
+          "mean_production_server_ms": 2.603
+        },
+        {
+          "local_sequence": 16,
+          "source": "src/Repository/PostRepository.php:160",
+          "local_sql": "SELECT COUNT(DISTINCT user_id) FROM posts WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0 AND is_anonymous = 0",
+          "production_pattern_id": "ebc2bed99599",
+          "mean_production_server_ms": 2.096
+        },
+        {
+          "local_sequence": 17,
+          "source": "src/Repository/ReactionRepository.php:76",
+          "local_sql": "SELECT post_id, emoji, COUNT(*) AS n FROM reactions WHERE post_id IN (?) GROUP BY post_id, emoji ORDER BY n DESC, emoji ASC",
+          "production_pattern_id": "5dbdb4df1019",
+          "mean_production_server_ms": 2.349
+        },
+        {
+          "local_sequence": 18,
+          "source": "src/Service/CustomEmojiService.php:119",
+          "local_sql": "SELECT shortcode FROM custom_emoji WHERE is_enabled = 1 AND allow_reactions = 1 ORDER BY shortcode ASC LIMIT 50",
+          "production_pattern_id": "733a2f247df3",
+          "mean_production_server_ms": 2.099,
+          "matched_in_source": "production-staff-targeted-insights.json"
+        },
+        {
+          "local_sequence": 19,
+          "source": "src/Service/ContentReferenceService.php:67",
+          "local_sql": "SELECT * FROM content_references WHERE source_type = ? AND source_id IN (?) AND target_id IS NOT NULL AND unavailable = 0 ORDER BY id ASC",
+          "production_pattern_id": "fc45a62582d4",
+          "mean_production_server_ms": 1.956,
+          "matched_in_source": "production-staff-targeted-insights.json"
+        },
+        {
+          "local_sequence": 20,
+          "source": "src/Repository/LinkPreviewRepository.php:93",
+          "local_sql": "SELECT * FROM link_previews WHERE source_type = ? AND source_id IN (?) AND status IN ('fetched','removed') ORDER BY id ASC",
+          "production_pattern_id": "a66daaefcb07",
+          "mean_production_server_ms": 2.323
+        },
+        {
+          "local_sequence": 21,
+          "source": "src/Service/SinceLastReadContextService.php:18",
+          "local_sql": "SELECT cursor_post.id, cursor_post.created_at FROM thread_user tu JOIN posts cursor_post ON cursor_post.id = tu.last_read_post_id AND cursor_post.thread_id = tu.thread_id AND cursor_post.is_deleted = 0 AND cursor_post.is_pending = 0 WHERE tu.user_id = ? AND tu.thread_id = ?",
+          "production_pattern_id": "8c6ce093bf61",
+          "mean_production_server_ms": 2.1705
+        },
+        {
+          "local_sequence": 22,
+          "source": "src/Service/SinceLastReadContextService.php:36",
+          "local_sql": "SELECT p.id, p.body, p.body_html, p.created_at, p.is_anonymous, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role, COUNT(*) OVER () AS unread_post_count, FIRST_VALUE(p.id) OVER (ORDER BY p.created_at DESC, p.id DESC) AS unread_to_post_id FROM posts p JOIN users u ON u.id = p.user_id WHERE p.thread_id = ? AND p.is_deleted = 0 AND p.is_pending = 0 AND (p.created_at > ? OR (p.created_at = ? AND p.id > ?)) ORDER BY p.created_at ASC, p.id ASC LIMIT 6",
+          "production_pattern_id": "59a2f1f82227",
+          "mean_production_server_ms": 2.8945
+        },
+        {
+          "local_sequence": 23,
+          "source": "src/Repository/ReactionRepository.php:102",
+          "local_sql": "SELECT post_id, emoji FROM reactions WHERE user_id = ? AND post_id IN (?)",
+          "production_pattern_id": "3d867b379766",
+          "mean_production_server_ms": 2.165,
+          "matched_in_source": "production-staff-targeted-insights.json"
+        },
+        {
+          "local_sequence": 24,
+          "source": "src/Repository/ThreadUserRepository.php:166",
+          "local_sql": "SELECT is_starred FROM thread_user WHERE user_id = ? AND thread_id = ?",
+          "production_pattern_id": "296c4a4ae61c",
+          "mean_production_server_ms": 2.1365,
+          "matched_in_source": "production-staff-targeted-insights.json"
+        },
+        {
+          "local_sequence": 25,
+          "source": "src/Repository/ThreadUserRepository.php:47",
+          "local_sql": "SELECT id, created_at FROM posts WHERE id = ? AND thread_id = ? AND is_deleted = 0 AND is_pending = 0",
+          "production_pattern_id": "87f088ad4666",
+          "mean_production_server_ms": 2.312
+        },
+        {
+          "local_sequence": 26,
+          "source": "src/Repository/ThreadUserRepository.php:58",
+          "local_sql": "INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (:uid, :tid, :pid, 0) ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)",
+          "production_pattern_id": "6f90d39a8a15",
+          "mean_production_server_ms": 2.1585
+        },
+        {
+          "local_sequence": 27,
+          "source": "src/Repository/ThreadUserRepository.php:64",
+          "local_sql": "SELECT tu.last_read_post_id, current_post.id AS current_id, current_post.created_at AS current_created_at FROM thread_user tu LEFT JOIN posts current_post ON current_post.id = tu.last_read_post_id AND current_post.thread_id = tu.thread_id AND current_post.is_deleted = 0 AND current_post.is_pending = 0 WHERE tu.user_id = ? AND tu.thread_id = ? FOR UPDATE",
+          "production_pattern_id": "6414e62cb390",
+          "mean_production_server_ms": 2.3875
+        },
+        {
+          "local_sequence": 28,
+          "source": "src/Repository/RoleCapabilityRepository.php:23",
+          "local_sql": "SELECT c.capability_key, r.role_key FROM role_capabilities rc JOIN roles r ON r.id = rc.role_id JOIN capabilities c ON c.id = rc.capability_id",
+          "production_pattern_id": "b7be6023ebeb",
+          "mean_production_server_ms": 2.19175
+        },
+        {
+          "local_sequence": 29,
+          "source": "src/Repository/BoardRepository.php:18",
+          "local_sql": "SELECT * FROM boards ORDER BY category_id ASC, position ASC, id ASC",
+          "production_pattern_id": "dbefebfef83d",
+          "mean_production_server_ms": 1.76875
+        },
+        {
+          "local_sequence": 30,
+          "source": "src/Repository/SubscriptionRepository.php:23",
+          "local_sql": "SELECT * FROM subscriptions WHERE user_id = ? AND target_type = ? AND target_id = ?",
+          "production_pattern_id": "b04f9a746520",
+          "mean_production_server_ms": 2.3825
+        },
+        {
+          "local_sequence": 32,
+          "source": "src/Repository/ThreadRepository.php:541",
+          "local_sql": "SELECT h.*, u.username AS actor_username, u.display_name AS actor_display_name, u.role AS actor_role, CASE WHEN EXISTS ( SELECT 1 FROM posts op WHERE op.thread_id = h.thread_id AND op.user_id = h.actor_id AND op.is_op = 1 AND op.is_anonymous = 1 ) THEN 1 ELSE 0 END AS actor_is_anonymous FROM thread_status_history h LEFT JOIN users u ON u.id = h.actor_id WHERE h.thread_id = ? ORDER BY h.created_at DESC, h.id DESC LIMIT 5",
+          "production_pattern_id": "e1a7b2a01c66",
+          "mean_production_server_ms": 2.3415
+        },
+        {
+          "local_sequence": 33,
+          "source": "src/Repository/ThreadAssignmentRepository.php:18",
+          "local_sql": "SELECT ta.*, u.username AS assigned_username, u.display_name AS assigned_display_name FROM thread_assignments ta JOIN users u ON u.id = ta.assigned_user_id WHERE ta.thread_id = ?",
+          "production_pattern_id": "81c4794b1475",
+          "mean_production_server_ms": 2.085
+        },
+        {
+          "local_sequence": 34,
+          "source": "src/Repository/ThreadUserRepository.php:34",
+          "local_sql": "SELECT * FROM thread_user WHERE user_id = ? AND thread_id = ?",
+          "production_pattern_id": "f6c23db945fa",
+          "mean_production_server_ms": 2.12
+        },
+        {
+          "local_sequence": 35,
+          "source": "src/Repository/TagRepository.php:216",
+          "local_sql": "SELECT t.* FROM thread_tags tt JOIN tags t ON t.id = tt.tag_id WHERE tt.thread_id = ? AND t.is_enabled = 1 AND t.visibility = 'public' ORDER BY t.name ASC",
+          "production_pattern_id": "f3a03776a91d",
+          "mean_production_server_ms": 2.112,
+          "matched_in_source": "production-staff-targeted-insights.json"
+        },
+        {
+          "local_sequence": 36,
+          "source": "src/Repository/TagRepository.php:76",
+          "local_sql": "SELECT * FROM tags WHERE is_enabled = 1 AND visibility = 'public' ORDER BY name ASC, id ASC",
+          "production_pattern_id": "826e7ad4725f",
+          "mean_production_server_ms": 2.9155,
+          "matched_in_source": "production-staff-targeted-insights.json"
+        },
+        {
+          "local_sequence": 37,
+          "source": "src/Repository/ThreadIntelligenceJobRepository.php:32",
+          "local_sql": "SELECT * FROM thread_intelligence_jobs WHERE thread_id = ?",
+          "production_pattern_id": "05d98b818d2a",
+          "mean_production_server_ms": 1.912
+        },
+        {
+          "local_sequence": 38,
+          "source": "src/Service/ThreadIntelligence/ThreadIntelligenceEligibility.php:122",
+          "local_sql": "SELECT t.id, t.is_deleted, t.is_pending, b.visibility FROM threads t JOIN boards b ON b.id = t.board_id WHERE t.id = ?",
+          "production_pattern_id": "4fa56935f12d",
+          "mean_production_server_ms": 2.2295
+        },
+        {
+          "local_sequence": 39,
+          "source": "src/Service/ThreadIntelligence/ThreadIntelligenceEligibility.php:223",
+          "local_sql": "SELECT COUNT(*) AS total, SUM(CASE WHEN id > :checkpoint THEN 1 ELSE 0 END) AS after_checkpoint FROM posts WHERE thread_id = :thread_id AND is_deleted = 0 AND is_pending = 0",
+          "production_pattern_id": "1ce5c7dd6517",
+          "mean_production_server_ms": 2.06375
+        },
+        {
+          "local_sequence": 40,
+          "source": "src/Service/ThreadIntelligence/ThreadIntelligenceEligibility.php:223",
+          "local_sql": "SELECT COUNT(*) AS total, SUM(CASE WHEN id > :checkpoint THEN 1 ELSE 0 END) AS after_checkpoint FROM posts WHERE thread_id = :thread_id AND is_deleted = 0 AND is_pending = 0",
+          "production_pattern_id": "1ce5c7dd6517",
+          "mean_production_server_ms": 2.06375
+        },
+        {
+          "local_sequence": 41,
+          "source": "src/Service/ThreadIntelligence/ThreadIntelligenceViewService.php:49",
+          "local_sql": "SELECT t.id, t.is_deleted, t.is_pending, t.board_id, b.visibility AS board_visibility FROM threads t JOIN boards b ON b.id = t.board_id WHERE t.id = ?",
+          "production_pattern_id": "71b3d60f8a3a",
+          "mean_production_server_ms": 2.091
+        },
+        {
+          "local_sequence": 42,
+          "source": "src/Repository/BoardMemberRepository.php:51",
+          "local_sql": "SELECT board_id FROM board_members WHERE user_id = ?",
+          "production_pattern_id": "2aa3433073d5",
+          "mean_production_server_ms": 1.8419999999999999
+        },
+        {
+          "local_sequence": 43,
+          "source": "src/Service/ThreadIntelligence/ThreadIntelligenceViewService.php:63",
+          "local_sql": "SELECT s.*, u.username AS author_username FROM thread_summaries s LEFT JOIN users u ON u.id = s.author_id WHERE s.thread_id = ? AND s.status = 'published' ORDER BY s.version DESC, s.id DESC LIMIT 1",
+          "production_pattern_id": "20cf44cc54ca",
+          "mean_production_server_ms": 2.235
+        },
+        {
+          "local_sequence": 44,
+          "source": "src/Service/ThreadIntelligence/ThreadIntelligenceViewService.php:307",
+          "local_sql": "SELECT rt.*, t.title, t.slug, t.board_id, t.is_deleted, t.is_pending, b.visibility AS board_visibility FROM related_threads rt JOIN threads t ON t.id = rt.related_thread_id JOIN boards b ON b.id = t.board_id WHERE rt.source_thread_id = ? AND rt.status = 'approved' ORDER BY rt.id DESC",
+          "production_pattern_id": "52776ed6f9b0",
+          "mean_production_server_ms": 2.602
+        },
+        {
+          "local_sequence": 45,
+          "source": "src/Service/ThreadIntelligence/ThreadIntelligenceViewService.php:381",
+          "local_sql": "SELECT s.id, s.kind, s.status, s.version, s.parent_summary_id, s.published_at, s.created_at, u.username AS author_username FROM thread_summaries s LEFT JOIN users u ON u.id = s.author_id WHERE s.thread_id = ? ORDER BY s.version DESC, s.id DESC",
+          "production_pattern_id": "ba5a1352a6e0",
+          "mean_production_server_ms": 2.286
+        },
+        {
+          "local_sequence": 46,
+          "source": "src/Service/PollService.php:137",
+          "local_sql": "SELECT * FROM polls WHERE thread_id = ?",
+          "production_pattern_id": "4a9bb053b605",
+          "mean_production_server_ms": 1.969
+        },
+        {
+          "local_sequence": 47,
+          "source": "src/Repository/SettingRepository.php:85",
+          "local_sql": "SELECT `key`, `value` FROM settings",
+          "production_pattern_id": "93eb8a04b426",
+          "mean_production_server_ms": 1.6438333333333333
+        },
+        {
+          "local_sequence": 48,
+          "source": "src/Repository/ThreadUserRepository.php:275",
+          "local_sql": "SELECT t.board_id, COUNT(*) AS unread_count FROM threads t JOIN boards b ON b.id = t.board_id LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ? LEFT JOIN posts read_post ON read_post.id = tu.last_read_post_id AND read_post.thread_id = t.id AND read_post.is_deleted = 0 AND read_post.is_pending = 0 LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id WHERE t.is_deleted = 0 AND t.is_pending = 0 AND (1=1) AND (tu.snoozed_until IS NULL OR tu.snoozed_until <= UTC_TIMESTAMP()) AND COALESCE(ubp.is_muted, 0) = 0 AND (CASE WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?) ELSE ( t.last_post_id IS NOT NULL AND ( tu.last_read_post_id IS NULL OR read_post.id IS NULL OR t.last_post_at > read_post.created_at OR (t.last_post_at = read_post.created_at AND t.last_post_id > read_post.id) ) ) END) GROUP BY t.board_id ORDER BY t.board_id",
+          "production_pattern_id": "ca39729c4979",
+          "mean_production_server_ms": 2.5055
+        },
+        {
+          "local_sequence": 49,
+          "source": "src/Repository/CategoryRepository.php:18",
+          "local_sql": "SELECT * FROM categories ORDER BY position ASC, id ASC",
+          "production_pattern_id": "ccc1ff4c2039",
+          "mean_production_server_ms": 1.8655
+        },
+        {
+          "local_sequence": 50,
+          "source": "src/Repository/UserPreferenceRepository.php:25",
+          "local_sql": "SELECT prefs FROM user_preferences WHERE user_id = ?",
+          "production_pattern_id": "868a9b204296",
+          "mean_production_server_ms": 1.9075
+        },
+        {
+          "local_sequence": 51,
+          "source": "src/Repository/PackageThemeRepository.php:110",
+          "local_sql": "SELECT active_build_id, lkg_build_id, activated_at, activated_by FROM theme_state WHERE id = 1",
+          "production_pattern_id": "a4d28ba1c048",
+          "mean_production_server_ms": 1.81425
+        },
+        {
+          "local_sequence": 52,
+          "source": "src/Repository/ReportRepository.php:184",
+          "local_sql": "SELECT COUNT(*) FROM reports WHERE status IN ('open','triaged')",
+          "production_pattern_id": "643a0fcea14b",
+          "mean_production_server_ms": 1.92525
+        },
+        {
+          "local_sequence": 53,
+          "source": "src/Service/NotificationVisibilityService.php:39",
+          "local_sql": "SELECT board_id FROM board_members WHERE user_id = ?",
+          "production_pattern_id": "2aa3433073d5",
+          "mean_production_server_ms": 1.8419999999999999
+        },
+        {
+          "local_sequence": 54,
+          "source": "src/Service/NotificationVisibilityService.php:43",
+          "local_sql": "SELECT board_id FROM board_moderators WHERE user_id = ?",
+          "production_pattern_id": "c44469821594",
+          "mean_production_server_ms": 1.6749166666666666
+        },
+        {
+          "local_sequence": 55,
+          "source": "src/Repository/NotificationRepository.php:175",
+          "local_sql": "SELECT COUNT(*) FROM notifications n LEFT JOIN users a ON a.id = n.actor_id LEFT JOIN threads t ON t.id = n.thread_id LEFT JOIN boards b ON b.id = t.board_id LEFT JOIN posts pp ON pp.id = n.post_id WHERE n.user_id = ? AND n.is_read = 0 AND (n.type IN ('mod', 'announcement', 'badge') OR (NOT EXISTS (SELECT 1 FROM blocks nb WHERE nb.user_id = n.user_id AND nb.blocked_user_id = n.actor_id) AND NOT EXISTS (SELECT 1 FROM blocks nb2 WHERE nb2.user_id = n.actor_id AND nb2.blocked_user_id = n.user_id))) AND (n.thread_id IS NULL OR (t.id IS NOT NULL AND t.is_deleted = 0 AND t.is_pending = 0 AND b.id IS NOT NULL)) AND (n.post_id IS NULL OR (pp.id IS NOT NULL AND pp.is_deleted = 0 AND pp.is_pending = 0 AND pp.thread_id = t.id)) AND (n.conversation_id IS NULL OR ( EXISTS (SELECT 1 FROM conversations nc WHERE nc.id = n.conversation_id) AND ((n.type = 'mod' AND 1 = 1) OR (n.type = 'dm' AND 1 = 1 AND EXISTS (SELECT 1 FROM conversation_participants cp WHERE cp.conversation_id = n.conversation_id AND cp.user_id = n.user_id AND n.created_at >= cp.joined_at AND (cp.left_at IS NULL OR n.created_at <= cp.left_at) AND (cp.joined_after_message_id = 0 OR EXISTS ( SELECT 1 FROM dm_messages nm WHERE nm.conversation_id = cp.conversation_id AND nm.id > cp.joined_after_message_id AND nm.created_at <= n.created_at AND (cp.left_at IS NULL OR nm.created_at <= cp.left_at) ))))))) AND (n.type <> 'dm' OR (n.conversation_id IS NOT NULL AND 1 = 1)) AND (n.type NOT IN ('reply', 'mention', 'reaction', 'new_post', 'new_thread', 'solved') OR n.thread_id IS NOT NULL)",
+          "production_pattern_id": "d946aa01e71c",
+          "mean_production_server_ms": 3.030666666666667
+        },
+        {
+          "local_sequence": 56,
+          "source": "src/Repository/UserRepository.php:491",
+          "local_sql": "SELECT id, username, display_name, role, status, show_presence, profile_visibility, last_seen_at FROM users WHERE show_presence = 1 AND status <> 'banned' AND last_seen_at IS NOT NULL AND last_seen_at >= ? ORDER BY last_seen_at DESC, id ASC LIMIT 201",
+          "production_pattern_id": "6a7da52d8047",
+          "mean_production_server_ms": 1.8791666666666667
+        },
+        {
+          "local_sequence": 57,
+          "source": "src/Repository/BoardFolderRepository.php:19",
+          "local_sql": "SELECT f.id AS folder_id, f.name AS folder_name, b.id AS board_id, b.name AS board_name, b.slug AS board_slug, b.visibility AS board_visibility FROM board_folders f LEFT JOIN board_folder_boards fb ON fb.folder_id=f.id LEFT JOIN boards b ON b.id=fb.board_id WHERE f.user_id=? ORDER BY f.position,f.id,fb.position,b.name",
+          "production_pattern_id": "a3a064559c7a",
+          "mean_production_server_ms": 1.97425
+        },
+        {
+          "local_sequence": 58,
+          "source": "src/Repository/SavedFeedRepository.php:19",
+          "local_sql": "SELECT * FROM saved_feed_filters WHERE user_id = ? ORDER BY position, id",
+          "production_pattern_id": "4250956952bc",
+          "mean_production_server_ms": 1.73175
+        }
+      ],
+      "missing_expected_queries": [],
+      "production_fixture_differences": [
+        {
+          "local_sequence": 31,
+          "source": "src/Repository/SubscriptionRepository.php:23",
+          "local_sql": "SELECT * FROM subscriptions WHERE user_id = ? AND target_type = ? AND target_id = ?",
+          "status": "Local fallback is not observed: two production subscription executions returned two rows across two thread requests, consistent with an explicit thread subscription bypassing board fallback."
+        }
+      ]
+    },
+    "staff_presence_fresh": {
+      "matched_requests_in_window": 2,
+      "local_query_count": 4,
+      "observed_selected_queries_per_request": 4,
+      "source_expected_queries_with_production_subscription": 4,
+      "query_count_status": "Corroborated: all local patterns present and all window frequencies match.",
+      "summed_pattern_mean_server_ms": 10.06425,
+      "server_time_status": "All local route patterns are present. Pattern-mean allocation across shared query patterns, not direct per-request SQL spans.",
+      "extra_production_transaction_control_exchanges": 0,
+      "matched_queries": [
+        {
+          "local_sequence": 1,
+          "source": "src/Repository/SessionRepository.php:42",
+          "local_sql": "SELECT * FROM sessions WHERE id = ? AND revoked_at IS NULL AND expires_at > UTC_TIMESTAMP()",
+          "production_pattern_id": "2525cc93f1d2",
+          "mean_production_server_ms": 4.261125
+        },
+        {
+          "local_sequence": 2,
+          "source": "src/Repository/UserRepository.php:19",
+          "local_sql": "SELECT * FROM users WHERE id = ?",
+          "production_pattern_id": "51219ff9ab81",
+          "mean_production_server_ms": 2.280125
+        },
+        {
+          "local_sequence": 3,
+          "source": "src/Repository/SettingRepository.php:85",
+          "local_sql": "SELECT `key`, `value` FROM settings",
+          "production_pattern_id": "93eb8a04b426",
+          "mean_production_server_ms": 1.6438333333333333
+        },
+        {
+          "local_sequence": 4,
+          "source": "src/Repository/UserRepository.php:491",
+          "local_sql": "SELECT id, username, display_name, role, status, show_presence, profile_visibility, last_seen_at FROM users WHERE show_presence = 1 AND status <> 'banned' AND last_seen_at IS NOT NULL AND last_seen_at >= ? ORDER BY last_seen_at DESC, id ASC LIMIT 201",
+          "production_pattern_id": "6a7da52d8047",
+          "mean_production_server_ms": 1.8791666666666667
+        }
+      ],
+      "missing_expected_queries": [],
+      "production_fixture_differences": []
+    },
+    "staff_bell_fresh": {
+      "matched_requests_in_window": 2,
+      "local_query_count": 10,
+      "observed_selected_queries_per_request": 10,
+      "source_expected_queries_with_production_subscription": 10,
+      "query_count_status": "Corroborated: all local patterns present and all window frequencies match.",
+      "summed_pattern_mean_server_ms": 23.566,
+      "server_time_status": "All local route patterns are present. Pattern-mean allocation across shared query patterns, not direct per-request SQL spans.",
+      "extra_production_transaction_control_exchanges": 0,
+      "matched_queries": [
+        {
+          "local_sequence": 1,
+          "source": "src/Repository/SessionRepository.php:42",
+          "local_sql": "SELECT * FROM sessions WHERE id = ? AND revoked_at IS NULL AND expires_at > UTC_TIMESTAMP()",
+          "production_pattern_id": "2525cc93f1d2",
+          "mean_production_server_ms": 4.261125
+        },
+        {
+          "local_sequence": 2,
+          "source": "src/Repository/UserRepository.php:19",
+          "local_sql": "SELECT * FROM users WHERE id = ?",
+          "production_pattern_id": "51219ff9ab81",
+          "mean_production_server_ms": 2.280125
+        },
+        {
+          "local_sequence": 3,
+          "source": "src/Repository/SettingRepository.php:85",
+          "local_sql": "SELECT `key`, `value` FROM settings",
+          "production_pattern_id": "93eb8a04b426",
+          "mean_production_server_ms": 1.6438333333333333
+        },
+        {
+          "local_sequence": 4,
+          "source": "src/Service/NotificationVisibilityService.php:39",
+          "local_sql": "SELECT board_id FROM board_members WHERE user_id = ?",
+          "production_pattern_id": "2aa3433073d5",
+          "mean_production_server_ms": 1.8419999999999999
+        },
+        {
+          "local_sequence": 5,
+          "source": "src/Service/NotificationVisibilityService.php:43",
+          "local_sql": "SELECT board_id FROM board_moderators WHERE user_id = ?",
+          "production_pattern_id": "c44469821594",
+          "mean_production_server_ms": 1.6749166666666666
+        },
+        {
+          "local_sequence": 6,
+          "source": "src/Repository/BoardModeratorRepository.php:50",
+          "local_sql": "SELECT board_id FROM board_moderators WHERE user_id = ?",
+          "production_pattern_id": "c44469821594",
+          "mean_production_server_ms": 1.6749166666666666
+        },
+        {
+          "local_sequence": 7,
+          "source": "src/Repository/RoleAssignmentRepository.php:22",
+          "local_sql": "SELECT ra.*, r.role_key, r.role_rank FROM role_assignments ra JOIN roles r ON r.id = ra.role_id WHERE ra.subject_type = 'user' AND ra.subject_id = ? AND ra.revoked_at IS NULL",
+          "production_pattern_id": "79bba4688af9",
+          "mean_production_server_ms": 1.9016666666666666
+        },
+        {
+          "local_sequence": 8,
+          "source": "src/Repository/RoleCapabilityRepository.php:23",
+          "local_sql": "SELECT c.capability_key, r.role_key FROM role_capabilities rc JOIN roles r ON r.id = rc.role_id JOIN capabilities c ON c.id = rc.capability_id",
+          "production_pattern_id": "b7be6023ebeb",
+          "mean_production_server_ms": 2.19175
+        },
+        {
+          "local_sequence": 9,
+          "source": "src/Repository/NotificationRepository.php:183",
+          "local_sql": "SELECT n.*, a.username AS actor_username, a.display_name AS actor_display_name, t.title AS thread_title, t.slug AS thread_slug, COALESCE(pp.is_anonymous, (SELECT op.is_anonymous FROM posts op WHERE op.thread_id = t.id AND op.is_op = 1 LIMIT 1), 0) AS post_is_anonymous FROM notifications n LEFT JOIN users a ON a.id = n.actor_id LEFT JOIN threads t ON t.id = n.thread_id LEFT JOIN boards b ON b.id = t.board_id LEFT JOIN posts pp ON pp.id = n.post_id WHERE n.user_id = ? AND (n.type IN ('mod', 'announcement', 'badge') OR (NOT EXISTS (SELECT 1 FROM blocks nb WHERE nb.user_id = n.user_id AND nb.blocked_user_id = n.actor_id) AND NOT EXISTS (SELECT 1 FROM blocks nb2 WHERE nb2.user_id = n.actor_id AND nb2.blocked_user_id = n.user_id))) AND (n.thread_id IS NULL OR (t.id IS NOT NULL AND t.is_deleted = 0 AND t.is_pending = 0 AND b.id IS NOT NULL)) AND (n.post_id IS NULL OR (pp.id IS NOT NULL AND pp.is_deleted = 0 AND pp.is_pending = 0 AND pp.thread_id = t.id)) AND (n.conversation_id IS NULL OR ( EXISTS (SELECT 1 FROM conversations nc WHERE nc.id = n.conversation_id) AND ((n.type = 'mod' AND 1 = 1) OR (n.type = 'dm' AND 1 = 1 AND EXISTS (SELECT 1 FROM conversation_participants cp WHERE cp.conversation_id = n.conversation_id AND cp.user_id = n.user_id AND n.created_at >= cp.joined_at AND (cp.left_at IS NULL OR n.created_at <= cp.left_at) AND (cp.joined_after_message_id = 0 OR EXISTS ( SELECT 1 FROM dm_messages nm WHERE nm.conversation_id = cp.conversation_id AND nm.id > cp.joined_after_message_id AND nm.created_at <= n.created_at AND (cp.left_at IS NULL OR nm.created_at <= cp.left_at) ))))))) AND (n.type <> 'dm' OR (n.conversation_id IS NOT NULL AND 1 = 1)) AND (n.type NOT IN ('reply', 'mention', 'reaction', 'new_post', 'new_thread', 'solved') OR n.thread_id IS NOT NULL) ORDER BY n.id DESC LIMIT 11",
+          "production_pattern_id": "5f7921489a97",
+          "mean_production_server_ms": 3.065
+        },
+        {
+          "local_sequence": 10,
+          "source": "src/Repository/NotificationRepository.php:175",
+          "local_sql": "SELECT COUNT(*) FROM notifications n LEFT JOIN users a ON a.id = n.actor_id LEFT JOIN threads t ON t.id = n.thread_id LEFT JOIN boards b ON b.id = t.board_id LEFT JOIN posts pp ON pp.id = n.post_id WHERE n.user_id = ? AND n.is_read = 0 AND (n.type IN ('mod', 'announcement', 'badge') OR (NOT EXISTS (SELECT 1 FROM blocks nb WHERE nb.user_id = n.user_id AND nb.blocked_user_id = n.actor_id) AND NOT EXISTS (SELECT 1 FROM blocks nb2 WHERE nb2.user_id = n.actor_id AND nb2.blocked_user_id = n.user_id))) AND (n.thread_id IS NULL OR (t.id IS NOT NULL AND t.is_deleted = 0 AND t.is_pending = 0 AND b.id IS NOT NULL)) AND (n.post_id IS NULL OR (pp.id IS NOT NULL AND pp.is_deleted = 0 AND pp.is_pending = 0 AND pp.thread_id = t.id)) AND (n.conversation_id IS NULL OR ( EXISTS (SELECT 1 FROM conversations nc WHERE nc.id = n.conversation_id) AND ((n.type = 'mod' AND 1 = 1) OR (n.type = 'dm' AND 1 = 1 AND EXISTS (SELECT 1 FROM conversation_participants cp WHERE cp.conversation_id = n.conversation_id AND cp.user_id = n.user_id AND n.created_at >= cp.joined_at AND (cp.left_at IS NULL OR n.created_at <= cp.left_at) AND (cp.joined_after_message_id = 0 OR EXISTS ( SELECT 1 FROM dm_messages nm WHERE nm.conversation_id = cp.conversation_id AND nm.id > cp.joined_after_message_id AND nm.created_at <= n.created_at AND (cp.left_at IS NULL OR nm.created_at <= cp.left_at) ))))))) AND (n.type <> 'dm' OR (n.conversation_id IS NOT NULL AND 1 = 1)) AND (n.type NOT IN ('reply', 'mention', 'reaction', 'new_post', 'new_thread', 'solved') OR n.thread_id IS NOT NULL)",
+          "production_pattern_id": "d946aa01e71c",
+          "mean_production_server_ms": 3.030666666666667
+        }
+      ],
+      "missing_expected_queries": [],
+      "production_fixture_differences": []
+    }
+  },
+  "content_and_permission_scope": {
+    "home": "Production directory CTE covers three boards and returns three rows per request, versus one board in the fixture; query count is unchanged. Both home requests have one session touch and one presence touch, plus the settings refill.",
+    "thread": "One OP, zero replies, already-read cursor. Production link-preview SQL includes removed rows for the current staff author. The own-image/staff-author local probe retained the baseline query count. Explicit subscription removes one board fallback lookup compared with the empty-subscription fixture.",
+    "staff": "Admin role gives one report count per HTML request, privileged notification/presence SQL, and the staff post stream includes deleted posts. Local staff counts already include these differences.",
+    "bell": "Production bell returns two notifications per request versus the empty local fixture; all ten queries still match.",
+    "transactions": "BEGIN and COMMIT are PDO calls outside query metrics and are additional to counts above; local outer rollback transaction suppresses these two exchanges."
+  },
+  "subscription_code": "src/Repository/SubscriptionRepository.php:58",
+  "checks": {
+    "all_48_selected_pattern_counts_conserved": true,
+    "summed_route_selected_execution_ms_times_two": 406.87,
+    "all_54_combined_pattern_counts_conserved": true,
+    "summed_route_combined_execution_ms_times_two": 433.63800000000003
+  },
+  "sources": [
+    "production-staff-window-insights.json",
+    "production-staff-targeted-insights.json",
+    "server-staff-raw.json"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "measuredAt": "2026-09-20T12:51:49+00:00",
+  "sourceUrl": "https://forum.candidary.online/media/1",
+  "sourceSha256": "94a07340fa0c52918e08e9dbf6eb6710a27677ef70b446d1293e3dd51b9d884b",
+  "sourceUnchanged": true,
+  "encoder": {
+    "PHP": "8.5.4",
+    "GD": "2.3.3",
+    "algorithm": "GD imagecopyresampled then imagewebp",
+    "quality": 82,
+    "localResizeEncodeMs": 48.235
+  },
+  "original": {
+    "mime": "image/png",
+    "width": 1698,
+    "height": 926,
+    "bytes": 2166961
+  },
+  "variant": {
+    "mime": "image/webp",
+    "width": 640,
+    "height": 349,
+    "bytes": 37432,
+    "sha256": "15126210b279ec37215dfff8b449c0ad39275b75caa53e8a4575d87efdfcbc2d",
+    "reviewArtifact": "browser-media-1-640-q82.webp"
+  },
+  "estimates": {
+    "networkBitsPerSecond": 1600000,
+    "bytesPerMillisecond": 200,
+    "originalPureTransferMs": 10834.805,
+    "variantPureTransferMs": 187.16,
+    "pureTransferSavingMs": 10647.645,
+    "savingPercent": 98.27260389088683,
+    "coldThreadLcpBeforeMs": 13636,
+    "coldThreadLcpMinusPureTransferSavingMs": 2988.3549999999996,
+    "earlierImageDiscoveryUpperBoundMs": 308.5999999999999
+  },
+  "limits": [
+    "Offline derivative only. Original unchanged; no production file, HTML, DB, cache or configuration changed.",
+    "Transport-only estimate assumes measured 1.6Mbps profile and same image response wait; no end-to-end variant replay performed.",
+    "The 640px variant covers displayed279 CSS pixels at DPR2; larger views need additional responsive widths/original.",
+    "Visual benchmark sample requires review on supported displays and representative media before choosing sitewide quality."
+  ],
+  "visualReview": "Inspected 640x349 derivative: composition and major labels preserved at output size; tiny screenshot text is naturally small. Sitewide quality not established."
+}

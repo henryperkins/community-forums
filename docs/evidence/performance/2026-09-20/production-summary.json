@@ -1,0 +1,194 @@
+{
+  "method": "curl fresh connection; no cookies; 15 seconds between requests; final response status time corrects 103 Early Hints; p75 uses nearest rank and is a small synthetic sample, not a field percentile",
+  "routes": {
+    "platform_static": {
+      "first_observed_final_ttfb_ms": 189.336,
+      "final_ttfb_ms": {
+        "n": 3,
+        "min": 183.105,
+        "median": 189.336,
+        "p75_nearest_rank": 200.153,
+        "max": 200.153
+      },
+      "container_ms": {
+        "n": 3,
+        "min": 66,
+        "median": 66,
+        "p75_nearest_rank": 69,
+        "max": 69
+      },
+      "outside_container_timer_ms": {
+        "n": 3,
+        "min": 117.105,
+        "median": 123.336,
+        "p75_nearest_rank": 131.153,
+        "max": 131.153
+      },
+      "before_container_timer_ms": {
+        "n": 3,
+        "min": 41,
+        "median": 46,
+        "p75_nearest_rank": 46,
+        "max": 46
+      },
+      "early_hints_samples": 0,
+      "statuses": [
+        "200",
+        "200",
+        "200"
+      ]
+    },
+    "health": {
+      "first_observed_final_ttfb_ms": 444.065,
+      "final_ttfb_ms": {
+        "n": 3,
+        "min": 444.065,
+        "median": 486.853,
+        "p75_nearest_rank": 495.725,
+        "max": 495.725
+      },
+      "container_ms": {
+        "n": 3,
+        "min": 337,
+        "median": 347,
+        "p75_nearest_rank": 373,
+        "max": 373
+      },
+      "outside_container_timer_ms": {
+        "n": 3,
+        "min": 107.065,
+        "median": 113.853,
+        "p75_nearest_rank": 148.725,
+        "max": 148.725
+      },
+      "before_container_timer_ms": {
+        "n": 3,
+        "min": 41,
+        "median": 42,
+        "p75_nearest_rank": 46,
+        "max": 46
+      },
+      "early_hints_samples": 0,
+      "statuses": [
+        "200",
+        "200",
+        "200"
+      ]
+    },
+    "guest_home": {
+      "first_observed_final_ttfb_ms": 606.826,
+      "final_ttfb_ms": {
+        "n": 5,
+        "min": 606.826,
+        "median": 637.061,
+        "p75_nearest_rank": 662.19,
+        "max": 756.139
+      },
+      "container_ms": {
+        "n": 5,
+        "min": 503,
+        "median": 517,
+        "p75_nearest_rank": 526,
+        "max": 598
+      },
+      "outside_container_timer_ms": {
+        "n": 5,
+        "min": 103.826,
+        "median": 121.061,
+        "p75_nearest_rank": 145.19,
+        "max": 158.139
+      },
+      "before_container_timer_ms": {
+        "n": 5,
+        "min": 40,
+        "median": 41,
+        "p75_nearest_rank": 42,
+        "max": 44
+      },
+      "early_hints_samples": 5,
+      "statuses": [
+        "200",
+        "200",
+        "200",
+        "200",
+        "200"
+      ]
+    },
+    "guest_thread": {
+      "first_observed_final_ttfb_ms": 1593.75,
+      "final_ttfb_ms": {
+        "n": 5,
+        "min": 1509.887,
+        "median": 1562.192,
+        "p75_nearest_rank": 1593.75,
+        "max": 1790.354
+      },
+      "container_ms": {
+        "n": 5,
+        "min": 1385,
+        "median": 1440,
+        "p75_nearest_rank": 1468,
+        "max": 1479
+      },
+      "outside_container_timer_ms": {
+        "n": 5,
+        "min": 105.86,
+        "median": 122.192,
+        "p75_nearest_rank": 124.887,
+        "max": 322.354
+      },
+      "before_container_timer_ms": {
+        "n": 5,
+        "min": 41,
+        "median": 42,
+        "p75_nearest_rank": 42,
+        "max": 43
+      },
+      "early_hints_samples": 5,
+      "statuses": [
+        "200",
+        "200",
+        "200",
+        "200",
+        "200"
+      ]
+    },
+    "login": {
+      "first_observed_final_ttfb_ms": 653.343,
+      "final_ttfb_ms": {
+        "n": 3,
+        "min": 594.251,
+        "median": 606.541,
+        "p75_nearest_rank": 653.343,
+        "max": 653.343
+      },
+      "container_ms": {
+        "n": 3,
+        "min": 479,
+        "median": 479,
+        "p75_nearest_rank": 551,
+        "max": 551
+      },
+      "outside_container_timer_ms": {
+        "n": 3,
+        "min": 102.343,
+        "median": 115.251,
+        "p75_nearest_rank": 127.541,
+        "max": 127.541
+      },
+      "before_container_timer_ms": {
+        "n": 3,
+        "min": 41,
+        "median": 42,
+        "p75_nearest_rank": 45,
+        "max": 45
+      },
+      "early_hints_samples": 3,
+      "statuses": [
+        "200",
+        "200",
+        "200"
+      ]
+    }
+  }
+}

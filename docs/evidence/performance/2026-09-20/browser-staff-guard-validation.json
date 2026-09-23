@@ -1,0 +1,40 @@
+{
+  "verifiedAt": "2026-09-20T13:09:07.860Z",
+  "source": "browser-member-measure.cjs",
+  "environment": "isolated data: page; no production cookies loaded",
+  "blocked": [
+    {
+      "method": "POST",
+      "path": "/probe-fetch"
+    },
+    {
+      "method": "PUT",
+      "path": "/probe-request"
+    },
+    {
+      "method": "DELETE",
+      "path": "/probe-xhr"
+    },
+    {
+      "method": "POST",
+      "path": "/probe-beacon"
+    },
+    {
+      "method": "POST",
+      "path": "/probe-form"
+    },
+    {
+      "method": "POST",
+      "path": "/probe-form"
+    },
+    {
+      "method": "POST",
+      "path": "/probe-form"
+    }
+  ],
+  "beaconAccepted": false,
+  "submitEventPrevented": true,
+  "readGetAllowed": true,
+  "observedHttpRequests": [],
+  "urlRedactionVerified": true
+}

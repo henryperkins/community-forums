@@ -1,0 +1,19 @@
+{
+  "captured_at": "2026-09-20T12:45:18.959797+00:00",
+  "path": "/t/1-this-is-a-topic",
+  "posts": 1,
+  "reply_count_from_public_html": 0,
+  "body_image_urls": [
+    "/media/1"
+  ],
+  "body_image_loading": [
+    "lazy"
+  ],
+  "poll_or_reference_or_wiki_markup_detected": false,
+  "stylesheets": [
+    "/assets/dist/imladris-style-BCCSHjuG.css",
+    "/assets/dist/app-style-DoskWIQG.css",
+    "/assets/dist/wysiwyg-composer-BqYYcGYs.css"
+  ],
+  "dynamic_brand_or_theme_stylesheet": false
+}

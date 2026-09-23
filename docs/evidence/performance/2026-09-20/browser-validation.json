@@ -1,0 +1,70 @@
+{
+  "validatedAt": "2026-09-20T12:55:31.387288+00:00",
+  "files": [
+    {
+      "file": "browser-image-benchmark.json",
+      "validJson": true
+    },
+    {
+      "file": "browser-local-cleanup.json",
+      "validJson": true
+    },
+    {
+      "file": "browser-local-fixture.json",
+      "validJson": true
+    },
+    {
+      "file": "browser-local-member-home.json",
+      "validJson": true,
+      "samples": 2,
+      "allMainResponses200": true,
+      "requestMethods": [
+        "GET"
+      ],
+      "savedSensitiveHeaders": false
+    },
+    {
+      "file": "browser-local-member-polls.json",
+      "validJson": true,
+      "samples": 1,
+      "allMainResponses200": true,
+      "requestMethods": [
+        "GET"
+      ],
+      "savedSensitiveHeaders": false
+    },
+    {
+      "file": "browser-local-member-thread.json",
+      "validJson": true,
+      "samples": 2,
+      "allMainResponses200": true,
+      "requestMethods": [
+        "GET"
+      ],
+      "savedSensitiveHeaders": false
+    },
+    {
+      "file": "browser-production-guest-home.json",
+      "validJson": true,
+      "samples": 2,
+      "allMainResponses200": true,
+      "requestMethods": [
+        "GET"
+      ],
+      "savedSensitiveHeaders": false
+    },
+    {
+      "file": "browser-production-guest-thread.json",
+      "validJson": true,
+      "samples": 2,
+      "allMainResponses200": true,
+      "requestMethods": [
+        "GET"
+      ],
+      "savedSensitiveHeaders": false
+    }
+  ],
+  "scriptSyntaxCheck": "node --check browser-measure.cjs passed",
+  "productionRequests": "Four mobile page navigations and one additional GET /media/1 for the offline encoding benchmark, plus automatic GET subresources. No POST or production login.",
+  "codeChanges": "No implementation files edited."
+}

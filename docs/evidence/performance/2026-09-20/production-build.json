@@ -1,0 +1,16 @@
+{
+  "checkout_sha": "ec29d6cd9932025744f8fdd724b6744d7f902312",
+  "manifest_version": "6ba4ffef9eadf890",
+  "production_urls": [
+    "/assets/dist/imladris-style-BCCSHjuG.css",
+    "/assets/dist/app-style-DoskWIQG.css",
+    "/assets/dist/wysiwyg-composer-BqYYcGYs.css",
+    "/assets/dist/wysiwyg-composer-CNH4HhNE.js",
+    "/assets/dist/app-97a98cfe6141fd45.js",
+    "/assets/dist/composer-7dbe56fb74bd2844.js",
+    "/assets/dist/passkeys-45dd692ca9028436.js"
+  ],
+  "all_urls_match_manifest": true,
+  "dynamic_stylesheet_urls": [],
+  "interpretation": "Asset build matches the checkout. Worker settings separately confirm emulate-prepares=true; asset parity alone does not prove every PHP file."
+}

@@ -1,0 +1,783 @@
+{
+  "organized_at": "2026-09-23T07:41:36.779867+00:00",
+  "original_count": 86,
+  "retained_count": 50,
+  "archived_count": 36,
+  "original_backup_root": "/home/ubuntu/community-forums-archives/2026-09-23-messages/untracked-originals",
+  "entries": [
+    {
+      "original": ".github/prompts/page-load-performance.prompt.md",
+      "bytes": 14276,
+      "sha256": "219d888a73f37fe088365d4ebcd52a658bf8dc04cdb5039423c72c41bfd1ac92",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/session-brief.md",
+      "reason": "historical brief",
+      "destination_sha256": "6fd7ae9b3155d1b5f714087e46a3114a7a5d5dac679f791293e3ae9ff1332efc"
+    },
+    {
+      "original": ".grok/config.toml",
+      "bytes": 76,
+      "sha256": "1d34329a3bac8c68248f2cd3f5fa5c37a1a0eeece944ff0a0561ea87c3a6a795",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/.grok/config.toml",
+      "reason": "machine-specific configuration",
+      "destination_sha256": "1d34329a3bac8c68248f2cd3f5fa5c37a1a0eeece944ff0a0561ea87c3a6a795"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/analyze-production-staff.py",
+      "bytes": 7071,
+      "sha256": "3d93a64eac6b1a7a45f0ad248e25c01345ae44bfddc3830a3ffa51b538df7707",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/analyze-production-staff.py",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "3d93a64eac6b1a7a45f0ad248e25c01345ae44bfddc3830a3ffa51b538df7707"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/analyze-production.py",
+      "bytes": 4568,
+      "sha256": "52f426135e15d35ae89405e95a886a4b3410e096e9943914d098c030adefd86b",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/analyze-production.py",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "52f426135e15d35ae89405e95a886a4b3410e096e9943914d098c030adefd86b"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/attribution-model.json",
+      "bytes": 4496,
+      "sha256": "c345740228f3a8751eca3c1406cd172353d2f49af44433df97a317d245f95437",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/attribution-model.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "c345740228f3a8751eca3c1406cd172353d2f49af44433df97a317d245f95437"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-analysis.md",
+      "bytes": 18793,
+      "sha256": "b10f38a4c99ade7f6d492fa840328944bfdfa192bf6550afa74c0092436a3cce",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-analysis.md",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "b23de9e3cdb879d965612bcd7c749bb56cc1a76a857817bb8e9c0e4eedb60a60"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-image-benchmark.json",
+      "bytes": 1836,
+      "sha256": "5308aeaa1617bcd9816dfa561c2fc8c59185febf7aa7fd3978754a1783ec26ee",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-image-benchmark.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "5308aeaa1617bcd9816dfa561c2fc8c59185febf7aa7fd3978754a1783ec26ee"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-image-benchmark.php",
+      "bytes": 2725,
+      "sha256": "7d221c2ebae335639517166e4950b7842e493f640b6c290ddfe55e4d89f68c4b",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-image-benchmark.php",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "7d221c2ebae335639517166e4950b7842e493f640b6c290ddfe55e4d89f68c4b"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-cleanup.json",
+      "bytes": 276,
+      "sha256": "d3aecdb7b6a5206cf8367366218f4d6bf5dbe778e2640787a9c0d9088e94480e",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-local-cleanup.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "d3aecdb7b6a5206cf8367366218f4d6bf5dbe778e2640787a9c0d9088e94480e"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-fixture.json",
+      "bytes": 253,
+      "sha256": "6ed8dc63377d0db05ae45d67523a352ddb05f8d5c43fdc37d87056cd90a01ac7",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-local-fixture.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "6ed8dc63377d0db05ae45d67523a352ddb05f8d5c43fdc37d87056cd90a01ac7"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-fixture.php",
+      "bytes": 1854,
+      "sha256": "85020dbd28ea09604297b2a8c03bab41c37569f2bd93ff19eae6c4e9bd3f8ecb",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-local-fixture.php",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "85020dbd28ea09604297b2a8c03bab41c37569f2bd93ff19eae6c4e9bd3f8ecb"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-home-cold-browser.png",
+      "bytes": 92016,
+      "sha256": "fe8f24cf63d36cc4c26473df8f9b34cf99dd45a9f9ad6fbf82604fd1491c1de9",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-local-member-home-cold-browser.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "fe8f24cf63d36cc4c26473df8f9b34cf99dd45a9f9ad6fbf82604fd1491c1de9"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-home-warm-browser.png",
+      "bytes": 92016,
+      "sha256": "fe8f24cf63d36cc4c26473df8f9b34cf99dd45a9f9ad6fbf82604fd1491c1de9",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-local-member-home-warm-browser.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "fe8f24cf63d36cc4c26473df8f9b34cf99dd45a9f9ad6fbf82604fd1491c1de9"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-home.json",
+      "bytes": 121645,
+      "sha256": "05b07ffb4703443a5eaf91c95b933eca76aeef7e4d91b6cfdaeee123bddd0bcb",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-local-member-home.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "05b07ffb4703443a5eaf91c95b933eca76aeef7e4d91b6cfdaeee123bddd0bcb"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-polls-65s-poll-window.png",
+      "bytes": 91940,
+      "sha256": "fb57040c3f786e679f3cfeafc6c85e60068c9c9f2a4be1b9bbf58c7733db9649",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-local-member-polls-65s-poll-window.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "fb57040c3f786e679f3cfeafc6c85e60068c9c9f2a4be1b9bbf58c7733db9649"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-polls.json",
+      "bytes": 64777,
+      "sha256": "4fbc0d40ab6009572d0cf6b5243c91187154c8a0fda24078984711a907e87dc1",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-local-member-polls.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "4fbc0d40ab6009572d0cf6b5243c91187154c8a0fda24078984711a907e87dc1"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-thread-cold-browser-first-unread.png",
+      "bytes": 75796,
+      "sha256": "7c519e7b3a9aca02791c679b918525af2676bf10a6505ba21263ce98b31d9d34",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-local-member-thread-cold-browser-first-unread.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "7c519e7b3a9aca02791c679b918525af2676bf10a6505ba21263ce98b31d9d34"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-thread-warm-browser-read.png",
+      "bytes": 75796,
+      "sha256": "7c519e7b3a9aca02791c679b918525af2676bf10a6505ba21263ce98b31d9d34",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-local-member-thread-warm-browser-read.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "7c519e7b3a9aca02791c679b918525af2676bf10a6505ba21263ce98b31d9d34"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-local-member-thread.json",
+      "bytes": 188422,
+      "sha256": "f1713cc8d7ad0af694f523d46bbb42e343e612eb4888ab0dffbb1ce325e1aabc",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-local-member-thread.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "f1713cc8d7ad0af694f523d46bbb42e343e612eb4888ab0dffbb1ce325e1aabc"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-media-1-640-q82.webp",
+      "bytes": 37432,
+      "sha256": "15126210b279ec37215dfff8b449c0ad39275b75caa53e8a4575d87efdfcbc2d",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-media-1-640-q82.webp",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "15126210b279ec37215dfff8b449c0ad39275b75caa53e8a4575d87efdfcbc2d"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-guest-home-cold-browser.png",
+      "bytes": 128202,
+      "sha256": "ae2d4e2c6a0b53aa8df586591410a61ffebe2d77575bc25837c8300f4f0567c2",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-production-guest-home-cold-browser.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "ae2d4e2c6a0b53aa8df586591410a61ffebe2d77575bc25837c8300f4f0567c2"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-guest-home-warm-browser.png",
+      "bytes": 128202,
+      "sha256": "ae2d4e2c6a0b53aa8df586591410a61ffebe2d77575bc25837c8300f4f0567c2",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-production-guest-home-warm-browser.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "ae2d4e2c6a0b53aa8df586591410a61ffebe2d77575bc25837c8300f4f0567c2"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-guest-home.json",
+      "bytes": 148764,
+      "sha256": "82cdf323f978289a679123591320d5ac1fc5a26a1004661f39e1fd18b1173316",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-production-guest-home.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "82cdf323f978289a679123591320d5ac1fc5a26a1004661f39e1fd18b1173316"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-guest-thread-cold-browser.png",
+      "bytes": 316370,
+      "sha256": "e7faaa0f0a4ba34882884716a00b8c59c86b24dacf02affc6dc91759ef367fbe",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-production-guest-thread-cold-browser.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "e7faaa0f0a4ba34882884716a00b8c59c86b24dacf02affc6dc91759ef367fbe"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-guest-thread-warm-browser.png",
+      "bytes": 316370,
+      "sha256": "e7faaa0f0a4ba34882884716a00b8c59c86b24dacf02affc6dc91759ef367fbe",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-production-guest-thread-warm-browser.png",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "e7faaa0f0a4ba34882884716a00b8c59c86b24dacf02affc6dc91759ef367fbe"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-guest-thread.json",
+      "bytes": 189444,
+      "sha256": "4256e72bd09d09c518f462192a1e223440a0f804822c7784c635c25252c41937",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-production-guest-thread.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "4256e72bd09d09c518f462192a1e223440a0f804822c7784c635c25252c41937"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-staff-home.json",
+      "bytes": 146596,
+      "sha256": "d97d950af0282b7253403d41a978465e88469d9360287b14646931f95fedfa7a",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-production-staff-home.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "d97d950af0282b7253403d41a978465e88469d9360287b14646931f95fedfa7a"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-staff-polls.json",
+      "bytes": 80746,
+      "sha256": "ac48288da33077dd21c621ced3b6da6105d0cda923f16257d66addb681fabe9e",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-production-staff-polls.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "ac48288da33077dd21c621ced3b6da6105d0cda923f16257d66addb681fabe9e"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-production-staff-thread.json",
+      "bytes": 225480,
+      "sha256": "4ef3b81910592fb913db078541d0ff2ab0352dbe0dd74f04bb137b980472e826",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/browser-production-staff-thread.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "4ef3b81910592fb913db078541d0ff2ab0352dbe0dd74f04bb137b980472e826"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-staff-analysis.md",
+      "bytes": 13039,
+      "sha256": "7e12f8558943e5614440fbf012f19b4ccd1233aaeab5447e8e32c9893303944f",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-staff-analysis.md",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "bd713a41dd7cb837470d950125f585d481e5ce53cd38833baa786a7b6a337468"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-staff-guard-validation.json",
+      "bytes": 786,
+      "sha256": "3efa69bf2dd396a790cfbbc18c7f34c327425e69999d52f2c3a67758b3e88c1c",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-staff-guard-validation.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "3efa69bf2dd396a790cfbbc18c7f34c327425e69999d52f2c3a67758b3e88c1c"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-staff-validation.json",
+      "bytes": 1732,
+      "sha256": "c9151a1ce854bbb640a0c6ee6f6c88a41dfff82e8643ff990021dbd914e8ba6e",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-staff-validation.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "c9151a1ce854bbb640a0c6ee6f6c88a41dfff82e8643ff990021dbd914e8ba6e"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/browser-validation.json",
+      "bytes": 1770,
+      "sha256": "8087fcc495043a35ad28f2ef102e5a76891bce2d2a94d00db31a31d260fc37c2",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/browser-validation.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "8087fcc495043a35ad28f2ef102e5a76891bce2d2a94d00db31a31d260fc37c2"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/diagnosis-validation.json",
+      "bytes": 2562,
+      "sha256": "153265cf5ce6f13e4ef148f07762e3806ece45f4a542028a1a6f23e13a80bf3e",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/diagnosis-validation.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "153265cf5ce6f13e4ef148f07762e3806ece45f4a542028a1a6f23e13a80bf3e"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/diagnosis.md",
+      "bytes": 34723,
+      "sha256": "3b7043d32a03c15cb5ae0e44291cf949e82fd64900f61adc8fefeae56b59fbf2",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/diagnosis.md",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "19cb4ffd6754ccd9525d5e1fadf6b085a8bd09488f59f647971fff8c0e2cfdb4"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/measure-production-staff.py",
+      "bytes": 5649,
+      "sha256": "f0a388b88983d8789f68b9af7505ad45ffe53931996e1cde164b5fb752cc28df",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/measure-production-staff.py",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "f0a388b88983d8789f68b9af7505ad45ffe53931996e1cde164b5fb752cc28df"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/measure-production.py",
+      "bytes": 3792,
+      "sha256": "71bfbd2b4ec7f8613e4672124e9393647c7de839ac492bb420bad19594c92ce1",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/measure-production.py",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "71bfbd2b4ec7f8613e4672124e9393647c7de839ac492bb420bad19594c92ce1"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-build.json",
+      "bytes": 699,
+      "sha256": "8dc9ceedac559be1412b8459388178ab4be0ef6edd007bfb354443a68bca0df8",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-build.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "8dc9ceedac559be1412b8459388178ab4be0ef6edd007bfb354443a68bca0df8"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-cloudflare-settings.json",
+      "bytes": 2648,
+      "sha256": "36979e097534c0cecbb4892a7ea2313e302f5090020bed4646270b7cfcc32601",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-cloudflare-settings.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "36979e097534c0cecbb4892a7ea2313e302f5090020bed4646270b7cfcc32601"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-concurrency.json",
+      "bytes": 14570,
+      "sha256": "a247da14ee6ad74340c40436ec042d66cf57cdd6d5db2e541c8b303327457ce8",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-concurrency.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "a247da14ee6ad74340c40436ec042d66cf57cdd6d5db2e541c8b303327457ce8"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-container-placement.json",
+      "bytes": 1385,
+      "sha256": "279045ddec9f06739e9488b2fda3695fc0298ea00ca803a1bb11eb33f1fdee21",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-container-placement.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "279045ddec9f06739e9488b2fda3695fc0298ea00ca803a1bb11eb33f1fdee21"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-initial-curl-samples.jsonl",
+      "bytes": 14373,
+      "sha256": "47eaf1712f55ffde76aeb93716443c19281ca536c540beb049ec8d7cd8006f2f",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-initial-curl-samples.jsonl",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "47eaf1712f55ffde76aeb93716443c19281ca536c540beb049ec8d7cd8006f2f"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-matched-samples.json",
+      "bytes": 48253,
+      "sha256": "3919e3c74fa63e7123d4bc49284b8a298d14261bed68bd4563f2bfe2d2ad1509",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-matched-samples.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "3919e3c74fa63e7123d4bc49284b8a298d14261bed68bd4563f2bfe2d2ad1509"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-planetscale-branch.json",
+      "bytes": 715,
+      "sha256": "200836a9690865cee716824344b313bc6d6886e871a1bd1b80094f2b194fd116",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-planetscale-branch.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "200836a9690865cee716824344b313bc6d6886e871a1bd1b80094f2b194fd116"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-planetscale-insights.json",
+      "bytes": 43190,
+      "sha256": "777dace87d8a2d69c894607152022879ef3ba060e92c7f856a89665350e6a2b0",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-planetscale-insights.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "777dace87d8a2d69c894607152022879ef3ba060e92c7f856a89665350e6a2b0"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-release/README.md",
+      "bytes": 4137,
+      "sha256": "562b29149fe141e4465eeec339ecb4b0847b049e22ba4aab625023cff21e5c65",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-release/README.md",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "00017675a3e954d191fe67016515b5757474d5665f29875379755868e2836d8a"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-release/accessibility.json",
+      "bytes": 258,
+      "sha256": "b827dac47e0ef6a509ef752e679b048e55f1a73e2e89100ed741f4062345c4dd",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-release/accessibility.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "b827dac47e0ef6a509ef752e679b048e55f1a73e2e89100ed741f4062345c4dd"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-release/checks.json",
+      "bytes": 1087,
+      "sha256": "a49b146448028be6c86d1b7ee752b8f5bb4977922b41fc60a31eb24be2be9125",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-release/checks.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "a49b146448028be6c86d1b7ee752b8f5bb4977922b41fc60a31eb24be2be9125"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-release/live-verification.json",
+      "bytes": 2033,
+      "sha256": "f8379fcebf3fdd97b3c97812a9690bb57fae81344d25cdd5ca209282f87551e3",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-release/live-verification.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "f8379fcebf3fdd97b3c97812a9690bb57fae81344d25cdd5ca209282f87551e3"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-release/measurements.json",
+      "bytes": 2378,
+      "sha256": "29d84a159c1d5324f9e4da83e6e2b863ee01bc7bf6d4df0a3a0a47589da6f6fb",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-release/measurements.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "29d84a159c1d5324f9e4da83e6e2b863ee01bc7bf6d4df0a3a0a47589da6f6fb"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-release/production-member-thread.json",
+      "bytes": 402091,
+      "sha256": "09019b16e0952b29f277c933fb15715aedf724c7e8039facb8def8de1ad0a9b2",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-release/production-member-thread.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "09019b16e0952b29f277c933fb15715aedf724c7e8039facb8def8de1ad0a9b2"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-release/session-cleanup.json",
+      "bytes": 133,
+      "sha256": "c11135bddd1be33db930dd9efb4d3fd58f46e56af79abbc000e9e3fe9f390b28",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-release/session-cleanup.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "c11135bddd1be33db930dd9efb4d3fd58f46e56af79abbc000e9e3fe9f390b28"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-samples.jsonl",
+      "bytes": 42399,
+      "sha256": "d5196e3830b98cb2658df51e3bd9fda5801404c62ce7a845c38ac0f354333ae1",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-samples.jsonl",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "d5196e3830b98cb2658df51e3bd9fda5801404c62ce7a845c38ac0f354333ae1"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-attribution-model.json",
+      "bytes": 8730,
+      "sha256": "87f26c6afdebd949d0880fe1db75126a9c5a4ccfd1f6a9bdaf49dbe64b56cfb7",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-staff-attribution-model.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "87f26c6afdebd949d0880fe1db75126a9c5a4ccfd1f6a9bdaf49dbe64b56cfb7"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-browser-worker-matches.json",
+      "bytes": 29579,
+      "sha256": "c57ff071cd3b9ba62be3f727da82fdcb188518def8b48c6ab8172591b65d2082",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-staff-browser-worker-matches.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "c57ff071cd3b9ba62be3f727da82fdcb188518def8b48c6ab8172591b65d2082"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-initial-state.json",
+      "bytes": 811,
+      "sha256": "f244cd968211d43746fe40b1b7036995b0a1994b1569eda5b2bb1bcfcabe53af",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-staff-initial-state.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "f244cd968211d43746fe40b1b7036995b0a1994b1569eda5b2bb1bcfcabe53af"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-matched-samples.json",
+      "bytes": 27407,
+      "sha256": "1da5c804249d429125356cf6aeb1651d9871aafb6382f3dbced4a88a206c2666",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-staff-matched-samples.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "1da5c804249d429125356cf6aeb1651d9871aafb6382f3dbced4a88a206c2666"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-samples.jsonl",
+      "bytes": 21759,
+      "sha256": "fb41b177a13ac819d293ad326a2bae8abbcab66baa98277bb9ff6c38303f8856",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-staff-samples.jsonl",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "fb41b177a13ac819d293ad326a2bae8abbcab66baa98277bb9ff6c38303f8856"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-session-cleanup.json",
+      "bytes": 739,
+      "sha256": "5e40a7c456a404af69b8556962bfa41ccf6508bf4695f90bfeec608d3e72da4e",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-staff-session-cleanup.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "5e40a7c456a404af69b8556962bfa41ccf6508bf4695f90bfeec608d3e72da4e"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-summary.json",
+      "bytes": 3774,
+      "sha256": "6679ad5602163b9f220958aee8abddd7644070c8be9164640ec4e08870fc1f6e",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-staff-summary.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "6679ad5602163b9f220958aee8abddd7644070c8be9164640ec4e08870fc1f6e"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-targeted-insights.json",
+      "bytes": 26391,
+      "sha256": "867e89f5a473229cba375b1c4c03c0c11d0a4c317c1a277a1e30cc484f77a63f",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-staff-targeted-insights.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "867e89f5a473229cba375b1c4c03c0c11d0a4c317c1a277a1e30cc484f77a63f"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-uncorrelated-concurrent-logs.json",
+      "bytes": 3181,
+      "sha256": "ecaf2ae12d865c19d7499fd8b485d8a48762df0553b2ef7d1819f475527eeb1a",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-staff-uncorrelated-concurrent-logs.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "ecaf2ae12d865c19d7499fd8b485d8a48762df0553b2ef7d1819f475527eeb1a"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-window-insights.json",
+      "bytes": 73294,
+      "sha256": "05b934513ff524076147465607c08e9b61f644cfa7670381163b7032c404baca",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-staff-window-insights.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "05b934513ff524076147465607c08e9b61f644cfa7670381163b7032c404baca"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-staff-worker-timings.json",
+      "bytes": 9480,
+      "sha256": "564023c208183c89d9ad09c1bf520aa4bae47479110b93e2c4856b0afdf0471e",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-staff-worker-timings.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "564023c208183c89d9ad09c1bf520aa4bae47479110b93e2c4856b0afdf0471e"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-summary.json",
+      "bytes": 4339,
+      "sha256": "495d1027ba40892d334eba0f8d2b65d934c4e3313d8a4fedd7a1c88755f5f240",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-summary.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "495d1027ba40892d334eba0f8d2b65d934c4e3313d8a4fedd7a1c88755f5f240"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-thread-shape.json",
+      "bytes": 490,
+      "sha256": "6ca75618a6d39f3d99cdcc3f6fd36559c20b230584aa702db0554ccaa33ca9e0",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/production-thread-shape.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "6ca75618a6d39f3d99cdcc3f6fd36559c20b230584aa702db0554ccaa33ca9e0"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-window-insights.json",
+      "bytes": 44549,
+      "sha256": "c295cefd1691d552e4a30592828a68b056f0bae581dfeec38569f6bf07b3c053",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-window-insights.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "c295cefd1691d552e4a30592828a68b056f0bae581dfeec38569f6bf07b3c053"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/production-worker-timings.json",
+      "bytes": 12844,
+      "sha256": "d6d7b13449e8fd267b4baea858d50795d15109ec1c2969112570c9aed21a5efd",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/production-worker-timings.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "d6d7b13449e8fd267b4baea858d50795d15109ec1c2969112570c9aed21a5efd"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-analysis.md",
+      "bytes": 16811,
+      "sha256": "7678e9409620dce58b5919664b22e13be79d6d066eaa68e8048361fb297a552c",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-analysis.md",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "ff3db2edf20b36c9f77c24e1a6983156c50e1e624056aaa89435bb9ffa96e44f"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-attribution-cleanup.txt",
+      "bytes": 65,
+      "sha256": "5ac8db6396c91fffaf0ac2ac06710be01873282bb2464a1c535c3bb906c33f9c",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-attribution-cleanup.txt",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "5ac8db6396c91fffaf0ac2ac06710be01873282bb2464a1c535c3bb906c33f9c"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-attribution-raw.json",
+      "bytes": 3230678,
+      "sha256": "a84af8b36bf41bfa0111e1f256ce9970aebff87656439901e0bfe45000a24f37",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/server-attribution-raw.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "a84af8b36bf41bfa0111e1f256ce9970aebff87656439901e0bfe45000a24f37"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-attribution-staff-image-cleanup.txt",
+      "bytes": 65,
+      "sha256": "5ac8db6396c91fffaf0ac2ac06710be01873282bb2464a1c535c3bb906c33f9c",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-attribution-staff-image-cleanup.txt",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "5ac8db6396c91fffaf0ac2ac06710be01873282bb2464a1c535c3bb906c33f9c"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-attribution-staff-image-raw.json",
+      "bytes": 3310554,
+      "sha256": "ac1d0652f0f4ba770765e2b721ee88bceac25846c4fbbea765bbdf6a8655d22d",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/server-attribution-staff-image-raw.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "ac1d0652f0f4ba770765e2b721ee88bceac25846c4fbbea765bbdf6a8655d22d"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-attribution-summary.json",
+      "bytes": 204860,
+      "sha256": "1cef748f9fdbe6623c83af962c3d6b6b0dbb2ee557eae71b2bb13355c63bd099",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-attribution-summary.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "1cef748f9fdbe6623c83af962c3d6b6b0dbb2ee557eae71b2bb13355c63bd099"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-phpunit.txt",
+      "bytes": 285,
+      "sha256": "95cbb0812939fdc64b4d96cf2f9e6efc484f3c24519426906bcf7948b8dd4d15",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-phpunit.txt",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "95cbb0812939fdc64b4d96cf2f9e6efc484f3c24519426906bcf7948b8dd4d15"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-production-query-reconciliation.json",
+      "bytes": 19180,
+      "sha256": "d1c6bd157367a1070ce9d1d67c54a32dff67d1011bf4f2296347dd6536114aa2",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-production-query-reconciliation.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "d1c6bd157367a1070ce9d1d67c54a32dff67d1011bf4f2296347dd6536114aa2"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-request-probe.json",
+      "bytes": 1256,
+      "sha256": "62b22457c911b6685ddcf0c1f9e7068ca254752d86b88ce98044a3ddcd51be44",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-request-probe.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "62b22457c911b6685ddcf0c1f9e7068ca254752d86b88ce98044a3ddcd51be44"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-staff-analysis.md",
+      "bytes": 8487,
+      "sha256": "8282309ec1d4ae4093ff80bef1c7a2ad8fa610dacc0222cae9215dd28316adc0",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-staff-analysis.md",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "77f50fe7f4f3ff5b3fc28007f9a15d1f8250a05e728a29caa3efd42134461733"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-staff-attribution.php",
+      "bytes": 8767,
+      "sha256": "ea112062da201f0612ee23e4874353e2b456d36131c5963296d7e27281c049f1",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/server-staff-attribution.php",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "ea112062da201f0612ee23e4874353e2b456d36131c5963296d7e27281c049f1"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-staff-cleanup.jsonl",
+      "bytes": 112,
+      "sha256": "cc67b78361239cc7e17f5e8dc12baa569864325153e46eb4e6038cf0c4206c83",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-staff-cleanup.jsonl",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "cc67b78361239cc7e17f5e8dc12baa569864325153e46eb4e6038cf0c4206c83"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-staff-production-reconciliation.json",
+      "bytes": 53296,
+      "sha256": "f6ed31306bdfe26c86314c9facc8442c9f3434b9a139890980c9f595e2125b15",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-staff-production-reconciliation.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "f6ed31306bdfe26c86314c9facc8442c9f3434b9a139890980c9f595e2125b15"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-staff-raw.json",
+      "bytes": 3858813,
+      "sha256": "2e3b1a1ee2b1accf21956b2e453839cd936d1fb9d1d60ed7b5948b6c08345137",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/server-staff-raw.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "2e3b1a1ee2b1accf21956b2e453839cd936d1fb9d1d60ed7b5948b6c08345137"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-staff-summary.json",
+      "bytes": 241083,
+      "sha256": "5496c4f9cf7ada19515e638a4a54d387f34f17c53922a8baff65c7ce8b92a6ec",
+      "disposition": "retained",
+      "destination": "docs/evidence/performance/2026-09-20/server-staff-summary.json",
+      "reason": "report, summarized evidence, visual evidence, or validation record",
+      "destination_sha256": "5496c4f9cf7ada19515e638a4a54d387f34f17c53922a8baff65c7ce8b92a6ec"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-staff-uninstrumented.json",
+      "bytes": 59985,
+      "sha256": "c4ce6aeaea52ee1e3b4876405a8bbf0a8327160ca3542a32b68b3ca3362fda4a",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/server-staff-uninstrumented.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "c4ce6aeaea52ee1e3b4876405a8bbf0a8327160ca3542a32b68b3ca3362fda4a"
+    },
+    {
+      "original": "docs/evidence/performance/2026-09-20/server-uninstrumented.json",
+      "bytes": 50845,
+      "sha256": "bca9866545da615d9ccd777bc28e716c0f892489d04fdaad9b42101e08b4cc6e",
+      "disposition": "archived",
+      "destination": "/home/ubuntu/community-forums-archives/2026-09-23-messages/scratch/docs/evidence/performance/2026-09-20/server-uninstrumented.json",
+      "reason": "raw trace or one-off measurement helper",
+      "destination_sha256": "bca9866545da615d9ccd777bc28e716c0f892489d04fdaad9b42101e08b4cc6e"
+    },
+    {
+      "original": "docs/superpowers/plans/2026-09-21-messages-poll-focus-fixes.md",
+      "bytes": 51677,
+      "sha256": "f67d5f73020c269370d9eaa3a95ac667dc1dd27743234f5171ef7ae5bad705b8",
+      "disposition": "retained",
+      "destination": "docs/superpowers/plans/2026-09-21-messages-poll-focus-fixes.md",
+      "reason": "completed Messages plan",
+      "destination_sha256": "3f774985eaed5d0aa861538d010040689b5314a203ce034c7f540a2edf8ddcef"
+    }
+  ]
+}

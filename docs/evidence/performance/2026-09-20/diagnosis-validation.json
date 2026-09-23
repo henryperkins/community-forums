@@ -1,0 +1,55 @@
+{
+  "validated_at": "2026-09-20T13:29:46.610916+00:00",
+  "mode": "diagnose",
+  "product_source_changes": [],
+  "prior_tracked_evidence_changes": [],
+  "raw_serial_samples_checked": 39,
+  "all_serial_final_statuses": 200,
+  "early_hints_correction_checked_against_total_time": true,
+  "server_scenarios_with_complete_query_count_attribution": 55,
+  "new_evidence_files_checked_before_this_record": 79,
+  "malformed_json_or_jsonl": 0,
+  "broken_relative_markdown_links": 0,
+  "invalid_checked_code_line_pointers": 0,
+  "syntax_checks": {
+    "python": "AST parse passed for all evidence Python files; no pycache generated",
+    "javascript": "node --check passed for guest and staff browser harnesses",
+    "php": "php -l passed for original evidence harnesses and new staff attribution harness"
+  },
+  "focused_phpunit": {
+    "tests": 7,
+    "assertions": 56,
+    "result": "passed",
+    "output": "server-phpunit.txt"
+  },
+  "cleanup": {
+    "private_browser_server_port_8036": "no listener",
+    "worker_tail": "stopped; no matching node process",
+    "rollback_fixtures": "verified by server-attribution-cleanup.txt",
+    "private_browser_database_and_cookie": "removed per browser-local-cleanup.json",
+    "generated_pycache": "removed",
+    "production_staff_session": "signed out; guest response and cleared session cookie verified",
+    "private_auth_artifacts": "cookie jars, initial authenticated HTML, login helper and raw authenticated tail removed",
+    "cookie_and_csrf_scan": "no production authentication values found in evidence before private artifacts were removed"
+  },
+  "limits": [
+    "No full PHPUnit rerun or implementation change.",
+    "No ordinary-member production session, genuine first-unread production navigation, or field p75.",
+    "209ms / 13.38% guest-thread and 39.9ms / 6.52% staff-presence model residuals remain; fine-grained stopping threshold is not fully met.",
+    "Staff last-bell Worker event was not captured; serial response timing is retained.",
+    "No deployed optimization or before/after page replay."
+  ],
+  "guest_serial_samples": 19,
+  "staff_serial_samples": 20,
+  "staff_worker_matches": 19,
+  "original_serial_cross_path_log_mismatches": 0,
+  "original_server_scenarios": 27,
+  "staff_server_scenarios": 28,
+  "json_files_checked_in_directory": 53,
+  "jsonl_records_checked_in_directory": 48,
+  "staff_insights_combined_patterns": 54,
+  "staff_insights_execution_counts_conserved": true,
+  "staff_browser_navigations": 5,
+  "staff_browser_auth_verified": true,
+  "staff_browser_non_read_requests": 0
+}

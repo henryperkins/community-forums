@@ -127,3 +127,14 @@ change affects only browser automation and is covered by the combined rerun.
 Hostname-route [PR #72](https://github.com/henryperkins/community-forums/pull/72)
 remains open and draft. Its Cloudflare prerequisites are unverified by this work.
 Its branch and worktree are retained.
+
+Main was pushed through `8ea7734d`; local and remote matched. All four Messages
+worktrees and both temporary Messages branches were removed after their source
+and local-state snapshots were archived. The three owned databases and their
+specific grants were removed; the existing main server and Messages database
+were preserved. See [cleanup.json](cleanup.json).
+
+GitHub's [browser workflow](https://github.com/henryperkins/community-forums/actions/runs/35832801398)
+did not start any step: its annotation says the account is locked due to a
+billing issue. This is an external CI limitation, not a CI pass. The local runs
+above supply the verification evidence; the CI receipt is in [ci.json](ci.json).

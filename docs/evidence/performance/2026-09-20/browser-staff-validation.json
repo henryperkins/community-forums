@@ -1,0 +1,56 @@
+{
+  "verifiedAt": "2026-09-20T13:18:24.178769+00:00",
+  "files": [
+    {
+      "file": "browser-production-staff-home.json",
+      "validJson": true,
+      "samples": 2,
+      "allAuthenticated": true,
+      "allStaffNavigation": true,
+      "allMainResponses200": true,
+      "blockedWrites": 0,
+      "observedNonReadRequests": 0,
+      "requestMethods": [
+        "GET"
+      ],
+      "forbiddenPrivacyKeys": [],
+      "sensitiveResponseHeaders": []
+    },
+    {
+      "file": "browser-production-staff-polls.json",
+      "validJson": true,
+      "samples": 1,
+      "allAuthenticated": true,
+      "allStaffNavigation": true,
+      "allMainResponses200": true,
+      "blockedWrites": 0,
+      "observedNonReadRequests": 0,
+      "requestMethods": [
+        "GET"
+      ],
+      "forbiddenPrivacyKeys": [],
+      "sensitiveResponseHeaders": []
+    },
+    {
+      "file": "browser-production-staff-thread.json",
+      "validJson": true,
+      "samples": 2,
+      "allAuthenticated": true,
+      "allStaffNavigation": true,
+      "allMainResponses200": true,
+      "blockedWrites": 0,
+      "observedNonReadRequests": 0,
+      "requestMethods": [
+        "GET"
+      ],
+      "forbiddenPrivacyKeys": [],
+      "sensitiveResponseHeaders": []
+    }
+  ],
+  "privateCookieValueLeakFiles": [],
+  "noScreenshotsSaved": true,
+  "scriptSyntaxCheck": "node --check browser-member-measure.cjs passed",
+  "writeGuardTest": "Seven isolated write attempts blocked, no HTTP request emitted, GET preserved.",
+  "firstUnreadLimit": "Production threads already read. Original local cold-browser-first-unread label was inaccurate: no saved cursor. Neither establishes a genuine first-unread browser journey.",
+  "cookieCleanupOwner": "Main agent"
+}

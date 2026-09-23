@@ -1,0 +1,75 @@
+{
+  "commit": "2d925557de4f78753e443caecb7eecb428250171",
+  "previous_production_warm_cls": 1.036995563603232,
+  "measurement_scope": "Authenticated staff account, 390x844 mobile laboratory trace on production; three warm repetitions, not field p75.",
+  "profile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "deviceScaleFactor": 2,
+    "isMobile": true,
+    "hasTouch": true,
+    "cpuSlowdown": 4,
+    "network": {
+      "latencyMs": 150,
+      "downloadBitsPerSecond": 1600000,
+      "uploadBitsPerSecond": 750000
+    },
+    "cache": "new context initially; same context subsequent visits",
+    "holdAfterLoadMs": 15000,
+    "navigationIntervalMs": 30000
+  },
+  "samples": [
+    {
+      "label": "cold-after-deploy",
+      "cls": 0.07297823886876491,
+      "unfiltered_shift_sum": 0.11695027603114694,
+      "recent_input_shifts": 1,
+      "cached_responses": 2,
+      "errors": 2,
+      "status": 200,
+      "auth_verified": true,
+      "non_read_requests": []
+    },
+    {
+      "label": "warm-after-deploy-1",
+      "cls": 0.04397203716238203,
+      "unfiltered_shift_sum": 0.04397203716238203,
+      "recent_input_shifts": 0,
+      "cached_responses": 16,
+      "errors": 2,
+      "status": 200,
+      "auth_verified": true,
+      "non_read_requests": []
+    },
+    {
+      "label": "warm-after-deploy-2",
+      "cls": 0.04397203716238203,
+      "unfiltered_shift_sum": 0.04397203716238203,
+      "recent_input_shifts": 0,
+      "cached_responses": 16,
+      "errors": 2,
+      "status": 200,
+      "auth_verified": true,
+      "non_read_requests": []
+    },
+    {
+      "label": "warm-after-deploy-3",
+      "cls": 0.04397203716238203,
+      "unfiltered_shift_sum": 0.04397203716238203,
+      "recent_input_shifts": 0,
+      "cached_responses": 16,
+      "errors": 2,
+      "status": 200,
+      "auth_verified": true,
+      "non_read_requests": []
+    }
+  ],
+  "known_production_console_issues": [
+    "Cloudflare analytics beacon blocked by the existing Content Security Policy.",
+    "Existing /composer/giphy-config endpoint returns 404."
+  ],
+  "known_production_console_issues_match_pre_release_trace": true,
+  "cold_attribution_note": "Chromium marked one cold layout shift as recent input despite the harness sending no input; standard cold CLS is 0.072978 and the unfiltered shift sum is 0.116950. All warm runs exclude zero shifts."
+}

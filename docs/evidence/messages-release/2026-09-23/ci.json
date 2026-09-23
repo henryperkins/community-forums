@@ -1,0 +1,10 @@
+{
+  "commit": "8ea7734d7a959ef7b6fc1fd5d562d6001c237898",
+  "run_url": "https://github.com/henryperkins/community-forums/actions/runs/35832801398",
+  "conclusion": "failure",
+  "steps_started": 0,
+  "reason": [
+    "The job was not started because your account is locked due to a billing issue."
+  ],
+  "local_verification": "See README.md and committed logs; remote CI is not counted as passed."
+}

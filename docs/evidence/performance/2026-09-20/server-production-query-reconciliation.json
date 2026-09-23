@@ -1,0 +1,341 @@
+{
+  "source": "production-window-insights.json",
+  "scope": {
+    "organization": "perkinism",
+    "database": "imladris-boards",
+    "branch": "main",
+    "from": "2026-09-20T12:42:00Z",
+    "to": "2026-09-20T12:47:30Z"
+  },
+  "method": "Classify observed normalized SQL patterns by the current local call-site trace. Counts 5 home, 3 login, 6 thread, and 3 health explain the shared-pattern frequencies. Selected Insights patterns may be incomplete, but every current local route pattern appears and frequencies agree. No production credentials or requests were used by this analysis.",
+  "routes": {
+    "guest_home": {
+      "queries_per_request": 6,
+      "summed_mean_server_ms": 15.359571428571428,
+      "patterns": [
+        {
+          "sql": "select * from boards order by category_id asc, `position` asc, id asc",
+          "id": "dbefebfef83d",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.218142857142857,
+          "estimated_server_ms_per_request": 2.218142857142857
+        },
+        {
+          "sql": "select active_build_id, lkg_build_id, activated_at, activated_by from theme_state where id = ?",
+          "id": "a4d28ba1c048",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.062,
+          "estimated_server_ms_per_request": 2.062
+        },
+        {
+          "sql": "select * from categories order by `position` asc, id asc",
+          "id": "ccc1ff4c2039",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.0517857142857143,
+          "estimated_server_ms_per_request": 2.0517857142857143
+        },
+        {
+          "sql": "select `key`, `value` from settings",
+          "id": "93eb8a04b426",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.0076428571428573,
+          "estimated_server_ms_per_request": 2.0076428571428573
+        },
+        {
+          "sql": "select id, username, display_name, role, `status`, show_presence, profile_visibility, last_seen_at from users where show_presence = ? and `status` != ? and last_seen_at is not null and last_seen_at >= ? and profile_visibility = ? order by last_seen_at desc, id asc limit ?",
+          "id": "9e2197af9f32",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 11,
+          "mean_server_ms": 2.301,
+          "estimated_server_ms_per_request": 2.301
+        },
+        {
+          "sql": "with visible_boards as (select ? as board_id, ? as ordinal from dual union all select ?, ? as ordinal from dual union all select ?, ? as ordinal from dual) , reaction_counts as (select p.thread_id, count(r.id) as commend_count from posts as p join threads as scoped on scoped.id = p.thread_id join visible_boards as vb on vb.board_id = scoped.board_id join reactions as r on r.post_id = p.id and r.user_id != p.user_id where p.is_op = ? and p.is_deleted = ? and p.is_pending = ? group by p.thread_id) , base as (select t.id, t.board_id, t.title, t.slug, t.created_at, t.last_post_at, t.reply_count, t.`status`, t.status_changed_at, u.username as author_username, u.display_name as author_display_name, u.role as author_role, COALESCE(op.is_anonymous, ?) as op_is_anonymous, COALESCE(rc.commend_count, ?) as commend_count, case when t.`status` = ? or t.reply_count = ? then ? else ? end as is_unanswered, case when t.`status` in (<elements>) then ? else ? end as is_settled from threads as t join visible_boards as vb on vb.board_id = t.board_id join users as u on u.id = t.user_id left join posts as op on op.thread_id = t.id and op.is_op = ? left join reaction_counts as rc on rc.thread_id = t.id where t.is_deleted = ? and t.is_pending = ?) , aggregates as (select board_id, max(last_post_at) as latest_activity_at, max(created_at) as newest_thread_at, sum(is_unanswered) as unanswered_count, max(commend_count) as top_commend_count, sum(is_settled) as settled_count, max(case when is_settled = ? then COALESCE(status_changed_at, last_post_at) end) as latest_settled_at from base group by board_id) , ranked as (select base.*, row_number() over (partition by board_id order by last_post_at desc, id desc) as topic_rank from base) select vb.board_id, a.latest_activity_at, a.newest_thread_at, COALESCE(a.unanswered_count, ?) as unanswered_count, COALESCE(a.top_commend_count, ?) as top_commend_count, COALESCE(a.settled_count, ?) as settled_count, a.latest_settled_at, r.id as thread_id, r.title, r.slug, r.created_at, r.last_post_at, r.reply_count, r.`status`, r.status_changed_at, r.author_username, r.author_display_name, r.author_role, r.op_is_anonymous, r.commend_count from visible_boards as vb left join aggregates as a on a.board_id = vb.board_id left join ranked as r on r.board_id = vb.board_id and r.topic_rank <= ? and ? = ? order by vb.ordinal asc, r.topic_rank asc",
+          "id": "5eb3fcfdfe39",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 5,
+          "mean_server_ms": 4.718999999999999,
+          "estimated_server_ms_per_request": 4.718999999999999
+        }
+      ]
+    },
+    "guest_thread": {
+      "queries_per_request": 27,
+      "summed_mean_server_ms": 59.81957142857143,
+      "patterns": [
+        {
+          "sql": "select * from boards order by category_id asc, `position` asc, id asc",
+          "id": "dbefebfef83d",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.218142857142857,
+          "estimated_server_ms_per_request": 2.218142857142857
+        },
+        {
+          "sql": "select active_build_id, lkg_build_id, activated_at, activated_by from theme_state where id = ?",
+          "id": "a4d28ba1c048",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.062,
+          "estimated_server_ms_per_request": 2.062
+        },
+        {
+          "sql": "select * from categories order by `position` asc, id asc",
+          "id": "ccc1ff4c2039",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.0517857142857143,
+          "estimated_server_ms_per_request": 2.0517857142857143
+        },
+        {
+          "sql": "select `key`, `value` from settings",
+          "id": "93eb8a04b426",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.0076428571428573,
+          "estimated_server_ms_per_request": 2.0076428571428573
+        },
+        {
+          "sql": "select count(*) as total, sum(case when id > ? then ? else ? end) as after_checkpoint from posts where thread_id = ? and is_deleted = ? and is_pending = ?",
+          "id": "1ce5c7dd6517",
+          "occurrences_per_request": 2,
+          "observed_window_executions": 12,
+          "mean_server_ms": 2.127333333333333,
+          "estimated_server_ms_per_request": 4.254666666666666
+        },
+        {
+          "sql": "select id, username, display_name, role, `status`, show_presence, profile_visibility, last_seen_at from users where show_presence = ? and `status` != ? and last_seen_at is not null and last_seen_at >= ? and profile_visibility = ? order by last_seen_at desc, id asc limit ?",
+          "id": "9e2197af9f32",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 11,
+          "mean_server_ms": 2.301,
+          "estimated_server_ms_per_request": 2.301
+        },
+        {
+          "sql": "select h.*, u.username as actor_username, u.display_name as actor_display_name, u.role as actor_role, case when exists (select ? from posts as op where op.thread_id = h.thread_id and op.user_id = h.actor_id and op.is_op = ? and op.is_anonymous = ?) then ? else ? end as actor_is_anonymous from thread_status_history as h left join users as u on u.id = h.actor_id where h.thread_id = ? order by h.created_at desc, h.id desc limit ?",
+          "id": "e1a7b2a01c66",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 3.1108333333333333,
+          "estimated_server_ms_per_request": 3.1108333333333333
+        },
+        {
+          "sql": "select t.*, b.slug as board_slug, b.`name` as board_name, b.visibility as board_visibility, b.post_min_role as board_post_min_role, b.allow_anonymous as board_allow_anonymous, b.require_approval as board_require_approval, b.assignment_mode as board_assignment_mode, b.tags_enabled as board_tags_enabled, b.wiki_enabled as board_wiki_enabled, b.is_archived as board_is_archived, b.id as board_id, au.username as author_username, au.display_name as author_display_name from threads as t join boards as b on b.id = t.board_id join users as au on au.id = t.user_id where t.id = ?",
+          "id": "3bd31031f7cb",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.4316666666666666,
+          "estimated_server_ms_per_request": 2.4316666666666666
+        },
+        {
+          "sql": "select p.*, u.username as author_username, u.display_name as author_display_name, u.role as author_role, u.signature as author_signature, u.reputation as author_reputation, u.title as author_title from posts as p join users as u on u.id = p.user_id where p.thread_id = ? and p.is_deleted = ? and p.is_pending = ? order by p.created_at asc, p.id asc limit ?, ?",
+          "id": "6e0f3b4b0324",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.3603333333333336,
+          "estimated_server_ms_per_request": 2.3603333333333336
+        },
+        {
+          "sql": "select rt.*, t.title, t.slug, t.board_id, t.is_deleted, t.is_pending, b.visibility as board_visibility from related_threads as rt join threads as t on t.id = rt.related_thread_id join boards as b on b.id = t.board_id where rt.source_thread_id = ? and rt.`status` = ? order by rt.id desc",
+          "id": "52776ed6f9b0",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.3325,
+          "estimated_server_ms_per_request": 2.3325
+        },
+        {
+          "sql": "select u.id as user_id, u.username as author_username, u.display_name as author_display_name, u.role as author_role, min(p.created_at) as first_at from posts as p join users as u on u.id = p.user_id where p.thread_id = ? and p.is_deleted = ? and p.is_pending = ? and p.is_anonymous = ? group by u.id, u.username, u.display_name, u.role order by first_at asc, u.id asc limit ?",
+          "id": "1ebe69766766",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.3286666666666664,
+          "estimated_server_ms_per_request": 2.3286666666666664
+        },
+        {
+          "sql": "select t.id, t.is_deleted, t.is_pending, b.visibility from threads as t join boards as b on b.id = t.board_id where t.id = ?",
+          "id": "4fa56935f12d",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.287666666666667,
+          "estimated_server_ms_per_request": 2.287666666666667
+        },
+        {
+          "sql": "select t.* from thread_tags as tt join tags as t on t.id = tt.tag_id where tt.thread_id = ? and t.is_enabled = ? and t.visibility = ? order by t.`name` asc",
+          "id": "f3a03776a91d",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.2746666666666666,
+          "estimated_server_ms_per_request": 2.2746666666666666
+        },
+        {
+          "sql": "select * from link_previews where source_type = ? and source_id in (<elements>) and `status` = ? order by id asc",
+          "id": "2d7908829237",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.2613333333333334,
+          "estimated_server_ms_per_request": 2.2613333333333334
+        },
+        {
+          "sql": "select s.*, u.username as author_username from thread_summaries as s left join users as u on u.id = s.author_id where s.thread_id = ? and s.`status` = ? order by s.version desc, s.id desc limit ?",
+          "id": "20cf44cc54ca",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.2413333333333334,
+          "estimated_server_ms_per_request": 2.2413333333333334
+        },
+        {
+          "sql": "select post_id, emoji, count(*) as n from reactions where post_id in (<elements>) group by post_id, emoji order by n desc, emoji asc",
+          "id": "5dbdb4df1019",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.2376666666666667,
+          "estimated_server_ms_per_request": 2.2376666666666667
+        },
+        {
+          "sql": "select s.id, s.kind, s.`status`, s.version, s.parent_summary_id, s.published_at, s.created_at, u.username as author_username from thread_summaries as s left join users as u on u.id = s.author_id where s.thread_id = ? order by s.version desc, s.id desc",
+          "id": "ba5a1352a6e0",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.2343333333333333,
+          "estimated_server_ms_per_request": 2.2343333333333333
+        },
+        {
+          "sql": "select t.id, t.is_deleted, t.is_pending, t.board_id, b.visibility as board_visibility from threads as t join boards as b on b.id = t.board_id where t.id = ?",
+          "id": "71b3d60f8a3a",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.2159999999999997,
+          "estimated_server_ms_per_request": 2.2159999999999997
+        },
+        {
+          "sql": "select t.* from thread_redirects as r join threads as t on t.id = r.canonical_thread_id where r.old_thread_id = ?",
+          "id": "aa7523a15da9",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.1856666666666666,
+          "estimated_server_ms_per_request": 2.1856666666666666
+        },
+        {
+          "sql": "select count(*) from posts where thread_id = ? and is_deleted = ? and is_pending = ?",
+          "id": "bf052384e03f",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.118,
+          "estimated_server_ms_per_request": 2.118
+        },
+        {
+          "sql": "select count(distinct user_id) from posts where thread_id = ? and is_deleted = ? and is_pending = ? and is_anonymous = ?",
+          "id": "ebc2bed99599",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.14,
+          "estimated_server_ms_per_request": 2.14
+        },
+        {
+          "sql": "select ta.*, u.username as assigned_username, u.display_name as assigned_display_name from thread_assignments as ta join users as u on u.id = ta.assigned_user_id where ta.thread_id = ?",
+          "id": "81c4794b1475",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.092,
+          "estimated_server_ms_per_request": 2.092
+        },
+        {
+          "sql": "select * from thread_intelligence_jobs where thread_id = ?",
+          "id": "05d98b818d2a",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.011833333333333,
+          "estimated_server_ms_per_request": 2.011833333333333
+        },
+        {
+          "sql": "select * from polls where thread_id = ?",
+          "id": "4a9bb053b605",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 1.9303333333333335,
+          "estimated_server_ms_per_request": 1.9303333333333335
+        },
+        {
+          "sql": "select shortcode from custom_emoji where is_enabled = ? and allow_reactions = ? order by shortcode asc limit ?",
+          "id": "733a2f247df3",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 1.9876666666666667,
+          "estimated_server_ms_per_request": 1.9876666666666667
+        },
+        {
+          "sql": "select * from content_references where source_type = ? and source_id in (<elements>) and target_id is not null and unavailable = ? order by id asc",
+          "id": "fc45a62582d4",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 6,
+          "mean_server_ms": 2.1418333333333335,
+          "estimated_server_ms_per_request": 2.1418333333333335
+        }
+      ]
+    },
+    "guest_login": {
+      "queries_per_request": 5,
+      "summed_mean_server_ms": 10.679238095238095,
+      "patterns": [
+        {
+          "sql": "select * from boards order by category_id asc, `position` asc, id asc",
+          "id": "dbefebfef83d",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.218142857142857,
+          "estimated_server_ms_per_request": 2.218142857142857
+        },
+        {
+          "sql": "select active_build_id, lkg_build_id, activated_at, activated_by from theme_state where id = ?",
+          "id": "a4d28ba1c048",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.062,
+          "estimated_server_ms_per_request": 2.062
+        },
+        {
+          "sql": "select * from categories order by `position` asc, id asc",
+          "id": "ccc1ff4c2039",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.0517857142857143,
+          "estimated_server_ms_per_request": 2.0517857142857143
+        },
+        {
+          "sql": "select `key`, `value` from settings",
+          "id": "93eb8a04b426",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 14,
+          "mean_server_ms": 2.0076428571428573,
+          "estimated_server_ms_per_request": 2.0076428571428573
+        },
+        {
+          "sql": "select provider_key, display_name from identity_providers where type = ? and is_enabled = ? and client_id != ? and client_secret_ref != ? order by display_name asc, id asc",
+          "id": "23ff57181018",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 3,
+          "mean_server_ms": 2.3396666666666666,
+          "estimated_server_ms_per_request": 2.3396666666666666
+        }
+      ]
+    },
+    "healthz": {
+      "queries_per_request": 1,
+      "summed_mean_server_ms": 0.15966666666666665,
+      "patterns": [
+        {
+          "sql": "select ? from dual",
+          "id": "af8f87af1716",
+          "occurrences_per_request": 1,
+          "observed_window_executions": 3,
+          "mean_server_ms": 0.15966666666666665,
+          "estimated_server_ms_per_request": 0.15966666666666665
+        }
+      ]
+    }
+  }
+}

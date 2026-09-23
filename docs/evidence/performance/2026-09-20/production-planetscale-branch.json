@@ -1,0 +1,30 @@
+{
+  "captured_at": "2026-09-20T12:41:10.790Z",
+  "name": "main",
+  "mysql_address": "gcp-us-central1.connect.psdb.cloud",
+  "region": {
+    "id": "wwtee9y1aci0",
+    "type": "Region",
+    "provider": "GCP",
+    "enabled": true,
+    "public_ip_addresses": [
+      "34.123.38.122",
+      "34.171.148.176",
+      "35.184.2.198",
+      "35.193.174.51",
+      "3.209.149.66",
+      "3.215.97.46",
+      "34.193.111.15"
+    ],
+    "display_name": "GCP us-central1",
+    "location": "Council Bluffs, Iowa",
+    "slug": "gcp-us-central1",
+    "current_default": false,
+    "mysql_supported": true,
+    "postgresql_supported": true,
+    "neki_supported": true
+  },
+  "kind": "mysql",
+  "production": true,
+  "ready": true
+}

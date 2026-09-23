@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-09-20T13:23:17.730951+00:00",
+  "scope": "Only the temporary production session created for this diagnosis; ordinary logout POST with existing CSRF token, followed by GET redirect. Other sessions were not revoked.",
+  "logout_followed_by_guest_response": true,
+  "session_cookie_removed_from_jar": true,
+  "local_private_artifacts_removed": [
+    "member-cookies.json",
+    "member-cookies.txt",
+    "member-home-initial.html",
+    "login-member.py",
+    "member-auth-result.json",
+    "staff-worker-tail-raw.log",
+    "staff-worker-tail-stderr.log"
+  ],
+  "cookie_and_csrf_values_found_in_evidence": false,
+  "private_artifact_removal_verified": true,
+  "cleanup_finished_at": "2026-09-20T13:24:12.567401+00:00"
+}

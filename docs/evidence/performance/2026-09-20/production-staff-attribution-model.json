@@ -1,0 +1,272 @@
+{
+  "kind": "Staff fixture forecasts and production comparisons; estimated transport cost, not request-level spans",
+  "platform_floor_ms": 189.336,
+  "connection_plus_unseparated_health_overhead_ms": 247.0,
+  "query_exchange_ms": 34.0,
+  "query_exchange_range_ms": [
+    33,
+    45
+  ],
+  "formula": "platform + connection + (SQL + BEGIN/COMMIT exchanges) * R + local non-SQL time",
+  "scenarios": {
+    "staff_home_fresh": {
+      "local_queries": 20,
+      "extra_production_transaction_exchanges": 0,
+      "local_non_sql_ms": 2.262,
+      "forecast_ms": 1118.598,
+      "forecast_range_ms": [
+        1098.598,
+        1338.598
+      ],
+      "historical_colocation_forecast_ms": 541.598
+    },
+    "staff_thread_direct_first": {
+      "local_queries": 57,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.19,
+      "forecast_ms": 2446.526,
+      "forecast_range_ms": [
+        2387.526,
+        3095.526
+      ],
+      "historical_colocation_forecast_ms": 972.526
+    },
+    "staff_thread_direct_repeat": {
+      "local_queries": 58,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.055,
+      "forecast_ms": 2480.391,
+      "forecast_range_ms": [
+        2420.391,
+        3140.391
+      ],
+      "historical_colocation_forecast_ms": 983.391
+    },
+    "staff_presence_fresh": {
+      "local_queries": 4,
+      "extra_production_transaction_exchanges": 0,
+      "local_non_sql_ms": 0.124,
+      "forecast_ms": 572.46,
+      "forecast_range_ms": [
+        568.46,
+        616.46
+      ],
+      "historical_colocation_forecast_ms": 363.46
+    },
+    "staff_bell_fresh": {
+      "local_queries": 10,
+      "extra_production_transaction_exchanges": 0,
+      "local_non_sql_ms": 0.221,
+      "forecast_ms": 776.557,
+      "forecast_range_ms": [
+        766.557,
+        886.557
+      ],
+      "historical_colocation_forecast_ms": 429.557
+    },
+    "staff_home_stale": {
+      "local_queries": 23,
+      "extra_production_transaction_exchanges": 0,
+      "local_non_sql_ms": 1.996,
+      "forecast_ms": 1220.332,
+      "forecast_range_ms": [
+        1197.332,
+        1473.332
+      ],
+      "historical_colocation_forecast_ms": 574.332
+    },
+    "staff_thread_repeat_stale": {
+      "local_queries": 61,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.201,
+      "forecast_ms": 2582.537,
+      "forecast_range_ms": [
+        2519.537,
+        3275.537
+      ],
+      "historical_colocation_forecast_ms": 1016.537
+    },
+    "staff_presence_stale": {
+      "local_queries": 7,
+      "extra_production_transaction_exchanges": 0,
+      "local_non_sql_ms": 0.138,
+      "forecast_ms": 674.474,
+      "forecast_range_ms": [
+        667.474,
+        751.474
+      ],
+      "historical_colocation_forecast_ms": 396.474
+    },
+    "staff_bell_stale": {
+      "local_queries": 13,
+      "extra_production_transaction_exchanges": 0,
+      "local_non_sql_ms": 0.235,
+      "forecast_ms": 878.571,
+      "forecast_range_ms": [
+        865.571,
+        1021.571
+      ],
+      "historical_colocation_forecast_ms": 462.571
+    },
+    "staff_unread_link_without_cursor": {
+      "local_queries": 57,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.171,
+      "forecast_ms": 2446.507,
+      "forecast_range_ms": [
+        2387.507,
+        3095.507
+      ],
+      "historical_colocation_forecast_ms": 972.507
+    },
+    "staff_unread_link_already_read": {
+      "local_queries": 58,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.208,
+      "forecast_ms": 2480.544,
+      "forecast_range_ms": [
+        2420.544,
+        3140.544
+      ],
+      "historical_colocation_forecast_ms": 983.544
+    },
+    "staff_unread_link_redirect": {
+      "local_queries": 13,
+      "extra_production_transaction_exchanges": 0,
+      "local_non_sql_ms": 0.315,
+      "forecast_ms": 878.651,
+      "forecast_range_ms": [
+        865.651,
+        1021.651
+      ],
+      "historical_colocation_forecast_ms": 462.651
+    },
+    "staff_unread_redirect_destination": {
+      "local_queries": 62,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 5.3,
+      "forecast_ms": 2617.636,
+      "forecast_range_ms": [
+        2553.636,
+        3321.636
+      ],
+      "historical_colocation_forecast_ms": 1028.636
+    },
+    "staff_unread_link_after_read": {
+      "local_queries": 58,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.805,
+      "forecast_ms": 2481.141,
+      "forecast_range_ms": [
+        2421.141,
+        3141.141
+      ],
+      "historical_colocation_forecast_ms": 984.141
+    },
+    "staff_one_unread_direct": {
+      "local_queries": 62,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 6.175,
+      "forecast_ms": 2618.511,
+      "forecast_range_ms": [
+        2554.511,
+        3322.511
+      ],
+      "historical_colocation_forecast_ms": 1029.511
+    },
+    "staff_own_image_thread_first": {
+      "local_queries": 57,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.261,
+      "forecast_ms": 2446.597,
+      "forecast_range_ms": [
+        2387.597,
+        3095.597
+      ],
+      "historical_colocation_forecast_ms": 972.597
+    },
+    "staff_own_image_thread_repeat": {
+      "local_queries": 58,
+      "extra_production_transaction_exchanges": 2,
+      "local_non_sql_ms": 4.171,
+      "forecast_ms": 2480.507,
+      "forecast_range_ms": [
+        2420.507,
+        3140.507
+      ],
+      "historical_colocation_forecast_ms": 983.507
+    }
+  },
+  "limits": [
+    "Guest controls calibrate transport assumptions, not direct production PDO spans.",
+    "Local CPU timings omit connection establishment and are not a container CPU measurement.",
+    "First render without a cursor differs from an explicit unread-link redirect journey."
+  ],
+  "explicit_unread_link_journey": {
+    "http_requests": 2,
+    "queries": 75,
+    "transaction_exchanges": 2,
+    "forecast_ms": 3496.287,
+    "forecast_range_ms": [
+      3419.287,
+      4343.287
+    ],
+    "historical_colocation_forecast_ms": 1491.287,
+    "qualification": "Local one-unread fixture extrapolation only; not observed in production."
+  },
+  "staff_image_variant_scenario": {
+    "original_cold_lcp_ms": 15744,
+    "byte_saving": 2129529,
+    "assumed_bytes_per_ms": 200,
+    "transfer_saving_ms": 10647.645,
+    "estimated_lcp_ms": 5096.355,
+    "qualification": "Bandwidth-only estimate; editor traffic, encoding/cache policy and browser scheduling can alter real savings."
+  },
+  "comparison_qualification": "Production counts corroborated by normalized Insights frequencies for the first two complete serial cycles: home23 stale, already-read subscribed thread57, presence4, bell10. Model agreement is not direct attribution of execution spans.",
+  "production_comparison_to_serial_medians": {
+    "staff_home": {
+      "local_comparison_scenario": "staff_home_stale",
+      "predicted_ms": 1220.332,
+      "observed_median_ms": 1259.664,
+      "observed_minus_model_ms": 39.332,
+      "absolute_error_percent_of_observed": 3.122,
+      "production_queries": 23,
+      "production_extra_transaction_exchanges": 0,
+      "server_sql_ms_from_allocated_normalized_averages": 58.747,
+      "server_sql_percent_of_observed_median": 4.664
+    },
+    "staff_thread_already_read": {
+      "local_comparison_scenario": "staff_thread_direct_repeat",
+      "predicted_ms": 2446.391,
+      "observed_median_ms": 2417.288,
+      "observed_minus_model_ms": -29.103,
+      "absolute_error_percent_of_observed": 1.204,
+      "production_queries": 57,
+      "production_extra_transaction_exchanges": 2,
+      "server_sql_ms_from_allocated_normalized_averages": 124.442,
+      "server_sql_percent_of_observed_median": 5.148
+    },
+    "staff_presence": {
+      "local_comparison_scenario": "staff_presence_fresh",
+      "predicted_ms": 572.46,
+      "observed_median_ms": 612.368,
+      "observed_minus_model_ms": 39.908,
+      "absolute_error_percent_of_observed": 6.517,
+      "production_queries": 4,
+      "production_extra_transaction_exchanges": 0,
+      "server_sql_ms_from_allocated_normalized_averages": 10.064,
+      "server_sql_percent_of_observed_median": 1.643
+    },
+    "staff_bell": {
+      "local_comparison_scenario": "staff_bell_fresh",
+      "predicted_ms": 776.557,
+      "observed_median_ms": 782.93,
+      "observed_minus_model_ms": 6.373,
+      "absolute_error_percent_of_observed": 0.814,
+      "production_queries": 10,
+      "production_extra_transaction_exchanges": 0,
+      "server_sql_ms_from_allocated_normalized_averages": 23.566,
+      "server_sql_percent_of_observed_median": 3.01
+    }
+  }
+}
