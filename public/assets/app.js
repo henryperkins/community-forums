@@ -69,7 +69,7 @@
      */
     function shortPoll(url, interval, apply, options) {
         if (!window.fetch) { return; }
-        var timer = null, backoff = 0, stopped = false, busy = false, resume = false;
+        var timer = null, backoff = 0, stopped = false, busy = false, resume = false, nextDelay = interval;
         function clear() {
             if (timer !== null) { window.clearTimeout(timer); timer = null; }
         }
@@ -81,6 +81,7 @@
             if (stopped || document.hidden) { return; }
             if (busy) { resume = true; return; }
             busy = true;
+            nextDelay = interval;
             var init = options ? options() : {};
             init.credentials = 'same-origin';
             init.headers = Object.assign({ 'X-Requested-With': 'XMLHttpRequest' }, init.headers || {});
@@ -89,14 +90,19 @@
                 if (!r.ok) { throw new Error('poll failed'); }
                 return r.json();
             }).then(function (data) {
-                backoff = 0;
-                if (!stopped && !document.hidden && data && apply(data) === false) { stopped = true; }
+                if (data) { backoff = 0; }
+                if (!stopped && !document.hidden && data) {
+                    var verdict = apply(data);
+                    if (verdict === false) { stopped = true; }
+                    else if (typeof verdict === 'number' && verdict >= 0) { nextDelay = verdict; }
+                }
             }).catch(function () {
                 backoff = backoff === 0 ? interval : Math.min(backoff * 2, 15 * 60000);
             }).finally(function () {
                 busy = false;
+                var delay = backoff > 0 ? backoff : nextDelay;
                 if (resume) { resume = false; schedule(0); }
-                else { schedule(backoff || interval); }
+                else { schedule(delay); }
             });
         }
         document.addEventListener('visibilitychange', function () {
@@ -1523,7 +1529,7 @@
     if (dmStream && dmScroller && dmShell) {
         var dmPill = document.querySelector('[data-dm-newpill]');
         var dmStatus = document.querySelector('[data-dm-update-status]');
-        var lastId = 0, pendingMessages = 0, stickToEnd = false;
+        var lastId = 0, pendingMessages = 0, stickToEnd = false, dmBurst = 0;
         dmStream.querySelectorAll('[data-message-id]').forEach(function (line) { lastId = Math.max(lastId, Number(line.dataset.messageId)); });
         function atDmEnd() { return dmScroller.scrollHeight - dmScroller.scrollTop - dmScroller.clientHeight < 90; }
         function moveDmReceipt() {
@@ -1625,7 +1631,7 @@
         }
         if (dmShell.dataset.dmLatest === '1') {
             shortPoll('/messages/' + dmShell.dataset.dmConversation + '/poll', 20000, function (data) {
-                var nearEnd = atDmEnd(), oldTop = dmScroller.scrollTop;
+                var follow = stickToEnd, previousId = lastId, oldTop = dmScroller.scrollTop;
                 if (data.html) {
                     var template = document.createElement('template'); template.innerHTML = data.html;
                     template.content.querySelectorAll('[data-message-id]').forEach(function (line) {
@@ -1635,7 +1641,7 @@
                     var incoming = template.content.querySelectorAll('[data-message-id]').length;
                     if (incoming) {
                         dmStream.appendChild(template.content); arrangeDmRuns(); enhanceDmCopy(dmStream);
-                        if (nearEnd) { bottomDm(); }
+                        if (follow) { bottomDm(); }
                         else {
                             dmScroller.scrollTop = oldTop; dmPill.hidden = false;
                             dmPill.querySelector('span').textContent = pendingMessages + ' new message' + (pendingMessages === 1 ? '' : 's');
@@ -1661,6 +1667,12 @@
                 }
                 updateDmCount(data.dm_unread);
                 localiseDmTimes(document);
+                // Bound catch-up work even if messages arrive faster than we read.
+                if (data.has_more === true && lastId > previousId && dmBurst < 20) {
+                    dmBurst += 1;
+                    return 0;
+                }
+                dmBurst = 0;
             }, function () {
                 var token = dmShell.querySelector('input[name="_token"]');
                 return { method: 'POST', body: new URLSearchParams({ after: String(lastId), _token: token ? token.value : '' }) };

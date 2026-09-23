@@ -88,3 +88,88 @@ test('a late font load re-bottoms a reader who is still pinned', async ({ page }
   expect(gap).toBeLessThan(90);
   await expect(page.locator('[data-dm-newpill]')).toBeHidden();
 });
+
+const messageHtml = (id: number) =>
+  `<div class="dm-group" data-dm-author="2" data-dm-date="2026-09-21">` +
+  `<div class="dm-msgs"><div class="dm-ghead"><span class="dm-name">Bob</span>` +
+  `<time datetime="2026-09-21T12:00:00Z">12:00</time></div>` +
+  `<div class="dm-line" id="m${id}" data-message-id="${id}" data-created-at="2026-09-21T12:00:00Z">` +
+  `<div class="dm-body formatted-content"><p>Page row ${id}</p></div></div></div></div>`;
+
+test('a has_more page requests the next page without waiting for the interval', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  await login(page, 'alice');
+  await page.goto('/messages/new');
+  const started = await post(page, '/messages', { to: 'bob', body: 'Open the counsel.' });
+  expect(started.status()).toBe(303);
+  const route = started.headers().location!;
+  let calls = 0;
+  const afters: string[] = [];
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    afters.push(new URLSearchParams(route.request().postData() || '').get('after') || '');
+    if (calls === 1) {
+      await route.fulfill({ json: {
+        html: messageHtml(9001), last_id: 9001, has_more: true,
+        presence: {}, dm_unread: 1, other_last_read_message_id: null,
+      } });
+      return;
+    }
+    await route.fulfill({ json: {
+      html: messageHtml(9002), last_id: 9002, has_more: false,
+      presence: {}, dm_unread: 0, other_last_read_message_id: null,
+    } });
+  });
+  await page.goto(route);
+  await expect.poll(() => calls, { timeout: 3000 }).toBe(2);
+  expect(afters[1]).toBe('9001');
+  await expect(page.locator('#m9001')).toBeAttached();
+  await expect(page.locator('#m9002')).toBeAttached();
+  await expect(page.locator('[data-dm-newpill]')).toBeHidden();
+});
+
+test('a has_more page that does not advance the cursor waits for the interval', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  const href = await startCounsel(page);
+  let calls = 0;
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    const after = new URLSearchParams(route.request().postData() || '').get('after') || '0';
+    await route.fulfill({ json: {
+      html: '', last_id: Number(after), has_more: true,
+      presence: {}, dm_unread: 0, other_last_read_message_id: null,
+    } });
+  });
+  await page.clock.install();
+  await page.goto(href);
+  await expect.poll(() => calls).toBe(1);
+  await page.clock.runFor(3000);
+  expect(calls).toBe(1);
+  await page.clock.runFor(20050);
+  await expect.poll(() => calls).toBe(2);
+});
+
+test('catch-up yields after twenty immediate follow-ups', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  const href = await startCounsel(page);
+  let calls = 0;
+  const cursors: number[] = [];
+  await page.route('**/messages/*/poll', async route => {
+    calls++;
+    const after = Number(new URLSearchParams(route.request().postData() || '').get('after'));
+    cursors.push(after);
+    await route.fulfill({ json: {
+      html: '', last_id: after + 1, has_more: calls <= 21,
+      presence: {}, dm_unread: 0, other_last_read_message_id: null,
+    } });
+  });
+  await page.clock.install();
+  await page.goto(href);
+  await expect.poll(() => calls, { timeout: 3000 }).toBe(21);
+  await page.clock.runFor(1000);
+  expect(calls).toBe(21);
+  await page.clock.runFor(20000);
+  await expect.poll(() => calls).toBe(22);
+  expect(cursors.slice(1).every((cursor, index) => cursor === cursors[index] + 1)).toBe(true);
+});
+
