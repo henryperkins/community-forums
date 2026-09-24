@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Controller\Controller;
 use App\Core\Config;
 use App\Core\Request;
 use App\Core\ValidationException;
@@ -96,7 +97,7 @@ final class MfaService
 
     public function beginLoginChallenge(User $user, Request $request, string $nextPath): string
     {
-        return $this->mfa->createLoginChallenge($user->id(), $this->safeNext($nextPath), $request->ip(), $request->userAgent());
+        return $this->mfa->createLoginChallenge($user->id(), Controller::localPath($nextPath, '/'), $request->ip(), $request->userAgent());
     }
 
     /**
@@ -225,14 +226,6 @@ final class MfaService
     {
         $normalized = preg_replace('/[^A-Z0-9]/', '', strtoupper($code)) ?? '';
         return hash_hmac('sha256', $normalized, (string) $this->config->get('app.key', ''));
-    }
-
-    private function safeNext(string $next): string
-    {
-        if ($next === '' || $next[0] !== '/' || str_starts_with($next, '//') || str_starts_with($next, '/\\')) {
-            return '/';
-        }
-        return $next;
     }
 
     /** @param mixed $before @param mixed $after */

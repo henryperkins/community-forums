@@ -58,7 +58,7 @@ final class ThreadWorkflowController extends Controller
 
         $message = $until === null ? 'Snooze cleared.' : 'Topic snoozed.';
         return $this->redirectWithFlash(
-            $this->safeReturn($request, '/t/' . $threadId . '-' . (string) $thread['slug']),
+            $this->localReturn($request, '/t/' . $threadId . '-' . (string) $thread['slug']),
             $message,
         );
     }
@@ -83,7 +83,7 @@ final class ThreadWorkflowController extends Controller
             return $this->redirectWithFlash($url, $e->first());
         }
 
-        return $this->redirectWithFlash($this->safeReturn($request, $url), 'Assignment updated.');
+        return $this->redirectWithFlash($this->localReturn($request, $url), 'Assignment updated.');
     }
 
     private function requireWorkflow(): void
@@ -124,12 +124,6 @@ final class ThreadWorkflowController extends Controller
             'week' => gmdate('Y-m-d H:i:s', time() + 7 * 24 * 3600),
             default => null,
         };
-    }
-
-    private function safeReturn(Request $request, string $default): string
-    {
-        $return = (string) $request->post('return', '');
-        return $return !== '' && preg_match('#^/(?![/\\\\])#', $return) === 1 ? $return : $default;
     }
 
     private function resolveAssignee(Request $request): int

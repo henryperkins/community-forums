@@ -92,7 +92,7 @@ final class EngagementController extends Controller
             return Response::json(['ok' => true, 'starred' => $starred]);
         }
 
-        $return = $this->safeReturn($request, '/t/' . $threadId . '-' . $thread['slug']);
+        $return = $this->localReturn($request, '/t/' . $threadId . '-' . $thread['slug']);
         return $this->redirectWithFlash($return, $starred ? 'Thread starred.' : 'Star removed.');
     }
 
@@ -141,7 +141,7 @@ final class EngagementController extends Controller
             return Response::json(['ok' => true, 'unread' => $unread]);
         }
 
-        $return = $this->safeReturn($request, '/t/' . $threadId . '-' . $thread['slug']);
+        $return = $this->localReturn($request, '/t/' . $threadId . '-' . $thread['slug']);
         return $this->redirectWithFlash($return, $unread ? 'Marked unread.' : 'Marked read.');
     }
 
@@ -179,23 +179,8 @@ final class EngagementController extends Controller
             return Response::json(['ok' => true]);
         }
 
-        $return = $this->safeReturn($request, '/c/' . $board['slug']);
+        $return = $this->localReturn($request, '/c/' . $board['slug']);
         return $this->redirectWithFlash($return, 'Board marked read.');
-    }
-
-    /**
-     * Validate a caller-supplied return path so it can only be a local redirect.
-     * Must be a single leading slash NOT followed by '/' or '\' — browsers
-     * normalise "/\evil.com" to the protocol-relative "//evil.com", so a bare
-     * !str_starts_with('//') check is bypassable.
-     */
-    private function safeReturn(Request $request, string $default): string
-    {
-        $return = (string) $request->post('return', '');
-        if ($return !== '' && preg_match('#^/(?![/\\\\])#', $return) === 1) {
-            return $return;
-        }
-        return $default;
     }
 
     private function requireEngagement(): void
