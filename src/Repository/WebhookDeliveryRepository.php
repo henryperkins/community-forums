@@ -91,12 +91,12 @@ final class WebhookDeliveryRepository
 
     public function acquireDrainLock(): bool
     {
-        return (int) $this->db->fetchValue("SELECT GET_LOCK('rb_webhook_outbox', 0)") === 1;
+        return $this->db->tryLock('rb_webhook_outbox');
     }
 
     public function releaseDrainLock(): void
     {
-        $this->db->run("SELECT RELEASE_LOCK('rb_webhook_outbox')");
+        $this->db->unlock('rb_webhook_outbox');
     }
 
     /** @return array<string,int> */

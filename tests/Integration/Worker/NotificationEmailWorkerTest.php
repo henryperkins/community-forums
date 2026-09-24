@@ -424,14 +424,14 @@ final class NotificationEmailWorkerTest extends TestCase
         $mailer = new ArrayMailer();
 
         $other = new \App\Core\Database($GLOBALS['__RB_TEST_DBCONFIG']); // separate connection
-        self::assertSame(1, (int) $other->fetchValue("SELECT GET_LOCK('rb_email_outbox', 0)"));
+        self::assertTrue($other->tryLock('rb_email_outbox'));
         try {
             $stats = $this->worker($mailer)->run();
             self::assertSame(0, $stats['sent'], 'a concurrent run must not send while the outbox is locked');
             self::assertSame(0, $mailer->count());
             self::assertSame('queued', (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"), 'row stays queued for the holder');
         } finally {
-            $other->run("SELECT RELEASE_LOCK('rb_email_outbox')");
+            $other->unlock('rb_email_outbox');
         }
 
         // Once the lock is free the next run drains it exactly once.
@@ -439,6 +439,26 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(1, $after['sent']);
         self::assertSame(1, $mailer->count());
     }
+
+    public function testAnotherDatabasesDrainLockDoesNotStallThisOutbox(): void
+    {
+        // Lock names are server-wide. A drainer for another database on the
+        // same server (another install, or a parallel test run) holds its own
+        // name, so this outbox still drains.
+        $this->queuedDelivery();
+        $mailer = new ArrayMailer();
+        $elsewhere = (new \App\Core\Database(['database' => 'another_install'] + $GLOBALS['__RB_TEST_DBCONFIG']))
+            ->lockName('rb_email_outbox');
+        $other = new \App\Core\Database($GLOBALS['__RB_TEST_DBCONFIG']); // separate connection
+        self::assertSame(1, (int) $other->fetchValue('SELECT GET_LOCK(?, 0)', [$elsewhere]));
+        try {
+            self::assertSame(1, $this->worker($mailer)->run()['sent']);
+            self::assertSame(1, $mailer->count());
+        } finally {
+            $other->run('SELECT RELEASE_LOCK(?)', [$elsewhere]);
+        }
+    }
+
     public function testUnavailableIsTerminalSuppressedAndNeverReportedSent(): void
     {
         $d = $this->queuedDelivery();

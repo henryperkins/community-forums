@@ -466,12 +466,12 @@ final class DailyDigestWorkerTest extends TestCase
     {
         $f = $this->digestFixture();
         $other = new \App\Core\Database($GLOBALS['__RB_TEST_DBCONFIG']);
-        self::assertSame(1, (int) $other->fetchValue("SELECT GET_LOCK('rb_email_outbox', 0)"));
+        self::assertTrue($other->tryLock('rb_email_outbox'));
         $mailer = new ArrayMailer();
         try {
             $stats = $this->worker($mailer)->run('2026-09-20 09:15:00');
             self::assertSame(1, $stats['queued']); self::assertSame(0, $stats['sent']);
-        } finally { $other->run("SELECT RELEASE_LOCK('rb_email_outbox')"); }
+        } finally { $other->unlock('rb_email_outbox'); }
         $worker = new \App\Worker\NotificationEmailWorker(new EmailDeliveryRepository($this->db), new EmailSuppressionRepository($this->db),
             new \App\Repository\PostRepository($this->db), $this->users(), $mailer, $this->config);
         self::assertSame(1, $worker->run()['sent']);
