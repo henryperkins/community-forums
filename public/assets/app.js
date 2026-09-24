@@ -589,10 +589,23 @@
             try {
                 navigator.clipboard.writeText(copy.href).then(function () {
                     if (copy.hasAttribute('data-copy-link')) {
+                        // The label says what happened, then goes back to naming
+                        // the action. The status is cleared first so a second copy
+                        // is a change a screen reader announces again.
                         var label = copy.querySelector('span');
-                        if (label) { label.textContent = 'Copied'; }
-                        var status = document.querySelector('[data-copy-status]');
-                        if (status) { status.textContent = 'Link copied.'; }
+                        if (label) {
+                            var action = copy.getAttribute('data-copy-label') || label.textContent;
+                            copy.setAttribute('data-copy-label', action);
+                            label.textContent = 'Copied';
+                            window.clearTimeout(copy.rbCopiedTimer);
+                            copy.rbCopiedTimer = window.setTimeout(function () { label.textContent = action; }, 2000);
+                        }
+                        var scope = copy.closest('.profile-actions') || document;
+                        var status = scope.querySelector('[data-copy-status]');
+                        if (status) {
+                            status.textContent = '';
+                            window.setTimeout(function () { status.textContent = 'Link copied.'; }, 50);
+                        }
                         return;
                     }
                     if (clickedMenu) { clickedMenu.open = false; }
@@ -1986,6 +1999,16 @@
             }
         });
     }
+
+    // A step nested inside a menu (the profile's Block confirmation) folds away
+    // whenever its menu closes, by any route, so the menu never reopens on a
+    // destructive step. toggle does not bubble, hence the capture phase.
+    document.addEventListener('toggle', function (e) {
+        var menu = e.target;
+        if (!menu || !menu.matches || !menu.matches('details.dm-menu') || menu.open) { return; }
+        var nested = menu.querySelectorAll('details[open]');
+        for (var ni = 0; ni < nested.length; ni++) { nested[ni].open = false; }
+    }, true);
 
     // Messages compose dialog (Phase 3): the list pane's round "+" is a native
     // <details>; CSS under .has-js lifts the open dialog into a centred modal.

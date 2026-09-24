@@ -18,6 +18,7 @@ $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'follow
     <?php if (empty($people)): ?>
         <div class="profile-panel-empty">
             <h2><?= $mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.' ?></h2>
+            <p><?= $mode === 'followers' ? 'When members follow ' . $e($display) . ', they will be listed here.' : $e($display) . ' is not following anyone yet.' ?></p>
         </div>
     <?php else: ?>
         <ul class="people-list">
@@ -27,10 +28,11 @@ $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'follow
                     <?= $this->partial('partials/monogram', ['name' => $pd, 'username' => $person['username']]) ?>
                     <a class="person-name" href="/u/<?= $e($person['username']) ?>"><?= $e($pd) ?></a>
                     <span class="handle">@<?= $e($person['username']) ?></span>
-                    <span class="muted"><?= (int) ($person['reputation'] ?? 0) ?> regard</span>
+                    <span class="muted person-rep"><?= (int) ($person['reputation'] ?? 0) ?> regard</span>
                     <?php if (!empty($can_remove_followers)): ?>
                         <form class="inline" method="post" action="/u/<?= $e($profile['username']) ?>/followers/<?= (int) $person['id'] ?>/remove">
                             <?= $this->csrfField() ?>
+                            <input type="hidden" name="return" value="<?= $e($page > 1 ? $listUrl . '?page=' . $page : $listUrl) ?>">
                             <button class="linkbtn danger" type="submit">Remove</button>
                         </form>
                     <?php endif; ?>

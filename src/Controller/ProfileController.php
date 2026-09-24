@@ -109,6 +109,8 @@ final class ProfileController extends Controller
             );
         }
 
+        $followerCount = $follows->followerCount($profileId);
+        $followingCount = $follows->followingCount($profileId);
         $connMode = $request->query('c') === 'following' ? 'following' : 'followers';
         $rawConnQuery = $request->query('cq');
         $connQuery = is_string($rawConnQuery) ? trim($rawConnQuery) : '';
@@ -116,13 +118,20 @@ final class ProfileController extends Controller
         $connTotal = 0;
         $connPage = 1;
         if ($tab === 'connections') {
-            $connTotal = $connMode === 'following'
-                ? $follows->countFollowing($profileId, $connQuery)
-                : $follows->countFollowers($profileId, $connQuery);
+            // A guest's list leaves out members-only accounts, so only a
+            // signed-in, unfiltered list can reuse the header total.
+            $publicOnly = $viewer === null;
+            if ($connQuery === '' && !$publicOnly) {
+                $connTotal = $connMode === 'following' ? $followingCount : $followerCount;
+            } else {
+                $connTotal = $connMode === 'following'
+                    ? $follows->countFollowing($profileId, $connQuery, $publicOnly)
+                    : $follows->countFollowers($profileId, $connQuery, $publicOnly);
+            }
             $connPage = min($page, max(1, (int) ceil($connTotal / $perPage)));
             $connList = $connMode === 'following'
-                ? $follows->listFollowing($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery)
-                : $follows->listFollowers($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery);
+                ? $follows->listFollowing($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery, $publicOnly)
+                : $follows->listFollowers($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery, $publicOnly);
         }
 
         $canViewMemberRecord = $viewer !== null
@@ -135,8 +144,8 @@ final class ProfileController extends Controller
             'bio_html' => $bioHtml,
             'title' => $titles->resolve($profile['title'] ?? null, (int) $profile['reputation']),
             'badges' => $community ? $this->container->get(BadgeRepository::class)->forUser($profileId) : [],
-            'follower_count' => $follows->followerCount($profileId),
-            'following_count' => $follows->followingCount($profileId),
+            'follower_count' => $followerCount,
+            'following_count' => $followingCount,
             'solved_count' => $this->container->get(UserRepository::class)->solvedAnswerCount($profileId),
             'recent_threads' => $tab === 'overview' ? $threadRepo->recentByUser($profileId, 5) : [],
             'recent_posts' => $tab === 'overview' ? $postRepo->recentByUser($profileId, 5) : [],
@@ -209,14 +218,15 @@ final class ProfileController extends Controller
         $perPage = 20;
         $rawPage = $request->query('page');
         $page = max(1, is_scalar($rawPage) ? (int) $rawPage : 1);
+        $publicOnly = $viewer === null;
         $total = $mode === 'followers'
-            ? $follows->countFollowers($profileId)
-            : $follows->countFollowing($profileId);
+            ? $follows->countFollowers($profileId, '', $publicOnly)
+            : $follows->countFollowing($profileId, '', $publicOnly);
         $pageCount = max(1, (int) ceil($total / $perPage));
         $page = min($page, $pageCount);
         $list = $mode === 'followers'
-            ? $follows->listFollowers($profileId, $perPage, ($page - 1) * $perPage)
-            : $follows->listFollowing($profileId, $perPage, ($page - 1) * $perPage);
+            ? $follows->listFollowers($profileId, $perPage, ($page - 1) * $perPage, '', $publicOnly)
+            : $follows->listFollowing($profileId, $perPage, ($page - 1) * $perPage, '', $publicOnly);
 
         return $this->view('profile/connections', [
             'profile' => $profile,

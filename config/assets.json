@@ -1,9 +1,9 @@
 {
-  "version": "b22f586c9c4538c5",
+  "version": "e19e54babc87e949",
   "urls": {
-    "app.css": "/assets/dist/app-style-DuJ5bYUb.css",
+    "app.css": "/assets/dist/app-style-hkoXC0Xn.css",
     "imladris.css": "/assets/dist/imladris-style-Cw9wS_6P.css",
-    "app.js": "/assets/dist/app-a52ff1e30bb7fc86.js",
+    "app.js": "/assets/dist/app-f21f303cb228adc9.js",
     "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
     "passkeys.js": "/assets/dist/passkeys-45dd692ca9028436.js",
     "tour.js": "/assets/dist/tour-7cdbe315501e3843.js",
@@ -27,23 +27,23 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "6de0ec49820661b20b83c9c5775ca22ca388d54748125ca784c446363ea3874d",
+      "sha256": "ec6308b19bde37451cbc366d75ff059b0dfe1d50b297fd988a8bdcbf10fba6e1",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "cf10703414b5b5aef56426f603d5633bb4de8e350cb522a3393d1f61ecda5543",
+      "sha256": "e71efb53f7e5e213a8c06528cb675676eabaef08c9447c4016ed913365f29ff2",
       "immutable": false
     },
     "/assets/composer.js": {
       "sha256": "16f6461ce88a71c73b390075c5f902c7983d3998bedb0cd7dbdbf2299ad930ae",
       "immutable": false
     },
-    "/assets/dist/app-a52ff1e30bb7fc86.js": {
-      "sha256": "a52ff1e30bb7fc860a6eb1e064f7295ee79414ad7ee38c8c4c8ba07e027daf2d",
+    "/assets/dist/app-f21f303cb228adc9.js": {
+      "sha256": "f21f303cb228adc9e27145aab560d804c78be4735d20f3a12380e8cf2982b6a7",
       "immutable": true
     },
-    "/assets/dist/app-style-DuJ5bYUb.css": {
-      "sha256": "d186ba3a3514312177d7070f6358ee9d628aec84b905bf20c6b4d00d89913edd",
+    "/assets/dist/app-style-hkoXC0Xn.css": {
+      "sha256": "60e65c039f1e3e5e00c9f86aa66c70fde7a244f67ef3fc093426ecf7f3376386",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {

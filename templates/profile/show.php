@@ -12,8 +12,11 @@ if ($bioPlain !== '') {
 }
 $this->section('description', \App\Support\Str::snippet($description, 160));
 $this->section('composer', '0');
-$profileExcerpt = static function (string $html): string {
-    return \App\Support\Str::snippet(\App\Support\Str::plainText($html), 140);
+// Rendered words, not Markdown source; the raw body stands in only when the
+// render cache is blank (PRODUCT_DESIGN §9.5).
+$profileExcerpt = static function (string $html, string $body): string {
+    $text = trim($html) !== '' ? \App\Support\Str::plainText($html) : $body;
+    return \App\Support\Str::snippet($text, 140);
 };
 ?>
 <div class="profile">
@@ -87,6 +90,7 @@ $profileExcerpt = static function (string $html): string {
                                     <form method="post" action="<?= $e($profileUrl) ?>/block">
                                         <?= $this->csrfField() ?>
                                         <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
+                                        <input type="hidden" name="intent" value="unblock">
                                         <button class="dm-menu-item" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span>Unblock</span></button>
                                     </form>
                                 <?php else: ?>
@@ -95,7 +99,8 @@ $profileExcerpt = static function (string $html): string {
                                         <form method="post" action="<?= $e($profileUrl) ?>/block">
                                             <?= $this->csrfField() ?>
                                             <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
-                                            <p>@<?= $e($profile['username']) ?> can no longer message you or mention you. You can undo this from this menu.</p>
+                                            <input type="hidden" name="intent" value="block">
+                                            <p>@<?= $e($profile['username']) ?> can no longer message you or mention you. Any follow between you ends, and unblocking does not restore it.</p>
                                             <button class="btn btn-small danger" type="submit">Block @<?= $e($profile['username']) ?></button>
                                         </form>
                                     </details>
@@ -152,7 +157,13 @@ $profileExcerpt = static function (string $html): string {
     $connPageCount = (int) ($conn_page_count ?? 1);
     $connUrl = static function (array $changes = []) use ($profileUrl, $connMode, $connQ, $connPage): string {
         $params = array_merge(['tab' => 'connections', 'c' => $connMode, 'cq' => $connQ, 'page' => $connPage], $changes);
-        $params = array_filter($params, static fn ($value): bool => $value !== '' && $value !== null && $value !== 'followers' && $value !== 1);
+        // Drop the defaults by key: a search for "followers" is still a search.
+        $params = array_filter(
+            $params,
+            static fn ($value, string $key): bool => $value !== '' && $value !== null
+                && !($key === 'c' && $value === 'followers') && !($key === 'page' && $value === 1),
+            ARRAY_FILTER_USE_BOTH,
+        );
         return $profileUrl . '?' . http_build_query($params);
     };
     ?>
@@ -202,7 +213,7 @@ $profileExcerpt = static function (string $html): string {
                             <?php foreach ($recent_posts as $p): ?>
                                 <li class="profile-row">
                                     <a class="profile-row-title" href="/t/<?= (int) $p['thread_id'] ?>-<?= $e($p['thread_slug']) ?>#p<?= (int) $p['id'] ?>"><?= $e($p['thread_title']) ?></a>
-                                    <?php $postExcerpt = $profileExcerpt((string) ($p['body_html'] ?? '')); ?>
+                                    <?php $postExcerpt = $profileExcerpt((string) ($p['body_html'] ?? ''), (string) ($p['body'] ?? '')); ?>
                                     <?php if ($postExcerpt !== ''): ?><p class="profile-row-excerpt"><?= $e($postExcerpt) ?></p><?php endif; ?>
                                     <p class="profile-row-meta"><span><?= $e(human_datetime($p['created_at'])) ?></span><span><?= (int) ($p['commend_count'] ?? 0) ?> commends</span></p>
                                 </li>
@@ -269,8 +280,9 @@ $profileExcerpt = static function (string $html): string {
                             ? '/t/' . (int) $row['id'] . '-' . $row['slug']
                             : '/t/' . (int) $row['thread_id'] . '-' . $row['thread_slug'] . '#p' . (int) $row['id'];
                         $rowTitle = $isTopic ? (string) $row['title'] : (string) $row['thread_title'];
-                        $rowHtml = $isTopic ? (string) ($row['excerpt_html'] ?? '') : (string) ($row['body_html'] ?? '');
-                        $rowBody = $profileExcerpt($rowHtml);
+                        $rowBody = $isTopic
+                            ? $profileExcerpt((string) ($row['excerpt_html'] ?? ''), (string) ($row['excerpt_body'] ?? ''))
+                            : $profileExcerpt((string) ($row['body_html'] ?? ''), (string) ($row['body'] ?? ''));
                         ?>
                         <li class="profile-row">
                             <div class="profile-row-body">
@@ -324,7 +336,7 @@ $profileExcerpt = static function (string $html): string {
                     </ul>
                 <?php else: ?>
                     <div class="profile-panel-empty">
-                        <h2>No commended posts yet.</h2>
+                        <h3>No commended posts yet.</h3>
                         <p>Posts others commend will be listed here.</p>
                     </div>
                 <?php endif; ?>
