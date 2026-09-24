@@ -812,6 +812,11 @@
     var editableTarget = function (target) {
         return !!(target && target.closest && target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]'));
     };
+    // Controls that act on Enter themselves. A page shortcut on Enter has to
+    // yield to them, or the key never reaches the link or button with focus.
+    var activationTarget = function (target) {
+        return !!(target && target.closest && target.closest('a[href], button, summary, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="switch"], [role="option"]'));
+    };
     var panelField = function (kind) { return kind === 'reading' ? 'inbox_reading_open' : 'rail_open'; };
     var panelIsOpen = function (kind) { return document.body.classList.contains(kind === 'reading' ? 'is-reading-open' : 'is-rail-open'); };
     var renderPanelState = function (kind, open) {
@@ -1160,6 +1165,9 @@
                     return;
                 }
                 if (event.ctrlKey || event.metaKey || event.altKey || editableTarget(event.target)) { return; }
+                // Nothing fires from inside an open menu or dialog — the account
+                // menu included — where e or s would mark or star a topic out of sight.
+                if (event.target.closest && event.target.closest('details[open], [role="dialog"]')) { return; }
                 var rows = Array.prototype.slice.call(allRows());
                 if (!rows.length) { return; }
                 var index = cursorRow ? rows.indexOf(cursorRow) : -1;
@@ -1172,6 +1180,11 @@
                 var activeRow = cursorRow || rows[0];
                 var activeLink = linkIn(activeRow);
                 if (event.key === 'Enter' || event.key.toLowerCase() === 'o') {
+                    // Enter on a focused control is that control's: the cursor is not
+                    // focus, and taking it opened the cursor topic instead of Log out,
+                    // a rail link or the skip link. A row's own topic link still opens
+                    // in the pane — its native click reaches the list's click handler.
+                    if (event.key === 'Enter' && activationTarget(event.target)) { return; }
                     event.preventDefault();
                     setCursor(activeRow, false);
                     loadThread(activeLink, true, true);
@@ -1971,6 +1984,29 @@
             if (!railIsOpen() || document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
             if (e.key === 'Escape') { setRail(false, true, true); }
             if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { dmWrapTab(e, dmRail, false); }
+        });
+    }
+
+    // The account menu (the topbar seat) is a native <details>, so it opens and
+    // closes with no JS. This adds the dismissal the DM menus below have: Escape
+    // closes it and hands focus back to the seat, a click outside closes it, and
+    // so does Tab-ing past its last item, so it never sits open over the page.
+    var identityMenu = document.querySelector('details.identity-menu');
+    if (identityMenu) {
+        var identitySeat = identityMenu.querySelector(':scope > summary');
+        document.addEventListener('click', function (e) {
+            if (identityMenu.open && !identityMenu.contains(e.target)) { identityMenu.open = false; }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape' || !identityMenu.open) { return; }
+            var hadFocus = identityMenu.contains(document.activeElement);
+            identityMenu.open = false;
+            if (hadFocus && identitySeat) { identitySeat.focus(); }
+        });
+        identityMenu.addEventListener('focusout', function (e) {
+            // No relatedTarget means focus left the window or landed on nothing
+            // focusable (a click on the panel's padding): not a departure.
+            if (identityMenu.open && e.relatedTarget && !identityMenu.contains(e.relatedTarget)) { identityMenu.open = false; }
         });
     }
 
