@@ -409,26 +409,33 @@ final class ThreadRepository
         $offset = max(0, min(1_000_000, $offset));
         [$where, $params] = $this->profileFilter($userId, $query);
         $order = $sort === 'commends'
-            ? 'commend_count DESC, t.created_at DESC, t.id DESC'
+            ? 'COALESCE(rc.commend_count, 0) DESC, t.created_at DESC, t.id DESC'
             : 't.created_at DESC, t.id DESC';
 
         return $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name,
-                    (SELECT op.body FROM posts op
+                    (SELECT op.body_html FROM posts op
                       WHERE op.thread_id = t.id AND op.is_op = 1
                         AND op.is_deleted = 0 AND op.is_pending = 0 AND op.is_anonymous = 0
-                      ORDER BY op.id ASC LIMIT 1) AS excerpt_body,
-                    (SELECT COUNT(*) FROM reactions r
-                       JOIN posts reacted_op ON reacted_op.id = r.post_id
-                      WHERE reacted_op.thread_id = t.id AND reacted_op.is_op = 1
-                        AND reacted_op.is_deleted = 0 AND reacted_op.is_pending = 0
-                        AND r.user_id <> reacted_op.user_id) AS commend_count
+                      ORDER BY op.id ASC LIMIT 1) AS excerpt_html,
+                    COALESCE(rc.commend_count, 0) AS commend_count
              FROM threads t
              JOIN boards b ON b.id = t.board_id
+             LEFT JOIN (
+                 SELECT reacted_op.thread_id, COUNT(*) AS commend_count
+                 FROM reactions r
+                 JOIN posts reacted_op ON reacted_op.id = r.post_id
+                 WHERE reacted_op.user_id = ?
+                   AND reacted_op.is_op = 1
+                   AND reacted_op.is_deleted = 0
+                   AND reacted_op.is_pending = 0
+                   AND r.user_id <> reacted_op.user_id
+                 GROUP BY reacted_op.thread_id
+             ) rc ON rc.thread_id = t.id
              WHERE $where
              ORDER BY $order
              LIMIT " . $limit . ' OFFSET ' . $offset,
-            $params,
+            [$userId, ...$params],
         );
     }
 

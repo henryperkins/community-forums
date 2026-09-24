@@ -113,10 +113,16 @@ final class ProfileController extends Controller
         $rawConnQuery = $request->query('cq');
         $connQuery = is_string($rawConnQuery) ? trim($rawConnQuery) : '';
         $connList = [];
+        $connTotal = 0;
+        $connPage = 1;
         if ($tab === 'connections') {
+            $connTotal = $connMode === 'following'
+                ? $follows->countFollowing($profileId, $connQuery)
+                : $follows->countFollowers($profileId, $connQuery);
+            $connPage = min($page, max(1, (int) ceil($connTotal / $perPage)));
             $connList = $connMode === 'following'
-                ? $follows->listFollowing($profileId, 100, 0, $connQuery)
-                : $follows->listFollowers($profileId, 100, 0, $connQuery);
+                ? $follows->listFollowing($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery)
+                : $follows->listFollowers($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery);
         }
 
         $canViewMemberRecord = $viewer !== null
@@ -145,6 +151,8 @@ final class ProfileController extends Controller
             'conn_mode' => $connMode,
             'conn_query' => $connQuery,
             'conn_list' => $connList,
+            'conn_page' => $connPage,
+            'conn_page_count' => max(1, (int) ceil($connTotal / $perPage)),
             'can_remove_followers' => $isSelf && $connMode === 'followers',
             'custom_fields' => $this->container->get(FeatureFlags::class)->enabled('custom_profile_fields')
                 ? $this->container->get(UserProfileFieldRepository::class)->forUser($profileId)
@@ -198,14 +206,24 @@ final class ProfileController extends Controller
         }
 
         $follows = $this->container->get(FollowRepository::class);
+        $perPage = 20;
+        $rawPage = $request->query('page');
+        $page = max(1, is_scalar($rawPage) ? (int) $rawPage : 1);
+        $total = $mode === 'followers'
+            ? $follows->countFollowers($profileId)
+            : $follows->countFollowing($profileId);
+        $pageCount = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $pageCount);
         $list = $mode === 'followers'
-            ? $follows->listFollowers($profileId, 100)
-            : $follows->listFollowing($profileId, 100);
+            ? $follows->listFollowers($profileId, $perPage, ($page - 1) * $perPage)
+            : $follows->listFollowing($profileId, $perPage, ($page - 1) * $perPage);
 
         return $this->view('profile/connections', [
             'profile' => $profile,
             'mode' => $mode,
             'people' => $list,
+            'page' => $page,
+            'page_count' => $pageCount,
             'can_remove_followers' => $isSelf && $mode === 'followers',
         ]);
     }

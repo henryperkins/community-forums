@@ -18,7 +18,7 @@ $desc = $this->block('description', $brand['name'] . ' — a community forum.');
 // The console is its own shell (ADMIN.md §9.2, ADR 0024): admin/_console emits the
 // identity row and area tier, so the member topbar and board rail stay out of it.
 $showChrome = $variant !== 'auth' && $variant !== 'admin';
-$richComposerOn = !empty($features['rich_composer']);
+$richComposerOn = !empty($features['rich_composer']) && $this->block('composer', '1') !== '0';
 $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
     && isset($assetUrls['wysiwyg-composer.js'], $assetUrls['wysiwyg-composer.css']);
 ?>

@@ -91,12 +91,23 @@ final class FollowController extends Controller
             throw new ForbiddenException('You can only remove followers from your own profile.');
         }
 
+        $return = $this->safeReturn($request, '/u/' . (string) $profile['username'] . '/followers');
         try {
             $this->container->get(FollowService::class)->removeFollower($user, (int) ($params['id'] ?? 0));
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/u/' . (string) $profile['username'] . '/followers', $e->first());
+            return $this->redirectWithFlash($return, $e->first());
         }
-        return $this->redirectWithFlash('/u/' . (string) $profile['username'] . '/followers', 'Follower removed.');
+        return $this->redirectWithFlash($return, 'Follower removed.');
+    }
+
+    private function safeReturn(Request $request, string $default): string
+    {
+        $return = (string) $request->post('return', '');
+        if ($return !== '' && preg_match('#^/(?![/\\\\])#', $return) === 1) {
+            return $return;
+        }
+
+        return $default;
     }
 
     private function requireCommunity(): void

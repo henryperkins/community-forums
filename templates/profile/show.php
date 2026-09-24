@@ -4,10 +4,23 @@ $this->layout('layout');
 $display = ($profile['display_name'] ?? '') !== '' ? $profile['display_name'] : $profile['username'];
 $this->section('title', $display . ' (@' . $profile['username'] . ')');
 $profileUrl = '/u/' . $profile['username'];
+$this->section('canonical', $profileUrl);
+$bioPlain = \App\Support\Str::snippet(\App\Support\Str::plainText((string) ($bio_html ?? '')), 120);
+$description = $display . ' (@' . $profile['username'] . ')';
+if ($bioPlain !== '') {
+    $description .= ' — ' . $bioPlain;
+}
+$this->section('description', \App\Support\Str::snippet($description, 160));
+$this->section('composer', '0');
+$profileExcerpt = static function (string $html): string {
+    return \App\Support\Str::snippet(\App\Support\Str::plainText($html), 140);
+};
 ?>
 <div class="profile">
     <header class="profile-cover">
-        <svg class="profile-cover-star" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
+        <div class="profile-cover-canvas" aria-hidden="true">
+            <svg class="profile-cover-star" viewBox="0 0 100 100" fill="none"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
+        </div>
         <span class="profile-avatar">
             <?= $this->partial('partials/monogram', ['name' => $display, 'username' => $profile['username'], 'avatar_path' => $profile['avatar_path'] ?? null, 'gilt' => true]) ?>
             <?php
@@ -34,8 +47,8 @@ $profileUrl = '/u/' . $profile['username'];
             <dl class="profile-stats">
                 <div><dt>Posts</dt><dd><?= number_format((int) $profile['post_count']) ?></dd></div>
                 <?php if (!empty($community)): ?>
-                    <div><dt><a href="<?= $e($profileUrl) ?>/followers">Followers</a></dt><dd><?= number_format((int) ($follower_count ?? 0)) ?></dd></div>
-                    <div><dt><a href="<?= $e($profileUrl) ?>/following">Following</a></dt><dd><?= number_format((int) ($following_count ?? 0)) ?></dd></div>
+                    <div><dt><a href="<?= $e($profileUrl) ?>?tab=connections">Followers</a></dt><dd><?= number_format((int) ($follower_count ?? 0)) ?></dd></div>
+                    <div><dt><a href="<?= $e($profileUrl) ?>?tab=connections&amp;c=following">Following</a></dt><dd><?= number_format((int) ($following_count ?? 0)) ?></dd></div>
                     <?php if ((int) ($solved_count ?? 0) > 0): ?>
                         <div><dt>Solved</dt><dd><?= number_format((int) $solved_count) ?></dd></div>
                     <?php endif; ?>
@@ -63,17 +76,30 @@ $profileUrl = '/u/' . $profile['username'];
                     <?php if (!empty($can_block)): ?>
                         <?php // Destructive actions live behind the ··· (consolidation §5c),
                               // reusing the DM popover — native <details>, so no-JS still works. ?>
+                        <p class="sr-only" data-copy-status role="status"></p>
                         <details class="dm-menu">
                             <summary class="dm-iconbtn" aria-label="More actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
                             <div class="dm-menu-pop">
                                 <a class="dm-menu-item" href="<?= $e($profileUrl) ?>" data-copy-link>
                                     <?= $this->partial('partials/icon', ['name' => 'copy']) ?><span>Copy link</span>
                                 </a>
-                                <form method="post" action="<?= $e($profileUrl) ?>/block">
-                                    <?= $this->csrfField() ?>
-                                    <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
-                                    <button class="dm-menu-item danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span><?= !empty($viewer_blocks_profile) ? 'Unblock' : 'Block' ?></span></button>
-                                </form>
+                                <?php if (!empty($viewer_blocks_profile)): ?>
+                                    <form method="post" action="<?= $e($profileUrl) ?>/block">
+                                        <?= $this->csrfField() ?>
+                                        <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
+                                        <button class="dm-menu-item" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span>Unblock</span></button>
+                                    </form>
+                                <?php else: ?>
+                                    <details class="profile-block">
+                                        <summary class="dm-menu-item danger"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span>Block</span></summary>
+                                        <form method="post" action="<?= $e($profileUrl) ?>/block">
+                                            <?= $this->csrfField() ?>
+                                            <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
+                                            <p>@<?= $e($profile['username']) ?> can no longer message you or mention you. You can undo this from this menu.</p>
+                                            <button class="btn btn-small danger" type="submit">Block @<?= $e($profile['username']) ?></button>
+                                        </form>
+                                    </details>
+                                <?php endif; ?>
                             </div>
                         </details>
                     <?php endif; ?>
@@ -122,9 +148,11 @@ $profileUrl = '/u/' . $profile['username'];
         $params = array_filter($params, static fn ($value): bool => $value !== '' && $value !== null && $value !== 1 && $value !== 'newest');
         return $profileUrl . ($params === [] ? '' : '?' . http_build_query($params));
     };
-    $connUrl = static function (array $changes = []) use ($profileUrl, $connMode, $connQ): string {
-        $params = array_merge(['tab' => 'connections', 'c' => $connMode, 'cq' => $connQ], $changes);
-        $params = array_filter($params, static fn ($value): bool => $value !== '' && $value !== null && $value !== 'followers');
+    $connPage = (int) ($conn_page ?? 1);
+    $connPageCount = (int) ($conn_page_count ?? 1);
+    $connUrl = static function (array $changes = []) use ($profileUrl, $connMode, $connQ, $connPage): string {
+        $params = array_merge(['tab' => 'connections', 'c' => $connMode, 'cq' => $connQ, 'page' => $connPage], $changes);
+        $params = array_filter($params, static fn ($value): bool => $value !== '' && $value !== null && $value !== 'followers' && $value !== 1);
         return $profileUrl . '?' . http_build_query($params);
     };
     ?>
@@ -174,7 +202,8 @@ $profileUrl = '/u/' . $profile['username'];
                             <?php foreach ($recent_posts as $p): ?>
                                 <li class="profile-row">
                                     <a class="profile-row-title" href="/t/<?= (int) $p['thread_id'] ?>-<?= $e($p['thread_slug']) ?>#p<?= (int) $p['id'] ?>"><?= $e($p['thread_title']) ?></a>
-                                    <p class="profile-row-excerpt"><?= $e(mb_strimwidth((string) $p['body'], 0, 140, '…')) ?></p>
+                                    <?php $postExcerpt = $profileExcerpt((string) ($p['body_html'] ?? '')); ?>
+                                    <?php if ($postExcerpt !== ''): ?><p class="profile-row-excerpt"><?= $e($postExcerpt) ?></p><?php endif; ?>
                                     <p class="profile-row-meta"><span><?= $e(human_datetime($p['created_at'])) ?></span><span><?= (int) ($p['commend_count'] ?? 0) ?> commends</span></p>
                                 </li>
                             <?php endforeach; ?>
@@ -240,12 +269,13 @@ $profileUrl = '/u/' . $profile['username'];
                             ? '/t/' . (int) $row['id'] . '-' . $row['slug']
                             : '/t/' . (int) $row['thread_id'] . '-' . $row['thread_slug'] . '#p' . (int) $row['id'];
                         $rowTitle = $isTopic ? (string) $row['title'] : (string) $row['thread_title'];
-                        $rowBody = $isTopic ? (string) ($row['excerpt_body'] ?? '') : (string) $row['body'];
+                        $rowHtml = $isTopic ? (string) ($row['excerpt_html'] ?? '') : (string) ($row['body_html'] ?? '');
+                        $rowBody = $profileExcerpt($rowHtml);
                         ?>
                         <li class="profile-row">
                             <div class="profile-row-body">
                                 <a class="profile-row-title" href="<?= $e($rowUrl) ?>"><?= $e($rowTitle) ?></a>
-                                <?php if ($rowBody !== ''): ?><p class="profile-row-excerpt"><?= $e(mb_strimwidth($rowBody, 0, 140, '…')) ?></p><?php endif; ?>
+                                <?php if ($rowBody !== ''): ?><p class="profile-row-excerpt"><?= $e($rowBody) ?></p><?php endif; ?>
                                 <p class="profile-row-meta"><span>#<?= $e($row['board_slug']) ?></span><span><?= $e(human_datetime($row['created_at'])) ?></span></p>
                             </div>
                             <span class="profile-row-commends"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) ($row['commend_count'] ?? 0)) ?></span>
@@ -259,7 +289,10 @@ $profileUrl = '/u/' . $profile['username'];
                     <p><a class="btn btn-small" href="<?= $e($listUrl(['q' => '', 'page' => 1])) ?>">Clear search</a></p>
                 </div>
             <?php else: ?>
-                <p class="profile-panel-empty"><?= $activeTab === 'threads' ? 'No topics started yet.' : 'No posts yet.' ?></p>
+                <div class="profile-panel-empty">
+                    <h2><?= $activeTab === 'threads' ? 'No topics started yet.' : 'No posts yet.' ?></h2>
+                    <p><?= $activeTab === 'threads' ? 'Public topics will be listed here.' : 'Public posts will be listed here.' ?></p>
+                </div>
             <?php endif; ?>
 
             <?php if ($pageCount > 1): ?>
@@ -290,7 +323,10 @@ $profileUrl = '/u/' . $profile['username'];
                         <?php endforeach; ?>
                     </ul>
                 <?php else: ?>
-                    <p class="profile-panel-empty">No commended posts yet.</p>
+                    <div class="profile-panel-empty">
+                        <h2>No commended posts yet.</h2>
+                        <p>Posts others commend will be listed here.</p>
+                    </div>
                 <?php endif; ?>
             </section>
         </div>
@@ -299,8 +335,8 @@ $profileUrl = '/u/' . $profile['username'];
         <div class="profile-connections">
             <div class="profile-conn-tools">
                 <span class="profile-seg">
-                    <a class="profile-seg-opt<?= $connMode === 'followers' ? ' is-on' : '' ?>" href="<?= $e($connUrl(['c' => 'followers', 'cq' => ''])) ?>">Followers · <?= number_format((int) ($follower_count ?? 0)) ?></a>
-                    <a class="profile-seg-opt<?= $connMode === 'following' ? ' is-on' : '' ?>" href="<?= $e($connUrl(['c' => 'following', 'cq' => ''])) ?>">Following · <?= number_format((int) ($following_count ?? 0)) ?></a>
+                    <a class="profile-seg-opt<?= $connMode === 'followers' ? ' is-on' : '' ?>" href="<?= $e($connUrl(['c' => 'followers', 'cq' => '', 'page' => 1])) ?>">Followers · <?= number_format((int) ($follower_count ?? 0)) ?></a>
+                    <a class="profile-seg-opt<?= $connMode === 'following' ? ' is-on' : '' ?>" href="<?= $e($connUrl(['c' => 'following', 'cq' => '', 'page' => 1])) ?>">Following · <?= number_format((int) ($following_count ?? 0)) ?></a>
                 </span>
                 <form class="profile-conn-search" method="get" action="<?= $e($profileUrl) ?>">
                     <input type="hidden" name="tab" value="connections">
@@ -325,6 +361,7 @@ $profileUrl = '/u/' . $profile['username'];
                             <?php if (!empty($can_remove_followers) && $connMode === 'followers'): ?>
                                 <form class="inline" method="post" action="<?= $e($profileUrl) ?>/followers/<?= (int) $person['id'] ?>/remove">
                                     <?= $this->csrfField() ?>
+                                    <input type="hidden" name="return" value="<?= $e($connUrl()) ?>">
                                     <button class="linkbtn danger" type="submit">Remove follower</button>
                                 </form>
                             <?php endif; ?>
@@ -334,13 +371,20 @@ $profileUrl = '/u/' . $profile['username'];
             <?php elseif ($connQ !== ''): ?>
                 <div class="profile-panel-empty">
                     <h2>Nothing matches “<?= $e($connQ) ?>”</h2>
-                    <p><a class="btn btn-small" href="<?= $e($connUrl(['cq' => ''])) ?>">Clear search</a></p>
+                    <p><a class="btn btn-small" href="<?= $e($connUrl(['cq' => '', 'page' => 1])) ?>">Clear search</a></p>
                 </div>
             <?php else: ?>
                 <div class="profile-panel-empty">
                     <h2>No one here yet</h2>
                     <p><?= $connMode === 'followers' ? 'When members follow ' . $e($firstName) . ', they will be listed here.' : $e($firstName) . ' is not following anyone yet.' ?></p>
                 </div>
+            <?php endif; ?>
+            <?php if ($connPageCount > 1): ?>
+                <nav class="profile-pager" aria-label="Pagination">
+                    <?php if ($connPage > 1): ?><a class="btn btn-small" href="<?= $e($connUrl(['page' => $connPage - 1])) ?>">Previous</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
+                    <span class="profile-pager-label">Page <?= $connPage ?> of <?= $connPageCount ?></span>
+                    <?php if ($connPage < $connPageCount): ?><a class="btn btn-small" href="<?= $e($connUrl(['page' => $connPage + 1])) ?>">Next</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
+                </nav>
             <?php endif; ?>
         </div>
     <?php endif; ?>

@@ -588,6 +588,13 @@
             var fallback = function () { window.location.href = copy.href; };
             try {
                 navigator.clipboard.writeText(copy.href).then(function () {
+                    if (copy.hasAttribute('data-copy-link')) {
+                        var label = copy.querySelector('span');
+                        if (label) { label.textContent = 'Copied'; }
+                        var status = document.querySelector('[data-copy-status]');
+                        if (status) { status.textContent = 'Link copied.'; }
+                        return;
+                    }
                     if (clickedMenu) { clickedMenu.open = false; }
                 }).catch(fallback);
             } catch (error) {
@@ -2171,4 +2178,27 @@
         });
         update();
     });
+})();
+
+// Profile tabs scroll as a strip on a narrow window. A focused tab at the
+// end can sit half off the edge; pull it fully into the strip.
+(function () {
+    'use strict';
+    var strips = document.querySelectorAll('.profile-tabs');
+    for (var i = 0; i < strips.length; i++) {
+        strips[i].addEventListener('focusin', function (event) {
+            var tab = event.target;
+            if (!tab || !tab.classList || !tab.classList.contains('profile-tab')) { return; }
+            var scroller = tab.parentElement;
+            if (!scroller) { return; }
+            var pad = 12;
+            var tabRect = tab.getBoundingClientRect();
+            var scrollerRect = scroller.getBoundingClientRect();
+            if (tabRect.left < scrollerRect.left + pad) {
+                scroller.scrollLeft -= (scrollerRect.left + pad) - tabRect.left;
+            } else if (tabRect.right > scrollerRect.right - pad) {
+                scroller.scrollLeft += tabRect.right - (scrollerRect.right - pad);
+            }
+        });
+    }
 })();

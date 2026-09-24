@@ -351,4 +351,109 @@ final class AppProfileActivityTest extends TestCase
         $this->assertSeeText($page, 'aria-current="page"');
         $this->assertSeeText($page, 'No public activity yet');
     }
+
+    public function test_profile_counts_open_connections_and_excerpts_use_rendered_text(): void
+    {
+        [$board, $author] = $this->seedAuthor();
+        $this->db->run('UPDATE users SET bio = ? WHERE id = ?', ['Keeper of the record.', (int) $author['id']]);
+        $this->makeThread($board, $author, 'Rendered excerpt topic', 'A **bold claim** and a [record](https://example.com/record).');
+
+        $page = $this->get('/u/galadriel');
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'href="/u/galadriel?tab=connections"');
+        $this->assertSeeText($page, 'href="/u/galadriel?tab=connections&amp;c=following"');
+        $this->assertDontSeeText($page, 'href="/u/galadriel/followers"');
+        $this->assertDontSeeText($page, 'href="/u/galadriel/following"');
+        self::assertMatchesRegularExpression('#<link rel="canonical" href="[^"]*/u/galadriel">#', $page->body());
+        self::assertMatchesRegularExpression('#<meta name="description" content="[^"]*Keeper of the record\.#', $page->body());
+
+        $posts = $this->get('/u/galadriel', ['tab' => 'posts']);
+        $this->assertSeeText($posts, 'bold claim');
+        $this->assertSeeText($posts, 'record');
+        $this->assertDontSeeText($posts, '**bold claim**');
+        $this->assertDontSeeText($posts, 'example.com');
+        self::assertMatchesRegularExpression('#<link rel="canonical" href="[^"]*/u/galadriel">#', $posts->body());
+    }
+
+    public function test_block_asks_before_it_commits_and_copy_announces(): void
+    {
+        $this->seedAuthor();
+        $this->actingAs($this->makeUser(['username' => 'blocker']));
+
+        $page = $this->get('/u/galadriel');
+        $this->assertSeeText($page, 'Block @galadriel');
+        $this->assertSeeText($page, 'can no longer message you or mention you');
+        $this->assertSeeText($page, 'data-copy-status');
+
+        $this->post('/u/galadriel/block');
+        $blocked = $this->get('/u/galadriel');
+        $this->assertSeeText($blocked, '>Unblock<');
+        $this->assertDontSeeText($blocked, 'Block @galadriel');
+    }
+
+    public function test_connections_page_past_the_first_screen_and_honor_a_local_return(): void
+    {
+        [, $author] = $this->seedAuthor();
+        $follows = new FollowRepository($this->db);
+        $first = null;
+        $last = null;
+        for ($i = 1; $i <= 21; $i++) {
+            $follower = $this->makeUser(['username' => sprintf('follower%02d', $i), 'display_name' => sprintf('Follower %02d', $i)]);
+            $follows->follow((int) $follower['id'], (int) $author['id']);
+            if ($i === 1) {
+                $first = $follower;
+            }
+            $last = $follower;
+        }
+        $this->actingAs($author);
+
+        $firstPage = $this->get('/u/galadriel', ['tab' => 'connections']);
+        $this->assertSeeText($firstPage, 'Page 1 of 2');
+        $this->assertSeeText($firstPage, 'Follower 21');
+        $this->assertDontSeeText($firstPage, 'Follower 01');
+
+        $secondPage = $this->get('/u/galadriel', ['tab' => 'connections', 'page' => '2']);
+        $this->assertSeeText($secondPage, 'Page 2 of 2');
+        $this->assertSeeText($secondPage, 'Follower 01');
+        $this->assertDontSeeText($secondPage, 'Follower 21');
+
+        $legacy = $this->get('/u/galadriel/followers', ['page' => '2']);
+        $this->assertSeeText($legacy, 'regard');
+        $this->assertDontSeeText($legacy, ' rep');
+        $this->assertSeeText($legacy, 'Follower 01');
+        self::assertMatchesRegularExpression('#<link rel="canonical" href="[^"]*/u/galadriel">#', $legacy->body());
+
+        $removed = $this->post('/u/galadriel/followers/' . (int) $first['id'] . '/remove', [
+            'return' => '/u/galadriel?tab=connections&page=2',
+        ]);
+        $this->assertRedirect($removed, '/u/galadriel?tab=connections&page=2');
+
+        $rejected = $this->post('/u/galadriel/followers/' . (int) $last['id'] . '/remove', [
+            'return' => 'https://evil.example/phish',
+        ]);
+        $this->assertRedirect($rejected, '/u/galadriel/followers');
+        unset($last);
+    }
+
+    public function test_profile_skips_the_composer_script(): void
+    {
+        $this->seedAuthor();
+
+        $profile = $this->get('/u/galadriel');
+        $home = $this->get('/');
+
+        self::assertMatchesRegularExpression('#/assets/(?:dist/)?composer[-.]#', $home->body());
+        self::assertDoesNotMatchRegularExpression('#/assets/(?:dist/)?composer[-.]#', $profile->body());
+    }
+
+    public function test_gated_profile_is_not_indexed(): void
+    {
+        $author = $this->makeUser(['username' => 'gated-seat']);
+        $this->db->run("UPDATE users SET profile_visibility = 'members' WHERE id = ?", [(int) $author['id']]);
+
+        $page = $this->get('/u/gated-seat');
+
+        $this->assertSeeText($page, 'name="robots" content="noindex, nofollow"');
+        self::assertMatchesRegularExpression('#<link rel="canonical" href="[^"]*/u/gated-seat">#', $page->body());
+    }
 }

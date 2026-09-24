@@ -101,6 +101,32 @@ final class FollowRepository
         );
     }
 
+    /** Follower rows matching an optional literal name search. */
+    public function countFollowers(int $targetId, string $query = ''): int
+    {
+        [$filter, $params] = $this->nameFilter($query);
+        array_unshift($params, $targetId);
+
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM follows f JOIN users u ON u.id = f.user_id
+             WHERE f.target_type = 'user' AND f.target_id = ?$filter",
+            $params,
+        );
+    }
+
+    /** Followed-user rows matching an optional literal name search. */
+    public function countFollowing(int $userId, string $query = ''): int
+    {
+        [$filter, $params] = $this->nameFilter($query);
+        array_unshift($params, $userId);
+
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM follows f JOIN users u ON u.id = f.target_id
+             WHERE f.user_id = ? AND f.target_type = 'user'$filter",
+            $params,
+        );
+    }
+
     /** People $userId follows. */
     public function followingCount(int $userId): int
     {
