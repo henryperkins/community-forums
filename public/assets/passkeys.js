@@ -8,7 +8,42 @@
         return;
     }
 
-    var CANCELLED = 'Passkey step was cancelled or unavailable - your other sign-in methods still work.';
+    var CANCELLED = 'Passkey step was cancelled or unavailable — your other sign-in methods still work.';
+
+    // Only the product's own words reach the page. A WebAuthn DOMException
+    // always carries a message, and it is the browser's ("The operation either
+    // timed out or was not allowed. See: https://www.w3.org/TR/webauthn-2/…"),
+    // so testing err.message printed a spec URL on every cancelled prompt.
+    // Copy we wrote travels as a productError; anything else (a cancelled or
+    // failed ceremony, a dropped connection, an HTML error page where JSON was
+    // expected) reads as CANCELLED.
+    function productError(message) {
+        var error = new Error(message);
+        error.product = true;
+
+        return error;
+    }
+
+    function messageFor(err) {
+        return err && err.product ? err.message : CANCELLED;
+    }
+
+    // One ceremony per control at a time: a second press while the browser's
+    // passkey sheet is up would start a second challenge and spend another
+    // rate-limit slot. aria-busy is the app's shared pending state (board
+    // Follow uses it too).
+    function claim(button) {
+        if (button.getAttribute('aria-busy') === 'true') {
+            return false;
+        }
+
+        button.setAttribute('aria-busy', 'true');
+        return true;
+    }
+
+    function release(button) {
+        button.removeAttribute('aria-busy');
+    }
 
     function b64uToBuf(value) {
         var s = String(value).replace(/-/g, '+').replace(/_/g, '/');
@@ -68,7 +103,9 @@
     }
 
     function firstError(json, fallback) {
-        if (json && json.errors) {
+        // A WebAuthnException answer carries a `code` and a message written for
+        // operators ("COSE key does not decode…"), not for members.
+        if (json && json.errors && !json.code) {
             var keys = Object.keys(json.errors);
             if (keys.length) {
                 return json.errors[keys[0]];
@@ -85,6 +122,17 @@
 
         el.textContent = message;
         el.hidden = false;
+    }
+
+    // The error lines are role="alert" live regions. Clearing one empties it
+    // instead of hiding it, so the next failure is a change of text, which is
+    // what gets announced, even when it repeats the last one. The login line is
+    // rendered empty from the start; the settings lines start hidden (an empty
+    // line would add height to their forms) and are first shown with their text.
+    function clear(el) {
+        if (el) {
+            el.textContent = '';
+        }
     }
 
     function prepCreateOptions(options) {
@@ -157,14 +205,14 @@
                 return post(addForm.getAttribute('data-stepup-url'), {}, addForm)
                     .then(function (json) {
                         if (!json.ok) {
-                            throw new Error(firstError(json, 'Confirm with an existing passkey before adding another one.'));
+                            throw productError(firstError(json, 'Confirm with an existing passkey before adding another one.'));
                         }
 
                         return navigator.credentials.get({ publicKey: prepGetOptions(json.options) });
                     })
                     .then(function (credential) {
                         if (!credential) {
-                            throw new Error(CANCELLED);
+                            throw productError(CANCELLED);
                         }
 
                         assertion.value = serializeAssertion(credential);
@@ -179,21 +227,23 @@
         }
 
         addBtn.addEventListener('click', function () {
-            if (addErr) {
-                addErr.hidden = true;
+            if (!claim(addBtn)) {
+                return;
             }
+
+            clear(addErr);
 
             beginRegistrationChallenge()
                 .then(function (json) {
                     if (!json.ok) {
-                        throw new Error(firstError(json, 'Could not start the passkey setup.'));
+                        throw productError(firstError(json, 'Could not start the passkey setup.'));
                     }
 
                     return navigator.credentials.create({ publicKey: prepCreateOptions(json.options) });
                 })
                 .then(function (credential) {
                     if (!credential) {
-                        throw new Error(CANCELLED);
+                        throw productError(CANCELLED);
                     }
 
                     var nickname = addForm.querySelector('input[name="nickname"]');
@@ -204,13 +254,14 @@
                 })
                 .then(function (json) {
                     if (!json.ok) {
-                        throw new Error(firstError(json, 'The passkey could not be saved.'));
+                        throw productError(firstError(json, 'The passkey could not be saved.'));
                     }
 
                     window.location.reload();
                 })
                 .catch(function (err) {
-                    show(addErr, err && err.message ? err.message : CANCELLED);
+                    release(addBtn);
+                    show(addErr, messageFor(err));
                 });
         });
     }
@@ -229,19 +280,25 @@
             }
 
             stepBtn.addEventListener('click', function () {
+                if (!claim(stepBtn)) {
+                    return;
+                }
+
+                var stepErr = form.querySelector('[data-passkey-revoke-error]');
+                clear(stepErr);
                 var panel = document.querySelector('[data-passkey-add-form]');
                 var stepUpUrl = panel ? panel.getAttribute('data-stepup-url') : '';
                 post(stepUpUrl, {}, form)
                     .then(function (json) {
                         if (!json.ok) {
-                            throw new Error(firstError(json, CANCELLED));
+                            throw productError(firstError(json, CANCELLED));
                         }
 
                         return navigator.credentials.get({ publicKey: prepGetOptions(json.options) });
                     })
                     .then(function (credential) {
                         if (!credential) {
-                            throw new Error(CANCELLED);
+                            throw productError(CANCELLED);
                         }
 
                         form.querySelector('input[name="passkey_assertion"]').value = serializeAssertion(credential);
@@ -252,7 +309,8 @@
                         form.submit();
                     })
                     .catch(function (err) {
-                        show(form.querySelector('[data-passkey-revoke-error]'), err && err.message ? err.message : CANCELLED);
+                        release(stepBtn);
+                        show(stepErr, messageFor(err));
                     });
             });
         });
@@ -272,9 +330,11 @@
         }
 
         signinBtn.addEventListener('click', function () {
-            if (signinErr) {
-                signinErr.hidden = true;
+            if (!claim(signinBtn)) {
+                return;
             }
+
+            clear(signinErr);
 
             var emailInput = document.querySelector('form input[name="email"]');
             var nextInput = document.querySelector('form input[name="next"]');
@@ -283,14 +343,14 @@
             }, document)
                 .then(function (json) {
                     if (!json.ok) {
-                        throw new Error(firstError(json, 'Could not start passkey sign-in.'));
+                        throw productError(firstError(json, 'Could not start passkey sign-in.'));
                     }
 
                     return navigator.credentials.get({ publicKey: prepGetOptions(json.options) });
                 })
                 .then(function (credential) {
                     if (!credential) {
-                        throw new Error(CANCELLED);
+                        throw productError(CANCELLED);
                     }
 
                     return post(signin.getAttribute('data-login-url'), {
@@ -301,16 +361,26 @@
                 })
                 .then(function (json) {
                     if (!json.ok) {
-                        throw new Error(firstError(json, 'That passkey could not be used to sign in.'));
+                        throw productError(firstError(json, 'That passkey could not be used to sign in.'));
                     }
 
                     window.location.assign(json.redirect || '/');
                 })
                 .catch(function (err) {
-                    show(signinErr, err && err.message ? err.message : CANCELLED);
+                    release(signinBtn);
+                    show(signinErr, messageFor(err));
                 });
         });
     }
+
+    // A page restored from the back/forward cache comes back as it was left:
+    // the control whose ceremony navigated away is still marked busy, and
+    // would ignore every press until a reload.
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            document.querySelectorAll('[data-passkey-signin-btn], [data-passkey-add-btn], [data-passkey-stepup-btn]').forEach(release);
+        }
+    });
 
     bindAddForm();
     bindRevokeForms();

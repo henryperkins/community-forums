@@ -1,19 +1,28 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Log in'); $this->section('variant', 'auth'); ?>
+<?php
+// Every refusal (wrong credentials, throttled, banned) is one message that names
+// no field on purpose: naming the wrong one would tell a stranger whether the
+// address has an account. So neither input is marked invalid; both are described
+// by the message, and focus lands on the password (the email is kept) so a screen
+// reader hears why the sign-in failed as the page arrives.
+$loginError = (string) ($errors['email'] ?? '');
+$describedBy = $loginError !== '' ? ' aria-describedby="login-error"' : '';
+?>
 <div class="auth-card">
     <span class="auth-eyebrow">Welcome back</span>
     <h1>Log in</h1>
-    <?php if (!empty($errors['email'])): ?><p class="field-error auth-error" role="alert"><?= $e($errors['email']) ?></p><?php endif; ?>
+    <?php if ($loginError !== ''): ?><p class="field-error auth-error" id="login-error" role="alert"><?= $e($loginError) ?></p><?php endif; ?>
     <form method="post" action="/login" class="auth-form">
         <?= $this->csrfField() ?>
         <input type="hidden" name="next" value="<?= $e($next ?? '/') ?>">
         <label class="field">
             <span>Email</span>
-            <input type="email" name="email" class="input input-engraved" autocomplete="username" value="<?= $e($old['email'] ?? '') ?>" required autofocus>
+            <input type="email" name="email" class="input input-engraved" autocomplete="username" value="<?= $e($old['email'] ?? '') ?>" required<?= $describedBy ?><?= $loginError === '' ? ' autofocus' : '' ?>>
         </label>
         <label class="field">
             <span>Password</span>
-            <input type="password" name="password" class="input input-engraved" autocomplete="current-password" required>
+            <input type="password" name="password" class="input input-engraved" autocomplete="current-password" required<?= $describedBy ?><?= $loginError !== '' ? ' autofocus' : '' ?>>
         </label>
         <button class="btn" type="submit">Log in</button>
     </form>
@@ -24,7 +33,8 @@
              data-login-url="/login/passkey"
              hidden>
             <button type="button" class="btn btn-secondary" data-passkey-signin-btn>Sign in with a passkey</button>
-            <p class="field-error" data-passkey-signin-error hidden></p>
+            <?php /* Always rendered, empty until a ceremony fails: a live region has to exist before its text arrives or it is not announced. */ ?>
+            <p class="field-error" data-passkey-signin-error role="alert"></p>
         </div>
     <?php endif; ?>
     <?php if (!empty($oauth_providers)): ?>

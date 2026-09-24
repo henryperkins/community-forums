@@ -118,6 +118,8 @@ test.describe('passkeys (P5-11 Gate A browser evidence)', () => {
     const axe = await new AxeBuilder({ page }).include('[data-passkey-panel]').analyze();
     expect(axe.violations).toEqual([]);
 
+    // Log out lives in the seat's account menu (ADR 0032): open it first.
+    await page.locator('.identity-menu > summary').click();
     await page.locator('form[action="/logout"] button[type="submit"]').click();
     await page.goto(`${BASE}/login`);
     await page.fill('input[name="email"]', 'bob@retro.test');

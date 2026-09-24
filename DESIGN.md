@@ -178,7 +178,7 @@ components:
 
 > **This file is the visual system only.** Product and technical truth lives in `PRODUCT_DESIGN.md` (renamed from `DESIGN.md` on 2026-08-27); durable product context lives in `PRODUCT.md`; `DECISIONS.md` wins on any conflict. Machine-readable extensions — tonal ramps, shadows, motion, breakpoints, component snippets — live in `.impeccable/design.json`.
 >
-> **Authoritative sources.** Tokens: `resources/imladris/tokens/{colors,typography,spacing,fonts}.css`, generated into `public/assets/imladris.css`. Components: `public/assets/app.css`, with the curated transcription in `docs/design-system/imladris/components.css`. The two token copies were verified byte-identical on 2026-08-27.
+> **Authoritative sources.** Tokens: `resources/imladris/tokens/{colors,typography,spacing,fonts}.css`, generated into `public/assets/imladris.css`. Components: `public/assets/app.css`, with the curated transcription in `docs/design-system/imladris/components.css`. The two token copies were verified byte-identical on 2026-08-27. A few application-owned semantic tokens the layer does not carry (`--field-rule`, `--stage-*`) are defined in `app.css`'s own token block, beside its twilight registers (ADR 0039).
 
 ## Overview
 
@@ -329,7 +329,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 ### Buttons
 
 - **Shape:** gently curved (`7px`), 1px transparent border, `--shadow-xs` at rest, pressing to `translateY(0.5px) scale(.995)`.
-- **Primary:** evergreen (`#2E4A3A`) on parchment text (`#FAF6EC`), padded `9px 17px`, Marcellus at 0.9rem with 0.03em tracking, **sentence case**. Hover deepens to `green-800`.
+- **Primary:** evergreen (`#2E4A3A`) on parchment text (`#FAF6EC`), padded `9px 17px`, Marcellus at 0.9rem with 0.03em tracking, **sentence case**. Hover deepens the resting fill toward black, `color-mix(in srgb, var(--accent) 82%, #000)` (the danger button's recipe): about `green-800` by day, a deeper gold in twilight, and the operator's own colour under branding, never a different hue (ADR 0039).
 - **Secondary:** raised parchment (`#FAF6EC`) with ink text and a 1.5px `--border-soft` outline, no shadow. Hover sinks the fill to `parchment-200` and strengthens the border.
 - **Ghost:** transparent with `ink-700` text and a transparent 1.5px border, so it occupies the same box as its siblings and does not shift the row on hover.
 - **Accent:** mallorn gold (`#C29A44`) with `ink-900` text — the one place gold is a fill, reserved for a single moment of emphasis per screen.
@@ -357,6 +357,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 
 - **Style:** raised parchment, 1.5px `--border-soft`, 7px radius, `--shadow-inset`, set in the body serif at inherited size and padded `9px 11px`. A search field takes the pill variant on the sunken page colour. Until 2026-09-13 the application stylesheet overrode this with a 1px `--border` hairline at 6px and no inset, and — because `app.css` is unlayered — that is what actually painted on every `<input>` and `<select>`, while `<textarea>` got the spec. There is now **one** field register (ADR 0034).
 - **Focus:** the gold halo — border shifts to `gold-400`, a 2px evergreen outline at 1px offset, and a layered `0 0 0 3px` gold focus ring over the inset. Focus is unmistakable and warm rather than the browser default.
+- **Engraved frames** (the lapidary fields on the auth screens, account settings, appeals and the Messages compose form) draw their edge in `--field-rule`: `gold-700` by day and `gold-600` in twilight. That holds 3:1 against the card and against the field's own fill in both registers, as WCAG 1.4.11 asks of a field's boundary. The layer's `--gold-200` measured 1.30:1 by day and drew a near-white line by night (ADR 0039).
 - **Labels:** Marcellus at 0.82rem, muted ink, 5px above the control.
 - **Errors:** rust text at 0.85rem directly beneath the field, with underlined inline links.
 - **Switches:** a 42×24 pill track, sunken parchment with a strong border and inset shadow, carrying an 18px round knob ringed in `gold-200`; checked fills the track evergreen and gilds the knob to `gold-200` with a `gold-500` ring. Transitions run `--dur-base` on `--ease-calm`.
@@ -402,6 +403,8 @@ Families that still have more than one implementation are listed, ranked, in ADR
 ### The lapidary register, and the chamfer that is gone from it
 
 The ornamented treatment that dresses the account templates and five of the six auth screens — gold-ruled parchment frames, engraved panel headings, gold row dots. It is **ink, not geometry**: an engraved frame is the same box as a plain one, drawn in gold.
+
+The auth screens sit on a **stage** that is twilight in both registers, while the seal card on it flips with the theme. The stage paints from tokens that do not flip: `--stage-ground`, `--stage-raised` (the skip link's plate), `--stage-ink` and `--stage-accent`, the one gold of the brand star, the card's rule, and focus on the stage. Focus there cannot use the page's `--accent`: it is evergreen by day, drawn for parchment, and measured 1.75:1 on the stage (ADR 0039).
 
 It was not always. Until **2026-09-13** these frames cut their corners at 45°, an octagon made from a `clip-path` plus eight background-gradient layers standing in for a border, with a second inset octagon on `.scribe-panel` and `.auth-card` as a doubled rule. That chamfer is removed (**ADR 0033**). It was expensive — every state restated all eight layers — and it was actively harmful: a `clip-path` cuts everything outside the octagon, so the outer focus ring on an engraved field, a choice card and a search well had *never rendered*, and the octagon on `/compose` flooded the title field solid gold on focus.
 

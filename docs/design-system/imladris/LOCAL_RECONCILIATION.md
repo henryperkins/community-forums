@@ -699,3 +699,28 @@ the reasons the chamfer entry gives: the first three sit inside
 `design_surface.roots` and paint nothing, and the `ui_kits/` copies are governed
 by `RETIRED.md`. **A future bundle that offers a ★ back into a production-facing
 source should have that hunk refused.**
+
+## 2026-09-24 — production diverges on the engraved edge and the button hover (ADR 0039)
+
+**Application-only; no mirror source changed.** Two rules the mirror's
+`components.css` carries now paint differently in production. Both are overridden
+by unlayered `public/assets/app.css`:
+
+- **`.input-engraved` / `.textarea-engraved` edge.** The mirror draws it in
+  `--gold-200`: 1.30:1 against the parchment card, where WCAG 1.4.11 asks 3:1 of a
+  field's boundary, and a near-white 10.8:1 line in twilight. Production draws it
+  in `--field-rule`, an application-owned token (`gold-700` by day, `gold-600` in
+  twilight).
+- **`.btn:hover`.** The mirror hovers on `--brand-hover`, which is evergreen in
+  both registers and untouched by operator branding, so a gold twilight button
+  turned green. Production deepens the button's own fill,
+  `color-mix(in srgb, var(--accent) 82%, #000)`.
+
+The auth stage's new `--stage-*` tokens are application-only too; the mirror's
+screens carry no auth stage. The tokens live in `app.css` because on a branch
+that already edits the application, `build:imladris` cannot run until the runtime
+baseline matches (see the 2026-09-13 ordering note).
+
+**A future bundle that offers `--gold-200` back on the engraved edge, or
+`--brand-hover` back on `.btn:hover`, should have that hunk refused**, unless it
+brings the token upstream with the same contrast.

@@ -1,11 +1,11 @@
 {
-  "version": "7ef1dcc3fb730375",
+  "version": "90cd206ce718430b",
   "urls": {
-    "app.css": "/assets/dist/app-style-CYwMKTp8.css",
+    "app.css": "/assets/dist/app-style-BZKT6hDh.css",
     "imladris.css": "/assets/dist/imladris-style-Cw9wS_6P.css",
-    "app.js": "/assets/dist/app-f21f303cb228adc9.js",
+    "app.js": "/assets/dist/app-8d249b5339460b13.js",
     "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
-    "passkeys.js": "/assets/dist/passkeys-45dd692ca9028436.js",
+    "passkeys.js": "/assets/dist/passkeys-27f8b05555555872.js",
     "tour.js": "/assets/dist/tour-7cdbe315501e3843.js",
     "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
     "wysiwyg-composer.css": "/assets/dist/wysiwyg-composer-DJaHQYS-.css",
@@ -27,23 +27,23 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "0ae01b21b603a5fc3cbc5d9b46de48d26c1884e860f7a5e98fb11614218fc39e",
+      "sha256": "e543584c5bca3cfe7826c9760d054710d3143d50dc89441282a4f1bf7e45b72a",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "e71efb53f7e5e213a8c06528cb675676eabaef08c9447c4016ed913365f29ff2",
+      "sha256": "c0c558ba9f25acedd123b0743a0a4d19549630b1c253e31ee29817d0387f3427",
       "immutable": false
     },
     "/assets/composer.js": {
       "sha256": "16f6461ce88a71c73b390075c5f902c7983d3998bedb0cd7dbdbf2299ad930ae",
       "immutable": false
     },
-    "/assets/dist/app-f21f303cb228adc9.js": {
-      "sha256": "f21f303cb228adc9e27145aab560d804c78be4735d20f3a12380e8cf2982b6a7",
+    "/assets/dist/app-8d249b5339460b13.js": {
+      "sha256": "8d249b5339460b132ee0161257dc27786a50b8bbd57d3c7fe0473ab573e416e3",
       "immutable": true
     },
-    "/assets/dist/app-style-CYwMKTp8.css": {
-      "sha256": "76d805819e607a47c8af650c7c4c2bca7a4abab3e4cdcc51218ed9d6625e4b1f",
+    "/assets/dist/app-style-BZKT6hDh.css": {
+      "sha256": "355c22489593331e4029c1bbf28215a3e5e892a6a3d1ad9e1edf39f101d8919b",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {
@@ -118,8 +118,8 @@
       "sha256": "156e7142326caf8b6fcb4cd4d903fa219ef445c7a3821f224ec33a2938bf478e",
       "immutable": true
     },
-    "/assets/dist/passkeys-45dd692ca9028436.js": {
-      "sha256": "45dd692ca902843661a7b57bdcfe8436c6ae95cd12f0843cf3ccc431071ab5c3",
+    "/assets/dist/passkeys-27f8b05555555872.js": {
+      "sha256": "27f8b05555555872d8b09cede7eabe69831af5f03f7e44689df2371934632b34",
       "immutable": true
     },
     "/assets/dist/tour-7cdbe315501e3843.js": {
@@ -219,7 +219,7 @@
       "immutable": false
     },
     "/assets/passkeys.js": {
-      "sha256": "28a5821a60f9fa7c8244f0ceda86da4981487bc37db1f63ccd7d3380c238872e",
+      "sha256": "daab2ddf725491d45d3cbd9b3da46189c51723b16e904d54b3cb38e7b939d73f",
       "immutable": false
     },
     "/assets/tour.js": {
