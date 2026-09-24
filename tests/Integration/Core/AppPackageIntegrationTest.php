@@ -21,7 +21,7 @@ final class AppPackageIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->artifactDir = sys_get_temp_dir() . '/rb-test-packages';
+        $this->artifactDir = (string) $this->config->get('packages.storage_path');
         $this->root = SigningHarness::generate();
         (new SettingRepository($this->db))->set('features', ['package_registry' => true]);
         $this->admin = $this->makeAdmin(['password' => 'password123']);

@@ -22,7 +22,7 @@ final class AppPackageSecurityConsoleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->artifactDir = sys_get_temp_dir() . '/rb-test-packages-security';
+        $this->artifactDir = $this->config->get('packages.storage_path') . '-security';
         $this->root = SigningHarness::generate();
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
         (new SettingRepository($this->db))->set('features', ['package_registry' => true]);

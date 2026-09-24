@@ -27,7 +27,7 @@ final class AppPackageLifecycleTest extends TestCase
     {
         parent::setUp();
 
-        $this->artifactDir = sys_get_temp_dir() . '/rb-test-packages';
+        $this->artifactDir = (string) $this->config->get('packages.storage_path');
         $this->root = SigningHarness::generate();
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
         (new \App\Repository\PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);

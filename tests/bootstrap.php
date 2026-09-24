@@ -53,14 +53,16 @@ if (!$schemaIsCurrent) {
 // keeps the secure defaults (DESIGN §11).
 PasswordHasher::setDefaultOptions(['memory_cost' => 8, 'time_cost' => 1, 'threads' => 1]);
 
-// Point the rate-limit store at a throwaway directory (most tests inject an
-// in-memory limiter anyway).
+// Files a run writes go under a throwaway directory named for its test
+// database, never the real storage roots. Runs on separate databases can then
+// go at once: package tests clear their artifact directory after every test,
+// which would otherwise delete a concurrent run's fixtures mid-test.
+$scratch = sys_get_temp_dir() . '/rb-test-' . $dbConfig['database'];
 $config = new Config(array_replace_recursive($config->all(), [
-    'paths' => ['ratelimit' => sys_get_temp_dir() . '/rb-test-ratelimit'],
-    // Uploaded media goes to a throwaway dir, never the real storage root.
-    'uploads' => ['storage_path' => sys_get_temp_dir() . '/rb-test-media'],
-    // Package artifacts go to a throwaway dir, never the real storage root.
-    'packages' => ['storage_path' => sys_get_temp_dir() . '/rb-test-packages'],
+    // Most tests inject an in-memory limiter anyway.
+    'paths' => ['ratelimit' => $scratch . '/ratelimit'],
+    'uploads' => ['storage_path' => $scratch . '/media'],
+    'packages' => ['storage_path' => $scratch . '/packages'],
     // Assert the HSTS header in tests regardless of the local .env value.
     'security' => ['hsts' => true],
 ]));
