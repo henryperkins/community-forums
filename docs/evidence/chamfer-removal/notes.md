@@ -236,3 +236,15 @@ Browser runs used `DB_DATABASE=retroboards_chamfer_review_e2e`,
 started from `prepare.sh` after the mutating admin regressions. Both scratch
 DBs and their isolated stores were removed afterward, and the temporary server
 was stopped. The existing browser/development database and server were preserved.
+
+## Superseded in part, 2026-09-24 (ADR 0039)
+
+The engraved frames in these captures (`auth-card`, `account-settings`,
+`compose-fields`, `engraved-field-*`) show the edge in `--gold-200`. Production now
+draws it in `--field-rule`: `gold-700` by day and `gold-600` in twilight, because
+`--gold-200` measured 1.30:1 against the card, below the 3:1 WCAG 1.4.11 asks of
+a field's boundary. The geometry this slice proves is unchanged: a real border,
+no clip-path, the outer focus ring. So these captures are left as the dated
+record. For the new edge, see `docs/evidence/auth-login-logout-polish/`, whose
+`compare/` holds before and after pairs. `/compose`'s title field paints its own
+ink frame and did not change.

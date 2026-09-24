@@ -55,8 +55,8 @@ final class MessagesStylesContractTest extends TestCase
         $offenders = [];
         foreach (self::rules(self::css()) as [$selector, $body]) {
             $selectors = array_map('trim', explode(',', $selector));
-            // A rule is a Messages rule when every selector in it is one; the
-            // shared engraved-field register merely lists a .dm-form member.
+            // A rule is a Messages rule when every selector in it is one; a
+            // shared rule that merely lists a .dm- member is not.
             $isMessages = $selectors !== [] && array_filter(
                 $selectors,
                 static fn (string $s): bool => !str_contains($s, '.dm-'),
