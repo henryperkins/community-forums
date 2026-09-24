@@ -630,7 +630,12 @@ final class AppProfileActivityTest extends TestCase
             self::assertMatchesRegularExpression('#<link rel="canonical" href="[^"]*/u/gated-seat">#', $page->body());
         }
 
+        // A member's own view of a members-only profile is not for an index either.
         $this->actingAs($this->makeUser(['username' => 'gated-reader']));
-        $this->assertDontSeeText($this->get('/u/gated-seat'), 'noindex');
+        $memberView = $this->get('/u/gated-seat');
+        $this->assertDontSeeText($memberView, 'visible to signed-in members');
+        $this->assertSeeText($memberView, 'name="robots" content="noindex, nofollow"');
+        $this->makeUser(['username' => 'open-seat']);
+        $this->assertDontSeeText($this->get('/u/open-seat'), 'noindex');
     }
 }

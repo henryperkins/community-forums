@@ -5,6 +5,10 @@ $display = ($profile['display_name'] ?? '') !== '' ? $profile['display_name'] : 
 $this->section('title', $display . ' (@' . $profile['username'] . ')');
 $profileUrl = '/u/' . $profile['username'];
 $this->section('canonical', $profileUrl);
+// A members-only profile is never for an index, even in a member's own view.
+if ((string) ($profile['profile_visibility'] ?? 'public') === 'members') {
+    $this->section('robots', 'noindex, nofollow');
+}
 $bioPlain = \App\Support\Str::snippet(\App\Support\Str::plainText((string) ($bio_html ?? '')), 120);
 $description = $display . ' (@' . $profile['username'] . ')';
 if ($bioPlain !== '') {
