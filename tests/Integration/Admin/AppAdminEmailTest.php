@@ -40,6 +40,16 @@ final class AppAdminEmailTest extends TestCase
         $this->config = $cfg;
     }
 
+    /** Rebuild the kernel so its Mailer has no From address, whatever .env configures. */
+    private function useUnconfiguredMailer(): void
+    {
+        $cfg = new Config(array_replace_recursive($this->config->all(), [
+            'mail' => ['driver' => 'sendmail', 'from' => ''],
+        ]));
+        $this->app = new App($cfg, $this->db, $this->rateLimiter);
+        $this->config = $cfg;
+    }
+
     public function test_index_requires_admin(): void
     {
         // Guest → redirect to login.
@@ -57,7 +67,7 @@ final class AppAdminEmailTest extends TestCase
 
     public function test_unconfigured_transport_blocks_test_send_and_shows_blocked_banner(): void
     {
-        // Default kernel uses SendmailMailer('') → not configured.
+        $this->useUnconfiguredMailer();
         $this->actingAs($this->makeAdmin(['email' => 'blocked@example.test']));
 
         $res = $this->post('/admin/email/test', []);
