@@ -99,7 +99,6 @@ final class AdminLinkPreviewController extends Controller
 
     private function back(Request $request): string
     {
-        $return = (string) $request->post('return', '/admin/link-previews');
-        return preg_match('#^/(?![/\\\\])#', $return) === 1 ? $return : '/admin/link-previews';
+        return $this->localReturn($request, '/admin/link-previews');
     }
 }

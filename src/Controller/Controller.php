@@ -90,19 +90,25 @@ abstract class Controller
         return $this->redirect($to);
     }
 
-    /**
-     * A posted `return` path, if it is local; $default otherwise. Browsers strip
-     * tab and newline from a Location before resolving it, so "/<TAB>/evil" is
-     * "//evil": control characters, spaces and backslashes are refused anywhere,
-     * not just after the first slash.
-     */
+    /** A posted `return` path, if it is local; $default otherwise. */
     protected function localReturn(Request $request, string $default): string
     {
-        $return = $request->post('return', '');
-        if (is_string($return)
-            && preg_match('#^/(?!/)#', $return) === 1
-            && preg_match('/[\x00-\x20\x7F\\\\]/', $return) !== 1) {
-            return $return;
+        return self::localPath($request->post('return'), $default);
+    }
+
+    /**
+     * $path if it is local, $default otherwise. Browsers strip tab and newline
+     * from a Location before resolving it, so "/<TAB>/evil" is "//evil":
+     * control characters, spaces and backslashes are refused anywhere, not just
+     * after the first slash. Public so MfaService, which carries a sign-in's
+     * next path across the second step, holds it to the same rule.
+     */
+    public static function localPath(mixed $path, string $default): string
+    {
+        if (is_string($path)
+            && preg_match('#^/(?!/)#', $path) === 1
+            && preg_match('/[\x00-\x20\x7F\\\\]/', $path) !== 1) {
+            return $path;
         }
 
         return $default;

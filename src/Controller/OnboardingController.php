@@ -26,7 +26,7 @@ final class OnboardingController extends Controller
         if ($request->wantsJson()) {
             return Response::json(['ok' => true]);
         }
-        return $this->redirect($this->safeNext($request->str('next')));
+        return $this->redirect(self::localPath($request->str('next'), '/'));
     }
 
     /** Tour endpoints are inert when the subsystem is disabled (matches siblings). */
@@ -35,15 +35,6 @@ final class OnboardingController extends Controller
         if (!$this->container->get(FeatureFlags::class)->enabled('product_tour')) {
             throw new NotFoundException();
         }
-    }
-
-    /** Only same-origin root-relative paths are accepted; everything else → '/'. */
-    private function safeNext(string $next): string
-    {
-        if ($next === '' || $next[0] !== '/' || str_starts_with($next, '//') || str_starts_with($next, '/\\')) {
-            return '/';
-        }
-        return $next;
     }
 
     public function replay(Request $request): Response
