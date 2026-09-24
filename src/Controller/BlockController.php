@@ -44,27 +44,29 @@ final class BlockController extends Controller
         $blocks = $this->container->get(BlockRepository::class);
         $follows = $this->container->get(FollowRepository::class);
 
-        if ($blocks->blocks($user->id(), $targetId)) {
-            $blocks->unblock($user->id(), $targetId);
+        // A form that names its intent is applied idempotently, so a double
+        // submit or a stale tab's "Block" can never undo a block. A form
+        // without one keeps the toggle.
+        $blocking = $blocks->blocks($user->id(), $targetId);
+        $intent = $request->post('intent');
+        $block = $intent === 'block' || ($intent !== 'unblock' && !$blocking);
+
+        if (!$block) {
+            if ($blocking) {
+                $blocks->unblock($user->id(), $targetId);
+            }
             $message = 'Unblocked.';
         } else {
-            $blocks->block($user->id(), $targetId);
-            // Sever any follow relationship both ways.
-            $follows->unfollow($user->id(), $targetId);
-            $follows->unfollow($targetId, $user->id());
+            if (!$blocking) {
+                $blocks->block($user->id(), $targetId);
+                // Sever any follow relationship both ways.
+                $follows->unfollow($user->id(), $targetId);
+                $follows->unfollow($targetId, $user->id());
+            }
             $message = 'Blocked. They can no longer message or @mention you.';
         }
 
-        $return = $this->safeReturn($request, '/u/' . (string) $target['username']);
+        $return = $this->localReturn($request, '/u/' . (string) $target['username']);
         return $this->redirectWithFlash($return, $message);
-    }
-
-    private function safeReturn(Request $request, string $default): string
-    {
-        $return = (string) $request->post('return', '');
-        if ($return !== '' && preg_match('#^/(?![/\\\\])#', $return) === 1) {
-            return $return;
-        }
-        return $default;
     }
 }

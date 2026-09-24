@@ -101,6 +101,32 @@ final class FollowRepository
         );
     }
 
+    /** Follower rows matching an optional literal name search. */
+    public function countFollowers(int $targetId, string $query = '', bool $publicOnly = false): int
+    {
+        [$filter, $params] = $this->listFilter($query, $publicOnly);
+        array_unshift($params, $targetId);
+
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM follows f JOIN users u ON u.id = f.user_id
+             WHERE f.target_type = 'user' AND f.target_id = ?$filter",
+            $params,
+        );
+    }
+
+    /** Followed-user rows matching an optional literal name search. */
+    public function countFollowing(int $userId, string $query = '', bool $publicOnly = false): int
+    {
+        [$filter, $params] = $this->listFilter($query, $publicOnly);
+        array_unshift($params, $userId);
+
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM follows f JOIN users u ON u.id = f.target_id
+             WHERE f.user_id = ? AND f.target_type = 'user'$filter",
+            $params,
+        );
+    }
+
     /** People $userId follows. */
     public function followingCount(int $userId): int
     {
@@ -141,11 +167,11 @@ final class FollowRepository
     }
 
     /** @return array<int,array<string,mixed>> follower user rows, newest first */
-    public function listFollowers(int $targetId, int $limit = 50, int $offset = 0, string $query = ''): array
+    public function listFollowers(int $targetId, int $limit = 50, int $offset = 0, string $query = '', bool $publicOnly = false): array
     {
         $limit = max(1, min(100, $limit));
         $offset = max(0, min(1_000_000, $offset));
-        [$filter, $params] = $this->nameFilter($query);
+        [$filter, $params] = $this->listFilter($query, $publicOnly);
         array_unshift($params, $targetId);
 
         return $this->db->fetchAll(
@@ -159,11 +185,11 @@ final class FollowRepository
     }
 
     /** @return array<int,array<string,mixed>> followed user rows, newest first */
-    public function listFollowing(int $userId, int $limit = 50, int $offset = 0, string $query = ''): array
+    public function listFollowing(int $userId, int $limit = 50, int $offset = 0, string $query = '', bool $publicOnly = false): array
     {
         $limit = max(1, min(100, $limit));
         $offset = max(0, min(1_000_000, $offset));
-        [$filter, $params] = $this->nameFilter($query);
+        [$filter, $params] = $this->listFilter($query, $publicOnly);
         array_unshift($params, $userId);
 
         return $this->db->fetchAll(
@@ -174,6 +200,22 @@ final class FollowRepository
              LIMIT " . $limit . ' OFFSET ' . $offset,
             $params,
         );
+    }
+
+    /**
+     * $publicOnly is for a guest reader: a guest-visible list never names an
+     * account whose profile is members-only (ADR 0031 §2).
+     *
+     * @return array{0:string,1:list<mixed>}
+     */
+    private function listFilter(string $query, bool $publicOnly): array
+    {
+        [$filter, $params] = $this->nameFilter($query);
+        if ($publicOnly) {
+            $filter .= " AND u.profile_visibility = 'public'";
+        }
+
+        return [$filter, $params];
     }
 
     /** @return array{0:string,1:list<mixed>} */

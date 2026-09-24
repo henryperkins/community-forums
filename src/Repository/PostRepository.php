@@ -384,8 +384,11 @@ final class PostRepository
             ? 'commend_count DESC, p.created_at DESC, p.id DESC'
             : 'p.created_at DESC, p.id DESC';
 
+        // A correlated count runs only for the page's rows; a grouped derived
+        // table would aggregate every reaction on every one of the member's posts
+        // on each view (measured 2-3x slower on MariaDB 11.8 for a prolific member).
         return $this->db->fetchAll(
-            "SELECT p.id, p.thread_id, p.body, p.created_at, p.is_op,
+            "SELECT p.id, p.thread_id, p.body, p.body_html, p.created_at, p.is_op,
                     t.title AS thread_title, t.slug AS thread_slug,
                     t.reply_count AS thread_reply_count,
                     b.slug AS board_slug, b.name AS board_name,
@@ -422,7 +425,7 @@ final class PostRepository
         [$where, $params] = $this->profileFilter($userId, '');
 
         return $this->db->fetchAll(
-            "SELECT p.id, p.thread_id, p.body, p.created_at,
+            "SELECT p.id, p.thread_id, p.created_at,
                     t.title AS thread_title, t.slug AS thread_slug,
                     b.slug AS board_slug, b.name AS board_name,
                     (SELECT COUNT(*) FROM reactions r

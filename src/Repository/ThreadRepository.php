@@ -412,8 +412,14 @@ final class ThreadRepository
             ? 'commend_count DESC, t.created_at DESC, t.id DESC'
             : 't.created_at DESC, t.id DESC';
 
+        // excerpt_body is the Markdown the controller renders when the OP's
+        // render cache is blank (PRODUCT_DESIGN §9.5).
         return $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name,
+                    (SELECT op.body_html FROM posts op
+                      WHERE op.thread_id = t.id AND op.is_op = 1
+                        AND op.is_deleted = 0 AND op.is_pending = 0 AND op.is_anonymous = 0
+                      ORDER BY op.id ASC LIMIT 1) AS excerpt_html,
                     (SELECT op.body FROM posts op
                       WHERE op.thread_id = t.id AND op.is_op = 1
                         AND op.is_deleted = 0 AND op.is_pending = 0 AND op.is_anonymous = 0

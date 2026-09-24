@@ -123,6 +123,50 @@ foreach (array_slice($connectionIds, 0, 3) as $followedId) {
     $follows->follow($galadrielId, $followedId);
 }
 
+// The narrow-cover stress case: a 32-character unbroken handle (the longest a
+// username may be) with no display name, so the h1 carries the handle itself,
+// and an unbroken website.
+$longHandle = 'Celebrimbor_of_Eregion_Ringsmith';
+$longId = $ensureUser($longHandle, '');
+$db->run(
+    "UPDATE users
+     SET display_name = NULL, bio = NULL, title = NULL, reputation = 0, profile_visibility = 'public',
+         website = 'https://celebrimbor-of-eregion-ringsmith.example/the-forge-of-the-gwaith-i-mirdain',
+         created_at = '2020-06-01 12:00:00'
+     WHERE id = ?",
+    [$longId],
+);
+// The spec blocks and unblocks this member through the real ··· form. Start
+// every project clean even if an earlier run stopped between the two.
+$db->run('DELETE FROM blocks WHERE user_id = ? OR blocked_user_id = ?', [$longId, $longId]);
+
+// The paging fixture: 21 public followers plus one members-only follower
+// (private-seat), so a signed-in viewer pages 20 + 2 and a guest 20 + 1
+// (ADR 0031 §2). One password hash serves every follower; none signs in.
+$lamplighterId = $ensureUser('lamplighter', 'Lamplighter');
+$db->run("UPDATE users SET profile_visibility = 'public' WHERE id = ?", [$lamplighterId]);
+$hearthHash = $hasher->hash('password123');
+for ($i = 1; $i <= 21; $i++) {
+    $hearthName = sprintf('hearth_%02d', $i);
+    $hearth = $users->findByUsername($hearthName);
+    $hearthId = $hearth !== null ? (int) $hearth['id'] : $users->create([
+        'username' => $hearthName,
+        'email' => $hearthName . '@retro.test',
+        'password_hash' => $hearthHash,
+        'display_name' => sprintf('Hearth %02d', $i),
+        'role' => 'user',
+        'status' => 'active',
+    ]);
+    $follows->follow($hearthId, $lamplighterId);
+}
+$follows->follow($privateId, $lamplighterId);
+// One timestamp, so the lists order by follower id alone: hearth_21 first,
+// private-seat (the oldest account) last, on page 2.
+$db->run(
+    "UPDATE follows SET created_at = '2026-08-03 10:17:00' WHERE target_type = 'user' AND target_id = ?",
+    [$lamplighterId],
+);
+
 $existingTopicCount = (int) $db->fetchValue(
     'SELECT COUNT(*) FROM threads WHERE user_id = ? AND is_deleted = 0',
     [$galadrielId],

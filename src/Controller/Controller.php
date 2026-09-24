@@ -91,6 +91,24 @@ abstract class Controller
     }
 
     /**
+     * A posted `return` path, if it is local; $default otherwise. Browsers strip
+     * tab and newline from a Location before resolving it, so "/<TAB>/evil" is
+     * "//evil": control characters, spaces and backslashes are refused anywhere,
+     * not just after the first slash.
+     */
+    protected function localReturn(Request $request, string $default): string
+    {
+        $return = $request->post('return', '');
+        if (is_string($return)
+            && preg_match('#^/(?!/)#', $return) === 1
+            && preg_match('/[\x00-\x20\x7F\\\\]/', $return) !== 1) {
+            return $return;
+        }
+
+        return $default;
+    }
+
+    /**
      * Canonical location of a post within its thread, including the page it
      * falls on, so a no-JS redirect after a write lands on the right page and
      * its #anchor resolves (a paginated thread otherwise dropped the viewer on

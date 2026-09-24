@@ -107,16 +107,34 @@ final class ProfileController extends Controller
                 $perPage,
                 ($page - 1) * $perPage,
             );
+            $listRows = $tab === 'threads'
+                ? $this->renderBlankExcerpts($listRows, 'excerpt_html', 'excerpt_body')
+                : $this->renderBlankExcerpts($listRows, 'body_html', 'body');
         }
 
+        // A guest's counts and lists leave out members-only accounts (ADR 0031
+        // §2), so the numbers a guest reads agree with the people listed.
+        $publicOnly = $viewer === null;
+        $followerCount = $publicOnly ? $follows->countFollowers($profileId, '', true) : $follows->followerCount($profileId);
+        $followingCount = $publicOnly ? $follows->countFollowing($profileId, '', true) : $follows->followingCount($profileId);
         $connMode = $request->query('c') === 'following' ? 'following' : 'followers';
         $rawConnQuery = $request->query('cq');
         $connQuery = is_string($rawConnQuery) ? trim($rawConnQuery) : '';
         $connList = [];
+        $connTotal = 0;
+        $connPage = 1;
         if ($tab === 'connections') {
+            if ($connQuery === '') {
+                $connTotal = $connMode === 'following' ? $followingCount : $followerCount;
+            } else {
+                $connTotal = $connMode === 'following'
+                    ? $follows->countFollowing($profileId, $connQuery, $publicOnly)
+                    : $follows->countFollowers($profileId, $connQuery, $publicOnly);
+            }
+            $connPage = min($page, max(1, (int) ceil($connTotal / $perPage)));
             $connList = $connMode === 'following'
-                ? $follows->listFollowing($profileId, 100, 0, $connQuery)
-                : $follows->listFollowers($profileId, 100, 0, $connQuery);
+                ? $follows->listFollowing($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery, $publicOnly)
+                : $follows->listFollowers($profileId, $perPage, ($connPage - 1) * $perPage, $connQuery, $publicOnly);
         }
 
         $canViewMemberRecord = $viewer !== null
@@ -129,11 +147,11 @@ final class ProfileController extends Controller
             'bio_html' => $bioHtml,
             'title' => $titles->resolve($profile['title'] ?? null, (int) $profile['reputation']),
             'badges' => $community ? $this->container->get(BadgeRepository::class)->forUser($profileId) : [],
-            'follower_count' => $follows->followerCount($profileId),
-            'following_count' => $follows->followingCount($profileId),
+            'follower_count' => $followerCount,
+            'following_count' => $followingCount,
             'solved_count' => $this->container->get(UserRepository::class)->solvedAnswerCount($profileId),
             'recent_threads' => $tab === 'overview' ? $threadRepo->recentByUser($profileId, 5) : [],
-            'recent_posts' => $tab === 'overview' ? $postRepo->recentByUser($profileId, 5) : [],
+            'recent_posts' => $tab === 'overview' ? $this->renderBlankExcerpts($postRepo->recentByUser($profileId, 5), 'body_html', 'body') : [],
             'board_activity' => $tab === 'overview' ? $postRepo->boardActivityForUser($profileId, 4) : [],
             'top_commended' => $tab === 'commends' ? $postRepo->topCommendedByUser($profileId, 5) : [],
             'list_rows' => $listRows,
@@ -145,6 +163,8 @@ final class ProfileController extends Controller
             'conn_mode' => $connMode,
             'conn_query' => $connQuery,
             'conn_list' => $connList,
+            'conn_page' => $connPage,
+            'conn_page_count' => max(1, (int) ceil($connTotal / $perPage)),
             'can_remove_followers' => $isSelf && $connMode === 'followers',
             'custom_fields' => $this->container->get(FeatureFlags::class)->enabled('custom_profile_fields')
                 ? $this->container->get(UserProfileFieldRepository::class)->forUser($profileId)
@@ -166,6 +186,24 @@ final class ProfileController extends Controller
             'profile_status' => (string) ($profile['status'] ?? 'active'),
             'profile_suspended_until' => $profile['suspended_until'] ?? null,
         ]);
+    }
+
+    /**
+     * Blank cached HTML is rendered from the Markdown on read (PRODUCT_DESIGN
+     * §9.5), so an excerpt never shows Markdown source.
+     *
+     * @param array<int,array<string,mixed>> $rows
+     * @return array<int,array<string,mixed>>
+     */
+    private function renderBlankExcerpts(array $rows, string $htmlKey, string $bodyKey): array
+    {
+        foreach ($rows as $i => $row) {
+            if (trim((string) ($row[$htmlKey] ?? '')) === '' && trim((string) ($row[$bodyKey] ?? '')) !== '') {
+                $rows[$i][$htmlKey] = $this->container->get(Markdown::class)->render((string) $row[$bodyKey]);
+            }
+        }
+
+        return $rows;
     }
 
     /** Followers / following lists (COMMUNITY §8), subject to visibility + blocks. */
@@ -198,14 +236,25 @@ final class ProfileController extends Controller
         }
 
         $follows = $this->container->get(FollowRepository::class);
+        $perPage = 20;
+        $rawPage = $request->query('page');
+        $page = max(1, is_scalar($rawPage) ? (int) $rawPage : 1);
+        $publicOnly = $viewer === null;
+        $total = $mode === 'followers'
+            ? $follows->countFollowers($profileId, '', $publicOnly)
+            : $follows->countFollowing($profileId, '', $publicOnly);
+        $pageCount = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $pageCount);
         $list = $mode === 'followers'
-            ? $follows->listFollowers($profileId, 100)
-            : $follows->listFollowing($profileId, 100);
+            ? $follows->listFollowers($profileId, $perPage, ($page - 1) * $perPage, '', $publicOnly)
+            : $follows->listFollowing($profileId, $perPage, ($page - 1) * $perPage, '', $publicOnly);
 
         return $this->view('profile/connections', [
             'profile' => $profile,
             'mode' => $mode,
             'people' => $list,
+            'page' => $page,
+            'page_count' => $pageCount,
             'can_remove_followers' => $isSelf && $mode === 'followers',
         ]);
     }
