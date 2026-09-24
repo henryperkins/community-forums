@@ -153,6 +153,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                         <form class="dm-rail-form" method="post" action="/u/<?= $e($railOtherUser) ?>/block">
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="return" value="/messages/<?= $railId ?>">
+                            <input type="hidden" name="intent" value="<?= !empty($other_is_blocked) ? 'unblock' : 'block' ?>">
                             <button class="dm-rail-btn danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span><?= !empty($other_is_blocked) ? 'Unblock ' : 'Block ' ?><?= $e($railOtherName) ?></span></button>
                         </form>
                     <?php endif; ?>

@@ -412,8 +412,8 @@ final class ThreadRepository
             ? 'commend_count DESC, t.created_at DESC, t.id DESC'
             : 't.created_at DESC, t.id DESC';
 
-        // excerpt_body backs excerpt_html when the render cache is blank
-        // (PRODUCT_DESIGN §9.5): the words stay available, unformatted.
+        // excerpt_body is the Markdown the controller renders when the OP's
+        // render cache is blank (PRODUCT_DESIGN §9.5).
         return $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name,
                     (SELECT op.body_html FROM posts op

@@ -12,11 +12,9 @@ if ($bioPlain !== '') {
 }
 $this->section('description', \App\Support\Str::snippet($description, 160));
 $this->section('composer', '0');
-// Rendered words, not Markdown source; the raw body stands in only when the
-// render cache is blank (PRODUCT_DESIGN §9.5).
-$profileExcerpt = static function (string $html, string $body): string {
-    $text = trim($html) !== '' ? \App\Support\Str::plainText($html) : $body;
-    return \App\Support\Str::snippet($text, 140);
+// Rendered words, not Markdown source. The controller renders a blank cache.
+$profileExcerpt = static function (string $html): string {
+    return \App\Support\Str::snippet(\App\Support\Str::plainText($html), 140);
 };
 ?>
 <div class="profile">
@@ -213,7 +211,7 @@ $profileExcerpt = static function (string $html, string $body): string {
                             <?php foreach ($recent_posts as $p): ?>
                                 <li class="profile-row">
                                     <a class="profile-row-title" href="/t/<?= (int) $p['thread_id'] ?>-<?= $e($p['thread_slug']) ?>#p<?= (int) $p['id'] ?>"><?= $e($p['thread_title']) ?></a>
-                                    <?php $postExcerpt = $profileExcerpt((string) ($p['body_html'] ?? ''), (string) ($p['body'] ?? '')); ?>
+                                    <?php $postExcerpt = $profileExcerpt((string) ($p['body_html'] ?? '')); ?>
                                     <?php if ($postExcerpt !== ''): ?><p class="profile-row-excerpt"><?= $e($postExcerpt) ?></p><?php endif; ?>
                                     <p class="profile-row-meta"><span><?= $e(human_datetime($p['created_at'])) ?></span><span><?= (int) ($p['commend_count'] ?? 0) ?> commends</span></p>
                                 </li>
@@ -280,9 +278,7 @@ $profileExcerpt = static function (string $html, string $body): string {
                             ? '/t/' . (int) $row['id'] . '-' . $row['slug']
                             : '/t/' . (int) $row['thread_id'] . '-' . $row['thread_slug'] . '#p' . (int) $row['id'];
                         $rowTitle = $isTopic ? (string) $row['title'] : (string) $row['thread_title'];
-                        $rowBody = $isTopic
-                            ? $profileExcerpt((string) ($row['excerpt_html'] ?? ''), (string) ($row['excerpt_body'] ?? ''))
-                            : $profileExcerpt((string) ($row['body_html'] ?? ''), (string) ($row['body'] ?? ''));
+                        $rowBody = $profileExcerpt((string) ($isTopic ? ($row['excerpt_html'] ?? '') : ($row['body_html'] ?? '')));
                         ?>
                         <li class="profile-row">
                             <div class="profile-row-body">

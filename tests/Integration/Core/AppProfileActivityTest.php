@@ -400,16 +400,17 @@ final class AppProfileActivityTest extends TestCase
         }
     }
 
-    public function test_excerpts_fall_back_to_the_body_when_the_render_cache_is_blank(): void
+    public function test_excerpts_render_a_blank_cache_from_the_markdown(): void
     {
         [$board, $author] = $this->seedAuthor();
-        $topic = $this->makeThread($board, $author, 'Uncached excerpt topic', 'Words kept without a cache.');
+        $topic = $this->makeThread($board, $author, 'Uncached excerpt topic', 'Words **kept** without a cache.');
         $this->db->run('UPDATE posts SET body_html = NULL WHERE thread_id = ?', [$topic['thread_id']]);
 
-        foreach (['posts', 'threads'] as $tab) {
-            $this->assertSeeText($this->get('/u/galadriel', ['tab' => $tab]), 'Words kept without a cache.');
+        foreach ([['tab' => 'posts'], ['tab' => 'threads'], []] as $query) {
+            $page = $this->get('/u/galadriel', $query);
+            $this->assertSeeText($page, 'Words kept without a cache.');
+            $this->assertDontSeeText($page, '**kept**');
         }
-        $this->assertSeeText($this->get('/u/galadriel'), 'Words kept without a cache.');
     }
 
     public function test_commend_figures_count_only_other_members(): void
@@ -472,10 +473,18 @@ final class AppProfileActivityTest extends TestCase
         $this->post('/u/galadriel/block', ['intent' => 'unblock']);
         self::assertFalse($blocks->blocks((int) $blocker['id'], (int) $author['id']));
 
-        // Forms that send no intent (the DM and settings lists) still toggle.
+        // A form that sends no intent (an older cached page) still toggles.
         $this->post('/u/galadriel/block');
         self::assertTrue($blocks->blocks((int) $blocker['id'], (int) $author['id']));
         $this->assertRedirect($this->post('/u/galadriel/block', ['return' => "/\t/evil.example"]), '/u/galadriel');
+        self::assertFalse($blocks->blocks((int) $blocker['id'], (int) $author['id']));
+
+        // The block list's Unblock names its intent too: a double submit stays unblocked.
+        $blocks->block((int) $blocker['id'], (int) $author['id']);
+        $settings = $this->xpath($this->get('/settings/blocks'));
+        self::assertSame(1, $settings->query('//form[@action="/u/galadriel/block"][.//input[@name="intent" and @value="unblock"]]')->length);
+        $this->post('/u/galadriel/block', ['intent' => 'unblock', 'return' => '/settings/blocks']);
+        $this->assertRedirect($this->post('/u/galadriel/block', ['intent' => 'unblock', 'return' => '/settings/blocks']), '/settings/blocks');
         self::assertFalse($blocks->blocks((int) $blocker['id'], (int) $author['id']));
     }
 
@@ -566,6 +575,10 @@ final class AppProfileActivityTest extends TestCase
         $guestTab = $this->get('/u/galadriel', ['tab' => 'connections']);
         $this->assertSeeText($guestTab, 'Lindir');
         $this->assertDontSeeText($guestTab, 'celebrian');
+        // A guest's counts agree with the people a guest is shown.
+        $this->assertSeeText($guestTab, 'Followers · 1');
+        $this->assertSeeText($guestTab, 'Following · 0');
+        $this->assertSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'c' => 'following']), 'No one here yet');
         $this->assertSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'cq' => 'celeb']), 'Nothing matches');
         $this->assertDontSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'c' => 'following']), 'arwen');
         $guestLegacy = $this->get('/u/galadriel/followers');
@@ -576,6 +589,8 @@ final class AppProfileActivityTest extends TestCase
         $this->actingAs($this->makeUser(['username' => 'signed-in-reader']));
         $memberTab = $this->get('/u/galadriel', ['tab' => 'connections']);
         $this->assertSeeText($memberTab, 'Celebrian');
+        $this->assertSeeText($memberTab, 'Followers · 2');
+        $this->assertSeeText($memberTab, 'Following · 1');
         $this->assertSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'c' => 'following']), 'Arwen');
         $this->assertSeeText($this->get('/u/galadriel/followers'), 'Celebrian');
     }

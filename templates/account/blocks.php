@@ -28,6 +28,7 @@
                         <form class="inline" method="post" action="/u/<?= $e($b['username']) ?>/block">
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="return" value="/settings/blocks">
+                            <input type="hidden" name="intent" value="unblock">
                             <button class="linkbtn" type="submit">Unblock</button>
                         </form>
                     </li>

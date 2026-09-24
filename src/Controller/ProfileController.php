@@ -107,10 +107,16 @@ final class ProfileController extends Controller
                 $perPage,
                 ($page - 1) * $perPage,
             );
+            $listRows = $tab === 'threads'
+                ? $this->renderBlankExcerpts($listRows, 'excerpt_html', 'excerpt_body')
+                : $this->renderBlankExcerpts($listRows, 'body_html', 'body');
         }
 
-        $followerCount = $follows->followerCount($profileId);
-        $followingCount = $follows->followingCount($profileId);
+        // A guest's counts and lists leave out members-only accounts (ADR 0031
+        // §2), so the numbers a guest reads agree with the people listed.
+        $publicOnly = $viewer === null;
+        $followerCount = $publicOnly ? $follows->countFollowers($profileId, '', true) : $follows->followerCount($profileId);
+        $followingCount = $publicOnly ? $follows->countFollowing($profileId, '', true) : $follows->followingCount($profileId);
         $connMode = $request->query('c') === 'following' ? 'following' : 'followers';
         $rawConnQuery = $request->query('cq');
         $connQuery = is_string($rawConnQuery) ? trim($rawConnQuery) : '';
@@ -118,10 +124,7 @@ final class ProfileController extends Controller
         $connTotal = 0;
         $connPage = 1;
         if ($tab === 'connections') {
-            // A guest's list leaves out members-only accounts, so only a
-            // signed-in, unfiltered list can reuse the header total.
-            $publicOnly = $viewer === null;
-            if ($connQuery === '' && !$publicOnly) {
+            if ($connQuery === '') {
                 $connTotal = $connMode === 'following' ? $followingCount : $followerCount;
             } else {
                 $connTotal = $connMode === 'following'
@@ -148,7 +151,7 @@ final class ProfileController extends Controller
             'following_count' => $followingCount,
             'solved_count' => $this->container->get(UserRepository::class)->solvedAnswerCount($profileId),
             'recent_threads' => $tab === 'overview' ? $threadRepo->recentByUser($profileId, 5) : [],
-            'recent_posts' => $tab === 'overview' ? $postRepo->recentByUser($profileId, 5) : [],
+            'recent_posts' => $tab === 'overview' ? $this->renderBlankExcerpts($postRepo->recentByUser($profileId, 5), 'body_html', 'body') : [],
             'board_activity' => $tab === 'overview' ? $postRepo->boardActivityForUser($profileId, 4) : [],
             'top_commended' => $tab === 'commends' ? $postRepo->topCommendedByUser($profileId, 5) : [],
             'list_rows' => $listRows,
@@ -183,6 +186,24 @@ final class ProfileController extends Controller
             'profile_status' => (string) ($profile['status'] ?? 'active'),
             'profile_suspended_until' => $profile['suspended_until'] ?? null,
         ]);
+    }
+
+    /**
+     * Blank cached HTML is rendered from the Markdown on read (PRODUCT_DESIGN
+     * §9.5), so an excerpt never shows Markdown source.
+     *
+     * @param array<int,array<string,mixed>> $rows
+     * @return array<int,array<string,mixed>>
+     */
+    private function renderBlankExcerpts(array $rows, string $htmlKey, string $bodyKey): array
+    {
+        foreach ($rows as $i => $row) {
+            if (trim((string) ($row[$htmlKey] ?? '')) === '' && trim((string) ($row[$bodyKey] ?? '')) !== '') {
+                $rows[$i][$htmlKey] = $this->container->get(Markdown::class)->render((string) $row[$bodyKey]);
+            }
+        }
+
+        return $rows;
     }
 
     /** Followers / following lists (COMMUNITY §8), subject to visibility + blocks. */

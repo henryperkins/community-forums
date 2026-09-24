@@ -1,7 +1,7 @@
 {
-  "version": "e19e54babc87e949",
+  "version": "7ef1dcc3fb730375",
   "urls": {
-    "app.css": "/assets/dist/app-style-hkoXC0Xn.css",
+    "app.css": "/assets/dist/app-style-CYwMKTp8.css",
     "imladris.css": "/assets/dist/imladris-style-Cw9wS_6P.css",
     "app.js": "/assets/dist/app-f21f303cb228adc9.js",
     "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
@@ -27,7 +27,7 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "ec6308b19bde37451cbc366d75ff059b0dfe1d50b297fd988a8bdcbf10fba6e1",
+      "sha256": "0ae01b21b603a5fc3cbc5d9b46de48d26c1884e860f7a5e98fb11614218fc39e",
       "immutable": false
     },
     "/assets/app.js": {
@@ -42,8 +42,8 @@
       "sha256": "f21f303cb228adc9e27145aab560d804c78be4735d20f3a12380e8cf2982b6a7",
       "immutable": true
     },
-    "/assets/dist/app-style-hkoXC0Xn.css": {
-      "sha256": "60e65c039f1e3e5e00c9f86aa66c70fde7a244f67ef3fc093426ecf7f3376386",
+    "/assets/dist/app-style-CYwMKTp8.css": {
+      "sha256": "76d805819e607a47c8af650c7c4c2bca7a4abab3e4cdcc51218ed9d6625e4b1f",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {

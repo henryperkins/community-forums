@@ -1936,9 +1936,13 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-rep-value { display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-mono); font-weight: var(--weight-medium); font-size: 1.35rem; line-height: 1; color: var(--ink-900); font-variant-numeric: tabular-nums; }
 .profile-rep-value .star-marker { width: 15px; height: 15px; align-self: center; color: var(--star); margin: 0; }
 .profile-rep-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .16em; font-size: .62rem; color: var(--gold-800); margin-top: 2px; }
-.profile-cover .profile-actions { margin: 0; justify-content: flex-end; }
+.profile-cover .profile-actions { margin: 0; justify-content: flex-end; color: var(--mist-200); }
 .profile-cover .profile-actions .linkbtn { color: var(--mist-200); }
-.profile-cover .dm-iconbtn { color: var(--mist-200); }
+/* The ··· trigger takes the twilight cover's ink; its own muted ink is drawn
+   for a light panel and measures 2.2:1 here. Hover (sticky after a tap) keeps
+   it too, over a chip of the same ink, not the panel's sunken chip. */
+.profile-cover .dm-iconbtn { color: inherit; }
+.profile-cover .dm-iconbtn:hover { color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); }
 .profile-cover .profile-actions .btn-on { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
 .profile-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 0; }
 .profile-badges-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .16em; font-size: .62rem; color: var(--text-faint); margin: 0 4px 0 0; }
@@ -2020,12 +2024,12 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .profile-avatar .monogram { width: 64px; height: 64px; font-size: 1.5rem; }
     .profile-aside { grid-column: 1 / -1; align-items: flex-start; margin-top: 12px; }
     .profile-rep { text-align: left; }
-    /* The button is not at the screen edge. The row spans the aside, and the
-       pop is positioned against that whole row, so it grows inward from the
-       cover's right edge however few actions the row holds. */
+    /* The button is not at the screen edge. The row spans the aside and the
+       pop opens from the row's start, under the actions that hold its
+       trigger, so it stays inside the cover however few actions there are. */
     .profile-cover .profile-actions { position: relative; align-self: stretch; justify-content: flex-start; }
     .profile-cover .dm-menu { position: static; }
-    .profile-cover .dm-menu-pop { right: 0; left: auto; width: min(260px, calc(100% - 8px)); }
+    .profile-cover .dm-menu-pop { left: 0; right: auto; width: min(260px, calc(100% - 8px)); }
     .profile-cover .dm-iconbtn { width: 44px; height: 44px; }
     /* 44px taps without taller boxes: the stat numbers keep one baseline. */
     .profile-cover .profile-stats dt a,
@@ -7727,8 +7731,9 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .profile-block > summary { list-style: none; width: 100%; }
 .profile-block > summary::-webkit-details-marker { display: none; }
 .profile-cover .profile-block form {
-    display: grid; gap: 8px; padding: 2px 10px 8px;
+    display: grid; gap: 8px; padding: 2px 10px 8px; overflow-wrap: anywhere;
 }
+.profile-cover .profile-block form > * { min-width: 0; }
 .profile-cover .profile-block form p {
     margin: 0; font-size: .82rem; line-height: 1.45; color: var(--text-body); text-wrap: pretty;
 }
