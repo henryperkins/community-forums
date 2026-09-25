@@ -46,7 +46,7 @@ editor at `GET/POST /settings/account`, and the scheduled purge worker.
 
 ## Pre-release restriction reconciliation
 
-Before releasing the 2026-09-20 lifecycle repair, run these **read-only**
+Before releasing a lifecycle or suspension repair, run these **read-only**
 diagnostics against the deployment database. Save the counts and reviewed IDs
 with the release record. An empty test schema is not evidence about existing
 member accounts.
@@ -78,6 +78,22 @@ WHERE (u.status = 'active' OR (
           WHERE d.user_id = u.id AND d.status = 'pending'
       )
   )
+ORDER BY u.id;
+
+-- Suspended accounts whose cached expiry ends before a live site post hold.
+-- NULL required_until means an indefinite hold is still in force.
+SELECT u.id, u.suspended_until,
+       CASE WHEN SUM(b.expires_at IS NULL) > 0 THEN NULL
+            ELSE MAX(b.expires_at) END AS required_until,
+       COUNT(*) AS live_post_restrictions
+FROM users u
+JOIN bans b ON b.user_id = u.id
+WHERE u.status = 'suspended' AND b.scope = 'site' AND b.type = 'post'
+  AND b.lifted_at IS NULL
+  AND (b.expires_at IS NULL OR b.expires_at > UTC_TIMESTAMP())
+GROUP BY u.id, u.suspended_until
+HAVING (SUM(b.expires_at IS NULL) > 0 AND u.suspended_until IS NOT NULL)
+    OR (SUM(b.expires_at IS NULL) = 0 AND u.suspended_until < MAX(b.expires_at))
 ORDER BY u.id;
 
 -- Pending requests outside the ordinary deletion/moderation states need review.
