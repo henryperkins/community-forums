@@ -1,5 +1,11 @@
 # RetroBoards Phase 6 Plan — Realtime & Scale
 
+> **Archived 2026-09-25.** Moved from the repository root to `docs/history/`; the text below is
+> otherwise unchanged and no longer maintained, so its status lines describe the date they were
+> written. Cite it for scope history and gate definitions, not current state: availability is
+> `src/Core/FeatureFlags.php` `DEFAULTS` plus the owning runbook in `docs/runbooks/`, open
+> carryovers are ADRs in `docs/adr/`, and what shipped is recorded in `CHANGELOG.md`.
+
 **Owner:** Henry  
 **Plan type:** Delivery baseline, capacity-triggered release train, and formal phase closeout  
 **Plan status:** **Draft — execution is gated by formal Phase 5 closeout, Milestone 0 capacity approval, and at least one evidenced scale trigger**  

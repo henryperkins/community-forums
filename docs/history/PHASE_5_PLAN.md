@@ -1,5 +1,11 @@
 # RetroBoards Phase 5 Plan — Ecosystem, Identity & Governance
 
+> **Archived 2026-09-25.** Moved from the repository root to `docs/history/`; the text below is
+> otherwise unchanged and no longer maintained, so its status lines describe the date they were
+> written. Cite it for scope history and gate definitions, not current state: availability is
+> `src/Core/FeatureFlags.php` `DEFAULTS` plus the owning runbook in `docs/runbooks/`, open
+> carryovers are ADRs in `docs/adr/`, and what shipped is recorded in `CHANGELOG.md`.
+
 **Owner:** Henry  
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
 **Plan status:** **Gate A accepted and default-on; Gate B remains reserved.** Current workstream state and evidence are in `PHASE_5_STATUS.md`; acceptance and rollout decisions are in ADRs 0012, 0017, and 0018.

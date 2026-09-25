@@ -1,9 +1,11 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.44 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Status:** v1.45 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
+
+This file is hand-maintained and can lag `database/migrations/`, which is what the database actually has. On 2026-09-25 it was checked against a database migrated through `0082_posts_read_order_index`: every created table is indexed below (`plugins` is the one documented table no migration builds), every column is documented, and the column types and nullability in the `CREATE TABLE` blocks match. Index names in the summary-style sections were not checked. Where a migration and a shape here disagree, the migration wins — correct this file.
 
 ## Conventions
 
@@ -46,7 +48,7 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 26 | `warnings` | Admin / mod | 2 | ADMIN §10.1 |
 | 27 | `user_notes` | Admin / mod | 2 | ADMIN §10.1 |
 | 28 | `board_members` | Admin | 2 | ADMIN §10.1 |
-| 29 | `plugins` | Admin / integrations | 3 | ADMIN §10.1 |
+| 29 | `plugins` | Admin / integrations | — | ADMIN §10.1 — **planned, never built** (no migration; ADR 0002 moved hooks/plugins to Phase 5) |
 | 30 | `webhooks` | Admin / integrations | 3 | ADMIN §10.1 |
 | 31 | `api_tokens` | Admin / integrations | 5 | ADMIN §10.1 |
 | 32 | `email_suppressions` | Email | 2 | ADMIN §10.1 |
@@ -133,10 +135,11 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 113 | `installed_package_credentials` | Ecosystem | 5 | PHASE_5_PLAN §8.2 / P5-04 (migration 0073; package-owned api_token/webhook links) |
 | 114 | `thread_intelligence_jobs` | Knowledge / AI | 4 | ADR 0019 Thread Intelligence / migration 0077 |
 | 115 | `thread_intelligence_generations` | Knowledge / AI | 4 | ADR 0019 Thread Intelligence / migration 0077 |
+| 116 | `submission_idempotency` | Composer / submissions | 3 | PHASE_3_PLAN §8.5 / P3-03 (migration 0044; DDL in §4) |
 
-> "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the PRODUCT_DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to PRODUCT_DESIGN §13.
+> "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7, now archived in `docs/history/`), which subdivides the PRODUCT_DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to PRODUCT_DESIGN §13.
 >
-> Tables 55–77 are the **Phase 5 foundation** (migrations `0049`–`0053`): originally additive and inert so no Gate A feature depended on an undocumented shape (Milestone 1). Accepted Gate A workstreams default on as of 2026-07-09 for any install without an explicit `features` override (fresh and upgraded alike), and each remains reversible through that override (see §5A and `PHASE_5_STATUS.md`).
+> Tables 55–77 are the **Phase 5 foundation** (migrations `0049`–`0053`): originally additive and inert so no Gate A feature depended on an undocumented shape (Milestone 1). Accepted Gate A workstreams default on as of 2026-07-09 for any install without an explicit `features` override (fresh and upgraded alike), and each remains reversible through that override (see §5A and `FeatureFlags::DEFAULTS`; rollout history is in ADR 0018 and the archived `docs/history/PHASE_5_STATUS.md`).
 >
 > Tables 78–80 are the **Gate A TOTP/recovery prerequisite** (migration `0054`):
 > additive, opt-in, and active only for accounts that enroll. They resolve ADR
@@ -168,10 +171,10 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > Tables 93–99 and the reconciled `users.status` / `email_deliveries.payload`
 > deltas are the **Phase 2–4 carryover completion** (migrations `0059`–`0062`):
 > additive account-lifecycle, moderation-appeals, email-domain, and
-> bookmark/profile-field shapes (see §4B). `appeals` and
-> `custom_profile_fields` default dark; `bookmark_folders` graduated to
-> default-on on 2026-07-01 and `account_lifecycle` on 2026-07-02 (both
-> reversible via the `features` override).
+> bookmark/profile-field shapes (see §4B). All four surfaces have graduated to
+> default-on — `bookmark_folders` on 2026-07-01, `account_lifecycle` and
+> `appeals` (ADR 0007) on 2026-07-02, and `custom_profile_fields` on
+> 2026-07-03 — each reversible via the `features` override.
 >
 > Migration `0063` adds email retry/backoff columns to `email_deliveries`.
 > Table 100 is server draft sync (`0064`, `server_drafts` flag; graduated to
@@ -211,7 +214,7 @@ CREATE TABLE users (
   profile_visibility   ENUM('public','members') NOT NULL DEFAULT 'public',          -- USER §7.2 (server-enforced)
   allow_dms            ENUM('everyone','members','none') NOT NULL DEFAULT 'members', -- USER §7.2; default 'members' per DECISIONS §5 #8
   show_presence        TINYINT(1)      NOT NULL DEFAULT 1,   -- USER §7.2
-  status               ENUM('active','suspended','banned') NOT NULL DEFAULT 'active',
+  status               ENUM('active','deactivated','pending_deletion','deleted','suspended','banned') NOT NULL DEFAULT 'active', -- lifecycle states added by migration 0059 (§4B); 'deleted' = anonymized tombstone
   suspended_until      DATETIME        NULL,                 -- ADMIN §10.2 (auto-restore on expiry)
   email_verified_at    DATETIME        NULL,
   onboarded_at         DATETIME        NULL,                 -- PRODUCT_DESIGN §8.3 (product tour, cross-device); ADDED in Phase 3 (PHASE_3_PLAN §8.1 / P3-11), not Phase 1
@@ -229,6 +232,7 @@ CREATE TABLE users (
   UNIQUE KEY uq_users_email (email),
   KEY idx_users_role_status_id (role, status, id),
   KEY idx_users_last_seen (last_seen_at),
+  KEY idx_users_reputation (reputation),                     -- all-time leaderboard order (migration 0041)
   KEY idx_users_signature_removed_by (signature_removed_by),
   KEY idx_users_avatar_removed_by (avatar_removed_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -327,6 +331,7 @@ CREATE TABLE threads (
   PRIMARY KEY (id),
   KEY idx_threads_inbox (board_id, is_pinned DESC, last_post_at DESC),
   KEY idx_threads_author (user_id),
+  KEY idx_threads_pending (is_pending, board_id),           -- approval-hold queue (migration 0045)
   FULLTEXT KEY ft_threads_title (title),                    -- PRODUCT_DESIGN §8.3 (global search §6.9); index BUILT in Phase 2 (search, P2-06), not Phase 1
   CONSTRAINT fk_threads_board FOREIGN KEY (board_id) REFERENCES boards(id),
   CONSTRAINT fk_threads_user  FOREIGN KEY (user_id)  REFERENCES users(id)
@@ -350,10 +355,12 @@ CREATE TABLE posts (
   edited_at      DATETIME        NULL,
   edited_by      BIGINT UNSIGNED NULL,
   deleted_by     BIGINT UNSIGNED NULL,
+  deleted_at     DATETIME        NULL,                      -- soft-delete timestamp; starts the attachment-retention grace window (migration 0047)
   PRIMARY KEY (id),
   KEY idx_posts_thread (thread_id, created_at),
   KEY idx_posts_thread_read (thread_id, is_deleted, is_pending, created_at, id), -- chronological live-read cursor/rank (`0082`)
   KEY idx_posts_author (user_id),
+  KEY idx_posts_pending (is_pending, thread_id),            -- approval-hold queue (migration 0045)
   FULLTEXT KEY ft_posts_body (body),                        -- search (PRODUCT_DESIGN §6.9); index BUILT in Phase 2 (P2-06), not Phase 1
   CONSTRAINT fk_posts_thread FOREIGN KEY (thread_id) REFERENCES threads(id),
   CONSTRAINT fk_posts_user   FOREIGN KEY (user_id)   REFERENCES users(id)
@@ -499,7 +506,8 @@ CREATE TABLE moderation_log (
 CREATE TABLE oauth_identities (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id          BIGINT UNSIGNED NOT NULL,
-  provider         ENUM('google','apple','github') NOT NULL,
+  provider         VARCHAR(64)     NOT NULL,                -- was ENUM('google','apple','github'); widened by migration 0052 (§5A)
+  provider_config_id BIGINT UNSIGNED NULL,                  -- identity_providers link (migration 0052; backfilled by 0074)
   provider_user_id VARCHAR(191)    NOT NULL,                -- stable id (sub / numeric id)
   email            VARCHAR(255)    NULL,                    -- may be a relay/private address
   email_verified   TINYINT(1)      NOT NULL DEFAULT 0,
@@ -509,7 +517,9 @@ CREATE TABLE oauth_identities (
   PRIMARY KEY (id),
   UNIQUE KEY uq_provider_identity (provider, provider_user_id),
   KEY idx_oauth_user (user_id),
-  CONSTRAINT fk_oauth_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  KEY idx_oauth_provider_config (provider_config_id),
+  CONSTRAINT fk_oauth_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_oauth_provider_config FOREIGN KEY (provider_config_id) REFERENCES identity_providers(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Per-user preference blob (theme, reading, notifications, composing, privacy, leaderboard opt-out, ...)
@@ -640,7 +650,9 @@ CREATE TABLE board_members (
   CONSTRAINT fk_bm_user  FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Installed plugins / integrations
+-- Installed plugins / integrations. PLANNED, NEVER BUILT: no migration creates this table. ADR 0002 moved
+-- internal hooks/plugins to Phase 5, which shipped the code-only first-party hook registry and the package
+-- tables (§5A); the untrusted server-extension runtime is 0065 (ADR 0011). Kept as the original ADMIN §10.1 design.
 CREATE TABLE plugins (
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   slug         VARCHAR(64)     NOT NULL,
@@ -729,6 +741,7 @@ CREATE TABLE email_deliveries (
   email      VARCHAR(255) NOT NULL,
   kind       ENUM('instant','digest','test','system') NOT NULL,
   subject    VARCHAR(255) NULL,
+  payload    JSON NULL,                                      -- migration 0061: versioned per-recipient render payload (instant/digest/system; NULL for test sends)
   status     ENUM('queued','sent','bounced','complained','suppressed','failed') NOT NULL DEFAULT 'queued',
   attempt_count INT UNSIGNED NOT NULL DEFAULT 0,             -- migration 0063: automatic retry/backoff attempts already made
   max_attempts TINYINT UNSIGNED NOT NULL DEFAULT 5,           -- max 1 preserves old single-attempt behavior
@@ -736,7 +749,7 @@ CREATE TABLE email_deliveries (
   next_attempt_at DATETIME NULL,                             -- NULL = immediately claimable when status='queued'
   error      VARCHAR(255) NULL,
   message_id VARCHAR(191) NULL,
-  idempotency_key VARCHAR(191) NULL,                          -- PRODUCT_DESIGN §9.6: post_id+':'+user_id for transactional 'instant' fan-out; NULL for digest/test/system
+  idempotency_key VARCHAR(191) NULL,                          -- PRODUCT_DESIGN §9.6: post_id+':'+user_id for 'instant' fan-out; 'digest:{user_id}:{local-date}' for digests; 'announcement:{version}:{user_id}' for system broadcasts; NULL only for test sends
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   sent_at    DATETIME NULL,
   PRIMARY KEY (id),
@@ -794,8 +807,8 @@ CREATE TABLE submission_idempotency (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id     BIGINT UNSIGNED NOT NULL,
   idem_key    CHAR(64)        NOT NULL,                     -- sha256 of the client token
-  context     VARCHAR(32)     NOT NULL,                     -- thread | reply | dm_start | dm_reply | post_edit | wiki_edit
-  result_type VARCHAR(32)     NOT NULL,                     -- thread | post | dm_message
+  context     VARCHAR(32)     NOT NULL,                     -- thread | reply | dm_start | dm_reply | post_edit | wiki_edit | mod_warn | api_token_mint
+  result_type VARCHAR(32)     NOT NULL,                     -- thread | post | dm_message | warning | api_token
   result_id   BIGINT UNSIGNED NOT NULL,
   created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -962,15 +975,15 @@ path.
 
 Migrations `0059`–`0062` add the remaining ADR 0006/0007 and P2-04 carryover
 shapes that PR #26 implemented. All are additive; the member-facing surfaces are
-feature-flag controlled (`appeals` and `custom_profile_fields` default off;
-`bookmark_folders` and `account_lifecycle` graduated to default-on on 2026-07-01
-and 2026-07-02 respectively, both reversible via the `features` override).
+feature-flag controlled and have all graduated to default-on (`bookmark_folders`
+2026-07-01; `account_lifecycle` and `appeals` 2026-07-02; `custom_profile_fields`
+2026-07-03), each reversible via the `features` override.
 "Inert schema is not evidence" (PRODUCT_DESIGN §13).
 
 Modified existing tables:
 
 - `users.status` **ENUM widened** to `('active','deactivated','pending_deletion','deleted','suspended','banned')` (migration `0059`) for self-service lifecycle states. Accounts are never hard-deleted; the grace-period purge anonymizes PII while preserving content + audit history.
-- `email_deliveries` adds `payload JSON NULL AFTER subject` (migration `0061`) so a `kind='system'` broadcast carries a durable per-recipient payload the worker renders at send time.
+- `email_deliveries` adds `payload JSON NULL AFTER subject` (migration `0061`) so a send carries a durable, versioned per-recipient payload the worker renders at send time. Introduced for `kind='system'` broadcasts; instant notifications and daily digests now store one too, and only `test` sends leave it NULL.
 
 New tables:
 
@@ -1125,7 +1138,7 @@ choice, isolation profile, numeric budgets, and permission taxonomy are
 **owner-approved Milestone-0 policy** and are deliberately **not** encoded here;
 private trust-root/signing keys never live in the application DB (§8.2 #1).
 "Inert schema is not evidence" of a shipped feature (PRODUCT_DESIGN §13) — see
-`PHASE_5_STATUS.md`,
+the archived `docs/history/PHASE_5_STATUS.md`,
 `docs/adr/0004-phase-5-entry-and-carryover.md`, and
 `docs/adr/0018-phase-5-gate-a-default-on.md`.
 
@@ -1256,11 +1269,11 @@ jobs queued.
 
 ## 6. Phase map (suggested build cut)
 
-This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the PRODUCT_DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above; appeals, bookmark-folders, custom-profile-fields, and server drafts are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); its remaining automation-rule table is **identified as a schema gap in PHASE_3_PLAN §8.2 and is not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
+This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7, archived in `docs/history/`), which subdivides the PRODUCT_DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins` (designed but never built — see the index), `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above; appeals, bookmark-folders, custom-profile-fields, and server drafts are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); its remaining automation-rule table is **identified as a schema gap in PHASE_3_PLAN §8.2 and is not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
 
 - **Phase 1 (MVP backend):** `users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`. → See **[docs/history/PHASE_1_MIGRATIONS.md](docs/history/PHASE_1_MIGRATIONS.md)** for the exact Phase‑1 column cut, migration order (`0001`–`0010`), and which columns are held back to Phases 2–3.
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
-- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built by `0057` and now governed by the accepted `webhooks` flag), `api_tokens`; appeals, bookmark-folder, custom-profile-field, and server-draft tables are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); the automation-rule table remains a **schema gap in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
+- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted; never built — superseded by the Phase 5 hook registry and package tables), `webhooks` + `webhook_deliveries` (durable delivery, built by `0057` and now governed by the accepted `webhooks` flag), `api_tokens`; appeals, bookmark-folder, custom-profile-field, and server-draft tables are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); the automation-rule table remains a **schema gap in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
 - **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as originally additive tables now animated by accepted Gate A defaults and reversible through `features` overrides, and the B2 service-secret registry (`0055`), API-token slice (`0056`), webhook delivery slice (`0057`), code-only first-party hook registry, Gate B server-extension runtime tables (`0065`), registry snapshot cache (`0068`), package lifecycle/review-enforcement schema (`0069`–`0070`), and declarative theme package build/state schema (`0072`) are reconciled here. The remaining Phase 5 schema (governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #10/#11/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands; the publisher/review operator console behavior still lands later on the `0070` tables.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
@@ -1284,7 +1297,7 @@ Where the docs genuinely disagreed, this file picks one answer. Each is reversib
 6. **`moderation_log.actor_id` is NULLable, NULL = system.** ADMIN §3.8/§10.2 require accountable *automated* actions; the base had `actor_id NOT NULL`.
 7. **`sessions` DDL is canonical and shipped.** Migration `0005_sessions.php` created the Phase 1 table with `csrf_secret`, `expires_at`, `revoked_at`, and `idx_sessions_active`; the §1 definition above is the canonical shape. IP retention per ADMIN §5.5 remains a separate purge-job concern.
 8. **`moderation_log.target_type` widened to include `category` and `setting`.** The planned admin console audits board/category structure changes and site-name changes, so the original four target types were too narrow for real operator actions.
-9. **`email_deliveries.idempotency_key` added (`UNIQUE`).** PRODUCT_DESIGN §9.6 mandates `idempotency_key = post_id + ':' + user_id` for transactional fan-out, and PHASE_2 (P2-00 / Milestone 0) treats the missing column as a blocker for email work — but the consolidated DDL had no such column. Added as `VARCHAR(191) NULL` with `UNIQUE KEY uq_deliv_idem` (NULL for digest/test/system sends; InnoDB permits multiple NULLs). (Reconciled 2026-06-26.)
+9. **`email_deliveries.idempotency_key` added (`UNIQUE`).** PRODUCT_DESIGN §9.6 mandates `idempotency_key = post_id + ':' + user_id` for transactional fan-out, and PHASE_2 (P2-00 / Milestone 0) treats the missing column as a blocker for email work — but the consolidated DDL had no such column. Added as `VARCHAR(191) NULL` with `UNIQUE KEY uq_deliv_idem` (InnoDB permits multiple NULLs). (Reconciled 2026-06-26.) Digests and system broadcasts later adopted their own keys (`digest:{user_id}:{local-date}`, `announcement:{version}:{user_id}`); only `test` sends are NULL.
 10. **`posts.ip` added (`VARBINARY(16) NULL`).** DECISIONS §4 #5 commits to storing *post* IPs — not just the login IP in `sessions.ip` — as a ban-evasion signal (ADMIN §5.4); the consolidated `posts` table had no IP column, leaving that decision and feature with no schema home. Added with the same 90-day-retention / Admin-only-audited posture as `sessions.ip`; the purge job is a later seam (ADMIN §5.5). **Build phase: added in the Phase 2 migration** — the phase that first uses it (ban-evasion P2-08). It was previously slated to ship with `posts` in Phase 1, but no Phase 1 plan item built it; PHASE_2_PLAN §7.1 (group 4) now owns it. (Reconciled 2026-06-26; build phase clarified.)
 11. **Forward-phase columns tagged with their build phase.** Several columns live in Phase 1 *table* definitions (so each table has one consolidated final shape) but are *built* later, and the phase plans say so: `users.onboarded_at` → **Phase 3** (PHASE_3_PLAN §8.1 / P3-11 creates it explicitly); `users.timezone` / `digest_hour` / `last_daily_digest_at` and the `ft_threads_title` / `ft_posts_body` FULLTEXT indexes → **Phase 2** (PHASE_1_PLAN defers FULLTEXT; PHASE_2_PLAN P2-06 builds it); `posts.ip` and `sessions.ip` → **Phase 2** (post/login IP, ban-evasion ADMIN §5.4; `posts.ip` per #10; both omitted from the Phase 1 migrations — docs/history/PHASE_1_MIGRATIONS.md §3). These are now annotated inline rather than left implicitly Phase 1, honouring the Conventions note that inline comments mark each column's phase. The owning *table* still appears under its creation phase in §6. (Reconciled 2026-06-26.)
 12. **`oauth_identities.avatar_url` added (`VARCHAR(512) NULL`).** DECISIONS §5 #4 schedules **OAuth avatar-import for Phase 2**, and PHASE_1_MIGRATIONS §4 puts `users.avatar_source` in Phase 2 — but the consolidated schema gave the imported provider avatar nowhere to live (`users.avatar_path` is Phase 3, for the local uploads/Gravatar pipeline). Added `oauth_identities.avatar_url` as the Phase-2 cache of the provider avatar: import sets `users.avatar_source='oauth'` and renders from it (monogram fallback). The local copy (`users.avatar_path`), user uploads, and Gravatar stay Phase 3 (PHASE_3_PLAN P3-12). PHASE_2_PLAN P2-10 / §7.1 group 5 now build `avatar_source` + `avatar_url`. (Reconciled 2026-06-26.)
@@ -1310,6 +1323,7 @@ The following candidates remain unspecced/uncommitted as of 2026-09-23. A mentio
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.45 | 2026-09-25 | Reconciled drift against the migrations: `users.status` shows the six-state `0059` ENUM; `oauth_identities` shows `0052`'s `VARCHAR(64)` provider plus `provider_config_id`, its index and FK; `email_deliveries` shows `0061`'s `payload`, with the idempotency-key comments corrected for digest and announcement keys; `posts.deleted_at` (`0047`), `idx_posts_pending`/`idx_threads_pending` (`0045`), and `idx_users_reputation` (`0041`) are folded in. `submission_idempotency` joins the table index as #116; `plugins` (#29) is marked planned-but-never-built. `appeals` and `custom_profile_fields` are recorded as graduated default-on (2026-07-02/03), and the `submission_idempotency` context comments list `mod_warn`/`api_token_mint`. Phase-plan and status pointers now name the `docs/history/` archive. |
 | v1.44 | 2026-09-23 | Replaced stale pre-implementation wording for shipped sessions and durable submission idempotency. The remaining candidate columns are explicitly scoped to uncommitted future schema work. |
 | v1.43 | 2026-08-27 | Chronological read-cursor migration `0082_posts_read_order_index` adds `posts.idx_posts_thread_read (thread_id,is_deleted,is_pending,created_at,id)`. `thread_user.last_read_post_id` remains the locked per-thread cursor identity; unread, first-unread, context, and repair logic resolve its post and compare `(created_at,id)` tuples so split/merge/import ID skew cannot move readers backward or hide later posts. No cursor column or per-post receipt table was added. |
 | v1.42 | 2026-08-09 | Link-preview enablement migration `0081_link_preview_enablement` completes the `link_previews` carryover for its default-on graduation (ADR 0025). Adds `boards.link_previews_enabled TINYINT(1) NOT NULL DEFAULT 0` — the DECISIONS §6 #5 locked per-board opt-in, re-checked at fetch time so switching a board off stops its queued backlog — and extends `link_previews.status` with a `removed` member plus `removed_by`/`removed_at`. `removed` exists because `purged` is deliberately revived by the queue upsert (`status = IF(status = 'purged', 'queued', status)`), so a member who removed a card from their own post would see it return on the next edit; `removed` survives that upsert and is refused by operator refresh. Both directions `information_schema`-guarded; `down()` drops the columns and folds any surviving `removed` row into `purged` before narrowing the ENUM, so MySQL never rewrites those rows to the empty string. |

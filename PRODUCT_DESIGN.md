@@ -1,6 +1,6 @@
 # RetroBoards — Product & Technical Design Document
 
-**Status:** v0.19 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Status:** v0.20 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
 **Stack:** PHP + MySQL (server-rendered) with progressive-enhancement JavaScript
 **This document is the source of truth.** When a decision changes, update it here first. Code, tickets, and mockups defer to this file.
 
@@ -22,8 +22,8 @@ The durable unit is the **topic**: the inbox is personal, the topic is durable, 
 
 ## How to use this document
 
-- **Priorities** use MoSCoW-style tags: **P0** (must-have, MVP cannot ship without it), **P1** (should-have, fast follow), **P2** (could-have / future, design for it but don't build yet).
-- **Build status** tags in the feature catalog are the **2026-06-26 planning snapshot**, not a current release ledger. For current availability, use `PRODUCT.md`, `src/Core/FeatureFlags.php`, and the relevant runbook; for delivery status, use the phase plans and `PHASE_5_STATUS.md`.
+- **Priorities** use MoSCoW-style tags: **P0** (must-have, MVP cannot ship without it), **P1** (should-have, fast follow), **P2** (could-have / future, design for it but don't build yet), **P3** (won't-have-this-round — deferred / later). Tiers are not delivery phases (DECISIONS §2).
+- **Build status** tags in the feature catalog are the **2026-06-26 planning snapshot**, not a current release ledger. For current availability, use `PRODUCT.md`, `src/Core/FeatureFlags.php`, and the relevant runbook; for open carryovers, the ADRs in `docs/adr/`; for delivery history, the archived phase plans and status ledgers in `docs/history/`.
 - Sections 1–7 are the product spec. Sections 8–11 are the technical design. Sections 12–16 are planning and reference.
 
 ---
@@ -98,7 +98,7 @@ The original front-end explorations (`app.html` + `app.css`, and the retro tribu
 | **Moderator** | Trusted member, scoped to one or more boards | Keep boards healthy: pin, lock, move, delete, handle reports |
 | **Admin / Staff** | Site operator (initially Henry) | Everything: manage boards/categories, roles, site settings, all moderation |
 
-Roles are cumulative in capability (Admin ⊇ Moderator ⊇ User ⊇ Guest). Moderator powers may be **scoped per board** (a user can moderate `#playstation-2` without moderating the whole site). See §10 for the full permissions matrix.
+Roles are cumulative in capability (Admin ⊇ Moderator ⊇ User ⊇ Guest). Moderation powers are **scoped per board**: they come from a `board_moderators` assignment (a user can moderate `#playstation-2` without moderating the whole site), not from the global `moderator` role alone. See §10 for the full permissions matrix.
 
 ## 5. Core Concepts & Information Architecture
 
@@ -140,7 +140,7 @@ Even though the UI feels like a single-page app, every view has a real, shareabl
 /c/{slug}?page=2           Pagination
 /t/{id}-{slug}             Canonical conversation          e.g. /t/1042-vice-city-impressions
 /u/{username}              A user profile
-/dm/{conversation-id}      A direct-message conversation (auth only)
+/messages/{id}             A direct-message conversation (auth only; /messages lists them)
 /feed                      Personalized Following feed
 /search?q=...&scope=...&order=...  Search results
 /compose?board=...         Top-level new-topic task (auth only)
@@ -259,7 +259,7 @@ This is a cornerstone and the most recently designed area. **Two unmistakable si
 
 ### 6.8 Direct Messages
 
-> **Confirmed in scope.** Private 1:1 messaging stays in RetroBoards' v1 community set (the adjacent plan deprioritised DMs; we keep them). Persisted via `conversations` / `conversation_participants` / `dm_messages` (§8). Group DMs remain P2.
+> **Confirmed in scope.** Private 1:1 messaging stays in RetroBoards' v1 community set (the adjacent plan deprioritised DMs; we keep them). Persisted via `conversations` / `conversation_participants` / `dm_messages` (§8). Group DMs remain P2 by tier and have shipped behind `group_dms`, default-on since 2026-07-18 (ADR 0022).
 
 | Feature | Priority | Status | Notes |
 |---|---|---|---|
@@ -504,7 +504,7 @@ Core entities and relationships:
 - **board_moderators** grants a user scoped moderation on a board.
 - **conversations** (+ participants + messages) model DMs separately from boards.
 - **reports** and **moderation_log** support accountable moderation.
-- Counters (`post_count`, `reply_count`, `thread_count`, `last_post_*`) are **denormalised** for cheap reads and updated on write (in a transaction or via triggers/app logic). Unread is derived from `thread_user.last_read_post_id` vs `thread.last_post_id`.
+- Counters (`post_count`, `reply_count`, `thread_count`, `last_post_*`) are **denormalised** for cheap reads and updated on write (in a transaction or via triggers/app logic). Unread is derived from the per-thread cursor `thread_user.last_read_post_id` (DECISIONS §3 #3) by comparing that post's `(created_at, id)` with the thread's `(last_post_at, last_post_id)`, so split/merge/import ID skew cannot move a reader backwards; a thread with no `thread_user` row is unread only if its last activity is after `settings.engagement_cutover_at`.
 
 Conventions: InnoDB, `utf8mb4`, `BIGINT UNSIGNED` surrogate keys, UTC `DATETIME`, soft-deletes where history matters. Lengths/types below are sensible starting points, not final.
 
@@ -633,7 +633,7 @@ CREATE TABLE reactions (
 CREATE TABLE thread_user (
   user_id           BIGINT UNSIGNED NOT NULL,
   thread_id         BIGINT UNSIGNED NOT NULL,
-  last_read_post_id BIGINT UNSIGNED NULL,              -- unread = thread.last_post_id > this
+  last_read_post_id BIGINT UNSIGNED NULL,              -- cursor identity; unread compares its post's (created_at, id) with the thread's (last_post_at, last_post_id)
   is_starred        TINYINT(1)      NOT NULL DEFAULT 0,
   -- is_subscribed dropped — superseded by the `subscriptions` table (SCHEMA §7 #4; see §8.3)
   PRIMARY KEY (user_id, thread_id),
@@ -714,7 +714,7 @@ CREATE TABLE moderation_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-> **Session handling.** RetroBoards uses opaque-token sessions backed by a **`sessions` table** (the hashed cookie token as the id, a per-session CSRF secret, device list, and revocation), which **ships in Phase 1** (DECISIONS §5 #9; canonical DDL in SCHEMA.md §1; migration `0005` in PHASE_1_MIGRATIONS). It powers "log out everywhere" and device management. The member security-activity view remains a separate open requirement in proposed [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md); session rows do not establish event-history coverage. Cookies are `HttpOnly`, `Secure`, `SameSite=Lax`, rotated on login, with idle + absolute timeouts. **Guests have no row anywhere** — a guest is simply a request without a valid session.
+> **Session handling.** RetroBoards uses opaque-token sessions backed by a **`sessions` table** (the hashed cookie token as the id, a per-session CSRF secret, device list, and revocation), which **ships in Phase 1** (DECISIONS §5 #9; canonical DDL in SCHEMA.md §1; migration `0005` in PHASE_1_MIGRATIONS). It powers "log out everywhere" and device management. The member security-activity view remains a separate open requirement in proposed [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md); session rows do not establish event-history coverage. Cookies are `HttpOnly`, `Secure`, `SameSite=Lax`, and login mints a fresh token and CSRF secret. A session has a fixed absolute lifetime (`SESSION_LIFETIME_DAYS`, default 30 days from sign-in) that activity does not extend, and there is **no idle timeout**; `last_seen_at` only feeds the device list. **Guests have no row anywhere** — a guest is simply a request without a valid session.
 
 ### 8.3 Additions (v0.2 — folded-in features)
 
@@ -742,7 +742,7 @@ Changes to the existing schema:
 | Table | Change | Why |
 |---|---|---|
 | `threads` | Add `FULLTEXT KEY ft_threads_title (title)` | Global search over titles (§6.9); `posts` already has `ft_posts_body`. |
-| `notifications` | Canonical column is **`type`** (not `kind`) and read-state is **`is_read`** (not `read_at`); enum reconciled to the full union `('reply','mention','reaction','dm','mod','new_post','new_thread','follow','badge','solved','announcement')` in §8.2 / **SCHEMA.md**. | Drives the bell dropdown + unread badge (§6.10); `announcement` powers admin broadcasts (Phase 2). |
+| `notifications` | Canonical column is **`type`** (not `kind`) and read-state is **`is_read`** (not `read_at`); enum reconciled to the full union `('reply','mention','reaction','dm','mod','new_post','new_thread','follow','badge','solved','announcement')` in §8.2 / **SCHEMA.md**. | Drives the notification list + unread badge (§6.10); `announcement` powers admin broadcasts (Phase 2). |
 | `users` | Add `onboarded_at DATETIME NULL` | Product-tour completion, cross-device (§6.17). |
 | `users` | `reputation` (already present) = denormalised count of reactions received (§6.16) | Maintained on reaction add/remove and post delete/restore. |
 | `users` | `timezone VARCHAR(64) NULL`, `digest_hour TINYINT NULL` (0–23 local), `last_daily_digest_at DATETIME NULL` | Timezone-aware daily digests + watermark so a digest is never duplicated or empty (ADMIN.md §7.6). |
@@ -791,6 +791,8 @@ The current client-side JS (channel switching, opening threads, filters, send) b
 
 ### 9.4 Internal JSON endpoints (enhancement path)
 
+Most routes below are ordinary HTML pages and form POSTs; react and star (like the read-state, follow and onboarding POSTs) also answer JSON when the request asks for it, and the dedicated JSON endpoints close the list (the enhancement path in §9.6).
+
 ```
 GET  /c/{slug}?page=n           → thread list (HTML fragment or JSON)
 GET  /t/{id}?page=n             → posts page
@@ -803,7 +805,11 @@ POST /t/{id}/star               → toggle star            (auth)
 POST /t/{id}/subscribe          → toggle subscription    (auth)
 POST /posts/{id}/report         → file a report          (auth)
 POST /mod/t/{id}/pin|lock|move  → moderation             (mod/admin)
-GET  /notifications             → list + unread count    (auth)
+GET  /notifications             → full notification page (auth)
+GET  /notifications/bell        → JSON unread + DM-unread counts + recent items (auth, polled)
+GET  /presence?format=json      → JSON who's-online roster (polled)
+POST /messages/{id}/poll        → JSON new DM messages     (auth, polled)
+POST /composer/preview          → JSON server-rendered preview (auth)
 ```
 
 ### 9.5 Post rendering & sanitisation
@@ -814,14 +820,14 @@ Missing or blank cached HTML is rendered from canonical Markdown in memory on re
 
 ### 9.6 Search, notifications & realtime (v0.2)
 
-- **Search.** `searchForum(q, boardId?)` runs two FULLTEXT `MATCH … AGAINST` queries — one over `threads.title`, one over `posts.body` — and returns the top thread and post hits with snippets, board-scoped when applicable. Public read; debounced client-side (200ms, min 2 chars).
+- **Search.** `GET /search?q=&scope=&order=` calls the replaceable `SearchService::search(SearchQuery $query, ?User $viewer)` seam (DECISIONS §2; `MysqlSearchService`): one `UNION ALL` FULLTEXT `MATCH … AGAINST` over `threads.title` and non-OP `posts.body`, scope `everything|topics|replies|mine`, order `relevance|newest`, up to 20 results with escaped snippets. The read gate is applied inside the service (guests: public boards; members: also private boards they belong to; admins: all). There is no board-scoped search. The server-rendered form needs at least 3 characters; there is no client-side search-as-you-type.
 - **Notification fan-out.** On post insert, **inside the write transaction**, look up subscribers of the thread and its board (`subscriptions`), exclude the author, and insert `notifications` rows. For subscribers with `email_enabled`, enqueue one transactional email per recipient with `idempotency_key = post_id + ':' + user_id`, skipping suppressed addresses (ADMIN.md §7). App-layer fan-out is chosen over DB triggers for portability (§14).
-- **Realtime delivery.** The bell's unread badge and the who's-online roster update via **short-polling** in v1 (SSE later if needed — DECISIONS §3 #4); a `GET /notifications` endpoint backs both the dropdown and the badge count. No WebSocket dependency for v1.
+- **Realtime delivery.** The bell's unread badge and the who's-online roster update via **short-polling** in v1 (SSE later if needed — DECISIONS §3 #4): `GET /notifications/bell` (JSON unread + DM-unread counts) and `GET /presence?format=json` every 60s, and an open DM conversation polls `POST /messages/{id}/poll` every 20s. The bell links to the full `GET /notifications` page; the last-20 dropdown is not built (proposed ADR 0035). No WebSocket dependency for v1.
 - **Presence.** A cheap `last_seen_at` heartbeat on authenticated requests; "online" = within a configurable window. The who's-online list is a filtered read, gated by each user's presence-privacy setting.
 
 ## 10. Permissions Matrix
 
-"Mod" = a moderator **on boards they are assigned to** (via `board_moderators`); a site-wide `role='moderator'` applies everywhere. Admin can do everything.
+"Mod" = a moderator **on boards they are assigned to** (via `board_moderators`): moderation checks allow an admin anywhere or an assigned moderator on that board (DECISIONS §4 #9). The global `users.role='moderator'` grants no board moderation by itself — only staff exemptions (anti-abuse scoring, the edit window, new-user upload/DM limits) and `post_min_role='moderator'` boards; wider scope exists only as a custom-role grant honoured under `CAPABILITIES_MODE=enforce`. Admin can do everything; account state still beats role.
 
 | Action | Guest | User | Mod (scoped) | Admin |
 |---|:--:|:--:|:--:|:--:|
@@ -835,7 +841,7 @@ Missing or blank cached HTML is rendered from canonical Markdown in memory on re
 | Pin / lock / move thread | — | — | ✓ (own boards) | ✓ |
 | Delete **any** post (soft) | — | — | ✓ (own boards) | ✓ |
 | Handle reports queue | — | — | ✓ (own boards) | ✓ |
-| Ban / suspend user | — | — | ✓ (own boards) | ✓ |
+| Ban / suspend user | — | — | — (warn only; board-scoped suspension deferred, ADR 0021 #4) | ✓ |
 | Assign board moderators | — | — | — | ✓ |
 | Create / edit boards & categories | — | — | — | ✓ |
 | Site settings & branding | — | — | — | ✓ |
@@ -849,8 +855,8 @@ Missing or blank cached HTML is rendered from canonical Markdown in memory on re
 - Passwords hashed with `password_hash()` (Argon2id preferred, bcrypt fallback). Never store or log plaintext.
 - **CSRF tokens** on every state-changing form/endpoint.
 - Output escaping with `htmlspecialchars()` by default; post HTML passes an **allowlist sanitiser**.
-- Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`; rotate on login; idle + absolute timeouts.
-- **Rate limiting** on login, registration, and posting; email verification gates first post to curb spam.
+- Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`; rotate on login; fixed absolute lifetime (`SESSION_LIFETIME_DAYS`, default 30 days, not extended by activity); no idle timeout.
+- **Rate limiting** on login, registration, and posting. Email verification is a soft signal (account recovery and the welcome badge) and does **not** gate posting; first-post spam is curbed by rate limits, anti-abuse new-user limits, and optional per-board approval. A verification-required posting gate is deferred (ADR 0021 #3).
 - Security headers: HSTS, a strict **Content-Security-Policy**, `X-Content-Type-Options`, `Referrer-Policy`.
 - Uploads (later) validated by type/size and served from a non-executable path.
 
@@ -885,7 +891,7 @@ Targets are set after a baseline (the install is new). Use a "success" and a "st
 
 ## 13. Roadmap & Phasing
 
-**Delivery source of truth:** the seven `PHASE_N_PLAN.md` files own the release-train scope and gates; `docs/history/PHASE_1-4_HISTORY.md` and `PHASE_5_STATUS.md` record completed/current status. The Phase 1–3 bullets and the §13.1 crosswalk in the original 2026-06 roadmap were planning snapshots and are superseded by those records.
+**Delivery record:** the seven phase plans (`PHASE_1_PLAN.md` … `PHASE_7_PLAN.md`) defined the release-train scope and gates. They, the Phase 1–4 history, and the retired `PHASE_5_STATUS.md` are archived, unmaintained, in `docs/history/`. There is no single current-status ledger: availability is `FeatureFlags::DEFAULTS` plus each feature's runbook, open carryovers are ADRs in `docs/adr/`, and what shipped is in `CHANGELOG.md`. The Phase 1–3 bullets and the §13.1 crosswalk in the original 2026-06 roadmap were planning snapshots and are superseded by those records.
 
 | Delivery phase | Focus | Current status |
 |---|---|---|
@@ -893,9 +899,9 @@ Targets are set after a baseline (the install is new). Use a "success" and a "st
 | 2 | Community essentials | Complete; acceptance and carryovers are recorded in `docs/history/PHASE_1-4_HISTORY.md`. |
 | 3 | Polish, trust & scale | Complete with explicit deferrals; see Phase 3 history and ADR 0002. |
 | 4 | Advanced community & content | Gate A accepted; Thread Intelligence follow-on accepted; remaining carryovers are recorded in ADRs 0003/0019. |
-| 5 | Ecosystem, identity & governance | Gate A accepted and default-on; Gate B remains reserved. Current status: `PHASE_5_STATUS.md`. |
-| 6 | Realtime & scale | Capacity-triggered; entry gates and triggers are in `PHASE_6_PLAN.md`. |
-| 7 | Platform expansion | Future strategy-gated phase; scope and decisions are in `PHASE_7_PLAN.md`. |
+| 5 | Ecosystem, identity & governance | Gate A accepted and default-on (ADRs 0017/0018); Gate B remains reserved. Status through 2026-09-20 is in the archived `docs/history/PHASE_5_STATUS.md`. |
+| 6 | Realtime & scale | Capacity-triggered; not started. Entry gates and triggers are in the archived `docs/history/PHASE_6_PLAN.md`. |
+| 7 | Platform expansion | Future strategy-gated phase; not started. Scope and decisions are in the archived `docs/history/PHASE_7_PLAN.md`. |
 
 P0–P3 remain priority tiers, orthogonal to delivery phases (DECISIONS §2). The current completion-evidence policy remains binding: behavior must be enforced and tested; UI-visible work also needs browser evidence.
 
@@ -929,6 +935,7 @@ This document has no separate decision backlog.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.20 | 2026-09-25 | Corrected drift against the shipped code: sessions have a fixed 30-day absolute lifetime and no idle timeout; unread compares the cursor post's `(created_at, id)` tuple; the global `moderator` role grants no board moderation and ban/suspend is admin-only (board scope deferred, ADR 0021); email verification is a soft signal that does not gate posting; search is `SearchService::search(SearchQuery, ?User)` with a 3-character minimum and no board scope; notification polling uses `/notifications/bell`; DM conversations live at `/messages/{id}`. §2 now defines P3, and §6.8 notes that group DMs shipped (ADR 0022). Phase plans and `PHASE_5_STATUS.md` are cited at their `docs/history/` archive. |
 | v0.19 | 2026-09-23 | Consolidated stale status and decision material. The feature catalogue and original roadmap are explicitly historical planning records; the delivery table now points to the seven phase records. Removed the duplicate original-question register in favor of DECISIONS and ADRs. |
 | v0.18 | 2026-09-12 | §6.15 presence marked Live and corrected: the four shipped rows were still listed "Planned", the roster is split into here-now and stepped-away against two configured windows, the rail badge counts here-now only, and one rule ladder (flag → status → presence toggle → profile visibility → recency → blocks) now serves the rail, the roll, the JSON feed and the profile dot. Added the deferred member-directory row. See ADR 0031. |
 | v0.17 | 2026-08-27 | Adopted the approved member-surface ownership model: `/` is place, `/inbox` is attention, Search and Compose are top-level routes, cross-surface travel moved to the topbar, and the shared rail now owns only boards plus public presence. Preserved `/feed` as a separate personalized Following surface in secondary identity navigation and bounded the Inbox preview beneath canonical topics. |

@@ -1,9 +1,9 @@
 # RetroBoards — User Account, Preferences & Profile Design
 
-**Status:** v0.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Status:** v0.14 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) and [ADMIN.md](ADMIN.md).** PRODUCT_DESIGN.md is the source of truth; ADMIN.md owns the operator surface; **this doc owns the member's own surface** — how a person signs in, configures their account, tailors their experience, and presents themselves. Same conventions (P0/P1/P2/P3; InnoDB / `utf8mb4`).
 
-> Older phase assignments in this design are scope history, not a live status ledger. Current shipped capability and open carryovers are in `PRODUCT.md`, `PHASE_5_STATUS.md`, and the relevant ADR/runbook.
+> Older phase assignments in this design are scope history, not a live status ledger. Current shipped capability is in `PRODUCT.md`, `FeatureFlags::DEFAULTS`, and the relevant runbook; open member carryovers are recorded in ADRs 0014 and 0035.
 
 ## Scope
 
@@ -112,7 +112,7 @@ Auto-linking by email is only ever *offered*, never done without the user provin
 - **Revocation:** unlinking a provider revokes our stored tokens (if any) and the identity row.
 - **Banned/suspended** users are blocked at resolution regardless of provider (state-first, ADMIN.md §2.4) — OAuth is not a ban bypass.
 - Apple relay emails and "hide my email" are respected; we never expose a user's real email obtained via a provider.
-- Rate-limit callback endpoints; log auth events to the user's security activity (§3.3).
+- Rate-limit callback endpoints; auth events are meant to feed the member's security activity (§3.3), which is not built yet (ADR 0035).
 
 ### 2.8 Edge cases
 
@@ -145,6 +145,15 @@ A `/settings` area with a left-nav (mirrors the admin Console pattern, ADMIN.md 
 | **Username** | Change **allowed but rate-limited** (e.g. once / 30 days); old handle reserved for a period and `/u/{old}` 301-redirects; change history kept for moderation. Uniqueness enforced. |
 | **Email** | Change requires verifying the **new** address before it becomes active; the old address is notified of the change (security). |
 | Avatar / Signature / Bio | Editable here or on the profile (§5); same data. |
+
+**Completion boundary (2026-09-25).** Settings → Account edits display name,
+pronouns, location, website, bio, signature and avatar; the **Username** and
+**Email** rows above are target behaviour, not shipped. Username change is an
+open requirement in [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md):
+the `username_history` table and the `/u/{old}` 301 lookup exist, but nothing
+renames an account or writes that history. The email field is shown read-only;
+the verified email-change flow is a carryover in
+[ADR 0014](docs/adr/0014-member-notifications-and-email-change-carryover.md).
 
 ### 3.3 Security
 
@@ -192,7 +201,7 @@ Appearance prefs are **client-applied** (instant) and override the site default 
 
 | Preference | Options / notes |
 |---|---|
-| **Threads per page** | 25 · 50 · 100 |
+| **Threads per page** | 20 · 25 · 50 · 100 (default 20) |
 | **Posts per page** | 10 · 20 · 40 |
 | Board topic order | Fixed: pinned first, then latest activity. Newest and Unanswered are Inbox filters. |
 | Open threads at | Last-read position · Top |
@@ -212,7 +221,7 @@ The member shapes their own sidebar:
 - **Favorite / pin boards** → surfaced in a "Favorites" group at the top of the sidebar.
 - **Mute / hide boards** → excluded from the sidebar and from unread counts (useful for boards you never read).
 - **Reorder** favorites; **collapse** categories with the state remembered per user.
-- **Custom groups / folders** of boards — **P2**.
+- **Custom groups / folders** of boards — **P2**; shipped behind `board_folders` (default-on since 2026-07-01).
 
 Board preferences are backed by `user_board_prefs` (§7).
 
@@ -250,7 +259,7 @@ on its own board and not only in your inbox. A guest sees none of it.
 - **Saved threads** = starred threads (`thread_user.is_starred`).
 - **Favorite boards** = `user_board_prefs.is_favorite` (§4.3).
 - A unified **"Saved"** view lists saved threads and favorite boards.
-- **Bookmark folders / tags** for organising saves — **P2**.
+- **Bookmark folders / tags** for organising saves — **P2**. Folders shipped behind `bookmark_folders` (default-on since 2026-07-01); personal tags on saves are not built.
 
 ### 4.5 Composing
 
@@ -276,7 +285,7 @@ Plus: **email digest cadence** (off / daily), **quiet hours**, **per-thread mute
 
 **Subscriptions (v0.2).** Beyond the per-type matrix above, a member can **subscribe to a specific thread or a whole board**, each with independent **In-app** and **Email** toggles (a Bell control on the thread page and the board header — PRODUCT_DESIGN.md §6.10). A dedicated **`/settings/notifications`** page lists every active subscription with per-row toggles and one-click unsubscribe. Subscriptions are stored in `subscriptions` (PRODUCT_DESIGN.md §8.3), which **supersedes** the old per-thread `is_subscribed` flag.
 
-**Per-subscription frequency & digests (v0.4).** Each subscription's frequency is **Instant / Daily / Off**, set per board or thread — a **thread overrides its board**, and "Off" silences that target. Daily activity rolls into a **timezone-aware daily digest** sent at the member's chosen **digest hour** (with their timezone, §4.2). `/settings/notifications` also offers a **digest preview** (what the next digest will include), a **test send** to verify deliverability, and — if an address was auto-suppressed after a bounce — a **re-enable** action once the inbox is working again. (Infra in ADMIN.md §7.6.)
+**Per-subscription frequency & digests (v0.4).** Each subscription's frequency is **Instant / Daily / Off**, set per board or thread — a **thread overrides its board**, and "Off" silences that target. Daily activity rolls into a **timezone-aware daily digest** sent at the member's chosen **digest hour** (with their timezone, §4.2). `/settings/notifications` is specified to also offer a **digest preview** (what the next digest will include), a **test send** to verify deliverability, and — if an address was auto-suppressed after a bounce — a **re-enable** action once the inbox is working again; none of the three is built yet (see the boundary below). (Infra in ADMIN.md §7.6.)
 
 **Repair scope and completion boundary (2026-09-20).** The implemented control
 set is subscription frequency and channel editing, global email pause, and daily
@@ -291,8 +300,10 @@ bell count is present before JavaScript runs. Saved-feed digest sources obey
 the same global settings, current source choices and content permissions on
 every attempt. Queued mail suppressed after an opt-out is terminal, so restoring
 a preference does not replay that activity. The [repair evidence index](docs/evidence/unified-notifications-and-settings/README.md)
-tracks current verification. The matrix, quiet hours, digest preview, member
-test-send and suppression recovery remain carryovers in [ADR 0014](docs/adr/0014-member-notifications-and-email-change-carryover.md).
+tracks current verification. The matrix, quiet hours, per-thread mute, digest
+preview, member test-send and suppression recovery remain carryovers in [ADR 0014](docs/adr/0014-member-notifications-and-email-change-carryover.md).
+Today a thread subscription set to **Off** silences subscription delivery for
+that thread, but not @mentions.
 
 ### 4.7 Privacy
 
@@ -414,7 +425,7 @@ A profile shows a **title/rank**, derived from **reputation/post-count threshold
 
 | Self-edit (User) | Staff-controlled (Mod/Admin) |
 |---|---|
-| Display name, avatar, signature, bio, location, website, pronouns | Role & per-board mod scope; account status; username-change history; rank when post-count-derived |
+| Display name, avatar, signature, bio, location, website, pronouns | Role & per-board mod scope; account status; username-change history *(pending the username-change flow, ADR 0035)*; rank when post-count-derived |
 
 Self-service edits are immediate (subject to sanitisation and the new-user gates); staff edits follow ADMIN.md §5 and are audited.
 
@@ -435,7 +446,7 @@ A first-run interactive tour helps newcomers learn the Slack/email-style layout 
 3. **Sign in with GitHub.** GitHub consent (`user:email`) → fetch primary email → if **unverified**, treat as unverified (prompt to verify before privileged actions) → log in/create.
 4. **Link a second provider.** Settings → Connections → "Add Google/Apple/GitHub" → provider flow → identity attached to current account.
 5. **Email collision.** A provider's verified email matches an existing local account → we **offer** to link, requiring the user to log into that account (never auto-merge) → identities joined.
-6. **Change email.** Settings → Account → new email → verification sent to the **new** address → confirm → switch; old address notified.
+6. **Change email** *(target — carryover in ADR 0014; the Account email field is read-only today)*. Settings → Account → new email → verification sent to the **new** address → confirm → switch; old address notified.
 7. **Set a password (OAuth-only).** Settings → Security → "Set password" → now email/password is an available method; unlink rules updated.
 8. **Upload an avatar.** Profile/Settings → upload → crop square → save → resized/stored; fallback chain updated; reportable thereafter.
 9. **Edit signature.** Settings/Profile → edit (sanitised, capped) → save; **new accounts** see "available after N posts."
@@ -538,13 +549,13 @@ CREATE TABLE username_history (
 ### 7.3 Reconciliation notes
 
 - **Saved/bookmarked threads reuse `thread_user.is_starred`** (PRODUCT_DESIGN.md §8) — no new table. Favorite **boards** use `user_board_prefs`.
-- **Active sessions/devices** (§3.3) build on the **`sessions`** table, which **ships in Phase 1** (SCHEMA §7 #7 / `0005_sessions.sql`); only the device-management UI is Phase 2.
-- **Notification preferences** (§4.6) live inside `user_preferences.prefs`; ADMIN.md §7 owns the templates and routing those preferences gate.
+- **Active sessions/devices** (§3.3) build on the **`sessions`** table, which **ships in Phase 1** (SCHEMA §7 #7 / `0005_sessions.php`); the device list and revocation UI is `/settings/sessions`.
+- **Notification preferences** (§4.6): the shipped pause-all-email switch lives in `user_preferences.prefs`, digest timezone/hour are `users` columns, and per-target frequency and channels live on `subscriptions`. The per-type matrix is specified for `user_preferences.prefs` or a documented successor (ADR 0014). ADMIN.md §7 owns the templates and routing those preferences gate.
 - **Subscriptions** (thread/board, with in-app/email toggles, §4.6) live in `subscriptions` (PRODUCT_DESIGN.md §8.3) and **supersede** `thread_user.is_subscribed`.
 
 ## 8. Roadmap Delta (user/account phasing)
 
-The original member-surface phase allocation is superseded by the seven delivery plans. Phases 1–4 are recorded as complete in `docs/history/PHASE_1-4_HISTORY.md`; Phase 5 Gate A status and the remaining member carryovers are in `PHASE_5_STATUS.md` and ADR 0035. Phase 6/7 work is defined in `PHASE_6_PLAN.md` and `PHASE_7_PLAN.md`. Use those records rather than treating the original plan text as current implementation status.
+The original member-surface phase allocation is superseded by the seven delivery plans, now archived in `docs/history/`. Phases 1–4 are recorded as complete in `docs/history/PHASE_1-4_HISTORY.md`; Phase 5 Gate A status through 2026-09-20 is in the archived `docs/history/PHASE_5_STATUS.md`. The remaining member carryovers are ADRs 0014 and 0035. Phase 6/7 scope is defined in the archived `docs/history/PHASE_6_PLAN.md` and `docs/history/PHASE_7_PLAN.md`. Use those records rather than treating the original plan text as current implementation status.
 
 ## 9. Decision records
 
@@ -557,6 +568,7 @@ This surface specification has no separate decision backlog.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.14 | 2026-09-25 | Marked the username and email changes in §3.2 and the §6 email-change flow as unshipped target behaviour (ADRs 0035/0014). The digest preview, test send and re-enable in §4.6 are specified-not-built, and per-thread mute joins the ADR 0014 carryovers. §4.2 threads-per-page adds the default 20 option, and the §4.3/§4.4 folder P2 items note that board and bookmark folders shipped. §7.3 cites `0005_sessions.php` and the real notification-preference storage. Status pointers now name the `docs/history/` archive. |
 | v0.13 | 2026-09-23 | Replaced the obsolete member-account phase roadmap and original-question register with the phase, ADR, and runbook records that now own status and decisions. |
 | v0.12 | 2026-08-02 | Removed the Default thread sort/Most replies preference. Board topic lists are fixed to pinned then latest activity; Newest and Unanswered are Inbox filters. |
 | v0.11 | 2026-07-12 | Added §4.9 with Living Brief reading, processor disclosure, access-gated provenance, retention, and last-good behavior; reconciled the joint default-on graduation of both Thread Intelligence flags and their independent rollback pins. |

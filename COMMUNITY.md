@@ -1,9 +1,9 @@
 # RetroBoards — Community Layer Design
 
-**Status:** v0.5 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Status:** v0.6 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md).** This document owns the **community / social layer**: connection and discovery around durable topics. Same conventions (P0/P1/P2; vanilla PHP + MySQL, server-rendered + progressive enhancement).
 
-> The original phase assignments are scope history, not a live status ledger. Current shipped capability and open carryovers are in `PRODUCT.md`, `PHASE_5_STATUS.md`, and the relevant ADR/runbook.
+> The original phase assignments are scope history, not a live status ledger. Current shipped capability is in `PRODUCT.md`, `FeatureFlags::DEFAULTS`, and the relevant runbook; open carryovers are in the ADRs. The retired phase plans and status ledgers are archived in `docs/history/`.
 
 ## Scope & stance
 
@@ -88,7 +88,7 @@ A single, honest, public number: **how much your contributions have been appreci
 ### 2.2 Display
 
 - A small number on the **profile** and optionally beside the username in posts (a quiet karma indicator, like a like-count — not a giant badge).
-- Maintained as a **denormalised counter** (`users.reputation`), updated on reaction add/remove and post delete/restore, so reads are free. A lightweight `reputation_events` ledger (§11) is optional for auditing/recompute.
+- Maintained as a **denormalised counter** (`users.reputation`) so reads are free. Every change is first written to the `reputation_events` ledger (§11): one idempotent row per reaction or accepted answer, reversed rather than deleted. The ledger is the source of truth; `repair:reputation` rebuilds it from reactions and accepted answers and reconciles `users.reputation` to its active rows.
 
 ### 2.3 What reputation does *not* do
 
@@ -162,7 +162,7 @@ A **small, honest** set — recognition, not a trophy farm. Badges are binary (e
 
 - **Automatic** badges award on their triggering event (post created, reaction milestone, accepted answer, anniversary job). **Manual** ones are admin-granted.
 - **Display:** a compact badge row on the profile with hover tooltips — not a giant case.
-- Admin-defined **custom badges** are **P2**; v1 ships this fixed set. Backed by `badges` + `user_badges` (§11).
+- Admin-defined **custom badges** are **P2**; v1 ships this fixed set. Backed by `badges` + `user_badges` (§11). *Since Phase 4, admins can define award rules over the existing badges (`badge_rules`, default-on since 2026-07-02); there is no admin surface for defining new badges.*
 
 ## 7. Leaderboards
 
@@ -171,7 +171,7 @@ Gentle and **opt-out**, never in your face.
 - A **"Top Contributors"** page: users ranked by reputation, with a time filter (this week / month / all-time). Optionally scoped per board.
 - It's a **page you choose to visit**, not a banner on the home inbox. Users can **hide from leaderboards** (a privacy preference).
 - **No prizes or competitive mechanics** — recognition only.
-- *Implementation:* all-time is trivial (order by `users.reputation`); time-windowed ranking uses the `reputation_events` ledger or a periodic aggregation job (**P2**).
+- *Implementation:* all-time orders by `users.reputation`; rolling 7- and 30-day windows and per-board ranking read the `reputation_events` ledger (**P2**; shipped in Phase 4 behind `reputation_ledger`, default-on since 2026-07-01).
 
 ## 8. Community Profile Elements
 
@@ -224,7 +224,7 @@ CREATE TABLE follows (
   CONSTRAINT fk_follow_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Badge catalogue (fixed set in v1; admin-defined P2)
+-- Badge catalogue (fixed set in v1; admin-defined award rules via badge_rules since Phase 4)
 CREATE TABLE badges (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   slug        VARCHAR(48)  NOT NULL,
@@ -247,17 +247,29 @@ CREATE TABLE user_badges (
   CONSTRAINT fk_ub_badge FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Optional reputation ledger (audit + time-windowed leaderboards). users.reputation is the canonical counter.
+-- Reputation ledger (migration 0048): the source of truth for audit, repair, and windowed/board leaderboards.
+-- users.reputation is a cache reconciled from the active (non-reversed) applied_delta rows.
 CREATE TABLE reputation_events (
-  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id     BIGINT UNSIGNED NOT NULL,
-  delta       INT NOT NULL,
-  reason      ENUM('reaction','solved','adjust') NOT NULL,
-  source_type ENUM('post','thread') NULL,
-  source_id   BIGINT UNSIGNED NULL,
-  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id         BIGINT UNSIGNED NOT NULL,
+  board_id        BIGINT UNSIGNED NULL,
+  source_type     VARCHAR(32)     NOT NULL,         -- 'reaction' | 'accepted_answer'
+  source_id       BIGINT UNSIGNED NULL,
+  logical_key     VARCHAR(120)    NOT NULL,         -- one event per logical source (idempotent)
+  delta           INT NOT NULL,
+  applied_delta   INT NOT NULL,
+  event_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reversed_at     DATETIME NULL,                    -- reversed, never deleted
+  reversed_by     BIGINT UNSIGNED NULL,
+  reversal_reason VARCHAR(255) NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  KEY idx_repev_user (user_id, created_at)
+  UNIQUE KEY uq_reputation_logical (logical_key),
+  KEY idx_rep_user_time (user_id, event_at),
+  KEY idx_rep_board_time (board_id, event_at),
+  CONSTRAINT fk_rep_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_rep_board FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE SET NULL,
+  CONSTRAINT fk_rep_reversed_by FOREIGN KEY (reversed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -280,7 +292,7 @@ To be explicit: **there are no Discourse-style trust levels.** Reputation, title
 - **PRODUCT_DESIGN.md** — finalises §6.16 reputation (resolves open question #15: reputation = Σ reactions received, +1 each, no separate Like). Gives §6.18 "Solved" a concrete home (`threads.accepted_answer_post_id`) and §6.19 owns the graduated Thread Intelligence contract.
 - **USER.md** — completes the profile community elements (§5.1) and resolves the rank/title stub (§5.5) as cosmetic. Adds follow/badge/solved notification types (§4.6), a leaderboard opt-out privacy pref (§4.7), and the Living Brief processor/provenance disclosure (§4.9).
 - **ADMIN.md** — reputation/badges/leaderboards add moderation levers (§10 here) but **no** new role gating; §3.10 owns Thread Intelligence operator and curator recovery.
-- **Schema** — new: `follows`, `badges`, `user_badges`, `reputation_events` (optional); `threads.accepted_answer_post_id`.
+- **Schema** — new: `follows`, `badges`, `user_badges`, `reputation_events` (the canonical reputation ledger, migration `0048`); `threads.accepted_answer_post_id`.
 
 ## 14. Phasing & remaining product choices
 
@@ -294,6 +306,12 @@ implementation now exist. ADR 0019's follow-on graduation made both owning
 feature defaults `true` on 2026-07-12 without rewriting the original Phase 4
 acceptance boundary.
 
+Of the other P2 items, these have shipped, each default-on and reversible through
+its flag: follow tags/boards and the Latest feed (`expanded_feeds`), time-windowed
+and per-board leaderboards (`reputation_ledger`), badge award rules over the
+existing badges (`badge_rules`), and remove-a-follower. Follow-activity
+notifications and a fan-out feed have not.
+
 ### 14.2 Remaining product choices
 
 | # | Question | Owner | Lean |
@@ -305,6 +323,7 @@ acceptance boundary.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.6 | 2026-09-25 | The `reputation_events` ledger is the canonical source that `users.reputation` is reconciled from, not an optional audit table. The §11 DDL is the migration-`0048` shape. §6/§7/§14.1 record which P2 items shipped: badge award rules, windowed and board leaderboards, tag/board follows with the Latest feed, and remove-a-follower. Status pointers name the `docs/history/` archive. |
 | v0.5 | 2026-09-23 | Consolidated obsolete phase-status language, corrected the header to include the already-recorded v0.4 change, and retained only the two unassigned product choices in §14.2. |
 | v0.4 | 2026-08-27 | Settled the shared-shell placement of the retained Following feed: `/feed` remains a separate personalized discovery surface in identity/secondary navigation; Inbox is topbar-primary; the board rail contains only boards plus public presence. |
 | v0.3 | 2026-07-12 | Added §1.1 and reconciled the Living Brief member and curator workflows, processor boundary, provenance, retention, last-good behavior, and joint default-on graduation with independent rollback pins. |

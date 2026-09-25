@@ -1,5 +1,11 @@
 # RetroBoards Phase 1 Plan — MVP Backend
 
+> **Archived 2026-09-25.** Moved from the repository root to `docs/history/`; the text below is
+> otherwise unchanged and no longer maintained, so its status lines describe the date they were
+> written. Cite it for scope history and gate definitions, not current state: availability is
+> `src/Core/FeatureFlags.php` `DEFAULTS` plus the owning runbook in `docs/runbooks/`, open
+> carryovers are ADRs in `docs/adr/`, and what shipped is recorded in `CHANGELOG.md`.
+
 **Owner:** Henry  
 **Plan type:** Delivery baseline and formal closeout  
 **Source of truth:** `PRODUCT_DESIGN.md`, with `DECISIONS.md` authoritative where documents conflict. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  

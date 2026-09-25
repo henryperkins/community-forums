@@ -2,7 +2,7 @@
 
 **RetroBoards** is self-hostable forum / community software — a **Community Inbox**: durable forum topics (Discourse-style permanence) presented through the familiar Slack/email-style three-pane shell, with email-style triage. Stack: **vanilla PHP 8 + MySQL**, server-rendered with progressive-enhancement JavaScript, designed to run on a single VPS.
 
-> **Status: Phase 5 (ecosystem, identity & governance) — Gate A accepted and default-on; Gate B reserved.** Most post-MVP feature flags now default ON (operator-reversible via `features.<flag>=false`); each flag's graduation is recorded in its ADR/runbook. Current state lives in [`PHASE_5_STATUS.md`](PHASE_5_STATUS.md); Gate A closeout evidence is indexed at [`docs/evidence/phase5/gate-a-closeout.md`](docs/evidence/phase5/gate-a-closeout.md) and ADR 0017/0018 record acceptance and the default-on decision. Thread Intelligence (`community_memory` + `automated_context`, ADR 0019) is default-on — read its [runbook](docs/runbooks/thread_intelligence.md) before scheduling the worker. Phase 4's record is in [Phase 4 history](docs/history/PHASE_1-4_HISTORY.md#phase-4-status) and [`docs/evidence/phase4-gate-a.md`](docs/evidence/phase4-gate-a.md).
+> **Status: Phases 1–4 complete; Phase 5 (ecosystem, identity & governance) Gate A accepted and default-on; Phase 5 Gate B and Phases 6–7 not started.** Most post-MVP feature flags now default ON (operator-reversible via `features.<flag>=false`): [`src/Core/FeatureFlags.php`](src/Core/FeatureFlags.php) `DEFAULTS` is the current inventory, and each flag's graduation is recorded in its ADR/runbook. Open carryovers are ADRs in [`docs/adr/`](docs/adr/) and shipped changes are in [`CHANGELOG.md`](CHANGELOG.md); the retired Phase 5 status ledger is archived at [`docs/history/PHASE_5_STATUS.md`](docs/history/PHASE_5_STATUS.md). Gate A closeout evidence is indexed at [`docs/evidence/phase5/gate-a-closeout.md`](docs/evidence/phase5/gate-a-closeout.md) and ADR 0017/0018 record acceptance and the default-on decision. Thread Intelligence (`community_memory` + `automated_context`, ADR 0019) is default-on — read its [runbook](docs/runbooks/thread_intelligence.md) before scheduling the worker. Phase 4's record is in [Phase 4 history](docs/history/PHASE_1-4_HISTORY.md#phase-4-status) and [`docs/evidence/phase4-gate-a.md`](docs/evidence/phase4-gate-a.md).
 
 ## Running it locally
 
@@ -38,11 +38,13 @@ The authoritative documents are:
 | [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) | The product & technical design — the product source of truth; the **roadmap** and **completion-evidence policy** (§13). |
 | [SCHEMA.md](SCHEMA.md) | The consolidated database schema (final table shapes) and the per-phase build cut (§6). |
 | [USER.md](USER.md) · [ADMIN.md](ADMIN.md) · [COMMUNITY.md](COMMUNITY.md) · [COMPOSER.md](COMPOSER.md) | The member, operator, community-layer, and composer surfaces. |
-| `PHASE_1_PLAN.md` … `PHASE_7_PLAN.md` (+ `docs/history/PHASE_1_MIGRATIONS.md`) | The seven-phase delivery sequence, entry/exit gates, and migration manifests. |
-
 **Precedence:** when this README and any document above disagree, the document above wins — and **DECISIONS.md wins over all**. In particular, the replaceable-interface seams live in **DECISIONS §2**, and the roadmap and completion-evidence policy in **PRODUCT_DESIGN §13** — not here.
 
+**Current state vs. history.** No single file is the status ledger. A subsystem's availability is its `FeatureFlags::DEFAULTS` entry plus its runbook in [`docs/runbooks/`](docs/runbooks/); decisions, deferrals, and open carryovers are ADRs in [`docs/adr/`](docs/adr/); what shipped is in [`CHANGELOG.md`](CHANGELOG.md); proof lives in [`docs/evidence/`](docs/evidence/). The original seven-phase plans (`PHASE_1_PLAN.md` … `PHASE_7_PLAN.md`), the retired `PHASE_5_STATUS.md`, the Phase 1–4 history, and the Phase 1 migration manifest are archived in [`docs/history/`](docs/history/) — scope history and gate definitions, not current status.
+
 ## The seven delivery phases (at a glance)
+
+The per-phase plans are archived in [`docs/history/`](docs/history/); the list below is their scope, not a status ledger.
 
 1. **Phase 1** — MVP backend (auth, posting, read path, first-run setup, inline moderation).
 2. **Phase 2** — community essentials (reactions/stars/unread, notifications + email, search, DMs, reports/moderators, OAuth, the community layer, announcements).

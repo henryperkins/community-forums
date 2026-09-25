@@ -1,9 +1,9 @@
 # RetroBoards — Decisions Log
 
-**Status:** v1.7 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Status:** v1.8 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
 **This file settles the open questions** across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md), and [COMMUNITY.md](COMMUNITY.md). Where a doc's "Open Questions" section lists an item, the resolution here is authoritative. Decisions are either **[Henry]** (an explicit choice) or **[Rec]** (a recommended default — easily changed, with rationale).
 
-> This log records product choices and the original v1 deferrals; it is not a current implementation ledger. Many items deferred from v1 later shipped. Current availability is recorded in `PRODUCT.md`, `PHASE_5_STATUS.md`, `FeatureFlags::DEFAULTS`, and feature runbooks. New carryovers and proposed dispositions may be recorded in later ADRs.
+> This log records product choices and the original v1 deferrals; it is not a current implementation ledger. Many items deferred from v1 later shipped. Current availability is recorded in `PRODUCT.md`, `FeatureFlags::DEFAULTS`, and feature runbooks; the retired phase plans and Phase 5 status ledger are archived in `docs/history/`. New carryovers and proposed dispositions may be recorded in later ADRs.
 
 ## 1. Confirmed by Henry
 
@@ -125,6 +125,7 @@ The original minor open questions were reputation-milestone notifications (lean:
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.8 | 2026-09-25 | Repointed the current-availability note after the phase plans and `PHASE_5_STATUS.md` were archived to `docs/history/`; no decision changed. |
 | v1.7 | 2026-09-23 | Clarified that §7 records original v1 deferrals rather than current shipped status; pointed current availability and later carryovers to the live status/ADR records. Corrected the session architecture to the shipped database-backed opaque-token contract. |
 | v1.6 | 2026-07-09 | Accepted the bounded Thread Intelligence graduation decision: AI-generated Living Briefs for eligible public threads may auto-publish after local validation/moderation; personal return context remains deterministic; failures preserve last-good output; public-source provenance is member-readable; raw provider content and credentials are not retained. Added `ThreadIntelligenceProvider`, `ThreadIntelligenceOutputModerator`, and `OpenAiTransport` to the replaceable seam registry and linked ADR 0019's narrow Phase 4 supersession. |
 | v1.5 | 2026-06-26 | Cross-doc review pass: §7 added **public federation** to the Phase 7 deferred-work map (it was only in PHASE_7_PLAN / SCHEMA §6). Companion fixes landed elsewhere — SCHEMA (`notifications.'announcement'` + announcements storage; default-collapsed flag; de-referenced the missing auth-design doc), DESIGN (sessions-table-ships-Phase-1 wording; mockup-status; composer phasing), COMPOSER (priority-tier→delivery-phase map), and the Phase 1/2/3/6/7 plans (Phase-1 rate-limit store; stale `sessions.ip` note; Phase-2 column enumeration + announcement storage; Phase-3 plugins/webhooks/api_tokens create-not-extend; README authority; Phase-7 draft/SSE conditionality). Added `README.md` as a thin orientation pointer. |

@@ -6,7 +6,7 @@ This document consolidates the completed-phase status and completion records for
 The notification/account audit found privacy, lifecycle, delivery and incomplete
 organization workflows after those releases. Their current remediation and
 fresh evidence are tracked in the [combined evidence index](../evidence/unified-notifications-and-settings/README.md)
-and [Phase 5 status](../../PHASE_5_STATUS.md); the old suite totals do not close
+and [Phase 5 status](PHASE_5_STATUS.md); the old suite totals do not close
 the newer findings. Member security history and email discoverability are
 explicit open requirements in proposed [ADR 0035](../adr/0035-member-settings-completion-carryovers.md).
 

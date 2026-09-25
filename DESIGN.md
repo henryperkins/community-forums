@@ -278,13 +278,13 @@ The three panes map to real URLs rather than to client state: `/` is the forum i
 
 **Spacing** runs on a 4px base: 4, 8, 12, 16, 24, 32, 48, 112px. Cards are padded 18px, thread rows 14/16px, posts 18/20px, and the gap between rows is 10px in comfortable and zero in the ruled densities, where a hairline does the separating.
 
-**Responsive.** The architectural breakpoint is **860px**: three panes collapse to one column, the sidebar becomes a slide-in drawer, and a conversation grows a back link to the list it came from. Secondary breakpoints at 900px (admin chrome wraps, its tier scrolls) and 760px (in-pane density) carry the rest.
+**Responsive.** The architectural breakpoint is **860px**: three panes collapse to one column, the sidebar becomes a slide-in drawer, and a conversation grows a back link to the list it came from. Secondary breakpoints at 900px (the chrome compacts: the admin bar wraps and its tier scrolls, the member top bar and board rail tighten, and Messages drops to one pane) and 760px (in-pane density) carry most of the rest.
 
 ### Named Rules
 
 **The Real-URL Rule.** Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view. *Audit test: load it with JavaScript disabled; if the content is gone, the layout is wrong.*
 
-**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px is the admin-chrome breakpoint. The stylesheet currently carries twelve distinct max-widths; that sprawl is debt, not vocabulary. New responsive work reuses an existing breakpoint or justifies a new one in review.
+**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Together they carry 39 of the 64 width queries in `app.css`, which holds nineteen distinct max-widths in all (380–1699px, counted 2026-09-25; the generated `imladris.css` uses ten of them). The other sixteen are one- or two-use thresholds — that sprawl is debt, not vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review.
 
 ## Elevation & Depth
 
@@ -436,5 +436,5 @@ Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-en
 - **Don't** round anything holding content past 12px, and don't make a button or card pill-shaped. *Two live exceptions are unresolved rather than sanctioned — `.star-btn`/`.topic-tools-open` and `.board-mute-toggle` are buttons wearing pills because the handoff canvases draw them that way while this document and `components.css` say 7px. The Messages room adds two more to the same open question (2026-09-23): `.dm-newpill`, the "New messages" button, which the committed Messages mock draws as a pill; and the room's toast flash (`.main > .flash:has(+ .dm-shell)`), a `role="status"` notice rather than a button, but a pill-shaped plate holding a sentence. ADR 0034 records the conflict (the Messages pair in its 2026-09-23 addendum); it needs a ruling, not a sweep.*
 - **Don't** use a pure-black shadow, or add elevation to something that is merely at rest.
 - **Don't** cut a corner. No `clip-path` octagons, no frame whose edge is drawn as background-gradient layers — a frame is a real border plus a radius, and a `clip-path` on a control silently eats its outer focus ring. Don't extend the lapidary register to new surfaces either; it is legacy and shrinking.
-- **Don't** invent a new breakpoint. 860px collapses the shell and 900px wraps the admin chrome; reuse them.
-- **Don't** rename the forum lexicon. Reply is **counsel**, reputation is **regard**, badges are **marks of esteem**, like is **commend** — this vocabulary is a binding brand commitment recorded in `PRODUCT.md`.
+- **Don't** invent a new breakpoint. 860px collapses the shell, 900px compacts the chrome, and 760px stacks in-pane layouts; reuse them.
+- **Don't** rename the lexicon where it has shipped. On member surfaces reputation is **regard**, badges are **marks of esteem**, like is **commend**, and the leaderboard is **top contributors**. *Counsel* is a register word ("Add your counsel", "Private counsel"), not the name of the reply control, which reads **Reply** with an "N replies" count (ADR 0027); the admin and moderation consoles use plain words such as Reputation and Badges (ADR 0024). `PRODUCT.md` records the lexicon as a binding brand commitment; how far it reaches beyond the shipped member strings is an open owner decision (ADR 0024, obligation 5).

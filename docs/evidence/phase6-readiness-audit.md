@@ -7,8 +7,8 @@
 > [ADR 0018](../adr/0018-phase-5-gate-a-default-on.md)), superseding this
 > audit's claims that Gate A work was still pending. Line numbers, flag states,
 > and "current" assertions below describe only the 2026-06-30 checkout. For
-> today's phase entry requirements, consult [Phase 6 plan](../../PHASE_6_PLAN.md)
-> and [Phase 5 status](../../PHASE_5_STATUS.md); Gate A acceptance alone does
+> Phase 6 entry requirements, consult the archived [Phase 6 plan](../history/PHASE_6_PLAN.md)
+> and [Phase 5 status](../history/PHASE_5_STATUS.md); Gate A acceptance alone does
 > not establish Phase 6 readiness.
 
 This note records an engineering audit of Phase 6 readiness as of its date. It

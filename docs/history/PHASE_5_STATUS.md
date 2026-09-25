@@ -1,5 +1,12 @@
 # Phase 5 Status
 
+> **Archived 2026-09-25 — no longer maintained.** This was the live Phase 5 status ledger through
+> the 2026-09-20 notification/account repair. It moved from the repository root to `docs/history/`
+> with its text unchanged apart from re-relativized links; each entry describes its own date.
+> Current availability is `src/Core/FeatureFlags.php` `DEFAULTS` plus the owning runbook in
+> `docs/runbooks/`; open carryovers are ADRs in `docs/adr/`; what shipped is recorded in
+> `CHANGELOG.md`.
+
 ## Unified notification and account repairs — 2026-09-20
 
 **Implemented and locally verified on `codex/unified-notifications-settings`; no deployment claimed.**
@@ -9,14 +16,14 @@ It includes lifecycle-state precedence, shared authorized notification history,
 durable digests, state-independent delivery reductions, TOTP/passwordless
 recovery, avatar draft preservation, saved-feed/folder behavior and mobile
 settings/session presentation. Current results and the final release gates live
-in the [combined evidence index](docs/evidence/unified-notifications-and-settings/README.md)
-and [notifications runbook](docs/runbooks/unified-notifications.md); account
+in the [combined evidence index](../evidence/unified-notifications-and-settings/README.md)
+and [notifications runbook](../runbooks/unified-notifications.md); account
 restrictions and pre-release reconciliation live in the
-[account lifecycle runbook](docs/runbooks/account_lifecycle.md#pre-release-restriction-reconciliation).
+[account lifecycle runbook](../runbooks/account_lifecycle.md#pre-release-restriction-reconciliation).
 
 Member security history, email discovery, username changes and a last-20 bell
 dropdown remain explicit open requirements in proposed
-[ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md). The accepted
+[ADR 0035](../adr/0035-member-settings-completion-carryovers.md). The accepted
 notification-control and staff-inbox carryovers retain ADR 0014/0021 ownership.
 The repair gate passed 2,926 PHP tests / 22,080 assertions, 224 browser tests
 (18 intentional skips), Imladris build/check/verification and independent review.

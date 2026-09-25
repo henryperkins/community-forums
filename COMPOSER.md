@@ -1,6 +1,6 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.12 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Status:** v0.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
@@ -62,7 +62,7 @@ A single `Composer` component is mounted with a small **context config**; the in
 | **The input box & all its features** | **Identical** | **Identical** | **Identical** |
 | Wrapper adds | A **Title** field above + **board picker** | Sticky-to-bottom; optional "replying to" / quote chip | **Recipient** (to whom) + conversation header |
 | Placeholder | "Start a new topic in #board…" | "Reply to {thread}…" / "Message #board…" | "Message @user…" |
-| Submit target | `POST /threads` (creates thread; first post = OP) | `POST /t/{id}/reply` | `POST /dm/{conversationId}/messages` |
+| Submit target | `POST /threads` (creates thread; first post = OP) | `POST /t/{id}/reply` | `POST /messages` (new conversation) · `POST /messages/{conversationId}` (reply) |
 | On success | Navigate to the new thread | Full navigation (optimistic insert **deferred** — ADR 0020) | Full navigation (optimistic insert **deferred** — ADR 0020) |
 | Who can use it | Members (board `post_min_role`); guests see join-bar | Members (thread not locked); guests see join-bar | Members; gated by recipient's "Allow DMs" + block list (USER.md §4.7) |
 | Context-scoped limits | Title required; board-level image/limit settings | Locked thread disables it | DM length cap; no thread-only affordances |
@@ -205,14 +205,14 @@ The file picker, paste, and drop are JavaScript enhancements. Without JavaScript
 
 ## 8. Drafts & Autosave
 
-- **Continuous, debounced autosave** to `localStorage`, keyed per context so multiple drafts coexist:
-  - Reply → `draft:thread:{threadId}:{userId}`
-  - New thread → `draft:newthread:{boardId}:{userId}` (body **and** title)
-  - DM → `draft:dm:{conversationId}:{userId}`
-  - Edit → `draft:edit:{postId}:{userId}` (kept separate so editing never clobbers a fresh reply draft)
-- **Restored on mount**, **cleared on successful send.** Survives reload, navigation, and crashes. A subtle "Draft saved" indicator confirms.
-- The **"Drafts"** sidebar quick-filter (PRODUCT_DESIGN §5.2/§6.5) lists active drafts with their context + a preview; click to resume in the right composer.
-- **Signed-out** users' drafts still save locally; after sign-in, offer to restore the text into the composer.
+- **Continuous autosave** to `localStorage`, keyed `rb-draft:{username}:{form action}` (`anon` when signed out) so multiple drafts coexist:
+  - Reply → `rb-draft:{username}:/t/{threadId}/reply`
+  - New thread → `rb-draft:{username}:/threads` (one new-topic draft shared by board forms and `/compose`; locally the body only — the title is kept in the server draft)
+  - DM → `rb-draft:{username}:/messages` (new conversation) · `rb-draft:{username}:/messages/{conversationId}` (reply)
+  - Edit → no local draft: post and wiki edit forms opt out with `data-no-draft`, since they are pre-filled from the stored body
+- **Restored on mount.** A submitted draft is cleared on the next successfully loaded page, not at submit, so a dropped connection cannot lose it. Survives reload, navigation, and crashes. A subtle "Draft saved" indicator confirms.
+- The **Drafts** page (`/drafts`, under Account settings and the identity menu) lists server and browser-local drafts with their context + a preview; click to resume in the right composer.
+- **Signed-out** users' drafts still save locally; after sign-in they are moved to the member's key automatically and restore into the composer.
 - **Server-side draft sync** complements local recovery for authenticated members through the `server_drafts` table and is default-on. A revision conflict presents both copies for an explicit choice; disabling `server_drafts` leaves local recovery available. See `docs/runbooks/server_drafts.md`.
 
 ## 9. Submission & Feedback
@@ -295,11 +295,11 @@ Safety notes: the rich surface **never** stores HTML — Markdown only, rendered
 
 ### 14.1 One component, four mount configs
 
-A single `Composer` (client) takes a small config and nothing else changes:
+One client component takes a small config and nothing else changes. The block below is the logical config, not a JavaScript factory: `composer_shell.php` carries it on each server-rendered `form.composer` as `data-composer-context` / `data-composer-target-id` / `data-composer-instance` / `data-upload-max-bytes` (plus optional `data-no-draft`, `data-no-wysiwyg`, `data-thread-composer`), and `composer.js` enhances every such form:
 
 ```js
 Composer({
-  context:    'thread' | 'reply' | 'dm' | 'edit',
+  context:    'new_thread' | 'reply' | 'dm' | 'edit',
   targetId,                 // boardId | threadId | conversationId | postId
   hasTitle:   boolean,      // New Thread only
   recipient,                // DM only
@@ -366,30 +366,10 @@ If a future feature can't be offered identically in all four, that's a signal to
 
 ### 16.2 Schema additions
 
-```sql
--- Uploaded files referenced from Markdown; tracks ownership, limits, moderation.
-CREATE TABLE attachments (
-  id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id        BIGINT UNSIGNED NOT NULL,
-  post_id        BIGINT UNSIGNED NULL,      -- set when attached to a post
-  dm_message_id  BIGINT UNSIGNED NULL,      -- set when attached to a DM
-  kind           ENUM('image','file') NOT NULL DEFAULT 'image',
-  path           VARCHAR(512)    NOT NULL,
-  mime           VARCHAR(100)    NOT NULL,
-  size_bytes     INT UNSIGNED    NOT NULL,
-  width          INT UNSIGNED    NULL,
-  height         INT UNSIGNED    NULL,
-  alt            VARCHAR(255)    NULL,
-  created_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_attach_post (post_id),
-  KEY idx_attach_dm (dm_message_id),
-  CONSTRAINT fk_attach_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
+- **`attachments`** — uploaded files referenced from Markdown, with ownership, limits and moderation. The canonical shape is SCHEMA.md §4: built by `0043_attachments`, with `0058_phase4_carryover_foundation` adding the scan/quarantine/download-name columns and `idx_attach_scan`. Files are addressed by an unguessable `storage_key` (there is no `path` column), carry a `sha256`, move `temp → finalized → deleted`, take their `visibility` from the parent at finalize, and a `purpose` separates post/DM media from brand and avatar uploads.
 
 - **`posts.body` already stores Markdown** (canonical) and **`posts.body_html`** the cached sanitised render (PRODUCT_DESIGN.md §8) — no change needed; this doc just fixes the markup *flavour* as Markdown.
-- **Drafts** always keep a local `localStorage` recovery copy. Authenticated cross-device sync uses `server_drafts` (`user_id`, `context_key`, `revision`, `title`, `body`, `metadata`, `updated_at`, `expires_at`), default-on and independently reversible through the feature flag.
+- **Drafts** keep a local `localStorage` recovery copy for new-topic, reply and DM composers (edit forms opt out, §8). Authenticated cross-device sync uses `server_drafts` (`user_id`, `context_key`, `revision`, `title`, `body`, `metadata`, `updated_at`, `expires_at`), default-on and independently reversible through the feature flag.
 - **Mentions** are parsed at submit; an optional `post_mentions` lookup table can speed "who was mentioned" queries if needed (P2).
 - **Content references** use `content_references.target_type ENUM('board','thread','post','tag')`; migration `0071_content_reference_tags` added `tag` so WYSIWYG `#` tag suggestions and `/tags/{slug}` links can resolve through the same read-gated reference-card path.
 
@@ -414,6 +394,7 @@ This surface specification has no separate decision backlog.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.13 | 2026-09-25 | Reconciled with the shipped composer. The DM submit target is `POST /messages` / `POST /messages/{id}` (§2). Local drafts use `rb-draft:{username}:{form action}` keys, edit forms keep none, drafts clear on the next loaded page, and signed-out drafts migrate automatically at sign-in (§8). The Drafts list is the `/drafts` page. The §14.1 mount context is `new_thread`, carried as `data-composer-*` attributes. §16.2 points to SCHEMA.md for the `attachments` shape instead of repeating the superseded `path`-column DDL. |
 | v0.12 | 2026-09-23 | Replaced obsolete local-only-draft and Phase 3 planning language with the shipped `server_drafts` contract. Consolidated the original question register into DECISIONS and ADRs. |
 | v0.11 | 2026-09-23 | Upload readiness, explicit failure recovery, interrupted drafts, cancellation, server pending-image validation, and wiki attachment finalization. Local evidence is separate from production/device verification. |
 | v0.1 | 2026-06-19 | Initial composer design. One shared component across New Thread / Reply / DM (+ edit) with an identical feature surface; **hybrid live-Markdown** editing model (resolves PRODUCT_DESIGN.md markup question); toolbar; full keyboard shortcuts (Cmd/Ctrl+K reconciled); mentions/emoji/references; attachments/images/embeds; drafts & autosave; submission/feedback + edit mode + error taxonomy; preview; validation/limits/safety; accessibility & i18n; responsive/mobile; architecture (one component + mount config, hybrid editor, progressive enhancement); the unified feature-surface matrix; `attachments` schema; phasing & open questions. |

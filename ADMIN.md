@@ -1,9 +1,9 @@
 # RetroBoards — Admin & Moderation Design
 
-**Status:** v0.17 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-23
+**Status:** v0.18 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, PRODUCT_DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; InnoDB / `utf8mb4`).
 
-> Older phase assignments in this design are scope history, not a live status ledger. Current shipped capability and open carryovers are in `PRODUCT.md`, `PHASE_5_STATUS.md`, and the relevant ADR/runbook.
+> Older phase assignments in this design are scope history, not a live status ledger. Current shipped capability is in `PRODUCT.md`, `FeatureFlags::DEFAULTS`, and the relevant runbook; open operator carryovers are ADRs (notably 0021). Where a passage below describes unbuilt behaviour, it says so and names the owning ADR.
 
 ## Scope
 
@@ -52,7 +52,7 @@ A state overrides the role's normal capabilities. State lives on the account (`u
 |---|---|---|
 | **Active** | Normal — role capabilities apply. | Default. |
 | **Suspended** | Temporary read-only. Can log in and read, **cannot post/react/DM** until expiry. | Has an `expires_at`; auto-restores. A "timeout". |
-| **Banned** | Access revoked. Configurable: *post-ban* (read-only, sees a banner) or *full ban* (login blocked entirely). | Permanent unless lifted. Reason required; logged. Scope can be site-wide or per-board (§1.4). |
+| **Banned** | Access revoked. Configurable: *post-ban* (read-only, sees a banner) or *full ban* (login blocked entirely). | Permanent unless lifted. Reason required; logged. Scope can be site-wide or per-board (§1.4). *Shipped: a ban is always full (sign-in refused) and site-wide; a post-only restriction is a suspension, optionally indefinite. Ban types and board scope are carryovers (ADR 0021 #4).* |
 
 Banned/Suspended **always lose to** role: a banned Admin (e.g. compromised account an owner locked) cannot act. Effective authority is computed state-first (§2.4).
 
@@ -76,7 +76,7 @@ Powers apply within a **scope**. This is how "where" is expressed.
 - **Category-scoped** — convenience: assign a Moderator to a whole category (expands to its boards). Optional, P1.
 - **Self** — every User can act on their **own** content (edit/delete own posts) regardless of mod status.
 
-Bans and suspensions also carry scope: a **board ban** blocks one board; a **site ban** blocks everything.
+Bans and suspensions also carry scope: a **board ban** blocks one board; a **site ban** blocks everything. *(Board bans are not built — ADR 0021 #4. Shipped suspensions and bans are site-wide and Admin-only, §3.4.)*
 
 ## 2. Permissions System (who can do what, and where)
 
@@ -125,7 +125,7 @@ Scope column: **Self** = own content; **Board** = only assigned boards; **Site**
 | `user.ban_site` / `user.delete` / `user.export` | — | — | — | ✓ |
 | `site.settings` / `theming` / `integrations` / `plugins` / `webhooks` / `audit.view` | — | — | — | ✓ |
 
-Note: Moderators get **`user.list` (read-only, limited)** scoped to participants in their boards so they can act on offenders, but never `user.assign_roles`, `view_pii`, or site bans.
+Note: Moderators get **`user.list` (read-only, limited)** scoped to participants in their boards so they can act on offenders, but never `user.assign_roles`, `view_pii`, or site bans. *Shipped: of the `mod.user.*` actions, a board moderator can only warn; mute, suspend and board ban are Admin-only or not built (§3.4, ADR 0021 #4).*
 
 ### 2.3 "Where" — scoping rules
 
@@ -140,7 +140,7 @@ function can(user, capability, target):
     # 1. State gate (state beats role)
     if user is null:                      role = GUEST          # not logged in
     else if user.status == BANNED:        return capability in GUEST_READONLY
-                                          and not board_banned(user, target)
+                                          and not board_banned(user, target)   # board bans not built (ADR 0021 #4)
     else if user.status == SUSPENDED:     allowed = GUEST_READONLY
     else:                                 allowed = capabilities_for(user.role)
 
@@ -156,8 +156,7 @@ function can(user, capability, target):
 
     # 4. Read gate for private boards
     if capability == 'content.read' and target.board.is_private:
-         if board_members is not enabled yet: return user.role == ADMIN
-         return board_member(user, target.board)
+         return user.role == ADMIN or board_member(user, target.board)
 
     return true
 ```
@@ -217,13 +216,15 @@ All content actions are **soft** wherever possible (nothing is hard-deleted from
 
 Escalating ladder, each recorded and visible on the user's admin record:
 
+> **Amended 2026-09-25 (ADR 0021 #4).** Shipped: only Admins suspend, ban, or lift, and only site-wide — on both `/admin/users/{id}/…` and `/mod/u/{id}/…`. A suspension is read-only until `suspended_until`, or indefinite with no expiry (`bans` `scope='site'`, `type='post'`). A ban is full — sign-in is refused — and has no expiry (`type='full'`). A board moderator's only member action is a warning attributed to a board they moderate. Mute/timeout, board bans, moderator board-suspension (`scope='board'`), selectable ban types and expiring bans are carryovers under ADR 0021 #4; the `bans.scope`/`board_id` columns exist but are unused. The v0.12 suspend-scope resolution below records the design decision, not shipped behaviour.
+
 | Action | Capability | Scope | Effect |
 |---|---|---|---|
 | **Warn** | `mod.user.warn` | Board/Site | Formal notice; user sees it; counts toward history. No functional restriction. |
-| **Mute / timeout** | `mod.user.mute` | Board/Site | Read-only for a short duration (hours). Lightweight `Suspended`. |
-| **Suspend** | `mod.user.suspend` | Board/Site | Read-only for a set duration (days). **Admin:** site-wide (global `users.status`/`suspended_until` fast-path). **Moderator:** scoped to their assigned board(s) — a time-limited board read-only state recorded in `bans` (`scope='board'`, `type='post'`, `expires_at`), enforced via the board-level gate, not the global account flag. |
-| **Ban — board** | `mod.user.ban_board` | Board | Blocks posting (or reading) in one board. |
-| **Ban — site** | `user.ban_site` (Admin) | Site | Full or post-only site ban. |
+| **Mute / timeout** | `mod.user.mute` | Board/Site | Read-only for a short duration (hours). Lightweight `Suspended`. *Not built — carryover (ADR 0021 #4).* |
+| **Suspend** | `mod.user.suspend` | Board/Site | Read-only for a set duration (days). **Admin:** site-wide (global `users.status`/`suspended_until` fast-path). **Moderator:** scoped to their assigned board(s) — a time-limited board read-only state recorded in `bans` (`scope='board'`, `type='post'`, `expires_at`), enforced via the board-level gate, not the global account flag. *Shipped: Admin site-wide only; moderator board-scoped suspension is a carryover (ADR 0021 #4).* |
+| **Ban — board** | `mod.user.ban_board` | Board | Blocks posting (or reading) in one board. *Not built — carryover (ADR 0021 #4).* |
+| **Ban — site** | `user.ban_site` (Admin) | Site | Full or post-only site ban. *Shipped: full ban only (sign-in refused, no expiry); post-only is an indefinite suspension; choosing a ban type is a carryover (ADR 0021 #4).* |
 | **Reveal anon author** | `mod.anon.reveal` | Board/Site | Unmasks an Anonymous post's author; the reveal is itself audited. |
 | **Add mod note** | `mod.user.warn` | — | Private staff note on the account (not user-visible). *2026-07-18: notes are **admin-only** in the shipped implementation — `user_notes` is globally scoped, so the any-board-moderator mapping over-disclosed; see ADR 0021 (post-review decisions).* |
 
@@ -246,7 +247,7 @@ Auto-flags (spam filters, word lists, throttles — §3.8) enter the **same queu
 
 ### 3.6 Audit log
 
-Every moderation and admin action appends an immutable record (`moderation_log`, PRODUCT_DESIGN.md §8 + extensions §10): **who, what action, on what target, in what scope, why (reason), when**, plus a before/after snapshot for edits. Append-only (no edit/delete). Visible to Admins site-wide and to Moderators for their boards (`mod.log.view`). The log is the backbone of accountability and appeals.
+Every moderation and admin action appends an immutable record (`moderation_log`, PRODUCT_DESIGN.md §8 + extensions §10): **who, what action, on what target, in what scope, why (reason), when**, plus a before/after snapshot for edits. Append-only (no edit/delete). Visible to Admins site-wide and to Moderators for their boards (`mod.log.view`). *(Shipped: `/admin/audit` is Admin-only; the board-scoped moderator view is deferred — ADR 0021 #5.)* The log is the backbone of accountability and appeals.
 
 ### 3.7 Appeals (Phase 3)
 
@@ -343,12 +344,12 @@ Admin CRUD with per-board settings:
 
 - **Public** — listed and readable by everyone (Guests included).
 - **Hidden** — not shown in the sidebar/index, but readable by direct link (useful for staff or low-key boards).
-- **Private** — read-gated. In the Phase 1 console this is an active-admin-only hold state because `board_members` is still Phase 2. Once `board_members` ships (§10), private boards become member-scoped: only members of the board (by role or explicit membership) can see them.
+- **Private** — visible only to Admins and explicit board members (`board_members`; added and removed at `/admin/boards/{id}/members`, audited). A board moderator who is not a member can still open and moderate the board's threads, but not its board page, listings, or search. Membership shipped in Phase 2 (P2-08, migration `0031`), replacing the Phase 1 admin-only hold.
 
 ### 4.4 Lifecycle
 
 - **Archive** — board becomes read-only; content preserved and still searchable. Reversible.
-- **Delete** — soft-delete; requires choosing what happens to its threads (move to another board, or soft-delete with them). Slugs of deleted boards are reserved to avoid collisions and broken links.
+- **Delete** — permanent (hard delete). An empty board is deleted directly; a board with threads is deleted only after every thread row — hidden, held and deleted included — moves to a chosen unarchived board, in one locked transaction that recomputes the destination's counters. The confirmation page shows the impact and asks for the board slug. Settings, moderators, members and slug history go with the board, so old-slug redirects stop and the slug can be reused; thread URLs keep working. Audited as `move_board_content` + `delete_board`. *Soft delete with reserved slugs, and the optional soft-delete-threads-with-board path, are a carryover (ADR 0021 #10).*
 - All structural changes are audited.
 
 ### 4.5 Management UX
@@ -367,7 +368,7 @@ A single screen per user:
 
 - **Identity & profile:** username, display name, email (PII-gated), avatar, title/rank, join date, last seen, reputation/post count, verification status.
 - **Role & scope:** assign role (User/Moderator/Admin) and, for Moderators, which boards/categories they cover.
-- **State controls:** suspend / ban with **reason + duration + scope** (board or site) + ban type (post-only vs full). Lift/restore.
+- **State controls:** suspend / ban with **reason + duration + scope** (board or site) + ban type (post-only vs full). Lift/restore. *(Shipped: site scope only; suspension takes an optional expiry, a ban is always full — ADR 0021 #4.)*
 - **History:** posts, reports filed and received, prior mod actions, warnings — a complete accountability trail.
 - **Mod notes:** private staff-only notes on the account.
 - **Signals:** known IPs / devices and possible alt accounts (Admin-only, audited, privacy-caveated — §5.5).
@@ -380,7 +381,7 @@ Granting Moderator opens a board/category picker. Granting Admin requires a conf
 
 ### 5.4 Bans & evasion
 
-Bans carry scope, duration, reason, and type (§3.4). The system **surfaces** likely evasion (new account sharing email/IP/device fingerprints with a banned one) to Admins as a hint — it never auto-bans collaterally. Banned users hitting the site see a clear, non-leaky "you are banned" state (post-ban) or a generic block (full ban).
+Bans carry scope, duration, reason, and type (§3.4; shipped bans are site-wide, full and non-expiring — ADR 0021 #4). The system **surfaces** likely evasion (new account sharing email/IP/device fingerprints with a banned one) to Admins as a hint — it never auto-bans collaterally. Banned users hitting the site see a clear, non-leaky "you are banned" state (post-ban) or a generic block (full ban).
 
 ### 5.5 Privacy & compliance
 
@@ -437,6 +438,8 @@ This section covers **staff-facing** alerts and the Admin's control over the who
 
 ### 7.2 Routing, scope & noise control
 
+> **Amended 2026-09-25 (ADR 0021 #1–#2).** Shipped: a post report sends an in-app alert to that board's moderators and all Admins; a DM report alerts Admins in-app; outbound webhooks carry `report.created`, `report.resolved`, `member.banned` and `moderation.auto_action` for public-board events; announcements (§7.4) ship as a banner with optional in-app and email broadcast, rate-limited (5/hour) and audited. Carryovers: the other §7.1 events, per-staff preferences and quiet hours, thresholds and digests, the staff inbox, a staff email channel, and the event × channel × audience matrix (ADR 0021 #2, to share one preference model with the member matrix in ADR 0014); and editable email templates with preview/test-send (ADR 0021 #1). The fixed built-in templates stand until then.
+
 - **Scope-aware routing:** a board moderator is notified only about their boards; Admins get site-wide + system. Reuses the permission scope (§2.3).
 - **Per-staff preferences:** each mod/admin can mute or change the channel per event type, with **quiet hours**.
 - **Thresholds & digests:** instead of one ping per report, configure "notify when the queue exceeds N" or "when an item ages past T", and batch the rest into a periodic **digest** to prevent alert fatigue.
@@ -457,8 +460,8 @@ This section covers **staff-facing** alerts and the Admin's control over the who
 
 The subscription/notification system (PRODUCT_DESIGN.md §6.10, §8.3) emails subscribers on new posts/threads. The Admin owns the infrastructure:
 
-- **Domain setup first.** Before any notification email can send, the operator configures a sending domain (SPF/DKIM). The Console surfaces domain status and a setup dialog if it isn't ready — **sending is blocked until then.** (Adapts the adjacent project's "check domain status → set up infra" flow to our email integration, §8.7.)
-- **Transactional templates:** `new-post-in-thread` and `new-thread-in-board`, each rendered with thread title, board name, a snippet, and a deep link; subject lines kept short and specific. Editable with preview + test-send (as §7.4).
+- **Domain setup first.** Before any notification email can send, the operator configures a sending domain (SPF/DKIM). `/admin/email` shows the domain's SPF/DKIM status with a re-check; sending is blocked for an unverified domain **only when `email_require_verified_domain` is on** (off by default — ADR 0008). (Adapts the adjacent project's "check domain status → set up infra" flow to our email integration, §8.7.)
+- **Transactional templates:** fixed, built-in text. The instant notification says there is new activity in a followed thread and deep-links to it (no thread title, board name or snippet yet), with a one-click unsubscribe; daily digests use their own template. Editing, preview and member test-send are carryovers (ADR 0021 #1; member side ADR 0014).
 - **Per-recipient, idempotent send:** the post-insert fan-out enqueues one email per subscriber with `idempotency_key = post_id + ':' + user_id`, so retries never double-send.
 - **Suppression list:** bounces, complaints, and unsubscribes add the address to `email_suppressions` (§10); the fan-out skips suppressed recipients. One-click unsubscribe in every notification email.
 - **Transactional only:** notification + system emails. **Marketing/digest blasts are out of scope** (unsupported by the transactional path); a member's "email digest" preference (USER.md §4.6) batches *notification* emails, not marketing.
@@ -542,7 +545,7 @@ Server-side plugins run with app privileges, so v1 is **conservative**:
 
 - **Outbound webhooks:** fire on chosen events to a URL with **HMAC-signed** payloads and retries. This is the low-effort path for Slack/Discord/Zapier/n8n without writing a plugin.
 - **Signing secrets:** webhook secrets are stored as SecretVault references (`secret_ref`, `svcsec_*`), shown once at creation/rotation, and never stored in plaintext.
-- **Admin/REST API:** a minimal, **token-authenticated** API (scoped tokens, audited) for automation — read stats, manage content/users. Tokens are managed in the Console (§9).
+- **Admin/REST API:** a read-only Bearer API — `GET /api/v1/me`, `/api/v1/boards`, `/api/v1/boards/{id}/threads`; scopes `read:boards` and `read:threads`; public boards only; `api_tokens` flag, default on. Admins mint (password re-auth, token shown once) and revoke tokens at `/admin/api-tokens`; mint, revoke and scope denials are audited. *Stats and content/user-management scopes are planned, not built, and no ADR tracks them yet — record one before promising them.*
 
 ### 8.7 First-party integration targets
 
@@ -612,7 +615,7 @@ with JavaScript disabled.
 - **Appearance** — live token/brand editor with a real-time preview pane and theme picker.
 - **Integrations** — installed plugins (enable/disable/configure with their permission prompts), webhook endpoints, API tokens.
 - **Link previews** (`/admin/link-previews`, ADR 0025) — queue-health tiles, the SSRF host allowlist, the kill switch, the per-board opt-in roll-up, and a recent-previews table with per-row refresh/purge. It names, in prose, whichever of its three gates (flag, board opt-in, allowlist) is still closed, so "nothing is unfurling" is never a mystery. Author-removed rows are shown but offer no refresh — the console is not a way around a member's decision about their own post.
-- **Settings → Registration/Security** — registration mode (open / approval / invite), email-verification requirement, password policy, rate limits, anonymous-posting default.
+- **Settings → Registration/Security** — registration mode (open / approval / invite), email-verification requirement, password policy, rate limits, anonymous-posting default. *Shipped: registration mode `open` / `closed` / `invite`; approval mode, the verification requirement, password policy and the rate-limit editor are carryovers (ADR 0021 #3).*
 
 ### 9.4 Design principles for the Console
 
@@ -650,7 +653,7 @@ CREATE TABLE bans (
   id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id    BIGINT UNSIGNED NOT NULL,
   scope      ENUM('site','board') NOT NULL DEFAULT 'site',
-  board_id   BIGINT UNSIGNED NULL,                  -- required when scope='board'
+  board_id   BIGINT UNSIGNED NULL,                  -- required when scope='board' (board scope unused today — ADR 0021 #4)
   type       ENUM('post','full') NOT NULL DEFAULT 'post',
   reason     VARCHAR(255)    NOT NULL,
   created_by BIGINT UNSIGNED NOT NULL,
@@ -817,7 +820,7 @@ CREATE TABLE email_deliveries (
 
 ## 11. Roadmap Delta (admin/mod phasing)
 
-This section's original phase assignments are superseded by the seven delivery plans. Phases 1–4 are recorded as complete in `docs/history/PHASE_1-4_HISTORY.md`; Phase 5 Gate A status, Gate B reserves, and accepted deferrals are in `PHASE_5_STATUS.md`, `PHASE_5_PLAN.md`, and `docs/adr/`. Phase 6/7 scope is in `PHASE_6_PLAN.md` and `PHASE_7_PLAN.md`. Use those records for current status; the surface requirements above remain the behavioral specification.
+This section's original phase assignments are superseded by the seven delivery plans, now archived in `docs/history/`. Phases 1–4 are recorded as complete in `docs/history/PHASE_1-4_HISTORY.md`; Phase 5 Gate A status through 2026-09-20 and the Gate B reserves are in the archived `docs/history/PHASE_5_STATUS.md` and `docs/history/PHASE_5_PLAN.md`; accepted deferrals are in `docs/adr/`. Phase 6/7 scope is in the archived `docs/history/PHASE_6_PLAN.md` and `docs/history/PHASE_7_PLAN.md`. For current availability use `FeatureFlags::DEFAULTS` and the runbooks; the surface requirements above remain the behavioral specification.
 
 ## 12. Decision records
 
@@ -830,6 +833,7 @@ This surface specification has no separate decision backlog.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.18 | 2026-09-25 | Status-truth pass against shipped code. §3.4 and related passages: suspend and ban are Admin/site-only, and mute, board bans and moderator board-suspension are carryovers (ADR 0021 #4), so the v0.12 suspend-scope resolution is a design decision that is not built. The §3.6 moderator audit view is deferred (ADR 0021 #5). §2.4/§4.3 private boards are member-gated since Phase 2. §4.4 delete is hard-delete-with-forced-move (ADR 0021 #10). §8.6 API is read-only. The §7.2–§7.5 staff matrix, staff inbox and template editing are carryovers (ADR 0021 #1–#2), domain send-blocking is opt-in (ADR 0008), and the §9.3 registration/security settings beyond open/closed/invite are ADR 0021 #3. Status pointers name the `docs/history/` archive. |
 | v0.17 | 2026-09-23 | Replaced the obsolete phase roadmap and original-question register with links to the phase, ADR, and runbook records that now own status and decisions. Updated first-run setup and post-setup registration language to the delivered Console behavior. |
 | v0.16 | 2026-08-09 | Link previews completed and enabled (ADR 0025): §4.2 gains the **Unfurl link previews** per-board setting (`boards.link_previews_enabled`, DECISIONS §6 #5, default off; storable on any board but inert unless the board is public); §9.2 adds **Link previews** as a fourth tab in the Features area; §9.3 describes the `/admin/link-previews` console (queue tiles, host allowlist, kill switch, per-board opt-in, per-row refresh/purge, all audited — refresh deliberately unavailable on an author-removed row). Operator runbook: `docs/runbooks/link_previews.md`. |
 | v0.15 | 2026-07-18 | PR #44 safety remediation deviations recorded (ADR 0021): §3.4 "Add mod note" is admin-only in the shipped implementation (globally-scoped `user_notes` under any-board-mod read over-disclosed); §4.4 board delete ships as hard-DELETE-with-forced-move inside one locking transaction (every thread row moves, slugs un-reserve via cascade) with soft-delete + reserved slugs still deferred as ADR 0021 item 10. |

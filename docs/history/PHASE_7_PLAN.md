@@ -1,5 +1,11 @@
 # RetroBoards Phase 7 Plan — Platform Expansion & Portability
 
+> **Archived 2026-09-25.** Moved from the repository root to `docs/history/`; the text below is
+> otherwise unchanged and no longer maintained, so its status lines describe the date they were
+> written. Cite it for scope history and gate definitions, not current state: availability is
+> `src/Core/FeatureFlags.php` `DEFAULTS` plus the owning runbook in `docs/runbooks/`, open
+> carryovers are ADRs in `docs/adr/`, and what shipped is recorded in `CHANGELOG.md`.
+
 **Owner:** Henry  
 **Plan type:** Delivery baseline, strategy-gated release train, and formal roadmap closeout  
 **Plan status:** **Draft — execution is gated by formal Phase 6 closeout and Milestone 0 platform-strategy approval**  

@@ -4,7 +4,7 @@
 **Status:** Recorded and owner-approved 2026-06-30; accepted as the A5 entry-gate
 artifact in ADR 0012 on 2026-07-01. It operationalizes ADR 0004 **D6**. The
 later implementation refinement to RP-ID resolution is recorded separately in
-`PHASE_5_STATUS.md`.
+the archived `docs/history/PHASE_5_STATUS.md`.
 **Precedence:** subordinate to `DECISIONS.md` → `PRODUCT_DESIGN.md` → ADR 0004 (**D6**).
 
 > **Self-hostable framing.** RetroBoards runs on a single VPS per operator, so

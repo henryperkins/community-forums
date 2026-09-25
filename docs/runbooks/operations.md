@@ -1,6 +1,6 @@
 # RetroBoards — Operations Runbook
 
-Cross-phase operating procedures, first established for `PHASE_2_PLAN.md` §10
+Cross-phase operating procedures, first established for `docs/history/PHASE_2_PLAN.md` §10
 (observability) and §12 (staged release and rollback). All commands run from
 the project root on the VPS. `php bin/console` lists every command.
 

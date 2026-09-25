@@ -143,7 +143,7 @@ required, then schedule the workers for the subsystems you intend to operate
 and the relevant per-feature runbooks). To hold a default-on subsystem back,
 set a merge-preserving `features.<flag>=false` override as described in
 [operations §2](operations.md). The original Phase 2 launch order is retained
-in [PHASE_2_PLAN.md](../../PHASE_2_PLAN.md) §12 as history, not a new-install
+in [PHASE_2_PLAN.md](../history/PHASE_2_PLAN.md) §12 as history, not a new-install
 checklist.
 
 ## 6. Known caveats

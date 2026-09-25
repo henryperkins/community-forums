@@ -1,5 +1,11 @@
 # RetroBoards Phase 2 Plan — Community Essentials
 
+> **Archived 2026-09-25.** Moved from the repository root to `docs/history/`; the text below is
+> otherwise unchanged and no longer maintained, so its status lines describe the date they were
+> written. Cite it for scope history and gate definitions, not current state: availability is
+> `src/Core/FeatureFlags.php` `DEFAULTS` plus the owning runbook in `docs/runbooks/`, open
+> carryovers are ADRs in `docs/adr/`, and what shipped is recorded in `CHANGELOG.md`.
+
 **Owner:** Henry  
 **Plan type:** Delivery baseline, release train, and formal phase closeout  
 **Source hierarchy:** `DECISIONS.md` is authoritative where documents conflict; `PRODUCT_DESIGN.md` is the product source of truth; `SCHEMA.md` owns the final database shape; `ADMIN.md`, `USER.md`, `COMPOSER.md`, and `COMMUNITY.md` own their respective surfaces. P0/P1/P2 in the source documents are priority tiers, not delivery-phase numbers.  
