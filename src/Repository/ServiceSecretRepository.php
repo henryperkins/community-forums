@@ -142,11 +142,11 @@ final class ServiceSecretRepository
 
     public function acquirePruneLock(): bool
     {
-        return $this->db->tryLock('rb_secret_prune');
+        return (int) $this->db->fetchValue("SELECT GET_LOCK('rb_secret_prune', 0)") === 1;
     }
 
     public function releasePruneLock(): void
     {
-        $this->db->unlock('rb_secret_prune');
+        $this->db->run("SELECT RELEASE_LOCK('rb_secret_prune')");
     }
 }

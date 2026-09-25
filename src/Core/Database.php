@@ -379,30 +379,6 @@ final class Database
         }
     }
 
-    /**
-     * Take the named advisory lock without waiting; false while another
-     * connection holds it. Released by unlock() or when the connection closes.
-     */
-    public function tryLock(string $name): bool
-    {
-        return (int) $this->fetchValue('SELECT GET_LOCK(?, 0)', [$this->lockName($name)]) === 1;
-    }
-
-    public function unlock(string $name): void
-    {
-        $this->run('SELECT RELEASE_LOCK(?)', [$this->lockName($name)]);
-    }
-
-    /**
-     * MySQL lock names are server-wide, so a lock is named for this database:
-     * another install or test database on the same server must not hold it.
-     * The digest keeps the name under MySQL's 64-character limit.
-     */
-    public function lockName(string $name): string
-    {
-        return $name . ':' . substr(hash('sha256', (string) ($this->config['database'] ?? '')), 0, 16);
-    }
-
     /** @return array{connections:int,connection_ms:float,queries:int,query_ms:float} */
     public function metrics(): array
     {

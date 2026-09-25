@@ -77,12 +77,12 @@ final class EmailDeliveryRepository
      */
     public function acquireDrainLock(): bool
     {
-        return $this->db->tryLock('rb_email_outbox');
+        return (int) $this->db->fetchValue("SELECT GET_LOCK('rb_email_outbox', 0)") === 1;
     }
 
     public function releaseDrainLock(): void
     {
-        $this->db->unlock('rb_email_outbox');
+        $this->db->run("SELECT RELEASE_LOCK('rb_email_outbox')");
     }
 
     /** @return array<int,array<string,mixed>> oldest queued sends, for the worker */
