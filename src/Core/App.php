@@ -395,6 +395,19 @@ final class App
         });
         $response = $this->process($container, $request);
         $this->preloadAssets($response);
+        // A page rendered for a signed-in member must not outlive the session in
+        // the browser: without this, Back after Log out re-showed the member's
+        // last page (settings, messages) from the disk cache. Chrome still keeps
+        // no-store pages in its back/forward cache until an HttpOnly cookie
+        // changes, which Log out does, so in-session Back stays instant there.
+        // HTML only: history never shows a JSON answer, and a no-store fetch
+        // whose body is never read (the composer's draft discard) stays open in
+        // Chromium's network stack. A route that set its own policy keeps it
+        // (/users-online stays `private, no-cache`, ADR 0031 §12).
+        if ($session->user() !== null && $response->getHeader('Cache-Control') === null
+            && str_starts_with((string) $response->getHeader('Content-Type'), 'text/html')) {
+            $response->header('Cache-Control', 'private, no-store');
+        }
 
         SecurityHeaders::apply(
             $response,
@@ -498,6 +511,16 @@ final class App
             $oauthCallback = preg_match('#^/auth/[^/]+/callback$#', $path) === 1;
             if ($request->isPost() && !$oauthCallback
                 && !$container->get(Csrf::class)->verify((string) ($request->post('_token') ?? ''))) {
+                // Log out pressed in a second tab after the first one signed out,
+                // or after the session lapsed, carries a token for a session that
+                // no longer exists. What it asked for has already happened, so say
+                // that instead of "that form has expired". This is not an
+                // exemption: the token still failed, the logout handler never
+                // runs, and a live session with a bad token still gets the 403.
+                if ($path === '/logout' && $container->get(Session::class)->user() === null) {
+                    $container->get(Flash::class)->add('You are already signed out.');
+                    return $this->redirect('/', 303);
+                }
                 return $this->renderError($container, 403, 'That form has expired or its security token was invalid. Please go back, reload, and try again.');
             }
 
@@ -606,6 +629,24 @@ final class App
             405 => 'That action is not allowed here.',
             default => 'Something went wrong.',
         };
+    }
+
+    /**
+     * Where the topbar's "Log in" brings a guest back to: the page they were
+     * reading, re-encoded as a URL path (Request::path() is decoded, so a slug
+     * with a space or an accent must not reach `next` raw). Only a GET is a
+     * page to return to; `/` keeps the default landing (the inbox), and the
+     * sign-in pages themselves have nothing to return to.
+     */
+    private function loginReturnPath(Request $request, Session $session): ?string
+    {
+        $path = $request->path();
+        if ($session->user() !== null || $request->method() !== 'GET' || $path === '/'
+            || preg_match('#^/(?:login|logout|register|invite|forgot|reset|verify|auth|setup)(?:/|$)#', $path) === 1) {
+            return null;
+        }
+
+        return implode('/', array_map('rawurlencode', explode('/', $path)));
     }
 
     private function shareViewGlobals(Container $container, Request $request): bool
@@ -891,6 +932,7 @@ final class App
             'csrf_token' => static fn (): string => $container->get(Csrf::class)->token(),
             'flash' => $flash->current(),
             'request_path' => $request->path(),
+            'login_return' => $this->loginReturnPath($request, $session),
             'nav' => $nav,
             'inbox_unread_count' => $inboxUnreadCount,
             'dm_unread' => static function () use ($container, $session, $features): int {

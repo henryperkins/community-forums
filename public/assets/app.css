@@ -180,7 +180,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     box-shadow: var(--shadow-xs);
     transition: background var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
 }
-.btn:hover { text-decoration: none; background: var(--brand-hover); }
+/* Hover deepens the button's own fill, the .btn.danger:hover recipe below. It
+   used --brand-hover, which is evergreen in both registers and untouched by
+   operator branding: a gold twilight button, or a branded one, turned green. */
+.btn:hover { text-decoration: none; background: color-mix(in srgb, var(--accent) 82%, #000); }
 .btn:active { transform: translateY(0.5px) scale(.995); }
 .btn-small { padding: 6px 13px; font-size: .82rem; }
 .btn.danger, .danger { color: var(--danger); }
@@ -766,6 +769,29 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 }
 
+/* ── Application-owned semantic tokens (ADR 0039) ─────────────────────────
+   Values the Imladris layer does not carry. Primitives appear here, in token
+   definitions, and never in the rules that paint from them (DESIGN.md, the
+   Semantic-Only Rule).
+
+   --field-rule is the edge of an engraved frame. The layer's --gold-200
+   measured 1.30:1 against the parchment card, and WCAG 1.4.11 asks 3:1 of a
+   field's boundary; in twilight the same primitive drew a near-white 10.8:1
+   line. gold-700 holds 3.92:1 against the card and 3.69:1 against the field's
+   own fill by day; twilight takes gold-600 (4.71:1 / 5.30:1), restated in both
+   twilight registers below.
+
+   --stage-* paint the auth gate's stage, which is twilight in both registers,
+   so they do not flip. The page's --accent is evergreen by day, drawn for
+   parchment: on this ground its focus ring measured 1.75:1. */
+:root {
+    --field-rule: var(--gold-700);
+    --stage-ground: var(--twilight-900);
+    --stage-raised: var(--twilight-800);
+    --stage-ink: var(--parchment-50);
+    --stage-accent: var(--gold-400);
+}
+
 /* ── Phase 3: appearance preferences (P3-01) ──────────────────────────────
    Theme/density/font-size/reduced-motion are stamped on <html> by the server
    from the user's resolved preferences, so there is no flash and the no-JS
@@ -816,6 +842,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     --star: var(--gold-400);
     --presence: var(--green-400);
     --focus-ring: rgba(210,176,98,.75);
+    --field-rule: var(--gold-600);
     /* Restated in BOTH dark registers on purpose. imladris.css declares --scrim
        under [data-theme="dark"] only and carries no [data-theme="system"] block,
        so a member on the default `system` theme with a dark OS was getting the
@@ -867,6 +894,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
         --star: var(--gold-400);
         --presence: var(--green-400);
         --focus-ring: rgba(210,176,98,.75);
+        --field-rule: var(--gold-600);
         /* See the twilight block above: this is the audience that needed it. */
         --scrim: rgba(9,13,17,.58);
     }
@@ -2358,19 +2386,27 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* — Auth gate: ceremonial twilight stage with parchment seal card. — */
+/* The stage is twilight in both registers, so it paints from the --stage-*
+   tokens, which do not flip; the seal card on it still does. */
 .variant-auth {
-    background: var(--twilight-900);
+    background: var(--stage-ground);
 }
 .variant-auth .skip-link:focus {
-    color: var(--parchment-50);
-    background: var(--twilight-800);
+    color: var(--stage-ink);
+    background: var(--stage-raised);
+}
+/* Focus on the stage takes the stage's gold: the page's --accent is evergreen
+   by day and measured 1.75:1 here. Focus inside the card keeps --accent. */
+.variant-auth .auth-brand:focus-visible,
+.variant-auth .skip-link:focus-visible {
+    outline-color: var(--stage-accent);
 }
 .auth-stage {
     min-height: 100vh;
     min-height: 100dvh;
     position: relative;
     overflow: hidden;
-    background: var(--twilight-900);
+    background: var(--stage-ground);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2385,7 +2421,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     width: 760px;
     height: 760px;
     transform: translate(-50%, -50%);
-    color: var(--gold-500);
+    color: var(--gold);
     opacity: .07;
     pointer-events: none;
 }
@@ -2397,7 +2433,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     display: inline-flex;
     align-items: center;
     gap: 12px;
-    color: var(--gold-400);
+    color: var(--stage-accent);
     text-decoration: none;
 }
 .auth-brand:hover {
@@ -2412,7 +2448,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     font-family: var(--font-display);
     font-weight: var(--weight-medium);
     font-size: 1.7rem;
-    color: var(--parchment-50);
+    color: var(--stage-ink);
     line-height: 1;
     letter-spacing: .005em;
 }
@@ -2427,7 +2463,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     max-width: 432px;
     margin: 0;
     padding: 30px 30px 26px;
-    border: 1.5px solid var(--gold-400);
+    border: 1.5px solid var(--stage-accent);
     border-radius: var(--radius-lg);
     background: var(--surface-raised);
     box-shadow: var(--shadow-xl);
@@ -2507,9 +2543,8 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
    it has no `textarea.input` rule, so its copy stays a bare class list. */
 .input-engraved,
 .textarea-engraved,
-textarea.textarea-engraved,
-.dm-form:not(.composer-shell) .composer-input {
-    border: 1.5px solid var(--gold-200);
+textarea.textarea-engraved {
+    border: 1.5px solid var(--field-rule);
     border-radius: var(--radius-md);
     background-color: var(--surface-page);
     box-shadow: var(--shadow-inset);
@@ -2521,8 +2556,7 @@ textarea.textarea-engraved,
    rule goes to --gold-500. Same reason the :user-invalid rule below restates
    it. */
 .input-engraved:focus,
-.textarea-engraved:focus,
-.dm-form:not(.composer-shell) .composer-input:focus {
+.textarea-engraved:focus {
     border-color: var(--gold-500);
     outline: 2px solid var(--accent);
     outline-offset: 1px;
@@ -2586,17 +2620,18 @@ textarea.textarea-engraved,
     color: var(--text-muted);
     font-size: .92rem;
 }
-.auth-links a {
-    color: var(--brand);
-}
 /* Links inside muted/notice prose can miss the 3:1 link-vs-text contrast
    (WCAG 1.4.1 / axe link-in-text-block) when relying on color alone — one
    shared rule instead of per-surface patches, so the next muted-prose link
-   ships compliant by default. */
+   ships compliant by default. The index's guest note is such prose. These
+   links keep the page's link colour, --accent: `.auth-links a` once took
+   --brand, a fill token that is green-500 by night and measured 2.86:1 on
+   the twilight card. */
 .auth-links a,
 .callout a,
 .muted a,
-.empty a {
+.empty a,
+.directory-guest-note a {
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -8142,13 +8177,6 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 @media (prefers-reduced-motion: reduce) {
     .main > .flash:has(+ .dm-shell) { animation: none; }
 }
-/* The standalone DM composer is the same 9px engraved well as an auth or
-   account field, so `.dm-form:not(.composer-shell) .composer-input` is carried
-   in the .input-engraved rules instead of restating the eight rule layers a
-   third time. It reaches here at (0,3,0), which clears both `.composer-input,
-   textarea.input` and `.composer-box .composer-input` wherever they are
-   declared. Search "Engraved frames" to edit it. */
-
 /* ── Empty states ─────────────────────────────────────────────────────── */
 .dm-empty {
     flex: 1;

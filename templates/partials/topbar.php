@@ -191,7 +191,8 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
             </details>
         <?php else: ?>
             <a class="forum-bar-signup" href="/register">Sign up</a>
-            <a class="forum-bar-signin" href="/login">Log in</a>
+            <?php /* A guest who signs in from here comes back to the page they were reading (App::loginReturnPath). */ ?>
+            <a class="forum-bar-signin" href="/login<?= !empty($login_return) ? '?next=' . $e(rawurlencode((string) $login_return)) : '' ?>">Log in</a>
         <?php endif; ?>
     </span>
 </header>

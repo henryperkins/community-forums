@@ -102,11 +102,7 @@ final class SettingsController extends Controller
         $this->container->get(PreferenceService::class)
             ->updateMemberSurfaces($user->id(), $request->allInput());
 
-        $return = (string) $request->post('return', '');
-        if ($return === '' || preg_match('#^/(?![/\\\\])#', $return) !== 1) {
-            $return = '/';
-        }
-        return $this->redirect($return);
+        return $this->redirect($this->localReturn($request, '/'));
     }
 
     public function resetPreferences(Request $request): Response

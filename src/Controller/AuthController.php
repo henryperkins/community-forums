@@ -38,7 +38,7 @@ final class AuthController extends Controller
             return $this->redirect($this->authenticatedHome());
         }
         return $this->view('auth/login', [
-            'next' => $this->safeNext((string) $request->query('next', '')),
+            'next' => self::localPath($request->query('next'), $this->authenticatedHome()),
             'errors' => [],
             'old' => [],
         ]);
@@ -51,6 +51,7 @@ final class AuthController extends Controller
             return $this->redirect($this->authenticatedHome());
         }
 
+        $next = self::localPath($request->input('next'), $this->authenticatedHome());
         $limiter = $this->container->get(RateLimitService::class);
         $email = $request->str('email');
         $subject = strtolower($email);
@@ -58,7 +59,7 @@ final class AuthController extends Controller
             $limiter->enforceSubject('login', $request, $subject);
         } catch (HttpException) {
             return $this->view('auth/login', [
-                'next' => $this->safeNext((string) $request->input('next', '')),
+                'next' => $next,
                 'errors' => ['email' => 'Too many attempts. Please wait a few minutes and try again.'],
                 'old' => ['email' => $email],
             ], 429);
@@ -71,7 +72,7 @@ final class AuthController extends Controller
                 ? 'This account is not permitted to sign in.'
                 : 'The email or password you entered is incorrect.';
             return $this->view('auth/login', [
-                'next' => $this->safeNext((string) $request->input('next', '')),
+                'next' => $next,
                 'errors' => ['email' => $message],
                 'old' => ['email' => $email],
             ], 422);
@@ -81,17 +82,17 @@ final class AuthController extends Controller
 
         $mfa = $this->container->get(MfaService::class);
         if ($mfa->enabledForUser($user->id())) {
-            $token = $mfa->beginLoginChallenge($user, $request, $this->safeNext((string) $request->input('next', '')));
+            $token = $mfa->beginLoginChallenge($user, $request, $next);
             return $this->view('auth/mfa', [
                 'token' => $token,
-                'next' => $this->safeNext((string) $request->input('next', '')),
+                'next' => $next,
                 'errors' => [],
             ]);
         }
 
         $this->session()->login($user);
 
-        return $this->redirect($this->safeNext((string) $request->input('next', '')));
+        return $this->redirect($next);
     }
 
     /** @param array<string,string> $params */
@@ -102,6 +103,7 @@ final class AuthController extends Controller
         }
 
         $token = (string) $request->post('mfa_token', '');
+        $next = self::localPath($request->post('next'), $this->authenticatedHome());
         $limiter = $this->container->get(RateLimitService::class);
         $mfa = $this->container->get(MfaService::class);
         // Resolve the challenge's account (without consuming it) so the guess
@@ -120,13 +122,13 @@ final class AuthController extends Controller
         } catch (HttpException) {
             return $this->view('auth/mfa', [
                 'token' => $token,
-                'next' => $this->safeNext((string) $request->post('next', '')),
+                'next' => $next,
                 'errors' => ['code' => 'Too many attempts. Please sign in again in a few minutes.'],
             ], 429);
         } catch (ValidationException $e) {
             return $this->view('auth/mfa', [
                 'token' => $token,
-                'next' => $this->safeNext((string) $request->post('next', '')),
+                'next' => $next,
                 'errors' => $e->errors,
             ], 422);
         }
@@ -135,7 +137,7 @@ final class AuthController extends Controller
             $limiter->clear('mfa_account', $request, $account);
         }
         $this->session()->login($result['user']);
-        return $this->redirect($this->safeNext($result['next']));
+        return $this->redirect(self::localPath($result['next'], $this->authenticatedHome()));
     }
 
     /** @param array<string,string> $params */
@@ -194,7 +196,7 @@ final class AuthController extends Controller
 
         $limiter->clearSubject('passkey_login', $request, $subject);
         $this->session()->login($result['user']);
-        return Response::json(['ok' => true, 'redirect' => $this->safeNext((string) ($request->post('next') ?? ''))]);
+        return Response::json(['ok' => true, 'redirect' => self::localPath($request->post('next'), $this->authenticatedHome())]);
     }
 
     /** @param array<string,string> $params */
@@ -497,19 +499,6 @@ final class AuthController extends Controller
 
         $this->container->get(EmailVerificationService::class)->issue($user->id(), $user->email());
         return $this->redirectWithFlash('/settings/account', 'Verification email sent — check your inbox.');
-    }
-
-    /**
-     * Only permit same-site relative redirect targets. Rejects protocol-relative
-     * forms in every slash/backslash variant (//, /\, \/, \\) — browsers
-     * normalise backslashes, so those would redirect off-site.
-     */
-    private function safeNext(string $next): string
-    {
-        if ($next === '' || $next[0] !== '/' || preg_match('~^[\\\\/]{2}~', $next) === 1) {
-            return $this->authenticatedHome();
-        }
-        return $next;
     }
 
     private function gatePasskeys(): void

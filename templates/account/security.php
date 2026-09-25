@@ -238,7 +238,7 @@ $secPanelFocus = $secOrphaned === [];
                                 <button type="button" class="btn btn-secondary" data-passkey-stepup-btn hidden>Confirm with a passkey</button>
                             <?php endif; ?>
                             <button type="submit" class="btn danger"<?= !$passkeys['has_password'] ? ' data-passkey-needs-stepup' : '' ?>>Remove</button>
-                            <p class="field-error" data-passkey-revoke-error hidden></p>
+                            <p class="field-error" data-passkey-revoke-error role="alert" hidden></p>
                         </form>
                     </li>
                 <?php endforeach; ?>
@@ -263,7 +263,7 @@ $secPanelFocus = $secOrphaned === [];
                 <input type="text" name="nickname" class="input" maxlength="120">
             </label>
             <button type="button" class="btn" data-passkey-add-btn>Add a passkey</button>
-            <p class="field-error" data-passkey-add-error hidden></p>
+            <p class="field-error" data-passkey-add-error role="alert" hidden></p>
         </form>
         <noscript>
             <p class="muted">Adding a passkey needs JavaScript and a supported browser. Password, authenticator code, and recovery sign-in keep working without it.</p>
