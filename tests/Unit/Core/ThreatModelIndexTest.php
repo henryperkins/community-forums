@@ -118,11 +118,14 @@ final class ThreatModelIndexTest extends TestCase
         self::assertSame([], $errors, "threat-model index invalid:\n- " . implode("\n- ", $errors));
     }
 
-    public function test_every_dossier_is_recorded_pending_owner_review(): void
+    /** ADR 0017 accepted the six dossiers as the Gate A risk record (GA-DOD-23). */
+    public function test_every_dossier_records_its_gate_a_acceptance(): void
     {
+        self::assertFileExists(self::root() . '/docs/adr/0017-phase-5-gate-a-closeout.md');
         ['contents' => $contents] = self::loadReal();
         foreach ($contents as $model => $markdown) {
-            self::assertStringContainsString('pending owner review', $markdown, $model);
+            self::assertStringContainsString('**Status:** Gate A risk record accepted 2026-07-09 (ADR 0017).', $markdown, $model);
+            self::assertStringNotContainsString('pending owner review', $markdown, $model);
         }
     }
 
