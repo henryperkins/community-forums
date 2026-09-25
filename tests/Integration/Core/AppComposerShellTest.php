@@ -144,6 +144,7 @@ final class AppComposerShellTest extends TestCase
             self::assertStringContainsString('maxlength="' . $spec['maxlength'] . '"', $form);
             self::assertStringContainsString('placeholder="' . $escapedPlaceholder . '"', $form);
             self::assertStringContainsString('aria-label="' . $escapedLabel . '"', $form);
+            self::assertStringContainsString('class="composer-send-word">' . $escapedLabel . '</span>', $form);
             self::assertSame(1, substr_count($form, 'class="composer-box"'));
             self::assertSame(1, substr_count($form, 'data-composer-upload-tray'));
             self::assertSame(1, substr_count($form, 'class="composer-actions-start"'));

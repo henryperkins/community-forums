@@ -169,4 +169,24 @@ final class AppReactionTest extends TestCase
         $this->assertStatus(404, $blocked);
         self::assertSame(1, $this->reactionRows($opId), 'outsider reaction is rejected');
     }
+
+    public function testThreadNamesTheGestureInsteadOfABareEmoji(): void
+    {
+        $s = $this->scenario();
+        $fan = $this->makeUser();
+        $this->actingAs($fan);
+        $this->assertRedirect($this->post('/posts/' . $s['op_id'] . '/react', ['emoji' => '👍']));
+
+        $page = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+
+        self::assertStringContainsString('class="reaction-name">Commend</span>', $html);
+        self::assertStringContainsString('icon-commend-star', $html);
+        self::assertStringNotContainsString('reaction-bare', $html);
+        self::assertStringContainsString('class="reaction-name">Kindled</span>', $html);
+        self::assertStringContainsString('class="reaction-name">Seconded</span>', $html);
+        self::assertStringContainsString('class="reaction-name">Illuminating</span>', $html);
+        self::assertStringContainsString('name="emoji" value="👍"', $html);
+    }
 }

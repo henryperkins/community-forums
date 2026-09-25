@@ -137,11 +137,25 @@ async function tabTo(page: Page, target: Locator, limit = 160): Promise<number> 
   throw new Error(`Tab order did not reach ${await target.evaluate((element) => element.outerHTML.slice(0, 160))}`);
 }
 
+async function activeReaction(post: Locator, emoji: string): Promise<Locator | null> {
+  const forms = post.locator('.reactions form');
+  for (let index = 0; index < await forms.count(); index += 1) {
+    const form = forms.nth(index);
+    if (await form.locator('input[name="emoji"]').inputValue() !== emoji) continue;
+    const button = form.locator('button.reaction');
+    if (await button.evaluate((element) => element.classList.contains('reaction-on'))) {
+      return button;
+    }
+    return null;
+  }
+  return null;
+}
+
 async function setReactionState(post: Locator, emoji: string, enabled: boolean): Promise<void> {
-  const active = post.locator('.reactions .reaction-on').filter({ hasText: emoji }).first();
-  const isEnabled = await active.count() > 0;
+  const active = await activeReaction(post, emoji);
+  const isEnabled = active !== null;
   if (isEnabled === enabled) return;
-  if (isEnabled) {
+  if (isEnabled && active) {
     await active.click();
     return;
   }
@@ -903,32 +917,33 @@ test('the star pill uses the commend star and never wraps the facts row', async 
 });
 
 /**
- * B4. `.reaction-n::before` puts a separator between a reaction's NAME and its
- * count. Production reactions are raw emoji with no name, so the separator had
- * nothing to separate and rendered as a stray dot before the number.
+ * The chip speaks a word plus the commend star. The separator sits between that
+ * name and the count. The stored glyph stays in the form value.
  */
-test('a bare reaction chip drops the orphaned name separator', async ({ page }, info) => {
+test('a reaction chip names the gesture and separates the count', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'the reaction picker differs only in placement by pointer type');
   await login(page);
   await openSeedTopic(page);
 
   const post = page.locator('[data-post]').first();
-  const emoji = await post.locator('[data-post-toolbar] .reaction-menu input[name="emoji"]').first().inputValue();
-  const initiallyOn = await post.locator('.reactions .reaction-on').filter({ hasText: emoji }).count() > 0;
+  const menuForm = post.locator('[data-post-toolbar] .reaction-menu form').first();
+  const emoji = await menuForm.locator('input[name="emoji"]').inputValue();
+  const label = (await menuForm.locator('.reaction-name').innerText()).trim();
+  const initiallyOn = (await activeReaction(post, emoji)) !== null;
   await setReactionState(post, emoji, false);
   try {
     await setReactionState(post, emoji, true);
     await expect(page.locator('[data-thread-study]')).toBeVisible();
 
-    const chip = post.locator('.reactions .reaction-on').filter({ hasText: emoji }).first();
-    await expect(chip).toHaveClass(/reaction-bare/);
-    expect((await chip.innerText()).trim()).not.toContain('·');
-    // The rule has to WIN, not merely exist: the identical ::before ships inside
-    // @layer imladris.components, and app.css is unlayered.
+    const chip = post.locator('.reactions .reaction-on').filter({ hasText: label }).first();
+    await expect(chip).not.toHaveClass(/reaction-bare/);
+    await expect(chip.locator('.reaction-name')).toHaveText(label);
+    await expect(chip.locator('svg.icon-commend-star')).toHaveCount(1);
+    expect((await chip.innerText()).trim()).toContain('·');
     const separator = await chip.locator('.reaction-n').evaluate(
       (el) => getComputedStyle(el, '::before').content,
     );
-    expect(separator).toBe('none');
+    expect(separator).toContain('·');
 
     await shot(page, info, '91-thread-reaction-chip');
   } finally {

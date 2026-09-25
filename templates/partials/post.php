@@ -171,19 +171,16 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
         <div class="reactions" data-post="<?= (int) $p['id'] ?>">
             <?php foreach ($counts as $emoji => $n): ?>
                 <?php $on = in_array($emoji, $mine, true); ?>
+                <?php $reactionLabel = reaction_label((string) $emoji); ?>
                 <?php if ($current_user !== null && $canWrite): ?>
                     <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                        <?php /* reaction-bare: the "·" in .reaction-n::before separates a
-                                 reaction's NAME from its count, and production reactions are
-                                 raw emoji with no name (ReactionService::ALLOWED). Unconditional
-                                 because there is no named form to render. */ ?>
-                        <button type="submit" class="reaction<?= $on ? ' reaction-on' : '' ?> reaction-bare" aria-pressed="<?= $on ? 'true' : 'false' ?>"
-                                title="<?= $on ? 'Remove your reaction' : 'React' ?>"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></button>
+                        <button type="submit" class="reaction<?= $on ? ' reaction-on' : '' ?>" aria-pressed="<?= $on ? 'true' : 'false' ?>"
+                                title="<?= $e($on ? 'Remove your ' . $reactionLabel : $reactionLabel) ?>"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><?= (int) $n ?></span></button>
                     </form>
                 <?php else: ?>
-                    <span class="reaction reaction-static reaction-bare"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></span>
+                    <span class="reaction reaction-static"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><?= (int) $n ?></span></span>
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>

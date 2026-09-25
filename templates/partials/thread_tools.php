@@ -178,7 +178,11 @@ if (!empty($my_snooze)) {
                     </form>
                 <?php endif; ?>
                 <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
-                    <form method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Clear accepted answer</button></form>
+                    <details class="tool-confirm">
+                        <summary class="linkbtn">Clear accepted answer</summary>
+                        <p class="tool-confirm-note" id="unaccept-note-<?= (int) $thread['id'] ?>">The solved mark comes off this topic. You can mark another reply as the answer.</p>
+                        <form method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept" aria-describedby="unaccept-note-<?= (int) $thread['id'] ?>"><?= $this->csrfField() ?><button class="btn btn-small" type="submit">Clear the accepted answer</button></form>
+                    </details>
                 <?php endif; ?>
                 <?php /* Two states, stated (ThreadView.dc.html:906-909). "Pin" / "Unpin"
                          names the act and leaves the reader to infer the state from the
@@ -205,7 +209,11 @@ if (!empty($my_snooze)) {
                     </div>
                 <?php endif; ?>
                 <?php if (!empty($poll['can_close'])): ?>
-                    <form method="post" action="/polls/<?= (int) $poll['id'] ?>/close"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Close poll</button></form>
+                    <details class="tool-confirm">
+                        <summary class="linkbtn">Close poll</summary>
+                        <p class="tool-confirm-note" id="close-poll-note-<?= (int) $poll['id'] ?>">Voting ends and the tally is shown. The poll stays closed.</p>
+                        <form method="post" action="/polls/<?= (int) $poll['id'] ?>/close" aria-describedby="close-poll-note-<?= (int) $poll['id'] ?>"><?= $this->csrfField() ?><button class="btn btn-small" type="submit">Close the poll</button></form>
+                    </details>
                 <?php endif; ?>
                 <?php if (!empty($can_create_poll)): ?>
                     <details class="poll-builder">

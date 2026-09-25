@@ -55,6 +55,14 @@ $pollMode = (string) ($poll['mode'] ?? 'single') === 'multiple' ? 'choose any' :
             </div>
         </form>
     <?php else: ?>
-        <p class="muted">Results are visible after voting or after the poll closes.</p>
+        <ul class="poll-read">
+            <?php foreach ($poll['options'] as $option): ?>
+                <li><?= $e($option['body']) ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <div class="poll-foot">
+            <span class="poll-meta">Results stay hidden until you vote, or until the poll closes.</span>
+            <a class="btn btn-small" href="/login?next=<?= $e((string) ($request_path ?? '/')) ?>">Log in to vote</a>
+        </div>
     <?php endif; ?>
 </section>

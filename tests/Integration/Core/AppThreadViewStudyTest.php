@@ -467,4 +467,31 @@ final class AppThreadViewStudyTest extends TestCase
                 . 'when opening the dialog, which would hide the dialog, its close button and its scrim.',
         );
     }
+
+    public function test_clearing_the_accepted_answer_asks_before_it_submits(): void
+    {
+        $author = $this->makeUser(['username' => 'study_unaccept_author']);
+        $answerer = $this->makeUser(['username' => 'study_unaccept_answerer']);
+        $board = $this->makeBoard($this->makeCategory('Study Unaccept'));
+        $thread = $this->makeThread($board, $author, 'The solved mark can wait', 'Opening record.');
+        $replyId = $this->posting()->reply($this->userEntity($answerer), $thread['thread_id'], [
+            'body' => 'The record lives in the hall.',
+        ]);
+
+        $this->actingAs($author);
+        $this->assertRedirectContains($this->post('/posts/' . $replyId . '/accept'), '/t/' . $thread['thread_id']);
+
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $html = $page->body();
+        self::assertStringContainsString('<summary class="linkbtn">Clear accepted answer</summary>', $html);
+        self::assertStringContainsString('The solved mark comes off this topic.', $html);
+        self::assertStringContainsString('You can mark another reply as the answer.', $html);
+        self::assertStringContainsString('>Clear the accepted answer</button>', $html);
+        self::assertStringContainsString('aria-label="More post actions"', $html);
+        self::assertStringContainsString('class="composer-send-word">Reply</span>', $html);
+        self::assertDoesNotMatchRegularExpression(
+            '#<form method="post" action="/t/' . $thread['thread_id'] . '/unaccept"><input[^>]*><button class="linkbtn" type="submit">Clear accepted answer</button></form>#',
+            $html,
+        );
+    }
 }

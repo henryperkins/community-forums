@@ -216,4 +216,61 @@ final class AppPollTest extends TestCase
         $this->assertRedirectContains($this->post('/polls/' . $pollId . '/close'), '/t/' . $thread['thread_id']);
         self::assertSame('closed', (string) $this->db->fetchValue('SELECT status FROM polls WHERE id = ?', [$pollId]));
     }
+
+    public function test_guest_reads_poll_choices_without_the_tally(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['polls' => true]);
+        $author = $this->makeUser(['username' => 'poll_guest_author']);
+        $board = $this->makeBoard($this->makeCategory('Poll Guest'));
+        $thread = $this->makeThread($board, $author, 'Guest poll', 'body');
+        $this->actingAs($author);
+        $this->assertRedirectContains($this->post('/t/' . $thread['thread_id'] . '/poll', [
+            'question' => 'Where should the record live?',
+            'mode' => 'single',
+            'options' => "In the hall\nIn the archive",
+        ]), '/t/' . $thread['thread_id']);
+
+        $this->logoutClient();
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+
+        self::assertStringContainsString('class="poll-read"', $html);
+        self::assertStringContainsString('In the hall', $html);
+        self::assertStringContainsString('In the archive', $html);
+        self::assertStringContainsString('Log in to vote', $html);
+        self::assertStringContainsString('href="/login?next=/t/' . $thread['thread_id'] . '-' . $thread['slug'] . '"', $html);
+        self::assertStringNotContainsString('poll-result', $html);
+        self::assertStringNotContainsString('name="option_ids[]"', $html);
+    }
+
+    public function test_closing_a_poll_asks_before_it_submits(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['polls' => true]);
+        $author = $this->makeUser(['username' => 'poll_confirm_author']);
+        $board = $this->makeBoard($this->makeCategory('Poll Confirm'));
+        $thread = $this->makeThread($board, $author, 'Confirm the close', 'body');
+        $this->actingAs($author);
+        $this->assertRedirectContains($this->post('/t/' . $thread['thread_id'] . '/poll', [
+            'question' => 'Close this?',
+            'mode' => 'single',
+            'options' => "Yes\nNo",
+        ]), '/t/' . $thread['thread_id']);
+        $pollId = (int) $this->db->fetchValue('SELECT id FROM polls WHERE thread_id = ?', [$thread['thread_id']]);
+
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $html = $page->body();
+        self::assertStringContainsString('<summary class="linkbtn">Close poll</summary>', $html);
+        self::assertStringContainsString('The poll stays closed.', $html);
+        self::assertStringContainsString('>Close the poll</button>', $html);
+        self::assertDoesNotMatchRegularExpression(
+            '/<form method="post" action="\/polls\/' . $pollId . '\/close">.*<button class="linkbtn" type="submit">Close poll<\/button>/s',
+            $html,
+        );
+
+        $this->assertRedirectContains($this->post('/polls/' . $pollId . '/close'), '/t/' . $thread['thread_id']);
+        self::assertSame('closed', (string) $this->db->fetchValue('SELECT status FROM polls WHERE id = ?', [$pollId]));
+    }
 }
