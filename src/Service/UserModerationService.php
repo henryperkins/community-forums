@@ -306,8 +306,16 @@ final class UserModerationService
             $subject = $this->requireGovernable($actor, $subjectId, true);
             [$pending, $restrictions] = $this->lockModerationState($subjectId);
             $fullBan = $subject['status'] === 'banned';
+            // The account's write-gate cache must retain the longest live site
+            // post restriction; each bans row keeps its own original expiry.
+            $effectiveUntil = $until;
             foreach ($restrictions as $restriction) {
                 $fullBan = $fullBan || $restriction['type'] === 'full';
+                if ($restriction['type'] === 'post' && $effectiveUntil !== null) {
+                    $effectiveUntil = $restriction['expires_at'] === null
+                        ? null
+                        : max($effectiveUntil, (string) $restriction['expires_at']);
+                }
             }
             // A timed suspension must not erase a lifecycle hold on expiry.
             // Full bans retain cache precedence for both writes and queued mail.
@@ -318,7 +326,7 @@ final class UserModerationService
                 $subject['status'] === 'deactivated' => 'deactivated',
                 default => 'suspended',
             };
-            $this->users->setStatus((int) $subject['id'], $status, $until);
+            $this->users->setStatus((int) $subject['id'], $status, $effectiveUntil);
             // The live restriction and expiry remain independent of the cached
             // lifecycle state, so recovery must still consult this record.
             $this->db->run(

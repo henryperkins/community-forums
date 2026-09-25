@@ -74,6 +74,57 @@ final class AppUserModerationTest extends TestCase
         $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Full ban still applies']));
     }
 
+    public function test_indefinite_suspension_survives_a_shorter_second_suspension(): void
+    {
+        $this->actingAs($this->admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', ['reason' => 'Indefinite site hold']));
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', [
+            'reason' => 'One-hour follow-up',
+            'until' => gmdate('Y-m-d H:i:s', time() + 3600),
+        ]));
+        self::assertNull(
+            $this->users()->find((int) $this->bad['id'])['suspended_until'],
+            'The active indefinite restriction must remain the write-gate fast path.',
+        );
+
+        // An already elapsed follow-up stands in for the hour passing; the
+        // original indefinite restriction must still deny a member write.
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', [
+            'reason' => 'Expired follow-up', 'until' => '2020-01-01 00:00:00',
+        ]));
+        $this->actingAs($this->users()->find((int) $this->bad['id']));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still suspended']));
+    }
+
+    public function test_shorter_suspension_cannot_shorten_a_live_finite_hold(): void
+    {
+        $this->actingAs($this->admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', [
+            'reason' => 'Long hold', 'until' => '2032-01-01 00:00:00',
+        ]));
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', [
+            'reason' => 'Short follow-up', 'until' => '2020-01-01 00:00:00',
+        ]));
+        self::assertSame('2032-01-01 00:00:00', $this->users()->find((int) $this->bad['id'])['suspended_until']);
+        $this->actingAs($this->users()->find((int) $this->bad['id']));
+        $this->assertStatus(403, $this->post('/settings/account', ['display_name' => 'Still suspended']));
+    }
+
+    public function test_longer_suspension_extends_the_fast_path_and_lift_releases_all_overlaps(): void
+    {
+        $this->actingAs($this->admin);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', [
+            'reason' => 'First hold', 'until' => '2030-01-01 00:00:00',
+        ]));
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', [
+            'reason' => 'Extended hold', 'until' => '2032-01-01 00:00:00',
+        ]));
+        self::assertSame('2032-01-01 00:00:00', $this->users()->find((int) $this->bad['id'])['suspended_until']);
+        $this->assertStatus(303, $this->post('/mod/u/' . $this->bad['id'] . '/lift'));
+        $this->actingAs($this->users()->find((int) $this->bad['id']));
+        $this->assertStatus(303, $this->post('/settings/account', ['display_name' => 'Lifted account']));
+    }
+
     public function testAdminSuspendThenLift(): void
     {
         $this->actingAs($this->admin);

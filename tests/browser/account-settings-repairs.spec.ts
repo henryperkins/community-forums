@@ -56,6 +56,31 @@ test.describe('account settings repairs without JavaScript', () => {
     await capture(page, info, '01-suspension-retained');
   });
 
+  test('overlapping site suspensions keep the member write gate closed', async ({ page, browser }, info) => {
+    const member = fixture('inspect');
+    await login(page);
+    await page.goto('/settings/account/lifecycle');
+    const adminContext = await browser.newContext({ baseURL: new URL(page.url()).origin, javaScriptEnabled: false });
+    try {
+      const admin = await adminContext.newPage();
+      await login(admin, 'admin@retro.test');
+      await admin.goto(`/admin/users/${member.id}`);
+      const suspend = admin.locator(`form[action="/admin/users/${member.id}/suspend"]`);
+      await suspend.locator('[name="reason"]').fill('Indefinite site hold');
+      await suspend.getByRole('button', { name: 'Suspend', exact: true }).click();
+      await suspend.locator('[name="reason"]').fill('Shorter follow-up');
+      await suspend.locator('[name="until"]').fill('2020-01-01 00:00:00');
+      await suspend.getByRole('button', { name: 'Suspend', exact: true }).click();
+
+      expect((await post(page, '/settings/account', { display_name: 'Forbidden after overlap' })).status()).toBe(403);
+      await page.reload();
+      await expect(page.locator('form[action="/settings/account/deactivate"]')).toHaveCount(0);
+      await capture(page, info, '01-overlapping-suspensions-retained');
+    } finally {
+      await adminContext.close();
+    }
+  });
+
   test('scheduled deletion stays restricted and cancellation retains a later suspension', async ({ page }, info) => {
     await login(page);
     await page.goto('/settings/account/lifecycle');
