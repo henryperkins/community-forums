@@ -129,7 +129,8 @@ $shellUploadMax = max(1, (int) ($upload_max_bytes ?? 5242880));
                 <span data-composer-actions-end-slot></span>
                 <?php if ($shellBeforeSubmitSlot !== null): ?><?php $shellBeforeSubmitSlot(); ?><?php endif; ?>
                 <button type="submit" class="btn composer-send" aria-label="<?= $e($shellSubmitLabel) ?>" aria-describedby="<?= $e($shellUploadStatusId) ?>">
-                    <?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?>
+                    <span class="composer-send-word"><?= $e($shellSubmitLabel) ?></span>
+                    <span class="composer-send-mark" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?></span>
                 </button>
             </div>
         </div>

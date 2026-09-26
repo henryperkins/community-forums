@@ -247,3 +247,11 @@ if (!function_exists('human_duration')) {
             . ($rem > 0 ? ' ' . $rem . ' minute' . ($rem === 1 ? '' : 's') : '');
     }
 }
+
+if (!function_exists('reaction_label')) {
+    /** The council word or plain name for a stored reaction glyph or shortcode. */
+    function reaction_label(string $emoji): string
+    {
+        return \App\Service\ReactionService::label($emoji);
+    }
+}

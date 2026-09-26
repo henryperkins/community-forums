@@ -651,12 +651,18 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .reaction-add > summary { list-style: none; }
 .reaction-add > summary::-webkit-details-marker { display: none; }
 .reaction-pick { font-weight: 700; }
+.reaction-mark { display: inline-flex; flex: 0 0 auto; color: var(--star); }
+.reaction-mark .icon { width: 13px; height: 13px; }
+.reaction-name { font-family: var(--font-label); letter-spacing: .02em; }
+.reaction-on .reaction-mark { color: inherit; }
 .reaction-menu {
     position: absolute; z-index: 20; margin-top: 4px; padding: 6px;
-    display: flex; gap: 4px; flex-wrap: wrap; max-width: 220px;
+    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+    width: max-content; max-width: min(240px, 70vw); max-height: 280px; overflow: auto;
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
 }
+.reaction-menu .reaction { justify-content: flex-start; width: 100%; border-radius: var(--radius-sm); }
 .reaction-form { margin: 0; }
 
 .star-btn { font-size: .9rem; }
@@ -1248,8 +1254,22 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     border-radius: 50%;
     font-size: 1rem;
 }
+/* The word is the accessible name's visible twin. It stays clipped until the
+   dock is at rest, where an arrow alone does not say Reply. */
+.composer-send-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.composer-send-mark { display: inline-flex; }
 .composer-send:disabled { cursor: not-allowed; opacity: .48; }
-.composer-shell.is-submitting .composer-send > span { display: inline-block; animation: composer-quill 700ms linear infinite; }
+.composer-shell.is-submitting .composer-send-mark .icon { animation: composer-quill 700ms linear infinite; }
 @keyframes composer-quill { to { transform: rotate(360deg); } }
 
 .composer-meta-row {
@@ -1461,7 +1481,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     .composer-suggestion-popover { transition: none; }
     .composer-toolbar-action[data-tip]::after { transition: none; }
     .composer-emoji-dialog { transition: none; }
-    .composer-shell.is-submitting .composer-send > span { animation: none; }
+    .composer-shell.is-submitting .composer-send-mark .icon { animation: none; }
 }
 
 /* Uploaded media (P3-04). */
@@ -1865,17 +1885,13 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     }
     .inbox-reading.is-open [data-inbox-reading-content] { height: calc(100% - 48px); }
 }
-@media (max-width: 860px) and (scripting: enabled) {
-    body[data-route="thread"] .thread-conversation {
-        height: calc(100vh - var(--topbar-h) - 32px);
-        height: calc(100dvh - var(--topbar-h) - 32px);
-    }
-    /* Before wireExpansion installs, native focus and typed text expose the full
-       form. Afterwards the controller owns expansion, including explicit minimize
-       with a draft. Server-rendered errors/drafts already carry .is-expanded.
-       A Messages conversation's .dm-composer is the same shared dock (COMPOSER.md
-       §2, §13), so it rests the same way instead of taking a third of a phone. */
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-box {
+/* The topic dock rests at every width: one line until someone is answering.
+   .is-expanded keeps a draft or a validation error open. Before wireExpansion
+   installs, native focus and typed text expose the full form. Messages keeps
+   its own rest inside the 860px block below — a desktop conversation is not
+   this reading column. */
+@media (scripting: enabled) {
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-box {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -1883,16 +1899,16 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
         padding: 3px;
         border-radius: var(--radius-pill);
     }
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-upload-tray,
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-start,
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-end > :not(.composer-send),
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-meta-row,
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) [data-composer-after-box],
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-source-toggle { display: none; }
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-input,
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer {
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-upload-tray,
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-start,
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-end > :not(.composer-send),
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-meta-row,
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) [data-composer-after-box],
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-source-toggle { display: none; }
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-input,
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer {
         grid-column: 1;
         grid-row: 1;
         width: 100%;
@@ -1903,15 +1919,92 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
         resize: none;
         overflow: hidden;
     }
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer .ProseMirror {
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer .ProseMirror {
         height: 44px; min-height: 44px; max-height: 44px; padding: 10px 12px; overflow: hidden;
     }
-    :is(.reply-composer, .dm-composer):not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-bar {
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-bar {
         grid-column: 2;
         grid-row: 1;
         padding: 0;
         border: 0;
     }
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
+        width: auto;
+        min-width: 0;
+        height: 36px;
+        padding: 0 14px;
+        border-radius: var(--radius-md);
+    }
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-word {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+    }
+    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-mark { display: none; }
+}
+@media (max-width: 860px) and (scripting: enabled) {
+    body[data-route="thread"] .thread-conversation {
+        height: calc(100vh - var(--topbar-h) - 32px);
+        height: calc(100dvh - var(--topbar-h) - 32px);
+    }
+    /* A Messages conversation's .dm-composer is the same shared dock (COMPOSER.md
+       §2, §13) on a phone. The topic dock above already rests at every width. */
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-box {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 4px;
+        padding: 3px;
+        border-radius: var(--radius-pill);
+    }
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-upload-tray,
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-start,
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-end > :not(.composer-send),
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-meta-row,
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) [data-composer-after-box],
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-source-toggle { display: none; }
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-input,
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer {
+        grid-column: 1;
+        grid-row: 1;
+        width: 100%;
+        height: 44px;
+        min-height: 44px;
+        max-height: 44px;
+        margin: 0;
+        resize: none;
+        overflow: hidden;
+    }
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer .ProseMirror {
+        height: 44px; min-height: 44px; max-height: 44px; padding: 10px 12px; overflow: hidden;
+    }
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-bar {
+        grid-column: 2;
+        grid-row: 1;
+        padding: 0;
+        border: 0;
+    }
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
+        width: auto;
+        min-width: 0;
+        height: 36px;
+        padding: 0 14px;
+        border-radius: var(--radius-md);
+    }
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-word {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+    }
+    .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-mark { display: none; }
 }
 .thread-byline { font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; color: var(--text-muted); margin: 4px 0 0; }
 .star-btn {
@@ -9553,10 +9646,25 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
     color: var(--text-strong);
     text-wrap: pretty;
 }
-.poll-options {
+.poll-options,
+.poll-read {
     display: flex;
     flex-direction: column;
     gap: 6px;
+}
+.poll-read {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.poll-read li {
+    padding: 10px 13px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    color: var(--text-body);
+    font-size: var(--text-sm);
+    line-height: 1.45;
 }
 /* An unchosen option is RAISED on the sunken panel — sunken-on-sunken made three
    ballot rows read as one field of tan. Chosen fills --brand-subtle and takes
@@ -10957,6 +11065,16 @@ body.thread-restructure-open { overflow: hidden; }
 }
 .topic-tools-section-body { display: grid; gap: 10px; padding: 2px 4px 14px; }
 .topic-tools-section-body form { display: grid; gap: 7px; margin: 0; }
+.tool-confirm { display: grid; gap: 8px; }
+.tool-confirm > summary { width: max-content; cursor: pointer; }
+.tool-confirm > summary::-webkit-details-marker { display: none; }
+.tool-confirm-note {
+    margin: 0;
+    max-width: 42ch;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+}
 .post-toolbar {
     position: absolute;
     top: -13px;
@@ -10970,14 +11088,35 @@ body.thread-restructure-open { overflow: hidden; }
     background: var(--surface-raised);
     box-shadow: var(--shadow-md);
 }
-[data-thread-enhanced="1"] .post-toolbar {
+/* More stays in the resting pill. Quote, react, and accept join it when the
+   post is hovered, focused, or either disclosure is open. Opacity on the
+   toolbar itself would hide More along with them. */
+[data-thread-enhanced="1"] .post-toolbar { box-shadow: none; }
+[data-thread-enhanced="1"] .post-toolbar > :not(.post-menu) {
+    width: 0;
+    min-width: 0;
+    height: 0;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
     opacity: 0;
     pointer-events: none;
-    transition: opacity var(--dur-fast) var(--ease-calm);
+    border: 0;
 }
 [data-thread-enhanced="1"] .post:hover .post-toolbar,
 [data-thread-enhanced="1"] .post:focus-within .post-toolbar,
-[data-thread-enhanced="1"] .post:has([data-post-menu][open]) .post-toolbar { opacity: 1; pointer-events: auto; }
+[data-thread-enhanced="1"] .post:has([data-post-menu][open]) .post-toolbar,
+[data-thread-enhanced="1"] .post:has(.reaction-add[open]) .post-toolbar { box-shadow: var(--shadow-md); }
+[data-thread-enhanced="1"] .post:hover .post-toolbar > :not(.post-menu),
+[data-thread-enhanced="1"] .post:focus-within .post-toolbar > :not(.post-menu),
+[data-thread-enhanced="1"] .post:has([data-post-menu][open]) .post-toolbar > :not(.post-menu),
+[data-thread-enhanced="1"] .post:has(.reaction-add[open]) .post-toolbar > :not(.post-menu) {
+    width: 28px;
+    height: 28px;
+    overflow: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
 .post-toolbar-button {
     display: inline-flex;
     align-items: center;
@@ -11061,7 +11200,8 @@ body.thread-restructure-open { overflow: hidden; }
 /* Fine-pointer default: the toolbar itself carries react/quote/accept, so the
    menu's touch duplicates stay out of the DOM's accessibility tree entirely. */
 .post-menu-touch { display: none; }
-.post-menu-reactions { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 6px 6px; }
+.post-menu-reactions { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 2px 6px 6px; }
+.post-menu-reactions .reaction { justify-content: flex-start; width: 100%; border-radius: var(--radius-sm); }
 [data-thread-enhanced="1"] .post-native-disclosure > summary { display: none; }
 [data-thread-enhanced="1"] .post-native-disclosure:not([open]) { display: none; }
 .post-disclosure-close { min-width: 44px; margin: 0 0 8px auto; }
@@ -11125,6 +11265,7 @@ body.thread-restructure-open { overflow: hidden; }
     .topic-tools-close,
     [data-thread-restructure-close] { width: 44px; height: 44px; }
     .topic-tools-section-body button,
+    .tool-confirm > summary,
     .topic-tools-section-body select,
     .topic-tools-section-body input:not([type="checkbox"]):not([type="radio"]),
     .thread-restructure-dialog button,

@@ -26,8 +26,39 @@ use App\Security\WriteGate;
  */
 final class ReactionService
 {
-    /** Fixed, expressive reaction set (COMMUNITY §3). */
+    /** Fixed, expressive reaction set (COMMUNITY §3). Stored values stay these glyphs. */
     public const ALLOWED = ['👍', '❤️', '😂', '🎉', '🔥', '💯', '😮', '😢', '👀'];
+
+    /**
+     * Visible names for the shipped set. The four council words name the
+     * gestures the lexicon already claims; the rest keep a plain word so the
+     * tray is not a row of unlabeled emoji. Custom shortcodes label themselves.
+     *
+     * @var array<string,string>
+     */
+    public const LABELS = [
+        '👍' => 'Commend',
+        '❤️' => 'Heart',
+        '😂' => 'Laugh',
+        '🎉' => 'Celebrate',
+        '🔥' => 'Kindled',
+        '💯' => 'Seconded',
+        '😮' => 'Surprise',
+        '😢' => 'Sorrow',
+        '👀' => 'Illuminating',
+    ];
+
+    public static function label(string $emoji): string
+    {
+        if (isset(self::LABELS[$emoji])) {
+            return self::LABELS[$emoji];
+        }
+        if (preg_match('/^:([a-z0-9_+-]{2,40}):$/i', $emoji, $match) === 1) {
+            return ucfirst(str_replace(['_', '+', '-'], ' ', $match[1]));
+        }
+
+        return $emoji;
+    }
 
     public function __construct(
         private Database $db,

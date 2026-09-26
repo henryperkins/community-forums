@@ -25,7 +25,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
                     <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                        <button type="submit" class="reaction"><?= $e($emoji) ?></button>
+                        <button type="submit" class="reaction"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?></button>
                     </form>
                 <?php endforeach; ?>
             </div>
@@ -55,7 +55,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
                             <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                                <button type="submit" class="reaction"><?= $e($emoji) ?></button>
+                                <button type="submit" class="reaction"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?></button>
                             </form>
                         <?php endforeach; ?>
                     </div>
