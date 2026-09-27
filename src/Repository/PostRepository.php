@@ -363,6 +363,12 @@ final class PostRepository
         return $this->listByUser($userId, 'newest', '', $limit, 0);
     }
 
+    /** Public profile replies, excluding opening posts before applying the limit. */
+    public function recentRepliesByUser(int $userId, int $limit): array
+    {
+        return $this->listByUser($userId, limit: $limit, repliesOnly: true);
+    }
+
     /**
      * Profile Posts tab: public attributable posts with a bounded page,
      * literal-wildcard search, and newest/commend ordering.
@@ -376,10 +382,14 @@ final class PostRepository
         string $query = '',
         int $limit = 20,
         int $offset = 0,
+        bool $repliesOnly = false,
     ): array {
         $limit = max(1, min(100, $limit));
         $offset = max(0, min(1_000_000, $offset));
         [$where, $params] = $this->profileFilter($userId, $query);
+        if ($repliesOnly) {
+            $where .= ' AND p.is_op = 0';
+        }
         $order = $sort === 'commends'
             ? 'commend_count DESC, p.created_at DESC, p.id DESC'
             : 'p.created_at DESC, p.id DESC';

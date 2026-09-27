@@ -368,7 +368,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Sidebar rail** (272px): sunken parchment. Quick filters, Marcellus gold-ink category headers, gold `#` board rows with count pills, and a DM list with presence dots.
 - **Filter tabs:** Marcellus pills at `6px 13px`; active fills evergreen with parchment text.
 - **Segmented control:** a sunken pill shell with 3px padding; the active item fills evergreen.
-- **Underline tabs** (sort, profile): no fill; the active item goes strong-ink, semibold, with a 2px gold underline drawn as an inset shadow.
+- **Underline tabs:** no fill; the active item goes strong-ink with a 2px gold underline drawn as an inset shadow. Ruled section rows (`.text-tabs.is-ruled`, including the profile) wrap on a full-width hairline and keep Marcellus at its inherited regular weight; other underline tabs retain the existing semibold treatment. URL-changing tabs and segmented switches are links with `aria-current="page"` (ADR 0040).
 - **Admin chrome:** a sticky two-row block — a 58px identity row (brand, wordmark, exit link, an uppercase mode pill) above a scrolling tier of area links. The tier deliberately uses the pill register so it never reads as a duplicate of a page's own underline sub-tabs one heading below.
 
 ### Signature: the thread row

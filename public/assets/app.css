@@ -219,6 +219,12 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .btn-ghost:hover { background: var(--surface-sunken); }
 .btn-accent { background: var(--gold-500); color: var(--ink-900); }
 .btn-accent:hover { background: var(--gold-600); }
+/* The mirrored danger variant otherwise inherits .btn's unlayered fill. */
+.btn.btn-danger { background: revert-layer; color: revert-layer; }
+.btn:is(.btn-secondary, .btn-ghost, .btn-accent, .btn-danger):disabled:hover {
+    background: revert-layer; border-color: revert-layer;
+}
+.btn.is-disabled { opacity: .5; pointer-events: none; cursor: default; }
 .linkbtn {
     background: none;
     border: none;
@@ -2057,13 +2063,24 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-rep-value { display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-mono); font-weight: var(--weight-medium); font-size: 1.35rem; line-height: 1; color: var(--ink-900); font-variant-numeric: tabular-nums; }
 .profile-rep-value .star-marker { width: 15px; height: 15px; align-self: center; color: var(--star); margin: 0; }
 .profile-rep-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .16em; font-size: .62rem; color: var(--gold-800); margin-top: 2px; }
-.profile-cover .profile-actions { margin: 0; justify-content: flex-end; color: var(--mist-200); }
+.profile-cover .profile-actions { margin: 0; justify-content: flex-end; align-items: stretch; color: var(--mist-200); }
+.profile-actions > form { display: flex; }
+.profile-actions > .btn { display: inline-flex; align-items: center; }
 .profile-cover .profile-actions .linkbtn { color: var(--mist-200); }
 /* The ··· trigger takes the twilight cover's ink; its own muted ink is drawn
    for a light panel and measures 2.2:1 here. Hover (sticky after a tap) keeps
    it too, over a chip of the same ink, not the panel's sunken chip. */
-.profile-cover .dm-iconbtn { color: inherit; }
-.profile-cover .dm-iconbtn:hover { color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); }
+.profile-cover-action,
+.profile-cover .dm-iconbtn {
+    padding: 6px 13px; font-family: var(--font-label); font-size: .82rem; letter-spacing: .03em;
+    border: 1.5px solid color-mix(in srgb, var(--mist-200) 34%, transparent);
+    border-radius: var(--radius-md); background: transparent; color: var(--mist-200);
+}
+.profile-cover .dm-iconbtn { width: 32px; height: 100%; min-height: 32px; padding: 0; }
+.profile-cover-action:hover,
+.profile-cover .dm-iconbtn:hover { background: color-mix(in srgb, var(--parchment-50) 8%, transparent); color: var(--parchment-50); }
+.profile-cover-action.btn-on { display: inline-flex; align-items: center; gap: 6px; }
+.profile-cover-action.btn-on .icon { width: 13px; height: 13px; }
 .profile-cover .profile-actions .btn-on { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
 .profile-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 0; }
 .profile-badges-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .16em; font-size: .62rem; color: var(--text-faint); margin: 0 4px 0 0; }
@@ -2269,30 +2286,23 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-moderator-copy strong { font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; font-weight: var(--weight-semibold); }
 .profile-moderator a { flex: 0 0 auto; font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-info); }
 
-.profile-tabs {
-    display: flex; gap: 2px; margin: 26px 0 0; border-bottom: 1px solid var(--border-hair);
-    scroll-padding-inline: 12px;
-}
-.profile-tab {
-    flex: 0 0 auto; padding: 9px 15px; margin-bottom: -1px;
-    border-bottom: 2px solid transparent; font-family: var(--font-label); font-size: .84rem;
-    letter-spacing: .03em; color: var(--text-muted); text-decoration: none;
-    scroll-margin-inline: 12px;
-}
-.profile-tab:hover { color: var(--text-strong); text-decoration: none; }
-.profile-tab.is-active { color: var(--text-strong); border-bottom-color: var(--gold-500); }
+/* Profile controls use the shared system classes; hooks retain layout only. */
+.profile-tabs { margin: 26px 0 0; }
+.profile-tab { flex: 0 0 auto; }
+/* Plain anchors get an unlayered accent color; these link components own ink. */
+.profile :is(.text-tab, .segmented-item) { color: revert-layer; text-decoration: revert-layer; }
 
 .profile-overview,
 .profile-list,
 .profile-commends,
 .profile-connections { padding-top: 26px; }
-.profile-overview { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 30px; align-items: start; }
-.profile-overview.is-single { grid-template-columns: minmax(0, 1fr); }
-.profile-overview-main { min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.profile-overview { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
+.profile-overview-main { flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
 /* Direct child only: this is the page's own section eyebrow. An unscoped
    descendant selector reaches into the bio and restyles a member's ## heading
    as chrome — user prose is never the page's furniture. */
 .profile-overview-main > section > h2,
+.profile-activity-heading > h2,
 .profile-commend-list > h2,
 .profile-overview-aside h2 {
     margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em;
@@ -2301,9 +2311,10 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 /* Type comes from .formatted-content; the bio only states its own measure. */
 .profile-bio .prose { max-width: 66ch; }
 .profile-overview-aside {
-    display: flex; flex-direction: column; gap: 18px; padding: 18px;
-    background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);
+    flex: 1 1 292px; min-width: 0; display: flex; flex-direction: column; gap: 18px;
 }
+/* The legacy unlayered .card otherwise overrides the system's edge and radius. */
+.profile .card { background: revert-layer; border: revert-layer; border-radius: revert-layer; margin-bottom: 0; overflow: visible; }
 .profile-overview-aside section + section { padding-top: 18px; border-top: 1px solid var(--border-hair); }
 .profile-overview-aside h2 { margin-bottom: 10px; font-size: .64rem; }
 .profile-custom-fields { display: flex; flex-direction: column; gap: 10px; margin: 0; }
@@ -2331,27 +2342,40 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-row-commends .star-marker,
 .profile-commend-count .star-marker { flex: 0 0 auto; width: 11px; height: 11px; color: var(--star); }
 
+/* Recent activity: URL-backed filters and optional disclosure of each excerpt. */
+.profile-activity-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 4px; }
+.profile-activity-heading > h2 { margin: 0; }
+/* Retired global inbox-tab styles would add a baseline and change pill sizing. */
+.profile-activity .inbox-tabs { display: revert-layer; margin: 0; border: 0; }
+.profile-activity .inbox-tab { padding: revert-layer; border: revert-layer; border-radius: revert-layer; }
+.profile-activity-rows { list-style: none; margin: 0; padding: 0; }
+.profile-activity-row { border-bottom: 1px solid var(--border-hair); }
+.profile-activity-line { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 0; }
+.profile-activity-kind { flex: 0 0 44px; font-family: var(--font-label); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); }
+.profile-activity-title { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .98rem; line-height: 1.4; color: var(--text-strong); text-decoration: none; }
+.profile-activity-title:hover { color: var(--accent); text-decoration: none; }
+.profile-activity-line time { flex: none; font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
+.profile-activity-toggle { display: none; flex: none; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text-faint); cursor: pointer; }
+.has-js .profile-activity-toggle:not([hidden]) { display: inline-flex; }
+.profile-activity-toggle:hover { background: var(--surface-sunken); color: var(--text-body); }
+.profile-activity-detail { padding: 0 38px 12px 54px; animation: profile-detail-enter 160ms var(--ease-calm); }
+.profile-activity-detail .profile-row-excerpt { margin-top: 0; }
+.profile-activity-detail .profile-row-meta { margin-top: 6px; }
+@keyframes profile-detail-enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .profile-activity-detail { animation: none; } }
+
 .profile-list { padding-top: 22px; }
-.profile-list-tools { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; }
-.profile-search { position: relative; flex: 1; max-width: 380px; display: block; }
-.profile-search .icon { position: absolute; z-index: 1; left: 12px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); color: var(--text-faint); pointer-events: none; }
-.profile-search input { width: 100%; padding: 8px 12px 8px 33px; border: 1px solid var(--border-soft); border-radius: var(--radius-pill); background: var(--surface-raised); font-family: var(--font-body); font-size: .93rem; color: var(--text-body); }
-.profile-search input:focus { outline: 0; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+.profile-list-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 0 0 4px; }
+.profile-search { flex: 1 1 240px; min-width: 0; max-width: 380px; }
+/* Generic .input and its focus rule are unlayered; return these properties to
+   Input pill + affix, including its inset focus ring, without copying values. */
+.profile-search .input { padding: revert-layer; border-radius: revert-layer; background: revert-layer; }
+.profile-search .input:focus { box-shadow: revert-layer; }
 .profile-list-tools > .btn { flex: 0 0 auto; }
 .profile-list-count { flex: 0 0 auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint); }
-.profile-sort,
-.profile-seg { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: var(--radius-pill); }
 .profile-sort { margin-left: auto; }
-.profile-sort-opt,
-.profile-seg-opt { padding: 5px 13px; border-radius: var(--radius-pill); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
-.profile-seg-opt { padding: 6px 15px; font-size: .78rem; }
-.profile-sort-opt:hover,
-.profile-seg-opt:hover { color: var(--text-strong); text-decoration: none; }
-.profile-sort-opt.is-on,
-.profile-seg-opt.is-on { background: var(--surface-raised); color: var(--text-strong); box-shadow: var(--shadow-sm); }
 .profile-pager { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; }
 .profile-pager-label { font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint); }
-.profile-pager .is-disabled { opacity: .45; pointer-events: none; }
 
 /* The empty-state frame. Dashed is the system's word for an absence ("dashed
    borders mean locked, empty, or archived"); the token and the radius are the
@@ -2366,7 +2390,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 }
 .profile-panel-empty :is(h2, h3) { margin: 0; font-family: var(--font-display); font-size: 1.25rem; line-height: 1.25; font-weight: var(--weight-medium); color: var(--text-strong); }
 .profile-panel-empty p { margin: 7px auto 0; max-width: 42ch; font-size: .95rem; line-height: 1.5; }
-.profile-panel-empty .btn { margin-top: 9px; }
+.profile-panel-empty .btn { margin-top: 16px; }
 
 .profile-commends { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 30px; align-items: start; }
 /* Gold stays the star, the word, and the hairline. The field is the raised
@@ -2384,10 +2408,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-commend-body a:hover { color: var(--accent); }
 
 .profile-connections { padding-top: 22px; }
-.profile-conn-tools { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.profile-conn-search { flex: 1; display: flex; align-items: center; gap: 8px; margin: 0; }
-.profile-conn-search .profile-search { max-width: 300px; }
-.profile-conn-search .profile-search input { padding-top: 7px; padding-bottom: 7px; font-size: .9rem; }
+.profile-conn-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 14px; }
+.profile-conn-search { flex: 1 1 310px; min-width: 0; display: flex; align-items: center; gap: 8px; margin: 0; }
+.profile-conn-search .profile-search { flex-basis: 220px; max-width: 300px; }
 .profile-conn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
 .profile-conn-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); }
 .profile-conn-card > .monogram { flex: 0 0 auto; width: 38px; height: 38px; font-size: .82rem; }
@@ -2397,22 +2420,18 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-conn-meta { display: block; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-label); font-size: .7rem; letter-spacing: .03em; color: var(--text-faint); }
 .profile-conn-card .linkbtn { flex: 0 0 auto; padding: 5px 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; }
 
-.profile-gated-card {
-    max-width: 560px; margin: 60px auto 0; padding: 40px 34px; text-align: center;
-    background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-}
-.profile-gated-ic { width: 34px; height: 34px; color: var(--gold-700); }
+.profile-gated { max-width: 560px; padding-top: 60px; }
+.profile-gated-card { padding: 40px 34px; text-align: center; }
+.profile-gated-ic { width: 34px; height: 34px; color: var(--gold-ink); stroke-width: 1.4; }
 .profile-gated-card h1 { margin: 15px 0 0; font-family: var(--font-display); font-size: 1.6rem; font-weight: var(--weight-medium); color: var(--text-strong); }
 .profile-gated-card > p:not(.profile-gated-actions) { max-width: 44ch; margin: 9px auto 0; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty; }
 .profile-gated-actions { margin: 22px 0 0; }
 
 @media (max-width: 860px) {
-    .profile-overview,
     .profile-commends { grid-template-columns: minmax(0, 1fr); }
     .profile-overview-aside { width: 100%; }
 }
 @media (max-width: 700px) {
-    .profile-tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
     .profile-list-tools,
     .profile-conn-tools { align-items: stretch; flex-wrap: wrap; }
     .profile-list-tools .profile-search { min-width: min(100%, 260px); }
@@ -2428,16 +2447,12 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .profile-moderator { align-items: flex-start; flex-wrap: wrap; }
     .profile-moderator-copy { flex-basis: calc(100% - 34px); }
     .profile-moderator a { margin-left: 30px; }
-    .profile-tabs { margin-top: 20px; }
-    .profile-tab { padding-right: 12px; padding-left: 12px; }
     .profile-rows-lg .profile-row { align-items: flex-start; }
     .profile-conn-grid { grid-template-columns: minmax(0, 1fr); }
     .profile-conn-card { flex-wrap: wrap; }
     .profile-conn-card form { margin-left: 50px; }
-    .profile-gated-card { margin-top: 28px; padding: 34px 22px; }
-}
-@media (max-width: 430px) {
-    .profile-tab { padding-right: 8px; padding-left: 8px; }
+    .profile-gated { padding-top: 28px; }
+    .profile-gated-card { padding: 34px 22px; }
 }
 
 /* — New-Topic disclosure becomes a centred modal once JS is present (§5.2).

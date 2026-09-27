@@ -724,3 +724,25 @@ baseline matches (see the 2026-09-13 ordering note).
 **A future bundle that offers `--gold-200` back on the engraved edge, or
 `--brand-hover` back on `.btn:hover`, should have that hunk refused**, unless it
 brings the token upstream with the same contrast.
+
+## 2026-09-27 — User profile uses shared components
+
+Imported the user-profile handoff's Tabs and Input preview sources/declarations,
+their usage notes, the forum card, and `UserProfile.dc.html`. Applied **only** the
+four component CSS hunks: disabled variant hover, input affixes, segmented link
+hover, and ruled underline tabs. The thread-row, operator-cluster, `.hash`, and
+field-hint/link-preview divergences remain held back; no whole-file stylesheet
+replacement occurred.
+
+Production uses the shared classes with its existing profile hooks. Application
+CSS retains layout, cover actions, and the activity disclosure, plus scoped
+`revert-layer` bridges for legacy unlayered rules. The 2026-08-27 member transfer
+block is unchanged and still matches character for character. The mirror and
+application digests and generated assets were refreshed after review.
+
+ADR 0040 adopts the combined Recent activity list with server GET filters,
+JavaScript disclosures, existing visibility/anonymity guards, and opening-post
+deduplication. Full tabs keep 20-item pages. Relative timestamps retain exact UTC
+in `datetime` and `title`. No client-only filter or upstream component runtime is
+introduced. The source-only preview limitation still applies; evidence comes
+from the PHP application (see `docs/evidence/profile-system-2026-09-27/`).

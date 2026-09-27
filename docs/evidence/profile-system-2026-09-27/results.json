@@ -1,0 +1,53 @@
+{
+  "date": "2026-09-27",
+  "base_commit": "7fcc4b9b1456bfdaec6704338ea2a500e61a24cb",
+  "deployment": "local changes only",
+  "phpunit": {
+    "tests": 3108,
+    "assertions": 23549,
+    "failures": 0,
+    "skipped": 1,
+    "skip_reason": "test_0077_down_and_up_rehearsal_on_fixture_free_schema requires the dedicated retroboards_thread_intelligence_clean database"
+  },
+  "playwright": {
+    "passed": 18,
+    "failed": 0,
+    "browser": "Chromium",
+    "base_url": "http://localhost:8037",
+    "viewports": [
+      "1160x900",
+      "390x844",
+      "320px long-handle/menu regression checks"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "javascript_disabled": true,
+    "serious_or_critical_profile_axe_violations": 0,
+    "unexpected_browser_errors": 0
+  },
+  "imladris": {
+    "tests": 24,
+    "assertions": 305,
+    "failures": 0
+  },
+  "asset_tests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "design_scan": {
+    "new_warnings": 0,
+    "changed_line_advisories": [
+      ".82rem cover actions",
+      ".6rem activity kind",
+      ".98rem activity title"
+    ],
+    "disposition": "All three sizes are specified by the handoff."
+  },
+  "limits": [
+    "No production deployment.",
+    "The upstream .dc.html compiler is absent; fidelity checked against documented values and production captures.",
+    "No physical-device or non-Chromium browser run."
+  ]
+}

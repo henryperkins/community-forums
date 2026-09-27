@@ -42,6 +42,61 @@ final class AppProfileActivityTest extends TestCase
         self::assertLessThan($secondAt, $firstAt, sprintf('Expected "%s" before "%s".', $first, $second));
     }
 
+    public function test_overview_merges_six_latest_topics_and_replies_without_counting_opening_posts_twice(): void
+    {
+        [$board, $author] = $this->seedAuthor();
+        $starter = $this->makeUser(['username' => 'activity-starter']);
+        $replyThread = $this->makeThread($board, $starter, 'Reply destination');
+        for ($i = 1; $i <= 7; $i++) {
+            $topic = $this->makeThread($board, $author, 'Activity topic ' . $i, 'Topic excerpt ' . $i);
+            $reply = $this->posting()->reply($this->userEntity($author), $replyThread['thread_id'], ['body' => 'Reply excerpt ' . $i]);
+            $this->db->run('UPDATE threads SET created_at = ? WHERE id = ?', ['2026-01-0' . $i . ' 10:00:00', $topic['thread_id']]);
+            $this->db->run('UPDATE posts SET created_at = ? WHERE id = ?', ['2026-01-0' . $i . ' 11:00:00', $reply]);
+        }
+
+        $page = $this->get('/u/galadriel');
+        $this->assertStatus(200, $page);
+        $xpath = $this->xpath($page);
+        $rows = $xpath->query('//section[@id="recent-activity"]//li');
+        self::assertSame(6, $rows->length);
+        $this->assertTextOrder($page->body(), 'Reply excerpt 7', 'Topic excerpt 7');
+        $this->assertTextOrder($page->body(), 'Topic excerpt 7', 'Reply excerpt 6');
+        $this->assertDontSeeText($page, 'Topic excerpt 4');
+        self::assertSame(6, $xpath->query('//section[@id="recent-activity"]//div[@hidden]')->length);
+
+        foreach (['threads' => 'Topic', 'posts' => 'Reply'] as $filter => $kind) {
+            $filtered = $this->get('/u/galadriel', ['activity' => $filter]);
+            $filteredXpath = $this->xpath($filtered);
+            self::assertSame(6, $filteredXpath->query('//section[@id="recent-activity"]//li')->length);
+            self::assertSame(6, $filteredXpath->query('//section[@id="recent-activity"]//span[normalize-space()="' . $kind . '"]')->length);
+            self::assertSame(1, $filteredXpath->query('//nav[@aria-label="Show"]/a[@aria-current="page" and @href="/u/galadriel?activity=' . $filter . '#recent-activity"]')->length);
+            $this->assertSeeText($filtered, $kind === 'Topic' ? 'Topic excerpt 2' : 'Reply excerpt 2');
+            $this->assertDontSeeText($filtered, $kind === 'Topic' ? 'Reply excerpt' : 'Topic excerpt');
+        }
+        foreach (['unknown', ['threads']] as $invalid) {
+            $fallback = $this->get('/u/galadriel', ['activity' => $invalid]);
+            $this->assertStatus(200, $fallback);
+            self::assertSame(1, $this->xpath($fallback)->query('//nav[@aria-label="Show"]/a[@aria-current="page" and normalize-space()="All"]')->length);
+        }
+    }
+
+    public function test_sort_and_connection_links_announce_only_the_current_selection(): void
+    {
+        $this->seedAuthor();
+        foreach (['newest' => 'Newest', 'commends' => 'Most commended'] as $sort => $label) {
+            $page = $this->get('/u/galadriel', ['tab' => 'posts', 'sort' => $sort]);
+            $selected = $this->xpath($page)->query('//nav[@aria-label="Order"]/a[@aria-current="page"]');
+            self::assertSame(1, $selected->length);
+            self::assertSame($label, trim($selected->item(0)->textContent));
+        }
+        foreach (['followers' => 'Followers', 'following' => 'Following'] as $mode => $label) {
+            $page = $this->get('/u/galadriel', ['tab' => 'connections', 'c' => $mode]);
+            $selected = $this->xpath($page)->query('//nav[@aria-label="Connections"]/a[@aria-current="page"]');
+            self::assertSame(1, $selected->length);
+            self::assertStringStartsWith($label, trim($selected->item(0)->textContent));
+        }
+    }
+
     public function test_moderator_context_matches_actual_member_record_scope(): void
     {
         [$board, $author] = $this->seedAuthor();
@@ -241,6 +296,14 @@ final class AppProfileActivityTest extends TestCase
         foreach (['Hidden opening marker', 'Private opening marker', 'Deleted opening marker', 'Pending opening marker', 'Anonymous opening marker', 'Hidden reply marker', 'Private reply marker', 'Deleted reply marker', 'Pending reply marker', 'Anonymous reply marker'] as $marker) {
             $this->assertDontSeeText($posts, $marker);
         }
+        foreach (['all', 'threads', 'posts'] as $filter) {
+            $overview = $this->get('/u/galadriel', ['activity' => $filter]);
+            $this->assertStatus(200, $overview);
+            foreach (['Hidden topic marker', 'Private topic marker', 'Deleted topic marker', 'Pending topic marker', 'Anonymous topic marker', 'Hidden opening marker', 'Private opening marker', 'Deleted opening marker', 'Pending opening marker', 'Anonymous opening marker', 'Hidden reply marker', 'Private reply marker', 'Deleted reply marker', 'Pending reply marker', 'Anonymous reply marker'] as $marker) {
+                $this->assertDontSeeText($overview, $marker);
+            }
+            $this->assertSeeText($overview, $filter === 'posts' ? 'Visible reply marker' : 'Visible public topic');
+        }
         self::assertGreaterThan(0, $visibleReply);
         self::assertGreaterThan(0, $hiddenReply);
         self::assertGreaterThan(0, $privateReply);
@@ -426,7 +489,9 @@ final class AppProfileActivityTest extends TestCase
 
         self::assertSame(['Counted topic' => '2'], $this->rowCommends($this->get('/u/galadriel', ['tab' => 'threads'])));
         self::assertSame(['Counted topic' => '2'], $this->rowCommends($this->get('/u/galadriel', ['tab' => 'posts', 'sort' => 'commends'])));
-        $this->assertSeeText($this->get('/u/galadriel'), '2 commends');
+        // The overview counts replies beside a Topic; it no longer lists the
+        // same opening post a second time to display its commend count.
+        $this->assertSeeText($this->get('/u/galadriel'), '0 replies');
         $commends = $this->xpath($this->get('/u/galadriel', ['tab' => 'commends']));
         self::assertSame('2', trim($commends->query('//span[contains(@class,"profile-commend-count")]')->item(0)->textContent));
     }

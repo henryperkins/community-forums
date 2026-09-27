@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x600" name="Forum — inbox row, conversation, composer" subtitle="The Council Inbox surfaces: tabs, thread rows, a post, the join-bar" -->
+<!-- @dsCard group="Components" viewport="760x760" name="Forum — inbox row, conversation, composer" subtitle="The forum-inbox parts: scope and order as separate axes, thread rows at both densities, a post, the composer, the join-bar" -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,8 +7,12 @@
 <style>
   body { margin: 0; padding: 22px; background: var(--surface-page); }
   .stack { display: flex; flex-direction: column; gap: 16px; }
-  .group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
   .cap { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: 10px; color: var(--gold-ink); margin-bottom: 8px; }
+  .lede { margin: 0 0 4px; max-width: 74ch; font-size: .9rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty; }
+  .lede b { font-family: var(--font-label); font-weight: var(--weight-regular); color: var(--text-strong); }
+  .axis { font-family: var(--font-label); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint); }
+  .note { margin: 6px 0 0; font-family: var(--font-mono); font-size: .68rem; color: var(--text-faint); }
 </style>
 </head>
 <body>
@@ -17,31 +21,76 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="../../_ds_bundle.js"></script>
+<script src="../_card-guard.js"></script>
 <script type="text/babel">
 const { ThreadRow, Post, Composer, JoinBar, Tabs, Reaction } = window.ImladrisDesignSystem_c3e027;
 const check = <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M20 6L9 17l-5-5"/></svg>;
+
+/* Four topics, seen through both axes. `active` is minutes since last post and
+   `created` minutes since opening, so a lower number is more recent. */
+const TOPICS = [
+  { key: 'a', title: 'Evaluations as ritual, not gate', author: 'Galadriel', authorSeed: 'galadriel',
+    authorTier: 'Loremaster', authorRep: '5.1k', presence: 'online', giltAuthor: true, status: 'solved',
+    replies: 23, time: '2h', commends: 310, starred: true, active: 2, created: 40, reason: 'Starred by you',
+    snippet: 'We keep treating the eval suite as a turnstile. What if it were a rite the whole council kept?' },
+  { key: 'b', title: 'Who changed what — and can you prove the rollback?', author: 'Erestor', authorSeed: 'erestor',
+    authorTier: 'Legend', authorRep: '3.9k', presence: 'online', giltAuthor: true,
+    replies: 41, time: '5h', commends: 542, unread: true, active: 5, created: 22, reason: 'Mentioned you',
+    snippet: 'The diff is small; the audit trail must be whole. Here is the rollback drill we ran on Tuesday.' },
+  { key: 'c', title: 'On exposing capability before we are asked', author: 'Elrond', authorSeed: 'elrond',
+    authorTier: 'Legend', authorRep: '8.7k', giltAuthor: true, status: 'decision_made', pinned: true,
+    replies: 12, time: '1d', commends: 128, active: 26, created: 30, reason: 'Watched topic',
+    snippet: 'A decision, recorded: we publish the capability notes the same day we brief the council.' },
+  { key: 'd', title: 'Retention windows for anonymised IPs', author: 'Arwen', authorSeed: 'arwen',
+    authorTier: 'Veteran', authorRep: '1.2k', presence: 'away', status: 'needs_answer',
+    replies: 9, time: '3d', commends: 61, unread: true, active: 74, created: 88,
+    assignee: 'erestor', reason: 'Watched board',
+    snippet: 'Ninety days for the raw record, indefinitely for the anonymised aggregate. One exception stands.' },
+];
+
+const SCOPES = ['For You', 'Unread', 'Mentions', 'Watching'];
+const IN_SCOPE = {
+  'For You': (t) => !!t.reason,
+  Unread: (t) => !!t.unread,
+  Mentions: (t) => t.reason === 'Mentioned you',
+  Watching: (t) => t.reason === 'Watched topic',
+};
+const ORDERS = ['Activity', 'Newest', 'Commended'];
+const SEQ = {
+  Activity: (a, b) => a.active - b.active,
+  Newest: (a, b) => a.created - b.created,
+  Commended: (a, b) => b.commends - a.commends,
+};
+
 function Demo() {
-  const [den, setDen] = React.useState('Hall');
-  const [filter, setFilter] = React.useState('All');
+  const [scope, setScope] = React.useState('For You');
+  const [order, setOrder] = React.useState('Activity');
+  const [density, setDensity] = React.useState('Compact');
+  const rows = TOPICS.filter(IN_SCOPE[scope]).slice()
+    .sort((a, b) => (a.pinned ? 0 : 1) - (b.pinned ? 0 : 1) || SEQ[order](a, b));
   return (
     <div className="stack">
-      <div className="group">
-        <Tabs variant="segment" items={['Hall','Watch']} value={den} onChange={setDen} />
-        <Tabs variant="pill" items={['All','Unread','Starred','Mine']} value={filter} onChange={setFilter} />
+      <div>
+        <div className="cap">Queue · two axes</div>
+        <p className="lede"><b>Scope</b> says which topics; <b>order</b> says in what sequence. They are separate parameters, so every combination is expressible — the inbox once welded them into one enum and could not ask for “Unread, newest first”. Pinned leads in every order.</p>
+        <div className="bar">
+          <span className="axis">Scope</span>
+          <Tabs variant="pill" mode="toggle" aria-label="Scope" items={SCOPES} value={scope} onChange={setScope} />
+        </div>
+        <div className="bar" style={{marginTop: '9px'}}>
+          <span className="axis">Order</span>
+          <Tabs variant="segment" mode="toggle" aria-label="Order" items={ORDERS} value={order} onChange={setOrder} />
+          <span className="axis" style={{marginLeft: 'auto'}}>Density</span>
+          <Tabs variant="segment" mode="toggle" aria-label="Density" items={['Compact', 'Comfortable']} value={density} onChange={setDensity} />
+        </div>
       </div>
-      <ul className={"thread-list" + (den === 'Watch' ? ' is-compact' : '')}>
-        <ThreadRow title="Evaluations as ritual, not gate" author="Galadriel" authorSeed="galadriel"
-          authorTier="Loremaster" authorRep="5.1k" presence="online" giltAuthor status="solved"
-          replies={23} time="2h" commends={31} starred
-          snippet="We keep treating the eval suite as a turnstile. What if it were a rite the whole council kept?" />
-        <ThreadRow title="Who changed what — and can you prove the rollback?" author="Erestor" authorSeed="erestor"
-          authorTier="Legend" authorRep="3.9k" presence="online" giltAuthor
-          replies={41} time="5h" commends={54} unread
-          snippet="The diff is small; the audit trail must be whole. Here is the rollback drill we ran on Tuesday." />
-        <ThreadRow title="On exposing capability before we are asked" author="Elrond" authorSeed="elrond"
-          authorTier="Legend" authorRep="8.7k" giltAuthor status="decision_made"
-          replies={12} time="1d" snippet="A decision, recorded: we publish the capability notes the same day we brief the council." />
-      </ul>
+      <div>
+        <ul className={'thread-list' + (density === 'Compact' ? ' is-compact' : '')}>
+          {rows.map((t) => <ThreadRow key={t.key} {...t} presentation="inbox" />)}
+        </ul>
+        {rows.length === 0 ? <p className="note">Nothing in {scope} — a scope fills as topics qualify; order never changes what is included.</p> : null}
+        <p className="note">{rows.length} of {TOPICS.length} topics · compact hides the snippet, the triage aid a queue can afford in comfortable</p>
+      </div>
       <div>
         <div className="cap">Conversation</div>
         <Post author="Erestor" authorSeed="erestor" authorTier="Legend" handle="erestor" authorTitle="Loremaster of Imladris" presence="online" op rep="3.9k" time="2 days ago"

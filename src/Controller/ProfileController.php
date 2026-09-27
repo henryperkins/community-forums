@@ -141,6 +141,46 @@ final class ProfileController extends Controller
             && !$isSelf
             && $this->container->get(UserModerationService::class)->canViewPanelFor($viewer, $profileId);
 
+        $activityFilter = $request->query('activity');
+        $activityFilter = in_array($activityFilter, ['threads', 'posts'], true) ? $activityFilter : 'all';
+        $recentActivity = [];
+        if ($tab === 'overview') {
+            // Each query applies the public/attributable guard before its limit.
+            // Opening posts already appear as topics, never again as replies.
+            if ($activityFilter !== 'posts') {
+                foreach ($this->renderBlankExcerpts($threadRepo->recentByUser($profileId, 6), 'excerpt_html', 'excerpt_body') as $thread) {
+                    $recentActivity[] = [
+                        'kind' => 'threads', 'id' => (int) $thread['id'],
+                        'title' => $thread['title'],
+                        'url' => '/t/' . (int) $thread['id'] . '-' . $thread['slug'],
+                        'created_at' => $thread['created_at'],
+                        'excerpt_html' => $thread['excerpt_html'],
+                        'board_slug' => $thread['board_slug'],
+                        'count' => (int) $thread['reply_count'],
+                    ];
+                }
+            }
+            if ($activityFilter !== 'threads') {
+                foreach ($this->renderBlankExcerpts($postRepo->recentRepliesByUser($profileId, 6), 'body_html', 'body') as $post) {
+                    $recentActivity[] = [
+                        'kind' => 'posts', 'id' => (int) $post['id'],
+                        // Titles are stored without an added "Re: " prefix.
+                        'title' => $post['thread_title'],
+                        'url' => '/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'] . '#p' . (int) $post['id'],
+                        'created_at' => $post['created_at'],
+                        'excerpt_html' => $post['body_html'],
+                        'board_slug' => $post['board_slug'],
+                        'count' => (int) $post['commend_count'],
+                    ];
+                }
+            }
+            usort($recentActivity, static fn (array $a, array $b): int =>
+                strcmp($b['created_at'], $a['created_at'])
+                ?: strcmp($a['kind'], $b['kind'])
+                ?: $b['id'] <=> $a['id']);
+            $recentActivity = array_slice($recentActivity, 0, 6);
+        }
+
         return $this->view('profile/show', [
             'profile' => $profile,
             'tab' => $tab,
@@ -150,8 +190,8 @@ final class ProfileController extends Controller
             'follower_count' => $followerCount,
             'following_count' => $followingCount,
             'solved_count' => $this->container->get(UserRepository::class)->solvedAnswerCount($profileId),
-            'recent_threads' => $tab === 'overview' ? $threadRepo->recentByUser($profileId, 5) : [],
-            'recent_posts' => $tab === 'overview' ? $this->renderBlankExcerpts($postRepo->recentByUser($profileId, 5), 'body_html', 'body') : [],
+            'recent_activity' => $recentActivity,
+            'activity_filter' => $activityFilter,
             'board_activity' => $tab === 'overview' ? $postRepo->boardActivityForUser($profileId, 4) : [],
             'top_commended' => $tab === 'commends' ? $postRepo->topCommendedByUser($profileId, 5) : [],
             'list_rows' => $listRows,

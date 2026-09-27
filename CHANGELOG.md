@@ -2,6 +2,18 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Profile components and Recent activity
+
+- Profile tabs, order and connection switches, searches, pagers, actions, and
+  cards adopt the shared Imladris classes. Current order and connection links
+  now announce their selection to assistive technology.
+- Overview combines recent topics and replies into six chronological entries,
+  with GET filters and optional excerpt disclosures. Opening posts appear once
+  as topics; public-content and anonymity guards remain enforced (ADR 0040).
+- Applied the four supplied component CSS changes selectively and regenerated
+  delivery assets, preserving held-back mirror differences and the full lists'
+  existing 20-item pagination.
+
 ## [Unreleased] - Imladris board page
 
 - Adopted the Imladris `board-page` template on `/c/{slug}` (ADR 0027). The

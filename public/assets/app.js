@@ -2261,3 +2261,19 @@
         });
     }
 })();
+
+// Profile activity disclosures enhance the server's linked, filtered list.
+(function () {
+    document.querySelectorAll('[data-activity-toggle]').forEach(function (button) {
+        var detail = document.getElementById(button.getAttribute('aria-controls'));
+        if (!detail) { return; }
+        button.addEventListener('click', function () {
+            var expanded = button.getAttribute('aria-expanded') !== 'true';
+            detail.hidden = !expanded;
+            button.setAttribute('aria-expanded', String(expanded));
+            button.setAttribute('aria-label', (expanded ? 'Hide' : 'Show') + ' details: ' + button.getAttribute('data-activity-title'));
+            button.querySelector('path').setAttribute('d', expanded ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6');
+        });
+        button.hidden = false;
+    });
+})();

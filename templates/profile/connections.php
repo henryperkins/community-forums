@@ -41,9 +41,9 @@ $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'follow
         </ul>
         <?php if ($pageCount > 1): ?>
             <nav class="profile-pager" aria-label="Pagination">
-                <?php if ($page > 1): ?><a class="btn btn-small" href="<?= $e($page === 2 ? $listUrl : $listUrl . '?page=' . ($page - 1)) ?>">Previous</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
+                <?php if ($page > 1): ?><a class="btn btn-secondary btn-small" href="<?= $e($page === 2 ? $listUrl : $listUrl . '?page=' . ($page - 1)) ?>" rel="prev">Previous</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
                 <span class="profile-pager-label">Page <?= $page ?> of <?= $pageCount ?></span>
-                <?php if ($page < $pageCount): ?><a class="btn btn-small" href="<?= $e($listUrl . '?page=' . ($page + 1)) ?>">Next</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
+                <?php if ($page < $pageCount): ?><a class="btn btn-secondary btn-small" href="<?= $e($listUrl . '?page=' . ($page + 1)) ?>" rel="next">Next</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
             </nav>
         <?php endif; ?>
     <?php endif; ?>

@@ -70,13 +70,14 @@ $profileExcerpt = static function (string $html): string {
                     <?php if (!empty($can_follow)): ?>
                         <form class="inline" method="post" action="<?= $e($profileUrl) ?>/follow" data-follow>
                             <?= $this->csrfField() ?>
-                            <button class="btn btn-small<?= !empty($is_following) ? ' btn-on' : '' ?>" type="submit">
+                            <button class="btn btn-small<?= !empty($is_following) ? ' profile-cover-action btn-on' : ' btn-accent' ?>" type="submit">
+                                <?php if (!empty($is_following)): ?><?= $this->partial('partials/icon', ['name' => 'check']) ?><?php endif; ?>
                                 <?= !empty($is_following) ? 'Following' : 'Follow' ?>
                             </button>
                         </form>
                     <?php endif; ?>
                     <?php if (!empty($can_message)): ?>
-                        <a class="btn btn-small" href="/messages/new?to=<?= $e($profile['username']) ?>">Message</a>
+                        <a class="btn btn-small profile-cover-action" href="/messages/new?to=<?= $e($profile['username']) ?>">Message</a>
                     <?php endif; ?>
                     <?php if (!empty($can_block)): ?>
                         <?php // Destructive actions live behind the ··· (consolidation §5c),
@@ -113,7 +114,7 @@ $profileExcerpt = static function (string $html): string {
                 </div>
             <?php elseif (!empty($is_self)): ?>
                 <div class="profile-actions">
-                    <a class="btn btn-small" href="/settings/account">Edit profile</a>
+                    <a class="btn btn-small profile-cover-action" href="/settings/account">Edit profile</a>
                 </div>
             <?php endif; ?>
         </div>
@@ -169,20 +170,19 @@ $profileExcerpt = static function (string $html): string {
         return $profileUrl . '?' . http_build_query($params);
     };
     ?>
-    <nav class="profile-tabs" aria-label="Profile activity">
-        <a class="profile-tab<?= $activeTab === 'overview' ? ' is-active' : '' ?>"<?= $activeTab === 'overview' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>">Overview</a>
-        <a class="profile-tab<?= $activeTab === 'threads' ? ' is-active' : '' ?>"<?= $activeTab === 'threads' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=threads">Topics</a>
-        <a class="profile-tab<?= $activeTab === 'posts' ? ' is-active' : '' ?>"<?= $activeTab === 'posts' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=posts">Posts</a>
+    <nav class="profile-tabs text-tabs is-ruled" aria-label="Profile activity">
+        <a class="profile-tab text-tab<?= $activeTab === 'overview' ? ' is-active' : '' ?>"<?= $activeTab === 'overview' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>">Overview</a>
+        <a class="profile-tab text-tab<?= $activeTab === 'threads' ? ' is-active' : '' ?>"<?= $activeTab === 'threads' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=threads">Topics</a>
+        <a class="profile-tab text-tab<?= $activeTab === 'posts' ? ' is-active' : '' ?>"<?= $activeTab === 'posts' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=posts">Posts</a>
         <?php if (!empty($community)): ?>
-            <a class="profile-tab<?= $activeTab === 'commends' ? ' is-active' : '' ?>"<?= $activeTab === 'commends' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=commends">Commends</a>
-            <a class="profile-tab<?= $activeTab === 'connections' ? ' is-active' : '' ?>"<?= $activeTab === 'connections' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=connections">Connections</a>
+            <a class="profile-tab text-tab<?= $activeTab === 'commends' ? ' is-active' : '' ?>"<?= $activeTab === 'commends' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=commends">Commends</a>
+            <a class="profile-tab text-tab<?= $activeTab === 'connections' ? ' is-active' : '' ?>"<?= $activeTab === 'connections' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=connections">Connections</a>
         <?php endif; ?>
     </nav>
 
     <?php if ($activeTab === 'overview'): ?>
         <?php
         $hasAside = !empty($custom_fields) || !empty($board_activity);
-        $overviewEmpty = ($bio_html ?? '') === '' && empty($recent_threads) && empty($recent_posts) && !$hasAside;
         ?>
         <div class="profile-overview<?= $hasAside ? '' : ' is-single' ?>">
             <div class="profile-overview-main">
@@ -195,43 +195,10 @@ $profileExcerpt = static function (string $html): string {
                         <div class="prose formatted-content"><?= $bio_html /* pre-sanitised */ ?></div>
                     </section>
                 <?php endif; ?>
-                <?php if (!empty($recent_threads)): ?>
-                    <section class="profile-threads">
-                        <h2>Recent topics</h2>
-                        <ul class="profile-rows">
-                            <?php foreach ($recent_threads as $t): ?>
-                                <li class="profile-row">
-                                    <a class="profile-row-title" href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?>"><?= $e($t['title']) ?></a>
-                                    <p class="profile-row-meta"><span>#<?= $e($t['board_slug']) ?></span><span><?= (int) ($t['reply_count'] ?? 0) ?> replies</span><span><?= $e(human_datetime($t['created_at'])) ?></span></p>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </section>
-                <?php endif; ?>
-                <?php if (!empty($recent_posts)): ?>
-                    <section class="profile-posts">
-                        <h2>Recent posts</h2>
-                        <ul class="profile-rows">
-                            <?php foreach ($recent_posts as $p): ?>
-                                <li class="profile-row">
-                                    <a class="profile-row-title" href="/t/<?= (int) $p['thread_id'] ?>-<?= $e($p['thread_slug']) ?>#p<?= (int) $p['id'] ?>"><?= $e($p['thread_title']) ?></a>
-                                    <?php $postExcerpt = $profileExcerpt((string) ($p['body_html'] ?? '')); ?>
-                                    <?php if ($postExcerpt !== ''): ?><p class="profile-row-excerpt"><?= $e($postExcerpt) ?></p><?php endif; ?>
-                                    <p class="profile-row-meta"><span><?= $e(human_datetime($p['created_at'])) ?></span><span><?= (int) ($p['commend_count'] ?? 0) ?> commends</span></p>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </section>
-                <?php endif; ?>
-                <?php if ($overviewEmpty): ?>
-                    <div class="profile-panel-empty">
-                        <h2>No public activity yet</h2>
-                        <p><?= $e($firstName) ?> has taken a seat but not yet spoken.</p>
-                    </div>
-                <?php endif; ?>
+                <?= $this->partial('profile/recent_activity', ['rows' => $recent_activity, 'filter' => $activity_filter, 'profile_url' => $profileUrl, 'first_name' => $firstName]) ?>
             </div>
             <?php if ($hasAside): ?>
-                <aside class="profile-overview-aside">
+                <aside class="profile-overview-aside card">
                     <?php if (!empty($custom_fields)): ?>
                         <section>
                             <h2>Profile details</h2>
@@ -261,16 +228,16 @@ $profileExcerpt = static function (string $html): string {
             <form class="profile-list-tools" method="get" action="<?= $e($profileUrl) ?>">
                 <input type="hidden" name="tab" value="<?= $e($activeTab) ?>">
                 <?php if ($activeSort !== 'newest'): ?><input type="hidden" name="sort" value="<?= $e($activeSort) ?>"><?php endif; ?>
-                <label class="profile-search">
-                    <?= $this->partial('partials/icon', ['name' => 'search']) ?>
-                    <input type="search" enterkeyhint="search" name="q" value="<?= $e($q) ?>" placeholder="Search this member's activity" aria-label="Search this member's activity">
+                <label class="profile-search input-affix">
+                    <span class="input-affix-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></span>
+                    <input class="input input-pill" type="search" enterkeyhint="search" name="q" value="<?= $e($q) ?>" placeholder="Search this member's activity" aria-label="Search this member's activity">
                 </label>
                 <button class="btn btn-small" type="submit">Search</button>
                 <span class="profile-list-count"><?= $listTotal === 1 ? '1 entry' : number_format($listTotal) . ' entries' ?></span>
-                <span class="profile-sort">
-                    <a class="profile-sort-opt<?= $activeSort === 'newest' ? ' is-on' : '' ?>" href="<?= $e($listUrl(['sort' => 'newest', 'page' => 1])) ?>">Newest</a>
-                    <a class="profile-sort-opt<?= $activeSort === 'commends' ? ' is-on' : '' ?>" href="<?= $e($listUrl(['sort' => 'commends', 'page' => 1])) ?>">Most commended</a>
-                </span>
+                <nav class="profile-sort segmented" aria-label="Order">
+                    <a class="profile-sort-opt segmented-item<?= $activeSort === 'newest' ? ' is-on is-active' : '' ?>"<?= $activeSort === 'newest' ? ' aria-current="page"' : '' ?> href="<?= $e($listUrl(['sort' => 'newest', 'page' => 1])) ?>">Newest</a>
+                    <a class="profile-sort-opt segmented-item<?= $activeSort === 'commends' ? ' is-on is-active' : '' ?>"<?= $activeSort === 'commends' ? ' aria-current="page"' : '' ?> href="<?= $e($listUrl(['sort' => 'commends', 'page' => 1])) ?>">Most commended</a>
+                </nav>
             </form>
 
             <?php if (!empty($list_rows)): ?>
@@ -298,7 +265,7 @@ $profileExcerpt = static function (string $html): string {
                 <div class="profile-panel-empty">
                     <h2>Nothing matches “<?= $e($q) ?>”</h2>
                     <p>Try a shorter phrase, or clear the search to see everything.</p>
-                    <p><a class="btn btn-small" href="<?= $e($listUrl(['q' => '', 'page' => 1])) ?>">Clear search</a></p>
+                    <p><a class="btn btn-secondary btn-small" href="<?= $e($listUrl(['q' => '', 'page' => 1])) ?>">Clear search</a></p>
                 </div>
             <?php else: ?>
                 <div class="profile-panel-empty">
@@ -309,9 +276,9 @@ $profileExcerpt = static function (string $html): string {
 
             <?php if ($pageCount > 1): ?>
                 <nav class="profile-pager" aria-label="Pagination">
-                    <?php if ($currentPage > 1): ?><a class="btn btn-small" href="<?= $e($listUrl(['page' => $currentPage - 1])) ?>">Previous</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
+                    <?php if ($currentPage > 1): ?><a class="btn btn-secondary btn-small" href="<?= $e($listUrl(['page' => $currentPage - 1])) ?>" rel="prev">Previous</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
                     <span class="profile-pager-label">Page <?= $currentPage ?> of <?= $pageCount ?></span>
-                    <?php if ($currentPage < $pageCount): ?><a class="btn btn-small" href="<?= $e($listUrl(['page' => $currentPage + 1])) ?>">Next</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
+                    <?php if ($currentPage < $pageCount): ?><a class="btn btn-secondary btn-small" href="<?= $e($listUrl(['page' => $currentPage + 1])) ?>" rel="next">Next</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
                 </nav>
             <?php endif; ?>
         </div>
@@ -346,16 +313,16 @@ $profileExcerpt = static function (string $html): string {
     <?php elseif ($activeTab === 'connections'): ?>
         <div class="profile-connections">
             <div class="profile-conn-tools">
-                <span class="profile-seg">
-                    <a class="profile-seg-opt<?= $connMode === 'followers' ? ' is-on' : '' ?>" href="<?= $e($connUrl(['c' => 'followers', 'cq' => '', 'page' => 1])) ?>">Followers · <?= number_format((int) ($follower_count ?? 0)) ?></a>
-                    <a class="profile-seg-opt<?= $connMode === 'following' ? ' is-on' : '' ?>" href="<?= $e($connUrl(['c' => 'following', 'cq' => '', 'page' => 1])) ?>">Following · <?= number_format((int) ($following_count ?? 0)) ?></a>
-                </span>
+                <nav class="profile-seg segmented" aria-label="Connections">
+                    <a class="profile-seg-opt segmented-item<?= $connMode === 'followers' ? ' is-on is-active' : '' ?>"<?= $connMode === 'followers' ? ' aria-current="page"' : '' ?> href="<?= $e($connUrl(['c' => 'followers', 'cq' => '', 'page' => 1])) ?>">Followers · <?= number_format((int) ($follower_count ?? 0)) ?></a>
+                    <a class="profile-seg-opt segmented-item<?= $connMode === 'following' ? ' is-on is-active' : '' ?>"<?= $connMode === 'following' ? ' aria-current="page"' : '' ?> href="<?= $e($connUrl(['c' => 'following', 'cq' => '', 'page' => 1])) ?>">Following · <?= number_format((int) ($following_count ?? 0)) ?></a>
+                </nav>
                 <form class="profile-conn-search" method="get" action="<?= $e($profileUrl) ?>">
                     <input type="hidden" name="tab" value="connections">
                     <input type="hidden" name="c" value="<?= $e($connMode) ?>">
-                    <label class="profile-search">
-                        <?= $this->partial('partials/icon', ['name' => 'search']) ?>
-                        <input type="search" enterkeyhint="search" name="cq" value="<?= $e($connQ) ?>" placeholder="Find a member" aria-label="Find a member">
+                    <label class="profile-search input-affix">
+                        <span class="input-affix-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></span>
+                        <input class="input input-pill" type="search" enterkeyhint="search" name="cq" value="<?= $e($connQ) ?>" placeholder="Find a member" aria-label="Find a member">
                     </label>
                     <button class="btn btn-small" type="submit">Search</button>
                 </form>
@@ -383,7 +350,7 @@ $profileExcerpt = static function (string $html): string {
             <?php elseif ($connQ !== ''): ?>
                 <div class="profile-panel-empty">
                     <h2>Nothing matches “<?= $e($connQ) ?>”</h2>
-                    <p><a class="btn btn-small" href="<?= $e($connUrl(['cq' => '', 'page' => 1])) ?>">Clear search</a></p>
+                    <p><a class="btn btn-secondary btn-small" href="<?= $e($connUrl(['cq' => '', 'page' => 1])) ?>">Clear search</a></p>
                 </div>
             <?php else: ?>
                 <div class="profile-panel-empty">
@@ -393,9 +360,9 @@ $profileExcerpt = static function (string $html): string {
             <?php endif; ?>
             <?php if ($connPageCount > 1): ?>
                 <nav class="profile-pager" aria-label="Pagination">
-                    <?php if ($connPage > 1): ?><a class="btn btn-small" href="<?= $e($connUrl(['page' => $connPage - 1])) ?>">Previous</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
+                    <?php if ($connPage > 1): ?><a class="btn btn-secondary btn-small" href="<?= $e($connUrl(['page' => $connPage - 1])) ?>" rel="prev">Previous</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
                     <span class="profile-pager-label">Page <?= $connPage ?> of <?= $connPageCount ?></span>
-                    <?php if ($connPage < $connPageCount): ?><a class="btn btn-small" href="<?= $e($connUrl(['page' => $connPage + 1])) ?>">Next</a><?php else: ?><span class="btn btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
+                    <?php if ($connPage < $connPageCount): ?><a class="btn btn-secondary btn-small" href="<?= $e($connUrl(['page' => $connPage + 1])) ?>" rel="next">Next</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
                 </nav>
             <?php endif; ?>
         </div>

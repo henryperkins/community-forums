@@ -445,6 +445,12 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .btn-danger:hover { background: color-mix(in srgb, var(--danger) 82%, #000); }
 .btn[disabled], .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn:disabled:hover { background: var(--accent); }
+/* A disabled button keeps its own ground under the pointer. The rule above holds
+   primary still; it also painted every other variant evergreen. */
+.btn-secondary:disabled:hover { background: var(--surface-raised); border-color: var(--border-soft); }
+.btn-ghost:disabled:hover { background: transparent; }
+.btn-accent:disabled:hover { background: var(--gold-500); }
+.btn-danger:disabled:hover { background: var(--danger); }
 .btn-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
 
 .linkbtn { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font: inherit; }
@@ -598,6 +604,10 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     box-shadow: var(--shadow-inset), inset 0 0 0 1px var(--gold-200), 0 0 0 3px var(--focus-ring);
 }
 .input-pill { border-radius: var(--radius-pill); background: var(--surface-page); padding: 8px 15px; }
+/* Leading icon (Input `icon`): a decorative glyph in the field's left padding. */
+.input-affix { position: relative; display: block; }
+.input-affix-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); display: inline-flex; color: var(--text-faint); pointer-events: none; }
+.input-affix > .input { padding-left: 35px; }
 
 /* ── Engraved frames ──────────────────────────────────────────────────────
    These frames used to cut their corners at 45°: a clip-path octagon whose
@@ -783,6 +793,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     color: var(--text-muted); background: transparent;
     border-radius: var(--radius-pill); padding: 5px 15px;
 }
+.segmented-item:hover { color: var(--text-strong); text-decoration: none; }
 .segmented-item.is-active { background: var(--brand); color: var(--parchment-50); }
 
 /* ── Inbox filter tabs (Marcellus pills) ─────────────────────────────────── */
@@ -797,8 +808,15 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* Underline-style tabs (sort / profile) */
 .text-tabs { display: inline-flex; gap: 4px; }
 .text-tab { font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted); padding: 8px 14px; cursor: pointer; background: none; border: 0; }
-.text-tab:hover { color: var(--text-strong); }
+.text-tab:hover { color: var(--text-strong); text-decoration: none; }
 .text-tab.is-active { color: var(--text-strong); font-weight: var(--weight-semibold); box-shadow: inset 0 -2px 0 var(--accent-2); }
+/* Ruled (Tabs `ruled`): a page's own sections on a full-width hairline, the
+   active mark sitting on the rule. The admin sub-sections, the board-index
+   panes and the profile each drew this row by hand. Marcellus ships one weight,
+   so a ruled tab is marked by ink and rule, not by a synthesized bold that
+   also nudges its neighbours. */
+.text-tabs.is-ruled { display: flex; flex-wrap: wrap; box-shadow: inset 0 -1px 0 var(--border-hair); }
+.text-tabs.is-ruled .text-tab.is-active { font-weight: inherit; }
 
 /* ── Admin chrome — the unifying bar across every Admin template ───────────
    Two rows in one sticky block. The area tier deliberately uses the PILL

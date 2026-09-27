@@ -3,19 +3,9 @@ import { expect, test, type Locator, type Page, type TestInfo } from '@playwrigh
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const evidenceRoot = path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-profile-production');
-const sourceFile = path.join(
-  repoRoot,
-  'docs',
-  'design-system',
-  'imladris',
-  'templates',
-  'user-profile',
-  'UserProfile.dc.html',
-);
 const credentials = {
   member: ['bob@retro.test', 'password123'],
   self: ['galadriel@retro.test', 'password123'],
@@ -279,50 +269,112 @@ async function capture(
   return output;
 }
 
-async function captureReference(page: Page, info: TestInfo, theme: Theme): Promise<string> {
-  await page.setViewportSize(viewport(info));
-  await page.goto(pathToFileURL(sourceFile).href, { waitUntil: 'load' });
-  await expect(page.locator('[data-screen-label="User profile"]')).toBeVisible();
-  await applyTheme(page, theme);
-  const output = path.join(evidenceRoot, 'reference', projectName(info), `profile-${theme}.png`);
-  fs.mkdirSync(path.dirname(output), { recursive: true });
-  await captureScreenshot(page, output);
-  return output;
-}
-
-async function captureComparison(
-  page: Page,
-  info: TestInfo,
-  theme: Theme,
-  reference: string,
-  production: string,
-): Promise<void> {
-  const size = viewport(info);
-  const gap = 24;
-  const referenceData = fs.readFileSync(reference).toString('base64');
-  const productionData = fs.readFileSync(production).toString('base64');
-  await page.goto('about:blank');
-  await page.setViewportSize({ width: size.width * 2 + gap + 72, height: Math.max(900, size.height + 100) });
-  await page.setContent(`<!doctype html>
-    <html lang="en"><head><meta charset="utf-8"><title>Profile comparison</title>
-      <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #d4d4d4; color: #171717; font: 600 15px/1.4 system-ui, sans-serif; }
-        main { display: grid; grid-template-columns: repeat(2, ${size.width}px); gap: ${gap}px; padding: 24px; align-items: start; }
-        figure { margin: 0; padding: 11px; background: #fff; border: 1px solid #aaa; }
-        figcaption { margin-bottom: 9px; }
-        img { display: block; width: 100%; height: auto; background: #fff; }
-      </style></head><body><main>
-        <figure><figcaption>Imladris source (${theme})</figcaption><img alt="Imladris source" src="data:image/png;base64,${referenceData}"></figure>
-        <figure><figcaption>Production profile (${theme})</figcaption><img alt="Production profile" src="data:image/png;base64,${productionData}"></figure>
-      </main></body></html>`, { waitUntil: 'load' });
-  await page.locator('img').evaluateAll(async (images) => Promise.all(images.map((image) => image.decode())));
-  const output = path.join(evidenceRoot, 'comparisons', `${projectName(info)}-${theme}.png`);
-  fs.mkdirSync(path.dirname(output), { recursive: true });
-  await captureScreenshot(page, output);
-}
+// The imported .dc.html is source-only (PREVIEW_STATUS.md): its upstream
+// component compiler is absent. Compare production to the handoff's documented
+// values below; never label an unresolved loader as a rendered reference.
 
 test.beforeAll(() => seedProfileFixture());
+
+test('recent activity filters navigate and independent disclosures work by keyboard', async ({ page }, info) => {
+  const messages = captureBrowserMessages(page);
+  await page.setViewportSize(viewport(info));
+  await visit(page, '/u/galadriel');
+  await expect(page).toHaveTitle(/Galadriel/);
+  const activity = page.getByRole('region', { name: 'Recent activity' });
+  await expect(activity.locator('.profile-activity-row')).toHaveCount(6);
+  await expect(activity.locator('time').first()).toHaveAttribute('title', /UTC$/);
+  await expect(activity.locator('time').first()).not.toContainText('UTC');
+  const toggles = activity.getByRole('button');
+  const first = toggles.nth(0);
+  const firstDetail = page.locator('#' + await first.getAttribute('aria-controls'));
+  await expect(firstDetail).toBeHidden();
+  await first.focus();
+  await page.keyboard.press('Enter');
+  await expect(first).toHaveAttribute('aria-expanded', 'true');
+  await expect(first).toHaveAccessibleName(/^Hide details: /);
+  await expect(firstDetail).toBeVisible();
+  await toggles.nth(1).click();
+  await expect(firstDetail).toBeVisible();
+  await expect(toggles.nth(1)).toHaveAttribute('aria-expanded', 'true');
+  await expect(firstDetail.locator('.profile-row-meta')).toContainText(/#.+\d+ (repl|commend)/);
+  for (const theme of ['light', 'dark'] as const) {
+    await capture(page, info, 'activity-expanded', theme);
+    await expect(firstDetail).toHaveCSS('animation-name', 'none');
+  }
+  await first.focus();
+  await page.keyboard.press('Space');
+  await expect(firstDetail).toBeHidden();
+  await expect(first).toHaveAccessibleName(/^Show details: /);
+
+  for (const [label, kind, value] of [['Topics', 'Topic', 'threads'], ['Replies', 'Reply', 'posts']] as const) {
+    await activity.getByRole('link', { name: label, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`activity=${value}#recent-activity$`));
+    await expect(activity.locator('[aria-current="page"]')).toHaveText(label);
+    await expect(activity.locator('.profile-activity-kind')).toHaveText(Array(6).fill(kind));
+    await expectNoHorizontalOverflow(page);
+  }
+  await activity.getByRole('link', { name: 'All', exact: true }).click();
+  await expect(page).toHaveURL(/\/u\/galadriel#recent-activity$/);
+  expect(messages).toEqual([]);
+});
+
+test('profile controls use system sizing, focus, current states and stable disabled fills', async ({ page }, info) => {
+  const messages = captureBrowserMessages(page);
+  await page.setViewportSize(viewport(info));
+  await visit(page, '/u/galadriel?tab=threads');
+  const tabs = page.getByRole('navigation', { name: 'Profile activity' });
+  const order = page.getByRole('navigation', { name: 'Order' });
+  const search = page.getByRole('searchbox');
+  const pager = page.getByRole('navigation', { name: 'Pagination' });
+  await expect(tabs).toHaveCSS('flex-wrap', 'wrap');
+  await expect(tabs.getByRole('link', { name: 'Topics', exact: true })).toHaveCSS('font-weight', '400');
+  await expect(order.locator('[aria-current="page"]')).toHaveText('Newest');
+  await order.getByRole('link', { name: 'Most commended' }).click();
+  await expect(order.locator('[aria-current="page"]')).toHaveText('Most commended');
+  await expect(pager.getByRole('link', { name: 'Next' })).toHaveAttribute('rel', 'next');
+  await expect(pager.locator('[aria-disabled="true"]')).toHaveCSS('opacity', '0.5');
+
+  for (const theme of ['light', 'dark'] as const) {
+    await applyTheme(page, theme);
+    await expect(order.locator('[aria-current="page"]')).toHaveCSS('color', 'rgb(250, 246, 236)');
+    await expect(tabs.getByRole('link', { name: 'Topics', exact: true })).toHaveCSS('color', theme === 'light' ? 'rgb(27, 35, 29)' : 'rgb(250, 246, 236)');
+    await search.focus();
+    await expect(search).toHaveCSS('padding-left', '35px');
+    await expect(search).toHaveCSS('border-radius', '999px');
+    await expect(search).toHaveCSS('font-size', '17px');
+    await expect(search).toHaveCSS('outline-width', '2px');
+    await expect(search).toHaveCSS('background-color', theme === 'light' ? 'rgb(245, 239, 225)' : 'rgb(22, 29, 36)');
+    await expect(order.locator('[aria-current="page"]')).toHaveCSS('background-color', theme === 'light' ? 'rgb(46, 74, 58)' : 'rgb(78, 116, 89)');
+    await capture(page, info, 'system-controls-focused', theme);
+  }
+
+  // Real disabled controls exercise the global system additions through the
+  // production cascade, including app.css's otherwise winning hover rules.
+  await page.locator('.profile').evaluate((profile) => {
+    for (const variant of ['secondary', 'ghost', 'accent', 'danger']) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.disabled = true;
+      button.className = `btn btn-${variant}`;
+      button.textContent = `Disabled ${variant}`;
+      button.dataset.disabledProbe = variant;
+      profile.append(button);
+    }
+  });
+  for (const theme of ['light', 'dark'] as const) {
+    await applyTheme(page, theme);
+    for (const variant of ['secondary', 'ghost', 'accent', 'danger']) {
+      const button = page.locator(`[data-disabled-probe="${variant}"]`);
+      await page.mouse.move(0, 0);
+      await page.waitForTimeout(160);
+      const background = await button.evaluate((element) => getComputedStyle(element).backgroundColor);
+      await button.hover({ force: true });
+      await page.waitForTimeout(160);
+      await expect(button).toHaveCSS('background-color', background);
+    }
+  }
+  expect(messages).toEqual([]);
+});
 
 test('profile states match the approved anatomy in light and dark themes', async ({ page }, info) => {
   const messages = captureBrowserMessages(page);
@@ -368,8 +420,8 @@ test('profile states match the approved anatomy in light and dark themes', async
   await login(page, 'member');
   await visit(page, '/u/galadriel');
   await expect(page.getByRole('link', { name: 'Message', exact: true })).toBeVisible();
-  const memberLight = await capture(page, info, 'member-populated', 'light');
-  const memberDark = await capture(page, info, 'member-populated', 'dark');
+  await capture(page, info, 'member-populated', 'light');
+  await capture(page, info, 'member-populated', 'dark');
 
   await login(page, 'self');
   await visit(page, '/u/galadriel?tab=connections');
@@ -386,13 +438,6 @@ test('profile states match the approved anatomy in light and dark themes', async
   await capture(page, info, 'moderator-overview', 'dark');
 
   expect(messages, 'unexpected console warnings/errors or HTTP failures').toEqual([]);
-  page.removeAllListeners('console');
-  page.removeAllListeners('pageerror');
-  page.removeAllListeners('response');
-  const referenceLight = await captureReference(page, info, 'light');
-  const referenceDark = await captureReference(page, info, 'dark');
-  await captureComparison(page, info, 'light', referenceLight, memberLight);
-  await captureComparison(page, info, 'dark', referenceDark, memberDark);
 
 });
 
@@ -424,7 +469,7 @@ test('tabs, search, sorting, paging, menu, copy link, and keyboard focus work', 
   await expect(page.locator('.profile-seg-opt.is-on')).toHaveText(`Following · ${followingTotal}`);
   await expect(page.locator('.profile-conn-card')).toHaveCount(Number(followingTotal));
 
-  const topics = page.getByRole('link', { name: 'Topics', exact: true });
+  const topics = page.getByRole('navigation', { name: 'Profile activity' }).getByRole('link', { name: 'Topics', exact: true });
   await topics.focus();
   await expect(topics).toBeFocused();
   await page.keyboard.press('Enter');
@@ -507,12 +552,25 @@ test('profile navigation and GET forms remain complete without JavaScript', asyn
   await login(page, 'member');
   await visit(page, '/u/galadriel');
 
+  const activity = page.getByRole('region', { name: 'Recent activity' });
+  await expect(activity.getByRole('button')).toHaveCount(0);
+  await expect(activity.locator('.profile-activity-detail:visible')).toHaveCount(0);
+  await activity.getByRole('link', { name: 'Replies', exact: true }).click();
+  await expect(page).toHaveURL(/activity=posts#recent-activity$/);
+  await expect(activity.locator('.profile-activity-kind')).toHaveText(Array(6).fill('Reply'));
+  await activity.getByRole('link', { name: 'Topics', exact: true }).click();
+  await expect(activity.locator('.profile-activity-kind')).toHaveText(Array(6).fill('Topic'));
+  await activity.getByRole('link', { name: 'All', exact: true }).click();
+  const noJsCapture = path.join(evidenceRoot, projectName(info), 'activity-no-js.png');
+  fs.mkdirSync(path.dirname(noJsCapture), { recursive: true });
+  await captureScreenshot(page, noJsCapture);
+
   const menu = page.locator('details.dm-menu');
   await menu.locator(':scope > summary').click();
   await expect(menu).toHaveAttribute('open', '');
   await expect(menu.getByRole('link', { name: 'Copy link' })).toHaveAttribute('href', '/u/galadriel');
 
-  await page.getByRole('link', { name: 'Topics', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Profile activity' }).getByRole('link', { name: 'Topics', exact: true }).click();
   await page.getByRole('searchbox', { name: "Search this member's activity" }).fill('rollback');
   await page.getByRole('button', { name: 'Search' }).click();
   await expect(page).toHaveURL(/q=rollback/);
