@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +15,8 @@ test('the real Workers Assets binding serves GET, conditional 304, HEAD and safe
   const directory = await mkdtemp(path.join(os.tmpdir(), 'retroboards-static-test-'));
   let runtime;
   try {
-    for (const url of [manifest.urls['app.css'], '/assets/app.js']) {
+    const retained = [...new Set(manifest.releases.slice(1).flatMap(release => release.files))];
+    for (const url of new Set([manifest.urls['app.css'], '/assets/app.js', ...retained])) {
       const target = path.join(directory, url.slice(1));
       await mkdir(path.dirname(target), { recursive: true });
       await copyFile(path.join(root, 'public', url), target);
@@ -55,6 +57,14 @@ test('the real Workers Assets binding serves GET, conditional 304, HEAD and safe
     assert.equal(conditional.headers.get('ETag'), etag);
     assert.equal(conditional.headers.get('Cache-Control'), 'public, max-age=31536000, immutable');
     assert.equal(await conditional.text(), '');
+    for (const url of retained) {
+      const retainedResponse = await runtime.dispatchFetch(`https://forum.example${url}`);
+      assert.equal(retainedResponse.status, 200, `Previous release dependency: ${url}`);
+      assert.equal(retainedResponse.headers.get('Cache-Control'), 'public, max-age=31536000, immutable');
+      assert.equal(retainedResponse.headers.get('X-RetroBoards-Cache'), 'STATIC');
+      assert.equal(createHash('sha256').update(Buffer.from(await retainedResponse.arrayBuffer())).digest('hex'),
+        manifest.files[url].sha256, `Previous release bytes: ${url}`);
+    }
     const head = await runtime.dispatchFetch(url, { method: 'HEAD' });
     assert.equal(head.status, 200);
     assert.equal(head.headers.get('ETag'), etag);

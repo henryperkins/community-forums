@@ -230,6 +230,12 @@ gh api repos/<owner>/<repo>/commits/$SHA/check-runs \
 curl -sS https://forum.example.com/healthz    # only meaningful once that says completed/success
 ```
 
+After verifying the new live asset URLs and hashes, record the deployed asset
+version with `npm run assets:record-release -- <verified-deployed-version>` and
+commit the updated manifest and delivery files before the next release. See
+§14, **Release overlap**, for the retention and verification contract. Ordinary
+builds never advance that deployed baseline.
+
 The commands below are the **first-time / disaster-recovery** path, for standing
 a deployment up before the git integration exists or when it is unavailable. Run
 them from the main checkout, whose `wrangler.jsonc` and `worker/` now match what
@@ -575,6 +581,50 @@ minifies core CSS/JS into content-hashed files, rewrites font URLs, and emits a
 small editor entry that loads Milkdown only when a composer exists (including
 a composer inserted later). Keep the manifest and generated files together in
 deployments. The Docker build and Wrangler build command regenerate them.
+
+**Release overlap (ADR 0041).** `config/assets.json.deployedReleases` pins the
+three most recent deployed asset versions. Ordinary builds keep those pins
+while replacing the current candidate; `releases` lists the full delivery set
+(at most four distinct versions). Repeated edits, previews, failed deployments,
+source reverts, and `check:assets` do not advance the baseline. Each pinned
+release's complete fingerprinted file set remains in `public/assets/dist`, the
+manifest allowlist, and `.build/static`, with SHA-256 verification before
+publication. Docker's assets stage copies the manifest before building so its
+output agrees with the Worker build.
+
+Publication stages both output directories and installs the manifest last.
+Caught write or installation failures restore the previous outputs so a normal
+build can be retried. If rollback reports preserved `.retroboards-assets-*`
+backup directories, keep them until the previous directories are recovered;
+they may contain the only local copies of retained immutable files.
+Inspect those same backups after a forcibly terminated build: automatic
+rollback handles caught errors, not termination between directory renames.
+
+After a successful production deployment, verify its live asset URLs and hashes
+against the exact source checkout's manifest, then record that manifest's
+16-character `version`:
+
+```sh
+npm run assets:record-release -- <verified-deployed-version>
+npm run check:assets
+```
+
+The record command checks the supplied version against both current sources and
+the previously built manifest; it does not query or deploy to production. Never
+run it for a preview or failed deployment. Commit the resulting manifest and
+delivery files before the next release so fresh checkouts and Docker inherit
+the new baseline. Recording the same version again is idempotent. Recording a
+new version keeps that deployment and its two predecessors, retiring the oldest
+exclusive files from both directories and the allowlist. A tab older than that
+window may need a reload before its first deferred editor import. For any
+rollback, verify that the chosen bundle contains the asset versions still
+referenced by the running container.
+
+If a page shows an ordinary "Skip to content" link, duplicate rail controls,
+and the board rail stacked above the content, check the exact `app-style-*.css`
+URL in its HTML. A missing application stylesheet leaves the Imladris component
+styles intact but loses the mobile drawer and shell geometry. Reproduce with
+that exact old URL; checking only the newest homepage cannot detect this case.
 
 Production follow-up remains: colocate the branch with ENAM and use its
 region-scoped access host, deploy this code, set Browser Cache TTL/Early Hints,

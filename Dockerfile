@@ -11,7 +11,8 @@ COPY vite.config.mjs ./
 COPY bin/build-assets.mjs bin/build-assets.mjs
 COPY src/client/ src/client/
 COPY public/assets/ public/assets/
-RUN mkdir -p config && npm run build
+COPY config/assets.json config/assets.json
+RUN npm run build
 
 # ---------------------------------------------------------------------------
 # Stage 2: PHP base — OS libraries + PHP extensions shared by the vendor

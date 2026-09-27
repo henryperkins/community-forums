@@ -1,0 +1,8 @@
+Docker manifest matches the host; every public and staged asset digest matches.
+No staging or backup directories remain after successful publication.
+{
+  "manifestSha256": "530dafcb6ca354e02418bbedf9a4ca075cc1b1ca4f917308c6f58d3f65e1176d",
+  "files": 54,
+  "releases": 3,
+  "deployedReleases": 3
+}

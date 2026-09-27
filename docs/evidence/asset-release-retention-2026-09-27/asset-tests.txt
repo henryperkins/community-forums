@@ -1,0 +1,28 @@
+
+> test:assets
+> node --test tests/worker/*.test.mjs
+
+✔ builds keep recent pages and lazy imports working across deployments, then retire the oldest release (2005.143572ms)
+✔ the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses (305.543788ms)
+✔ fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable (21.95748ms)
+✔ only the genuine current version makes source asset URLs immutable (0.76381ms)
+✔ conditional requests retain 304 and validators, and HEAD retains its empty body (0.565063ms)
+✔ range responses and their status survive without exposing Set-Cookie (0.500463ms)
+✔ missing/private assets and unsupported methods never fall through to PHP or an SPA (0.533873ms)
+✔ branding, package themes and application routes retain dynamic response semantics (0.505624ms)
+✔ published manifest names only verified asset bytes and font preload matches emitted CSS (25.114649ms)
+✔ requests on the canonical origin pass through untouched (19.541701ms)
+✔ any other hostname is redirected to the same path and query on the canonical origin (0.920808ms)
+✔ plain http on the canonical host is upgraded to the canonical scheme (0.306636ms)
+✔ unsafe methods keep their method and body through a 308 (1.674929ms)
+✔ a stray request port is dropped and a non-default canonical port is carried over (0.390925ms)
+✔ loopback hosts (wrangler dev) and an unusable APP_URL fail open (0.329615ms)
+✔ certificate-validation paths on a non-canonical host go to the origin instead of redirecting (1.096126ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2058.642809

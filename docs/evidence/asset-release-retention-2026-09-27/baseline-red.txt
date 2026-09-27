@@ -1,0 +1,26 @@
+✖ repeated local builds and source reverts preserve the deployed baseline (2028.759068ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2084.280112
+
+✖ failing tests:
+
+test at ../../../tmp/retroboards-asset-fix-4tHVKx/before-fix/tests/worker/asset-release-retention.test.mjs:112:1
+✖ repeated local builds and source reverts preserve the deployed baseline (2028.759068ms)
+  AssertionError [ERR_ASSERTION]: Build dropped a deployed page dependency: /assets/dist/app-style-C8DsAy3d.css
+      at assertAvailable (file:///tmp/retroboards-asset-fix-4tHVKx/before-fix/tests/worker/asset-release-retention.test.mjs:47:14)
+      at async TestContext.<anonymous> (file:///tmp/retroboards-asset-fix-4tHVKx/before-fix/tests/worker/asset-release-retention.test.mjs:133:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

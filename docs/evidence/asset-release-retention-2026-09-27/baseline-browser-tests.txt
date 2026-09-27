@@ -1,0 +1,33 @@
+Chromium: npx playwright test asset-release-layout.spec.ts
+WebKit: E2E_LAYOUT_BROWSER=webkit npx playwright test asset-release-layout.spec.ts
+Full server logs omitted; test result lines follow.
+
+chromium
+  ✓   1 [desktop] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript on › member layout survives HTML from 0 asset releases ago (1.0s)
+  ✓   2 [desktop] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript on › member layout survives HTML from 1 asset releases ago (991ms)
+  ✓   3 [desktop] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript on › member layout survives HTML from 2 asset releases ago (939ms)
+  ✓   4 [desktop] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript off › member layout survives HTML from 0 asset releases ago (970ms)
+  ✓   5 [desktop] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript off › member layout survives HTML from 1 asset releases ago (961ms)
+  ✓   6 [desktop] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript off › member layout survives HTML from 2 asset releases ago (966ms)
+  ✓   7 [mobile] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript on › member layout survives HTML from 0 asset releases ago (1.6s)
+  ✓   8 [mobile] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript on › member layout survives HTML from 1 asset releases ago (1.6s)
+  ✓   9 [mobile] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript on › member layout survives HTML from 2 asset releases ago (1.5s)
+  ✓  10 [mobile] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript off › member layout survives HTML from 0 asset releases ago (914ms)
+  ✓  11 [mobile] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript off › member layout survives HTML from 1 asset releases ago (955ms)
+  ✓  12 [mobile] › asset-release-layout.spec.ts:19:11 › chromium, JavaScript off › member layout survives HTML from 2 asset releases ago (898ms)
+  12 passed (15.1s)
+
+webkit
+  ✓   1 [desktop] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript on › member layout survives HTML from 0 asset releases ago (1.6s)
+  ✓   2 [desktop] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript on › member layout survives HTML from 1 asset releases ago (1.7s)
+  ✓   3 [desktop] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript on › member layout survives HTML from 2 asset releases ago (1.6s)
+  ✓   4 [desktop] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript off › member layout survives HTML from 0 asset releases ago (1.5s)
+  ✓   5 [desktop] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript off › member layout survives HTML from 1 asset releases ago (1.6s)
+  ✓   6 [desktop] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript off › member layout survives HTML from 2 asset releases ago (1.6s)
+  ✓   7 [mobile] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript on › member layout survives HTML from 0 asset releases ago (2.1s)
+  ✓   8 [mobile] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript on › member layout survives HTML from 1 asset releases ago (2.2s)
+  ✓   9 [mobile] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript on › member layout survives HTML from 2 asset releases ago (2.1s)
+  ✓  10 [mobile] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript off › member layout survives HTML from 0 asset releases ago (1.5s)
+  ✓  11 [mobile] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript off › member layout survives HTML from 1 asset releases ago (1.6s)
+  ✓  12 [mobile] › asset-release-layout.spec.ts:19:11 › webkit, JavaScript off › member layout survives HTML from 2 asset releases ago (1.6s)
+  12 passed (22.5s)

@@ -1,5 +1,14 @@
 # RetroBoards runtime reconciliation
 
+## 2026-09-27 — retain recent delivery assets (ADR 0041)
+
+The runtime digest includes two restored fingerprinted application stylesheets
+from the preceding two asset releases. They retain their exact committed bytes
+to support pages received before a deployment. The final baseline incorporates
+the verified profile follow-up release `0f7b7486`; current source CSS, templates,
+entrypoint URLs, and the authoring mirror match that release. The existing
+mobile drawer, hidden skip link, and desktop shell contract remain authoritative.
+
 Imported from `imladris-design-system.zip` with SHA-256
 `2ee3201e3bfcaa82ed371af8709fd0737a54c69332119d006f6f0a51aa57dbeb`.
 

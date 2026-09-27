@@ -2,6 +2,14 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Preserve layout across deployments
+
+- Preserve fingerprinted CSS, scripts, editor chunks, and fonts from three
+  deployed asset versions across local rebuilds. Advance that window only
+  after a successful deployment is explicitly recorded, keeping pages received
+  before deployment styled and their deferred editor dependencies available
+  (ADR 0041).
+
 ## [Unreleased] - Profile components and Recent activity
 
 - Profile tabs, order and connection switches, searches, pagers, actions, and

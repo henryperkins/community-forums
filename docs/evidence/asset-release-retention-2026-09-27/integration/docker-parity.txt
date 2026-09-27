@@ -1,0 +1,3 @@
+/build/public: all 52 asset hashes match
+/build/.build/static: all 52 asset hashes match
+Manifest SHA-256: 991dd1fd520bdd6cdeb6c998f4bbbd0e45f34ff1d5fdbac016c2380b9e162c68 (identical to host)

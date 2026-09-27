@@ -1,0 +1,59 @@
+✖ overlayfs directory backups permit publication without losing deployed files (689.148957ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 743.87667
+
+✖ failing tests:
+
+test at tests/worker/asset-release-retention.test.mjs:232:1
+✖ overlayfs directory backups permit publication without losing deployed files (689.148957ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted rejection.
+  Actual message: "Command failed: /home/ubuntu/.nvm/versions/node/v24.21.0/bin/node --import ./overlayfs.mjs bin/build-assets.mjs
+  file:///tmp/retroboards-asset-releases-ZTvoj8/overlayfs.mjs:7
+          throw Object.assign(new Error('simulated overlayfs EXDEV'), { code: 'EXDEV' });
+                              ^
+
+  Error: simulated overlayfs EXDEV
+      at fs.promises.rename (file:///tmp/retroboards-asset-releases-ZTvoj8/overlayfs.mjs:7:29)
+      at publishAssets (file:///tmp/retroboards-asset-releases-ZTvoj8/bin/build-assets.mjs:71:15)
+      at async file:///tmp/retroboards-asset-releases-ZTvoj8/bin/build-assets.mjs:223:5 {
+    code: 'EXDEV'
+  }
+
+  Node.js v24.21.0
+  "
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///home/ubuntu/community-forums/tests/worker/asset-release-retention.test.mjs:251:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: /home/ubuntu/.nvm/versions/node/v24.21.0/bin/node --import ./overlayfs.mjs bin/build-assets.mjs
+    file:///tmp/retroboards-asset-releases-ZTvoj8/overlayfs.mjs:7
+            throw Object.assign(new Error('simulated overlayfs EXDEV'), { code: 'EXDEV' });
+                                ^
+
+    Error: simulated overlayfs EXDEV
+        at fs.promises.rename (file:///tmp/retroboards-asset-releases-ZTvoj8/overlayfs.mjs:7:29)
+        at publishAssets (file:///tmp/retroboards-asset-releases-ZTvoj8/bin/build-assets.mjs:71:15)
+        at async file:///tmp/retroboards-asset-releases-ZTvoj8/bin/build-assets.mjs:223:5 {
+      code: 'EXDEV'
+    }
+
+    Node.js v24.21.0
+
+        at genericNodeError (node:internal/errors:986:15)
+        at wrappedFn (node:internal/errors:540:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:514:28)
+        at maybeClose (node:internal/child_process:1141:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:306:5),
+    expected: undefined,
+    operator: 'doesNotReject',
+    diff: 'simple'
+  }

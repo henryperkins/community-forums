@@ -1,0 +1,25 @@
+✖ builds keep recent pages and lazy imports working across deployments, then retire the oldest release (526.047112ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 582.748787
+
+✖ failing tests:
+
+test at tests/worker/asset-release-retention.test.mjs:13:1
+✖ builds keep recent pages and lazy imports working across deployments, then retire the oldest release (526.047112ms)
+  AssertionError [ERR_ASSERTION]: Release 2 dropped a recent page dependency: /assets/dist/app-style-B5bgGmA5.css
+      at TestContext.<anonymous> (file:///home/ubuntu/community-forums/tests/worker/asset-release-retention.test.mjs:48:18)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

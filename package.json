@@ -5,6 +5,7 @@
     "build:wysiwyg": "npm run build",
     "check:assets": "node bin/build-assets.mjs --check",
     "check:wysiwyg": "npm run check:assets",
+    "assets:record-release": "node bin/build-assets.mjs --record-release",
     "test:assets": "node --test tests/worker/*.test.mjs",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail"
