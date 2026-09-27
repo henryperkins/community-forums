@@ -1,0 +1,162 @@
+{
+  "date": "2026-09-27",
+  "base_commit": "f2f616de22abc25d11b35820f08728b616b321c6",
+  "scope": "Profile review F1-F15, local implementation only",
+  "phpunit": {
+    "command": "composer test -- --display-skipped",
+    "exit_code": 0,
+    "tests": 3111,
+    "assertions": 23590,
+    "failures": 0,
+    "skipped": 1,
+    "skip": "AppThreadIntelligenceMigrationTest::test_0077_down_and_up_rehearsal_on_fixture_free_schema"
+  },
+  "profile_phpunit": {
+    "tests": 27,
+    "assertions": 371,
+    "failures": 0
+  },
+  "imladris": {
+    "tests": 24,
+    "assertions": 305,
+    "check": "passed"
+  },
+  "asset_tests": {
+    "tests": 15,
+    "failures": 0,
+    "manifest_check": "passed"
+  },
+  "browser": {
+    "engine": "Chromium",
+    "playwright": "1.61.1",
+    "url": "http://localhost:8037",
+    "passed": 26,
+    "failed": 0,
+    "block_capture_rerun_passed": 2,
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "viewport_widths": [
+      320,
+      390,
+      1024,
+      1160,
+      1440
+    ],
+    "java_script_disabled": true,
+    "unexpected_console_errors": 0,
+    "serious_critical_profile_axe_violations": 0,
+    "browser_plugin": "not available"
+  },
+  "red_green": {
+    "new_browser_checks_failed_before": 8,
+    "new_browser_checks_passed_after": 8,
+    "new_integration_tests_failed_before": 3,
+    "new_integration_tests_passed_after": 3
+  },
+  "design_scan": {
+    "changed_line_warnings": 0,
+    "changed_line_advisories": 1,
+    "advisory": "Cover note .93rem matches existing profile secondary copy."
+  },
+  "not_implemented": [
+    "D1",
+    "D2",
+    "O1",
+    "O2",
+    "O3",
+    "O4",
+    "O5"
+  ],
+  "screenshots": [
+    {
+      "path": "desktop/moderator-overview-dark.png",
+      "sha256": "2175c8c6f1cd40ad0447946dd97705575866fd51ddf2d33b878508dc2f5dbbc4"
+    },
+    {
+      "path": "desktop/moderator-overview-light.png",
+      "sha256": "b491d969a792978f9b9e141d4966f39218909b582d9eeca34abd4389ad79b081"
+    },
+    {
+      "path": "desktop/review-activity-1024-dark.png",
+      "sha256": "a34857d41e7884377e829966635b98b9d22dea9c73010f95f78de144abafa2e9"
+    },
+    {
+      "path": "desktop/review-activity-1024-light.png",
+      "sha256": "46de70e965a932683d49f1845b763f6fec523b8838e748444b1f572ef7d68e54"
+    },
+    {
+      "path": "desktop/review-activity-1440-dark.png",
+      "sha256": "83f0475746d32356c41a9a7ca92482e28974cd2e6691fc133f34b7af5df1ab3d"
+    },
+    {
+      "path": "desktop/review-activity-1440-light.png",
+      "sha256": "c0f13e1d5548730a666e60ed6c2f293a6a05dbb26e74370e12df374aaf7c37e0"
+    },
+    {
+      "path": "desktop/review-badge-no-js.png",
+      "sha256": "b27002342b2f7a566320c07fdd8c9ea2e1636b6697a34647c31d69b9b524eb7d"
+    },
+    {
+      "path": "desktop/review-blocked-persistent-dark.png",
+      "sha256": "4f8f603af8f65dd460bf2f83498d253c5166b406b238594c67fb251148afab9e"
+    },
+    {
+      "path": "desktop/review-blocked-persistent-light.png",
+      "sha256": "333775417b48f993f9679a58b96378ac858902ec75aa978fb0c5f2b70f013af8"
+    },
+    {
+      "path": "desktop/review-threads-dark.png",
+      "sha256": "ab6f582775d20f18b86ac9562cfad9d78858dcb3db2561db8195bf5545c447ab"
+    },
+    {
+      "path": "desktop/review-threads-light.png",
+      "sha256": "6e213f4106d211963f922f2ceb287b430d36f1a11b5bc6fc09fe553aa09afa0f"
+    },
+    {
+      "path": "mobile/guest-gated-dark.png",
+      "sha256": "3625962acc32a5fb7ca8ae5219d79ab1edf7c2e7e7f106fc9730fc906f0b8957"
+    },
+    {
+      "path": "mobile/guest-gated-light.png",
+      "sha256": "5ce54c589f394f8e429aefe37d325262f8b35ef6c4a5baae2ea4112d6af8735a"
+    },
+    {
+      "path": "mobile/review-activity-320-dark.png",
+      "sha256": "7658cfe5d93ccdd4d58527ac1c576f32c65631d19666397fb3b631bd8e588d0e"
+    },
+    {
+      "path": "mobile/review-activity-320-light.png",
+      "sha256": "ac5b747ad68075a882fd1904b28e80a01bd45203c4d4d60d826072d5512c23b9"
+    },
+    {
+      "path": "mobile/review-activity-390-dark.png",
+      "sha256": "97e1dabbddb787730324838bd178a1c899285a30da36ca0d152c02fe18bc28e4"
+    },
+    {
+      "path": "mobile/review-activity-390-light.png",
+      "sha256": "54b96de82880edc140b58718748a99a979d4bde21cc13c8fec0bc4f2b24e6db1"
+    },
+    {
+      "path": "mobile/review-badge-no-js.png",
+      "sha256": "f6ee3b30f6be4c960361d155aee98bc1b3df61ae3016ec82d51d00d42bb080bc"
+    },
+    {
+      "path": "mobile/review-blocked-persistent-dark.png",
+      "sha256": "de6d0ff0cff95f85ed73ee059e86729147527b746000a871223cbaf3e1461010"
+    },
+    {
+      "path": "mobile/review-blocked-persistent-light.png",
+      "sha256": "2b638fd3b9a9d892957fd2ee29c8e6d00a2f517030536b8616cdbc6d5db67b11"
+    },
+    {
+      "path": "mobile/review-own-followers-dark.png",
+      "sha256": "8fbb18c2ac303af75b22af8e779a06455cd4a3e3fe18574f0e221117209cb2e8"
+    },
+    {
+      "path": "mobile/review-own-followers-light.png",
+      "sha256": "37749dd0bb5654071d27536c05cf9c568194f219cb5720334bce676da37c6d3a"
+    }
+  ]
+}

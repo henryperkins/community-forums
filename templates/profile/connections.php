@@ -28,12 +28,12 @@ $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'follow
                     <?= $this->partial('partials/monogram', ['name' => $pd, 'username' => $person['username']]) ?>
                     <a class="person-name" href="/u/<?= $e($person['username']) ?>"><?= $e($pd) ?></a>
                     <span class="handle">@<?= $e($person['username']) ?></span>
-                    <span class="muted person-rep"><?= (int) ($person['reputation'] ?? 0) ?> regard</span>
+                    <span class="muted person-rep"><span class="profile-number"><?= number_format((int) ($person['reputation'] ?? 0)) ?></span> regard</span>
                     <?php if (!empty($can_remove_followers)): ?>
                         <form class="inline" method="post" action="/u/<?= $e($profile['username']) ?>/followers/<?= (int) $person['id'] ?>/remove">
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="return" value="<?= $e($page > 1 ? $listUrl . '?page=' . $page : $listUrl) ?>">
-                            <button class="linkbtn danger" type="submit">Remove</button>
+                            <button class="linkbtn danger" type="submit">Remove<span class="sr-only"> <?= $e($pd) ?> (@<?= $e($person['username']) ?>)</span></button>
                         </form>
                     <?php endif; ?>
                 </li>
@@ -42,7 +42,7 @@ $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'follow
         <?php if ($pageCount > 1): ?>
             <nav class="profile-pager" aria-label="Pagination">
                 <?php if ($page > 1): ?><a class="btn btn-secondary btn-small" href="<?= $e($page === 2 ? $listUrl : $listUrl . '?page=' . ($page - 1)) ?>" rel="prev">Previous</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
-                <span class="profile-pager-label">Page <?= $page ?> of <?= $pageCount ?></span>
+                <span class="profile-pager-label">Page <span class="profile-number"><?= $page ?></span> of <span class="profile-number"><?= $pageCount ?></span></span>
                 <?php if ($page < $pageCount): ?><a class="btn btn-secondary btn-small" href="<?= $e($listUrl . '?page=' . ($page + 1)) ?>" rel="next">Next</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
             </nav>
         <?php endif; ?>

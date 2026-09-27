@@ -275,6 +275,106 @@ async function capture(
 
 test.beforeAll(() => seedProfileFixture());
 
+test('profile review: phone activity titles remain fully readable', async ({ page }, info) => {
+  const messages = captureBrowserMessages(page);
+  for (const width of projectName(info) === 'mobile' ? [390, 320] : [1440, 1024]) {
+    await page.setViewportSize({ width, height: 900 });
+    await visit(page, '/u/galadriel');
+    await settle(page);
+    if (width <= 760) {
+      const titles = await page.locator('.profile-activity-title').evaluateAll((elements) =>
+        elements.map((element) => ({ client: element.clientWidth, scroll: element.scrollWidth })),
+      );
+      for (const title of titles) expect(title.scroll, JSON.stringify(title)).toBeLessThanOrEqual(title.client + 1);
+    }
+    await page.locator('[data-activity-toggle]').first().click();
+    await expect(page.locator('.profile-activity-detail').first()).toBeVisible();
+    await expect(page.locator('.profile-activity-detail .profile-number').first()).toHaveCSS('font-family', /JetBrains Mono/);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    for (const theme of ['light', 'dark'] as const) await capture(page, info, `review-activity-${width}`, theme);
+    if (width === 1024) {
+      const sections = await page.locator('.profile-overview-aside section').evaluateAll((elements) =>
+        elements.map((element) => ({ x: element.getBoundingClientRect().x, y: element.getBoundingClientRect().y })),
+      );
+      expect(sections).toHaveLength(2);
+      expect(Math.abs(sections[0].y - sections[1].y)).toBeLessThan(1);
+      expect(sections[1].x).toBeGreaterThan(sections[0].x);
+    }
+  }
+  expect(messages).toEqual([]);
+});
+
+test('profile review: search controls align and activity timestamps retain exact instants', async ({ page }, info) => {
+  const messages = captureBrowserMessages(page);
+  await page.setViewportSize(viewport(info));
+  for (const tab of ['threads', 'posts', 'connections']) {
+    await visit(page, `/u/galadriel?tab=${tab}`);
+    await settle(page);
+    const input = await page.getByRole('searchbox').boundingBox();
+    const submit = await page.getByRole('button', { name: 'Search', exact: true }).boundingBox();
+    expect(input).not.toBeNull();
+    expect(submit).not.toBeNull();
+    expect(Math.abs(input!.height - submit!.height), `${tab} search heights`).toBeLessThan(1);
+    if (tab !== 'connections') {
+      const times = page.locator('.profile-row-meta time');
+      await expect(times).toHaveCount(20);
+      await expect(times.first()).toHaveAttribute('datetime', /^\d{4}-\d\d-\d\dT/);
+      await expect(times.first()).toHaveAttribute('title', /UTC$/);
+      await expect(times.first()).not.toContainText('UTC');
+    }
+    await expect(page.locator('.profile-number').first()).toHaveCSS('font-family', /JetBrains Mono/);
+    for (const theme of ['light', 'dark'] as const) await capture(page, info, `review-${tab}`, theme);
+  }
+  expect(messages).toEqual([]);
+});
+
+test('profile review: follower actions name their target and fit below phone identities', async ({ page }, info) => {
+  const messages = captureBrowserMessages(page);
+  await page.setViewportSize(viewport(info));
+  await login(page, 'self');
+  await visit(page, '/u/galadriel?tab=connections');
+  const card = page.locator('.profile-conn-card').filter({ has: page.getByRole('link', { name: 'Erestor', exact: true }) });
+  const remove = card.getByRole('button', { name: 'Remove follower Erestor (@erestor)', exact: true });
+  await expect(remove).toBeVisible();
+  if (projectName(info) === 'mobile') {
+    const identity = await card.locator('.profile-conn-id').boundingBox();
+    const action = await remove.boundingBox();
+    expect(action!.y).toBeGreaterThanOrEqual(identity!.y + identity!.height);
+    const meta = await card.locator('.profile-conn-meta').evaluate((element) => ({ client: element.clientWidth, scroll: element.scrollWidth }));
+    expect(meta.scroll).toBeLessThanOrEqual(meta.client + 1);
+  }
+  for (const theme of ['light', 'dark'] as const) await capture(page, info, 'review-own-followers', theme);
+  await visit(page, '/u/galadriel/followers');
+  await expect(page.getByRole('button', { name: 'Remove Erestor (@erestor)', exact: true })).toBeVisible();
+  expect(messages).toEqual([]);
+});
+
+test('profile review: badge explanations work by keyboard without JavaScript', async ({ browser, baseURL }, info) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: viewport(info) });
+  const page = await context.newPage();
+  const messages = captureBrowserMessages(page);
+  await visit(page, '/u/galadriel');
+  const badge = page.locator('.badge-row details').first();
+  const explanation = badge.locator('.badge-description');
+  await expect(explanation).toBeHidden();
+  await badge.locator('summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(explanation).toBeVisible();
+  await expect(explanation).not.toBeEmpty();
+  await expectNoHorizontalOverflow(page);
+  // requestAnimationFrame callbacks do not run with page scripts disabled.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const output = path.join(evidenceRoot, projectName(info), 'review-badge-no-js.png');
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  await captureScreenshot(page, output);
+  await badge.locator('summary').click();
+  await expect(explanation).toBeHidden();
+  await page.locator('.profile-cover-note').getByRole('link', { name: 'Log in', exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?next=\/u\/galadriel$/);
+  expect(messages).toEqual([]);
+  await context.close();
+});
+
 test('recent activity filters navigate and independent disclosures work by keyboard', async ({ page }, info) => {
   const messages = captureBrowserMessages(page);
   await page.setViewportSize(viewport(info));
@@ -870,6 +970,10 @@ test('the ··· menu opens on screen, folds its Block step, and holds on a shor
   await expect(actions.getByRole('button', { name: 'Follow', exact: true })).toHaveCount(0);
   await expect(actions.getByRole('link', { name: 'Message', exact: true })).toHaveCount(0);
   await expect(actions.locator(':scope > :not([data-copy-status])')).toHaveCount(1);
+  await page.reload();
+  await expect(page.locator('.profile-cover [role="status"]').filter({ hasText: 'You blocked' })).toContainText(longHandle);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  for (const theme of ['light', 'dark'] as const) await capture(page, info, 'review-blocked-persistent', theme);
   for (const width of coverWidths(info)) {
     await page.setViewportSize({ width, height: viewport(info).height });
     await trigger.click();

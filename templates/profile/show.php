@@ -47,7 +47,7 @@ $profileExcerpt = static function (string $html): string {
             <p class="profile-handle">@<?= $e($profile['username']) ?><?php if (!empty($profile['pronouns'])): ?> · <?= $e($profile['pronouns']) ?><?php endif; ?></p>
             <p class="profile-meta">Member since <?= $e(human_date($profile['created_at'])) ?><?php if (!empty($profile['location'])): ?> · <?= $e($profile['location']) ?><?php endif; ?></p>
             <?php if (!empty($profile['website'])): ?>
-                <p class="profile-web"><a href="<?= $e($profile['website']) ?>" rel="nofollow noopener ugc" target="_blank"><?= $e($profile['website']) ?></a></p>
+                <p class="profile-web"><a href="<?= $e($profile['website']) ?>" rel="nofollow noopener ugc" target="_blank"><?= $e(preg_replace('~^https?://~i', '', rtrim((string) $profile['website'], '/'))) ?></a></p>
             <?php endif; ?>
             <dl class="profile-stats">
                 <div><dt>Posts</dt><dd><?= number_format((int) $profile['post_count']) ?></dd></div>
@@ -112,10 +112,15 @@ $profileExcerpt = static function (string $html): string {
                         </details>
                     <?php endif; ?>
                 </div>
+                <?php if (!empty($viewer_blocks_profile)): ?>
+                    <p class="profile-cover-note" role="status">You blocked <?= $e($display) ?>. Neither of you can follow or message the other.</p>
+                <?php endif; ?>
             <?php elseif (!empty($is_self)): ?>
                 <div class="profile-actions">
                     <a class="btn btn-small profile-cover-action" href="/settings/account">Edit profile</a>
                 </div>
+            <?php elseif ($current_user === null && (!empty($community) || !empty($guest_can_message))): ?>
+                <p class="profile-cover-note"><a href="/login?next=<?= $e($profileUrl) ?>">Log in</a> to <?php if (!empty($community)): ?>follow <?= $e($display) ?><?= !empty($guest_can_message) ? ' or send a message' : '' ?><?php else: ?>send a message to <?= $e($display) ?><?php endif; ?>.</p>
             <?php endif; ?>
         </div>
     </header>
@@ -126,7 +131,7 @@ $profileExcerpt = static function (string $html): string {
     <?php endif; ?>
 
     <?php if (!empty($can_view_member_record)): ?>
-        <section class="profile-moderator" aria-label="Moderator context">
+        <section class="profile-moderator callout" aria-label="Moderator context">
             <?= $this->partial('partials/icon', ['name' => 'shield', 'class' => 'profile-moderator-icon']) ?>
             <div class="profile-moderator-copy">
                 <strong>Moderator context</strong>
@@ -199,26 +204,28 @@ $profileExcerpt = static function (string $html): string {
             </div>
             <?php if ($hasAside): ?>
                 <aside class="profile-overview-aside card">
-                    <?php if (!empty($custom_fields)): ?>
-                        <section>
-                            <h2>Profile details</h2>
-                            <dl class="profile-custom-fields">
-                                <?php foreach ($custom_fields as $field): ?>
-                                    <div><dt><?= $e($field['label']) ?></dt><dd><?= $e($field['value']) ?></dd></div>
-                                <?php endforeach; ?>
-                            </dl>
-                        </section>
-                    <?php endif; ?>
-                    <?php if (!empty($board_activity)): ?>
-                        <section>
-                            <h2>Most active in</h2>
-                            <ul class="profile-active-boards">
-                                <?php foreach ($board_activity as $board): ?>
-                                    <li><a href="/c/<?= $e($board['slug']) ?>">#<?= $e($board['slug']) ?></a><span><?= number_format((int) $board['post_count']) ?></span></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </section>
-                    <?php endif; ?>
+                    <div class="profile-details">
+                        <?php if (!empty($custom_fields)): ?>
+                            <section>
+                                <h2>Profile details</h2>
+                                <dl class="profile-custom-fields">
+                                    <?php foreach ($custom_fields as $field): ?>
+                                        <div><dt><?= $e($field['label']) ?></dt><dd><?= $e($field['value']) ?></dd></div>
+                                    <?php endforeach; ?>
+                                </dl>
+                            </section>
+                        <?php endif; ?>
+                        <?php if (!empty($board_activity)): ?>
+                            <section>
+                                <h2>Most active in</h2>
+                                <ul class="profile-active-boards">
+                                    <?php foreach ($board_activity as $board): ?>
+                                        <li><a href="/c/<?= $e($board['slug']) ?>">#<?= $e($board['slug']) ?></a><span><?= number_format((int) $board['post_count']) ?><span class="sr-only"> posts</span></span></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </section>
+                        <?php endif; ?>
+                    </div>
                 </aside>
             <?php endif; ?>
         </div>
@@ -233,7 +240,7 @@ $profileExcerpt = static function (string $html): string {
                     <input class="input input-pill" type="search" enterkeyhint="search" name="q" value="<?= $e($q) ?>" placeholder="Search this member's activity" aria-label="Search this member's activity">
                 </label>
                 <button class="btn btn-small" type="submit">Search</button>
-                <span class="profile-list-count"><?= $listTotal === 1 ? '1 entry' : number_format($listTotal) . ' entries' ?></span>
+                <span class="profile-list-count"><span class="profile-number"><?= number_format($listTotal) ?></span> <?= $listTotal === 1 ? 'entry' : 'entries' ?></span>
                 <nav class="profile-sort segmented" aria-label="Order">
                     <a class="profile-sort-opt segmented-item<?= $activeSort === 'newest' ? ' is-on is-active' : '' ?>"<?= $activeSort === 'newest' ? ' aria-current="page"' : '' ?> href="<?= $e($listUrl(['sort' => 'newest', 'page' => 1])) ?>">Newest</a>
                     <a class="profile-sort-opt segmented-item<?= $activeSort === 'commends' ? ' is-on is-active' : '' ?>"<?= $activeSort === 'commends' ? ' aria-current="page"' : '' ?> href="<?= $e($listUrl(['sort' => 'commends', 'page' => 1])) ?>">Most commended</a>
@@ -255,7 +262,7 @@ $profileExcerpt = static function (string $html): string {
                             <div class="profile-row-body">
                                 <a class="profile-row-title" href="<?= $e($rowUrl) ?>"><?= $e($rowTitle) ?></a>
                                 <?php if ($rowBody !== ''): ?><p class="profile-row-excerpt"><?= $e($rowBody) ?></p><?php endif; ?>
-                                <p class="profile-row-meta"><span>#<?= $e($row['board_slug']) ?></span><span><?= $e(human_datetime($row['created_at'])) ?></span></p>
+                                <p class="profile-row-meta"><span>#<?= $e($row['board_slug']) ?></span><time datetime="<?= $e(iso_datetime($row['created_at'])) ?>" title="<?= $e(human_datetime($row['created_at'])) ?>"><?= $e(relative_datetime($row['created_at'])) ?></time></p>
                             </div>
                             <span class="profile-row-commends"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) ($row['commend_count'] ?? 0)) ?></span>
                         </li>
@@ -277,7 +284,7 @@ $profileExcerpt = static function (string $html): string {
             <?php if ($pageCount > 1): ?>
                 <nav class="profile-pager" aria-label="Pagination">
                     <?php if ($currentPage > 1): ?><a class="btn btn-secondary btn-small" href="<?= $e($listUrl(['page' => $currentPage - 1])) ?>" rel="prev">Previous</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
-                    <span class="profile-pager-label">Page <?= $currentPage ?> of <?= $pageCount ?></span>
+                    <span class="profile-pager-label">Page <span class="profile-number"><?= $currentPage ?></span> of <span class="profile-number"><?= $pageCount ?></span></span>
                     <?php if ($currentPage < $pageCount): ?><a class="btn btn-secondary btn-small" href="<?= $e($listUrl(['page' => $currentPage + 1])) ?>" rel="next">Next</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
                 </nav>
             <?php endif; ?>
@@ -314,8 +321,8 @@ $profileExcerpt = static function (string $html): string {
         <div class="profile-connections">
             <div class="profile-conn-tools">
                 <nav class="profile-seg segmented" aria-label="Connections">
-                    <a class="profile-seg-opt segmented-item<?= $connMode === 'followers' ? ' is-on is-active' : '' ?>"<?= $connMode === 'followers' ? ' aria-current="page"' : '' ?> href="<?= $e($connUrl(['c' => 'followers', 'cq' => '', 'page' => 1])) ?>">Followers · <?= number_format((int) ($follower_count ?? 0)) ?></a>
-                    <a class="profile-seg-opt segmented-item<?= $connMode === 'following' ? ' is-on is-active' : '' ?>"<?= $connMode === 'following' ? ' aria-current="page"' : '' ?> href="<?= $e($connUrl(['c' => 'following', 'cq' => '', 'page' => 1])) ?>">Following · <?= number_format((int) ($following_count ?? 0)) ?></a>
+                    <a class="profile-seg-opt segmented-item<?= $connMode === 'followers' ? ' is-on is-active' : '' ?>"<?= $connMode === 'followers' ? ' aria-current="page"' : '' ?> href="<?= $e($connUrl(['c' => 'followers', 'cq' => '', 'page' => 1])) ?>">Followers · <span class="profile-number"><?= number_format((int) ($follower_count ?? 0)) ?></span></a>
+                    <a class="profile-seg-opt segmented-item<?= $connMode === 'following' ? ' is-on is-active' : '' ?>"<?= $connMode === 'following' ? ' aria-current="page"' : '' ?> href="<?= $e($connUrl(['c' => 'following', 'cq' => '', 'page' => 1])) ?>">Following · <span class="profile-number"><?= number_format((int) ($following_count ?? 0)) ?></span></a>
                 </nav>
                 <form class="profile-conn-search" method="get" action="<?= $e($profileUrl) ?>">
                     <input type="hidden" name="tab" value="connections">
@@ -335,13 +342,13 @@ $profileExcerpt = static function (string $html): string {
                             <?= $this->partial('partials/monogram', ['name' => $personDisplay, 'username' => $person['username']]) ?>
                             <span class="profile-conn-id">
                                 <a href="/u/<?= $e($person['username']) ?>"><?= $e($personDisplay) ?></a>
-                                <span class="profile-conn-meta">@<?= $e($person['username']) ?> · <?= number_format((int) ($person['reputation'] ?? 0)) ?> regard</span>
+                                <span class="profile-conn-meta">@<?= $e($person['username']) ?> · <span class="profile-number"><?= number_format((int) ($person['reputation'] ?? 0)) ?></span> regard</span>
                             </span>
                             <?php if (!empty($can_remove_followers) && $connMode === 'followers'): ?>
                                 <form class="inline" method="post" action="<?= $e($profileUrl) ?>/followers/<?= (int) $person['id'] ?>/remove">
                                     <?= $this->csrfField() ?>
                                     <input type="hidden" name="return" value="<?= $e($connUrl()) ?>">
-                                    <button class="linkbtn danger" type="submit">Remove follower</button>
+                                    <button class="linkbtn danger" type="submit">Remove follower<span class="sr-only"> <?= $e($personDisplay) ?> (@<?= $e($person['username']) ?>)</span></button>
                                 </form>
                             <?php endif; ?>
                         </li>
@@ -361,7 +368,7 @@ $profileExcerpt = static function (string $html): string {
             <?php if ($connPageCount > 1): ?>
                 <nav class="profile-pager" aria-label="Pagination">
                     <?php if ($connPage > 1): ?><a class="btn btn-secondary btn-small" href="<?= $e($connUrl(['page' => $connPage - 1])) ?>" rel="prev">Previous</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Previous</span><?php endif; ?>
-                    <span class="profile-pager-label">Page <?= $connPage ?> of <?= $connPageCount ?></span>
+                    <span class="profile-pager-label">Page <span class="profile-number"><?= $connPage ?></span> of <span class="profile-number"><?= $connPageCount ?></span></span>
                     <?php if ($connPage < $connPageCount): ?><a class="btn btn-secondary btn-small" href="<?= $e($connUrl(['page' => $connPage + 1])) ?>" rel="next">Next</a><?php else: ?><span class="btn btn-secondary btn-small is-disabled" aria-disabled="true">Next</span><?php endif; ?>
                 </nav>
             <?php endif; ?>

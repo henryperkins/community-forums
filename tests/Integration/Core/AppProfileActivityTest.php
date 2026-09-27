@@ -155,21 +155,21 @@ final class AppProfileActivityTest extends TestCase
 
         $first = $this->get('/u/galadriel', ['tab' => 'threads']);
         $this->assertStatus(200, $first);
-        $this->assertSeeText($first, '22 entries');
-        $this->assertSeeText($first, 'Page 1 of 2');
+        self::assertStringContainsString('22 entries', strip_tags(($first)->body()));
+        self::assertStringContainsString('Page 1 of 2', strip_tags(($first)->body()));
         $this->assertSeeText($first, 'Topic number 22');
         $this->assertDontSeeText($first, 'Topic number 01');
 
         $clamped = $this->get('/u/galadriel', ['tab' => 'threads', 'page' => '999']);
         $this->assertStatus(200, $clamped);
-        $this->assertSeeText($clamped, 'Page 2 of 2');
+        self::assertStringContainsString('Page 2 of 2', strip_tags(($clamped)->body()));
         $this->assertSeeText($clamped, 'Topic number 01');
         $this->assertDontSeeText($clamped, 'Topic number 22');
 
         $hit = $this->get('/u/galadriel', ['tab' => 'threads', 'q' => 'number 07']);
         $this->assertStatus(200, $hit);
         $this->assertSeeText($hit, 'Topic number 07');
-        $this->assertSeeText($hit, '1 entry');
+        self::assertStringContainsString('1 entry', strip_tags($hit->body()));
         $this->assertDontSeeText($hit, 'Topic number 08');
 
         $literalWildcard = $this->get('/u/galadriel', ['tab' => 'threads', 'q' => '%']);
@@ -192,20 +192,20 @@ final class AppProfileActivityTest extends TestCase
 
         $first = $this->get('/u/galadriel', ['tab' => 'posts']);
         $this->assertStatus(200, $first);
-        $this->assertSeeText($first, '22 entries');
-        $this->assertSeeText($first, 'Page 1 of 2');
+        self::assertStringContainsString('22 entries', strip_tags(($first)->body()));
+        self::assertStringContainsString('Page 1 of 2', strip_tags(($first)->body()));
         $this->assertSeeText($first, 'Profile response 22');
         $this->assertDontSeeText($first, 'Profile response 01');
 
         $clamped = $this->get('/u/galadriel', ['tab' => 'posts', 'page' => '999']);
         $this->assertStatus(200, $clamped);
-        $this->assertSeeText($clamped, 'Page 2 of 2');
+        self::assertStringContainsString('Page 2 of 2', strip_tags(($clamped)->body()));
         $this->assertSeeText($clamped, 'Profile response 01');
 
         $hit = $this->get('/u/galadriel', ['tab' => 'posts', 'q' => 'response 13']);
         $this->assertStatus(200, $hit);
         $this->assertSeeText($hit, 'Profile response 13');
-        $this->assertSeeText($hit, '1 entry');
+        self::assertStringContainsString('1 entry', strip_tags($hit->body()));
 
         $literalWildcard = $this->get('/u/galadriel', ['tab' => 'posts', 'q' => '_']);
         $this->assertStatus(200, $literalWildcard);
@@ -343,8 +343,8 @@ final class AppProfileActivityTest extends TestCase
 
         $followers = $this->get('/u/galadriel', ['tab' => 'connections']);
         $this->assertStatus(200, $followers);
-        $this->assertSeeText($followers, 'Followers · 1');
-        $this->assertSeeText($followers, 'Following · 1');
+        self::assertStringContainsString('Followers · 1', strip_tags(($followers)->body()));
+        self::assertStringContainsString('Following · 1', strip_tags(($followers)->body()));
         $this->assertSeeText($followers, 'Lindir');
         $this->assertSeeText($followers, '/u/galadriel/followers/' . (int) $follower['id'] . '/remove');
         $this->assertSeeText($followers, 'Remove follower');
@@ -423,6 +423,83 @@ final class AppProfileActivityTest extends TestCase
         return new \DOMXPath($document);
     }
 
+    public function test_guest_invitation_respects_feature_flags_and_message_privacy(): void
+    {
+        [, $author] = $this->seedAuthor();
+        $settings = new SettingRepository($this->db);
+        foreach ([
+            [true, true, 'members', 'follow Galadriel or send a message'],
+            [true, false, 'members', 'follow Galadriel'],
+            [false, true, 'everyone', 'send a message to Galadriel'],
+            [true, true, 'none', 'follow Galadriel'],
+            [false, true, 'none', null],
+            [false, false, 'members', null],
+        ] as [$community, $dms, $allowDms, $invitation]) {
+            $settings->set('features', ['community' => $community, 'dms' => $dms]);
+            $this->db->run('UPDATE users SET allow_dms = ? WHERE id = ?', [$allowDms, $author['id']]);
+            $page = $this->get('/u/galadriel');
+            $this->assertStatus(200, $page);
+            $links = $this->xpath($page)->query('//header[contains(@class,"profile-cover")]//a[starts-with(@href,"/login?next=")]');
+            self::assertSame($invitation === null ? 0 : 1, $links->length);
+            if ($invitation !== null) {
+                self::assertSame('/login?next=/u/galadriel', $links->item(0)->getAttribute('href'));
+                self::assertSame('Log in to ' . $invitation . '.', trim($links->item(0)->parentNode->textContent));
+            }
+        }
+        $settings->set('features', ['community' => false, 'dms' => true]);
+        foreach ([['banned', null], ['suspended', null], ['active', '2999-01-01 00:00:00']] as [$status, $until]) {
+            $this->db->run('UPDATE users SET allow_dms = ?, status = ?, suspended_until = ? WHERE id = ?', ['members', $status, $until, $author['id']]);
+            $page = $this->get('/u/galadriel');
+            $this->assertStatus(200, $page);
+            self::assertSame(0, $this->xpath($page)->query('//header[contains(@class,"profile-cover")]//a[starts-with(@href,"/login?next=")]')->length);
+        }
+    }
+
+    public function test_block_explanation_persists_only_for_the_member_who_blocked(): void
+    {
+        [, $author] = $this->seedAuthor();
+        $viewer = $this->makeUser(['username' => 'profile-viewer']);
+        $blocks = new BlockRepository($this->db);
+        $this->actingAs($viewer);
+        $blocks->block((int) $author['id'], (int) $viewer['id']);
+        $otherBlock = $this->get('/u/galadriel');
+        $this->assertDontSeeText($otherBlock, 'You blocked');
+
+        $this->assertRedirect($this->post('/u/galadriel/block', ['intent' => 'block']), '/u/galadriel');
+        // Check a second GET after the flash was consumed.
+        $this->get('/u/galadriel');
+        $reloaded = $this->get('/u/galadriel');
+        $status = $this->xpath($reloaded)->query('//header[contains(@class,"profile-cover")]//p[@role="status" and contains(.,"You blocked")]');
+        self::assertSame(1, $status->length);
+        self::assertStringContainsString('Galadriel', $status->item(0)->textContent);
+        self::assertStringContainsString('Neither of you can follow or message the other.', $status->item(0)->textContent);
+        self::assertSame(0, $this->xpath($reloaded)->query('//header[contains(@class,"profile-cover")]//a[starts-with(@href,"/messages/new")]')->length);
+    }
+
+    public function test_remove_follower_buttons_name_the_target_on_both_surfaces(): void
+    {
+        [, $author] = $this->seedAuthor();
+        $follows = new FollowRepository($this->db);
+        foreach (['lindir', 'erestor'] as $name) {
+            $follower = $this->makeUser(['username' => $name, 'display_name' => 'Same <Name>']);
+            $follows->follow((int) $follower['id'], (int) $author['id']);
+        }
+        $this->actingAs($author);
+        foreach ([['/u/galadriel', ['tab' => 'connections']], ['/u/galadriel/followers', []]] as [$route, $query]) {
+            $page = $this->get($route, $query);
+            $this->assertStatus(200, $page);
+            $buttons = $this->xpath($page)->query('//form[contains(@action,"/followers/")]/button');
+            self::assertSame(2, $buttons->length);
+            $labels = [];
+            foreach ($buttons as $button) {
+                $labels[] = trim($button->textContent);
+            }
+            foreach (['lindir', 'erestor'] as $name) {
+                self::assertContains(($route === '/u/galadriel/followers' ? 'Remove' : 'Remove follower') . ' Same <Name> (@' . $name . ')', $labels);
+            }
+        }
+    }
+
     /** @return array<string,string> row title => the commend figure rendered beside it */
     private function rowCommends(\App\Core\Response $response): array
     {
@@ -491,7 +568,7 @@ final class AppProfileActivityTest extends TestCase
         self::assertSame(['Counted topic' => '2'], $this->rowCommends($this->get('/u/galadriel', ['tab' => 'posts', 'sort' => 'commends'])));
         // The overview counts replies beside a Topic; it no longer lists the
         // same opening post a second time to display its commend count.
-        $this->assertSeeText($this->get('/u/galadriel'), '0 replies');
+        self::assertStringContainsString('0 replies', strip_tags($this->get('/u/galadriel')->body()));
         $commends = $this->xpath($this->get('/u/galadriel', ['tab' => 'commends']));
         self::assertSame('2', trim($commends->query('//span[contains(@class,"profile-commend-count")]')->item(0)->textContent));
     }
@@ -567,26 +644,26 @@ final class AppProfileActivityTest extends TestCase
         $this->actingAs($author);
 
         $firstPage = $this->get('/u/galadriel', ['tab' => 'connections']);
-        $this->assertSeeText($firstPage, 'Page 1 of 2');
+        self::assertStringContainsString('Page 1 of 2', strip_tags(($firstPage)->body()));
         $this->assertSeeText($firstPage, 'Followers Fan 21');
         $this->assertDontSeeText($firstPage, 'Followers Fan 01');
 
         $secondPage = $this->get('/u/galadriel', ['tab' => 'connections', 'page' => '2']);
-        $this->assertSeeText($secondPage, 'Page 2 of 2');
+        self::assertStringContainsString('Page 2 of 2', strip_tags(($secondPage)->body()));
         $this->assertSeeText($secondPage, 'Followers Fan 01');
         $this->assertDontSeeText($secondPage, 'Followers Fan 21');
         $this->assertSeeText($secondPage, 'name="return" value="/u/galadriel?tab=connections&amp;page=2"');
-        $this->assertSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'page' => '99']), 'Page 2 of 2');
+        self::assertStringContainsString('Page 2 of 2', strip_tags(($this->get('/u/galadriel', ['tab' => 'connections', 'page' => '99']))->body()));
 
         // A search for the word "followers" is a search, not the default mode.
         $search = $this->get('/u/galadriel', ['tab' => 'connections', 'cq' => 'followers']);
-        $this->assertSeeText($search, 'Page 1 of 2');
+        self::assertStringContainsString('Page 1 of 2', strip_tags(($search)->body()));
         $this->assertSeeText($search, 'href="/u/galadriel?tab=connections&amp;cq=followers&amp;page=2"');
 
         $legacy = $this->get('/u/galadriel/followers', ['page' => '2']);
-        $this->assertSeeText($legacy, 'Page 2 of 2');
+        self::assertStringContainsString('Page 2 of 2', strip_tags(($legacy)->body()));
         $this->assertSeeText($legacy, 'Followers Fan 01');
-        $this->assertSeeText($legacy, '<span class="muted person-rep">0 regard</span>');
+        self::assertSame('0 regard', $this->xpath($legacy)->evaluate('normalize-space(//span[contains(@class,"person-rep")])'));
         $this->assertSeeText($legacy, 'name="return" value="/u/galadriel/followers?page=2"');
         self::assertMatchesRegularExpression('#<link rel="canonical" href="[^"]*/u/galadriel">#', $legacy->body());
 
@@ -614,13 +691,13 @@ final class AppProfileActivityTest extends TestCase
         }
 
         $tab = $this->get('/u/galadriel', ['tab' => 'connections', 'c' => 'following', 'page' => '2']);
-        $this->assertSeeText($tab, 'Page 2 of 2');
+        self::assertStringContainsString('Page 2 of 2', strip_tags(($tab)->body()));
         $this->assertSeeText($tab, 'Followed 01');
         $this->assertDontSeeText($tab, 'Followed 21');
         $this->assertSeeText($tab, 'href="/u/galadriel?tab=connections&amp;c=following"');
 
         $legacy = $this->get('/u/galadriel/following');
-        $this->assertSeeText($legacy, 'Page 1 of 2');
+        self::assertStringContainsString('Page 1 of 2', strip_tags(($legacy)->body()));
         $this->assertSeeText($legacy, 'Followed 21');
         $this->assertDontSeeText($legacy, 'Followed 01');
     }
@@ -641,8 +718,8 @@ final class AppProfileActivityTest extends TestCase
         $this->assertSeeText($guestTab, 'Lindir');
         $this->assertDontSeeText($guestTab, 'celebrian');
         // A guest's counts agree with the people a guest is shown.
-        $this->assertSeeText($guestTab, 'Followers · 1');
-        $this->assertSeeText($guestTab, 'Following · 0');
+        self::assertStringContainsString('Followers · 1', strip_tags(($guestTab)->body()));
+        self::assertStringContainsString('Following · 0', strip_tags(($guestTab)->body()));
         $this->assertSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'c' => 'following']), 'No one here yet');
         $this->assertSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'cq' => 'celeb']), 'Nothing matches');
         $this->assertDontSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'c' => 'following']), 'arwen');
@@ -654,8 +731,8 @@ final class AppProfileActivityTest extends TestCase
         $this->actingAs($this->makeUser(['username' => 'signed-in-reader']));
         $memberTab = $this->get('/u/galadriel', ['tab' => 'connections']);
         $this->assertSeeText($memberTab, 'Celebrian');
-        $this->assertSeeText($memberTab, 'Followers · 2');
-        $this->assertSeeText($memberTab, 'Following · 1');
+        self::assertStringContainsString('Followers · 2', strip_tags(($memberTab)->body()));
+        self::assertStringContainsString('Following · 1', strip_tags(($memberTab)->body()));
         $this->assertSeeText($this->get('/u/galadriel', ['tab' => 'connections', 'c' => 'following']), 'Arwen');
         $this->assertSeeText($this->get('/u/galadriel/followers'), 'Celebrian');
     }

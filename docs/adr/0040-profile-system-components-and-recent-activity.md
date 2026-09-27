@@ -65,3 +65,45 @@ Imported `.dc.html` and React previews remain source-only per
 [`PREVIEW_STATUS.md`](../design-system/imladris/PREVIEW_STATUS.md). Browser checks
 exercise real PHP routes and the generated CSS, rather than treating an
 unresolved authoring loader as visual evidence.
+
+## 2026-09-27: profile review corrections
+
+The follow-up review at `f2f616de` identified fifteen bounded corrections
+(F1–F15). They retain the activity, privacy, and pagination decisions above:
+
+- Recent titles wrap at the existing 760px in-pane step. Connection identities
+  wrap above their removal action at the existing 560px profile step. The
+  details card uses its own container width to place its two sections side by
+  side when space permits.
+- Countable values use the mono face, Topics and Posts carry relative `<time>`
+  labels with exact UTC metadata, and board activity counts include a spoken
+  post unit. Search buttons stretch to their fields; small commend glyphs are
+  13px. The private-profile audience phrase stays together.
+- Removal buttons include the escaped display name and unique handle in their
+  accessible text. Badge descriptions use native disclosures so keyboard and
+  touch users can read them with JavaScript disabled.
+- The cover persistently explains a block only to the person who made it.
+  Guests receive a return-to-profile login link only for available actions;
+  messaging invitations honor the flag, recipient preference, and recipient
+  account restrictions. Signed-in authorization rules are unchanged.
+- Moderator context adopts the shared info callout. Website labels omit the
+  scheme and final slash while retaining the complete destination in `href`.
+
+The application digest was reviewed against DESIGN.md's count typography,
+semantic colours, and responsive rules, and the shared callout decision in
+ADR 0037 before being refreshed. The mirrored components and member transfer
+block were not changed. See [the correction evidence](../evidence/profile-review-fixes-2026-09-27/README.md).
+
+### Remaining proposals from that review
+
+These are recorded as open proposals, not accepted changes:
+
+| Review ID | Proposal or issue | Current disposition |
+| --- | --- | --- |
+| D1 | Centre the Regard plate in the decorative star for every digit count | Decorative alignment proposal; existing geometry retained. |
+| D2 | Address the owner directly and offer Start a topic on an empty profile | Copy and activation proposal; current empty-state copy retained. |
+| O1 | Group consecutive replies to one topic | Would change this ADR's six-entry chronology; not adopted. |
+| O2 | Unify or redirect standalone followers/following pages | Existing URLs, pagination, and list presentation retained. |
+| O3 | Use full display names instead of the first word in visitor empty states | Copy choice remains open. |
+| O4 | Restyle the cover's gold Regard plate or record an exception | Existing handoff/One Gold Rule conflict remains unresolved. |
+| O5 | Reported phone top-bar Inbox clipping | Separate shared-chrome issue under ADR 0032; this profile correction does not resolve or claim verification of it. |

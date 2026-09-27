@@ -1,7 +1,7 @@
 {
-  "version": "125b5d8c76e46574",
+  "version": "dd4fdf0fe62cc55a",
   "urls": {
-    "app.css": "/assets/dist/app-style-CF_djGmG.css",
+    "app.css": "/assets/dist/app-style-C45PPeLE.css",
     "imladris.css": "/assets/dist/imladris-style-CU9grDIH.css",
     "app.js": "/assets/dist/app-18e75fb4c256674b.js",
     "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
@@ -27,7 +27,7 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "18633ec3996e19c3a6dbf838b534e743dbcefb077cac283174f6b32880b151df",
+      "sha256": "6fa210e7ba189d245f58c75da38acb550c73d9abf3551666098a23651ded8493",
       "immutable": false
     },
     "/assets/app.js": {
@@ -42,8 +42,8 @@
       "sha256": "18e75fb4c256674b0c9c6627048fcd3cd753cdff2406e1b90f01e002a61401a5",
       "immutable": true
     },
-    "/assets/dist/app-style-CF_djGmG.css": {
-      "sha256": "8de66a374c8049be96ebc5630ca0b68ff306daed3480f57adcd872e1d79f11ee",
+    "/assets/dist/app-style-C45PPeLE.css": {
+      "sha256": "f9af5a4aaaf4a66bb4a5a5c85c48ced872f623c3a5193ec89460a6190d5bd98e",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {

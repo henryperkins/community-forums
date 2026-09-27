@@ -68,8 +68,9 @@ final class ProfileController extends Controller
         // DM button: shown when DMs are on, the viewer isn't self/blocked, and the
         // target accepts DMs (final eligibility is still enforced on send).
         $allowDms = (string) ($profile['allow_dms'] ?? 'members');
+        $dmsEnabled = $this->container->get(FeatureFlags::class)->enabled('dms');
         $canMessage = $viewer !== null && !$isSelf && !$blockedEither
-            && $this->container->get(FeatureFlags::class)->enabled('dms')
+            && $dmsEnabled
             && $allowDms !== 'none';
 
         // Five real GET-backed tabs. Commends and Connections belong to the
@@ -214,6 +215,9 @@ final class ProfileController extends Controller
             'can_follow' => $community && $viewer !== null && !$isSelf && !$blockedEither,
             'is_following' => $viewer !== null && !$isSelf && $follows->isFollowing($viewer->id(), $profileId),
             'can_message' => $canMessage,
+            'guest_can_message' => $viewer === null && $dmsEnabled && $allowDms !== 'none'
+                && ($profile['status'] ?? 'active') === 'active'
+                && (empty($profile['suspended_until']) || strtotime($profile['suspended_until'] . ' UTC') <= time()),
             'can_block' => $viewer !== null && !$isSelf,
             'viewer_blocks_profile' => $viewerBlocksProfile,
             'blocked_either' => $blockedEither,

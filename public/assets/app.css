@@ -2059,6 +2059,8 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-cover .profile-stats dt a { color: var(--mist-200); }
 .profile-cover .profile-stats dd { color: var(--parchment-50); font-family: var(--font-mono); font-size: 1.05rem; font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; margin: 3px 0 0; }
 .profile-aside { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.profile-cover-note { max-width: 26ch; margin: 0; font-size: .93rem; line-height: 1.5; text-align: right; overflow-wrap: anywhere; }
+.profile-cover-note a { color: inherit; text-decoration: underline; text-underline-offset: .15em; }
 .profile-rep { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 18px; background: var(--gold-100); border: 1px solid var(--gold-200); border-radius: var(--radius-lg); }
 .profile-rep-value { display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-mono); font-weight: var(--weight-medium); font-size: 1.35rem; line-height: 1; color: var(--ink-900); font-variant-numeric: tabular-nums; }
 .profile-rep-value .star-marker { width: 15px; height: 15px; align-self: center; color: var(--star); margin: 0; }
@@ -2087,8 +2089,14 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-badges .badge-row { margin: 0; }
 /* Marks of esteem use the supplied Imladris Commend Star, never seed emoji. */
 .badge-chip { border: 1px solid var(--border-hair); border-radius: var(--radius-pill); background: var(--surface-raised); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-body); gap: 6px; padding: 4px 11px; }
-.badge-chip .badge-star { width: 11px; height: 11px; color: var(--star); flex: 0 0 auto; }
+.badge-chip .badge-star { width: 13px; height: 13px; color: var(--star); flex: 0 0 auto; }
 .badge-chip.is-locked { background: transparent; border: 1px dashed var(--border-strong); color: var(--text-muted); }
+.badge-row > li { min-width: 0; max-width: 100%; }
+.badge-info > summary { list-style: none; cursor: pointer; }
+.badge-info > summary::-webkit-details-marker { display: none; }
+.badge-disclosure { width: 12px; height: 12px; flex: none; }
+.badge-info[open] .badge-disclosure { transform: rotate(180deg); }
+.badge-description { max-width: 30ch; margin: 8px 0 0; color: var(--text-muted); overflow-wrap: anywhere; }
 
 /* — Leaderboard: footnote card + headline top-3 reputation (§5.5) — */
 .lb-top .lb-rep { font-size: 1.5rem; }
@@ -2277,9 +2285,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 /* — Member profile: complete Imladris activity surface (§5.4) — */
 .profile-rep-value { position: relative; }
 .profile-moderator {
-    display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 11px 16px;
-    background: var(--surface-info); border: 1px solid var(--river-200); border-left: 3px solid var(--info);
-    border-radius: var(--radius-md); color: var(--on-info);
+    display: flex; align-items: center; gap: 14px;
 }
 .profile-moderator-icon { flex: 0 0 auto; width: 16px; height: 16px; }
 .profile-moderator-copy { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: .9rem; }
@@ -2311,11 +2317,17 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 /* Type comes from .formatted-content; the bio only states its own measure. */
 .profile-bio .prose { max-width: 66ch; }
 .profile-overview-aside {
-    flex: 1 1 292px; min-width: 0; display: flex; flex-direction: column; gap: 18px;
+    flex: 1 1 292px; min-width: 0; container: profile-details / inline-size;
 }
+.profile-details { display: grid; gap: 18px; }
 /* The legacy unlayered .card otherwise overrides the system's edge and radius. */
 .profile .card { background: revert-layer; border: revert-layer; border-radius: revert-layer; margin-bottom: 0; overflow: visible; }
 .profile-overview-aside section + section { padding-top: 18px; border-top: 1px solid var(--border-hair); }
+@container profile-details (min-width: 540px) {
+    .profile-details { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .profile-details > section:only-child { grid-column: 1 / -1; }
+    .profile-details > section + section { padding: 0 0 0 24px; border-top: 0; border-left: 1px solid var(--border-hair); }
+}
 .profile-overview-aside h2 { margin-bottom: 10px; font-size: .64rem; }
 .profile-custom-fields { display: flex; flex-direction: column; gap: 10px; margin: 0; }
 .profile-custom-fields dt { font-family: var(--font-label); font-size: .68rem; letter-spacing: .06em; color: var(--text-faint); }
@@ -2338,9 +2350,11 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-row-title:hover { color: var(--accent); }
 .profile-row-excerpt { margin: 5px 0 0; font-size: .93rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty; overflow-wrap: anywhere; }
 .profile-row-meta { display: flex; flex-wrap: wrap; gap: 12px; margin: 5px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint); }
+.profile-number,
+.profile-row-meta time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: normal; }
 .profile-row-commends { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted); }
 .profile-row-commends .star-marker,
-.profile-commend-count .star-marker { flex: 0 0 auto; width: 11px; height: 11px; color: var(--star); }
+.profile-commend-count .star-marker { flex: 0 0 auto; width: 13px; height: 13px; color: var(--star); }
 
 /* Recent activity: URL-backed filters and optional disclosure of each excerpt. */
 .profile-activity-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 4px; }
@@ -2371,7 +2385,8 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
    Input pill + affix, including its inset focus ring, without copying values. */
 .profile-search .input { padding: revert-layer; border-radius: revert-layer; background: revert-layer; }
 .profile-search .input:focus { box-shadow: revert-layer; }
-.profile-list-tools > .btn { flex: 0 0 auto; }
+.profile-list-tools > .btn,
+.profile-conn-search > .btn { flex: 0 0 auto; align-self: stretch; }
 .profile-list-count { flex: 0 0 auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint); }
 .profile-sort { margin-left: auto; }
 .profile-pager { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; }
@@ -2426,10 +2441,17 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-gated-card h1 { margin: 15px 0 0; font-family: var(--font-display); font-size: 1.6rem; font-weight: var(--weight-medium); color: var(--text-strong); }
 .profile-gated-card > p:not(.profile-gated-actions) { max-width: 44ch; margin: 9px auto 0; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty; }
 .profile-gated-actions { margin: 22px 0 0; }
+.profile-gated-audience { white-space: nowrap; }
 
 @media (max-width: 860px) {
     .profile-commends { grid-template-columns: minmax(0, 1fr); }
     .profile-overview-aside { width: 100%; }
+    .profile-cover-note { max-width: 100%; text-align: left; }
+}
+@media (max-width: 760px) {
+    .profile-activity-line { align-items: baseline; }
+    .profile-activity-title { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+    .profile-activity-toggle { align-self: flex-start; }
 }
 @media (max-width: 700px) {
     .profile-list-tools,
@@ -2450,6 +2472,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .profile-rows-lg .profile-row { align-items: flex-start; }
     .profile-conn-grid { grid-template-columns: minmax(0, 1fr); }
     .profile-conn-card { flex-wrap: wrap; }
+    .profile-conn-id { flex-basis: calc(100% - 50px); }
+    .profile-conn-id > a,
+    .profile-conn-meta { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
     .profile-conn-card form { margin-left: 50px; }
     .profile-gated { padding-top: 28px; }
     .profile-gated-card { padding: 34px 22px; }

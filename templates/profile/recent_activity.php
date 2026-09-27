@@ -27,7 +27,7 @@
                     </div>
                     <div class="profile-activity-detail" id="<?= $e($detailId) ?>" hidden>
                         <?php if ($excerpt !== ''): ?><p class="profile-row-excerpt"><?= $e($excerpt) ?></p><?php endif; ?>
-                        <p class="profile-row-meta"><span>#<?= $e($row['board_slug']) ?></span><span><?= (int) $row['count'] ?> <?= $isTopic ? ((int) $row['count'] === 1 ? 'reply' : 'replies') : ((int) $row['count'] === 1 ? 'commend' : 'commends') ?></span></p>
+                        <p class="profile-row-meta"><span>#<?= $e($row['board_slug']) ?></span><span><span class="profile-number"><?= number_format((int) $row['count']) ?></span> <?= $isTopic ? ((int) $row['count'] === 1 ? 'reply' : 'replies') : ((int) $row['count'] === 1 ? 'commend' : 'commends') ?></span></p>
                     </div>
                 </li>
             <?php endforeach; ?>
