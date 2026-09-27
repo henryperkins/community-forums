@@ -2084,7 +2084,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-cover-action.btn-on { display: inline-flex; align-items: center; gap: 6px; }
 .profile-cover-action.btn-on .icon { width: 13px; height: 13px; }
 .profile-cover .profile-actions .btn-on { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
-.profile-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 0; }
+/* Baseline, not centre: an open description grows the chip row, and the label
+   belongs to the row's first line of chips rather than to its middle. */
+.profile-badges { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 14px 0 0; }
 .profile-badges-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .16em; font-size: .62rem; color: var(--text-faint); margin: 0 4px 0 0; }
 .profile-badges .badge-row { margin: 0; }
 /* Marks of esteem use the supplied Imladris Commend Star, never seed emoji. */
@@ -2092,11 +2094,16 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .badge-chip .badge-star { width: 13px; height: 13px; color: var(--star); flex: 0 0 auto; }
 .badge-chip.is-locked { background: transparent; border: 1px dashed var(--border-strong); color: var(--text-muted); }
 .badge-row > li { min-width: 0; max-width: 100%; }
-.badge-info > summary { list-style: none; cursor: pointer; }
+/* A block-level chip whose name sets its baseline: the label then sits on the
+   chip's text, not on the star icon's lower edge, with no line box around it. */
+.badge-info > summary { display: flex; width: fit-content; list-style: none; cursor: pointer; }
+.badge-info .badge-name { align-self: baseline; }
 .badge-info > summary::-webkit-details-marker { display: none; }
 .badge-disclosure { width: 12px; height: 12px; flex: none; }
 .badge-info[open] .badge-disclosure { transform: rotate(180deg); }
-.badge-description { max-width: 30ch; margin: 8px 0 0; color: var(--text-muted); overflow-wrap: anywhere; }
+/* Width 0 with a 100% floor: the description wraps at its chip's width, so it
+   never widens the list item and the neighbouring chips stay where they were. */
+.badge-description { width: 0; min-width: 100%; margin: 8px 0 0; font-size: .93rem; line-height: 1.5; color: var(--text-muted); overflow-wrap: anywhere; }
 
 /* — Leaderboard: footnote card + headline top-3 reputation (§5.5) — */
 .lb-top .lb-rep { font-size: 1.5rem; }
@@ -2177,11 +2184,15 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .profile-cover .dm-menu { position: static; }
     .profile-cover .dm-menu-pop { left: 0; right: auto; width: min(260px, calc(100% - 8px)); }
     .profile-cover .dm-iconbtn { width: 44px; height: 44px; }
-    /* 44px taps without taller boxes: the stat numbers keep one baseline. */
+    /* 44px taps without taller boxes: the stat numbers keep one baseline. The
+       guest's Log in link is the cover's only action for a guest, so it gets the
+       same target. */
     .profile-cover .profile-stats dt a,
-    .profile-cover .profile-web a { position: relative; }
+    .profile-cover .profile-web a,
+    .profile-cover .profile-cover-note a { position: relative; }
     .profile-cover .profile-stats dt a::after,
-    .profile-cover .profile-web a::after {
+    .profile-cover .profile-web a::after,
+    .profile-cover .profile-cover-note a::after {
         content: "";
         position: absolute;
         inset: min(0px, calc((100% - 44px) / 2));
@@ -2448,7 +2459,11 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .profile-overview-aside { width: 100%; }
     .profile-cover-note { max-width: 100%; text-align: left; }
 }
-@media (max-width: 760px) {
+/* A clipped title's only other copy is its title tooltip, which a touch screen
+   never shows. The query is a union: at 820px a tablet sets the details card
+   beside the list and its titles clip, yet it matches only the pointer terms;
+   a mouse keeps the one-line title above the 760px step. */
+@media (max-width: 760px), (hover: none), (pointer: coarse) {
     .profile-activity-line { align-items: baseline; }
     .profile-activity-title { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
     .profile-activity-toggle { align-self: flex-start; }

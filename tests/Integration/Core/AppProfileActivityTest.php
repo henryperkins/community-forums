@@ -500,6 +500,20 @@ final class AppProfileActivityTest extends TestCase
         }
     }
 
+    public function test_most_active_in_speaks_a_singular_or_plural_post_unit(): void
+    {
+        [$board, $author] = $this->seedAuthor();
+        $hearth = $this->makeBoard($this->makeCategory('Hearthside'), ['slug' => 'hearth', 'name' => 'Hearth']);
+        $this->makeThread($board, $author, 'The only counsel topic');
+        $this->makeThread($hearth, $author, 'First hearth topic');
+        $this->makeThread($hearth, $author, 'Second hearth topic');
+
+        // The unit is visually hidden, so only a screen reader hears it: one post is not "1 posts".
+        $boards = $this->xpath($this->get('/u/galadriel'));
+        self::assertSame('#hearth2 posts', $boards->evaluate('normalize-space(//ul[contains(@class,"profile-active-boards")]/li[1])'));
+        self::assertSame('#counsel1 post', $boards->evaluate('normalize-space(//ul[contains(@class,"profile-active-boards")]/li[2])'));
+    }
+
     /** @return array<string,string> row title => the commend figure rendered beside it */
     private function rowCommends(\App\Core\Response $response): array
     {

@@ -1,0 +1,60 @@
+{
+  "date": "2026-09-27",
+  "base_commit": "e4bc0acde1014c73155c7fea2921551ff42ebb25",
+  "scope": "Profile review follow-up: six gaps found verifying e4bc0acd, landed on main with the digest refresh",
+  "phpunit": {
+    "command": "vendor/bin/phpunit, four shards on private databases, after the digest refresh",
+    "tests": 3112,
+    "assertions": 23592,
+    "failures": 0,
+    "skipped": 1,
+    "skip": "AppThreadIntelligenceMigrationTest::test_0077_down_and_up_rehearsal_on_fixture_free_schema"
+  },
+  "profile_phpunit": {
+    "tests": 28,
+    "assertions": 373,
+    "failures": 0
+  },
+  "imladris": {
+    "check": "passed",
+    "application_digest": "816e6d020fa9a7e0deb9df9e71835f1e3143b603e4bc32ed9125efdc2d582a45",
+    "refresh": "config/imladris-runtime-baseline.json and resources/imladris/manifest.json, in the landing commit"
+  },
+  "asset_tests": {
+    "manifest_check": "passed",
+    "tests": 15,
+    "failures": 0
+  },
+  "browser": {
+    "engine": "Chromium",
+    "playwright": "1.61.1",
+    "spec": "tests/browser/profile-surface.spec.ts",
+    "passed": 28,
+    "failed": 0,
+    "touch_viewports": [
+      "820x1180",
+      "834x1194",
+      "1180x820"
+    ],
+    "tablet_capture_method": "fresh isMobile/hasTouch context per theme, viewport screenshot; full-page screenshots drop Chromium touch emulation"
+  },
+  "diff_check": "clean",
+  "screenshots": [
+    {
+      "path": "tablet/review-activity-820-light.png",
+      "sha256": "1e9803f0dc097c0ad1eff9fb914d7f4b39adaf69ab389ed28f82b960550a3622"
+    },
+    {
+      "path": "tablet/review-activity-820-dark.png",
+      "sha256": "9486c2ee3f71f95287e159df8768af9a3f46139ee8c6bee6de10ef5a3eb0d4cf"
+    },
+    {
+      "path": "desktop/review-badge-no-js.png",
+      "sha256": "794a9a63cc77261d1753d42ba5788c44757340bffc491714038631650d9f993a"
+    },
+    {
+      "path": "mobile/review-badge-no-js.png",
+      "sha256": "386b90d7c0d5033696038ee8240c2534c8e5123771aad6c079a343cf3dfc6fef"
+    }
+  ]
+}

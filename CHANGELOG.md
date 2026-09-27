@@ -13,6 +13,17 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Applied the four supplied component CSS changes selectively and regenerated
   delivery assets, preserving held-back mirror differences and the full lists'
   existing 20-item pagination.
+- Profile review corrections (ADR 0040). Recent activity titles wrap on phones
+  and touch tablets instead of hiding behind a tooltip. Counts, pager numbers,
+  and list timestamps use the mono face, and Topics and Posts show relative
+  times with the exact instant kept. Follower-removal buttons name the member,
+  and badge descriptions open as native disclosures.
+- The cover explains a block to the member who made it, and offers guests a
+  Log in link only for actions they could take, with a 44px touch target on
+  phones. The moderator strip uses the shared info callout, and website links
+  show the host without the scheme.
+- Opening a badge no longer shifts the badge row. "Most active in" counts say
+  "1 post" to a screen reader.
 
 ## [Unreleased] - Imladris board page
 

@@ -304,6 +304,62 @@ test('profile review: phone activity titles remain fully readable', async ({ pag
   expect(messages).toEqual([]);
 });
 
+test('profile review: touch tablets wrap activity titles while a mouse keeps one line', async ({ page, browser, baseURL }, info) => {
+  const messages = captureBrowserMessages(page);
+  const touch = projectName(info) === 'mobile';
+  // 820 and 834 are tablet portrait, where the details card sits beside the
+  // list and titles clip without the wrap; 1180 is tablet landscape beside the rail.
+  for (const [width, height] of [[820, 1180], [834, 1194], [1180, 820]] as const) {
+    await page.setViewportSize({ width, height });
+    await visit(page, '/u/galadriel');
+    await settle(page);
+    const hoverless = await page.evaluate(() => matchMedia('(hover: none), (pointer: coarse)').matches);
+    expect(hoverless, `${width}px pointer emulation`).toBe(touch);
+    const titles = await page.locator('.profile-activity-title').evaluateAll((elements) =>
+      elements.map((element) => ({ wrap: getComputedStyle(element).whiteSpace, client: element.clientWidth, scroll: element.scrollWidth })),
+    );
+    expect(titles).toHaveLength(6);
+    for (const title of titles) {
+      const detail = `${width}px ${JSON.stringify(title)}`;
+      if (touch) {
+        // Without hover there is no tooltip, so no title may be clipped.
+        expect(title.wrap, detail).toBe('normal');
+        expect(title.scroll, detail).toBeLessThanOrEqual(title.client + 1);
+      } else {
+        // A mouse keeps the one-line title; its tooltip carries the rest.
+        expect(title.wrap, detail).toBe('nowrap');
+      }
+    }
+  }
+  expect(messages).toEqual([]);
+  if (!touch) return;
+
+  // A full-page capture drops Chromium's touch emulation, both in the image and
+  // for the rest of the page, so each theme gets a fresh touch context and a
+  // viewport capture that ends at the list.
+  for (const theme of ['light', 'dark'] as const) {
+    const context = await browser.newContext({
+      baseURL, viewport: { width: 820, height: 1180 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
+    });
+    const tablet = await context.newPage();
+    const tabletMessages = captureBrowserMessages(tablet);
+    await visit(tablet, '/u/galadriel');
+    await applyTheme(tablet, theme);
+    await tablet.locator('#recent-activity').evaluate((section) => section.scrollIntoView({ block: 'end' }));
+    await settle(tablet);
+    const title = tablet.locator('.profile-activity-title').first();
+    await expect(title).toHaveCSS('white-space', 'normal');
+    await expectNoHorizontalOverflow(tablet);
+    await expectNoSeriousA11yViolations(tablet);
+    const output = path.join(evidenceRoot, 'tablet', `review-activity-820-${theme}.png`);
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    await tablet.screenshot({ path: output, animations: 'disabled' });
+    await expect(title, 'touch emulation held through the capture').toHaveCSS('white-space', 'normal');
+    expect(tabletMessages).toEqual([]);
+    await context.close();
+  }
+});
+
 test('profile review: search controls align and activity timestamps retain exact instants', async ({ page }, info) => {
   const messages = captureBrowserMessages(page);
   await page.setViewportSize(viewport(info));
@@ -356,12 +412,29 @@ test('profile review: badge explanations work by keyboard without JavaScript', a
   await visit(page, '/u/galadriel');
   const badge = page.locator('.badge-row details').first();
   const explanation = badge.locator('.badge-description');
+  // Page coordinates: focusing a chip below the fold scrolls the page.
+  const layout = () => page.locator('.profile-badges').evaluate((section) => ({
+    label: Math.round(section.querySelector('.profile-badges-label')!.getBoundingClientRect().top + window.scrollY),
+    chips: [...section.querySelectorAll('.badge-chip')].map((chip) => {
+      const rect = chip.getBoundingClientRect();
+      return { left: Math.round(rect.left + window.scrollX), top: Math.round(rect.top + window.scrollY) };
+    }),
+  }));
+  const closed = await layout();
   await expect(explanation).toBeHidden();
   await badge.locator('summary').focus();
   await page.keyboard.press('Enter');
   await expect(explanation).toBeVisible();
   await expect(explanation).not.toBeEmpty();
   await expectNoHorizontalOverflow(page);
+  // Opening grows the row downward only: the label stays on the first line of
+  // chips, and the chips beside the open one keep their places.
+  const open = await layout();
+  const detail = JSON.stringify({ closed, open });
+  expect(open.label, detail).toBe(closed.label);
+  const firstLine = closed.chips.filter((chip) => chip.top === closed.chips[0].top);
+  expect(firstLine.length, detail).toBeGreaterThan(1);
+  expect(open.chips.slice(0, firstLine.length), detail).toEqual(firstLine);
   // requestAnimationFrame callbacks do not run with page scripts disabled.
   await page.evaluate(() => window.scrollTo(0, 0));
   const output = path.join(evidenceRoot, projectName(info), 'review-badge-no-js.png');
@@ -777,13 +850,14 @@ test('phone stat numbers share a baseline and a 32-character handle wraps inside
       }
       if (width >= 390) expect(new Set(layout.map((item) => item.row)).size, `${detail}: one row`).toBe(1);
       if (mobile) {
-        // The tap target is the link's centred ::after, at least 44px each way.
-        const targets = await page.locator('.profile-cover .profile-stats dt a, .profile-cover .profile-web a')
+        // The tap target is the link's centred ::after, at least 44px each way,
+        // including the guest's Log in link.
+        const targets = await page.locator('.profile-cover .profile-stats dt a, .profile-cover .profile-web a, .profile-cover .profile-cover-note a')
           .evaluateAll((links) => links.map((link) => {
             const after = getComputedStyle(link, '::after');
             return { width: parseFloat(after.width), height: parseFloat(after.height) };
           }));
-        expect(targets.length, detail).toBe(3);
+        expect(targets.length, detail).toBe(4);
         for (const target of targets) {
           expect(target.height, `${detail} ${JSON.stringify(targets)}`).toBeGreaterThanOrEqual(44);
           expect(target.width, `${detail} ${JSON.stringify(targets)}`).toBeGreaterThanOrEqual(44);

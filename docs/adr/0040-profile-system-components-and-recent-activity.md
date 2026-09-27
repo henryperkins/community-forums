@@ -107,3 +107,28 @@ These are recorded as open proposals, not accepted changes:
 | O3 | Use full display names instead of the first word in visitor empty states | Copy choice remains open. |
 | O4 | Restyle the cover's gold Regard plate or record an exception | Existing handoff/One Gold Rule conflict remains unresolved. |
 | O5 | Reported phone top-bar Inbox clipping | Separate shared-chrome issue under ADR 0032; this profile correction does not resolve or claim verification of it. |
+
+## 2026-09-27: correction follow-up
+
+A verification pass over `e4bc0acd` reproduced its evidence and found six gaps.
+They are closed without changing the activity, privacy, or pagination decisions
+above:
+
+- Recent titles also wrap on a device that cannot hover (`hover: none` or a
+  coarse pointer), because a clipped title's only other copy is its tooltip.
+  At 820–834px a tablet sets the details card beside the main column, so each
+  title gets about 280px, and the 760px step alone left every fixture title
+  clipped. No width threshold separates tablets from desktops here, so the
+  query follows the pointer. A mouse keeps the one-line title.
+- The visually hidden unit after a "Most active in" count is singular for one
+  post.
+- COMMUNITY §6 now describes badge descriptions as native disclosures. It had
+  promised hover tooltips, which keyboard, touch, and no-JavaScript readers
+  could not reach.
+- Opening a badge no longer moves the row. The label aligns to the chips' text
+  baseline instead of the row's centre, and a description wraps at its chip's
+  width in the profile's secondary copy size instead of widening its list item.
+- The guest's Log in link takes the cover's 44px touch target at 860px and
+  below, as the stats and website links do.
+
+See [the follow-up evidence](../evidence/profile-review-follow-up-2026-09-27/README.md).

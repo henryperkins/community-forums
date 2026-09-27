@@ -220,7 +220,7 @@ $profileExcerpt = static function (string $html): string {
                                 <h2>Most active in</h2>
                                 <ul class="profile-active-boards">
                                     <?php foreach ($board_activity as $board): ?>
-                                        <li><a href="/c/<?= $e($board['slug']) ?>">#<?= $e($board['slug']) ?></a><span><?= number_format((int) $board['post_count']) ?><span class="sr-only"> posts</span></span></li>
+                                        <li><a href="/c/<?= $e($board['slug']) ?>">#<?= $e($board['slug']) ?></a><span><?= number_format((int) $board['post_count']) ?><span class="sr-only"> <?= (int) $board['post_count'] === 1 ? 'post' : 'posts' ?></span></span></li>
                                     <?php endforeach; ?>
                                 </ul>
                             </section>

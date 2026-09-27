@@ -1,6 +1,6 @@
 # RetroBoards — Community Layer Design
 
-**Status:** v0.6 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
+**Status:** v0.7 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-27
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md).** This document owns the **community / social layer**: connection and discovery around durable topics. Same conventions (P0/P1/P2; vanilla PHP + MySQL, server-rendered + progressive enhancement).
 
 > The original phase assignments are scope history, not a live status ledger. Current shipped capability is in `PRODUCT.md`, `FeatureFlags::DEFAULTS`, and the relevant runbook; open carryovers are in the ADRs. The retired phase plans and status ledgers are archived in `docs/history/`.
@@ -161,7 +161,7 @@ A **small, honest** set — recognition, not a trophy farm. Badges are binary (e
 | Staff / Founder | Role or early-member recognition | manual (admin) |
 
 - **Automatic** badges award on their triggering event (post created, reaction milestone, accepted answer, anniversary job). **Manual** ones are admin-granted.
-- **Display:** a compact badge row on the profile with hover tooltips — not a giant case.
+- **Display:** a compact badge row on the profile — not a giant case. Each badge is a native disclosure that opens its description in place, so keyboard, touch, and no-JavaScript readers reach it; a hover tooltip reached none of them (ADR 0040).
 - Admin-defined **custom badges** are **P2**; v1 ships this fixed set. Backed by `badges` + `user_badges` (§11). *Since Phase 4, admins can define award rules over the existing badges (`badge_rules`, default-on since 2026-07-02); there is no admin surface for defining new badges.*
 
 ## 7. Leaderboards
@@ -323,6 +323,7 @@ notifications and a fan-out feed have not.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.7 | 2026-09-27 | §6 badge display: descriptions open as native disclosures instead of hover tooltips, which keyboard, touch, and no-JavaScript readers could not reach (ADR 0040). |
 | v0.6 | 2026-09-25 | The `reputation_events` ledger is the canonical source that `users.reputation` is reconciled from, not an optional audit table. The §11 DDL is the migration-`0048` shape. §6/§7/§14.1 record which P2 items shipped: badge award rules, windowed and board leaderboards, tag/board follows with the Latest feed, and remove-a-follower. Status pointers name the `docs/history/` archive. |
 | v0.5 | 2026-09-23 | Consolidated obsolete phase-status language, corrected the header to include the already-recorded v0.4 change, and retained only the two unassigned product choices in §14.2. |
 | v0.4 | 2026-08-27 | Settled the shared-shell placement of the retained Following feed: `/feed` remains a separate personalized discovery surface in identity/secondary navigation; Inbox is topbar-primary; the board rail contains only boards plus public presence. |

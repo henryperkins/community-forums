@@ -114,3 +114,9 @@ DB_DATABASE=retroboards_profile_fixes_e2e E2E_PORT=8037 \
 [results.json](results.json) records the checks and capture hashes. The final
 block scenario was also rerun after adding the closed-menu captures, so the
 new explanation is visible in full.
+
+## Follow-up
+
+A later verification reproduced this record and found six gaps. They are closed
+in [the follow-up packet](../profile-review-follow-up-2026-09-27/README.md); this
+record and its captures are otherwise unchanged.
