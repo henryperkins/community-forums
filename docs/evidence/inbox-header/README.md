@@ -1,7 +1,7 @@
 # Inbox header simplification
 
-Verified locally on 2026-09-28 against the real PHP application and isolated
-MariaDB databases. This is implementation evidence, not a deployment record.
+Verified locally and deployed on 2026-09-28. Local checks use the real PHP
+application and isolated MariaDB databases; the production record is below.
 Built asset version: `ffc423564f256d2f`.
 Decision: [ADR 0042](../../adr/0042-inbox-header-simplification.md).
 
@@ -96,7 +96,9 @@ remains `ffc423564f256d2f`; this operation did not prematurely mark it deployed.
 
 ## Boundaries
 
-This evidence does not include a physical iPhone or a production deployment.
+This evidence does not include a physical iPhone or an authenticated interaction
+with the production inbox. Member flows were exercised locally; production
+verification checks the deployed build, public HTML, health, and asset bytes.
 WebKit was exercised through Playwright on Linux, including mobile emulation.
 Automated accessibility checks complement the focus and native-navigation tests;
 they are not a full assistive-technology audit.
@@ -106,3 +108,27 @@ presentation change: after previewing and removing a row from the Unread scope,
 the page-read form can retain the initial hidden topic IDs until navigation.
 This change preserves that form's server contract; the tested no-JavaScript
 page-read flow submits exactly the displayed page.
+
+## Production deployment
+
+Commit `61b67adc9119ef82745d4e48636ad9f376384560` deployed through Workers Builds
+on `main`. Build `4283cb22-85a5-4502-b445-0487970513f5` completed successfully at
+12:35:12 UTC. At 12:36:32 UTC, the public HTML referenced the new CSS and JS,
+`/healthz` reported both application and database healthy, and all 29 distinct
+current/retained asset hashes matched the release manifest with immutable cache
+headers. Worker version `6419f011-d2da-4c86-90eb-c52b3209f22e` received 100% of
+traffic. See the [initial deployment record](initial-deployment.json).
+
+After that verification, `npm run assets:record-release -- ffc423564f256d2f`
+recorded this deployment plus `a160f1a21c51fcb2` and `82a41e8eb74b03dc`. The
+follow-up retention commit keeps the same current asset version and URLs while
+retiring the fourth release's exclusive files.
+
+After recording, the full PHP suite again passed with 3,121 tests, 23,651
+assertions, and the same dedicated-database skip. Imladris verification passed
+(24 tests/305 assertions), asset tests passed (23), generated assets were
+current, and all 12 retained-layout browser cases passed.
+
+GitHub's separate `capture` and `upload-http` jobs did not start because the
+account was locked for billing. Their status is independent of the successful
+local checks, Workers Build, and live verification above.
