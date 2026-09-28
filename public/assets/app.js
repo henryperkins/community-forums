@@ -195,34 +195,53 @@
             a.setAttribute('data-presence-state', state);
             if (u.is_self) { a.setAttribute('data-presence-self', '1'); }
 
-            var wrap = document.createElement('span');
-            wrap.className = 'avatar-wrap';
-            var mono = document.createElement('span');
-            // monogram_class()/monogram_initials() are server-side; the poll
-            // cannot reproduce the palette hash, so a refreshed row uses the
-            // neutral variant rather than guessing at a different colour.
-            mono.className = 'monogram';
-            mono.setAttribute('aria-hidden', 'true');
-            // Mirror Str::initials(): up to two initials, splitting on the same
-            // separators, one CODE POINT each (Array.from, so an astral first
-            // character is not sliced into half a surrogate pair). The palette
-            // class is a server-side md5 hash and genuinely cannot be reproduced
-            // here, so a row rebuilt by the poll is the neutral variant — that
-            // half is a recorded deferral; the initials had no such excuse.
-            mono.textContent = (function (raw) {
-                var parts = raw.trim().split(/[\s_\-.]+/);
-                var letters = [];
-                for (var p = 0; p < parts.length && letters.length < 2; p++) {
-                    var first = Array.from(parts[p])[0];
-                    if (first) { letters.push(first); }
-                }
-                return letters.length ? letters.join('').toUpperCase() : '?';
-            })(name);
             var dot = document.createElement('span');
-            dot.className = 'presence-dot' + (state === 'away' ? ' is-away' : '');
             dot.setAttribute('aria-hidden', 'true');
-            wrap.appendChild(mono);
-            wrap.appendChild(dot);
+            // Mirror presence_person.php: with the reader's "Show avatars" off
+            // the dot stands alone, exactly as the server drew the row.
+            var lead = dot;
+            if (presence.getAttribute('data-presence-avatars') === '0') {
+                dot.className = 'presence-dot presence-dot-bare' + (state === 'away' ? ' is-away' : '');
+            } else {
+                dot.className = 'presence-dot' + (state === 'away' ? ' is-away' : '');
+                var mono;
+                if (typeof u.avatar_path === 'string' && u.avatar_path !== '') {
+                    // An uploaded avatar, drawn as partials/monogram.php draws it.
+                    mono = document.createElement('img');
+                    mono.className = 'monogram avatar-img';
+                    mono.src = u.avatar_path;
+                    mono.alt = '';
+                    mono.loading = 'lazy';
+                    mono.decoding = 'async';
+                } else {
+                    mono = document.createElement('span');
+                    // monogram_class()/monogram_initials() are server-side; the poll
+                    // cannot reproduce the palette hash, so a refreshed row uses the
+                    // neutral variant rather than guessing at a different colour.
+                    mono.className = 'monogram';
+                    // Mirror Str::initials(): up to two initials, splitting on the same
+                    // separators, one CODE POINT each (Array.from, so an astral first
+                    // character is not sliced into half a surrogate pair). The palette
+                    // class is a server-side md5 hash and genuinely cannot be reproduced
+                    // here, so a row rebuilt by the poll is the neutral variant — that
+                    // half is a recorded deferral; the initials had no such excuse.
+                    mono.textContent = (function (raw) {
+                        var parts = raw.trim().split(/[\s_\-.]+/);
+                        var letters = [];
+                        for (var p = 0; p < parts.length && letters.length < 2; p++) {
+                            var first = Array.from(parts[p])[0];
+                            if (first) { letters.push(first); }
+                        }
+                        return letters.length ? letters.join('').toUpperCase() : '?';
+                    })(name);
+                }
+                mono.setAttribute('aria-hidden', 'true');
+                var wrap = document.createElement('span');
+                wrap.className = 'avatar-wrap';
+                wrap.appendChild(mono);
+                wrap.appendChild(dot);
+                lead = wrap;
+            }
 
             var id = document.createElement('span');
             id.className = 'presence-person-id';
@@ -247,7 +266,7 @@
             id.appendChild(nameEl);
             id.appendChild(sub);
 
-            a.appendChild(wrap);
+            a.appendChild(lead);
             a.appendChild(id);
             li.appendChild(a);
             return li;

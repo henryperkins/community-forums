@@ -9,7 +9,7 @@ $canModerate = $canWrite && !empty($can_delete_posts) && !$owner;
 $isAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
 // Public byline is ALWAYS masked when anonymous; a mod "reveal" is a separate
 // audited action (flash), never an un-mask of this render.
-$a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? null, $p['author_role'] ?? 'user', $isAnon);
+$a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? null, $p['author_role'] ?? 'user', $isAnon, $p['author_avatar_path'] ?? null);
 ?>
 <?php $accepted = $accepted ?? false; ?>
 <?php // A grouped post is a consecutive reply by the same (non-anonymous) author —
@@ -30,7 +30,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
         <?php if ($grouped): ?><span class="post-avatar-spacer" aria-hidden="true"></span>
         <?php else: ?>
             <div class="post-avatar">
-                <?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?>
+                <?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed'], 'avatar_path' => $a['avatar_path']]) ?>
                 <?php // Regard plinth (§5.1): the author's commends earned, read from the
                       // real users.reputation. Suppressed for an anonymous post so a masked
                       // byline never leaks the real author's reputation. ?>

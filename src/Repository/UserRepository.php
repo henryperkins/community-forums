@@ -496,7 +496,7 @@ final class UserRepository
      * $limit is clamped and concatenated, never bound — EMULATE_PREPARES is off.
      * Ask for one more row than you intend to show to detect capping.
      *
-     * @return list<array{id:int,username:string,display_name:?string,role:string,status:string,show_presence:int,profile_visibility:string,last_seen_at:string}>
+     * @return list<array{id:int,username:string,display_name:?string,avatar_path:?string,role:string,status:string,show_presence:int,profile_visibility:string,last_seen_at:string}>
      */
     public function presenceRoster(string $since, int $limit, bool $guestViewer, ?string $search = null): array
     {
@@ -508,7 +508,7 @@ final class UserRepository
         $limit = max(1, min(5001, $limit));
 
         $rows = $this->db->fetchAll(
-            'SELECT id, username, display_name, role, status, show_presence, profile_visibility, last_seen_at
+            'SELECT id, username, display_name, avatar_path, role, status, show_presence, profile_visibility, last_seen_at
              FROM users
              WHERE ' . $where . '
              ORDER BY last_seen_at DESC, id ASC
@@ -520,6 +520,7 @@ final class UserRepository
             'id' => (int) $r['id'],
             'username' => (string) $r['username'],
             'display_name' => $r['display_name'] !== null ? (string) $r['display_name'] : null,
+            'avatar_path' => $r['avatar_path'] !== null && $r['avatar_path'] !== '' ? (string) $r['avatar_path'] : null,
             'role' => (string) $r['role'],
             'status' => (string) $r['status'],
             'show_presence' => (int) $r['show_presence'],
@@ -586,7 +587,7 @@ final class UserRepository
     {
         $limit = max(1, $limit);
         return $this->db->fetchAll(
-            "SELECT u.id, u.username, u.display_name, u.title, u.reputation, u.post_count
+            "SELECT u.id, u.username, u.display_name, u.avatar_path, u.title, u.reputation, u.post_count
              FROM users u
              LEFT JOIN user_preferences pf ON pf.user_id = u.id
              WHERE u.status <> 'banned' AND u.reputation > 0
@@ -629,7 +630,7 @@ final class UserRepository
         $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
         $offset = max(0, (int) ($filters['offset'] ?? 0));
 
-        $sql = 'SELECT id, username, display_name, email, role, status, reputation, post_count, created_at, last_seen_at,
+        $sql = 'SELECT id, username, display_name, avatar_path, email, role, status, reputation, post_count, created_at, last_seen_at,
                 (SELECT COUNT(*) FROM board_moderators bm WHERE bm.user_id = users.id) AS moderated_boards
                 FROM users';
         if ($where !== []) {

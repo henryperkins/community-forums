@@ -79,7 +79,7 @@ final class OAuthIdentityRepository
      * Accounts whose only sign-in method is the named OAuth provider.
      *
      * @param list<string>|array<int,string>|null $usableProviders currently configured provider keys; null preserves legacy "any linked provider" semantics
-     * @return list<array{id:int,username:string,email:string}>
+     * @return list<array{id:int,username:string,email:string,avatar_path:?string}>
      */
     public function soleMethodAccounts(string $provider, ?array $usableProviders = null): array
     {
@@ -90,7 +90,7 @@ final class OAuthIdentityRepository
         [$extraSql, $params] = $query;
 
         return $this->db->fetchAll(
-            'SELECT u.id, u.username, u.email ' . self::SOLE_METHOD_FROM . " {$extraSql} ORDER BY u.id",
+            'SELECT u.id, u.username, u.email, u.avatar_path ' . self::SOLE_METHOD_FROM . " {$extraSql} ORDER BY u.id",
             $params,
         );
     }

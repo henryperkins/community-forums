@@ -175,7 +175,7 @@ final class FollowRepository
         array_unshift($params, $targetId);
 
         return $this->db->fetchAll(
-            "SELECT u.id, u.username, u.display_name, u.title, u.reputation, f.created_at
+            "SELECT u.id, u.username, u.display_name, u.avatar_path, u.title, u.reputation, f.created_at
              FROM follows f JOIN users u ON u.id = f.user_id
              WHERE f.target_type = 'user' AND f.target_id = ?$filter
              ORDER BY f.created_at DESC, f.user_id DESC
@@ -193,7 +193,7 @@ final class FollowRepository
         array_unshift($params, $userId);
 
         return $this->db->fetchAll(
-            "SELECT u.id, u.username, u.display_name, u.title, u.reputation, f.created_at
+            "SELECT u.id, u.username, u.display_name, u.avatar_path, u.title, u.reputation, f.created_at
              FROM follows f JOIN users u ON u.id = f.target_id
              WHERE f.user_id = ? AND f.target_type = 'user'$filter
              ORDER BY f.created_at DESC, f.target_id DESC

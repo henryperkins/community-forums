@@ -53,7 +53,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                         $canManage = !empty($is_owner) && !$pLeft && !$pMe && !$pOwner;
                         ?>
                         <li class="dm-member<?= $pLeft ? ' is-left' : '' ?>">
-                            <?= $this->partial('partials/monogram', ['name' => $pName, 'username' => (string) $p['username']]) ?>
+                            <?= $this->partial('partials/monogram', ['name' => $pName, 'username' => (string) $p['username'], 'avatar_path' => $p['avatar_path'] ?? null]) ?>
                             <span class="m-id">
                                 <span class="m-name"><?= $e($pName) ?><?= $pMe ? ' (you)' : '' ?></span>
                                 <span class="m-handle">@<?= $e($p['username']) ?><?= $this->partial('partials/dm_presence', ['user_id' => $p['user_id'], 'state' => $presence_states[(int) $p['user_id']] ?? 'offline']) ?></span>
@@ -121,7 +121,7 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
             $railRole = ['user' => 'Member', 'moderator' => 'Moderator', 'admin' => 'Admin'][(string) ($other['role'] ?? 'user')] ?? 'Member';
             ?>
             <div class="dm-rail-id">
-                <?= $this->partial('partials/monogram', ['name' => $railOtherName, 'username' => $railOtherUser !== '' ? $railOtherUser : $railOtherName, 'gilt' => true]) ?>
+                <?= $this->partial('partials/monogram', ['name' => $railOtherName, 'username' => $railOtherUser !== '' ? $railOtherUser : $railOtherName, 'avatar_path' => $other['avatar_path'] ?? null, 'gilt' => true]) ?>
                 <h2 class="dm-rail-name"><?= $e($railOtherName) ?></h2>
                 <?php if ($railOtherUser !== ''): ?><span class="dm-rail-handle">@<?= $e($railOtherUser) ?></span><?php endif; ?>
                 <?= $this->partial('partials/dm_presence', ['user_id' => $other['id'] ?? 0, 'state' => $presence_states[(int) ($other['id'] ?? 0)] ?? 'offline', 'separator' => false]) ?>

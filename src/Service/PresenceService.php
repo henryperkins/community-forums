@@ -68,13 +68,13 @@ final class PresenceService
      * empty. `capped` says the roster hit presence.roster_max, in which case the
      * counts are a floor and the UI renders "N+".
      *
-     * @return array{members:list<array{username:string,display_name:string,state:string,is_self:bool,is_staff:bool}>,here:int,away:int,total:int,capped:bool}
+     * @return array{members:list<array{username:string,display_name:string,avatar_path:?string,state:string,is_self:bool,is_staff:bool}>,here:int,away:int,total:int,capped:bool}
      */
     public function snapshot(?User $viewer, string $search = ''): array
     {
         $key = ($viewer === null ? 'guest' : 'user:' . $viewer->id()) . '|' . $search;
         if (array_key_exists($key, $this->snapshots)) {
-            /** @var array{members:list<array{username:string,display_name:string,state:string,is_self:bool,is_staff:bool}>,here:int,away:int,total:int,capped:bool} */
+            /** @var array{members:list<array{username:string,display_name:string,avatar_path:?string,state:string,is_self:bool,is_staff:bool}>,here:int,away:int,total:int,capped:bool} */
             return $this->snapshots[$key];
         }
 
@@ -120,6 +120,9 @@ final class PresenceService
                 'display_name' => ($row['display_name'] ?? '') !== ''
                     ? (string) $row['display_name']
                     : (string) $row['username'],
+                // The uploaded avatar's local /media path, or null for the
+                // monogram. The poller reads it too, so a rebuilt row keeps it.
+                'avatar_path' => $row['avatar_path'] ?? null,
                 'state' => $state,
                 'is_self' => $isSelf,
                 // Matches mask_author()'s is_staff rule exactly (helpers.php).
@@ -146,7 +149,7 @@ final class PresenceService
      * every request — duplicates and skips rows between pages as members move
      * under the cursor. A name is stable for the length of a visit.
      *
-     * @return array{members:list<array{username:string,display_name:string,state:string,is_self:bool,is_staff:bool}>,here:int,away:int,total:int,shown:int,capped:bool,page:int,pages:int,filter:string,search:string}
+     * @return array{members:list<array{username:string,display_name:string,avatar_path:?string,state:string,is_self:bool,is_staff:bool}>,here:int,away:int,total:int,shown:int,capped:bool,page:int,pages:int,filter:string,search:string}
      */
     public function directory(?User $viewer, string $filter = '', string $search = '', int $page = 1): array
     {

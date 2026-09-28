@@ -53,6 +53,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
                     'identity' => [
                         'display_name' => $current_user->displayName(),
                         'username' => $current_user->username(),
+                        'avatar_path' => $current_user->avatarPath(),
                         'show_avatar' => $show_avatars ?? true,
                     ],
                     'wrapper_slot' => $dmNewWrapper,

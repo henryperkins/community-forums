@@ -66,6 +66,7 @@ final class LeaderboardController extends Controller
                 'rank' => $rank,
                 'username' => (string) $r['username'],
                 'display_name' => ($r['display_name'] ?? '') !== '' ? (string) $r['display_name'] : (string) $r['username'],
+                'avatar_path' => $r['avatar_path'] ?? null,
                 'reputation' => (int) $r['reputation'],
                 'post_count' => (int) $r['post_count'],
                 'title' => $titles->resolve($r['title'] ?? null, (int) $r['reputation']),

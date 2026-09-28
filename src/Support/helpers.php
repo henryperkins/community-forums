@@ -36,26 +36,28 @@ if (!function_exists('mask_author')) {
     /**
      * Single decision point for rendering a post/thread author byline. When the
      * post is anonymous every field collapses to the constant "Anonymous"
-     * identity — no display name, username, profile link, monogram seed, or role
-     * — so nothing can fingerprint or correlate the real author across posts
-     * (ADMIN §1.3 masked-identity posting). The real user_id is never touched, so
-     * owner/mod affordances and reputation are unaffected; unmasking is a
-     * separate, audited moderator action.
+     * identity — no display name, username, profile link, monogram seed,
+     * avatar, or role — so nothing can fingerprint or correlate the real author
+     * across posts (ADMIN §1.3 masked-identity posting). The real user_id is
+     * never touched, so owner/mod affordances and reputation are unaffected;
+     * unmasking is a separate, audited moderator action.
      *
-     * @return array{label:string, profile_url:?string, mono_name:string, mono_seed:string, is_staff:bool}
+     * @return array{label:string, profile_url:?string, mono_name:string, mono_seed:string, avatar_path:?string, is_staff:bool}
      */
-    function mask_author(?string $displayName, ?string $username, ?string $role = 'user', bool $isAnon = false): array
+    function mask_author(?string $displayName, ?string $username, ?string $role = 'user', bool $isAnon = false, ?string $avatarPath = null): array
     {
         if ($isAnon) {
-            return ['label' => 'Anonymous', 'profile_url' => null, 'mono_name' => 'Anonymous', 'mono_seed' => '', 'is_staff' => false];
+            return ['label' => 'Anonymous', 'profile_url' => null, 'mono_name' => 'Anonymous', 'mono_seed' => '', 'avatar_path' => null, 'is_staff' => false];
         }
         $username = (string) $username;
         $label = ($displayName ?? '') !== '' ? (string) $displayName : $username;
+        $avatarPath = trim((string) $avatarPath);
         return [
             'label' => $label !== '' ? $label : 'Unknown',
             'profile_url' => $username !== '' ? '/u/' . $username : null,
             'mono_name' => $label,
             'mono_seed' => $username,
+            'avatar_path' => $avatarPath !== '' ? $avatarPath : null,
             'is_staff' => $role === 'admin',
         ];
     }

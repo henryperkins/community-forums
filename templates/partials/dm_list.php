@@ -74,6 +74,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                         'identity' => [
                             'display_name' => $current_user->displayName(),
                             'username' => $current_user->username(),
+                            'avatar_path' => $current_user->avatarPath(),
                             'show_avatar' => $show_avatars ?? true,
                         ],
                                                 'wrapper_slot' => $dmDialogWrapper,
@@ -124,7 +125,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                 <li<?= $rowSearch !== '' ? ' data-dm-search-text="' . $e($rowSearch) . '"' : '' ?>>
                     <a class="dm-row dm-link<?= $cid === $dmActiveId ? ' active' : '' ?><?= !empty($c['is_unread']) ? ' is-unread' : '' ?>" href="/messages/<?= $cid ?>"<?= $cid === $dmActiveId ? ' aria-current="page"' : '' ?>>
                         <?php if (!empty($c['is_unread'])): ?><span class="sr-only">Unread. </span><?php endif; ?>
-                        <?= $this->partial('partials/monogram', ['name' => $rowName, 'username' => $seed, 'gilt' => $isGroup]) ?>
+                        <?= $this->partial('partials/monogram', ['name' => $rowName, 'username' => $seed, 'avatar_path' => $isGroup ? null : ($c['other_avatar_path'] ?? null), 'gilt' => $isGroup]) ?>
                         <span class="dm-row-top"><span class="dm-other"><?= $e($rowName) ?></span></span>
                         <?= $this->partial('partials/dm_time', ['at' => $c['last_message_at'] ?? null, 'class' => 'dm-time']) ?>
                         <span class="dm-preview"><?php if ((int) ($c['last_sender_id'] ?? 0) === $current_user->id()): ?><span class="dm-preview-you">You:</span> <?php endif; ?><?= $e(mb_strimwidth($rowPreview, 0, 120, '…')) ?></span>

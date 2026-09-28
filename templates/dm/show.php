@@ -24,7 +24,7 @@ $this->section('title', $title);
         <header class="dm-thread-head">
             <a class="dm-back" href="/messages" aria-label="Back to messages"><?= $this->partial('partials/icon', ['name' => 'chevron-left']) ?></a>
             <div class="dm-thread-id">
-                <?= $this->partial('partials/monogram', ['name' => !empty($is_group) ? $title : $otherName, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'gilt' => true]) ?>
+                <?= $this->partial('partials/monogram', ['name' => !empty($is_group) ? $title : $otherName, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'avatar_path' => !empty($is_group) ? null : ($other['avatar_path'] ?? null), 'gilt' => true]) ?>
                 <div>
                     <span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?><?= !empty($is_group) ? 'Private group' : 'Private counsel' ?></span>
                     <h1 class="dm-thread-title">
@@ -140,6 +140,7 @@ $this->section('title', $title);
                 'identity' => [
                     'display_name' => $current_user->displayName(),
                     'username' => $current_user->username(),
+                    'avatar_path' => $current_user->avatarPath(),
                     'show_avatar' => $show_avatars ?? true,
                 ],
                 // Present only without scripting: that send lands on its letter

@@ -29,7 +29,7 @@ $threadId = (int) $t['id'];
 $title = (string) $t['title'];
 $topicUrl = '/t/' . $threadId . '-' . (string) $t['slug'];
 // Mask the starter's identity when the OP post was made anonymously.
-$a = mask_author($t['author_display_name'] ?? null, $t['author_username'] ?? null, $t['author_role'] ?? 'user', !empty($t['op_is_anonymous']));
+$a = mask_author($t['author_display_name'] ?? null, $t['author_username'] ?? null, $t['author_role'] ?? 'user', !empty($t['op_is_anonymous']), $t['author_avatar_path'] ?? null);
 $unread = !empty($t['is_unread']);
 $inboxUnread = !empty($t['is_inbox_unread']);
 $starred = !empty($t['is_starred']);
@@ -95,7 +95,7 @@ if ($inboxPresentation) {
     <?php elseif ($unread): ?>
         <span class="unread-dot" title="Unread" role="img" aria-label="Unread"></span>
     <?php endif; ?>
-    <?php if ($show_avatars ?? true): ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?><?php endif; ?>
+    <?php if ($show_avatars ?? true): ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed'], 'avatar_path' => $a['avatar_path']]) ?><?php endif; ?>
     <div class="thread-row-main">
         <?php if ($boardPresentation): ?>
             <span class="thread-title-line">

@@ -65,6 +65,7 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
             'identity' => [
                 'display_name' => $current_user->displayName(),
                 'username' => $current_user->username(),
+                'avatar_path' => $current_user->avatarPath(),
                 'show_avatar' => $show_avatars ?? true,
             ],
             'allow_anonymous' => $composeOffersAnonymous,

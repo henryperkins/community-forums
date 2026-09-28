@@ -111,10 +111,11 @@ $shellUploadMax = max(1, (int) ($upload_max_bytes ?? 5242880));
                     <?php
                     $shellIdentityName = (string) ($shellIdentity['display_name'] ?? '');
                     $shellIdentityUsername = (string) ($shellIdentity['username'] ?? '');
+                    $shellIdentityAvatar = isset($shellIdentity['avatar_path']) && is_string($shellIdentity['avatar_path']) ? $shellIdentity['avatar_path'] : null;
                     $shellShowAvatar = !array_key_exists('show_avatar', $shellIdentity) || !empty($shellIdentity['show_avatar']);
                     ?>
                     <span class="composer-identity" dir="auto">
-                        <?php if ($shellShowAvatar): ?><?= $this->partial('partials/monogram', ['name' => $shellIdentityName, 'username' => $shellIdentityUsername]) ?><?php endif; ?>
+                        <?php if ($shellShowAvatar): ?><?= $this->partial('partials/monogram', ['name' => $shellIdentityName, 'username' => $shellIdentityUsername, 'avatar_path' => $shellIdentityAvatar]) ?><?php endif; ?>
                         <span class="composer-identity-copy">as <strong><?= $e($shellIdentityName) ?></strong></span>
                     </span>
                 <?php endif; ?>

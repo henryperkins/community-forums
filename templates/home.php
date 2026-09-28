@@ -203,7 +203,7 @@ $paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notificatio
                         <?php foreach ($connections as $person): ?>
                             <?php $display = ($person['display_name'] ?? '') !== '' ? (string) $person['display_name'] : (string) $person['username']; ?>
                             <li>
-                                <?= $this->partial('partials/monogram', ['name' => $display, 'username' => (string) $person['username']]) ?>
+                                <?= $this->partial('partials/monogram', ['name' => $display, 'username' => (string) $person['username'], 'avatar_path' => $person['avatar_path'] ?? null]) ?>
                                 <span><a href="/u/<?= $e((string) $person['username']) ?>"><?= $e($display) ?></a><span>@<?= $e((string) $person['username']) ?> · <?= (int) ($person['reputation'] ?? 0) ?> regard</span></span>
                                 <?php if (($connection_mode ?? 'followers') === 'followers'): ?>
                                     <form method="post" action="/u/<?= $e($current_user->username()) ?>/followers/<?= (int) $person['id'] ?>/remove">

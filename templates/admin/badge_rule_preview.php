@@ -22,7 +22,7 @@ $this->section('variant', 'admin');
             <ul class="link-list features-preview-list">
                 <?php foreach ($users as $user): ?>
                     <li>
-                        <?= $this->partial('partials/monogram', ['name' => (string) ($user['display_name'] ?? $user['username']), 'username' => (string) $user['username']]) ?>
+                        <?= $this->partial('partials/monogram', ['name' => (string) ($user['display_name'] ?? $user['username']), 'username' => (string) $user['username'], 'avatar_path' => $user['avatar_path'] ?? null]) ?>
                         <?php // feature-added: the design's username is inert text; production links the record. ?>
                         <a href="/admin/users/<?= (int) $user['id'] ?>"><?= $e($user['username']) ?></a>
                         <span class="features-preview-metric">Metric: <?= $e(number_format((int) $user['metric'])) ?></span>

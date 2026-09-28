@@ -15,7 +15,7 @@
  * is always present as text in `.presence-sub`, so a screen reader reads the
  * member once, not a leaf and a name.
  *
- * Expects: $member = ['username','display_name','state','is_self','is_staff'].
+ * Expects: $member = ['username','display_name','avatar_path','state','is_self','is_staff'].
  */
 $pState = ($member['state'] ?? '') === 'away' ? 'away' : 'online';
 $pName = ($member['display_name'] ?? '') !== '' ? (string) $member['display_name'] : (string) $member['username'];
@@ -39,7 +39,7 @@ $pSig = $pUser . ':' . $pState . ':' . (!empty($member['is_staff']) ? 's' : '-')
         ?>
         <?php if ($pAvatars): ?>
             <span class="avatar-wrap">
-                <?= $this->partial('partials/monogram', ['name' => $pName, 'username' => $pUser]) ?>
+                <?= $this->partial('partials/monogram', ['name' => $pName, 'username' => $pUser, 'avatar_path' => $member['avatar_path'] ?? null]) ?>
                 <span class="presence-dot<?= $pState === 'away' ? ' is-away' : '' ?>" aria-hidden="true"></span>
             </span>
         <?php else: ?>

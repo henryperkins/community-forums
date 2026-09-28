@@ -103,8 +103,8 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
             <span class="thread-participants-rule">
             <ul class="thread-participants" aria-label="In council">
                 <?php foreach ($participants as $pp): ?>
-                    <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false); ?>
-                    <li class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed']]) ?></li>
+                    <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false, $pp['author_avatar_path'] ?? null); ?>
+                    <li class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed'], 'avatar_path' => $pa['avatar_path']]) ?></li>
                 <?php endforeach; ?>
                 <?php $shownParticipants = count($participants); if ((int) ($participant_count ?? 0) > $shownParticipants): ?>
                     <li class="participant-more">+<?= (int) $participant_count - $shownParticipants ?></li>

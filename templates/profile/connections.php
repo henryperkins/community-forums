@@ -25,7 +25,7 @@ $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'follow
             <?php foreach ($people as $person): ?>
                 <?php $pd = ($person['display_name'] ?? '') !== '' ? $person['display_name'] : $person['username']; ?>
                 <li class="person-row">
-                    <?= $this->partial('partials/monogram', ['name' => $pd, 'username' => $person['username']]) ?>
+                    <?= $this->partial('partials/monogram', ['name' => $pd, 'username' => $person['username'], 'avatar_path' => $person['avatar_path'] ?? null]) ?>
                     <a class="person-name" href="/u/<?= $e($person['username']) ?>"><?= $e($pd) ?></a>
                     <span class="handle">@<?= $e($person['username']) ?></span>
                     <span class="muted person-rep"><span class="profile-number"><?= number_format((int) ($person['reputation'] ?? 0)) ?></span> regard</span>

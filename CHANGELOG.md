@@ -2,6 +2,23 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Uploaded avatars everywhere a member is drawn
+
+- An uploaded avatar now replaces the member's monogram on every surface that
+  draws the member, not only the profile header. That covers posts and the
+  topic's council stack, topic rows (board, tag, and inbox), the inbox preview,
+  the top bar and admin bar, composer identities, and the presence rail. It
+  also covers Messages (list, letter head, letters, and details rail), the
+  leaderboard, follower lists, blocks, and the admin member pages (USER §5.2).
+- An anonymous post never shows its author's avatar: `mask_author()` clears the
+  avatar with the rest of the identity (ADMIN §1.3). "Show avatars" hides
+  uploaded avatars wherever it already hid monograms.
+- The presence poll payload carries each member's `avatar_path`. A rail row
+  rebuilt by `app.js` keeps its picture, and it now honours "Show avatars" with
+  a bare dot, as the server-rendered row always did.
+- Uploading or removing an avatar redraws the top bar in the same response
+  instead of on the next page.
+
 ## [Unreleased] - Preserve layout across deployments
 
 - Preserve fingerprinted CSS, scripts, editor chunks, and fonts from three

@@ -197,6 +197,9 @@ final class AccountController extends Controller
                 'errors' => ['avatar' => $e->first() . ' Choose the file again to retry. Other profile edits are not saved.'],
             ], 422);
         }
+        // This page re-renders in place to keep the draft, so the shell's own
+        // avatar must be re-read or it shows the picture from before the upload.
+        $this->session()->refreshUser();
         return $this->accountView($user, [
             'old' => $request->allInput(),
             'avatar_message' => 'Avatar updated. Other profile edits are not saved.',
@@ -208,6 +211,7 @@ final class AccountController extends Controller
         $this->requireProfileMedia();
         $user = $this->requireUser();
         $this->container->get(ProfileMediaService::class)->removeAvatar($user);
+        $this->session()->refreshUser();
         return $this->accountView($user, [
             'old' => $request->allInput(),
             'avatar_message' => 'Avatar removed. Other profile edits are not saved.',

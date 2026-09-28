@@ -31,7 +31,7 @@ $this->section('variant', 'admin');
                 <ul class="provider-sole-list">
                     <?php foreach ($sole_accounts as $a): ?>
                         <li class="provider-sole-row">
-                            <?= $this->partial('partials/monogram', ['name' => $a['username'], 'username' => $a['username']]) ?>
+                            <?= $this->partial('partials/monogram', ['name' => $a['username'], 'username' => $a['username'], 'avatar_path' => $a['avatar_path'] ?? null]) ?>
                             <?php // "Contact them first" needs a path to the record. ?>
                             <a class="provider-sole-name" href="/admin/users?q=<?= $e(urlencode((string) $a['username'])) ?>"><?= $e($a['username']) ?></a>
                             <span class="provider-sole-email"><?= $e($a['email']) ?></span>

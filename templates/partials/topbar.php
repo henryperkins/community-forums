@@ -149,7 +149,7 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
             <details class="identity-menu">
                 <summary class="forum-bar-user" aria-label="Open account menu for <?= $e($current_user->displayName()) ?>">
                     <span class="avatar-wrap">
-                        <?= $this->partial('partials/monogram', ['name' => $current_user->displayName(), 'username' => $current_user->username()]) ?>
+                        <?= $this->partial('partials/monogram', ['name' => $current_user->displayName(), 'username' => $current_user->username(), 'avatar_path' => $current_user->avatarPath()]) ?>
                         <?php
                         // The viewer's own leaf, drawn for 'online' | 'away' only: a
                         // member who switched presence off must not see one beside

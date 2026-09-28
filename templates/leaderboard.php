@@ -22,7 +22,7 @@
                 <?php $rank = (int) $r['rank']; $roman = [1 => 'I', 2 => 'II', 3 => 'III'][$rank] ?? (string) $rank; $top = $rank <= 3; ?>
                 <li class="leaderboard-row<?= $top ? ' lb-top' : '' ?>">
                     <span class="lb-rank<?= $top ? ' lb-rank-roman' : '' ?>"><?= $e($roman) ?></span>
-                    <?= $this->partial('partials/monogram', ['name' => $r['display_name'], 'username' => $r['username'], 'gilt' => $top]) ?>
+                    <?= $this->partial('partials/monogram', ['name' => $r['display_name'], 'username' => $r['username'], 'avatar_path' => $r['avatar_path'] ?? null, 'gilt' => $top]) ?>
                     <?php if ($top): ?>
                         <?php // Top-3: a prominent identity card — name over a "@handle · title" sub-line. ?>
                         <div class="lb-id">

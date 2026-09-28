@@ -109,7 +109,12 @@ $unreadPill = static function (int $unread) use ($e): string {
             // shell's only route to /users-online, so hiding it on an empty roster
             // would remove the one way to go and look. The poll updates it in place.
             ?>
-            <section class="presence-widget" data-presence data-presence-limit="<?= $presenceLimit ?>" data-presence-poll>
+            <?php
+            // The poller rebuilds a changed row in app.js, so it has to know what
+            // presence_person.php decided about the "Show avatars" preference.
+            $presenceAvatars = is_callable($rail_avatars ?? null) ? ($rail_avatars)() : true;
+            ?>
+            <section class="presence-widget" data-presence data-presence-limit="<?= $presenceLimit ?>" data-presence-avatars="<?= $presenceAvatars ? '1' : '0' ?>" data-presence-poll>
                 <h2 class="presence-title">
                     <a href="/users-online">Online</a>
                     <span class="presence-count" data-presence-count><?= $presenceCapped ? $presenceHere . '+' : $presenceHere ?></span>

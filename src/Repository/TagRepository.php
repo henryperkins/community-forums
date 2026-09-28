@@ -257,6 +257,7 @@ final class TagRepository
         return $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
                     u.username AS author_username, u.display_name AS author_display_name,
+                    u.avatar_path AS author_avatar_path,
                     COALESCE(op.is_anonymous, 0) AS op_is_anonymous
              FROM thread_tags tt
              JOIN threads t ON t.id = tt.thread_id

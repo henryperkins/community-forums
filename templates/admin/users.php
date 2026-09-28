@@ -158,7 +158,7 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                             </td>
                             <td data-label="Member">
                                 <span class="member-directory-member">
-                                    <span class="member-directory-member-monogram"><?= $this->partial('partials/monogram', ['name' => $monogramName, 'username' => $u['username']]) ?></span>
+                                    <span class="member-directory-member-monogram"><?= $this->partial('partials/monogram', ['name' => $monogramName, 'username' => $u['username'], 'avatar_path' => $u['avatar_path'] ?? null]) ?></span>
                                     <a href="/admin/users/<?= (int) $u['id'] ?>" class="user-link member-directory-member-link"><?= $e($u['username']) ?></a>
                                     <?php if ($display !== ''): ?><span class="member-directory-display-name"><?= $e($display) ?></span><?php endif; ?>
                                 </span>

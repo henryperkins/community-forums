@@ -347,7 +347,7 @@ final class ThreadUserRepository
         $rows = $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
                     au.username AS author_username, au.display_name AS author_display_name,
-                    au.role AS author_role,
+                    au.role AS author_role, au.avatar_path AS author_avatar_path,
                     COALESCE(op.is_anonymous, 0) AS op_is_anonymous,
                     op.body AS excerpt_body, op.body_html AS excerpt_html,
                     (SELECT COUNT(*) FROM reactions commend

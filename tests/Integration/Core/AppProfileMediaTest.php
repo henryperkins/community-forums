@@ -266,6 +266,33 @@ final class AppProfileMediaTest extends TestCase
         $this->assertStatus(404, $this->get('/media/' . $attachmentId));
     }
 
+    public function test_avatar_actions_redraw_the_shells_own_avatar_in_the_same_response(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['username' => 'shellavatar']);
+        $this->actingAs($user);
+        $seat = '//summary[contains(@class, "forum-bar-user")]';
+
+        // The settings page re-renders in place to keep the draft; the session
+        // loaded the member before the upload, so the seat must be re-read.
+        $uploaded = $this->postFile('/settings/avatar', 'avatar', $this->fakeUpload($this->pngBytes(), 'avatar.png', 'image/png'));
+        $this->assertStatus(200, $uploaded);
+        $path = (string) $this->users()->find((int) $user['id'])['avatar_path'];
+        self::assertMatchesRegularExpression('~^/media/\d+$~', $path);
+        $document = new \DOMDocument();
+        @$document->loadHTML($uploaded->body());
+        $xpath = new \DOMXPath($document);
+        self::assertSame(1, $xpath->query($seat . '//img[contains(@class, "avatar-img") and @src="' . $path . '"]')->length);
+
+        $removed = $this->post('/settings/avatar/remove');
+        $this->assertStatus(200, $removed);
+        $document = new \DOMDocument();
+        @$document->loadHTML($removed->body());
+        $xpath = new \DOMXPath($document);
+        self::assertSame(0, $xpath->query($seat . '//img')->length);
+        self::assertSame(1, $xpath->query($seat . '//span[contains(@class, "monogram")]')->length);
+    }
+
     public function test_admin_removes_uploaded_avatar_and_audits_profile_media_action(): void
     {
         $admin = $this->makeAdmin(['username' => 'avataradmin']);

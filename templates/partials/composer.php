@@ -21,6 +21,7 @@ $replyInstance = 'reply-thread-' . $replyThreadId;
     'identity' => [
         'display_name' => $current_user->displayName(),
         'username' => $current_user->username(),
+        'avatar_path' => $current_user->avatarPath(),
         'show_avatar' => $show_avatars ?? true,
     ],
     'allow_anonymous' => !empty($thread['board_allow_anonymous']),

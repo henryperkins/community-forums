@@ -29,6 +29,7 @@ $opAuthor = $op === null ? null : mask_author(
     $op['author_username'] ?? null,
     $op['author_role'] ?? 'user',
     !empty($op['is_anonymous']),
+    $op['author_avatar_path'] ?? null,
 );
 // A rank beside a masked name narrows the field the mask exists to widen, so an
 // anonymous opening post states no standing either.
@@ -42,7 +43,7 @@ $opTier = ($opAuthor !== null && $opAuthor['profile_url'] !== null)
         <h2><?= $e($thread['title']) ?></h2>
         <div class="inbox-preview-attribution">
             <?php if ($opAuthor !== null): ?>
-                <?= $this->partial('partials/monogram', ['name' => $opAuthor['mono_name'], 'username' => $opAuthor['mono_seed']]) ?>
+                <?= $this->partial('partials/monogram', ['name' => $opAuthor['mono_name'], 'username' => $opAuthor['mono_seed'], 'avatar_path' => $opAuthor['avatar_path']]) ?>
                 <span class="inbox-preview-author"><?= $e($opAuthor['label']) ?></span>
                 <?php if ($opTier !== ''): ?><span class="inbox-preview-tier"><?= $e($opTier) ?></span><?php endif; ?>
             <?php endif; ?>
@@ -58,9 +59,9 @@ $opTier = ($opAuthor !== null && $opAuthor['profile_url'] !== null)
     <?php if ($replies !== []): ?>
         <ol class="inbox-preview-posts">
             <?php foreach ($replies as $post): ?>
-                <?php $author = mask_author($post['author_display_name'] ?? null, $post['author_username'] ?? null, $post['author_role'] ?? 'user', !empty($post['is_anonymous'])); ?>
+                <?php $author = mask_author($post['author_display_name'] ?? null, $post['author_username'] ?? null, $post['author_role'] ?? 'user', !empty($post['is_anonymous']), $post['author_avatar_path'] ?? null); ?>
                 <li data-inbox-preview-post="<?= (int) $post['id'] ?>">
-                    <?= $this->partial('partials/monogram', ['name' => $author['mono_name'], 'username' => $author['mono_seed']]) ?>
+                    <?= $this->partial('partials/monogram', ['name' => $author['mono_name'], 'username' => $author['mono_seed'], 'avatar_path' => $author['avatar_path']]) ?>
                     <div>
                         <p class="inbox-preview-byline"><span><?= $e($author['label']) ?></span><time datetime="<?= $e(iso_datetime($post['created_at'])) ?>"><?= $e(post_datetime($post['created_at'])) ?></time><?php if ((int) ($thread['accepted_answer_post_id'] ?? 0) === (int) $post['id']): ?><span class="chip chip-solved">Accepted</span><?php endif; ?></p>
                         <div class="formatted-content"><?= $post['body_html'] /* sanitized at write time */ ?></div>

@@ -180,7 +180,7 @@ $disabledNote = 'Disabled until the feature flag is enabled';
                     </a>
                 <?php endif; ?>
                 <a class="admin-bar-user" href="/u/<?= $e($viewer->username()) ?>" aria-label="<?= $e($viewer->displayName()) ?>">
-                    <?= $this->partial('partials/monogram', ['name' => $viewer->displayName(), 'username' => $viewer->username()]) ?>
+                    <?= $this->partial('partials/monogram', ['name' => $viewer->displayName(), 'username' => $viewer->username(), 'avatar_path' => $viewer->avatarPath()]) ?>
                     <span class="admin-bar-username"><?= $e($viewer->displayName()) ?></span>
                 </a>
                 <form class="inline" method="post" action="/logout">

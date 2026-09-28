@@ -161,7 +161,7 @@ final class BadgeRuleService
             default => ['SELECT 0', []],
         };
 
-        $sql = "SELECT u.id, u.username, u.display_name, ($metricSql) AS metric
+        $sql = "SELECT u.id, u.username, u.display_name, u.avatar_path, ($metricSql) AS metric
                 FROM users u
                 WHERE u.status = 'active'
                   AND NOT EXISTS (

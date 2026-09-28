@@ -178,6 +178,7 @@ final class ThreadRepository
             // are subject to the same rule — they carry the viewer's own state,
             // never another member's identity.
             'SELECT t.*, au.username AS author_username, au.display_name AS author_display_name,
+                    au.avatar_path AS author_avatar_path,
                     COALESCE(op.is_anonymous, 0) AS op_is_anonymous' . $viewerSelect . '
              FROM threads t
              JOIN users au ON au.id = t.user_id

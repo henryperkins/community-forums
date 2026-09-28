@@ -211,7 +211,7 @@ final class ReputationLedgerService
             $params[] = $boardId;
         }
         return $this->db->fetchAll(
-            'SELECT u.id, u.username, u.display_name, u.title, u.post_count,
+            'SELECT u.id, u.username, u.display_name, u.avatar_path, u.title, u.post_count,
                     SUM(e.applied_delta) AS reputation
              FROM reputation_events e
              JOIN users u ON u.id = e.user_id
@@ -219,7 +219,7 @@ final class ReputationLedgerService
              WHERE ' . implode(' AND ', $where) . "
                AND u.status <> 'banned'
                AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(pf.prefs, '$.hide_from_leaderboard')), 'false') <> 'true'
-             GROUP BY u.id, u.username, u.display_name, u.title, u.post_count
+             GROUP BY u.id, u.username, u.display_name, u.avatar_path, u.title, u.post_count
              HAVING reputation > 0
              ORDER BY reputation DESC, u.id DESC
              LIMIT " . $limit,

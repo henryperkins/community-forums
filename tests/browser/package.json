@@ -15,6 +15,7 @@
     "evidence:packages:prodlike": "RB_BROWSER_DARK_SURFACES=1 npm run prepare-db:prodlike && RB_BROWSER_DARK_SURFACES=1 bash prodlike-env.sh playwright test package-security.spec.ts",
     "evidence:webhooks": "bash prepare.sh && playwright test webhooks.spec.ts",
     "evidence:profiles": "bash prepare.sh && playwright test profile-surface.spec.ts",
+    "evidence:avatars": "bash prepare.sh && playwright test avatar-display.spec.ts",
     "evidence:inbox": "bash prepare.sh && playwright test forum-inbox-remediation.spec.ts --project=desktop",
     "evidence:presence": "bash prepare.sh && playwright test users-online-remediation.spec.ts",
     "evidence:chrome": "bash prepare.sh && playwright test unified-chrome.spec.ts",

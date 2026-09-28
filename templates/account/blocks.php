@@ -20,7 +20,7 @@
                 <?php foreach ($blocked as $b): ?>
                     <?php $name = ($b['display_name'] ?? '') !== '' ? $b['display_name'] : $b['username']; ?>
                     <li class="account-ruled-row">
-                        <?= $this->partial('partials/monogram', ['name' => $name, 'username' => $b['username']]) ?>
+                        <?= $this->partial('partials/monogram', ['name' => $name, 'username' => $b['username'], 'avatar_path' => $b['avatar_path'] ?? null]) ?>
                         <span class="account-row-main">
                             <a class="account-row-name" href="/u/<?= $e($b['username']) ?>"><?= $e($name) ?></a>
                             <span class="account-row-meta">@<?= $e($b['username']) ?><?php if (!empty($b['created_at'])): ?> · blocked <?= $e(human_datetime($b['created_at'])) ?><?php endif; ?></span>
