@@ -55,7 +55,7 @@ test.describe('member field errors', () => {
     await page.fill('input[name="website"]', 'ftp://example.com');
     // A second, later error: the signature rule (max 3 lines) is server-only.
     await page.fill('textarea[name="signature"]', 'one\ntwo\nthree\nfour');
-    await page.locator('form[action="/settings/account"] button[type="submit"]').click();
+    await page.getByRole('button', { name: 'Save profile', exact: true }).click();
 
     const website = page.locator('input[name="website"]');
     await expect(website).toHaveAttribute('aria-invalid', 'true');
@@ -132,7 +132,7 @@ test.describe('member field errors', () => {
     await shot(page, 'user-invalid-engraved');
   });
 
-  test('the shell reserves scroll padding for the sticky topbar and a stable gutter', async ({ page }) => {
+  test('the shell reserves scroll padding for the sticky topbar and a stable gutter', async ({ page }, info) => {
     await login(page);
     await page.goto('/inbox');
 
@@ -143,8 +143,8 @@ test.describe('member field errors', () => {
     const scrollPadding = await page.evaluate(
       () => getComputedStyle(document.documentElement).scrollPaddingTop,
     );
-    expect(topbar).toBe('62px');
-    expect(scrollPadding).toBe('74px');
+    expect(topbar).toBe(info.project.name === 'mobile' ? '108px' : '62px');
+    expect(scrollPadding).toBe(info.project.name === 'mobile' ? '120px' : '74px');
 
     const list = page.locator('.inbox-list');
     if (await list.count()) {

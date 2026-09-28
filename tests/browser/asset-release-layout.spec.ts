@@ -63,16 +63,20 @@ for (const javaScriptEnabled of [true, false]) {
         await expect(page.getByRole('heading', { name: 'Every board in the valley' })).toBeVisible();
         await expect(page.locator('.skip-link')).toHaveCSS('position', 'absolute');
         expect((await page.locator('.skip-link').boundingBox())!.x).toBeLessThan(0);
-        await expect(page.locator('header.forum-bar')).toHaveCSS('height', '62px');
+        const mobile = testInfo.project.name === 'mobile';
+        const headerHeight = await page.locator('header.forum-bar').evaluate(el => parseFloat(getComputedStyle(el).height));
+        // A retained release keeps its own header geometry as its age changes.
+        // Both supported mobile layouts must reserve the matching content offset.
+        expect(mobile ? [62, 108] : [62]).toContain(headerHeight);
+        if (mobile && age === 0) expect(headerHeight).toBe(108);
         await expect(page.locator('body')).toHaveCSS('margin', '0px');
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 
-        const mobile = testInfo.project.name === 'mobile';
         const rail = page.locator('.board-rail');
         if (mobile && javaScriptEnabled) {
           await expect(rail).toHaveCSS('position', 'fixed');
           expect(await rail.evaluate(element => element.getBoundingClientRect().x)).toBeLessThan(0);
-          expect((await page.locator('#main').boundingBox())!.y).toBe(62);
+          expect((await page.locator('#main').boundingBox())!.y).toBe(headerHeight);
           await expect(page.locator('.nav-toggle:visible')).toHaveCount(1);
           await page.locator('[data-nav-toggle]').click();
           await expect.poll(() => rail.evaluate(element => element.getBoundingClientRect().x)).toBe(0);

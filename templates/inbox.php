@@ -14,31 +14,61 @@ $available = array_fill_keys($scopes, true);
 <div class="inbox-shell" data-inbox data-inbox-scope="<?= $e($scope) ?>" data-inbox-order="<?= $e($order) ?>">
     <section class="inbox-list" data-inbox-list tabindex="-1" aria-label="Topics">
         <header class="board-header inbox-list-head">
-            <p class="inbox-kicker">Your personal forum view</p>
             <div class="inbox-title-line">
-                <h1>Forum inbox</h1>
+                <h1>Inbox</h1>
                 <?php if ((int) $unread_count > 0): ?>
                     <span class="badge" data-inbox-unread-count="<?= (int) $unread_count ?>"><?= (int) $unread_count ?> unread</span>
                 <?php endif; ?>
+                <details class="inbox-actions inbox-menu" name="inbox-controls" data-inbox-menu data-inbox-menu-align="end">
+                    <summary aria-label="Inbox actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
+                    <div class="inbox-menu-panel">
+                        <?php if (!empty($threads)): ?>
+                            <form class="inbox-mark-all" method="post" action="/inbox/bulk">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="scope" value="<?= $e($scope) ?>">
+                                <input type="hidden" name="order" value="<?= $e($order) ?>">
+                                <input type="hidden" name="page" value="<?= (int) $page ?>">
+                                <input type="hidden" name="action" value="read">
+                                <?php foreach ($threads as $thread): ?><input type="hidden" name="thread_ids[]" value="<?= (int) $thread['id'] ?>"><?php endforeach; ?>
+                                <button type="submit">Mark this page read</button>
+                            </form>
+                        <?php endif; ?>
+                        <details class="inbox-help">
+                            <summary>Help</summary>
+                            <p>Show chooses which topics appear. Sort changes their order.</p>
+                            <div class="inbox-keyboard-help">
+                                <p>Keyboard shortcuts</p>
+                                <dl>
+                                    <div><dt><kbd>j</kbd> / <kbd>k</kbd></dt><dd>Move between topics</dd></div>
+                                    <div><dt><kbd>Enter</kbd></dt><dd>Open topic</dd></div>
+                                    <div><dt><kbd>e</kbd></dt><dd>Mark read</dd></div>
+                                    <?php if ($current_user !== null && $current_user->isActive()): ?>
+                                        <div><dt><kbd>s</kbd></dt><dd>Star topic</dd></div>
+                                        <?php if (!empty($features['topic_workflow'])): ?><div><dt><kbd>#</kbd></dt><dd>Snooze until Monday</dd></div><?php endif; ?>
+                                    <?php endif; ?>
+                                </dl>
+                            </div>
+                        </details>
+                    </div>
+                </details>
             </div>
-            <p class="muted">Topics from across every board you can read, organized by the signals that make them yours. The full directory is <a href="/">Boards</a>; start a topic from the board it belongs to.</p>
         </header>
 
         <nav class="inbox-view-bar" aria-label="Inbox view">
-            <span class="inbox-view-label">Viewing</span>
-            <details class="inbox-scope-menu" data-inbox-scope-menu>
-                <summary aria-haspopup="menu">
+            <details class="inbox-scope-menu inbox-menu" name="inbox-controls" data-inbox-scope-menu data-inbox-menu>
+                <summary>
+                    <span class="inbox-control-label">Show:</span>
                     <span><?= $e($scopeLabel) ?></span>
-                    <span data-inbox-current-count><?= (int) $total ?></span>
+                    <span class="inbox-scope-count"><span data-inbox-current-count><?= (int) $total ?></span> <span data-inbox-count-label><?= (int) $total === 1 ? 'topic' : 'topics' ?></span></span>
                     <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
                 </summary>
-                <div class="inbox-scope-menu-panel" role="menu">
+                <div class="inbox-scope-menu-panel inbox-menu-panel">
                     <?php foreach (\App\Support\InboxView::GROUPS as $groupLabel => $groupScopes): ?>
                         <?php $visibleGroup = array_values(array_filter($groupScopes, static fn (string $item): bool => isset($available[$item]))); ?>
                         <?php if ($visibleGroup !== []): ?>
                             <span class="inbox-scope-group-label"><?= $e($groupLabel) ?></span>
                             <?php foreach ($visibleGroup as $item): ?>
-                                <a role="menuitem" href="<?= $e(\App\Support\InboxView::query($item, $order)) ?>"<?= $item === $scope ? ' class="is-active" aria-current="page"' : '' ?>>
+                                <a href="<?= $e(\App\Support\InboxView::query($item, $order)) ?>"<?= $item === $scope ? ' class="is-active" aria-current="page"' : '' ?>>
                                     <span><?= $e(\App\Support\InboxView::LABELS[$item]) ?></span>
                                     <span data-inbox-scope-count="<?= $e($item) ?>"><?= (int) ($scope_counts[$item] ?? 0) ?></span>
                                 </a>
@@ -48,26 +78,19 @@ $available = array_fill_keys($scopes, true);
                 </div>
             </details>
 
-            <span class="inbox-order" role="group" aria-label="Order">
-                <?php foreach (\App\Support\InboxView::ORDERS as $item): ?>
-                    <?php $itemLabel = \App\Support\InboxView::ORDER_LABELS[$item]; ?>
-                    <a href="<?= $e(\App\Support\InboxView::query($scope, $item)) ?>" title="Order by <?= $e($itemLabel['full']) ?>"<?= $item === $order ? ' class="is-active" aria-current="page"' : '' ?>><?= $e($itemLabel['short']) ?></a>
-                <?php endforeach; ?>
-            </span>
-
-            <?php if (!empty($threads)): ?>
-                <form class="inbox-mark-all" method="post" action="/inbox/bulk">
-                    <?= $this->csrfField() ?>
-                    <input type="hidden" name="scope" value="<?= $e($scope) ?>">
-                    <input type="hidden" name="order" value="<?= $e($order) ?>">
-                    <input type="hidden" name="page" value="<?= (int) $page ?>">
-                    <input type="hidden" name="action" value="read">
-                    <?php foreach ($threads as $thread): ?><input type="hidden" name="thread_ids[]" value="<?= (int) $thread['id'] ?>"><?php endforeach; ?>
-                    <button type="submit">Mark all read</button>
-                </form>
-            <?php endif; ?>
-            <span class="inbox-density"><?= ($appearance['density'] ?? 'comfortable') === 'compact' ? 'Compact' : 'Comfortable' ?> rows <a href="/settings/appearance" title="Density lives in your appearance preferences">change</a></span>
-            <span class="inbox-key-hint">Ordered by <?= $e($orderLabel['full']) ?> — j/k move · enter open · e read · s star · # snooze</span>
+            <details class="inbox-sort-menu inbox-menu" name="inbox-controls" data-inbox-menu>
+                <summary>
+                    <span class="inbox-control-label">Sort:</span>
+                    <span><?= $e(ucfirst($orderLabel['full'])) ?></span>
+                    <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
+                </summary>
+                <div class="inbox-menu-panel">
+                    <?php foreach (\App\Support\InboxView::ORDERS as $item): ?>
+                        <?php $itemLabel = \App\Support\InboxView::ORDER_LABELS[$item]; ?>
+                        <a href="<?= $e(\App\Support\InboxView::query($scope, $item)) ?>"<?= $item === $order ? ' class="is-active" aria-current="page"' : '' ?>><?= $e(ucfirst($itemLabel['full'])) ?></a>
+                    <?php endforeach; ?>
+                </div>
+            </details>
         </nav>
 
         <?php if (!empty($threads)): ?>
@@ -101,7 +124,6 @@ $available = array_fill_keys($scopes, true);
             <div class="inbox-empty-state">
                 <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'inbox-empty-star']) ?>
                 <p class="inbox-empty-title"><?= $e($emptyTitle) ?></p>
-                <p class="muted">This is your <?= $e($scopeLabel) ?> scope — it fills as topics qualify. Order (<?= $e($orderLabel['full']) ?>) changes the sequence, never what is included.</p>
                 <?php if ($scope !== 'for_you'): ?><a class="btn btn-small" href="<?= $e(\App\Support\InboxView::query('for_you', $order)) ?>">Back to For You</a><?php endif; ?>
             </div>
         <?php endif; ?>

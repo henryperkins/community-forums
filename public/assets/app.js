@@ -986,8 +986,10 @@
         var allRows = function () { return inboxList.querySelectorAll('[data-inbox-row]'); };
         var linkIn = function (row) { return row ? row.querySelector('[data-inbox-preview-url]') : null; };
         var rowForId = function (id) { return /^\d+$/.test(String(id || '')) ? inboxList.querySelector('[data-thread-id="' + id + '"]') : null; };
+        var inboxMenuSelector = '[data-inbox-menu], [data-inbox-row-menu]';
+        var openInboxMenuSelector = '[data-inbox-menu][open], [data-inbox-row-menu][open]';
         var clearInboxMenuPosition = function (menu) {
-            var panel = menu.querySelector('.inbox-scope-menu-panel, .thread-row-menu-panel');
+            var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel');
             menu.removeAttribute('data-inbox-menu-positioned');
             if (!panel) { return; }
             panel.style.removeProperty('left');
@@ -995,13 +997,14 @@
         };
         var positionInboxMenu = function (menu) {
             var trigger = menu.querySelector(':scope > summary');
-            var panel = menu.querySelector('.inbox-scope-menu-panel, .thread-row-menu-panel');
+            var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel');
             if (!menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
             var margin = 8;
             var gap = menu.matches('[data-inbox-scope-menu]') ? 7 : 4;
             var triggerRect = trigger.getBoundingClientRect();
             var panelRect = panel.getBoundingClientRect();
-            var left = menu.matches('[data-inbox-row-menu]') ? triggerRect.right - panelRect.width : triggerRect.left;
+            var alignEnd = menu.matches('[data-inbox-row-menu], [data-inbox-menu-align="end"]');
+            var left = alignEnd ? triggerRect.right - panelRect.width : triggerRect.left;
             var top = triggerRect.bottom + gap;
             left = Math.max(margin, Math.min(left, window.innerWidth - panelRect.width - margin));
             if (top + panelRect.height > window.innerHeight - margin) {
@@ -1013,7 +1016,7 @@
             menu.setAttribute('data-inbox-menu-positioned', '1');
         };
         var closeInboxMenus = function (restoreFocus) {
-            Array.prototype.forEach.call(inbox.querySelectorAll('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]'), function (menu) {
+            Array.prototype.forEach.call(inbox.querySelectorAll(openInboxMenuSelector), function (menu) {
                 menu.removeAttribute('open');
                 clearInboxMenuPosition(menu);
                 if (restoreFocus) {
@@ -1025,9 +1028,14 @@
 
         inbox.addEventListener('toggle', function (event) {
             var menu = event.target;
-            if (!menu.matches || !menu.matches('[data-inbox-scope-menu], [data-inbox-row-menu]')) { return; }
+            if (!menu.matches) { return; }
+            if (menu.matches('.inbox-help')) {
+                positionInboxMenu(menu.closest('[data-inbox-menu]'));
+                return;
+            }
+            if (!menu.matches(inboxMenuSelector)) { return; }
             if (!menu.open) { clearInboxMenuPosition(menu); return; }
-            Array.prototype.forEach.call(inbox.querySelectorAll('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]'), function (other) {
+            Array.prototype.forEach.call(inbox.querySelectorAll(openInboxMenuSelector), function (other) {
                 if (other !== menu) {
                     other.removeAttribute('open');
                     clearInboxMenuPosition(other);
@@ -1036,8 +1044,11 @@
             positionInboxMenu(menu);
         }, true);
         window.addEventListener('resize', function () {
-            var openMenu = inbox.querySelector('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]');
+            var openMenu = inbox.querySelector(openInboxMenuSelector);
             if (openMenu) { positionInboxMenu(openMenu); }
+        });
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest || !event.target.closest(inboxMenuSelector)) { closeInboxMenus(false); }
         });
         var markActive = function (link) {
             Array.prototype.forEach.call(allRows(), function (row) {
@@ -1108,7 +1119,12 @@
             if (queueUnread && inbox.getAttribute('data-inbox-scope') === 'unread') {
                 var scopeCount = inbox.querySelector('[data-inbox-current-count]');
                 var remaining = scopeCount ? parseInt(scopeCount.textContent || '', 10) : NaN;
-                if (!isNaN(remaining)) { scopeCount.textContent = String(Math.max(0, remaining - 1)); }
+                if (!isNaN(remaining)) {
+                    remaining = Math.max(0, remaining - 1);
+                    scopeCount.textContent = String(remaining);
+                    var countLabel = inbox.querySelector('[data-inbox-count-label]');
+                    if (countLabel) { countLabel.textContent = remaining === 1 ? 'topic' : 'topics'; }
+                }
                 row.remove();
                 if (cursorRow === row) { cursorRow = null; }
             }
@@ -1178,7 +1194,7 @@
             catch (error) { /* History can be unavailable in privacy modes. */ }
 
             document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && inbox.querySelector('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]')) {
+                if (event.key === 'Escape' && inbox.querySelector(openInboxMenuSelector)) {
                     event.preventDefault();
                     closeInboxMenus(true);
                     return;
@@ -1219,7 +1235,10 @@
                 }
             });
 
-            document.addEventListener('scroll', function () { closeInboxMenus(false); }, { capture: true, passive: true });
+            document.addEventListener('scroll', function (event) {
+                if (event.target.closest && event.target.closest(inboxMenuSelector)) { return; }
+                closeInboxMenus(false);
+            }, { capture: true, passive: true });
             inboxList.addEventListener('click', function (event) {
                 var link = event.target.closest ? event.target.closest('[data-inbox-preview-url]') : null;
                 if (!link || !inboxList.contains(link)) { return; }

@@ -1446,7 +1446,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     border-bottom: 1px solid var(--border-hair);
 }
 .directory-viewbar__label,
-.inbox-view-label,
 .search-view-label {
     color: var(--text-faint);
     font-family: var(--font-label);
@@ -1457,8 +1456,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .directory-viewbar__choices,
 .directory-viewbar__peek,
 .search-scope-options,
-.search-order-options,
-.inbox-order {
+.search-order-options {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1471,8 +1469,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .directory-viewbar__peek a,
 .directory-viewbar__peek button,
 .search-scope-options a,
-.search-order-options a,
-.inbox-order a {
+.search-order-options a {
     min-height: 30px;
     padding: 5px 12px;
     border: 0;
@@ -1491,8 +1488,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .directory-viewbar__peek a:hover,
 .directory-viewbar__peek button:hover,
 .search-scope-options a:hover,
-.search-order-options a:hover,
-.inbox-order a:hover {
+.search-order-options a:hover {
     background: var(--surface-sunken);
     color: var(--text-body);
     text-decoration: none;
@@ -1502,8 +1498,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .directory-viewbar__peek [aria-pressed="true"],
 .directory-viewbar__peek [aria-current="true"],
 .search-scope-options a.is-active,
-.search-order-options a.is-active,
-.inbox-order a.is-active {
+.search-order-options a.is-active {
     background: var(--brand-subtle);
     box-shadow: var(--gilt);
     color: var(--on-brand-subtle);
@@ -1528,8 +1523,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     box-shadow: var(--shadow-xs);
     color: var(--text-strong);
 }
-.directory-viewbar__density,
-.inbox-density {
+.directory-viewbar__density {
     margin-left: auto;
     color: var(--text-faint);
     font-family: var(--font-label);
@@ -1545,8 +1539,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .directory-viewbar > .directory-viewbar__density { margin-left: 0; }
 
 .board-index .forum-directory__hero > p a,
-.directory-viewbar__density a,
-.inbox-density a {
+.directory-viewbar__density a {
     text-decoration: underline;
     text-decoration-thickness: .06em;
     text-underline-offset: .14em;
@@ -1554,7 +1547,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .directory-viewbar-mobile { display: none; }
 .directory-order-note,
 .search-result-count,
-.inbox-key-hint,
 .inbox-shown-count {
     color: var(--text-faint);
     font-family: var(--font-mono);
@@ -1886,12 +1878,8 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     background: var(--surface-page);
     scrollbar-gutter: stable;
 }
-.inbox-list-head {
-    margin: 0 0 18px;
-    padding: 0;
-    border: 0;
-}
-.inbox-kicker,
+/* Keep the queue close to its controls; occasional actions live in disclosures. */
+.inbox-list-head { margin: 0 0 12px; padding: 0; border: 0; }
 .compose-eyebrow {
     margin: 0 0 6px;
     color: var(--gold-ink);
@@ -1900,17 +1888,12 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     letter-spacing: .18em;
     text-transform: uppercase;
 }
-.inbox-title-line {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 11px;
-}
+.inbox-title-line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .inbox-list-head h1 {
     margin: 0;
     color: var(--text-strong);
     font-family: var(--font-display);
-    font-size: 2.15rem;
+    font-size: 1.85rem;
     font-weight: var(--weight-medium);
 }
 .inbox-list-head .badge {
@@ -1919,84 +1902,63 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     background: var(--gold-soft);
     color: var(--gold-ink);
     font-size: .72rem;
-    /* `.badge` is the product's uppercase micro-label. Here it states a count in
-       words - "6 unread" - which the design sets in sentence case beside the h1
-       (ForumInbox.dc.html:90). Shouting it made the pill the loudest thing on a
-       queue whose whole job is ranking what matters. */
     letter-spacing: .04em;
     line-height: 1.6;
     text-transform: none;
 }
-.inbox-list-head > p:last-child {
-    max-width: 68ch;
-    margin: 8px 0 0;
-    color: var(--text-muted);
-    font-size: .98rem;
-    line-height: 1.55;
-    text-wrap: pretty;
-}
-/* The design rules the bar along its bottom edge only (ForumInbox.dc.html:101):
-   the lede above it is already separated by its own whitespace, and a second
-   hairline turned the header into a boxed band. */
 .inbox-view-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 10px;
+    gap: 8px 12px;
     margin-bottom: 6px;
     padding: 0 0 12px;
     border-bottom: 1px solid var(--border-hair);
 }
-.inbox-scope-menu { position: relative; }
-/* Scope and order are two axes, not two peers: scope decides WHICH topics and
-   wears the larger outlined control, order decides the sequence and wears the
-   smaller pills. Raising the scope button onto --surface-raised at the pills'
-   own .78rem flattened that (ForumInbox.dc.html:104). */
-.inbox-scope-menu > summary {
-    display: inline-flex;
-    min-height: 30px;
+.inbox-menu { position: relative; min-width: 0; }
+/* Native disclosures share the toolbar's left edge when no positioning script
+   is available, including widths where both triggers fit on the same row. */
+html:not(.has-js) .inbox-view-bar { position: relative; }
+html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
+.inbox-menu > summary {
+    display: flex;
+    min-height: 44px;
     align-items: center;
-    gap: 9px;
-    padding: 5px 12px;
+    gap: 8px;
+    padding: 8px 12px;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-pill);
     background: transparent;
     color: var(--text-strong);
     font-family: var(--font-label);
-    font-size: .84rem;
-    letter-spacing: .03em;
+    font-size: .82rem;
     line-height: 1.2;
-    white-space: nowrap;
     list-style: none;
     cursor: pointer;
 }
-.inbox-scope-menu > summary:hover {
-    border-color: var(--border-soft);
-    background: var(--surface-sunken);
-}
-.inbox-scope-menu > summary::-webkit-details-marker { display: none; }
-.inbox-scope-menu > summary [data-inbox-current-count] {
-    color: var(--gold-ink);
-    font-family: var(--font-mono);
-    font-size: .68rem;
-}
-.inbox-scope-menu > summary .icon { width: 12px; height: 12px; }
-.inbox-scope-menu-panel {
+.inbox-menu > summary:hover { border-color: var(--border-soft); background: var(--surface-sunken); }
+.inbox-menu > summary::-webkit-details-marker { display: none; }
+.inbox-control-label { color: var(--text-muted); }
+.inbox-scope-count { color: var(--gold-ink); font-size: .72rem; white-space: nowrap; }
+.inbox-scope-count [data-inbox-current-count] { font-family: var(--font-mono); }
+.inbox-menu > summary .icon { width: 12px; height: 12px; flex-shrink: 0; }
+.inbox-menu-panel {
     position: absolute;
     z-index: 50;
     top: calc(100% + 7px);
     left: 0;
     display: grid;
-    width: 244px;
-    max-height: min(44vh, 380px);
-    padding: 7px;
+    width: 280px;
+    max-width: calc(100vw - 32px);
+    max-height: min(60vh, 420px);
+    padding: 8px;
     overflow-y: auto;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-lg);
     background: var(--surface-raised);
     box-shadow: var(--shadow-lg);
 }
-.has-js .inbox-scope-menu[open] > .inbox-scope-menu-panel,
+.has-js .inbox-menu[open] > .inbox-menu-panel,
 .has-js .thread-row-menu[open] > .thread-row-menu-panel {
     position: fixed;
     top: 0;
@@ -2005,7 +1967,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     left: 0;
     visibility: hidden;
 }
-.has-js .inbox-scope-menu[data-inbox-menu-positioned="1"] > .inbox-scope-menu-panel,
+.has-js .inbox-menu[data-inbox-menu-positioned="1"] > .inbox-menu-panel,
 .has-js .thread-row-menu[data-inbox-menu-positioned="1"] > .thread-row-menu-panel { visibility: visible; }
 .inbox-scope-group-label {
     padding: 9px 10px 4px;
@@ -2015,60 +1977,41 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     letter-spacing: .16em;
     text-transform: uppercase;
 }
-.inbox-scope-menu-panel a {
-    display: flex;
-    min-height: 32px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 6px 9px;
-    border-left: 2px solid transparent;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+.inbox-menu-panel > a,
+.inbox-mark-all button,
+.inbox-help > summary {
+    min-height: 44px;
+    padding: 10px 8px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
     color: var(--text-body);
     font-family: var(--font-label);
-    font-size: .78rem;
+    font-size: .8rem;
+    line-height: 1.4;
+    text-align: left;
     text-decoration: none;
-}
-.inbox-scope-menu-panel a:hover { background: var(--surface-sunken); text-decoration: none; }
-.inbox-scope-menu-panel a.is-active {
-    border-left-color: var(--gold-500);
-    background: var(--brand-subtle);
-    color: var(--on-brand-subtle);
-}
-.inbox-scope-menu-panel a > span:last-child {
-    color: var(--text-faint);
-    font-family: var(--font-mono);
-    font-size: .66rem;
-}
-.inbox-mark-all { margin-left: auto; }
-.inbox-mark-all button {
-    min-height: 31px;
-    padding: 5px 11px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-md);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--font-label);
-    font-size: .76rem;
-    letter-spacing: .03em;
     cursor: pointer;
 }
-.inbox-mark-all button:hover {
-    background: var(--surface-sunken);
-    color: var(--text-body);
-}
-/* The statement belongs to the bar, not to a line of its own: the design keeps
-   it inline and lets flex wrapping decide when it drops (ForumInbox.dc.html:135).
-   `flex: 1 1 100%` forced the break at every width. */
-.inbox-density {
-    display: inline-flex;
-    flex: none;
-    align-items: baseline;
-    gap: 7px;
-    margin-left: 0;
-    white-space: nowrap;
-}
-.inbox-key-hint { flex: 1 1 100%; margin: 0; font-size: .68rem; }
+.inbox-menu-panel > a { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.inbox-menu-panel > a:hover,
+.inbox-mark-all button:hover,
+.inbox-help > summary:hover { background: var(--surface-sunken); text-decoration: none; }
+.inbox-menu-panel > a.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); }
+.inbox-scope-menu-panel a > span:last-child { color: var(--text-faint); font-family: var(--font-mono); font-size: .66rem; }
+.inbox-actions { margin-left: auto; }
+.inbox-actions > summary { width: 44px; justify-content: center; padding: 8px; border-color: transparent; border-radius: var(--radius-md); }
+.inbox-actions > summary .icon { width: 20px; height: 20px; }
+.inbox-actions > .inbox-menu-panel { left: auto; right: 0; }
+.inbox-mark-all { margin: 0; }
+.inbox-mark-all button { width: 100%; }
+.inbox-help > summary { list-style-position: inside; }
+.inbox-help p { margin: 8px; font-size: .9rem; line-height: 1.5; }
+.inbox-keyboard-help { display: none; }
+.has-js .inbox-keyboard-help { display: block; }
+.inbox-keyboard-help dl { margin: 8px; font-size: .85rem; }
+.inbox-keyboard-help dl > div { display: grid; grid-template-columns: 64px 1fr; gap: 8px; padding-block: 4px; }
+.inbox-keyboard-help dd { margin: 0; }
 .inbox-sweep {
     position: sticky;
     top: 0;
@@ -2721,7 +2664,8 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .thread-row-inbox .thread-title:focus-visible,
 .star-toggle:focus-visible,
 .thread-row-menu > summary:focus-visible,
-.inbox-scope-menu > summary:focus-visible,
+.inbox-menu > summary:focus-visible,
+.inbox-menu-panel :is(a, button, summary):focus-visible,
 .search-view-bar a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -2849,10 +2793,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
     .forum-directory__board-facts { flex-wrap: wrap; white-space: normal; }
     .forum-directory__peek li { grid-template-columns: 4px minmax(0, 1fr); }
     .forum-directory__peek li > span:last-child { grid-column: 2; white-space: normal; }
-    .inbox-title-line { align-items: baseline; }
     .inbox-view-bar { gap-inline: 8px; }
-    .inbox-mark-all { margin-left: 0; }
-    .inbox-density { flex-basis: 100%; }
     .thread-row-inbox > .monogram,
     .thread-row-inbox > .avatar-wrap { display: none; }
     .thread-row-inbox .thread-meta { font-size: .65rem; }

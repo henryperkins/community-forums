@@ -20,7 +20,7 @@ import path from 'node:path';
  */
 
 const repoRoot = path.resolve(__dirname, '..', '..');
-const OUT = path.resolve(repoRoot, 'docs/evidence/imladris-forum-inbox-remediation');
+const OUT = path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-forum-inbox-remediation');
 
 if (process.env.RB_BASE_URL) {
   test.use({ baseURL: process.env.RB_BASE_URL });
@@ -123,11 +123,9 @@ test('the viewing bar carries one rule, beneath it', async ({ page }) => {
   await expect(bar).toHaveCSS('border-top-width', '0px');
   await expect(bar).toHaveCSS('border-bottom-width', '1px');
 
-  // The density statement qualifies the bar it sits in and names the register
-  // the reader actually has, exactly as the board index states it.
-  const density = page.locator('.inbox-density');
-  await expect(density).toHaveText(/^(Compact|Comfortable) rows change$/);
-  await expect(density).toHaveCSS('flex-grow', '0');
+  // Both independent choices have explicit visible labels; preferences live in Settings.
+  await expect(page.locator('[data-inbox-scope-menu] > summary')).toContainText('Show:');
+  await expect(page.locator('.inbox-sort-menu > summary')).toContainText('Sort:');
 });
 
 /**

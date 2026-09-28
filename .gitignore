@@ -41,7 +41,7 @@ composer.lock
 /tests/browser/node_modules/
 /tests/browser/test-results/
 /tests/browser/playwright-report/
-/docs/evidence/browser/.artifacts/
+/docs/evidence/**/.artifacts/
 
 # OS / editor cruft
 .DS_Store

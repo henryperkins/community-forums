@@ -149,7 +149,7 @@ test('the bar and the rail are the design system\'s, at its geometry, in both re
 
   const bar = page.locator('header.forum-bar');
   await expect(bar).toBeVisible();
-  await expect(bar).toHaveCSS('height', '62px');
+  await expect(bar).toHaveCSS('height', testInfo.project.name === 'mobile' ? '108px' : '62px');
   await expect(page.locator('.forum-bar-surfaces[aria-label="Primary"]')).toBeVisible();
   await expect(page.locator('.forum-bar-surface.is-active[aria-current="page"]')).toHaveText('Boards');
   await expect(page.locator('.forum-bar-search')).toHaveAttribute('href', '/search');
@@ -397,7 +397,7 @@ echo json_encode($fixture, JSON_THROW_ON_ERROR);
   try {
     await signIn(page, `${fixture.username}@retro.test`);
     await page.goto('/inbox?scope=unread&order=newest');
-    const count = page.locator('.forum-bar-count');
+    const count = page.locator('.forum-bar-count[data-inbox-unread-count]');
     const railCount = page.locator(`[data-board-slug="${fixture.username}"] [data-board-unread-count]`);
     await expect(count).toHaveText('99+');
     await expect(count).toHaveAttribute('aria-label', '102 unread topics');
@@ -625,11 +625,8 @@ test.describe('with JavaScript disabled', () => {
     await expect(page).toHaveURL(/\/inbox$/);
     await expect(page.locator('.forum-bar-surfaces a[aria-current="page"]')).toContainText('Inbox');
 
-    // A narrow bar may move Messages into the native account disclosure; one
-    // visible shared entry point must survive either responsive arrangement.
-    await page.locator('.identity-menu > summary').click();
-    await expect(page.locator('.identity-menu')).toHaveAttribute('open', '');
-    const messages = page.locator('.forum-bar a[href="/messages"]:visible, .board-rail a[href="/messages"]:visible').first();
+    // Primary routes stay visible on the phone's second row.
+    const messages = page.locator('.forum-bar-surfaces a[href="/messages"]');
     await expect(messages).toBeVisible();
     await messages.click();
     await expect(page).toHaveURL(/\/messages$/);

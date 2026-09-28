@@ -2,6 +2,18 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - A simpler forum inbox
+
+- Put topics directly after a compact Inbox heading and labelled Show and Sort
+  disclosures. Topic counts name their unit; introductory copy, appearance
+  preferences, and the permanent keyboard legend leave the reading path.
+- Keep page actions and Help in the inbox action menu. “Mark this page read”
+  names its existing page-limited behavior. Filters, sorting, and page actions
+  remain usable without JavaScript; density remains in Appearance settings.
+- Give Boards, Inbox, and Messages a full second navigation row at the mobile
+  drawer breakpoint, preserving complete labels and the shared shell offsets
+  (ADR 0042).
+
 ## [Unreleased] - Uploaded avatars everywhere a member is drawn
 
 - An uploaded avatar now replaces the member's monogram on every surface that

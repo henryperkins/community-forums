@@ -127,7 +127,7 @@ board rail. The centre and optional reading pane belong to the current route:
 - **Pane 2 — current surface:** `/` is the non-personalized Board Index directory; `/inbox` is the member's personal queue; `/search` is scoped/ordered results; `/compose` is the focused new-topic editor; `/c/{slug}` is one board's fixed-order topic list. Each route owns its own scope/order/peek axes and server-rendered URL state.
 - **Pane 3 — bounded glance:** only `/inbox` may show a third pane, and it renders a bounded, read-gated topic preview. `/t/{id}-{slug}` alone owns the full thread stream, tools, and composer.
 
-Below 1280px the Inbox split-pane preview yields to the queue. On screens ≤860px the board rail becomes a slide-in drawer and the active surface becomes one column. Canonical links and forms remain complete with JavaScript disabled.
+Below 1280px the Inbox split-pane preview yields to the queue. On screens ≤860px the board rail becomes a slide-in drawer and the active surface becomes one column. The top bar places its primary route links on a second row so their labels remain visible beside the persistent controls. Canonical links and forms remain complete with JavaScript disabled.
 
 ### 5.3 URL structure (server-rendered, SEO-friendly)
 

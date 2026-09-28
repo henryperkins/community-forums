@@ -755,3 +755,16 @@ deduplication. Full tabs keep 20-item pages. Relative timestamps retain exact UT
 in `datetime` and `title`. No client-only filter or upstream component runtime is
 introduced. The source-only preview limitation still applies; evidence comes
 from the PHP application (see `docs/evidence/profile-system-2026-09-27/`).
+
+## 2026-09-28 — Inbox header and mobile route visibility
+
+ADR 0042 replaces the inbox's persistent introduction, order pills, density
+statement, and keyboard legend with a compact title, Show and Sort disclosures,
+and an action/help disclosure. This is an approved application adaptation of
+`ForumInbox.dc.html`; the imported preview stays historical reference material.
+The existing 108px two-row topbar now applies at the 860px drawer breakpoint so
+Boards, Inbox, and Messages are fully visible. The bounded member-surface block
+in `components.css` carries the approved control styling into the generated
+design layer and its application compatibility bridge together. The topbar
+adaptation remains application-owned; Search compacts at 1080px to preserve
+room for counts and controls. PHP and progressive enhancement retain behavior.

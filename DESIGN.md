@@ -270,7 +270,7 @@ All four are self-hosted WOFF2 under OFL 1.1, latin subset — the product runs 
 
 ## Layout
 
-A full-height application shell of three columns plus a top bar. The rails are fixed tokens: top bar **62px**, sidebar **272px**, topic list **410px**, and a **1280px** content maximum for centred pages.
+A full-height application shell of three columns plus a top bar. The rails are fixed tokens: top bar **62px** on desktop and **108px** at the mobile drawer breakpoint, sidebar **272px**, topic list **410px**, and a **1280px** content maximum for centred pages. The mobile top bar gives Boards, Inbox, and Messages their own row; drawer and scroll offsets follow the shared height token.
 
 The three panes map to real URLs rather than to client state: `/` is the forum index, `/inbox` the personalised topic inbox, `/c/{slug}` a board's fixed-order list, `/t/{id}-{slug}` the conversation. Navigation is server-rendered; JavaScript decorates.
 

@@ -230,7 +230,7 @@ final class AppInboxMemberSurfaceTest extends TestCase
 
         $forYou = $this->get('/inbox', ['scope' => 'for_you', 'order' => 'commended']);
         $this->assertSeeText($forYou, 'Nothing needs your attention right now.');
-        $this->assertSeeText($forYou, 'Order (most commended) changes the sequence, never what is included.');
+        $this->assertSeeText($forYou, 'Show chooses which topics appear. Sort changes their order.');
 
         $unread = $this->get('/inbox', ['scope' => 'unread', 'order' => 'newest']);
         self::assertStringContainsString('You&#039;re all caught up — nothing unread.', $unread->body());
