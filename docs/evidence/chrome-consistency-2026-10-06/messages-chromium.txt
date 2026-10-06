@@ -1,0 +1,8 @@
+
+  ✓  1 [desktop] › messages-audit-regressions.spec.ts:317:5 › P1-1 compose dialog is modal: aria-modal, Tab and Shift+Tab stay inside, Escape peels list then dialog (2.6s)
+
+  ✓  2 [desktop] › messages-audit-regressions.spec.ts:591:5 › P2-1 the saved details choice reopens only a column; overlays start closed with the back control reachable (1.5s)
+
+  ✓  3 [desktop] › messages-audit-regressions.spec.ts:850:5 › P3-5 one h1 per page, owner tools name the member, unread leads the row name, the details toggle is a button (948ms)
+
+  3 passed (5.8s)

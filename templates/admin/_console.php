@@ -149,6 +149,19 @@ $visibleTabs = static function (array $tabs) use ($adminViewer): array {
 
 $current = $areas[$area] ?? null;
 $disabledNote = 'Disabled until the feature flag is enabled';
+$tierEntries = [];
+foreach ($tierAreas as $key => $meta) {
+    $areaTabs = $visibleTabs($meta['tabs']);
+    $enabledTabs = array_filter($areaTabs, $tabEnabled);
+    $fallback = array_values($areaTabs);
+    $tierEntries[$key] = [
+        'label' => $meta['label'],
+        'href' => $enabledTabs === []
+            ? (string) ($fallback[0]['href'] ?? '/admin')
+            : (string) (reset($enabledTabs)['href']),
+        'enabled' => $enabledTabs !== [],
+    ];
+}
 ?>
 <div class="admin-bar">
     <div class="admin-bar-id">
@@ -200,30 +213,18 @@ $disabledNote = 'Disabled until the feature flag is enabled';
         </div>
     </div>
     <nav class="admin-tier" aria-label="Admin areas" data-admin-tier>
-        <?php foreach ($tierAreas as $key => $meta): ?>
-            <?php
-            $areaTabs = $visibleTabs($meta['tabs']);
-            $enabledTabs = array_filter($areaTabs, $tabEnabled);
-            // $areaTabs can now be empty in principle (an area whose every tab is
-            // admin_only, seen by a moderator), and reset([]) is false — indexing
-            // that warns, which failOnWarning turns red. Resolve through a list.
-            $fallback = array_values($areaTabs);
-            $firstHref = $enabledTabs === []
-                ? (string) ($fallback[0]['href'] ?? '/admin')
-                : (string) (reset($enabledTabs)['href']);
-            ?>
-            <?php if ($key === $area): ?>
-                <span class="admin-tier-item is-active" aria-current="page"><?= $e($meta['label']) ?></span>
-            <?php elseif ($enabledTabs === []): ?>
-                <span class="admin-tier-item is-disabled" aria-disabled="true" data-destination="<?= $e($firstHref) ?>">
-                    <span class="subnav-item-label"><?= $e($meta['label']) ?></span>
-                    <span class="subnav-item-note"><?= $e($disabledNote) ?></span>
-                </span>
-            <?php else: ?>
-                <a class="admin-tier-item" href="<?= $e($firstHref) ?>"><?= $e($meta['label']) ?></a>
-            <?php endif; ?>
-        <?php endforeach; ?>
+        <?= $this->partial('admin/_area_links', [
+            'entries' => $tierEntries, 'area' => $area, 'item_class' => 'admin-tier-item', 'disabled_note' => $disabledNote,
+        ]) ?>
     </nav>
+    <details class="admin-area-menu">
+        <summary data-admin-current-area><span>Admin areas</span><strong><?= $e($current['label'] ?? 'Admin console') ?></strong><?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?></summary>
+        <nav class="admin-mobile-areas" aria-label="Admin areas" data-admin-mobile-areas>
+            <?= $this->partial('admin/_area_links', [
+                'entries' => $tierEntries, 'area' => $area, 'item_class' => 'admin-area-item', 'disabled_note' => $disabledNote,
+            ]) ?>
+        </nav>
+    </details>
 </div>
 <main class="admin-console" id="main"<?= $current !== null ? ' data-area="' . $e($area) . '"' : '' ?>>
     <?php if ($current !== null): ?>

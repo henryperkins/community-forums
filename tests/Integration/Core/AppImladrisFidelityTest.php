@@ -525,12 +525,35 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'wardens-table-report-marker');
     }
 
-    /**
-     * Slice 18 -- ADMIN.md §9.4 least privilege, ADR 0024 constraint 4. /mod/* is
-     * moderator-reachable while /admin/* needs requireAdmin(), so the console
-     * tier a moderator sees on a queue must be reduced to the one area they can
-     * actually open. Showing ten areas that all 403 would be show-and-deny.
-     */
+    /** Both responsive menus must resolve the same server-owned navigation. */
+    public function test_operator_responsive_area_menus_share_flag_gates_and_non_link_current_state(): void
+    {
+        $admin = $this->makeAdmin();
+        (new \App\Repository\SettingRepository($this->db))->set('features', [
+            'api_tokens' => false, 'webhooks' => false, 'provider_registry' => false,
+        ]);
+        $this->actingAs($admin);
+        $response = $this->get('/admin/settings');
+        $this->assertStatus(200, $response);
+        $html = $response->body();
+
+        self::assertStringContainsString('<details class="admin-area-menu">', $html);
+        self::assertStringContainsString('<summary data-admin-current-area><span>Admin areas</span><strong>Settings</strong>', $html);
+        foreach (['admin-tier-item', 'admin-area-item'] as $class) {
+            self::assertMatchesRegularExpression('#<span class="' . $class . ' is-active" aria-current="page">Settings</span>#', $html);
+            self::assertMatchesRegularExpression('#<span class="' . $class . ' is-disabled" aria-disabled="true" data-destination="/admin/api-tokens">#', $html);
+        }
+        foreach (['/admin/api-tokens', '/admin/webhooks', '/admin/providers'] as $disabled) {
+            self::assertStringNotContainsString('href="' . $disabled . '"', $html);
+        }
+        self::assertSame(1, preg_match('#<nav class="admin-tier".*?</nav>#s', $html, $desktop));
+        self::assertSame(1, preg_match('#<nav class="admin-mobile-areas".*?</nav>#s', $html, $mobile));
+        preg_match_all('#<a class="admin-tier-item" href="([^"]+)"#', $desktop[0], $desktopLinks);
+        preg_match_all('#<a class="admin-area-item" href="([^"]+)"#', $mobile[0], $mobileLinks);
+        self::assertSame($desktopLinks[1], $mobileLinks[1]);
+    }
+
+    /** ADMIN §9.4: a board moderator keeps only the area they can open. */
     public function test_moderator_sees_only_the_moderation_area_on_a_queue(): void
     {
         // Board authority comes from board_moderators, not users.role: a bare
@@ -544,6 +567,9 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertStatus(200, $res);
         $body = $res->body();
         self::assertStringContainsString('admin-tier', $body);
+        self::assertSame(1, preg_match('#<nav class="admin-mobile-areas".*?</nav>#s', $body, $mobile));
+        self::assertSame(1, substr_count($mobile[0], 'admin-area-item'));
+        self::assertStringContainsString('aria-current="page">Moderation</span>', $mobile[0]);
         // Pin the area label itself, not the substring: aria-label="Moderation
         // sections" satisfied a bare 'Moderation' unconditionally, so this
         // assertion used to hold even with the tier empty.

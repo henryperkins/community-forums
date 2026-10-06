@@ -6,7 +6,7 @@
  * server-side (ADR 0032).
  *
  * One register, identical on every app route: house lockup · surface
- * pills · search · rail toggle · New topic · the viewer. Below 381px the primary
+ * pills · search · rail toggle · New topic · the viewer. Below 861px the primary
  * routes use their own row so all labels remain readable. The class vocabulary is
  * the design's own and the layered /assets/imladris.css styles it directly;
  * app.css carries only what the layer cannot express — see its "Member chrome"
@@ -22,9 +22,13 @@
  * for a guest.
  */
 $path = (string) ($request_path ?? '/');
-$isBoards = $path === '/' || str_starts_with($path, '/c/') || str_starts_with($path, '/tag/');
-$isInbox = $path === '/inbox' || str_starts_with($path, '/inbox/');
-$isMessages = $path === '/messages' || str_starts_with($path, '/messages/');
+$hasBoardRail = !empty($has_board_rail);
+$hasReadingPane = !empty($has_reading_pane);
+$isBoards = $hasBoardRail && ($path === '/' || str_starts_with($path, '/c/')
+    || $path === '/tags' || str_starts_with($path, '/tags/')
+    || (int) ($active_thread_board_id ?? 0) > 0);
+$isInbox = $hasBoardRail && ($path === '/inbox' || str_starts_with($path, '/inbox/'));
+$isMessages = $hasBoardRail && ($path === '/messages' || str_starts_with($path, '/messages/'));
 $surfaces = is_array($member_surfaces ?? null)
     ? $member_surfaces
     : ['rail_open' => true, 'inbox_reading_open' => true];
@@ -39,12 +43,14 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
 ?>
 <header class="forum-bar">
     <?php // The phone drawer's opener. Desktop never shows it (app.css); the design has no drawer. ?>
+    <?php if ($hasBoardRail): ?>
     <a class="nav-toggle" data-nav-fallback href="#sidebar-nav" aria-label="Open board rail">
         <?= $this->partial('partials/icon', ['name' => 'menu', 'class' => 'nav-toggle-ic']) ?>
     </a>
     <button class="nav-toggle" type="button" data-nav-toggle hidden aria-label="Open board rail" aria-expanded="false" aria-controls="sidebar-nav">
         <?= $this->partial('partials/icon', ['name' => 'menu', 'class' => 'nav-toggle-ic']) ?>
     </button>
+    <?php endif; ?>
 
     <a class="forum-bar-brand" href="/" aria-label="<?= $e($site_name) ?>">
         <?php if (!empty($branding['logo_path'])): ?>
@@ -58,7 +64,8 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
 
     <?php
     // The active pill keeps its href, where the component renders it inert: a
-    // surface here spans a family of routes (Boards covers /, /c/* and /tag/*),
+    // surface here spans a family of routes (Boards covers /, /c/*, /tags/* and
+    // authorized canonical topics),
     // so the pill is still the way back to the surface's root (ADR 0028's
     // shared-navigation contract).
     ?>
@@ -107,6 +114,7 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
             // shown band is filled — the rail on the left, the reading pane on
             // the right — and the band is drawn only while the pane is shown.
             ?>
+            <?php if ($hasBoardRail): ?>
             <form class="inline forum-bar-panel-form" method="post" action="/settings/member-surfaces" data-panel-form="rail">
                 <?= $this->csrfField() ?>
                 <input type="hidden" name="rail_open" value="<?= $railOpen ? '0' : '1' ?>">
@@ -115,8 +123,9 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
                     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><rect class="forum-bar-toggle-band" x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"/></svg>
                 </button>
             </form>
+            <?php endif; ?>
 
-            <?php if ($isInbox): ?>
+            <?php if ($hasReadingPane): ?>
                 <form class="inline forum-bar-panel-form" method="post" action="/settings/member-surfaces" data-panel-form="reading">
                     <?= $this->csrfField() ?>
                     <input type="hidden" name="inbox_reading_open" value="<?= $readingOpen ? '0' : '1' ?>">

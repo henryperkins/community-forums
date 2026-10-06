@@ -1,0 +1,8 @@
+  ✓  72 [mobile] › unified-chrome.spec.ts:611:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls (1.1s)
+
+  ✓  73 [mobile] › unified-chrome.spec.ts:648:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.6s)
+
+  ✓  74 [mobile] › unified-chrome.spec.ts:724:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (959ms)
+
+  23 skipped
+  51 passed (1.2m)

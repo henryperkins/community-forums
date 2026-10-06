@@ -54,7 +54,7 @@ of `.board-rail-cat` labels and `.board-rail-item` rows (`.is-active`,
 the presence widget in `.board-rail-foot`. The active pill and the active board
 carry `aria-current="page"` and **keep their `href`**, where the components render
 the active entry inert: a surface here spans a family of routes (Boards covers
-`/`, `/c/*` and `/tag/*`), so the pill is still the way back to the surface's
+`/`, `/c/*`, `/tags` and `/tags/*`), so the pill is still the way back to the surface's
 root, and ADR 0028's shared-navigation contract pins it. Other necessary PHP
 and progressive-enhancement adaptations are enumerated below.
 
@@ -264,3 +264,43 @@ The local warm CLS measurement fell from 1.047470 to 0.038149. Keyboard, no-JS,
 blocked-bundle and delayed-editor evidence, plus the authorized presentation
 baseline refresh and release checks, are recorded in
 [`docs/evidence/performance/2026-09-20/cls-fix/README.md`](../evidence/performance/2026-09-20/cls-fix/README.md).
+
+### Chrome consistency follow-up — 2026-10-06
+
+The shared header receives explicit shell capabilities from the layout. Plain
+error pages keep member identity and primary destinations without emitting
+controls for absent rails or reading panes. Boards is current on tag routes and
+authorized canonical topics, whose parent board remains current in the rail.
+
+Category board links and personal folder shortcuts now share one renderer for
+active state, unread counts, board URLs and visibility labels. The unread source
+is the existing read-gated Inbox aggregate; duplicate shortcuts repeat a board's
+count without increasing the queue total. Lost private-board access removes both
+copies. Saved feeds retain their own active state and public presence stays in
+the footer; the rail contains neither Inbox filters nor direct messages.
+
+The document-scrolling desktop rail clears the sticky header. Enhanced phone
+drawers focus their first usable control, wrap Tab, make covered main content
+inert, and return focus on dismissal. Resizing releases the covered content and
+keeps focus visible, including when the persisted desktop rail is closed. Native
+fragment links and the stacked no-JavaScript rail remain available. Board and
+Messages overlays share the same filtering and Tab-wrapping helper.
+
+Messages restores a saved details column only after its stylesheets are ready.
+WebKit can run the deferred controller before those sheets arrive, so an early
+position probe cannot distinguish a column from an overlay. Until styles load,
+the default remains closed; a user choice made meanwhile takes precedence.
+Explicit details fragments remain open during resize, while a restored column
+closes when it becomes an overlay without overwriting the saved preference.
+
+The operator shell keeps its horizontal area tier above 860px. At 860px and
+below, a native disclosure names the current area and opens the same ordered,
+role- and flag-gated destinations; active areas stay non-links. ADMIN §9.2/§9.4
+records this responsive adaptation. Narrow subscription panels put the title,
+delivery controls and off action on successive rows; their container size
+accounts for space taken by both sidebars. Long titles wrap at a readable width
+instead of widening the settings document. Long community names
+shorten in the operator header while controls and the brand mark keep their size.
+
+Validation and limits are recorded in
+[`docs/evidence/chrome-consistency-2026-10-06/README.md`](../evidence/chrome-consistency-2026-10-06/README.md).

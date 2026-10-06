@@ -693,8 +693,8 @@ final class App
 
         $nav = [];
         $inboxUnreadCount = 0;
+        $unreadCounts = [];
         try {
-            $unreadCounts = [];
             $user = $session->user();
             if ($user !== null && !empty($features['engagement'])) {
                 $cutover = $container->get(SettingRepository::class)
@@ -711,6 +711,7 @@ final class App
         } catch (Throwable) {
             $nav = [];
             $inboxUnreadCount = 0;
+            $unreadCounts = [];
         }
 
         // Presence is shared as a CLOSURE, not an array. Building the roster
@@ -935,6 +936,7 @@ final class App
             'login_return' => $this->loginReturnPath($request, $session),
             'nav' => $nav,
             'inbox_unread_count' => $inboxUnreadCount,
+            'board_unread_counts' => $unreadCounts,
             'dm_unread' => static function () use ($container, $session, $features): int {
                 try {
                     $viewer = $session->user();

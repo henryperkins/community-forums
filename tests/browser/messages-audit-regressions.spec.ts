@@ -31,7 +31,8 @@ import path from 'node:path';
  */
 
 const repoRoot = path.resolve(__dirname, '..', '..');
-const evidence = path.join(repoRoot, 'docs/evidence/dm-reimagine/phase5');
+const evidence = path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/dm-reimagine/phase5');
+test.use({ browserName: process.env.E2E_LAYOUT_BROWSER === 'webkit' ? 'webkit' : 'chromium' });
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const DESKTOP = { width: 1440, height: 1000 };
 const TOUCH: BrowserContextOptions = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
@@ -619,6 +620,15 @@ test('P2-1 the saved details choice reopens only a column; overlays start closed
         return !!hit && (hit === el || el.contains(hit));
       });
       expect.soft(back, 'the back control is not covered by the rail').toBe(true);
+      // A fragment is an explicit opening, independent of the saved column
+      // choice; responsive reclassification must keep that request open.
+      await page.goto(`/messages/${carol.id}#dm-rail`);
+      await expect(page.locator('#dm-rail')).toBeInViewport();
+      await expect(page.locator('[data-rail-toggle]')).toHaveAttribute('aria-expanded', 'true');
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await expect(page.locator('#dm-rail')).toBeInViewport();
+      expect(new URL(page.url()).hash).toBe('#dm-rail');
+      expect(await page.evaluate(() => localStorage.getItem('rb-dm-rail-collapsed'))).toBe('0');
     }
     if (label === '1280') {
       if (!await page.locator('.dm-shell').evaluate(n => n.classList.contains('rail-open'))) await page.locator('[data-rail-toggle]').click();
@@ -638,6 +648,10 @@ test('P2-1 the saved details choice reopens only a column; overlays start closed
   await expect.soft(wide.page.locator('.dm-shell'), '1800 restores the column').toHaveClass(/rail-open/);
   await expect.soft(wide.page.locator('[data-rail-toggle]')).toHaveAttribute('aria-expanded', 'true');
   await expect.soft(wide.page.locator('#dm-rail')).toBeInViewport();
+  await wide.page.setViewportSize({ width: 1280, height: 800 });
+  await expect(wide.page.locator('.dm-shell'), 'a restored column closes when it becomes an overlay').not.toHaveClass(/rail-open/);
+  await expect(wide.page.locator('[data-rail-toggle]')).toHaveAttribute('aria-expanded', 'false');
+  expect(await wide.page.evaluate(() => localStorage.getItem('rb-dm-rail-collapsed'))).toBe('0');
   expect.soft(wide.errors).toEqual([]);
   await wide.context.close();
 });

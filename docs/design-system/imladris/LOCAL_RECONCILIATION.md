@@ -768,3 +768,22 @@ in `components.css` carries the approved control styling into the generated
 design layer and its application compatibility bridge together. The topbar
 adaptation remains application-owned; Search compacts at 1080px to preserve
 room for counts and controls. PHP and progressive enhancement retain behavior.
+
+## 2026-10-06 — Chrome consistency
+
+ADR 0032's follow-up and ADMIN §9.2/§9.4 close the member/operator chrome audit:
+the desktop rail clears the sticky header on document-scrolling pages; phone
+drawers own keyboard focus while the main page is covered; plain errors omit
+controls for absent panes; Boards covers real tag routes and authorized topics;
+and folder shortcuts share board state with category rows. The narrow operator
+tier is a native disclosure headed by its current area, preserving the same
+ordered, role- and flag-gated destinations without JavaScript. Narrow
+subscription panels stack the title, delivery controls and off action based on
+available pane width; long titles wrap, and long operator-header brands yield
+space to controls. Messages waits for styles before restoring a saved column,
+so WebKit does not reopen an overlay over a smaller conversation. These
+application-owned geometry, interaction and content-resilience rules live in
+`public/assets/app.css`, `public/assets/app.js` and the PHP shell, retaining the
+imported Imladris vocabulary and semantic tokens. The
+bounded member-surface compatibility bridge and imported preview sources are
+unchanged. Evidence lives in `docs/evidence/chrome-consistency-2026-10-06/`.

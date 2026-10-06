@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\BoardMemberRepository;
+use App\Repository\BoardFolderRepository;
 use App\Repository\SettingRepository;
+use App\Repository\TagRepository;
 use App\Repository\ThreadUserRepository;
 use App\Repository\UserBoardPrefRepository;
 use App\Repository\UserPreferenceRepository;
@@ -80,6 +82,99 @@ final class AppMemberShellTest extends TestCase
         );
         self::assertSame(1, substr_count($rail, 'aria-current="page"'));
         self::assertStringNotContainsString('aria-current="page"', $this->boardRail($this->get('/')->body()));
+    }
+
+    public function test_boards_primary_route_covers_tag_pages_and_authorized_topics(): void
+    {
+        $user = $this->makeUser(['username' => 'primary_families']);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $user);
+        (new TagRepository($this->db))->create('shell-tag', 'Shell tag', null, (int) $user['id']);
+        $this->actingAs($user);
+
+        foreach (['/tags', '/tags/shell-tag', '/t/' . $thread['thread_id'] . '-' . $thread['slug']] as $path) {
+            $response = $this->get($path);
+            $this->assertStatus(200, $response);
+            self::assertMatchesRegularExpression(
+                '/data-primary-route="boards"[^>]*href="\/"[^>]*aria-current="page"/',
+                $this->topbar($response->body()),
+                $path,
+            );
+        }
+    }
+
+    public function test_plain_error_header_omits_controls_for_panes_that_do_not_exist(): void
+    {
+        $user = $this->makeUser(['username' => 'error_shell']);
+        $private = $this->makeBoard($this->makeCategory(), ['slug' => 'private-error-shell', 'visibility' => 'private']);
+        $this->actingAs($user);
+        (new UserPreferenceRepository($this->db))->merge((int) $user['id'], ['rail_open' => true]);
+
+        foreach (['/missing-shell' => 404, '/admin/settings' => 403, '/c/' . $private['slug'] => 404] as $path => $status) {
+            $response = $this->get($path);
+            $this->assertStatus($status, $response);
+            $topbar = $this->topbar($response->body());
+            self::assertStringContainsString('data-primary-route="boards"', $topbar);
+            self::assertStringNotContainsString('data-panel-form=', $topbar);
+            self::assertStringNotContainsString('data-nav-toggle', $topbar);
+            self::assertStringNotContainsString('data-nav-fallback', $topbar);
+            self::assertStringNotContainsString('aria-current="page"', $topbar);
+        }
+
+        self::assertTrue((new UserPreferenceRepository($this->db))->get((int) $user['id'])['rail_open']);
+        self::assertStringContainsString('data-panel-form="rail"', $this->topbar($this->get('/')->body()));
+    }
+
+    public function test_folder_shortcuts_share_board_state_without_bypassing_read_gates(): void
+    {
+        $category = $this->makeCategory('Folder places');
+        $user = $this->makeUser(['username' => 'folder_reader']);
+        $author = $this->makeUser(['username' => 'folder_author']);
+        $public = $this->makeBoard($category, ['slug' => 'folder-public']);
+        $private = $this->makeBoard($category, ['slug' => 'folder-private', 'visibility' => 'private']);
+        $hidden = $this->makeBoard($category, ['slug' => 'folder-hidden', 'visibility' => 'hidden']);
+        $muted = $this->makeBoard($category, ['slug' => 'folder-muted']);
+        $denied = $this->makeBoard($category, ['slug' => 'folder-denied', 'visibility' => 'private']);
+        (new BoardMemberRepository($this->db))->add((int) $private['id'], (int) $user['id'], null);
+        (new BoardMemberRepository($this->db))->add((int) $private['id'], (int) $author['id'], null);
+        $folders = new BoardFolderRepository($this->db);
+        $folder = $folders->create((int) $user['id'], 'My places');
+        foreach ([$public, $private, $hidden, $muted, $denied] as $board) {
+            $folders->addBoard($folder, (int) $board['id']);
+        }
+        $thread = $this->makeThread($public, $author, 'Folder unread');
+        $this->makeThread($private, $author, 'Private unread');
+        $this->makeThread($hidden, $author, 'Hidden unread');
+        $this->makeThread($muted, $author, 'Muted unread');
+        (new UserBoardPrefRepository($this->db))->setMuted((int) $user['id'], (int) $muted['id'], true);
+        (new SettingRepository($this->db))->set('engagement_cutover_at', '2000-01-01 00:00:00');
+        $this->actingAs($user);
+
+        $html = $this->get('/')->body();
+        $home = $this->boardRail($html);
+        self::assertStringContainsString('data-inbox-unread-count="2"', $this->topbar($html));
+        self::assertStringNotContainsString('folder-denied', $home);
+        foreach (['folder-public', 'folder-private'] as $slug) {
+            self::assertSame(2, preg_match_all('#<a class="board-rail-item[^>]*href="/c/' . $slug . '"[^>]*>.*?</a>#s', $home, $rows));
+            self::assertSame($rows[0][0], $rows[0][1], 'Both copies must carry the same board state.');
+            self::assertStringContainsString('data-board-unread-count="1"', $rows[0][0]);
+        }
+        self::assertSame(1, preg_match('#<a class="board-rail-item[^>]*href="/c/folder-hidden"[^>]*>.*?</a>#s', $home, $hiddenRow));
+        self::assertStringContainsString('board-rail-tag">hidden</span>', $hiddenRow[0]);
+        self::assertStringNotContainsString('data-board-unread-count', $hiddenRow[0]);
+        self::assertSame(2, preg_match_all('#<a class="board-rail-item[^>]*href="/c/folder-muted"[^>]*>.*?</a>#s', $home, $mutedRows));
+        foreach ($mutedRows[0] as $row) {
+            self::assertStringNotContainsString('data-board-unread-count', $row);
+        }
+
+        foreach (['/c/folder-public', '/t/' . $thread['thread_id'] . '-' . $thread['slug']] as $path) {
+            $rail = $this->boardRail($this->get($path)->body());
+            self::assertSame(2, preg_match_all('#<a class="board-rail-item is-active"[^>]*href="/c/folder-public"[^>]*aria-current="page"[^>]*>.*?</a>#s', $rail, $rows));
+            self::assertSame($rows[0][0], $rows[0][1]);
+        }
+        // Losing access must remove a stored private shortcut as well as its category row.
+        (new BoardMemberRepository($this->db))->remove((int) $private['id'], (int) $user['id']);
+        self::assertStringNotContainsString('folder-private', $this->boardRail($this->get('/')->body()));
     }
 
     public function test_rail_unread_pills_sum_to_inbox_and_muted_places_remain_without_attention(): void

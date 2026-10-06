@@ -2,6 +2,24 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Consistent headers and navigation
+
+- Keep focus inside the open mobile board drawer, restore it on dismissal, and
+  release covered content on resize. Desktop board rails stay below the header.
+- Omit pane controls on error pages that have no panes. Tags and authorized
+  topics mark Boards current; personal folder shortcuts share standard board
+  active state, unread counts and visibility labels without widening access.
+- Keep the current admin area visible in a native narrow-screen disclosure,
+  with the same role and feature gates and no JavaScript requirement.
+- Preserve admin controls and the brand mark when long community names shorten
+  in the header, including at the 900px transition.
+- Restore saved Messages details only after styles can identify a desktop
+  column. WebKit overlays stay closed on arrival; explicit details links and
+  resize behavior retain the desktop preference.
+- Give subscription titles their full row before the delivery controls in
+  narrow settings panels, and wrap long names. Align navigation documentation
+  with the rendered chrome (ADR 0032, 2026-10-06 follow-up).
+
 ## [Unreleased] - A simpler forum inbox
 
 - Put topics directly after a compact Inbox heading and labelled Show and Sort

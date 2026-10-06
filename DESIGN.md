@@ -45,19 +45,19 @@ colors:
   slate: "#3F6E89"
 typography:
   display:
-    fontFamily: "Cormorant Garamond, Hoefler Text, Garamond, Georgia, serif"
+    fontFamily: "Cormorant Garamond, Hoefler Text, Garamond, Georgia, Times New Roman, serif"
     fontSize: "2.25rem"
     fontWeight: 500
     lineHeight: 1.15
     letterSpacing: "-0.01em"
   headline:
-    fontFamily: "Cormorant Garamond, Hoefler Text, Garamond, Georgia, serif"
+    fontFamily: "Cormorant Garamond, Hoefler Text, Garamond, Georgia, Times New Roman, serif"
     fontSize: "1.75rem"
     fontWeight: 500
     lineHeight: 1.15
     letterSpacing: "-0.01em"
   title:
-    fontFamily: "Cormorant Garamond, Hoefler Text, Garamond, Georgia, serif"
+    fontFamily: "Cormorant Garamond, Hoefler Text, Garamond, Georgia, Times New Roman, serif"
     fontSize: "1.375rem"
     fontWeight: 500
     lineHeight: 1.15
@@ -67,19 +67,56 @@ typography:
     fontSize: "1.0625rem"
     fontWeight: 400
     lineHeight: 1.62
-    letterSpacing: "normal"
   label:
-    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, serif"
+    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
     fontSize: "0.72rem"
     fontWeight: 400
-    lineHeight: 1
     letterSpacing: "0.16em"
   mono:
     fontFamily: "JetBrains Mono, SFMono-Regular, ui-monospace, Menlo, Consolas, monospace"
     fontSize: "0.72rem"
     fontWeight: 400
+  body-ui:
+    fontFamily: "EB Garamond, Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif"
+    fontSize: "1.0625rem"
+    fontWeight: 400
+    lineHeight: 1.6
+  button-label:
+    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
+    fontSize: "0.9rem"
+    fontWeight: 400
+    letterSpacing: "0.03em"
+  chip-label:
+    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
+    fontSize: "0.62rem"
+    fontWeight: 400
     lineHeight: 1
-    letterSpacing: "normal"
+    letterSpacing: "0.1em"
+  small:
+    fontFamily: "EB Garamond, Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif"
+    fontSize: "0.95rem"
+    fontWeight: 400
+  fine:
+    fontFamily: "EB Garamond, Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif"
+    fontSize: "0.86rem"
+    fontWeight: 400
+  meta:
+    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
+    fontSize: "0.78rem"
+    fontWeight: 400
+  chip:
+    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
+    fontSize: "0.7rem"
+    fontWeight: 400
+  tab-label:
+    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
+    fontSize: "0.8rem"
+    fontWeight: 400
+    letterSpacing: "0.03em"
+  avatar-label:
+    fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
+    fontSize: "0.8rem"
+    fontWeight: 500
 rounded:
   sm: "4px"
   md: "7px"
@@ -99,33 +136,39 @@ components:
   button-primary:
     backgroundColor: "{colors.green-700}"
     textColor: "{colors.parchment-50}"
-    typography: "{typography.label}"
+    typography: "{typography.button-label}"
     rounded: "{rounded.md}"
     padding: "9px 17px"
   button-primary-hover:
-    backgroundColor: "{colors.green-800}"
+    backgroundColor: "color-mix(in srgb, var(--accent) 82%, #000)"
     textColor: "{colors.parchment-50}"
   button-secondary:
     backgroundColor: "{colors.parchment-50}"
     textColor: "{colors.ink-900}"
-    typography: "{typography.label}"
+    typography: "{typography.button-label}"
     rounded: "{rounded.md}"
     padding: "9px 17px"
   button-ghost:
     textColor: "{colors.ink-700}"
-    typography: "{typography.label}"
+    typography: "{typography.button-label}"
     rounded: "{rounded.md}"
     padding: "9px 17px"
   button-accent:
     backgroundColor: "{colors.gold-500}"
     textColor: "{colors.ink-900}"
-    typography: "{typography.label}"
+    typography: "{typography.button-label}"
+    rounded: "{rounded.md}"
+    padding: "9px 17px"
+  button-danger:
+    backgroundColor: "{colors.rust}"
+    textColor: "#FFFFFF"
+    typography: "{typography.button-label}"
     rounded: "{rounded.md}"
     padding: "9px 17px"
   chip-status:
     backgroundColor: "{colors.green-050}"
     textColor: "{colors.green-800}"
-    typography: "{typography.label}"
+    typography: "{typography.chip-label}"
     rounded: "{rounded.pill}"
     padding: "3px 9px"
   pill:
@@ -140,18 +183,22 @@ components:
     typography: "{typography.label}"
     rounded: "{rounded.pill}"
     padding: "6px 13px"
+  tab-ruled-active:
+    textColor: "{colors.green-700}"
+    typography: "{typography.tab-label}"
+    padding: "8px 14px"
   input:
     backgroundColor: "{colors.parchment-50}"
     textColor: "{colors.ink-900}"
-    typography: "{typography.body}"
+    typography: "{typography.body-ui}"
     rounded: "{rounded.md}"
     padding: "9px 11px"
   card:
     backgroundColor: "{colors.parchment-50}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.md}"
     padding: "18px"
   thread-row:
-    backgroundColor: "{colors.parchment-50}"
+    backgroundColor: "transparent"
     rounded: "{rounded.lg}"
     padding: "14px 16px"
   post:
@@ -168,7 +215,7 @@ components:
   monogram:
     backgroundColor: "{colors.green-100}"
     textColor: "{colors.green-800}"
-    typography: "{typography.label}"
+    typography: "{typography.avatar-label}"
     rounded: "{rounded.pill}"
     width: "36px"
     height: "36px"
@@ -178,7 +225,9 @@ components:
 
 > **This file is the visual system only.** Product and technical truth lives in `PRODUCT_DESIGN.md` (renamed from `DESIGN.md` on 2026-08-27); durable product context lives in `PRODUCT.md`; `DECISIONS.md` wins on any conflict. Machine-readable extensions — tonal ramps, shadows, motion, breakpoints, component snippets — live in `.impeccable/design.json`.
 >
-> **Authoritative sources.** Tokens: `resources/imladris/tokens/{colors,typography,spacing,fonts}.css`, generated into `public/assets/imladris.css`. Components: `public/assets/app.css`, with the curated transcription in `docs/design-system/imladris/components.css`. The two token copies were verified byte-identical on 2026-08-27. A few application-owned semantic tokens the layer does not carry (`--field-rule`, `--stage-*`) are defined in `app.css`'s own token block, beside its twilight registers (ADR 0039).
+> **Authoritative sources.** Foundations: `resources/imladris/tokens/{colors,typography,spacing,fonts}.css` and `resources/imladris/components.css`, generated into the low-priority layers of `public/assets/imladris.css`. The final application register is the unlayered `public/assets/app.css`; it wins wherever it overrides those layers. The authoring token copies in `docs/design-system/imladris/tokens/` were verified byte-identical on 2026-10-06. Application-owned semantic tokens (`--field-rule`, `--stage-*`) and the system-dark register live in `app.css` (ADR 0039).
+>
+> **Reading the tokens.** Frontmatter follows the [portable DESIGN.md format](https://raw.githubusercontent.com/google-labs-code/design.md/main/docs/spec.md). Colours are the stock primitives; component entries capture stock day defaults and specific variants, not every preference or surface override. Paint through the semantic aliases below. The sidecar's snippets carry the final application treatments and inherit live CSS variables. Ramps reuse the authored scales; Amber and Rust receive generated OKLCH preview ramps, not additional application tokens.
 
 ## Overview
 
@@ -226,6 +275,23 @@ Warm, low-chroma, and drawn from a single landscape: parchment and stone for the
 - **Ink** (`#1B231D` → `#94A095`, `ink-900…300`): the text scale, warm near-black down to soft grey-green. Body prose sits at `ink-700`, headings at `ink-900`, meta at `ink-500`, faint meta at `ink-400`.
 - **Twilight** (`#161D24`, `#1E2730`, `#283440`): the night register's surfaces.
 
+### The semantic registers
+
+The server stamps `data-theme="light|dark|system"` on `<html>`. System follows `prefers-color-scheme`; its dark aliases are restated in the application layer so a default-system visit gets the same register as an explicit dark choice. Operator branding loads afterward and can override action tokens.
+
+| Purpose | Semantic token | Day | Twilight |
+|---|---|---|---|
+| Page / raised / sunken | `--surface-page` / `--surface-raised` / `--surface-sunken` | parchment-100 / 50 / 200 | twilight-900 / 800 / 700 |
+| Action / action ink | `--accent` / `--accent-contrast` | green-700 / parchment-50 | gold-400 / twilight-900 |
+| Quiet brand / brand wash | `--brand` / `--brand-subtle` | green-700 / green-050 | green-500 / translucent evergreen |
+| Heading / prose / metadata | `--text-strong` / `--text-body` / `--text-muted` | ink-900 / ink-700 / ink-500 | parchment-50 / pale parchment-green / muted pale ink |
+| Small gold text | `--gold-ink` | dark gold ink | gold-400 |
+| Engraved field boundary | `--field-rule` | gold-700 | gold-600 |
+| Artifact reference | `--artifact-link` | river-500 | river-200 |
+| Drawer / dialog dimming | `--scrim` | translucent twilight | deeper translucent twilight |
+
+The older aliases `--surface`, `--surface-2`, `--surface-3` and `--border` still serve compatibility rules. Their twilight mapping differs from raised/page/sunken in places: `--surface` resolves to twilight-700, while `--surface-raised` resolves to twilight-800. Document and preview the token a component actually reads. Established action controls take their existing fills, including gold in twilight; the One Gold Rule continues to constrain decorative fields.
+
 ### The status ledger
 
 Status hues are named, not numbered, and each pairs a hue with a wash and an ink: **Leaf** `#4E7459` (solved), **Amber** `#B7842F` (needs answer), **Rust** `#9C4A33` (danger), **Slate** `#3F6E89` (info), plus a neutral pending. Decision-made borrows evergreen; pinned and staff borrow gold; archived is a dashed border with no fill.
@@ -242,9 +308,9 @@ Status hues are named, not numbered, and each pairs a hue with a wash and an ink
 
 ## Typography
 
-**Display Font:** Cormorant Garamond (with Hoefler Text, Garamond, Georgia, serif)
+**Display Font:** Cormorant Garamond (with Hoefler Text, Garamond, Georgia, Times New Roman, serif)
 **Body Font:** EB Garamond (with Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif)
-**Label Font:** Marcellus (with Optima, Palatino Linotype, Palatino, serif)
+**Label Font:** Marcellus (with Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif)
 **Mono Font:** JetBrains Mono (with SFMono-Regular, ui-monospace, Menlo, Consolas, monospace)
 
 All four are self-hosted WOFF2 under OFL 1.1, latin subset — the product runs a same-origin CSP, so there is no font CDN. Every family variable keeps a system-serif fallback so the register reads before the webfonts arrive.
@@ -256,9 +322,12 @@ All four are self-hosted WOFF2 under OFL 1.1, latin subset — the product runs 
 - **Display** (500, 2.25rem, 1.15, −0.01em): `h1` and page titles. Profile names step up to 2.4rem.
 - **Headline** (500, 1.75rem, 1.15): `h2`. The inbox heading sits between at 1.85rem.
 - **Title** (500, 1.375rem, 1.15): `h3`, board names. Thread-row titles run 1.2rem, and the study-view topic title 2.15rem with a 28ch measure.
-- **Body** (400, 1.0625rem/17px, 1.62): posts and prose. Measure ≈ 64ch.
+- **Body** (400, 1.0625rem/17px, 1.62): post prose. The shell and ordinary fields use the same size at 1.6 leading (`body-ui`). The 17px equivalence assumes the medium 16px root; reading preferences set the root to 14, 16 or 18px, and rem-based type follows it.
 - **Label** (400, 0.72rem, 0.16em tracking, uppercase): eyebrows, chips, meta lines. Button labels are the same family at 0.9rem and 0.03em tracking — and are **not** uppercased.
 - **Mono** (400, 0.72rem, tabular numerals): timestamps, counts, routes, breadcrumbs, regard figures.
+- **Small / Fine / Meta / Chip** (0.95 / 0.86 / 0.78 / 0.7rem): the named small-text scale for supporting prose, helper lines, structural metadata and the smallest new labels. The scale's `--text-chip` floor is 0.7rem. Older chip, tag, tier and row selectors still contain smaller values; `chip-label` records the existing 0.62rem default, not a new scale step to copy.
+
+**Reading measures** are separate from the shell rails: `--measure-prose` (64ch), `--measure-narrow` (56ch), `--measure-wide` (72ch), and `--measure-column` (646px). The last is a reading-column alignment contract, not a character measure. Existing application overrides still include 66ch on `.post-body`; use the named measures for new reading surfaces without claiming every older selector already consumes them.
 
 ### Named Rules
 
@@ -274,29 +343,31 @@ A full-height application shell of three columns plus a top bar. The rails are f
 
 The three panes map to real URLs rather than to client state: `/` is the forum index, `/inbox` the personalised topic inbox, `/c/{slug}` a board's fixed-order list, `/t/{id}-{slug}` the conversation. Navigation is server-rendered; JavaScript decorates.
 
-**Density is a first-class axis, not a preference toggle bolted on.** A topic list in a page reads at two densities from the same markup: *comfortable* (a parchment card per row with avatar, byline, chips, two-line snippet, meta) and *compact* (one ruled scannable line, snippet hidden, author folded into the meta). The board and the inbox are **presentations**, not densities, and keep their own geometry at either density: the *board* is a ruled entry on a 64px minimum floor with activity in a right-hand rail and no board label, because a board does not label itself; the *queue* is a ruled triage row that leads with the reason a topic is there. A long title wraps and the row grows — 64px is a minimum, never a crop.
+**Density is a first-class axis, not a preference toggle bolted on.** A topic list in a page reads at two densities from the same markup: *comfortable* (a flat ruled row with avatar, byline, chips, two-line snippet and meta) and *compact* (one scannable line, snippet hidden, author folded into the meta). The foundation's card-shaped topic row is overridden by the application's ruled register. The board and the inbox are **presentations**, not densities, and keep their own geometry at either density: the *board* uses six tracks — gutter, avatar, copy, status, activity, star — on a 64px minimum floor, or 56px when avatars are hidden. Its status owns a column, so this presentation has no status left-rule; a board does not label itself. The *queue* is a ruled triage row that leads with the reason a topic is there. A long title wraps and the row grows — these heights are minimums, never crops.
 
-**Spacing** runs on a 4px base: 4, 8, 12, 16, 24, 32, 48, 112px. Cards are padded 18px, thread rows 14/16px, posts 18/20px, and the gap between rows is 10px in comfortable and zero in the ruled densities, where a hairline does the separating.
+**Spacing** runs on a 4px base: 4, 8, 12, 16, 24, 32, 48, 112px. Cards are padded 18px, default thread rows 14/16px, and posts 18/20px. The application topic list uses zero row gap and a separating hairline; the foundation's 10px card gap is not the final list treatment.
 
 **Responsive.** The architectural breakpoint is **860px**: three panes collapse to one column, the sidebar becomes a slide-in drawer, and a conversation grows a back link to the list it came from. Secondary breakpoints at 900px (the chrome compacts: the admin bar wraps and its tier scrolls, the member top bar and board rail tighten, and Messages drops to one pane) and 760px (in-pane density) carry most of the rest.
+
+**Messages has surface-specific widths.** Above 900px it shows list and conversation. Its on-demand details rail becomes a column at 1400px with the board rail closed; with the board rail open, the implemented rail stays a drawer through 1699px and becomes a column at 1700px. That 1700px step remains an unconfirmed deviation in `.impeccable/surfaces/messages.md` §8, not an approved addition to the shared breakpoint vocabulary. At 900px and below the room shows one pane and Details opens as a full overlay. The root design guide records these widths; the surface brief owns the direction and open decision.
 
 ### Named Rules
 
 **The Real-URL Rule.** Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view. *Audit test: load it with JavaScript disabled; if the content is gone, the layout is wrong.*
 
-**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Together they carry 39 of the 64 width queries in `app.css`, which holds nineteen distinct max-widths in all (380–1699px, counted 2026-09-25; the generated `imladris.css` uses ten of them). The other sixteen are one- or two-use thresholds — that sprawl is debt, not vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review.
+**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it.
 
 ## Elevation & Depth
 
 Layered, warm, and shallow. Depth comes from a five-step shadow scale plus tonal layering between three parchment surfaces — raised, page, sunken — and the border hairline does much of the work that a shadow would do elsewhere. Nothing is glassy except two deliberate chrome bars (the topbar and the admin bar), which sit at ~90% surface with a 10px backdrop blur so content scrolls under them legibly.
 
-Shadows are cast in **warm ink** (`rgba(27,35,29,…)`), never neutral black. On twilight surfaces they deepen to `rgba(22,29,36,…)`.
+Shadows are cast in **warm ink** (`rgba(27,35,29,…)`), never neutral black. The modal scale uses twilight ink (`rgba(22,29,36,…)`); the shared shadow tokens retain their authored values in both theme registers rather than receiving a second dark-theme scale.
 
 ### Shadow Vocabulary
 
-- **`--shadow-xs`** (`0 1px 2px rgba(27,35,29,.06)`): the resting state of every card, thread row, post, and button. Barely there — enough to separate parchment from parchment.
+- **`--shadow-xs`** (`0 1px 2px rgba(27,35,29,.06)`): the foundation's low resting elevation, retained by ordinary cards, buttons and posts. Ruled application topic rows override it to no shadow.
 - **`--shadow-sm`** (`0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)`): the selected row, the accepted answer, a switch knob.
-- **`--shadow-md`** (`0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)`): hover lift on an interactive row.
+- **`--shadow-md`** (`0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)`): available hover elevation in the foundation; the final application topic row responds with a tonal wash instead.
 - **`--shadow-lg`** (`0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)`): popovers and menus.
 - **`--shadow-xl`** (`0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08)`): modal dialogs only.
 - **`--shadow-inset`** (`inset 0 1px 2px rgba(27,35,29,.07)`): fields and tracks — the impression of something pressed into the page.
@@ -306,17 +377,17 @@ Shadows are cast in **warm ink** (`rgba(27,35,29,…)`), never neutral black. On
 
 **The Warm-Shadow Rule.** No pure-black drop shadows anywhere. Every shadow is mixed from ink or twilight so it reads as candlelight on parchment rather than as a UI kit default. *Audit test: any `rgba(0,0,0,…)` in a shadow is wrong.*
 
-**The Lift-On-State Rule.** Surfaces are flat at rest at `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. A thread row lifts exactly 1px and gains `--shadow-md` on hover; nothing lifts without a reason.
+**The Lift-On-State Rule.** Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded.
 
 ## Shapes
 
-Restrained and rectilinear. Radii are `sm 4px`, `md 7px`, `lg 12px`, `xl 20px`, and `pill 999px`, and the system uses the small end far more than the large: cards, rows, and posts at 12px; buttons, fields, and menu items at 7px; inline code at 4px.
+Restrained and rectilinear. Radii are `sm 4px`, `md 7px`, `lg 12px`, `xl 20px`, and `pill 999px`, and the system uses the small end far more than the large: system containers and posts at 12px; buttons, fields and menu items at 7px; inline code at 4px. The generic application card reads `--radius` (7px by default, 6px in compact density); the board's ruled row is square.
 
 The **pill is reserved for tokens** — chips, badges, tags, filter tabs, segmented controls, the search field, the tier marker. Pill-ness means "this is a small labelled thing", so a pill-shaped button or card would misread as a status token.
 
 Borders do real work: a 1px `--border-hair` in parchment-300 is the system's default line, and much of the interface is built from hairlines rather than fills. Interactive controls step up to 1.5px so the outline reads as an affordance.
 
-The recurring silhouette is the **left rule**: a 3px vertical band on the leading edge of a thread row, coloured by status (leaf for solved, amber for needs-answer, evergreen for decision, gold for pinned) and transparent when there is nothing to say. In the board density it thins to 2px and steps outside the row. It is how the eye scans a list of forty topics for the three that matter.
+The recurring silhouette is the **left rule**: a 3px vertical band on the leading edge of the default topic row, coloured by status and transparent when there is nothing to say. It is one way the eye scans a long list for the topics that matter. The board presentation puts the status word in its own reserved column and removes the rule; the queue has its own triage grammar. A signature belongs to the presentation that uses it, not automatically to every row.
 
 ### Named Rules
 
@@ -333,7 +404,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Secondary:** raised parchment (`#FAF6EC`) with ink text and a 1.5px `--border-soft` outline, no shadow. Hover sinks the fill to `parchment-200` and strengthens the border.
 - **Ghost:** transparent with `ink-700` text and a transparent 1.5px border, so it occupies the same box as its siblings and does not shift the row on hover.
 - **Accent:** mallorn gold (`#C29A44`) with `ink-900` text — the one place gold is a fill, reserved for a single moment of emphasis per screen.
-- **Danger:** rust (`#9C4A33`) on white.
+- **Danger:** rust on white. The existing `.btn.danger` pins its dark-theme fill to `--rust`, preserving white-ink contrast; the foundation's `.btn-danger` follows `--danger`. Those selectors are not interchangeable in twilight.
 - **Disabled:** 50% opacity, `not-allowed`, and hover suppressed.
 - **Icons:** 16px, stroked at 1.9 with round caps and joins, `fill: none`, `stroke: currentColor`.
 
@@ -347,16 +418,16 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 
 ### Cards and containers
 
-- **Corner style:** 12px.
-- **Background:** raised parchment (`#FAF6EC`) on a `parchment-100` page.
-- **Border:** 1px `--border-hair`.
-- **Shadow:** `--shadow-xs` at rest; see Elevation.
+- **Corner style:** the foundation container is 12px; the generic application `.card` uses the preference-aware `--radius` (7px default, 6px compact).
+- **Background:** the foundation reads `--surface-raised`; the generic application card reads the older `--surface` alias. Both are parchment by day and resolve to different twilight surfaces.
+- **Border:** 1px `--border-hair` in the foundation, the legacy `--border` alias on the generic application card.
+- **Shadow:** the foundation's shallow `--shadow-xs` carries through to the generic application card; ruled lists override it to no shadow. See Elevation.
 - **Internal padding:** 18px, or `14px 16px` for a thread row and `18px 20px` for a post.
 
 ### Inputs and fields
 
 - **Style:** raised parchment, 1.5px `--border-soft`, 7px radius, `--shadow-inset`, set in the body serif at inherited size and padded `9px 11px`. A search field takes the pill variant on the sunken page colour. Until 2026-09-13 the application stylesheet overrode this with a 1px `--border` hairline at 6px and no inset, and — because `app.css` is unlayered — that is what actually painted on every `<input>` and `<select>`, while `<textarea>` got the spec. There is now **one** field register (ADR 0034).
-- **Focus:** the gold halo — border shifts to `gold-400`, a 2px evergreen outline at 1px offset, and a layered `0 0 0 3px` gold focus ring over the inset. Focus is unmistakable and warm rather than the browser default.
+- **Focus:** the gold halo — border shifts to `gold-400`, a 2px action-colour outline at 1px offset, and a layered `0 0 0 3px` `--focus-ring` over the inset. The outline follows evergreen by day, gold in twilight, and the operator's action colour under branding. Engraved fields have their own border and focus overrides.
 - **Engraved frames** (the lapidary fields on the auth screens, account settings, appeals and the Messages compose form) draw their edge in `--field-rule`: `gold-700` by day and `gold-600` in twilight. That holds 3:1 against the card and against the field's own fill in both registers, as WCAG 1.4.11 asks of a field's boundary. The layer's `--gold-200` measured 1.30:1 by day and drew a near-white line by night (ADR 0039).
 - **Labels:** Marcellus at 0.82rem, muted ink, 5px above the control.
 - **Errors:** rust text at 0.85rem directly beneath the field, with underlined inline links.
@@ -364,16 +435,16 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 
 ### Navigation
 
-- **Topbar** (62px): parchment at ~92% with a 10px backdrop blur and a hairline bottom border. Brand star and wordmark in Cormorant, a pill search field ("Search the council…"), the bell with a gold count dot, and the identity cluster with a 28px monogram and a leaf presence dot.
-- **Sidebar rail** (272px): sunken parchment. Quick filters, Marcellus gold-ink category headers, gold `#` board rows with count pills, and a DM list with presence dots.
+- **Topbar** (62px, 108px in the mobile member shell): a raised-surface wash with a 10px backdrop blur and a hairline bottom border. Brand star and wordmark in Cormorant; Boards, Inbox and Messages are direct links with full mobile labels and server-rendered counts. Search is a trigger labelled "Search the council…", followed by the bell and identity cluster. Auth pages use the plain shell and do not acquire the member shell's mobile height (ADR 0042).
+- **Sidebar rail** (272px): sunken parchment, with category-grouped board links, personal board folders and saved feeds. Board rows share active state, unread pills and private/hidden labels wherever they appear; active rows keep their board URL and a gold left rule. The footer carries public presence and “See everyone online.” Inbox filters and direct messages live on their own surfaces. Document-scrolling rails stay below the member header; the enhanced mobile drawer moves focus inside, contains keyboard navigation while the main page is covered, and restores opener focus on dismissal.
 - **Filter tabs:** Marcellus pills at `6px 13px`; active fills evergreen with parchment text.
 - **Segmented control:** a sunken pill shell with 3px padding; the active item fills evergreen.
-- **Underline tabs:** no fill; the active item goes strong-ink with a 2px gold underline drawn as an inset shadow. Ruled section rows (`.text-tabs.is-ruled`, including the profile) wrap on a full-width hairline and keep Marcellus at its inherited regular weight; other underline tabs retain the existing semibold treatment. URL-changing tabs and segmented switches are links with `aria-current="page"` (ADR 0040).
-- **Admin chrome:** a sticky two-row block — a 58px identity row (brand, wordmark, exit link, an uppercase mode pill) above a scrolling tier of area links. The tier deliberately uses the pill register so it never reads as a duplicate of a page's own underline sub-tabs one heading below.
+- **Underline tabs:** no fill, with a 2px gold active underline drawn as an inset shadow. The foundation sets active strong-ink; the generic application's unlayered link rule overrides that to `--accent`, including the hover underline, unless the surface provides its own compatibility rule. The sidecar captures that final generic application treatment. Ruled section rows (`.text-tabs.is-ruled`, including the profile) wrap on a full-width hairline and keep Marcellus at its inherited regular weight; other underline tabs retain the existing semibold treatment. URL-changing tabs and segmented switches are links with `aria-current="page"` (ADR 0040).
+- **Admin chrome:** a sticky two-row block — a 58px identity row (brand, wordmark, exit link, an uppercase mode pill) above a scrolling tier of area links on desktop. At 860px and below, a native disclosure names the current area and opens the same ordered, role- and flag-gated destinations without JavaScript. Area navigation uses the pill register, distinct from the page's underline section tabs one heading below.
 
 ### Signature: the thread row
 
-The system's most-repeated object and the place its character is clearest. A parchment card with a 3px status left-rule, a 44px monogram, a Cormorant byline, status chips, a Cormorant title at 1.2rem, a two-line clamped snippet in muted ink, and a Marcellus meta line with a gold-ink board hash. Unread state is carried by a **gold dot with a 2px translucent gold halo** plus a border shift to `green-200` and a semibold title — three quiet signals rather than one loud one. Selected state washes the row in `--brand-subtle` and turns the left rule leaf-green. Hover lifts 1px to `--shadow-md`.
+The system's most-repeated object and the place its character is clearest. The default application presentation is a flat, ruled entry with a 3px status left-rule, a 44px avatar or monogram, a Cormorant byline, status chips, a Cormorant title at 1.2rem, a two-line clamped snippet in muted ink, and a Marcellus meta line with a gold-ink board reference. Unread state carries a **gold dot with a 2px translucent gold halo** and a semibold title. Selected state uses `--brand-subtle`; hover uses a tonal wash without lifting the row. The foundation's card border and hover shadow are overridden by the application layer.
 
 It is **one partial** (`templates/partials/thread_row.php`) with a `presentation` axis — `default` for a list inside a page, `board` for the canonical index, `inbox` for the personal queue — and never a second row object (ADR 0036). Topic facts read identically in every presentation: the status word from the ledger, last activity as elapsed time on a `<time>` carrying the exact instant, a snooze as a date. Viewer facts render everywhere too, loud in the queue and quiet on the index. The queue's selection box, star toggle and row menu are slots on the row. Each presentation is styled under its own modifier, and restates what it keeps against the generic row and compact rules, which belong to the default list.
 
@@ -384,6 +455,8 @@ A topic star is a personal bookmark, and its word is **Star** / **Starred** — 
 ### Signature: the monogram
 
 A tinted ground with legible dark ink, rotating through ten variants across evergreen, river, gold, mist and parchment — so a list of members is quietly varied without anyone being assigned a "colour". 36px default, 26–64px by context, always a circle, always Marcellus. The `--gilt` inner ring marks the precious ones.
+
+An uploaded avatar replaces that fallback wherever the member is drawn. `partials/monogram.php` retains the circular `.monogram` frame and optional gilt ring, with `object-fit: cover` for the image. The adjacent identity supplies its name, so the image and fallback are decorative. Anonymous authors keep the masked fallback (USER §5.2).
 
 ### Shared components
 
@@ -428,7 +501,7 @@ Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-en
 ### Don't:
 
 - **Don't** introduce a sans-serif, a fifth family, or a webfont from a CDN. The CSP is same-origin and the fonts are self-hosted under OFL.
-- **Don't** write an inline `<style>` block, an inline `<script>`, or a `style="…"` attribute. `style-src 'self'` blocks all three, and the page fails silently. *Audit test: `grep -ro 'style="' templates/ | wc -l` must stay at 0.*
+- **Don't** write an inline `<style>` block, an inline `<script>`, or a `style="…"` attribute. The same-origin `style-src` and `script-src` policies block those forms. This constraint applies to application templates; the sidecar's CSS strings are tooling specimens, not styles to paste inline into PHP.
 - **Don't** use gold as a background for anything larger than a chip outside the DM Own-Letter Gold-Wash Exception, and don't use two accents — the palette has exactly one.
 - **Don't** put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)
 - **Don't** print ★ or ☆. The commend star, drawn with `partials/icon`, is the one esteem glyph; `templates/` holds the characters at zero and a test holds them there.

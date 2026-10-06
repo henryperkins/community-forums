@@ -1401,19 +1401,40 @@
     // Mobile navigation drawer (Phase 4): the sidebar rail slides in over a scrim
     // on small screens. Without JS the rail simply stacks above the content (the
     // server-rendered nav stays reachable). With scripting enabled CSS already
-    // supplies the drawer and fragment links; add state, Escape and focus return.
+    // supplies the drawer and fragment links. Enhancement owns focus while the
+    // main page is covered, and gives it back before the drawer becomes hidden.
     var navToggle = document.querySelector('[data-nav-toggle]');
     var navScrim = document.querySelector('[data-nav-scrim]');
-    if (navToggle) {
-        var sidebar = document.querySelector('[data-sidebar]');
-        var nativeNavOpen = sidebar && window.location.hash === '#' + sidebar.id;
+    var sidebar = document.querySelector('[data-sidebar]');
+    if (navToggle && sidebar) {
+        var navViewport = window.matchMedia('(max-width: 860px)');
+        var navMain = document.getElementById('main');
+        var navMainWasInert = false;
+        var navLastFocused = document.activeElement;
+        document.addEventListener('focusin', function (e) {
+            if (e.target !== document.body) { navLastFocused = e.target; }
+        });
+        var nativeNavOpen = window.location.hash === '#' + sidebar.id;
         var navFallbackFocused = document.activeElement && document.activeElement.matches('[data-nav-fallback], [data-nav-close]');
-        var setNav = function (open) {
+        var setNav = function (open, restoreFocus) {
+            open = !!open && navViewport.matches;
+            var wasOpen = document.body.classList.contains('nav-open');
+            if (navMain && open && !wasOpen) {
+                navMainWasInert = navMain.inert;
+                navMain.inert = true;
+            } else if (navMain && !open && wasOpen) {
+                navMain.inert = navMainWasInert;
+            }
             document.body.classList.toggle('nav-open', open);
             navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             navToggle.setAttribute('aria-label', open ? 'Close board rail' : 'Open board rail');
             if (navScrim) { navScrim.hidden = !open; }
-            if (!open && sidebar && sidebar.contains(document.activeElement)) {
+            if (open && !wasOpen) {
+                var stops = overlayTabStops(sidebar);
+                // Keep a usable native drawer control focused when a delayed
+                // bundle adopts the fragment fallback that is already open.
+                if (stops.indexOf(document.activeElement) === -1) { (stops[0] || sidebar).focus(); }
+            } else if (!open && wasOpen && restoreFocus !== false) {
                 navToggle.focus();
             }
         };
@@ -1422,24 +1443,47 @@
         });
         if (navScrim) { navScrim.addEventListener('click', function () { setNav(false); }); }
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && document.body.classList.contains('nav-open')) { setNav(false); }
+            if (!document.body.classList.contains('nav-open')) { return; }
+            if (e.key === 'Escape') { e.preventDefault(); setNav(false); }
+            if (e.key === 'Tab') { wrapOverlayTab(e, sidebar, true); }
         });
         // Closing the drawer after following a rail link keeps the next page clean.
         if (sidebar) {
             sidebar.addEventListener('click', function (e) {
-                if (e.target.closest && e.target.closest('[data-nav-close]')) { e.preventDefault(); }
-                if (e.target.closest && e.target.closest('a')) { setNav(false); }
+                var close = e.target.closest && e.target.closest('[data-nav-close]');
+                if (close) { e.preventDefault(); }
+                if (e.target.closest && e.target.closest('a')) { setNav(false, !!close); }
             });
         }
-        setNav(!!nativeNavOpen);
         document.body.setAttribute('data-nav-ready', '1');
         navToggle.hidden = false;
+        setNav(!!nativeNavOpen);
         if (nativeNavOpen) { clearDrawerFragment(sidebar.id); }
-        if (navFallbackFocused) { navToggle.focus(); }
+        if (navFallbackFocused && !document.body.classList.contains('nav-open')) { navToggle.focus(); }
+        navViewport.addEventListener('change', function () {
+            // Some engines blur a CSS-hidden control before firing this change.
+            var focused = document.activeElement === document.body ? navLastFocused : document.activeElement;
+            var focusedInRail = sidebar.contains(focused);
+            var focusedOnOpener = focused === navToggle;
+            setNav(false, false);
+            if (navViewport.matches && focusedInRail) {
+                navToggle.focus();
+            } else if (!navViewport.matches && (focusedOnOpener
+                || (focusedInRail && getComputedStyle(sidebar).display === 'none'))) {
+                var stops = overlayTabStops(sidebar);
+                if (getComputedStyle(sidebar).display !== 'none') {
+                    (stops[0] || sidebar).focus();
+                } else if (navMain) {
+                    navMain.setAttribute('tabindex', '-1');
+                    navMain.focus();
+                }
+            }
+        });
     }
 
     // The admin console has no navigation JavaScript. Its area tier scrolls
-    // horizontally and its section tabs wrap, so the console nav behaves
+    // horizontally on desktop; a native disclosure names the current area on
+    // narrow screens. Section tabs wrap, so the console nav behaves
     // identically with scripting disabled (ADMIN.md §9.4, amended by ADR 0024).
     // The former grouped-rail drawer, its scrim and its focus trap were removed
     // with the rail itself rather than left as dead chrome.
@@ -1917,13 +1961,17 @@
     // (the rail drawer, the compose dialog). With pullIn, focus that has left
     // the container, or fallen to <body> after the composer's Escape blur, is
     // brought back to its first or last control.
-    function dmWrapTab(e, container, pullIn) {
-        if (e.defaultPrevented) { return; }
-        var nodes = Array.from(container.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]')).filter(function (n) {
+    function overlayTabStops(container) {
+        return Array.from(container.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]')).filter(function (n) {
             var closed = n.closest('details:not([open])');
             return n.tabIndex >= 0 && !n.matches(':disabled') && !n.closest('[inert]') && n.getClientRects().length > 0
+                && getComputedStyle(n).visibility !== 'hidden'
                 && (!closed || n === closed.querySelector(':scope > summary'));
         });
+    }
+    function wrapOverlayTab(e, container, pullIn) {
+        if (e.defaultPrevented) { return; }
+        var nodes = overlayTabStops(container);
         if (!nodes.length) { return; }
         var first = nodes[0], last = nodes[nodes.length - 1], active = document.activeElement;
         if (!container.contains(active)) {
@@ -1952,6 +2000,7 @@
             return overlay;
         };
         var railOverlay = railIsOverlay();
+        var railChoiceMade = false;
         var setRail = function (open, persist, restoreFocus) {
             dmShell.classList.toggle('rail-open', open);
             if (!open && location.hash === '#dm-rail') { location.replace(location.pathname + location.search); }
@@ -1961,6 +2010,7 @@
             // passing look, so opening or closing one never changes what the
             // next page restores as a column.
             if (persist) {
+                railChoiceMade = true;
                 railOverlay = railIsOverlay();
                 if (!railOverlay) { try { localStorage.setItem(RAIL_KEY, open ? '0' : '1'); } catch (e) {} }
             }
@@ -1972,8 +2022,23 @@
         var stored = null;
         try { stored = localStorage.getItem(RAIL_KEY); } catch (e) {}
         // #dm-rail is an explicit request at any width; a remembered choice
-        // only reopens a column, so an overlay always starts closed.
-        setRail(location.hash === '#dm-rail' || (stored === '0' && !railOverlay), false, false);
+        // only reopens a column, so an overlay always starts closed. WebKit can
+        // run this deferred script before the stylesheets are ready: keep the
+        // default closed until their position rules can classify the rail.
+        setRail(location.hash === '#dm-rail', false, false);
+        var restoreRailChoice = function () {
+            railOverlay = railIsOverlay();
+            // A choice made while resources loaded takes precedence over the
+            // saved one, including an explicitly opened overlay.
+            if (!railChoiceMade) {
+                setRail(location.hash === '#dm-rail' || (stored === '0' && !railOverlay), false, false);
+            }
+        };
+        var railStylesPending = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(function (link) {
+            return !link.disabled && !link.sheet;
+        });
+        if (document.readyState === 'complete' || !railStylesPending) { restoreRailChoice(); }
+        else { window.addEventListener('load', restoreRailChoice, { once: true }); }
         // A column that turns into an overlay (resize, rotation, the board rail
         // opening beside it) would cover the conversation, and on a phone the
         // back control, so it closes; the saved column choice stays as it was.
@@ -2021,7 +2086,7 @@
         document.addEventListener('keydown', function (e) {
             if (!railIsOpen() || document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
             if (e.key === 'Escape') { setRail(false, true, true); }
-            if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { dmWrapTab(e, dmRail, false); }
+            if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { wrapOverlayTab(e, dmRail, false); }
         });
     }
 
@@ -2123,7 +2188,7 @@
         });
         document.addEventListener('keydown', function (e) {
             if (!dmCompose.open) { return; }
-            if (e.key === 'Tab' && dmDialogEl) { dmWrapTab(e, dmDialogEl, true); return; }
+            if (e.key === 'Tab' && dmDialogEl) { wrapOverlayTab(e, dmDialogEl, true); return; }
             if (e.key !== 'Escape') { return; }
             // Escape peels overlays outermost-first, as on the new-topic modal:
             // an open composer popover owns this keypress, not the dialog.

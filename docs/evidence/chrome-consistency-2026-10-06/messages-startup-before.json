@@ -1,0 +1,43 @@
+{
+  "engine": "WebKit on Linux",
+  "state": "Startup diagnosis before the stylesheet-ready restoration fix",
+  "saved_details_choice": "0 (open desktop column)",
+  "states": [
+    {
+      "viewport_width": 390,
+      "first_controller_probe": {
+        "position": "static",
+        "display": "block",
+        "ready": "interactive",
+        "css": [],
+        "shell": "dm-shell reading has-rail rail-open"
+      },
+      "after_load": {
+        "body": "variant-app is-rail-open is-reading-open",
+        "shell": "dm-shell reading has-rail rail-open",
+        "position": "fixed",
+        "display": "flex",
+        "x": 0,
+        "w": 390
+      }
+    },
+    {
+      "viewport_width": 1440,
+      "first_controller_probe": {
+        "position": "static",
+        "display": "block",
+        "ready": "interactive",
+        "css": [],
+        "shell": "dm-shell reading has-rail rail-open"
+      },
+      "after_load": {
+        "body": "variant-app is-rail-open is-reading-open",
+        "shell": "dm-shell reading has-rail rail-open",
+        "position": "fixed",
+        "display": "flex",
+        "x": 1100,
+        "w": 340
+      }
+    }
+  ]
+}

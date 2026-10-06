@@ -263,7 +263,8 @@ final class ThreadUserRepository
     /**
      * One bulk unread aggregate for the shared board rail. It deliberately uses
      * the exact Inbox-unread predicate, including active snoozes and board mute,
-     * so the topbar total equals the sum of rendered rail pills.
+     * so the topbar total equals the aggregate across unique boards. Personal
+     * shortcuts can repeat a board's pill without adding to the queue total.
      *
      * @return array<int,int> board_id => unread count (zero rows omitted)
      */

@@ -1,0 +1,8 @@
+  ✓  28 [mobile] › chrome-consistency.spec.ts:187:7 › long subscription names fit the settings content with JavaScript on (4.5s)
+
+  ✓  29 [mobile] › chrome-consistency.spec.ts:187:7 › long subscription names fit the settings content with JavaScript off (4.3s)
+
+  ✓  30 [mobile] › chrome-consistency.spec.ts:225:5 › native admin area navigation and board shortcuts work without JavaScript (2.2s)
+
+  11 skipped
+  19 passed (55.2s)

@@ -3,7 +3,7 @@
 /**
  * The board rail — the design system's BoardRail
  * (docs/design-system/imladris/components/forum/BoardRail.jsx), rendered
- * server-side (ADR 0032). Boards and nothing else, at one width, with the
+ * server-side (ADR 0032). Boards, personal folders and saved feeds, with the
  * active board marked the same way on every surface that has one; the presence
  * widget hangs in the footer slot, so the same roster and the same "See everyone
  * online" travel with the member across every route.
@@ -52,7 +52,11 @@ $unreadPill = static function (int $unread) use ($e): string {
     <?php foreach (($organization['board_folders'] ?? []) as $folder): ?>
         <span class="board-rail-cat"><?= $e($folder['name']) ?></span>
         <?php foreach ($folder['boards'] as $shortcut): ?>
-            <a class="board-rail-item" href="/c/<?= $e($shortcut['slug']) ?>"><span class="board-rail-name"><?= $e($shortcut['name']) ?></span></a>
+            <?php $shortcut['unread_count'] = (int) ($board_unread_counts[(int) $shortcut['id']] ?? 0); ?>
+            <?= $this->partial('partials/board_rail_item', [
+                'board' => $shortcut, 'unread_pill' => $unreadPill,
+                'active_thread_board_id' => $active_thread_board_id ?? 0,
+            ]) ?>
         <?php endforeach; ?>
     <?php endforeach; ?>
     <?php if (!empty($organization['saved_feeds'])): ?>
@@ -89,14 +93,11 @@ $unreadPill = static function (int $unread) use ($e): string {
                         </span>
                     <?php endif; ?>
                 <?php else: ?>
-                    <?php $active = $request_path === '/c/' . $board['slug']
-                        || (int) ($active_thread_board_id ?? 0) === (int) $board['id']; ?>
                     <?php // The active board keeps its href too (the component renders it inert): the row is also the way back to the board's first page. ?>
-                    <a class="board-rail-item<?= $active ? ' is-active' : '' ?>" data-board-slug="<?= $e($board['slug']) ?>" href="/c/<?= $e($board['slug']) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
-                        <span class="board-rail-name"><?= $e($board['name']) ?></span>
-                        <?= $unreadPill($unread) ?>
-                        <?php if ($board['visibility'] !== 'public'): ?><span class="board-rail-tag"><?= $e($board['visibility']) ?></span><?php endif; ?>
-                    </a>
+                    <?= $this->partial('partials/board_rail_item', [
+                        'board' => $board, 'unread_pill' => $unreadPill,
+                        'active_thread_board_id' => $active_thread_board_id ?? 0,
+                    ]) ?>
                 <?php endif; ?>
             <?php endforeach; ?>
         <?php endforeach; ?>
