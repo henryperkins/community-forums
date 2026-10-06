@@ -779,6 +779,17 @@ final class AppImladrisFidelityTest extends TestCase
         foreach (['.topbar-primary', '.topbar-search-entry', '.topbar-inner', '.nav-boards', '.nav-cat', '.sidebar {', '.sidebar-home', '.presence-list a {'] as $retired) {
             self::assertStringNotContainsString($retired, $application, $retired . ' was retired with the transfer chrome (ADR 0032)');
         }
+        // Decision 1: the current pill and the current rail board keep their
+        // href, so the layer must not give them the inert cursor the components
+        // drew while they rendered the active entry without one.
+        foreach (['.forum-bar-surface.is-active', '.board-rail-item.is-active'] as $current) {
+            self::assertSame(
+                1,
+                preg_match('/' . preg_quote($current, '/') . '\s*\{(?<declarations>[^}]*)\}/', $runtime, $match),
+                $current . ' is missing from the generated runtime.',
+            );
+            self::assertStringNotContainsString('cursor', $match['declarations'], $current . ' must keep the link cursor.');
+        }
 
         $this->actingAs($this->makeUser(['username' => 'chrome_reader']));
         $html = $this->get('/')->body();

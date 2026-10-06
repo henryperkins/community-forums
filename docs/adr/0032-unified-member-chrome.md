@@ -304,3 +304,32 @@ shorten in the operator header while controls and the brand mark keep their size
 
 Validation and limits are recorded in
 [`docs/evidence/chrome-consistency-2026-10-06/README.md`](../evidence/chrome-consistency-2026-10-06/README.md).
+
+### Shared-chrome design handoff — 2026-10-06
+
+Upstream's review of the shared chrome arrived after the follow-up above and
+read an older checkout. Reconciling it changed production in one respect: the
+design layer no longer gives the current Boards pill and the current rail board
+`cursor: default`, which contradicted decision 1. A computed-style comparison of
+the old and new bundles across member, moderator, admin and guest routes found no
+other difference.
+
+The handoff's two production checks need no change. The standalone bell has
+rendered since 2026-09-20. The console's exit link stays "Back to the forum"
+(ADMIN.md §9.2, ADR 0024). Production's contract also stands where the design
+differs, and those differences are raised upstream:
+
+- Boards is current on authorized topics and on `/tags*`.
+- The Messages pill carries a count.
+- The bell is a 40px target with its own badge anchor.
+- The narrow console tier is a disclosure.
+
+Five design-side questions are recorded with the sync. One needs an owner
+decision: whether `/leaderboard` keeps the standard rail, which production
+renders, or takes the routes block the design draws. The active console area
+stays a non-link under ADMIN.md §9.2.
+
+The mirror ledger is
+[`LOCAL_RECONCILIATION.md`](../design-system/imladris/LOCAL_RECONCILIATION.md)
+(2026-10-06, shared chrome). The comparison is recorded in
+[`docs/evidence/shared-chrome-handoff-2026-10-06/README.md`](../evidence/shared-chrome-handoff-2026-10-06/README.md).

@@ -33,7 +33,9 @@ export interface ForumNavProps extends React.HTMLAttributes<HTMLDivElement> {
   surface: string;
   /** Override the surface list (defaults to FORUM_SURFACES). */
   surfaces?: ForumSurface[];
-  /** Unread count on the Inbox pill. 0 renders no pill. */
+  /** Unread count on the Inbox pill. 0 renders no pill, and so does a null
+   *  `viewer` (a guest has no inbox). It is chrome: pass the same number on
+   *  every surface, or the pill appears and vanishes as the member clicks. */
   inboxCount?: number;
   /** Where the search control goes when `onSearch` is not supplied. */
   searchHref?: string;
@@ -74,8 +76,22 @@ export interface ForumNavProps extends React.HTMLAttributes<HTMLDivElement> {
   showCompose?: boolean;
   /** Signed-in member; omitted, the guest sign-in link renders instead. */
   viewer?: ForumNavViewer | null;
+  /** The guest's Log in. Production renders `/login?next=<current path>` on every
+   *  guest GET page so sign-in returns the reader to it (ADR 0038 #7); `/` and the
+   *  sign-in pages keep the bare `/login`. */
   signInHref?: string;
+  /** Unread notifications on the bell beside the seat. 0 renders the bell with
+   *  no count; counts above 99 render as 99+. Chrome, like `inboxCount`: the
+   *  same number on every surface. */
+  notificationCount?: number;
+  /** Where the bell goes when `onNotifications` is not supplied (default: the
+   *  Board index's Notifications pane). */
+  notificationsHref?: string;
+  /** Supply to handle the bell in-page instead of navigating. */
+  onNotifications?: () => void;
+  /** false drops the bell — for a product with `notifications` off. */
+  showNotifications?: boolean;
 }
 
-/** The unifying member chrome: house lockup, surface pills, search, rail toggle, compose, seat. */
+/** The unifying member chrome: house lockup, surface pills, search, rail toggle, compose, bell, seat. */
 export function ForumNav(props: ForumNavProps): JSX.Element;

@@ -1,0 +1,12 @@
+{
+  "base_commit": "34f13b00c9fbefb3576c421966c29aa5fca87c47",
+  "handoff_zip_sha256": "b81803534204ef25f520eb397bc19cf40a262c9b11cc00fbeb659b22d47f2d0c",
+  "candidate_asset_version": "927390ee7cc66f91",
+  "imladris_css": "/assets/dist/imladris-style-DeGci5u_.css",
+  "previous_imladris_css": "/assets/dist/imladris-style-B-rtqI97.css",
+  "app_css": "/assets/dist/app-style-BQQx77HF.css",
+  "app_js": "/assets/dist/app-5594cef9d85238a9.js",
+  "application_surface_sha256": "44c889569067cc04ea9670a52152220186a9060dee32bfce3b6c716926fe9a5b",
+  "design_surface_sha256": "bb91cb07ec941bb5a7fd496fae7234b3ceaebea8d9c7570fe355db43bdfeb5ac",
+  "status": "Validated local working tree; uncommitted and undeployed"
+}

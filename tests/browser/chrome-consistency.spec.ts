@@ -131,6 +131,9 @@ test('Boards owns tag pages and canonical topics while folder rows share active 
     expect((await page.goto(route))!.status()).toBe(200);
     await expect(page.locator('[data-primary-route="boards"]')).toHaveAttribute('aria-current', 'page');
     await expect(page.locator('[data-primary-route="boards"]')).toHaveAttribute('href', '/');
+    // A current entry is still a link to its surface (ADR 0032 decision 1), so it
+    // keeps the link cursor: Chromium computes `pointer`, WebKit `auto`.
+    await expect(page.locator('[data-primary-route="boards"]')).not.toHaveCSS('cursor', 'default');
   }
   for (const route of ['/c/chrome-place', fixture.topic]) {
     await page.goto(route);
@@ -139,6 +142,7 @@ test('Boards owns tag pages and canonical topics while folder rows share active 
     for (const row of await rows.all()) {
       await expect(row).toHaveClass(/is-active/);
       await expect(row).toHaveAttribute('aria-current', 'page');
+      await expect(row).not.toHaveCSS('cursor', 'default');
       await expect(row).toHaveAttribute('data-board-slug', 'chrome-place');
     }
   }

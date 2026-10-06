@@ -19,6 +19,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Give subscription titles their full row before the delivery controls in
   narrow settings panels, and wrap long names. Align navigation documentation
   with the rendered chrome (ADR 0032, 2026-10-06 follow-up).
+- Show the link cursor on the current Boards pill and the current rail board,
+  which stay links to their surface. The design mirror takes the shared-chrome
+  handoff; production keeps its route contract where that handoff differs
+  (ADR 0032, shared-chrome handoff).
 
 ## [Unreleased] - A simpler forum inbox
 

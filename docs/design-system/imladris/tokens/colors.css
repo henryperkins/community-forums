@@ -86,6 +86,14 @@
     --gold-soft:     var(--gold-100);
     --gold-ink:      #7E5F22;            /* darker gold for small text (AA)    */
     --on-brand-subtle: var(--green-800); /* ink on the brand-subtle wash       */
+    /* The engraved field's edge (ADR 0039 #2). gold-200 measured 1.30:1 on the
+       card; gold-700 is the lightest step clearing 3:1 on card and fill. */
+    --field-rule:    var(--gold-700);
+    /* The auth stage — twilight in both registers, so these never flip. */
+    --stage-ground:  var(--twilight-900);
+    --stage-raised:  var(--twilight-800);
+    --stage-ink:     var(--parchment-50);
+    --stage-accent:  var(--gold-400);
 
     /* ── Semantic: status ledger (colour + a word, never colour alone) ───── */
     --success: var(--leaf);    --surface-done:    var(--green-050); --on-done:    var(--green-800);
@@ -159,6 +167,7 @@
     --brand-subtle: rgba(78,116,89,.20);
     --gold-soft:    rgba(194,154,68,.16);
     --rule-gold:    var(--gold-400);
+    --field-rule:   var(--gold-600); /* 4.71:1 on the card, keeps the gilt */
     --success: var(--green-400);  --surface-done:    rgba(78,116,89,.20);  --on-done:    #BCD0BF;
     --warning: var(--gold-400);   --surface-review:  rgba(194,154,68,.16); --on-review:  #DCC68A;
     --pending: var(--ink-300);    --surface-pending: var(--twilight-700);  --on-pending: #AEB8B4;
@@ -166,8 +175,12 @@
     /* Bruinen has to climb in twilight the same way --info does. river-500 is
        3.08:1 on the page and 2.74:1 on a raised surface; the forum inbox spends
        this token on the board reference in every topic's meta line, which is
-       .7rem text and needs 4.5:1. river-200 clears both (10.8 / 9.6). */
+       .7rem text and needs 4.5:1. river-200 clears both (10.8 / 9.6). Dropped
+       here by mistake on 2026-08-27 and held downstream since; taken back. */
     --artifact-link: var(--river-200);
+    /* Ink stays on the ramp: --gold-200 measures 8.28:1 on a raised surface,
+       and the off-ramp literal it briefly became (#EBDAAC, .18 wash) sat 1/1/4
+       from it and lowered every ratio. Held downstream since 2026-08-27; taken back. */
     --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --star:    var(--gold-400);
     --scrim:   rgba(9,13,17,.58);

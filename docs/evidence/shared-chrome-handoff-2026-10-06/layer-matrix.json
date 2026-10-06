@@ -1,0 +1,113 @@
+{
+ "repo": "<checkout>",
+ "base": "http://localhost:8041",
+ "personas": {
+  "alice": "alice@retro.test",
+  "bob": "bob@retro.test",
+  "admin": "admin@retro.test"
+ },
+ "workers": 6,
+ "groups": [
+  {
+   "routes": {
+    "alice": [
+     "/",
+     "/inbox",
+     "/c/general",
+     "/t/2",
+     "/compose",
+     "/settings/account",
+     "/mod/reports"
+    ],
+    "admin": [
+     "/admin",
+     "/admin/users"
+    ],
+    "guest": [
+     "/",
+     "/login"
+    ]
+   },
+   "viewports": [
+    [
+     1280,
+     900
+    ],
+    [
+     1000,
+     800
+    ],
+    [
+     880,
+     900
+    ],
+    [
+     820,
+     1000
+    ],
+    [
+     390,
+     844
+    ]
+   ]
+  },
+  {
+   "routes": {
+    "alice": [
+     "/compose?board=general",
+     "/search",
+     "/search?q=keyboard",
+     "/users-online",
+     "/settings/appearance",
+     "/settings/notifications",
+     "/settings/privacy",
+     "/u/alice",
+     "/u/bob",
+     "/leaderboard",
+     "/messages",
+     "/notifications",
+     "/tags",
+     "/drafts",
+     "/feed",
+     "/nope-404"
+    ],
+    "bob": [
+     "/c/staff-room",
+     "/"
+    ],
+    "admin": [
+     "/admin/audit",
+     "/admin/structure",
+     "/admin/features",
+     "/admin/settings",
+     "/admin/branding",
+     "/admin/email",
+     "/mod/reports",
+     "/",
+     "/t/1"
+    ],
+    "guest": [
+     "/c/general",
+     "/t/2",
+     "/register",
+     "/u/alice",
+     "/leaderboard",
+     "/search"
+    ]
+   },
+   "viewports": [
+    [
+     1280,
+     900
+    ],
+    [
+     390,
+     844
+    ]
+   ]
+  }
+ ],
+ "layerA": "old bundle: public/assets/dist/imladris-style-B-rtqI97.css (font faces swapped for the relative set)",
+ "layerB": "new bundle: public/assets/dist/imladris-style-DeGci5u_.css (font faces swapped for the relative set)",
+ "out": "<scratch>/dist.json"
+}

@@ -36,46 +36,18 @@
 
 <div data-screen-label="Forum inbox" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
 
-  <!-- ── Topbar ── -->
-  <div style="flex: 0 0 var(--topbar-h); z-index: 20; display: flex; align-items: center; gap: 18px; padding: 0 22px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
-    <span style="display: inline-flex; align-items: center; gap: 10px;">
-      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
-      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
-    </span>
-    <nav aria-label="Primary" style="display: flex; align-items: center; gap: 4px;">
-      <a href="../board-index/BoardIndex.dc.html" style="padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Boards</a>
-      <a href="#" aria-current="page" style="display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: var(--radius-md); background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;">Inbox<sc-if value="{{ hasUnreadCount }}" hint-placeholder-val="{{ true }}"><span style="padding: 0 6px; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .64rem;">{{ unreadCount }}</span></sc-if></a>
-      <a href="#" style="padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Messages</a>
-    </nav>
-    <a href="../search/Search.dc.html" style="flex: 0 1 300px; min-width: 180px; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: 999px; box-sizing: border-box; text-decoration: none;" style-hover="border-color: var(--border-soft);">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
-      <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-faint); white-space: nowrap;">Search the council…</span>
-      <span style="margin-left: auto; font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint);">⌘K</span>
-    </a>
-    <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 4px;"><sc-if value="{{ railTbOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleRail }}" aria-pressed="true" title="Hide the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"></rect></svg></button></sc-if><sc-if value="{{ railTbOff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleRail }}" aria-pressed="false" title="Show the board rail (⌘B)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg></button></sc-if><sc-if value="{{ readingTbOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleReading }}" aria-pressed="true" title="Hide the reading pane (⌘J)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="9.8" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"></rect></svg></button></sc-if><sc-if value="{{ readingTbOff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleReading }}" aria-pressed="false" title="Show the reading pane (⌘J)" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg></button></sc-if></span>
-    <span aria-hidden="true" style="flex: none; width: 1px; height: 22px; background: var(--border-hair);"></span>
-    <span style="display: inline-flex; align-items: center; gap: 9px;"><span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .72rem;">ER</span><span style="font-family: var(--font-label); font-size: .8rem; color: var(--text-body);">Erestor</span></span>
-  </div>
+  <!-- ── Topbar — ForumNav. Two pane toggles here, so the bar takes the
+       toggle group rather than the single-rail shorthand. ── -->
+  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.ForumNav" surface="inbox" inbox-count="{{ unread }}" notification-count="3" toggles="{{ paneToggles }}" onToggleRail="{{ toggleRail }}" viewer="{{ viewer }}" hint-size="100%,62px"></x-import>
 
   <div style="flex: 1; min-height: 0; display: flex; align-items: stretch;">
 
-    <!-- ── Board rail — the shared partial, byte for byte what the index shows.
-         Boards and the public roster; no scopes. A scope is a lens on THIS
-         queue, so it belongs to the queue, not to the community's rail. ── -->
-    <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}">
-    <nav aria-label="Boards" style="flex: 0 0 var(--sidebar-w); display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 32px; overflow-y: auto; box-sizing: border-box; background: var(--surface-sunken); border-right: 1px solid var(--border-hair);">
-      <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="2">
-        <span style="display: block; padding: 16px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">{{ cat.name }}</span>
-        <sc-for list="{{ cat.boards }}" as="b" hint-placeholder-count="3">
-          <a href="../board-page/BoardPage.dc.html" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; box-sizing: border-box; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; text-decoration: none;" style-hover="background: var(--surface-page); color: var(--text-body);"><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span><sc-if value="{{ b.hasUnread }}" hint-placeholder-val="{{ false }}"><span title="{{ b.unreadLabel }}" aria-label="{{ b.unreadLabel }}" style="flex: 0 0 auto; padding: 0 6px; text-align: center; font-family: var(--font-mono); font-size: .66rem; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink);">{{ b.unread }}</span></sc-if></a>
-        </sc-for>
-      </sc-for>
-      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-hair);">
-        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.PresenceList" people="{{ roster }}" count="{{ onlineCount }}" max="{{ rosterMax }}" layout="list" hint-size="100%,230px"></x-import>
-        <a href="../users-online/UsersOnline.dc.html" style="display: inline-block; margin: 10px 0 0 8px; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);">See everyone</a>
-      </div>
-    </nav>
-    </sc-if>
+    <!-- ── Board rail — BoardRail. "Byte for byte what the index shows" is now
+         enforced by there being one copy of it, with the roster in its footer
+         slot. ── -->
+    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.BoardRail" categories="{{ categories }}" open="{{ railOpen }}" hint-size="272px,100%">
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.PresenceList" people="{{ roster }}" count="{{ onlineCount }}" max="{{ rosterMax }}" layout="list" all-href="../users-online/UsersOnline.dc.html" hint-size="100%,230px"></x-import>
+    </x-import>
 
     <!-- ── Personalized queue ── -->
     <sc-if value="{{ queueVisible }}" hint-placeholder-val="{{ true }}">
@@ -168,16 +140,16 @@
               <sc-if value="{{ t.picked }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.togglePick }}" aria-pressed="true" aria-label="{{ t.pickLabel }}" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; border: 1px solid var(--green-600); border-radius: var(--radius-sm); background: var(--green-600); color: var(--parchment-50); cursor: pointer;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4 10-10"></path></svg></button></sc-if>
               <sc-if value="{{ t.notPicked }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.togglePick }}" aria-pressed="false" aria-label="{{ t.pickLabel }}" style="width: 16px; height: 16px; padding: 0; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-page); cursor: pointer;" style-hover="border-color: var(--green-600);"></button></sc-if>
             </span>
-            <span style="position: relative; flex: 0 0 8px; display: inline-flex; justify-content: center; padding-top: 6px;"><sc-if value="{{ t.isUnread }}" hint-placeholder-val="{{ false }}"><span title="Unread" aria-label="Unread" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gold-500);"></span></sc-if></span>
+            <span style="position: relative; flex: 0 0 8px; display: inline-flex; justify-content: center; padding-top: 6px;"><sc-if value="{{ t.isUnread }}" hint-placeholder-val="{{ false }}"><span title="Unread" role="img" aria-label="Unread" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gold-500);"></span></sc-if></span>
             <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ t.author }}" username="{{ t.authorSeed }}" gilt="{{ t.gilt }}" presence="{{ t.presence }}" size="28" style="position: relative;" hint-size="28px,28px"></x-import>
             <span style="position: relative; flex: 1; min-width: 0;">
               <span data-row-head style="display: flex; align-items: baseline; gap: 2px 9px; flex-wrap: wrap;">
               <span data-row-chips style="order: 2; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <sc-if value="{{ t.hasReason }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .6rem; letter-spacing: .08em; white-space: nowrap;"><svg viewBox="0 0 100 100" width="9" height="9" aria-hidden="true"><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ t.reason }}</span></sc-if>
-                <sc-if value="{{ t.pinned }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">Pinned</span></sc-if>
-                <sc-if value="{{ t.stSolved }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">✓ Solved</span></sc-if>
+                <sc-if value="{{ t.pinned }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">Pinned</span></sc-if>
+                <sc-if value="{{ t.stSolved }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">Solved</span></sc-if>
                 <sc-if value="{{ t.stNeeds }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">Needs answer</span></sc-if>
-                <sc-if value="{{ t.stDecision }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">Decision</span></sc-if>
+                <sc-if value="{{ t.stDecision }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">Decision</span></sc-if>
                 <sc-if value="{{ t.locked }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;">Locked</span></sc-if>
               </span>
               <a href="#" onClick="{{ t.open }}" data-row-title style="order: 1; flex: 0 1 auto; min-width: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.06rem; line-height: 1.3; letter-spacing: -0.005em; color: var(--text-strong); text-decoration: none; text-wrap: pretty;" style-hover="color: var(--accent);">{{ t.title }}</a>
@@ -187,16 +159,18 @@
                 <a href="#" style="color: var(--artifact-link); text-decoration: none;" style-hover="text-decoration: underline;">{{ t.board }}</a>
                 <span>by {{ t.author }}</span>
                 <span>{{ t.repliesLabel }}</span>
-                <sc-if value="{{ t.showCommends }}" hint-placeholder-val="{{ false }}"><span title="Commends" style="color: var(--gold-ink);">{{ t.commendsLabel }}</span></sc-if>
+                <sc-if value="{{ t.showCommends }}" hint-placeholder-val="{{ false }}"><span title="Commends" style="display: inline-flex; align-items: center; gap: 4px; color: var(--gold-ink);"><svg viewBox="0 0 100 100" width="9" height="9" aria-hidden="true" style="color: var(--star);"><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ t.commendsLabel }}</span></sc-if>
                 <span>{{ t.time }}</span>
                 <sc-if value="{{ t.hasAssignee }}" hint-placeholder-val="{{ false }}"><span>assigned to @{{ t.assignee }}</span></sc-if>
                 <sc-if value="{{ t.hasSnooze }}" hint-placeholder-val="{{ false }}"><span>snoozed until {{ t.snooze }}</span></sc-if>
               </span>
             </span>
-            <sc-if value="{{ t.starred }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.toggleStar }}" aria-pressed="true" title="Starred" style="position: relative; flex: 0 0 auto; padding: 1px 4px; border: 0; background: none; color: var(--gold-600); font-size: .95rem; line-height: 1; cursor: pointer;">★</button></sc-if>
-            <sc-if value="{{ t.notStarred }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.toggleStar }}" aria-pressed="false" title="Star this topic" style="position: relative; flex: 0 0 auto; padding: 1px 4px; border: 0; background: none; color: var(--text-faint); font-size: .95rem; line-height: 1; cursor: pointer;" style-hover="color: var(--gold-600);">☆</button></sc-if>
+            <!-- The star is StarButton at icon size (ADR 0036 #3): the commend glyph,
+                 outlined until starred, named "Star {title}" because a list holds
+                 many of them. It and the row menu are 28px, as production measures. -->
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.StarButton" variant="icon" active="{{ t.starred }}" topic-title="{{ t.title }}" onClick="{{ t.toggleStar }}" style="position: relative;" hint-size="28px,28px"></x-import>
             <span style="position: relative; flex: 0 0 auto;">
-              <button onClick="{{ t.openMenu }}" aria-haspopup="menu" aria-label="More actions for this topic" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button>
+              <button onClick="{{ t.openMenu }}" aria-haspopup="menu" aria-label="{{ t.menuLabel }}" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--radius-md); background: none; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button>
               <sc-if value="{{ t.menuRoot }}" hint-placeholder-val="{{ false }}">
                 <span onClick="{{ t.closeMenu }}" aria-hidden="true" style="position: fixed; inset: 0; z-index: 899;"></span>
                 <span role="menu" ref="{{ t.menuRef }}" style="position: fixed; z-index: 900; display: block; padding: 5px 0; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); width: 178px;">
@@ -379,6 +353,10 @@ const SNOOZES = ['Later today', 'Tomorrow', 'Monday', 'Next week'];
 /* Presence is public and says nothing about the reader, so it is rail furniture
    rather than a personal signal — which is why the same roster hangs under the
    same rail on the board index. */
+// Board visibility on the rail, as production's sidebar draws it on every route:
+// a chip on any board that is not public. Chrome, so the same on every rail.
+const RAIL_TAGS = { 'audit-trails': 'restricted', 'capability-disclosure': 'private' };
+
 const ROSTER = [
   { name: 'Erestor', username: 'erestor', where: 'the-archive', presence: 'online', gilt: true, staff: true },
   { name: 'Galadriel', username: 'galadriel', where: 'evaluations', presence: 'online', gilt: true },
@@ -619,14 +597,15 @@ class Component extends DCLogic {
       title: t.title, author: t.author, authorSeed: t.seed, gilt: t.gilt, presence: t.presence,
       board: t.board, snippet: t.snippet, time: t.time,
       repliesLabel: t.replies + (t.replies === 1 ? ' reply' : ' replies'),
-      commendsLabel: '✦ ' + t.commends.toLocaleString(),
+      commendsLabel: t.commends.toLocaleString(),
       showCommends: s.order === 'commended',
       pinned: t.pinned, locked: t.locked,
       stSolved: t.status === 'solved',
       stNeeds: t.status === 'needs_answer',
       stDecision: t.status === 'decision_made',
       isUnread: t.unread, isRead: !t.unread,
-      starred: t.starred, notStarred: !t.starred,
+      starred: t.starred,
+      menuLabel: 'More actions for ' + t.title,
       hasReason: showReason && !!t.reason, reason: t.reason,
       hasAssignee: !!t.assignee, assignee: t.assignee,
       hasSnooze: !!t.snooze, snooze: t.snooze,
@@ -690,14 +669,24 @@ class Component extends DCLogic {
       backToList: () => this.setState({ mobilePane: 'list' }),
 
       categories: BOARDS.map((c) => ({
+        key: c.cat,
         name: c.cat,
         boards: c.boards.map((b) => {
           const n = s.threads.filter((t) => t.board === b.slug && t.unread).length;
-          return { name: b.name, unread: n, hasUnread: n > 0, unreadLabel: n + ' unread in ' + b.name };
+          return { key: b.slug, name: b.name, unread: n, unreadLabel: n + ' unread in ' + b.name, tag: RAIL_TAGS[b.slug] };
         }),
       })),
 
-      roster: ROSTER,
+      // The bar's own state: the seat, the unread pill, and both pane toggles
+      // as one group so they read as one control and not two conventions.
+      viewer: { name: 'Erestor', username: 'erestor', presence: 'online' },
+      unread,
+      paneToggles: [
+        { key: 'rail', icon: 'rail', on: s.railOpen && !mobile, title: (s.railOpen && !mobile) ? 'Hide the board rail (⌘B)' : 'Show the board rail (⌘B)', label: 'Board rail', onClick: () => this.setState((st) => ({ railOpen: !st.railOpen })) },
+        { key: 'reading', icon: 'pane', on: readingWanted, title: readingWanted ? 'Hide the reading pane (⌘J)' : 'Show the reading pane (⌘J)', label: 'Reading pane', onClick: () => this.setState((st) => ({ readingOpen: !st.readingOpen })) },
+      ],
+
+      roster: ROSTER.map((m) => Object.assign({}, m, { href: '../user-profile/UserProfile.dc.html', self: m.username === 'erestor' })),
       onlineCount: 34,
       rosterMax: 5,
 

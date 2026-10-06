@@ -49,6 +49,11 @@ export interface PresenceListProps extends Omit<React.HTMLAttributes<HTMLElement
   /** False renders bare dots with no monograms — the reader's "show avatars" preference. */
   avatars?: boolean;
   emptyLabel?: string;
+  /** Renders the widget's own "See everyone online" link to the roll. Every
+   *  rail passes the same href; a template never hand-rolls this link. */
+  allHref?: string;
+  /** Link text for `allHref`. Default "See everyone online". */
+  allLabel?: string;
   /** Slot under the list — a "See everyone" link, a note about presence privacy. */
   footer?: React.ReactNode;
 }

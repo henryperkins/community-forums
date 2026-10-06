@@ -130,6 +130,14 @@
     --gold-soft:     var(--gold-100);
     --gold-ink:      #7E5F22;            /* darker gold for small text (AA)    */
     --on-brand-subtle: var(--green-800); /* ink on the brand-subtle wash       */
+    /* The engraved field's edge (ADR 0039 #2). gold-200 measured 1.30:1 on the
+       card; gold-700 is the lightest step clearing 3:1 on card and fill. */
+    --field-rule:    var(--gold-700);
+    /* The auth stage — twilight in both registers, so these never flip. */
+    --stage-ground:  var(--twilight-900);
+    --stage-raised:  var(--twilight-800);
+    --stage-ink:     var(--parchment-50);
+    --stage-accent:  var(--gold-400);
 
     /* ── Semantic: status ledger (colour + a word, never colour alone) ───── */
     --success: var(--leaf);    --surface-done:    var(--green-050); --on-done:    var(--green-800);
@@ -203,6 +211,7 @@
     --brand-subtle: rgba(78,116,89,.20);
     --gold-soft:    rgba(194,154,68,.16);
     --rule-gold:    var(--gold-400);
+    --field-rule:   var(--gold-600); /* 4.71:1 on the card, keeps the gilt */
     --success: var(--green-400);  --surface-done:    rgba(78,116,89,.20);  --on-done:    #BCD0BF;
     --warning: var(--gold-400);   --surface-review:  rgba(194,154,68,.16); --on-review:  #DCC68A;
     --pending: var(--ink-300);    --surface-pending: var(--twilight-700);  --on-pending: #AEB8B4;
@@ -210,8 +219,12 @@
     /* Bruinen has to climb in twilight the same way --info does. river-500 is
        3.08:1 on the page and 2.74:1 on a raised surface; the forum inbox spends
        this token on the board reference in every topic's meta line, which is
-       .7rem text and needs 4.5:1. river-200 clears both (10.8 / 9.6). */
+       .7rem text and needs 4.5:1. river-200 clears both (10.8 / 9.6). Dropped
+       here by mistake on 2026-08-27 and held downstream since; taken back. */
     --artifact-link: var(--river-200);
+    /* Ink stays on the ramp: --gold-200 measures 8.28:1 on a raised surface,
+       and the off-ramp literal it briefly became (#EBDAAC, .18 wash) sat 1/1/4
+       from it and lowered every ratio. Held downstream since 2026-08-27; taken back. */
     --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --star:    var(--gold-400);
     --scrim:   rgba(9,13,17,.58);
@@ -429,7 +442,10 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     box-shadow: var(--shadow-xs);
     transition: background var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
 }
-.btn:hover { text-decoration: none; background: var(--brand-hover); }
+/* Hover deepens the button's own fill (ADR 0039 #5): it follows --accent,
+   operator branding included, where --brand-hover turned a gold twilight
+   button green. */
+.btn:hover { text-decoration: none; background: color-mix(in srgb, var(--accent) 82%, #000); }
 .btn:active { transform: translateY(0.5px) scale(.995); }
 .btn-small { padding: 6px 13px; font-size: .82rem; }
 .btn-secondary {
@@ -621,7 +637,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* Engraved field — a parchment well with a gold rule; the lapidary register
    of .input / .textarea (see "Lapidary register" below). */
 .input-engraved, .textarea-engraved {
-    border: 1.5px solid var(--gold-200);
+    border: 1.5px solid var(--field-rule);
     border-radius: var(--radius-md);
     background-color: var(--surface-page);
     box-shadow: var(--shadow-inset);
@@ -867,7 +883,9 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .forum-bar-surfaces { flex: none; display: flex; align-items: center; gap: 4px; }
 .forum-bar-surface { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .02em; text-decoration: none; white-space: nowrap; }
 .forum-bar-surface:hover { background: var(--surface-sunken); color: var(--text-body); }
-.forum-bar-surface.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
+/* The active pill keeps its href (ADR 0032 #1): a surface spans a family of
+   routes, so the pill is still the way back to the surface's root. */
+.forum-bar-surface.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); }
 /* No template behind it yet — legible, but plainly not a destination. */
 .forum-bar-surface.is-inert { color: var(--text-faint); cursor: default; }
 .forum-bar-surface.is-inert:hover { background: transparent; color: var(--text-faint); }
@@ -886,8 +904,12 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .forum-bar-railtoggle:hover { background: var(--surface-sunken); color: var(--text-body); }
 .forum-bar-divider { flex: none; width: 1px; height: 22px; background: var(--border-hair); }
 .forum-bar-compose { flex: none; white-space: nowrap; }
-/* Account names share the remaining bar width. Only the label clips: the
-   avatar, presence dot and any account disclosure must remain visible. */
+/* ForumNav's bell (.forum-bar-bell, .forum-bar-bell-count) is not styled in
+   this layer: production draws its bell from app.css's ADR 0032 adaptation (a
+   40px target, its own badge anchor), and the upstream hover wash would land on
+   it as a hybrid. Held — LOCAL_RECONCILIATION.md, 2026-10-06. */
+/* The seat shrinks and only the name clips: a 40-character display name must
+   not push the cluster off the viewport (raised downstream, 2026-09-12). */
 .forum-bar-user { flex: 0 1 auto; min-width: 0; max-width: 100%; display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text-body); }
 .forum-bar-user > .avatar-wrap, .forum-bar-user > .monogram { flex: none; }
 .forum-bar-user:hover { color: var(--accent); }
@@ -896,9 +918,14 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* Same discipline as the admin bar: shed labels before the row wraps. The
    wordmark goes first (the mark still identifies the house), then the surface
    labels compact, then search. */
+/* The base a:hover underline is for prose. A pill, the seat, the bell or a rail
+   row is a control and does not underline — downstream had to suppress this
+   itself (ADR 0032 #3), which is the sign it belonged here. */
+.forum-bar a:hover, .board-rail-item:hover, .board-rail-route:hover, .presence-all:hover { text-decoration: none; }
 @media (max-width: 1080px) {
     .forum-bar { gap: 12px; padding: 0 16px; }
     .forum-bar-username { display: none; }
+    /* With the name hidden the icon cluster cannot shrink; the search field yields. */
     .forum-bar-right { flex-shrink: 0; }
 }
 @media (max-width: 900px) {
@@ -929,7 +956,8 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .board-rail-cat { display: block; padding: 16px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint); }
 .board-rail-item { display: flex; align-items: center; gap: 8px; padding: 7px 12px; box-sizing: border-box; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; text-decoration: none; }
 .board-rail-item:hover { background: var(--surface-page); color: var(--text-body); }
-.board-rail-item.is-active { border-left-color: var(--gold-500); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
+/* The active board keeps its href too: the row is also the way back to the board's first page. */
+.board-rail-item.is-active { border-left-color: var(--gold-500); background: var(--brand-subtle); color: var(--on-brand-subtle); }
 .board-rail-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .board-rail-unread { flex: none; padding: 0 6px; text-align: center; border-radius: var(--radius-pill); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .66rem; }
 .board-rail-item.is-locked { color: var(--text-faint); cursor: default; }

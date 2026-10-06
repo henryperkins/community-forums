@@ -1,8 +1,8 @@
 {
-  "version": "4b1f2dfec996fc5d",
+  "version": "927390ee7cc66f91",
   "urls": {
     "app.css": "/assets/dist/app-style-BQQx77HF.css",
-    "imladris.css": "/assets/dist/imladris-style-B-rtqI97.css",
+    "imladris.css": "/assets/dist/imladris-style-DeGci5u_.css",
     "app.js": "/assets/dist/app-5594cef9d85238a9.js",
     "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
     "passkeys.js": "/assets/dist/passkeys-27f8b05555555872.js",
@@ -122,6 +122,10 @@
       "sha256": "1ceb0860ffe215a425778cad9ae9fcbf60779ca1d59f7087143e984568c1bc76",
       "immutable": true
     },
+    "/assets/dist/imladris-style-DeGci5u_.css": {
+      "sha256": "669048ba1a45bf8ec73ff4e476d48f65eaad84a8d389424518558003200ed2a8",
+      "immutable": true
+    },
     "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2": {
       "sha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
       "immutable": true
@@ -239,7 +243,7 @@
       "immutable": false
     },
     "/assets/imladris.css": {
-      "sha256": "a343be6c9061a358ca33132acc2e23439c5c9b3adc271fb3df442c22528c2e3c",
+      "sha256": "d8acefca061a0c8914ffb204cfcfa52b435575ebc5d5df5de85fcf1c1fec22e8",
       "immutable": false
     },
     "/assets/passkeys.js": {
@@ -253,7 +257,7 @@
   },
   "releases": [
     {
-      "version": "4b1f2dfec996fc5d",
+      "version": "927390ee7cc66f91",
       "files": [
         "/assets/dist/app-5594cef9d85238a9.js",
         "/assets/dist/app-style-BQQx77HF.css",
@@ -269,7 +273,7 @@
         "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
         "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
         "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-B-rtqI97.css",
+        "/assets/dist/imladris-style-DeGci5u_.css",
         "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",

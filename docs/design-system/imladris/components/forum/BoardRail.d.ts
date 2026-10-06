@@ -14,8 +14,9 @@ export interface RailBoard {
    *  post to, so a denied board is visible rather than quietly missing. */
   locked?: boolean;
   lockedTitle?: string;
-  /** Small outlined chip after the name — Leaderboard shows board visibility
-   *  ("private", "restricted") this way. */
+  /** Small outlined chip after the name: the board's visibility ("private",
+   *  "restricted"), on every rail but Compose's picker, as production's sidebar
+   *  draws it. Omit for a public board. */
   tag?: string;
 }
 
@@ -31,8 +32,10 @@ export interface RailRoute {
   label: string;
   /** Second line under the label, e.g. "Your personal queue". */
   sub?: string;
-  /** One of the named glyphs the rail draws. */
-  icon?: 'home' | 'inbox' | 'messages' | 'drafts' | 'following' | 'trophy';
+  /** One of the named glyphs the rail draws. `commend` is Top contributors'
+   *  glyph, as production's account menu draws it; `trophy` is kept for
+   *  existing callers and reads as a prize the ledger does not award. */
+  icon?: 'home' | 'inbox' | 'messages' | 'drafts' | 'following' | 'commend' | 'trophy';
   href?: string;
   active?: boolean;
 }

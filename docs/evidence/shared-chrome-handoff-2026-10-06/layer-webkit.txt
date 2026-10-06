@@ -1,0 +1,21 @@
+Old vs new fingerprinted Imladris bundle, WebKit 26.5 (webkit-2311, Playwright 1.61.1), same matrix. WebKit computes a link's cursor as 'auto' where Chromium reports 'pointer'.
+
+findings: 447  errors: 0
+  123  a.forum-bar-surface.is-active                                          cursor                       default                                -> auto
+       e.g. admin/@1280/dark, admin/@1280/light, admin/@1280/system-dark, admin/@390/dark … (123 contexts)
+   82  [focus] a.forum-bar-surface.is-active                                  cursor                       default                                -> auto
+       e.g. admin/@1280/dark, admin/@1280/light, admin/@390/dark, admin/@390/light … (82 contexts)
+   82  [hover] a.forum-bar-surface.is-active                                  cursor                       default                                -> auto
+       e.g. admin/@1280/dark, admin/@1280/light, admin/@390/dark, admin/@390/light … (82 contexts)
+   54  a.board-rail-item.is-active                                            cursor                       default                                -> auto
+       e.g. admin/t/1@1280/dark, admin/t/1@1280/light, admin/t/1@1280/system-dark, admin/t/1@390/dark … (54 contexts)
+   54  span.board-rail-name                                                   cursor                       default                                -> auto
+       e.g. admin/t/1@1280/dark, admin/t/1@1280/light, admin/t/1@1280/system-dark, admin/t/1@390/dark … (54 contexts)
+   20  [focus] a.board-rail-item.is-active                                    cursor                       default                                -> auto
+       e.g. admin/t/1@1280/dark, admin/t/1@1280/light, alice/c/general@1000/dark, alice/c/general@1000/light … (20 contexts)
+   20  [hover] a.board-rail-item.is-active                                    cursor                       default                                -> auto
+       e.g. admin/t/1@1280/dark, admin/t/1@1280/light, alice/c/general@1000/dark, alice/c/general@1000/light … (20 contexts)
+    6  span.board-rail-tag                                                    cursor                       default                                -> auto
+       e.g. bob/c/staff-room@1280/dark, bob/c/staff-room@1280/light, bob/c/staff-room@1280/system-dark, bob/c/staff-room@390/dark … (6 contexts)
+    6  span.forum-bar-count                                                   cursor                       default                                -> auto
+       e.g. alice/messages@1280/dark, alice/messages@1280/light, alice/messages@1280/system-dark, alice/messages@390/dark … (6 contexts)

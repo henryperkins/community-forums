@@ -21,7 +21,7 @@
 <div data-screen-label="Admin — overview" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
 
   <!-- ── Topbar ── -->
-  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="overview" hint-size="100%,101px"></x-import>
+  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="overview" viewer="{{ navViewer }}" notification-count="3" hint-size="100%,101px"></x-import>
 
   <div style="max-width: 1160px; margin: 0 auto; padding: 22px 28px 110px;">
 
@@ -263,13 +263,13 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'loading' | 'empty' | 'error'&quot;,&quot;section&quot;:&quot;Console state&quot;}}">
 const AUDIT = [
-  { when: '2 Aug 09:14', actor: 'erestor', action: 'resolve_report', type: 'post', id: 8841, reason: 'Off-topic, moved to #lore', change: 'status → resolved', date: '2026-08-02' },
+  { when: '2 Aug 09:14', actor: 'erestor', action: 'resolve_report', type: 'post', id: 8841, reason: 'Off-topic, moved to lore', change: 'status → resolved', date: '2026-08-02' },
   { when: '2 Aug 08:52', actor: 'elrond', action: 'update_board', type: 'board', id: 12, reason: 'Renamed to Practice', change: 'name, slug', date: '2026-08-02' },
   { when: '2 Aug 08:31', actor: 'system', action: 'hold_post', type: 'post', id: 8839, reason: 'Anti-abuse: first post', change: 'state → held', date: '2026-08-02' },
   { when: '1 Aug 21:07', actor: 'glorfindel', action: 'suspend', type: 'user', id: 431, reason: 'Repeated harassment after warning', change: 'until 8 Aug', date: '2026-08-01' },
   { when: '1 Aug 18:44', actor: 'erestor', action: 'dismiss_report', type: 'post', id: 8802, reason: 'No breach found', change: 'status → dismissed', date: '2026-08-01' },
   { when: '1 Aug 16:20', actor: 'elrond', action: 'update_setting', type: 'setting', id: 4, reason: 'Registration set to invite-only', change: 'registration_mode', date: '2026-08-01' },
-  { when: '1 Aug 14:03', actor: 'melian', action: 'merge_tag', type: 'tag', id: 77, reason: '#evaluation folded into #eval', change: 'alias added', date: '2026-08-01' },
+  { when: '1 Aug 14:03', actor: 'melian', action: 'merge_tag', type: 'tag', id: 77, reason: 'evaluation folded into eval', change: 'alias added', date: '2026-08-01' },
   { when: '1 Aug 11:38', actor: 'system', action: 'retry_webhook', type: 'webhook', id: 3, reason: 'Endpoint returned 502 twice', change: 'attempt 3 of 5', date: '2026-08-01' },
   { when: '31 Jul 22:15', actor: 'glorfindel', action: 'approve_topic', type: 'thread', id: 2291, reason: 'Held by board rule, reviewed', change: 'state → published', date: '2026-07-31' },
   { when: '31 Jul 19:02', actor: 'elrond', action: 'grant_badge', type: 'user', id: 88, reason: 'Keeper of the record — 100 accepted', change: 'badge granted', date: '2026-07-31' },
@@ -345,6 +345,7 @@ class Component extends DCLogic {
     ];
 
     return {
+      navViewer: { name: 'Elrond Half-elven', username: 'elrond' },
       atDashboard: s.view === 'dashboard', offDashboard: s.view !== 'dashboard',
       atAudit: s.view === 'audit', offAudit: s.view !== 'audit',
       goDashboard: () => this.setState({ view: 'dashboard' }),

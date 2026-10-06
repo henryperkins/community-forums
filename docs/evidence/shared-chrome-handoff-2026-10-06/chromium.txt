@@ -1,0 +1,5 @@
+chromium, new layer, private e2e database re-prepared before each spec group:
+chrome-consistency.spec.ts (fresh prepare.sh, desktop + mobile projects): 6 skipped; 12 passed (21.5s)
+unified-chrome.spec.ts (fresh prepare.sh, desktop + mobile projects): 5 skipped; 25 passed (30.6s)
+startup-geometry.spec.ts (fresh prepare.sh, desktop + mobile projects): 7 skipped; 7 passed (11.7s)
+admin-dashboard.spec.ts (fresh prepare.sh, desktop + mobile projects): 5 skipped; 7 passed (12.7s)
