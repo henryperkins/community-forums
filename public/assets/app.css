@@ -13,6 +13,12 @@ html {
        post to y=0 — underneath the bar. Pad the scroll port by the bar itself. */
     scroll-padding-block-start: calc(var(--topbar-h) + 12px);
 }
+/* Reserve the sticky dock during native focus/fragment scrolling. app.js
+   measures its changing height; the fallback also covers the native form while
+   bundles are blocked or scripting is off. */
+html:has(body[data-route="thread"]) {
+    scroll-padding-block-end: calc(var(--thread-dock-height, 24rem) + 12px);
+}
 
 body {
     margin: 0;
@@ -57,14 +63,15 @@ a {
 }
 a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 
-/* Warm, candlelit scrollbars (Imladris). */
+/* Scrollbar ink follows the current Imladris register. */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb {
-    background: var(--parchment-300);
+    background: var(--border-strong);
+    background-clip: padding-box;
     border-radius: var(--radius-pill);
-    border: 3px solid var(--parchment-100);
+    border: 3px solid transparent;
 }
-* { scrollbar-color: var(--parchment-300) var(--parchment-100); }
+* { scrollbar-color: var(--border-strong) transparent; scrollbar-width: thin; }
 
 .skip-link {
     position: absolute;
@@ -1882,21 +1889,15 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     border-radius: 0; box-shadow: none; padding: 0; margin-top: 18px;
 }
 .thread-conversation { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-/* The scroll port and dock keep their first-paint geometry while scripts load.
-   Topic tools have a native fragment drawer in this mode. With scripting off,
-   tools and posts remain in one naturally flowing document (FT-01). */
-@media (scripting: enabled) {
-    body[data-route="thread"] .thread-conversation {
-        height: calc(100vh - var(--topbar-h) - 48px);
-        height: calc(100dvh - var(--topbar-h) - 48px);
-    }
-    [data-thread-study] > .thread-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* The document owns thread scrolling, including native post fragments. A short
+   topic still fills the pane; longer topics grow around the sticky reply dock. */
+body[data-route="thread"] .thread-conversation {
+    min-height: calc(100vh - var(--topbar-h) - 48px);
+    min-height: calc(100dvh - var(--topbar-h) - 48px);
 }
-.thread-scroll { overscroll-behavior: contain; padding: 0 8px 12px 0; scrollbar-gutter: stable; }
-/* The canonical thread owns this enhanced scroll surface. The Community Inbox
-   now injects a bounded .inbox-preview instead of the complete thread markup. */
+.thread-scroll { flex: 1 0 auto; min-width: 0; padding-bottom: 12px; }
 .thread-dock {
-    position: relative; z-index: 2; flex: 0 0 auto; min-width: 0;
+    position: sticky; bottom: 0; z-index: 2; flex: 0 0 auto; min-width: 0;
     margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-hair);
     background: var(--surface-raised);
 }
@@ -1905,8 +1906,14 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .inbox-reading.is-open [data-inbox-reading-content],
 .inbox-reading.is-open .thread-conversation { height: 100%; min-height: 0; }
 @media (max-width: 860px) {
+    /* Let the shell grow with a document-scrolling topic so the sticky header
+       remains inside its containing block all the way through the stream. */
+    body[data-route="thread"] .app-shell { height: auto; }
     body[data-route="thread"] .main { padding-bottom: 16px; }
-    .thread-scroll { padding-right: 3px; }
+    body[data-route="thread"] .thread-conversation {
+        min-height: calc(100vh - var(--topbar-h) - 32px);
+        min-height: calc(100dvh - var(--topbar-h) - 32px);
+    }
     .thread-dock { margin-top: 8px; padding-top: 8px; }
     .inbox-reading.is-open {
         height: calc(100vh - var(--topbar-h));
@@ -1976,10 +1983,6 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-mark { display: none; }
 }
 @media (max-width: 860px) and (scripting: enabled) {
-    body[data-route="thread"] .thread-conversation {
-        height: calc(100vh - var(--topbar-h) - 32px);
-        height: calc(100dvh - var(--topbar-h) - 32px);
-    }
     /* A Messages conversation's .dm-composer is the same shared dock (COMPOSER.md
        §2, §13) on a phone. The topic dock above already rests at every width. */
     .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-box {
@@ -10554,17 +10557,6 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
    the topic carries — poll, brief, catch-up strip, composer — sat ~200px wider
    than the prose they exist to stand beside. */
 .thread-study { --measure: 646px; width: min(100%, var(--measure)); margin-inline: auto; }
-/* The scroll gutter is chrome, not measure. Where app.js turns .thread-scroll
-   into the column's own scroll container it reserves a stable scrollbar track
-   plus this surface's 8px inset — 23px in Chromium — and that came straight out
-   of the 646px the design gives the reading column, which is exactly the width
-   the header byline was short of stating its own reply count. The gutter hangs
-   outside the column instead, so the stream and the composer dock below it share
-   one measure. Only above the shell's own breakpoint, where the surface has room
-   beside it; at 860px and below the column is the pane and there is none. */
-@media (min-width: 861px) and (scripting: enabled) {
-    [data-thread-study] > .thread-scroll { margin-right: -23px; }
-}
 .thread-study-head { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--border-hair); }
 /* The display token, not a literal: 2.15rem was 1.6px shy of --text-display-lg
    for no reason anything records, and 28ch broke the title eight characters

@@ -537,3 +537,29 @@ This refines the phone spacing clauses above without changing ADR 0042's row
 count or shared height token. The regression tests run in the standard chrome
 and browser-evidence commands. See the
 [test and browser record](../evidence/header-regressions-2026-10-07/README.md).
+
+### Thread scrolling follow-up — 2026-10-07
+
+The thread portion of the 2026-09-20 startup contract now uses document scrolling
+and a bottom-sticky reply dock. CSS supplies the same scrolling ancestor before
+and after deferred bundles arrive, including when they are blocked or JavaScript
+is disabled. A viewport-based minimum height fills a short topic's pane while a
+long topic grows naturally. The mobile thread shell uses automatic height so the
+sticky header's containing block grows with that document. The stream and dock
+keep the same 646px reading measure without an inner scrollbar gutter or
+negative-margin compensation.
+
+Native post fragments use the document's existing scroll padding beneath the
+sticky member header. The initial fragment re-scroll into `.thread-scroll` is
+retired. Document end scroll padding reserves the measured dock height plus 12px
+for native focus reveal. Resize observation tracks the full border box, including
+keyboard padding, with a 24rem CSS fallback while measurement is unavailable.
+Native drawer links, installed drawer focus handling, compact composer
+startup, rich-editor caret preservation, and keyboard-aware dock padding retain
+their existing contracts.
+
+Shared scrollbars now use thin semantic `--border-strong` thumbs with transparent
+tracks and thumb borders. They follow the active parchment or twilight register.
+This also applies to scrolling rails and other member/operator controls. See
+ADR 0030's document-scrolling follow-up for the superseded thread adaptations;
+earlier startup measurements and evidence remain records of their original runs.

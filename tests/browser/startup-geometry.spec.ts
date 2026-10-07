@@ -170,12 +170,16 @@ async function saveEvidence(page: Page, info: TestInfo, name: string, value: unk
   await page.screenshot({ path: path.join(directory, `${name}.png`), fullPage: true, animations: 'disabled' });
 }
 
-function expectStable(before: Geometry, after: Geometry, phase: string): void {
+function expectStable(before: Geometry, after: Geometry, phase: string, documentThread = false): void {
   for (const name of ['main', 'scroll', 'dock']) {
     if (!before[name]) continue;
     expect.soft(after[name], `${phase}: ${name} is still rendered`).not.toBeNull();
     if (!after[name]) continue;
     for (const dimension of ['x', 'y', 'width', 'height'] as const) {
+      // A document thread can shorten below the viewport when native post
+      // disclosures acquire their enhanced controls. Its painted origins,
+      // reading width and sticky dock must stay put; CLS guards visible shifts.
+      if (documentThread && name !== 'dock' && dimension === 'height') continue;
       expect.soft(Math.abs(after[name]![dimension] - before[name]![dimension]), `${phase}: ${name}.${dimension}`).toBeLessThanOrEqual(1);
     }
   }
@@ -208,9 +212,19 @@ for (const destination of ['home', 'thread'] as const) {
       const probe = await page.evaluate(() => (window as Window & { __startupGeometry: Probe }).__startupGeometry);
       const result = { mode: 'controlled delayed bundles; routing disables cache', before, afterApp, afterComposer, cls: cls(probe.shifts), ...probe };
       await saveEvidence(page, info, `startup-${destination}-delayed`, result);
-      expectStable(before, afterApp, 'app startup');
-      expectStable(afterApp, afterComposer, 'composer startup');
+      expectStable(before, afterApp, 'app startup', destination === 'thread');
+      expectStable(afterApp, afterComposer, 'composer startup', destination === 'thread');
       expect.soft(result.cls, JSON.stringify(result.shifts)).toBeLessThan(0.1);
+      if (destination === 'thread') {
+        expect(await page.locator('.thread-scroll').evaluate((element) => getComputedStyle(element).overflowY)).toBe('visible');
+        const beforeScroll = await page.evaluate(() => window.scrollY);
+        await page.mouse.move(200, 300);
+        await page.mouse.wheel(0, 300);
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(beforeScroll);
+        expect(await page.locator('.thread-scroll').evaluate((element) => element.scrollTop)).toBe(0);
+        const dock = await page.locator('.thread-dock').boundingBox();
+        expect(dock!.y + dock!.height).toBeCloseTo(page.viewportSize()!.height, 0);
+      }
     } finally {
       app.release();
       composer.release();

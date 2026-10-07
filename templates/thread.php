@@ -139,11 +139,9 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
         <?php if ($current_user === null): ?><?= $this->partial('partials/thread_status_history', compact('status_history', 'status_labels')) ?><?php endif; ?>
     </header>
     <?php
-    /* FT-01. Topic tools and the split/merge disclosure belong to the topic head, and
-       they must render INSIDE .thread-scroll. Every in-flow sibling of .thread-scroll
-       takes its height out of the fixed-height column, so rendering them after
-       .thread-dock left the unenhanced reading pane at 12px of an 854px viewport.
-       They stay SIBLINGS here: nesting the restructure markup inside [data-topic-tools]
+    /* Topic tools and the split/merge disclosure belong to the topic head, ahead
+       of the stream and sticky reply dock. They stay SIBLINGS here: nesting the
+       restructure markup inside [data-topic-tools]
        would make app.js hide the dialog's own ancestor when opening it. */
     ?>
     <?= $this->partial('partials/thread_tools', [

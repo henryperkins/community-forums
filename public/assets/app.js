@@ -819,23 +819,17 @@
 
     enhanceThreadViews(document);
 
-    // FT-01. The thread's inner scroll port now only exists once the line above has
-    // run, and this script is deferred. The browser resolved any #p{id} fragment
-    // against the document scroller before that, so the post it scrolled to is no
-    // longer in view once .thread-scroll becomes the scroller at scrollTop 0.
-    // Re-resolve the fragment inside the new scroll port, once, on load only —
-    // Controller::threadRedirect() sends reply, edit, accepted-answer, moderation,
-    // memory and notification click-through to /t/{id}-{slug}#p{postId}.
-    (function () {
-        var hash = window.location.hash;
-        if (!/^#p\d+$/.test(hash)) { return; }
-        var target = document.getElementById(hash.slice(1));
-        if (!target) { return; }
-        var port = target.closest('[data-thread-enhanced="1"] > .thread-scroll');
-        if (!port) { return; }
-        // scrollIntoView would also scroll the window; set the port directly.
-        port.scrollTop = target.offsetTop - port.offsetTop;
-    })();
+    // Native focus scrolling must leave room for the sticky reply dock, including
+    // expanded drafts and the software keyboard. Scroll padding changes no layout.
+    var threadDock = document.querySelector('body[data-route="thread"] .thread-dock');
+    if (threadDock) {
+        var syncThreadDockHeight = function () {
+            document.documentElement.style.setProperty('--thread-dock-height', Math.ceil(threadDock.getBoundingClientRect().height) + 'px');
+        };
+        syncThreadDockHeight();
+        window.addEventListener('resize', syncThreadDockHeight);
+        if (window.ResizeObserver) { new ResizeObserver(syncThreadDockHeight).observe(threadDock, { box: 'border-box' }); }
+    }
 
     // Member-surface panels. The POST forms remain canonical; JavaScript applies
     // the state immediately and saves the same fields in the background. The

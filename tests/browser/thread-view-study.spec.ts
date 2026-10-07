@@ -458,9 +458,10 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
   await openSeedTopic(page);
 
   const thread = page.locator('[data-thread-study]');
-  // ADR 0030 #2: the column IS the measure the design declares once, 646px, and
-  // the scroll gutter hangs outside it. It was 860px with the prose capped
-  // separately at 70ch inside, so the byline ran 200px past its own sentence.
+  // ADR 0030 #2: the column IS the measure the design declares once, 646px.
+  // Document scrolling and the sticky dock share that width without an inner
+  // gutter. It was 860px with prose capped separately at 70ch, so the byline
+  // ran 200px past its own sentence.
   await expect(thread).toHaveCSS('width', info.project.name === 'desktop' ? '646px' : '362px');
   const box = await thread.boundingBox();
   expect(box).not.toBeNull();
@@ -764,6 +765,10 @@ test('mobile composer honors a representative keyboard inset', async ({ page }, 
   const box = await composer.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.y + box!.height).toBeLessThanOrEqual(844 - 240 + 2);
+  await expect.poll(() => page.evaluate(() => {
+    const dockHeight = Math.ceil(document.querySelector('.thread-dock')!.getBoundingClientRect().height);
+    return parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom) - dockHeight;
+  })).toBe(12);
 });
 
 test('the staff badge flips register and clears AA in both', async ({ page }) => {

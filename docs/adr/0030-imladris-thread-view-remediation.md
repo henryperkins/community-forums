@@ -50,7 +50,7 @@ different one.**
 |---|---|---|
 | 1 | The poll and the living brief render **after the opening post**, not above the stream | `ThreadView.dc.html:459-465` puts both on `raw.op`: the opening post asked the question the poll puts to a vote, and the brief summarises that same question. Production rendered them, plus the since-you-last-read panel, as three blocks *above* `.post-stream`, so every reader met a ballot and an AI-written summary before a single word of the topic. On the fixture that is 620px of apparatus before the first sentence. |
 | 2 | The reading column is the design's measure, declared once | `ThreadView.dc.html:56` declares `--measure: 646px` as a custom property precisely "so the top bar and the reading column cannot drift apart". Production was `width: min(100%, 860px)` with the prose capped separately at 70ch, so a post byline ran 743px while the sentence under it ran 539px, and the poll, the brief, the catch-up strip and the composer all sat ~200px past the measure they exist to stand beside. |
-| 3 | The scroll gutter is given back outside the measure | `.thread-scroll` reserves a stable scrollbar track plus this surface's 8px inset — 23px in Chromium — once app.js makes it the column's own scroll container. That came straight out of the 646px, which is exactly the width the header byline was short of stating its own reply count. |
+| 3 | The scroll gutter is given back outside the measure | `.thread-scroll` reserves a stable scrollbar track plus this surface's 8px inset — 23px in Chromium — once app.js makes it the column's own scroll container. That came straight out of the 646px, which is exactly the width the header byline was short of stating its own reply count. **Historical adaptation, superseded by the document-scrolling follow-up dated 2026-10-07 below.** |
 | 4 | The facts row carries the byline and the roster and **nothing else** | `ThreadView.dc.html:164-181`. The identity group also carried the tag chips, a visible `IN COUNCIL` eyebrow and a Tended-by/Quiet-until group. The row is `flex-wrap: nowrap` on purpose — so the byline elides rather than shoving the controls onto a second line — and with five items competing the one shrinkable item gave up **all** of its width: the topic's own byline rendered as `Opened by Erestor · 5 repl`, and the eyebrow beside it wrapped to `IN`/`COUNCIL`. |
 | 5 | The byline states the opened date, and folds the snooze into its tail | `bylineTail` (`ThreadView.dc.html:1568`) is `· opened · N replies · Quiet until X`. Production omitted the date and hoisted the snooze into a separate group. The snooze is the reader's own, like the reply count beside it. |
 | 6 | The assignment is stated where it is changed | The design keeps it out of the header entirely and reads it as `wardenSummary` on the drawer's Topic management summary, which production already renders. |
@@ -84,7 +84,7 @@ different one.**
 | # | Kept | Why |
 |---|---|---|
 | A | The three-pane app shell | The design's thread view is a standalone page with its own minimal top bar and no rail. Production keeps the member topbar and the board rail, as `/` and `/inbox` do — the design's own retired rail was a *thread-specific* right-hand reference rail (roster, tags, ledger), not the product's navigation, and its comment says so. |
-| B | The reading column scrolls internally | `.thread-scroll` is the fixed-height column of the Community Inbox shell, not the design's whole-page scroll with a sticky dock. Changing it would change the shell, not this surface. |
+| B | The reading column scrolls internally | `.thread-scroll` is the fixed-height column of the Community Inbox shell, not the design's whole-page scroll with a sticky dock. Changing it would change the shell, not this surface. **Historical keep, superseded by the document-scrolling follow-up dated 2026-10-07 below.** |
 | C | The breadcrumb's first hop still reads **Forum index** | `ThreadView.dc.html:141` says *Home*. The 2026-08-02 forum-surfaces spec names three destinations in plain language precisely because they are confused — *Forum index* (`/`), *Forum inbox* (`/inbox`), *Messages* — and `/` carries a `Forum index` eyebrow of its own. The prototype has no such neighbours to disambiguate from. A product naming decision outranks a prototype's word for the same link. |
 | C2 | The brief's pause sentence is unchanged | `ThreadView.dc.html:517` says *"Automatic refresh is paused, so this brief may be behind the replies below."* The 2026-08-26 living-brief redesign spec pins the production sentence **verbatim** (*"Copy, exactly: Automatic refresh is paused for this topic. The brief stands as published."*), and ADR 0026 §2a shipped it two days ago. A dated exact-copy instruction outranks a prototype's phrasing. |
 | C3 | Link-preview copy and controls | The design says *Remove this preview* / *Restore* with an ownership-specific hint sentence; production says *Remove preview* / *Restore preview* / *Link preview removed from this post.* Those strings are ADR 0025's, pinned by four browser and two PHPUnit assertions, and this is a visual remediation. The ownership hint the design adds **is** adopted, since production knows the owner. |
@@ -226,3 +226,30 @@ instead — the button is still the only control whose name starts that way.
 `role-assignments.spec.ts` reads the lock control as a `switch` named *Locked to
 replies* (#28), and `thread-view-study.spec.ts` parks the pointer before
 asserting the post toolbar is at rest, which the test claimed but never did.
+
+## Document-scrolling follow-up — 2026-10-07
+
+The canonical thread now scrolls with the document and keeps `.thread-dock`
+sticky at the bottom. Its conversation uses a viewport-based minimum height
+instead of a fixed height, so short topics fill the pane and longer topics grow
+with their content. On narrow screens, the app shell also grows with the thread,
+keeping the sticky member header's containing block as tall as the document.
+This supersedes fixed-height internal scrolling in deliberate keep B and the
+gutter compensation in fixed item #3. Their original measurements and evidence
+remain historical records.
+
+The reading column keeps its declared 646px measure. The stream and reply dock
+share that width without a nested scroll track, right inset, or `-23px` margin.
+Topic tools and post disclosures retain their existing enhancement and focus
+behavior; the reply composer retains its expansion, draft, validation, and
+keyboard-inset behavior.
+Document end scroll padding reserves the dock's measured height plus 12px for
+native focus reveal. Resize observation tracks its full border box, including
+keyboard padding, with a 24rem CSS fallback while measurement is unavailable.
+
+Post fragments use native document navigation and the shell's existing scroll
+padding below the sticky topbar. The special initial `#p{id}` re-scroll into
+`.thread-scroll` is removed because enhancement no longer changes the scrolling
+ancestor. Thin scrollbars use the semantic `--border-strong` thumb on a
+transparent track, with a transparent thumb border, so their ink follows the
+current parchment or twilight register instead of fixed light palette values.
