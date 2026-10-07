@@ -861,29 +861,31 @@ Not yet done, tracked here so it is not lost:
   `static.cloudflareinsights.com` to `script-src`; it currently only produces a
   console error.
 
-## 16. Public hostname `boards.hperkins.blog` — plan and state (2026-09-21)
+## 16. Public hostname `boards.hperkins.blog` — routing and migration plan
 
-Goal: serve production at `https://boards.hperkins.blog`, with
-`forum.candidary.online` redirecting there. Nothing below has been applied yet;
-this section records the facts, the mechanism, and the order of operations.
+Production remains canonical at `https://forum.candidary.online`.
+`boards.hperkins.blog` is an attached alias that redirects there. A future
+canonical-origin move would reverse that direction; the procedure below does
+not authorize that move.
 
-### What is true today
+### Routing verified 2026-10-07; migration inventory from 2026-09-21
 
 - Production is the Worker `retroboards` on the **Custom Domain**
   `forum.candidary.online` (zone `candidary.online`, account "Henry Flare",
   `a77e479f6736120eadd99973dbeb705e`). `APP_URL=https://forum.candidary.online`.
-  `workers.dev` and previews are disabled for the Worker, so exactly one
-  hostname reaches it.
+  The alias `boards.hperkins.blog/healthz` returns `301` to the canonical
+  host with `Cache-Control: no-store`.
 - `hperkins.blog` is **not a Cloudflare zone**. It is registered with
   WordPress.com (Automattic), uses `ns1/ns2/ns3.wordpress.com`, has **DNSSEC
   enabled**, and its apex/`www` host the WordPress.com (Atomic) blog. Its zone
-  at WordPress.com holds 14 records that must survive whatever is done:
+  at WordPress.com held 14 records in the 2026-09-21 inventory that must
+  survive any DNS migration (refresh the inventory first):
   apex `A` ×2 (WordPress.com, protected), `www CNAME hperkins.blog`,
   `MX 10 mx1.titan.email` / `MX 20 mx2.titan.email`, apex `TXT` SPF
   (`_spf.wpcloud.com` + `spf.titan.email`), apex `TXT` OpenAI verification,
   `_dmarc TXT`, `titan1._domainkey TXT` (DKIM), `wpcloud1/2._domainkey CNAME`
   (DKIM), `mailpoet1/2._domainkey CNAME` (DKIM), `_mailpoet TXT`.
-  `boards.hperkins.blog` does not exist (NXDOMAIN).
+  `boards.hperkins.blog` now CNAMEs to `saas-fallback.candidary.online`.
 - A Workers Custom Domain requires an **active zone the account owns**
   ([docs](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)),
   so `{ "pattern": "boards.hperkins.blog", "custom_domain": true }` cannot be
@@ -920,6 +922,52 @@ canonical origin, `Cache-Control: no-store`. Consequences:
 Pinned by `tests/worker/canonical.test.mjs` and
 `tests/Unit/Core/CloudflareDeploymentContractTest.php`.
 
+### Keep the SaaS zone route separate from Wrangler
+
+The existing zone route is `boards.hperkins.blog/*` → `retroboards`, in zone
+`candidary.online` (`973da452ca2467c3b0d6e489839300d2`). Its route ID was
+`cdd04d8a5b6147099b5daf73940c7f27` when read on 2026-10-07. Inspect it through
+the zone's **Workers Routes** page or
+`GET /zones/973da452ca2467c3b0d6e489839300d2/workers/routes`.
+
+Keep `wrangler.jsonc`'s `routes` list limited to Custom Domains. Wrangler
+4.118.0 sends ordinary routes through an account-level bulk
+`PUT /accounts/{account_id}/workers/scripts/retroboards/routes`. The deployment
+on 2026-10-07 rejected the alias with `10022 Route pattern must include zone
+name: candidary.online`. Switching `zone_name` to `zone_id` does not change
+that endpoint. With no ordinary routes in the config, Wrangler skips that PUT
+and leaves the independently provisioned zone route in place. Adding even an
+in-zone route would resume the bulk replacement and could remove the alias.
+`tests/worker/deployment-routes.test.mjs` checks the parsed Wrangler inputs.
+
+This failure happens after the Worker upload and container application update.
+It does **not** roll those changes back. Check the active Worker version,
+container image and `/healthz` even when Workers Builds marks the deploy failed;
+a successful alias redirect alone does not prove the container is healthy.
+
+The same investigation on 2026-10-07 found a separate startup outage:
+the container mounted R2 successfully, then boot-time migrations failed with
+`SQLSTATE[HY000] [1105] not_found: branch is missing or sleeping: w9fqlkhs3jd8`.
+PlanetScale's API confirmed that `perkinism/imladris-boards/main` still existed
+but had `state: sleeping` and `ready: false`. The canonical `/healthz` returned
+HTTP `500` / Cloudflare `1101`. PlanetScale's dashboard attributed the sleep
+to an overdue Cloudflare invoice. For this Cloudflare-billed subscription,
+pay the overdue balance in the **Henry Flare** account's Billing page, then
+go to **Hyperdrive (Postgres & MySQL Database)** and reactivate the existing
+PlanetScale subscription. Cloudflare can take up to 24 hours to recognize
+payment ([billing guidance](https://developers.cloudflare.com/billing/manage/pay-invoices-overdue-balances/)).
+Once the branch is ready, verify `/healthz` again; correcting the route config
+alone cannot restore the app. Keep the entrypoint's migration failure gate
+intact.
+
+On 2026-10-07, the zone-route read and live alias redirect succeeded, but the
+Custom Hostnames and fallback-origin API reads returned `1404` (no SaaS quota)
+and `1456` (SaaS access not granted). Those reads do not establish why the
+entitlement changed. Before provisioning or changing SaaS resources, verify
+the zone's SSL/TLS → Custom Hostnames entitlement in the dashboard. Preserve
+the working hostname route while investigating; do not substitute `*/*`, which
+would intercept the Candidary apex's Custom Domain.
+
 ### Mechanism B — Cloudflare for SaaS custom hostname (recommended)
 
 Keeps `hperkins.blog` DNS at WordPress.com untouched except for one new record.
@@ -938,9 +986,13 @@ zone **route** sends only that hostname to the Worker
    **proxied** (originless), then set it as the fallback origin
    (`PUT /zones/973da452ca2467c3b0d6e489839300d2/custom_hostnames/fallback_origin`
    `{"origin":"saas-fallback.candidary.online"}`) and wait for `active`.
-3. **Route, then deploy**: add to `routes` in `wrangler.jsonc`
-   `{ "pattern": "boards.hperkins.blog/*", "zone_name": "candidary.online" }`
-   and merge. **Never `*/*`**: the apex `candidary.online` is the Custom Domain
+3. **Route separately from deployment**: after SaaS is enabled, use the zone's
+   Workers Routes page to attach `boards.hperkins.blog/*` to `retroboards`, or
+   `POST /zones/973da452ca2467c3b0d6e489839300d2/workers/routes` with
+   `{"pattern":"boards.hperkins.blog/*","script":"retroboards"}` if it is
+   missing. Reuse the existing route when it already matches; do not recreate
+   it during each release or add it to `wrangler.jsonc`. **Never `*/*`**: the
+   apex `candidary.online` is the Custom Domain
    of the `candidary` Worker, and a zone-wide route runs *ahead* of Custom
    Domains, so `*/*` would hand that site to `retroboards`, whose canonical
    redirect would then send it to the forum. The hostname-only route is the
@@ -963,8 +1015,11 @@ zone **route** sends only that hostname to the Worker
    curl -sS https://forum.candidary.online/healthz          # still 200, unchanged
    ```
 
-Rollback of B at any point: delete the route from `wrangler.jsonc` (deploy),
-delete the custom hostname, delete the CNAME. The blog never noticed.
+Rollback of B: after deciding to remove the alias, delete its exact zone route
+through Workers Routes or `DELETE /zones/{zone_id}/workers/routes/{route_id}`
+(look up the current ID first), then delete the custom hostname and its CNAME.
+Removing a route from `wrangler.jsonc` no longer manages this separate resource.
+Leave the blog's other DNS records intact.
 
 ### Mechanism A — move the `hperkins.blog` zone to Cloudflare, then a Custom Domain
 
@@ -997,7 +1052,8 @@ deleted until well after cut-over.
 
 ### Then: make `boards.hperkins.blog` canonical
 
-Do this only after B.6 (or A.4) shows the `301`.
+Do this only after B.6 (or A.4) shows the `301`, the canonical `/healthz` is
+healthy, and the account/provider/passkey inventory above has been refreshed.
 
 1. In `wrangler.jsonc` set `APP_URL` to `https://boards.hperkins.blog`.
    Consider setting `WEBAUTHN_RP_ID=hperkins.blog` in the same change (it must

@@ -19,11 +19,9 @@ final class CloudflareDeploymentContractTest extends TestCase
         self::assertStringContainsString('"max_instances": 1', $config);
         self::assertStringContainsString('"pattern": "forum.candidary.online"', $config);
         self::assertStringContainsString('"custom_domain": true', $config);
-        // boards.hperkins.blog is a Cloudflare for SaaS custom hostname of the
-        // candidary.online zone, routed by hostname only (runbook §16): never a
-        // `*/*` route, which would capture the apex's own Custom Domain.
-        self::assertStringContainsString('"pattern": "boards.hperkins.blog/*"', $config);
-        self::assertStringContainsString('"zone_name": "candidary.online"', $config);
+        // SaaS zone-route ownership and the resulting Wrangler trigger inputs
+        // are checked with Wrangler's real config parser in
+        // tests/worker/deployment-routes.test.mjs (runbook §16).
         self::assertStringNotContainsString('"pattern": "*/*"', $config);
     }
 
