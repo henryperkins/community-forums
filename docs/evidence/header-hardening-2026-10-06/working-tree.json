@@ -1,0 +1,8 @@
+{
+  "base_commit": "553004b1400a97313a93dc13015e4a64a5c6798b",
+  "candidate_asset_version": "4a0845db4d949c81",
+  "css": "/assets/dist/app-style-DSkkmaTj.css",
+  "js": "/assets/dist/app-55d3b306ac99bd76.js",
+  "application_surface_sha256": "4b80ba7c77951c3eaaf626bde33bd77ff558592ba1f09d581b66034f183773bc",
+  "status": "Validated local working tree; uncommitted and undeployed"
+}

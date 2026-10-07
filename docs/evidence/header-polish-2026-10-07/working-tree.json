@@ -1,0 +1,10 @@
+{
+  "base_commit": "553004b1400a97313a93dc13015e4a64a5c6798b",
+  "includes": "the header hardening, unread marks and phone rows slices (docs/evidence/header-*-2026-10-0*) and this polish pass",
+  "candidate_asset_version": "1fbf9440c80f3726",
+  "css": "/assets/dist/app-style-Ca4IbNbF.css",
+  "js": "/assets/dist/app-5e87ce3a40c3e626.js",
+  "tour_js": "/assets/dist/tour-2cb01893b54a8644.js",
+  "application_surface_sha256": "737b5de3e956aac891465a6d80dab872bd5a996b1a7d4868ec75a03729bdcea0",
+  "status": "Validated local working tree; uncommitted and undeployed"
+}

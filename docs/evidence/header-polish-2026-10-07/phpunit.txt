@@ -1,0 +1,24 @@
+Full PHPUnit suite, 2026-10-07, working tree on 553004b1 with the header hardening, unread-marks,
+phone-rows and polish passes (4 round-robin shards, private DBs retroboards_test_hdr_s0..s3)
+
+shard 0: OK (888 tests, 5741 assertions)
+shard 1: Tests: 735, Assertions: 5544, Skipped: 1.
+shard 2: OK (765 tests, 4382 assertions)
+shard 3: OK (741 tests, 8105 assertions)
+
+Total: 3,129 tests, 23,772 assertions, 0 failures, 0 errors, 1 skip
+(AppThreadIntelligenceMigrationTest's 0077 rehearsal, which needs its dedicated clean database).
+
+Changed in this pass:
+  AppMemberShellTest::test_bar_names_its_counts_on_their_links_claims_no_shortcut_and_marks_the_bell_current_on_its_page (new)
+      one unread conversation is named on the Messages link in the singular, digits aria-hidden;
+      the search and its hint claim no shortcut and the bar renders no ⌘;
+      the account button is "Account menu for …";
+      the Settings link and the logout form open the menu's later groups, with the settings glyph;
+      the bell is current on /notifications only
+  AppMemberShellTest::test_rail_unread_pills_sum_to_inbox_and_muted_places_remain_without_attention (extended)
+      the Inbox link reads "Inbox, 1 unread topic" and its digit is aria-hidden
+  AppMemberShellTest::test_pane_toggles_carry_a_fixed_name_and_announce_their_state_once (updated)
+      the titles name the pane; data-shortcut names the key for app.js
+  AppModeratorScopeTest (updated)
+      the Moderation link reads "Moderation, 1 open report"; the digit is aria-hidden

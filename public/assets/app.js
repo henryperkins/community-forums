@@ -132,12 +132,25 @@
         run();
     }
 
+    // A count's words live on its link (data-count-name), as the bell's do: the
+    // link reads "Messages, 3 unread conversations" and the digits stay
+    // aria-hidden. With nothing to count the link is named by its label alone.
+    function nameCountedLink(node, noun, count) {
+        var link = node.closest ? node.closest('[data-count-name]') : null;
+        if (!link) { return; }
+        if (count > 0) {
+            link.setAttribute('aria-label', link.getAttribute('data-count-name') + ', ' + count + ' unread ' + noun + (count === 1 ? '' : 's'));
+        } else {
+            link.removeAttribute('aria-label');
+        }
+    }
+
     function updateDmCount(value) {
         var count = Math.max(0, Number(value) || 0);
         document.querySelectorAll('[data-dm-unread-count]').forEach(function (node) {
             node.textContent = count > 99 ? '99+' : String(count);
-            node.setAttribute('aria-label', count + ' unread conversation' + (count === 1 ? '' : 's'));
             node.hidden = count === 0;
+            nameCountedLink(node, 'conversation', count);
         });
     }
 
@@ -851,13 +864,18 @@
         var button = form.querySelector('button[type="submit"]');
         if (field) { field.value = open ? '0' : '1'; }
         if (button) {
-            // The design's toggle: `.is-on` fills the glyph's band while the pane is shown.
+            // The design's toggle: `.is-on` fills the glyph's band while the pane
+            // is shown. Its name is fixed; aria-pressed alone carries the state.
             button.classList.toggle('is-on', open);
-            button.setAttribute('aria-expanded', open ? 'true' : 'false');
             button.setAttribute('aria-pressed', open ? 'true' : 'false');
-            button.setAttribute('aria-label', (open ? 'Hide the ' : 'Show the ') + (kind === 'reading' ? 'reading pane' : 'board rail'));
-            button.setAttribute('title', (open ? 'Hide the ' : 'Show the ') + (kind === 'reading' ? 'reading pane (⌘J)' : 'board rail (⌘B)'));
         }
+    };
+    // A shortcut acts only while its toggle is drawn: behind the phone drawer
+    // (rail) or below the inbox's 1280px column (reading pane) the persisted
+    // state has nothing to show, and flipping it unseen would surprise later.
+    var panelAvailable = function (kind) {
+        var form = panelForms[kind];
+        return !!form && form.getClientRects().length > 0;
     };
     var persistPanelState = function (kind, open) {
         var form = panelForms[kind];
@@ -891,15 +909,32 @@
             persistPanelState(kind, desired);
         });
     });
+    // The shortcuts' hints. The server claims none, because nothing answers
+    // ⌘K without this script; here each control named by data-shortcut gets
+    // aria-keyshortcuts and a hint in the platform's own modifier: ⌘ on Apple
+    // devices, Ctrl elsewhere. The handler below takes either everywhere.
+    var applePlatform = /Mac|iPhone|iPad|iPod/i.test((navigator.userAgentData && navigator.userAgentData.platform)
+        || navigator.platform || navigator.userAgent || '');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-shortcut]'), function (control) {
+        var key = String(control.getAttribute('data-shortcut') || '').toUpperCase();
+        if (!key) { return; }
+        control.setAttribute('aria-keyshortcuts', (applePlatform ? 'Meta+' : 'Control+') + key);
+        var hint = control.querySelector('[data-shortcut-hint]');
+        if (hint) {
+            hint.textContent = applePlatform ? '\u2318' + key : 'Ctrl ' + key;
+            hint.hidden = false;
+        }
+        if (control.title) { control.title += ' (' + (applePlatform ? '\u2318' : 'Ctrl+') + key + ')'; }
+    });
     document.addEventListener('keydown', function (event) {
         if (!(event.ctrlKey || event.metaKey) || event.altKey || editableTarget(event.target)) { return; }
         var key = String(event.key || '').toLowerCase();
-        if (key === 'b' && panelForms.rail) {
+        if (key === 'b' && panelAvailable('rail')) {
             event.preventDefault();
             var railOpen = !panelIsOpen('rail');
             renderPanelState('rail', railOpen);
             persistPanelState('rail', railOpen);
-        } else if (key === 'j' && panelForms.reading) {
+        } else if (key === 'j' && panelAvailable('reading')) {
             event.preventDefault();
             var readingOpen = !panelIsOpen('reading');
             renderPanelState('reading', readingOpen);
@@ -1089,6 +1124,7 @@
             var count = parseInt(badge.getAttribute(attribute) || '', 10);
             if (isNaN(count) || count < 1) { return; }
             count--;
+            nameCountedLink(badge, 'topic', count);
             if (count === 0) { badge.remove(); return; }
             var label = count + ' unread topic' + (count === 1 ? '' : 's');
             badge.setAttribute(attribute, String(count));
@@ -1469,7 +1505,9 @@
             if (navViewport.matches && focusedInRail) {
                 navToggle.focus();
             } else if (!navViewport.matches && (focusedOnOpener
-                || (focusedInRail && getComputedStyle(sidebar).display === 'none'))) {
+                || (focusedInRail && getComputedStyle(sidebar).display === 'none')
+                // The drawer's close control has no desktop counterpart.
+                || (focusedInRail && focused.getClientRects().length === 0))) {
                 var stops = overlayTabStops(sidebar);
                 if (getComputedStyle(sidebar).display !== 'none') {
                     (stops[0] || sidebar).focus();
@@ -1479,6 +1517,31 @@
                 }
             }
         });
+    }
+
+    // The phone bar gives the primary routes their own row under the lockup and
+    // the account controls (ADR 0042), and CSS draws that row last. The reading
+    // and focus order follow it here, so Tab and a screen reader's swipe move
+    // row by row instead of dropping from the lockup to the routes and climbing
+    // back to search. Above the drawer breakpoint the routes return beside the
+    // lockup, where the desktop bar draws them. Without JavaScript the order
+    // stays the desktop one, which is still complete.
+    var forumBar = document.querySelector('.forum-bar');
+    var barRoutes = forumBar && forumBar.querySelector(':scope > .forum-bar-surfaces');
+    var barLockup = forumBar && forumBar.querySelector(':scope > .forum-bar-lockup');
+    if (barRoutes && barLockup) {
+        var phoneBar = window.matchMedia('(max-width: 860px)');
+        var placeRoutes = function () {
+            var focused = barRoutes.contains(document.activeElement) ? document.activeElement : null;
+            if (phoneBar.matches && forumBar.lastElementChild !== barRoutes) {
+                forumBar.appendChild(barRoutes);
+            } else if (!phoneBar.matches && barLockup.nextElementSibling !== barRoutes) {
+                barLockup.after(barRoutes);
+            }
+            if (focused && document.activeElement !== focused) { focused.focus(); }
+        };
+        placeRoutes();
+        phoneBar.addEventListener('change', placeRoutes);
     }
 
     // The admin console has no navigation JavaScript. Its area tier scrolls

@@ -1,0 +1,9 @@
+{
+  "base_commit": "553004b1400a97313a93dc13015e4a64a5c6798b",
+  "includes": "the header hardening slice (docs/evidence/header-hardening-2026-10-06) and this colorize pass",
+  "candidate_asset_version": "ab83ea3b5fc1e949",
+  "css": "/assets/dist/app-style-C0GigaME.css",
+  "js": "/assets/dist/app-55d3b306ac99bd76.js",
+  "application_surface_sha256": "3ac106ee285209af492f3b0ba790bb2c97e9957b13cea4355b006921c9bbbe04",
+  "status": "Validated local working tree; uncommitted and undeployed"
+}

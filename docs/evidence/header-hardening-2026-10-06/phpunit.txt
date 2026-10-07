@@ -1,0 +1,14 @@
+Full PHPUnit suite, 2026-10-06, working tree on 553004b1 (4 round-robin shards, private DBs retroboards_test_hdr_s0..s3)
+
+shard 0: OK (888 tests, 5741 assertions)
+shard 1: Tests: 733, Assertions: 5523, Skipped: 1.
+shard 2: OK (765 tests, 4382 assertions)
+shard 3: OK (741 tests, 8105 assertions)
+
+Total: 3,127 tests, 23,751 assertions, 0 failures, 0 errors, 1 skip.
+The skip is AppThreadIntelligenceMigrationTest::test_0077_down_and_up_rehearsal_on_fixture_free_schema,
+which runs only on its dedicated retroboards_thread_intelligence_clean database.
+
+Targeted: tests/Integration/Core/AppMemberShellTest.php — OK (14 tests, 180 assertions), including
+test_new_topic_opens_the_composer_on_the_board_being_read and
+test_pane_toggles_carry_a_fixed_name_and_announce_their_state_once.

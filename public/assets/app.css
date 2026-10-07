@@ -763,7 +763,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .btn-oauth { display: block; margin: 8px 0; }
 
 /* ── Accessibility + mobile polish (P2-11) ── */
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* No border-radius here. The layer's own :focus-visible rounds what has no
+   radius of its own (2px); restated unlayered, it beat every control's radius,
+   so a focused pill, search field or button squared off to 2px. */
 .skip-link { position: absolute; left: -999px; top: 0; z-index: 100; background: var(--surface); padding: 8px 12px; border: 1px solid var(--border); }
 .skip-link:focus { left: 8px; top: 8px; }
 
@@ -795,13 +798,23 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 
    --stage-* paint the auth gate's stage, which is twilight in both registers,
    so they do not flip. The page's --accent is evergreen by day, drawn for
-   parchment: on this ground its focus ring measured 1.75:1. */
+   parchment: on this ground its focus ring measured 1.75:1.
+
+   --z-* order the member shell. Page content stays at or below 30 (the post
+   toolbar and the phone directory bar are the highest); the sticky chrome sits
+   above it, so nothing on the page paints over the bar or its account menu;
+   the phone drawer's scrim and rail come next. Popovers, sheets and dialogs
+   that must cover the chrome already start at 42. The layer's own 20 put the
+   bar under the page's 30. */
 :root {
     --field-rule: var(--gold-700);
     --stage-ground: var(--twilight-900);
     --stage-raised: var(--twilight-800);
     --stage-ink: var(--parchment-50);
     --stage-accent: var(--gold-400);
+    --z-chrome: 40;
+    --z-scrim: 55;
+    --z-drawer: 60;
 }
 
 /* ── Phase 3: appearance preferences (P3-01) ──────────────────────────────
@@ -1759,7 +1772,18 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 @media (max-width: 860px) and (scripting: enabled) {
     .nav-toggle:not([hidden]) { display: inline-flex; }
     body[data-nav-ready] [data-nav-fallback] { display: none; }
-    body:not([data-nav-ready]) .nav-close { display: block; padding: 12px; }
+    /* The drawer's own close control, in its Tab loop before the enhancement
+       arrives and after: Topic tools' grammar, a 44px cross at the top corner
+       that takes focus when the drawer opens. Escape and the scrim still close
+       it too. */
+    .nav-close {
+        display: inline-flex; align-self: flex-end; align-items: center; justify-content: center;
+        flex: none; width: 44px; height: 44px; margin: -14px -6px 0 0;
+        border-radius: var(--radius-pill); color: var(--text-faint);
+    }
+    .nav-close .icon { width: 20px; height: 20px; }
+    .nav-close:hover, .nav-close:focus-visible { background: var(--surface-page); color: var(--text-strong); }
+    .nav-close:focus-visible { border-radius: var(--radius-pill); }
 
     /* The layer's .board-rail is a column in a
        fixed-height flex shell; on a phone it becomes this fixed drawer, which
@@ -1767,7 +1791,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     :root .app-shell { display: block; height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
     .app-shell > .board-rail {
         position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
-        display: flex; width: 322px; max-width: 86vw; max-height: none; z-index: 60;
+        display: flex; width: 322px; max-width: 86vw; max-height: none; z-index: var(--z-drawer);
         transform: translateX(-100%);
         /* A translated rail still participates in keyboard navigation. */
         visibility: hidden;
@@ -1779,7 +1803,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .main { width: 100%; }
     .nav-scrim:not([hidden]) {
         position: fixed; inset: 0; top: var(--topbar-h);
-        background: var(--scrim); z-index: 55;
+        background: var(--scrim); z-index: var(--z-scrim);
     }
 }
 @media (max-width: 860px) {
@@ -3026,15 +3050,9 @@ textarea.textarea-engraved {
     .session-agent-details summary { min-height: 44px; padding-block: 10px; }
 }
 @media (max-width: 860px) and (scripting: none) {
-    /* With no drawer script, account pages retain the real board, folder and
-       feed links in a bounded, focusable rail instead of a full-height preface. */
-    html:not(.has-js) [data-account-settings] .board-rail {
-        position: static;
-        max-height: 176px;
-        padding-block: 8px;
-        overflow-y: auto;
-        border-bottom: 1px solid var(--border-hair);
-    }
+    /* With no drawer script, every member page keeps the real board, folder and
+       feed links in a bounded rail above the content (Member chrome block);
+       account pages also make it focusable and start their long form at the top. */
     html:not(.has-js) [data-account-settings] .app-shell { align-content: start; }
 }
 .field-grid {
@@ -16222,8 +16240,40 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
    --maxw column the shell below is centred on. The design's 22px gutter is the
    floor, and its own 1080px step (16px) is kept. */
 .forum-bar { padding-inline: max(22px, calc((100% - var(--maxw)) / 2)); }
+/* The layer stacks the bar at 20, which the design's own shell never contests;
+   ours carries page controls at 30 (the post toolbar, the phone directory bar),
+   and they painted over the bar and over its account menu, taking the taps
+   aimed at Log out. The bar sits above all page content (--z-chrome). */
+.forum-bar { z-index: var(--z-chrome); }
+/* The operator's name and logo get a width budget. The design's lockup is
+   `flex: none` because it draws a fixed short name; production's is whatever
+   the operator chose (up to 80 characters, or an uploaded logo of any
+   proportion), and unbounded it pushed the account menu off-screen from 901 to
+   1280px. The lockup now takes only the room the routes, search and account
+   controls leave (no basis, growing to its own width and no further), so it
+   yields first: the mark keeps its size, the wordmark ends in an ellipsis, and
+   the logo scales down inside its 28px band. With no basis it also never breaks
+   the phone bar's wrapping first row. The accessible name stays the full name. */
+.forum-bar-brand { flex: 1 1 0; min-width: 24px; max-width: max-content; }
+/* The lockup's wrapper is the phone row's size container (below); here it
+   stands aside, and the link is the bar's own flex item. */
+.forum-bar-lockup { display: contents; }
+@container forum-lockup (width < calc(44px + 3.75rem)) {
+    .forum-bar-lockup .forum-bar-wordmark { display: none; }
+}
+/* The layer drops the name at 900px to keep its fixed-width bar on one row.
+   This lockup already yields, so the name stays and shortens instead: a guest
+   arriving from search on a phone still learns whose community this is. */
+.forum-bar-wordmark { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Above the compact step the lockup and the search share the room the routes
+   and account controls leave: the search grows to its 300px, the lockup to its
+   name. With the search holding 300px first, the default name was clipped at
+   1180px while the search kept its full width. */
+@media (min-width: 1081px) {
+    .forum-bar-searchwrap { flex: 1 1 0; max-width: 300px; }
+}
 /* The operator's uploaded logo replaces the lockup (Administration → Branding). */
-.brand-logo { display: block; height: 28px; width: auto; }
+.brand-logo { display: block; flex: 0 1 auto; min-width: 0; height: 28px; width: auto; object-fit: contain; object-position: left center; }
 /* The design's Monogram sizes itself (30px on the seat); the monogram partial
    emits the base class, which this file sizes at 36px. */
 .forum-bar-user .monogram { width: 30px; height: 30px; font-size: .74rem; }
@@ -16267,14 +16317,55 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 }
 .identity-menu-panel a:hover,
 .identity-menu-panel button:hover { background: var(--surface-sunken); text-decoration: none; }
+/* Three groups: your places; your settings and authority; leaving. A hairline
+   opens each later group, so Administration is no longer item 7 of 8 in an
+   undivided list and Log out stands apart. */
+.identity-menu-panel > .identity-menu-break { position: relative; margin-top: 9px; }
+.identity-menu-panel > .identity-menu-break::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    right: 9px;
+    left: 9px;
+    border-top: 1px solid var(--border-hair);
+    pointer-events: none;
+}
 /* A guest gets "Sign up" beside the design's Log in pill. */
 .forum-bar-signup { flex: none; font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
 .forum-bar-signup:hover { color: var(--accent); text-decoration: none; }
+/* Sign up was a 19px line of text beside a 33px pill; it takes the pill's
+   height as its target. Log in had no hover: it deepens its fill, the
+   .btn:hover recipe, so operator branding and twilight follow. */
+.forum-bar-signup { display: inline-flex; align-items: center; min-height: 32px; }
+.forum-bar-signin:hover { background: color-mix(in srgb, var(--accent) 82%, #000); color: var(--accent-contrast); }
+/* The lockup and the seat draw no box, but their focus rings take the pills'
+   corner rather than the 2px one. */
+.forum-bar-brand, .forum-bar-user { border-radius: var(--radius-md); }
+/* The drawer opener takes the toggles' and the bell's hover wash. */
+@media (hover: hover) {
+    .forum-bar > .nav-toggle:hover { background: var(--surface-sunken); }
+}
+/* The shortcut hint meets the chip floor (it was 0.64rem). app.js writes it,
+   with the platform's own modifier, only where the shortcut exists. */
+.forum-bar-kbd { font-size: var(--text-chip); }
 /* The pane toggles are POST forms so the state persists without JavaScript;
    the form is invisible chrome. The glyph's filled band is the pressed state,
    drawn only while the pane is shown — the design renders it conditionally. */
 .forum-bar-panel-form { margin: 0; }
-.forum-bar-railtoggle:not(.is-on) .forum-bar-toggle-band { display: none; }
+/* The band follows the star toggle's grammar: filled while the pane is shown,
+   outlined while it is hidden. Drawn at the design's half strength it measured
+   2.65:1 against its wash, and with no band at all when off, the two toggles
+   were the same empty box. Outlined, the band is the divider that still says
+   which side each toggle owns. */
+.forum-bar-railtoggle .forum-bar-toggle-band { opacity: 1; }
+.forum-bar-railtoggle:not(.is-on) .forum-bar-toggle-band { fill: none; stroke: currentColor; stroke-width: 1.1; }
+/* The reading pane is a column only from 1280px, the inbox's own breakpoint.
+   Below it an opened topic replaces the list and the persisted pane state has
+   nothing to show, so its toggle is not drawn, as the rail's is not drawn
+   behind the phone drawer. ⌘J stands down with it (app.js). */
+@media (max-width: 1279px) {
+    .forum-bar-panel-form[data-panel-form="reading"] { display: none; }
+}
 /* New topic carries a glyph the design's button lacks: on a phone the label
    goes and the glyph stays, because only a board page has a floating compose. */
 .forum-bar-compose .icon { display: none; }
@@ -16299,7 +16390,11 @@ h2.presence-title {
 .forum-bar a:hover,
 .board-rail a:hover,
 a.presence-person:hover { text-decoration: none; }
-/* Focus — the ring every other member-surface control wears (bridge above). */
+/* Focus — the ring every other member-surface control wears (bridge above).
+   The lockup, the drawer opener and New topic had only the bare outline. */
+.forum-bar-brand:focus-visible,
+.forum-bar > .nav-toggle:focus-visible,
+.forum-bar-compose .btn:focus-visible,
 .forum-bar-surface:focus-visible,
 .forum-bar-search:focus-visible,
 .forum-bar-railtoggle:focus-visible,
@@ -16307,7 +16402,8 @@ a.presence-person:hover { text-decoration: none; }
 .forum-bar-bell:focus-visible,
 .forum-bar-signin:focus-visible,
 .forum-bar-signup:focus-visible,
-.board-rail-item:focus-visible {
+.board-rail-item:focus-visible,
+.nav-close:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     box-shadow: 0 0 0 3px var(--focus-ring);
@@ -16341,41 +16437,103 @@ a.presence-person:hover { text-decoration: none; }
     .forum-bar-search-label, .forum-bar-kbd { display: none; }
     .forum-bar-searchwrap { flex: 0 0 44px; min-width: 44px; }
     .forum-bar-search { width: 44px; padding-inline: 0; justify-content: center; }
+    /* With its label gone the glyph is the control, so it is drawn at the
+       compose glyph's size rather than as the field's 13px adornment. */
+    .forum-bar-search > svg { width: 16px; height: 16px; }
 }
 @media (max-width: 860px) {
     /* The phone bar. The design's phone steps (1080 / 900 / 720) assume a bar
        with no hamburger, no compose and no account seat; ours carries all
-       three, so at the drawer breakpoint the row is packed the way the
-       2026-08-27 transfer packed it, or a 390px viewport scrolls sideways. */
-    .forum-bar { gap: 5px; padding-inline: 9px; }
-    .forum-bar-brand { min-width: 40px; min-height: 40px; justify-content: center; gap: 0; }
-    .forum-bar-surfaces { min-width: 0; gap: 1px; }
-    .forum-bar-surface { min-height: 40px; padding: 6px 8px; font-size: .74rem; }
-    .forum-bar-searchwrap { flex: 0 0 40px; min-width: 40px; }
-    .forum-bar-search { width: 40px; height: 40px; padding: 0; justify-content: center; }
-    /* The action cluster keeps its focus-ring gutter on the first row. */
-    .forum-bar-right { gap: 2px; }
-    /* The drawer replaces the persisted toggle on a phone. */
-    .forum-bar-panel-form { display: none; }
-    .forum-bar-user { min-width: 40px; min-height: 40px; justify-content: center; }
+       three. Every control on the first row is a 44px target with 8px between
+       targets. Spacing uses the bar's available width, including the space a
+       classic scrollbar takes. The outer gutter eases to 4px, the gaps to 4px,
+       and the counted bell's inner padding yields before any target does.
+       The lockup is the one control that can yield past 44px, never past its
+       mark. The inline-size container measures this row for its descendants;
+       the bar's own gap uses its percentage width rather than viewport units. */
+    .forum-bar {
+        container: forum-bar / inline-size;
+        --bar-gap: clamp(4px, calc((100cqw - 304px) / 5), 8px);
+        column-gap: clamp(4px, calc((100% - 304px) / 5), 8px);
+        padding-inline: clamp(4px, calc((100% - 300px) / 2), 8px);
+    }
+    .forum-bar > .nav-toggle { margin-right: 0; }
+    .forum-bar-right { gap: var(--bar-gap); }
+    .forum-bar-searchwrap { flex: 0 0 44px; min-width: 44px; }
+    .forum-bar-search { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    .forum-bar-user { min-width: 44px; min-height: 44px; justify-content: center; }
+    .forum-bar-compose .btn { display: inline-flex; align-items: center; min-height: 44px; }
+    /* The drawer replaces the persisted toggle on a phone, and the divider that
+       sets the toggles apart from the actions goes with it. */
+    .forum-bar-panel-form, .forum-bar-divider { display: none; }
+    /* The lockup keeps the community's name wherever a readable part of it
+       fits. Its wrapper takes the row's spare room (so the search joins the
+       actions on the right) and is a size container: the link inside draws the
+       mark and as much of the name as fits, ending in an ellipsis, and below
+       about five letters (3em of the name's own size) the name goes and the
+       mark stands alone. The spare room is never part of the link, so neither
+       a tap nor the focus ring finds a blank stretch. The mark's margin is its
+       44px target. */
+    .forum-bar-lockup { display: flex; flex: 1 1 0; align-items: center; min-width: 34px; container: forum-lockup / inline-size; }
+    .forum-bar-brand { flex: 0 1 auto; min-width: 0; max-width: 100%; gap: 0; min-height: 44px; }
+    .forum-bar-mark { margin: 10px; }
+    .brand-logo { margin-block: 8px; }
+    /* A guest's pair keeps the 44px floor; Log in keeps its fill. */
+    .forum-bar-signup, .forum-bar-signin { display: inline-flex; align-items: center; min-height: 44px; }
+    .forum-bar-signup { padding-inline: 6px; }
+    .forum-bar-signin { padding-block: 0; padding-inline: 12px; }
 }
 @media (max-width: 720px) {
     /* The design drops New topic here; a board page has a floating compose, the
        other surfaces do not, so the control stays as its glyph. */
     .forum-bar-compose { display: inline-flex; }
-    .forum-bar-compose .btn { display: inline-flex; width: 40px; min-width: 40px; height: 40px; padding: 0; align-items: center; justify-content: center; }
+    .forum-bar-compose .btn { display: inline-flex; width: 44px; min-width: 44px; height: 44px; padding: 0; align-items: center; justify-content: center; }
     .forum-bar-compose .icon { display: block; width: 16px; height: 16px; }
     .forum-bar-compose .btn > span { display: none; }
 }
 /* At the drawer breakpoint, keep complete primary route labels on a second
-   row instead of squeezing them behind the persistent controls.
-   The shared height also moves the drawer, scrim, and scroll offsets below
-   both rows. Admin/auth layouts without member chrome retain their height. */
+   row instead of squeezing them behind the persistent controls (ADR 0042).
+   The labels keep the desktop's 13px and the 44px floor. The shared height
+   also moves the drawer, scrim, and scroll offsets below both rows.
+   Admin/auth layouts without member chrome retain their height. CSS draws
+   this row last; app.js moves it last in the reading order too, so Tab and a
+   screen reader's swipe go row by row. */
 @media (max-width: 860px) {
-    :root:has(.forum-bar) { --topbar-h: 108px; }
+    :root:has(.forum-bar-surface + .forum-bar-surface) { --topbar-h: 108px; }
     .forum-bar { flex-wrap: wrap; align-content: center; row-gap: 0; padding-block: 5px; }
-    .forum-bar-surfaces { order: 1; flex: 0 0 100%; justify-content: center; overflow: visible; padding: 4px; }
-    .forum-bar-surface { min-height: 44px; }
+    .forum-bar-surfaces { order: 1; flex: 0 0 100%; justify-content: center; gap: var(--bar-gap); overflow: visible; padding: 4px 0; }
+    /* Large text and two capped counts still fit the narrow row: keep the
+       labels' type size and let their horizontal padding yield with the gaps. */
+    .forum-bar-surface { min-height: 44px; padding: 0 clamp(6px, calc((100cqw - 288px) / 4), 10px); font-size: .82rem; }
+    /* A bar with one route (a guest's, or a member's with Inbox and Messages
+       switched off) would spend the second row on Boards alone, the place the
+       lockup already leads. It keeps one row at the shared 62px height. */
+    .forum-bar-surfaces:not(:has(.forum-bar-surface + .forum-bar-surface)) { display: none; }
+}
+/* Without scripting there is no drawer, so on a phone the rail stacks above
+   the content. It stayed sticky: once the page scrolled it held its place
+   under the bar, covering the content and taking its taps. It scrolls away
+   with the page now, bounded the way account pages already bounded it, so the
+   content starts within the first screen. */
+@media (max-width: 860px) and (scripting: none) {
+    html:not(.has-js) .app-shell > .board-rail {
+        position: static;
+        max-height: 176px;
+        padding-block: 8px;
+        overflow-y: auto;
+        border-bottom: 1px solid var(--border-hair);
+    }
+}
+/* Touch above the drawer breakpoint (a tablet, a phone held sideways): the
+   single-row bar's controls keep the same 44px floor as the phone rows. */
+@media (min-width: 861px) and (pointer: coarse) {
+    .forum-bar-brand, .forum-bar-surface { min-height: 44px; }
+    .forum-bar-compose .btn { display: inline-flex; align-items: center; min-height: 44px; }
+    .forum-bar-search { height: 44px; }
+    .forum-bar-railtoggle { width: 44px; height: 44px; }
+    .forum-bar-user { min-width: 44px; min-height: 44px; justify-content: center; }
+    .forum-bar-signup, .forum-bar-signin { display: inline-flex; align-items: center; min-height: 44px; }
+    .forum-bar-signup { padding-inline: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {
     .board-rail { transition: none; }
@@ -16515,3 +16673,82 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
 .notification-count { display: inline-block; min-width: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--ink-900); font-size: 11px; line-height: 16px; text-align: center; font-weight: 700; }
 [data-notification-count][hidden] { display: none; }
 [data-notification-heading] [data-notification-count]::after { content: " unread"; }
+
+/* ── The bar's unread marks and its current surface (2026-10-06) ────────────
+   Gold in the bar means unread, and the Inbox, the product's own queue, leads.
+   Its count wears the thread row's unread mark (the gold dot and its 2px halo)
+   beside numerals a step heavier: the one saturated gold point the bar spends.
+   Messages, the bell and the account menu's Notifications row share one quiet
+   chip, the layer's gold-soft wash with gold ink, in JetBrains Mono at the chip
+   floor with tabular figures. The bell's solid gold disc in a bold serif, and
+   its badge laid over the glyph, are retired. Scoped to the member bar: the
+   console keeps its own bell. */
+.forum-bar .forum-bar-count,
+.forum-bar .bell-count,
+.identity-menu-panel .notification-count {
+    min-width: 16px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--gold-soft);
+    color: var(--gold-ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-chip);
+    font-weight: var(--weight-regular);
+    font-variant-numeric: tabular-nums;
+    line-height: 16px;
+    text-align: center;
+}
+.forum-bar .forum-bar-count[data-inbox-unread-count] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 0;
+    background: none;
+    font-weight: var(--weight-medium);
+}
+.forum-bar .forum-bar-count[data-inbox-unread-count]::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-2) 22%, transparent);
+}
+/* The bell's count sits beside its glyph, as the routes' counts do, so "99+"
+   never covers the bell. The target keeps its floor (40px, or 44px on a phone
+   or a touch screen) and grows only by the count; its hover takes the toggles'
+   sunken wash, where the old one dimmed the glyph to 2.89:1 in twilight. */
+.forum-bar [data-bell] { flex: 0 0 auto; width: auto; min-width: 40px; gap: 5px; padding-inline: 11px; }
+.forum-bar [data-bell] > .bell-count { position: static; }
+.forum-bar [data-bell]:hover { background: var(--surface-sunken); color: var(--text-body); }
+@media (max-width: 860px) {
+    .forum-bar [data-bell] { min-width: 44px; height: 44px; padding-inline: clamp(0px, calc((100cqw - 297px) / 2), 8px); }
+}
+@media (min-width: 861px) and (pointer: coarse) {
+    .forum-bar [data-bell] { min-width: 44px; height: 44px; }
+}
+/* The current surface carries a rule as well as the design's wash. The wash
+   alone measured 1.04:1 against the bar, and forced colours drop it entirely;
+   the rule is a border in the pill's own ink, so it survives them, and it is
+   evergreen rather than gold, which the bar keeps for unread. The bell is the
+   Notifications surface's entry, so on /notifications it is current the same
+   way. */
+.forum-bar-surface.is-active { position: relative; }
+.forum-bar [data-bell].is-active { position: relative; background: var(--brand-subtle); color: var(--on-brand-subtle); }
+.forum-bar-surface.is-active::after,
+.forum-bar [data-bell].is-active::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    bottom: 4px;
+    left: 12px;
+    border-bottom: 2px solid currentColor;
+    border-radius: 1px;
+    pointer-events: none;
+}
+@media (max-width: 860px) {
+    .forum-bar-surface.is-active::after { right: 10px; left: 10px; bottom: 6px; }
+    .forum-bar [data-bell].is-active::after { right: 8px; left: 8px; bottom: 6px; }
+}

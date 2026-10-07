@@ -48,7 +48,9 @@ final class AppModeratorScopeTest extends TestCase
         $this->assertStatus(200, $home);
         $this->assertSeeText($home, 'href="/mod/reports"');
         $this->assertSeeText($home, 'Moderation');
-        $this->assertSeeText($home, '<span class="mod-count">1</span>');
+        // The count's words live on the link; the digit is hidden.
+        $this->assertSeeText($home, 'aria-label="Moderation, 1 open report"');
+        $this->assertSeeText($home, '<span class="mod-count" aria-hidden="true">1</span>');
 
         $admin = $this->get('/admin');
         $this->assertStatus(403, $admin);

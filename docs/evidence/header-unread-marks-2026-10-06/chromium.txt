@@ -1,0 +1,58 @@
+Browser evidence, 2026-10-06 (Playwright 1.61; projects desktop 1280x800 and mobile 390x844 touch).
+Every group ran on a freshly prepared private database (prepare.sh), served by php -S on localhost.
+
+1. New spec: tests/browser/header-unread-marks.spec.ts
+
+   Chromium, working tree (retroboards_e2e_cz, port 8029, captures in desktop/ and mobile/):
+     10 passed, 2 skipped (pointer and persisted-toggle checks are desktop-only)
+   WebKit (E2E_LAYOUT_BROWSER=webkit, fresh prepare.sh, captures in webkit/):
+     10 passed, 2 skipped
+
+   The same spec against an unmodified `git archive HEAD` export (553004b1, port 8032): 8 failed, 2 passed
+       Inbox count (day, twilight; both projects)   background expected none, received rgb(244, 235, 207)
+                                                    or rgba(194, 154, 68, 0.16): a chip, not the lead mark
+       forced colours (both projects)               the current pill's rule is null: no cue survives
+       pane toggles                                 band opacity expected 1, received 0.5
+       bell hover in twilight                       contrast expected >= 4.5, received 2.89
+     The two that pass on HEAD guard the bell's 40px target when it has nothing to count.
+
+   Contrast, with translucent washes composited over the bar's measured ground (#faf6eb by day,
+   #1d262e in twilight; the spec asserts the thresholds in-page on both engines):
+       Inbox numerals (JetBrains Mono 500, 11.2px, tabular)
+           on the current pill                                 5.26:1 day   6.10:1 twilight
+           on the bar (Inbox not current)                      5.48:1 day   7.40:1 twilight
+       Messages / bell / menu chip numerals (Mono 400, 11.2px) 4.97:1 day   5.67:1 twilight
+       current-surface rule (2px, pill ink) vs its wash       10.08:1 day   7.78:1 twilight
+       pane toggle band, shown (filled) vs its wash           10.08:1 day   7.78:1 twilight
+       pane toggle band, hidden (outlined) vs the bar          5.41:1 day   5.64:1 twilight
+       bell hover glyph on its sunken wash, twilight           9.10:1 (was 2.89:1)
+       The gold dot itself is 2.3:1 by day, as on the thread rows; the numerals beside it carry the count.
+       bell: count beside the glyph, never overlapping; 40px tall; 40px wide with no count,
+             69px with "12" and 76px with "99+" (63/70px on a phone)
+
+2. Regression run of the existing specs (rsync copy of the working tree; committed evidence untouched):
+
+     header-hardening           6 passed, 4 skipped
+     unified-chrome            25 passed, 5 skipped
+     chrome-consistency        12 passed, 6 skipped
+     member-surfaces           12 passed, 2 skipped
+     inbox-header               6 passed
+     board-index-remediation   16 passed
+     community-inbox-theme     19 passed, 13 skipped, 2 failed (pre-existing)
+     forum-inbox-remediation   24 passed
+     a11y                      25 passed, 3 failed (pre-existing)
+     avatar-display             2 passed
+     asset-release-layout      12 passed
+     notifications-unified     19 passed, 1 failed (pre-existing; DB retroboards_unified_e2e_cz,
+                               RB_EVIDENCE_DIR in scratch). Its bell test ("member and admin bell renders
+                               zero and 105 counts with a long account name") passes on both projects.
+
+   Pre-existing failures, each reproduced identically on the HEAD export:
+     community-inbox-theme.spec.ts:301 [desktop]   the composer's anonymous disclosure intercepts Discard
+     community-inbox-theme.spec.ts:415 [mobile]    asserts a header of at most 64px (ADR 0042 made it 108px)
+     a11y.spec.ts:574 [desktop] and [mobile]       the custom emoji reaction button is never rendered
+     a11y.spec.ts:198 [desktop]                    /admin/themes: muted text in the theme packages card at 4.39:1
+                                                   (fails alone on a fresh DB on both trees; passed once in an
+                                                   earlier full-spec run, so it is order- or state-dependent)
+     notifications-unified.spec.ts:139 [mobile]    without JavaScript the phone board rail sticks below the
+                                                   header and intercepts the "Unread" filter link

@@ -4,6 +4,11 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Consistent headers and navigation
 
+- Keep both header rows inside narrow desktop viewports with classic scrollbar
+  gutters, and keep Large-text route labels and capped unread counts inside
+  320px phone viewports. Spacing and inner padding yield before the 44px targets.
+- Resolve numeric board slugs before legacy IDs in composer links. Explicit
+  board IDs and validation-error replays keep their intended posting destination.
 - Keep focus inside the open mobile board drawer, restore it on dismissal, and
   release covered content on resize. Desktop board rails stay below the header.
 - Omit pane controls on error pages that have no panes. Tags and authorized
@@ -23,6 +28,43 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   which stay links to their surface. The design mirror takes the shared-chrome
   handoff; production keeps its route contract where that handoff differs
   (ADR 0032, shared-chrome handoff).
+- Keep the member header above page content. On phones the directory bar and
+  post toolbars no longer paint over the header or its account menu, so Log out
+  receives its own taps (ADR 0032, header hardening).
+- Shorten long community names with an ellipsis and scale wide operator logos
+  inside the header, instead of pushing the account menu off-screen or starting
+  a third phone row.
+- Open the composer on the board being read from the header's New topic. Show
+  the reading-pane toggle only from 1280px, where the pane is a column. Give
+  both pane toggles fixed names, with their state in `aria-pressed`; ⌘B and ⌘J
+  act only while their toggle is shown.
+- Make the Inbox count the header's leading unread mark: the thread row's gold
+  dot beside its numerals. Messages, the bell and the account menu share one
+  quiet count chip with tabular figures. The bell's count sits beside the bell
+  instead of covering it.
+- Mark the current header surface with a rule that survives forced colours.
+  Draw each pane toggle's band filled while its pane is shown and outlined
+  while it is hidden.
+- Give every phone header control a 44px target with 8px between targets, and
+  the route labels the desktop's 13px. Tab and screen readers now move through
+  the phone header row by row (ADR 0032 and ADR 0042, phone rows).
+- Keep a guest's phone header to one row, since a lone Boards row only repeated
+  the logo's link. Show the community's name at narrow widths instead of hiding
+  it, and keep it whole at 1180px. Draw the header divider only beside a pane
+  toggle.
+- Add a close control inside the mobile board drawer. Without JavaScript, the
+  phone board rail now scrolls away with the page instead of covering it.
+  Touch screens above 860px get the same 44px header targets.
+- Keep each control's own corner shape when it has keyboard focus, everywhere
+  (pills and buttons used to square off). Every header control now shows the
+  gold focus halo (ADR 0032, header polish).
+- Show keyboard shortcut hints only when JavaScript can act on them, with the
+  platform's own modifier: ⌘ on Apple devices, Ctrl elsewhere. Screen readers
+  hear header counts as part of each link's name, for example "Inbox, 4 unread
+  topics", with the correct singular.
+- Mark the notification bell as the current page on Notifications. Group the
+  account menu with dividers, and give Settings its own icon. Add a hover
+  state to Log in. Correct the onboarding tour's first two steps for phones.
 
 ## [Unreleased] - A simpler forum inbox
 

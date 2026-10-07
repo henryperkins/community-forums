@@ -20,6 +20,7 @@ import path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '../..');
 const OUT = path.resolve(ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-unified-chrome');
+test.use({ browserName: process.env.E2E_LAYOUT_BROWSER === 'webkit' ? 'webkit' : 'chromium' });
 
 if (process.env.RB_BASE_URL) {
   test.use({ baseURL: process.env.RB_BASE_URL });
@@ -238,7 +239,7 @@ test('long stored account names fit the bar and keep the account menu reachable'
           await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme);
           expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
           await withinViewport(account);
-          await expect(account).toHaveAccessibleName(`Open account menu for ${name}`);
+          await expect(account).toHaveAccessibleName(`Account menu for ${name}`);
           await expect(account.locator('.monogram')).toHaveCSS('width', '30px');
 
           // Native summary activation and real Tab order prove that shrinking
@@ -385,7 +386,9 @@ $fixture = $db->transaction(function () use ($db) {
             'thread_id' => $threadId, 'user_id' => $userId, 'is_op' => true,
             'body' => 'A topic to read.', 'body_html' => '<p>A topic to read.</p>',
         ]);
-        $threads->updateLastPost($threadId, $postId, $userId, gmdate('Y-m-d H:i:s'));
+        // The unread cursor compares this timestamp with the stored post's.
+        // A fresh wall-clock value can cross a second and invent an unread post.
+        $threads->updateLastPost($threadId, $postId, $userId, $posts->find($postId)['created_at']);
         $state->markUnread($userId, $threadId);
     }
     $db->run('UPDATE boards SET thread_count = 102, post_count = 102 WHERE id = ?', [$boardId]);
@@ -398,9 +401,12 @@ echo json_encode($fixture, JSON_THROW_ON_ERROR);
     await signIn(page, `${fixture.username}@retro.test`);
     await page.goto('/inbox?scope=unread&order=newest');
     const count = page.locator('.forum-bar-count[data-inbox-unread-count]');
+    // The count's words live on the Inbox link, as the bell's do; the digits are hidden.
+    const inboxLink = page.locator('[data-primary-route="inbox"]');
     const railCount = page.locator(`[data-board-slug="${fixture.username}"] [data-board-unread-count]`);
     await expect(count).toHaveText('99+');
-    await expect(count).toHaveAttribute('aria-label', '102 unread topics');
+    await expect(count).toHaveAttribute('aria-hidden', 'true');
+    await expect(inboxLink).toHaveAccessibleName('Inbox, 102 unread topics');
     await expect(railCount).toHaveText('99+');
 
     for (const remaining of [101, 100, 99]) {
@@ -409,7 +415,7 @@ echo json_encode($fixture, JSON_THROW_ON_ERROR);
       await expect(count).toHaveAttribute('data-inbox-unread-count', String(remaining));
       await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
       await expect(count).toHaveText(remaining > 99 ? '99+' : '99');
-      await expect(count).toHaveAttribute('aria-label', `${remaining} unread topics`);
+      await expect(inboxLink).toHaveAccessibleName(`Inbox, ${remaining} unread topics`);
       await expect(railCount).toHaveAttribute('data-board-unread-count', String(remaining));
       await expect(railCount).toHaveText(remaining > 99 ? '99+' : '99');
       await expect(railCount).toHaveAttribute('aria-label', `${remaining} unread topics`);
@@ -438,11 +444,12 @@ foreach (array_slice($threads, 2) as $thread) {
       await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
       if (remaining === 1) {
         await expect(count).toHaveText('1');
-        await expect(count).toHaveAttribute('aria-label', '1 unread topic');
+        await expect(inboxLink).toHaveAccessibleName('Inbox, 1 unread topic');
         await expect(railCount).toHaveText('1');
         await expect(railCount).toHaveAttribute('aria-label', '1 unread topic');
       } else {
         await expect(count).toHaveCount(0);
+        await expect(inboxLink).toHaveAccessibleName('Inbox');
         await expect(railCount).toHaveCount(0);
       }
       if (testInfo.project.name === 'mobile') await page.locator('[data-inbox-back]').click();
@@ -587,7 +594,8 @@ test.describe('with JavaScript disabled', () => {
     await expect(page).toHaveURL(/\/c\/general$/);
     await expect(page.locator('body')).toHaveClass(/is-rail-closed/);
     await expect(page.locator('nav.board-rail')).toBeHidden();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    // A toggle button: aria-pressed alone carries the state (header hardening).
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
     await page.reload();
     await expect(page.locator('nav.board-rail')).toBeHidden();
 
@@ -602,7 +610,7 @@ test.describe('with JavaScript disabled', () => {
     await toggle.click();
     expect((await reopened).status()).toBe(303);
     await expect(page.locator('nav.board-rail')).toBeVisible();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
     await page.reload();
     await expect(page.locator('body')).toHaveClass(/is-rail-open/);
     await expect(page.locator('nav.board-rail')).toBeVisible();

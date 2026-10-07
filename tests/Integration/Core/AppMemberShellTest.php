@@ -65,6 +65,68 @@ final class AppMemberShellTest extends TestCase
         self::assertStringContainsString('href="/compose"', $topbar);
     }
 
+    /**
+     * The header's New topic opens the composer on the board being read, not on
+     * the first board listed: a member who meant to post in Harbour watch was
+     * handed whichever board sorted first. Plain error pages carry no board.
+     */
+    public function test_new_topic_opens_the_composer_on_the_board_being_read(): void
+    {
+        $category = $this->makeCategory('Compose places');
+        $this->makeBoard($category, ['slug' => 'first-listed', 'name' => 'First listed']);
+        $board = $this->makeBoard($category, ['slug' => 'harbour-watch', 'name' => 'Harbour watch']);
+        $private = $this->makeBoard($category, ['slug' => 'sealed-room', 'visibility' => 'private']);
+        $user = $this->makeUser(['username' => 'compose_context']);
+        $thread = $this->makeThread($board, $user, 'A topic on the harbour');
+        $this->actingAs($user);
+
+        self::assertStringContainsString('href="/compose"', $this->topbar($this->get('/')->body()));
+        foreach (['/c/harbour-watch', '/t/' . $thread['thread_id'] . '-' . $thread['slug']] as $path) {
+            $response = $this->get($path);
+            $this->assertStatus(200, $response);
+            self::assertStringContainsString('href="/compose?board=harbour-watch"', $this->topbar($response->body()), $path);
+        }
+
+        $denied = $this->get('/c/' . $private['slug']);
+        $this->assertStatus(404, $denied);
+        self::assertStringContainsString('href="/compose"', $this->topbar($denied->body()));
+        self::assertStringNotContainsString('sealed-room', $this->topbar($denied->body()));
+
+        $compose = $this->get('/compose', ['board' => 'harbour-watch']);
+        $this->assertStatus(200, $compose);
+        self::assertMatchesRegularExpression(
+            '~<option value="' . (int) $board['id'] . '"\s+data-board-slug="harbour-watch"[^>]*\bselected\b~',
+            $compose->body(),
+        );
+    }
+
+    /**
+     * The pane toggles are toggle buttons: a fixed name, with aria-pressed alone
+     * carrying the state. They had announced it three times over (a Hide/Show
+     * name, aria-pressed and aria-expanded).
+     */
+    public function test_pane_toggles_carry_a_fixed_name_and_announce_their_state_once(): void
+    {
+        $user = $this->makeUser(['username' => 'pane_names']);
+        (new UserPreferenceRepository($this->db))->merge((int) $user['id'], ['rail_open' => true, 'inbox_reading_open' => false]);
+        $this->actingAs($user);
+
+        $topbar = $this->topbar($this->get('/inbox')->body());
+        self::assertStringContainsString(
+            '<button class="forum-bar-railtoggle is-on" type="submit" aria-controls="sidebar-nav" aria-pressed="true" aria-label="Board rail" title="Board rail" data-shortcut="b">',
+            $topbar,
+        );
+        self::assertStringContainsString(
+            '<button class="forum-bar-railtoggle" type="submit" aria-controls="inbox-reading-pane" aria-pressed="false" aria-label="Reading pane" title="Reading pane" data-shortcut="j">',
+            $topbar,
+        );
+        self::assertSame(2, preg_match_all('~<button class="forum-bar-railtoggle[^>]*>~', $topbar, $toggles));
+        foreach ($toggles[0] as $toggle) {
+            self::assertStringNotContainsString('aria-expanded', $toggle);
+            self::assertDoesNotMatchRegularExpression('~Hide|Show~', $toggle);
+        }
+    }
+
     public function test_thread_rail_marks_its_authorized_parent_board(): void
     {
         $category = $this->makeCategory('Thread places');
@@ -119,10 +181,28 @@ final class AppMemberShellTest extends TestCase
             self::assertStringNotContainsString('data-nav-toggle', $topbar);
             self::assertStringNotContainsString('data-nav-fallback', $topbar);
             self::assertStringNotContainsString('aria-current="page"', $topbar);
+            // The divider sets the pane toggles apart, so it goes with them.
+            self::assertStringNotContainsString('forum-bar-divider', $topbar);
         }
 
         self::assertTrue((new UserPreferenceRepository($this->db))->get((int) $user['id'])['rail_open']);
-        self::assertStringContainsString('data-panel-form="rail"', $this->topbar($this->get('/')->body()));
+        $home = $this->topbar($this->get('/')->body());
+        self::assertStringContainsString('data-panel-form="rail"', $home);
+        self::assertMatchesRegularExpression('~data-panel-form="rail".*?</form>\s*<span class="forum-bar-divider" aria-hidden="true"></span>~s', $home);
+    }
+
+    public function test_drawer_close_control_is_a_named_cross_at_the_top_of_the_rail(): void
+    {
+        $this->actingAs($this->makeUser(['username' => 'drawer_close']));
+
+        $rail = $this->boardRail($this->get('/inbox')->body());
+        // The first stop in the drawer, before and after the enhancement: a fragment
+        // link back to the content, named for what it does and drawn as the icon set's cross.
+        self::assertMatchesRegularExpression(
+            '~^<nav class="board-rail"[^>]*>\s*<a class="nav-close" data-nav-close href="#main" aria-label="Close board rail"><svg class="icon icon-x"[^>]*aria-hidden="true">~',
+            $rail,
+        );
+        self::assertSame(1, substr_count($rail, 'data-nav-close'));
     }
 
     public function test_folder_shortcuts_share_board_state_without_bypassing_read_gates(): void
@@ -199,7 +279,45 @@ final class AppMemberShellTest extends TestCase
         self::assertStringContainsString('data-board-unread-count="1"', $rail);
         self::assertStringContainsString('data-board-slug="muted-attention"', $rail);
         self::assertStringNotContainsString('private-attention', $rail);
-        self::assertStringContainsString('data-inbox-unread-count="1"', $this->topbar($html));
+        // The words live on the Inbox link, singular for one; the digits are hidden.
+        self::assertStringContainsString(
+            'data-count-name="Inbox" aria-label="Inbox, 1 unread topic">Inbox<span class="forum-bar-count" data-inbox-unread-count="1" aria-hidden="true">1</span>',
+            $this->topbar($html),
+        );
+    }
+
+    public function test_bar_names_its_counts_on_their_links_claims_no_shortcut_and_marks_the_bell_current_on_its_page(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'counted-words']);
+        $sender = $this->makeUser(['username' => 'count_sender']);
+        $reader = $this->makeUser(['username' => 'count_reader', 'display_name' => 'Count Reader']);
+        // The sender posts once, so the new-account throttle lets the letter through.
+        $this->makeThread($board, $sender, 'Warm-up', 'hello');
+        $this->actingAs($sender);
+        $this->post('/messages', ['to' => 'count_reader', 'body' => 'One letter.']);
+
+        $this->actingAs($reader);
+        $topbar = $this->topbar($this->get('/inbox')->body());
+        // One unread conversation: the link reads it, in the singular; the digits are hidden.
+        self::assertStringContainsString(
+            'data-count-name="Messages" aria-label="Messages, 1 unread conversation">Messages<span class="forum-bar-count" data-dm-unread-count aria-hidden="true">1</span>',
+            $topbar,
+        );
+        self::assertStringNotContainsString('unread conversations"', $topbar);
+        // Without the script nothing answers ⌘K, so the server claims no shortcut.
+        self::assertStringContainsString('<a class="forum-bar-search" href="/search" aria-label="Search the council" data-shortcut="k">', $topbar);
+        self::assertStringContainsString('<span class="forum-bar-kbd" data-shortcut-hint aria-hidden="true" hidden></span>', $topbar);
+        self::assertStringNotContainsString('⌘', $topbar);
+        // The summary's expanded state says open or closed; its name carries no verb.
+        self::assertStringContainsString('<summary class="forum-bar-user" aria-label="Account menu for Count Reader">', $topbar);
+        // The menu's groups, and Settings no longer wearing Profile's person.
+        self::assertMatchesRegularExpression('~<a class="identity-menu-break" href="/settings/account"><svg class="icon icon-settings"~', $topbar);
+        self::assertStringContainsString('<form class="identity-menu-break" method="post" action="/logout">', $topbar);
+        // The bell is current only on its own page.
+        self::assertStringContainsString('<a class="forum-bar-bell bell" href="/notifications" data-bell data-notification-link aria-label=', $topbar);
+        $notices = $this->topbar($this->get('/notifications')->body());
+        self::assertStringContainsString('<a class="forum-bar-bell bell is-active" href="/notifications" data-bell data-notification-link aria-current="page" aria-label=', $notices);
+        self::assertSame(0, substr_count($notices, 'forum-bar-surface is-active'));
     }
 
     public function test_contextual_surface_preference_persists_without_overwriting_siblings(): void

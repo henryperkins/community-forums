@@ -206,10 +206,13 @@ final class PostController extends Controller
         array $old = [],
     ): array {
         $boards = $this->composeBoards($user);
+        // Header/picker links name a slug with ?board=; a submitted board_id
+        // and its 422 replay always name an ID. Keep numeric slugs distinct.
+        $preferSlug = !array_key_exists('board_id', $old) && $request->input('board') !== null;
         $requested = array_key_exists('board_id', $old)
             ? $old['board_id']
             : $request->input('board', $request->input('board_id'));
-        $selected = $this->resolveComposeBoard($boards, $requested);
+        $selected = $this->resolveComposeBoard($boards, $requested, $preferSlug);
         if ($selected === null) {
             throw new ForbiddenException('There are no boards you can post in.');
         }
@@ -272,13 +275,27 @@ final class PostController extends Controller
     }
 
     /** @param list<array<string,mixed>> $boards @return array<string,mixed>|null */
-    private function resolveComposeBoard(array $boards, mixed $requested): ?array
+    private function resolveComposeBoard(array $boards, mixed $requested, bool $preferSlug): ?array
     {
         $requestedString = is_string($requested) || is_int($requested) ? trim((string) $requested) : '';
-        if ($requestedString !== '') {
+        $slugMatch = null;
+        if ($preferSlug && $requestedString !== '') {
+            foreach ($boards as $board) {
+                if ($requestedString === (string) $board['slug']) {
+                    $slugMatch = $board;
+                    break;
+                }
+            }
+        }
+        if ($slugMatch !== null && !empty($slugMatch['can_post'])) {
+            return $slugMatch;
+        }
+        // A listed but unpostable slug falls back; it must not be reinterpreted
+        // as another board's ID. Legacy ?board=ID still works without a slug match.
+        if ($slugMatch === null && $requestedString !== '') {
             foreach ($boards as $board) {
                 if (!empty($board['can_post'])
-                    && ($requestedString === (string) $board['id'] || $requestedString === (string) $board['slug'])) {
+                    && $requestedString === (string) $board['id']) {
                     return $board;
                 }
             }

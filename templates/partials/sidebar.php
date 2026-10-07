@@ -47,7 +47,7 @@ $unreadPill = static function (int $unread) use ($e): string {
 };
 ?>
 <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards" tabindex="<?= $this->block('account_settings', '') === '1' ? '0' : '-1' ?>">
-    <a class="nav-close" data-nav-close href="#main">Close board rail</a>
+    <a class="nav-close" data-nav-close href="#main" aria-label="Close board rail"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
     <?php $organization = !$composeMode && is_callable($organization_nav ?? null) ? $organization_nav() : []; ?>
     <?php foreach (($organization['board_folders'] ?? []) as $folder): ?>
         <span class="board-rail-cat"><?= $e($folder['name']) ?></span>

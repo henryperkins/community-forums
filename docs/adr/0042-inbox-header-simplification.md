@@ -40,3 +40,24 @@ browser checks cover light/dark themes, 320–1440px widths, complete route labe
 filter/order preservation, action-menu focus, accessibility, and no-JavaScript
 page actions. Existing PHP and browser suites cover the underlying inbox and
 shared chrome contracts.
+
+## Addendum — 2026-10-07: phone row details
+
+The 2026-10-06 header critique proposed wrapping the phone bar only when
+needed; the owner kept this decision and asked for its details to be fixed.
+One clause changes: a bar with a single route (a guest's, or a member's with
+Inbox and Messages switched off) no longer takes the second row for Boards
+alone, which is where its lockup already leads. It keeps one 62px row, and the
+height token follows it. Every bar with more than one route keeps the two rows
+and the 108px token.
+
+Within the rows, the first row's controls are 44px targets with 8px gaps, the
+routes keep the desktop's 13px labels, and the reading and focus order follow
+the rows. ADR 0032 ("Phone rows and the drawer — 2026-10-07") records the full
+change, and [the evidence](../evidence/header-phone-rows-2026-10-07/README.md)
+records how it was checked.
+
+The subsequent [header review](0032-unified-member-chrome.md#header-review-regressions--2026-10-07)
+refines the spacing budget: gaps and horizontal padding now follow the actual
+bar width, including classic scrollbar gutters and the Large text preference.
+Targets, complete route labels, row order and the 108px height stay intact.
