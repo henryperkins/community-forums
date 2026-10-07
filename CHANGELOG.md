@@ -4,6 +4,12 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Consistent headers and navigation
 
+- Use document scrolling on topics with a bottom-sticky reply dock and
+  theme-aware scrollbar ink. Keep native fragments and keyboard focus visible
+  between the header and dock (ADR 0030, document-scrolling follow-up).
+- Exclude nested controls inside closed disclosures from modal focus cycles.
+  Keep pressed post actions in place until their click settles when leaving an
+  empty expanded reply dock.
 - Keep both header rows inside narrow desktop viewports with classic scrollbar
   gutters, and keep Large-text route labels and capped unread counts inside
   320px phone viewports. Spacing and inner padding yield before the 44px targets.

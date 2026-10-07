@@ -210,8 +210,12 @@ test('desktop Topic tools accords, traps focus, and restores each opener', async
   await expect(tools).toBeVisible();
   await expect(tools).toHaveAttribute('aria-modal', 'true');
   await expect(closeTools).toBeFocused();
+  const management = tools.locator('[data-topic-tools-section="management"]');
+  await expect(management).not.toHaveAttribute('open', '');
+  expect(await management.locator('details > summary').count()).toBeGreaterThan(0);
   await page.keyboard.press('Shift+Tab');
-  expect(await tools.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  // Closed outer sections must exclude their nested disclosure summaries.
+  await expect(management.locator(':scope > summary')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(closeTools).toBeFocused();
 
@@ -435,12 +439,30 @@ test('quote inserts exactly once through the source adapter', async ({ page }, i
     await openSeedTopic(page);
 
     const form = page.locator('#reply');
+    // Source is exposed after the reader enters the compact reply dock.
+    await form.locator('.wysiwyg-composer .ProseMirror').click();
+    await expect(form).toHaveClass(/is-expanded/);
     await form.getByRole('button', { name: 'Source' }).click();
     const reply = form.locator('textarea[name="body"]');
     await expect(reply).toBeVisible();
     await reply.fill('');
 
-    await quotePost(page.locator('article[data-post]').nth(1));
+    await expect.poll(() => form.evaluate((element) => {
+      const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { isSourceMode?: () => boolean } })._rbComposerAdapter;
+      return adapter?.isSourceMode?.();
+    })).toBe(true);
+    const post = page.locator('article[data-post]').nth(1);
+    await post.hover();
+    const quote = post.locator('[data-post-toolbar] > [data-quote-post]');
+    await quote.scrollIntoViewIfNeeded();
+    const box = await quote.boundingBox();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    // A held press must not shrink the empty dock and move Quote before release.
+    await page.evaluate(() => new Promise((resolve) => window.setTimeout(resolve, 0)));
+    await expect(form).toHaveClass(/is-expanded/);
+    await page.mouse.up();
+    await expect(reply).toHaveValue(/^> [^\n]+\n\n$/);
     const quotedValue = await reply.inputValue();
     expect(quotedValue.match(/^> /gm) ?? []).toHaveLength(1);
     expect(quotedValue).toMatch(/^> [^\n]+\n\n$/);
@@ -933,7 +955,9 @@ test('a reaction chip names the gesture and separates the count', async ({ page 
   const post = page.locator('[data-post]').first();
   const menuForm = post.locator('[data-post-toolbar] .reaction-menu form').first();
   const emoji = await menuForm.locator('input[name="emoji"]').inputValue();
-  const label = (await menuForm.locator('.reaction-name').innerText()).trim();
+  // Closed native disclosures omit their contents from rendered innerText.
+  const label = (await menuForm.locator('.reaction-name').textContent())!.trim();
+  expect(label).not.toBe('');
   const initiallyOn = (await activeReaction(post, emoji)) !== null;
   await setReactionState(post, emoji, false);
   try {
@@ -944,7 +968,7 @@ test('a reaction chip names the gesture and separates the count', async ({ page 
     await expect(chip).not.toHaveClass(/reaction-bare/);
     await expect(chip.locator('.reaction-name')).toHaveText(label);
     await expect(chip.locator('svg.icon-commend-star')).toHaveCount(1);
-    expect((await chip.innerText()).trim()).toContain('·');
+    // The separator is generated CSS content, which innerText omits.
     const separator = await chip.locator('.reaction-n').evaluate(
       (el) => getComputedStyle(el, '::before').content,
     );
@@ -1056,20 +1080,22 @@ test('post actions are reachable by keyboard alone', async ({ page }, info) => {
   const posts = page.locator('[data-post]:has([data-post-menu] > summary)');
   const post = posts.first();
   const toolbar = post.locator('[data-post-toolbar]');
-  // At rest, with no pointer anywhere near it: present in the DOM but quiet.
+  // More remains visible at rest; the other action controls join it on focus.
   // Park the pointer first — Playwright leaves it wherever the last click was,
   // and openSeedTopic's own click lands inside the reading column, so "at rest"
   // was a claim this test never actually established.
   await page.mouse.move(0, 0);
   await expect(toolbar).toHaveCount(1);
-  await expect(toolbar).toHaveCSS('opacity', '0');
-
-  // Focus alone reveals it — this is why the toolbar fades rather than
-  // unmounting or going `visibility: hidden`: a hidden control is not tabbable,
-  // and tabbing to it is the point.
+  const quote = toolbar.locator(':scope > [data-quote-post]');
   const menu = post.locator('[data-post-menu] > summary');
-  expect(await tabTo(page, menu)).toBeGreaterThan(0);
   await expect(toolbar).toHaveCSS('opacity', '1');
+  await expect(menu).toBeVisible();
+  await expect(quote).toHaveCSS('opacity', '0');
+
+  // The resting More control is tabbable, and focus reveals its sibling actions.
+  expect(await tabTo(page, menu)).toBeGreaterThan(0);
+  await expect(quote).toHaveCSS('opacity', '1');
+  await expect(quote).toBeVisible();
   await expect(menu).toBeFocused();
 
   await page.keyboard.press('Enter');

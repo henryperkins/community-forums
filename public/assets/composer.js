@@ -2827,23 +2827,39 @@
         return !tray || tray.children.length === 0;
     }
 
+    var dockPointerActive = false;
+
     function watchDockPointer() {
         if (dockPointerWatch) { return; }
         dockPointerWatch = true;
-        // Focus alone is not enough: tapping a non-focusable region of the page
-        // on mobile Safari moves no focus at all, so an empty dock would stay
-        // open forever. pointerdown fires for those taps and resolves the target
-        // before any focus change, and capture keeps a stopPropagation() inside
-        // an unrelated widget from swallowing it.
-        document.addEventListener('pointerdown', function (event) {
+        // Non-focusable outside taps must still fold an empty dock. Wait until
+        // the click target is settled: shrinking a sticky dock on pointerdown
+        // can clamp document scrolling and move the pressed post action before
+        // pointerup. Capture keeps an unrelated stopPropagation from hiding it.
+        function collapseOutside(target) {
             // Only wireExpansion stamps data-composer-dock, so it alone names a dock.
             var open = document.querySelectorAll('.is-expanded[data-composer-dock="1"]');
             for (var i = 0; i < open.length; i++) {
                 var form = open[i];
-                if (form.contains(event.target)) { continue; }
+                if (form.contains(target)) { continue; }
                 if (form._rbExpansion) { form._rbExpansion.collapseIfEmpty(); }
             }
+        }
+        document.addEventListener('pointerdown', function () { dockPointerActive = true; }, true);
+        document.addEventListener('click', function (event) {
+            dockPointerActive = false;
+            collapseOutside(event.target);
         }, true);
+        function releasePointer(event) {
+            // A drag or cancelled gesture may produce no click. Native click
+            // dispatch completes before this task; Quote has then filled its dock.
+            window.setTimeout(function () {
+                dockPointerActive = false;
+                collapseOutside(event.target);
+            }, 0);
+        }
+        document.addEventListener('pointerup', releasePointer, true);
+        document.addEventListener('pointercancel', releasePointer, true);
     }
 
     function wireExpansion(form) {
@@ -2912,7 +2928,7 @@
             // form, so one contains() check covers all of them.
             window.setTimeout(function () {
                 if (form._rbComposerDestroyed) { return; }
-                if (form.contains(document.activeElement)) { return; }
+                if (form.contains(document.activeElement) || dockPointerActive) { return; }
                 collapseIfEmpty();
             }, 0);
             // Deliberately no document.hasFocus() guard: tabbing past the last

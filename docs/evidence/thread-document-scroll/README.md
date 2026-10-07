@@ -72,8 +72,9 @@ Committed evidence includes the [Chromium matrix](chromium-scroll-matrix.json),
 Raw logs and remaining screenshots stay in local
 `output/playwright/thread-scroll/`.
 Committed screenshot baselines were restored after saving the new captures.
-The complete browser suite is not claimed green; the five baseline failures
-above remain outside this change.
+Those five cases were handled in the separate
+[interaction repair verification](../thread-interaction-repairs/README.md).
+At the initial scroll capture, the complete browser suite was not claimed green.
 
 ## Existing public preview
 

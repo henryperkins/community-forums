@@ -253,3 +253,17 @@ padding below the sticky topbar. The special initial `#p{id}` re-scroll into
 ancestor. Thin scrollbars use the semantic `--border-strong` thumb on a
 transparent track, with a transparent thumb border, so their ink follows the
 current parchment or twilight register instead of fixed light palette values.
+
+## Interaction follow-up — 2026-10-07
+
+Modal focus cycling checks every closed disclosure ancestor; a nested summary
+inside a closed management section is excluded until its outer section opens.
+An empty expanded dock now folds after an outside click has acquired its target.
+Shrinking it on pointerdown could clamp document scrolling, move the pressed
+Quote button, and send pointerup/click to a different element. Keyboard-only
+focus departure still folds an empty dock; drag/cancel releases have a deferred
+fallback. The source-mode quote regression holds a mouse press across the
+focusout task and verifies one insertion on release.
+
+Verification is recorded in
+[thread interaction repairs](../evidence/thread-interaction-repairs/README.md).

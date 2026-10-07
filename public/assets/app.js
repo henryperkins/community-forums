@@ -511,6 +511,16 @@
         return !!element && element.getClientRects().length > 0;
     }
 
+    function exposedByDetails(element) {
+        var closed = element.closest('details:not([open])');
+        // A nested summary is hidden when any outer disclosure is closed.
+        while (closed) {
+            if (element !== closed.querySelector(':scope > summary')) { return false; }
+            closed = closed.parentElement ? closed.parentElement.closest('details:not([open])') : null;
+        }
+        return true;
+    }
+
     function accordTopicTools(tools, section) {
         if (!section) { return; }
         var sections = tools.querySelectorAll('[data-topic-tools-section]');
@@ -784,10 +794,8 @@
         if (!dialog) { return; }
         var candidates = dialog.querySelectorAll('a[href], button:not([disabled]), summary, input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
         var focusable = Array.prototype.filter.call(candidates, function (item) {
-            var closedDetails = item.closest('details:not([open])');
-            var closedSummary = closedDetails ? closedDetails.querySelector(':scope > summary') : null;
             return visible(item) && !item.closest('[hidden]')
-                && (!closedDetails || item === closedSummary)
+                && exposedByDetails(item)
                 && item.getAttribute('tabindex') !== '-1'
                 && !item.matches(':disabled') && item.getAttribute('aria-disabled') !== 'true';
         });
@@ -2020,10 +2028,9 @@
     // brought back to its first or last control.
     function overlayTabStops(container) {
         return Array.from(container.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]')).filter(function (n) {
-            var closed = n.closest('details:not([open])');
             return n.tabIndex >= 0 && !n.matches(':disabled') && !n.closest('[inert]') && n.getClientRects().length > 0
                 && getComputedStyle(n).visibility !== 'hidden'
-                && (!closed || n === closed.querySelector(':scope > summary'));
+                && exposedByDetails(n);
         });
     }
     function wrapOverlayTab(e, container, pullIn) {
