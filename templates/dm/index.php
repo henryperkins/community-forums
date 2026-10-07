@@ -7,8 +7,8 @@
         <div class="dm-empty">
             <div class="dm-empty-inner">
                 <span class="star" aria-hidden="true">✦</span>
-                <h2><?= !empty($first_run) ? 'Begin your first private counsel' : 'Choose a conversation' ?></h2>
-                <p><?= !empty($first_run) ? 'Write to a member from their profile, or start here. Only the people you name can read what you write.' : 'Open one from the list, or begin a new private message.' ?></p>
+                <h2><?= !empty($first_run) ? 'Start a conversation' : 'Choose a conversation' ?></h2>
+                <p><?= !empty($first_run) ? 'Send a private message to another member. Only those named can read your messages.' : 'Open a conversation from the list, or start a new message.' ?></p>
                 <?= $this->partial('partials/dm_empty_actions', ['new_user_throttled' => $new_user_throttled ?? false]) ?>
             </div>
         </div>

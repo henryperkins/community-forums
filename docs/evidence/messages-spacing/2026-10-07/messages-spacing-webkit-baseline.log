@@ -1,0 +1,59 @@
+
+Running 1 test using 1 worker
+
+(node:603460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✘  1 [desktop] › .messages-spacing-baseline.spec.ts:375:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view (21.5s)
+
+
+  1) [desktop] › .messages-spacing-baseline.spec.ts:375:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view
+
+    Error: 422 stays open after a tap outside
+
+    expect(locator).toHaveClass(expected) failed
+
+    Locator: locator('.dm-composer')
+    Expected pattern: /is-expanded/
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - 422 stays open after a tap outside with timeout 5000ms
+      - waiting for locator('.dm-composer')
+
+
+      449 |           await page.locator('.dm-thread-head').tap({ position: { x: 200, y: 8 } });
+      450 |           await settle(page, 300);
+    > 451 |           await expect.soft(page.locator('.dm-composer'), '422 stays open after a tap outside').toHaveClass(/is-expanded/);
+          |                                                                                                 ^
+      452 |           await expect.soft(page.locator('.dm-composer .field-error')).toBeVisible();
+      453 |         }
+      454 |         expect.soft(errors).toEqual([]);
+        at /home/ubuntu/community-forums/tests/browser/.messages-spacing-baseline.spec.ts:451:97
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.dm-composer .field-error')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "soft toBeVisible" with timeout 5000ms
+      - waiting for locator('.dm-composer .field-error')
+
+
+      450 |           await settle(page, 300);
+      451 |           await expect.soft(page.locator('.dm-composer'), '422 stays open after a tap outside').toHaveClass(/is-expanded/);
+    > 452 |           await expect.soft(page.locator('.dm-composer .field-error')).toBeVisible();
+          |                                                                        ^
+      453 |         }
+      454 |         expect.soft(errors).toEqual([]);
+      455 |         await context.close();
+        at /home/ubuntu/community-forums/tests/browser/.messages-spacing-baseline.spec.ts:452:72
+
+    Error Context: ../../output/playwright/messages-spacing-20261007/webkit-baseline/.artifacts/.messages-spacing-baseline-bd5e7-and-opens-with-Send-in-view-desktop/error-context.md
+
+  1 failed
+    [desktop] › .messages-spacing-baseline.spec.ts:375:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view

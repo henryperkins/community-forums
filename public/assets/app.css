@@ -7498,6 +7498,7 @@ textarea.textarea-engraved {
        carries that pairing (--accent-contrast turns twilight-900 at night, 3.3:1
        on green-500), so it is named once here, in the token layer. */
     --dm-on-brand: var(--parchment-50);
+    --dm-list-inset: var(--space-4);
     width: 100%;
     max-width: var(--maxw);
     margin: -24px auto -64px;
@@ -7538,7 +7539,7 @@ textarea.textarea-engraved {
     min-height: 0;
 }
 .dm-listpane-head {
-    padding: 18px 18px 12px;
+    padding: var(--space-4) var(--dm-list-inset) var(--space-3);
     border-bottom: 1px solid var(--border-hair);
     position: relative;   /* anchors the no-JS compose panel */
 }
@@ -7568,10 +7569,10 @@ textarea.textarea-engraved {
 .dm-listpane-filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 7px;
-    margin-top: 12px;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
 }
-.dm-listpane-filters .pill { text-decoration: none; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; min-height: 34px; display: inline-flex; align-items: center; padding: 0 13px; }
+.dm-listpane-filters .pill { text-decoration: none; font-family: var(--font-label); text-transform: none; letter-spacing: normal; font-size: var(--text-fine); min-height: 44px; display: inline-flex; align-items: center; padding: 0 var(--space-3); }
 .dm-listpane-filters .pill:hover { color: var(--dm-accent-ink); }
 /* Selected = the system's filter tab (DESIGN.md "Filter tabs": active fills
    evergreen with parchment text), so the choice reads by fill, not by hue. The
@@ -7583,8 +7584,8 @@ textarea.textarea-engraved {
 /* Round "new message" action — quiet gold, the one invitation in the header. */
 .dm-new-btn {
     flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -7619,7 +7620,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     position: relative;
     display: flex;
     align-items: center;
-    margin-top: 12px;
+    margin-top: var(--space-3);
 }
 .dm-search .icon {
     position: absolute;
@@ -7631,9 +7632,10 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 }
 .dm-search input {
     width: 100%;
+    min-height: 44px;
     font: inherit;
     font-family: var(--font-body);
-    font-size: .92rem;
+    font-size: 1rem;
     color: var(--text-body);
     padding: 8px 12px 8px 34px;
     background: var(--dm-sunken);
@@ -7843,13 +7845,14 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--info) 22%, transparent);
 }
 .dm-list-empty {
-    padding: 40px 22px;
+    padding: var(--space-5) var(--dm-list-inset);
+    margin: 0;
     color: var(--text-muted);
-    text-align: center;
+    text-align: left;
 }
-.dm-list-empty-first { padding: 34px 22px; text-align: left; }
-.dm-list-empty-first p { margin: 0; color: var(--text-body); }
-.dm-list-empty-first .dm-list-empty-sub { margin-top: 6px; font-size: .9rem; color: var(--text-muted); }
+.dm-list-empty > p { margin: 0; }
+.dm-list-empty-title { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: var(--text-thread); font-weight: var(--weight-medium); color: var(--text-strong); line-height: 1.25; }
+.dm-list-empty-first .dm-list-empty-sub { max-width: 36ch; font-size: var(--text-sm); color: var(--text-muted); line-height: 1.5; }
 
 /* ── Conversation header: identity, presence, one lock eyebrow ────────── */
 .dm-threadpane {
@@ -8436,11 +8439,10 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     margin: 0;
     line-height: 1.55;
 }
-.dm-empty-inner .btn { margin-top: 6px; }
-.dm-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0 0; }
+.dm-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); margin: var(--space-4) 0 0; }
 .dm-empty-note { display: flex; align-items: flex-start; gap: 8px; text-align: left; font-size: .9rem; line-height: 1.5; color: var(--text-muted); background: var(--dm-ground); border: 1px solid var(--border-hair); border-radius: var(--radius-md); padding: 10px 12px; margin: 14px 0 0; }
 .dm-empty-note .icon { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 4px; color: var(--dm-accent-ink); }
-.dm-list-empty-first .dm-empty-actions { justify-content: flex-start; }
+.dm-list-empty .dm-empty-actions { justify-content: flex-start; }
 
 /* ── The standalone New message page is the reading room ──────────────── */
 .dm-compose {
@@ -8455,21 +8457,24 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .dm-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--space-4);
     align-items: stretch;
 }
+.dm-form .field { margin-bottom: 0; }
+.dm-form .field-label { display: block; margin-bottom: var(--space-2); font-family: var(--font-label); font-size: var(--text-fine); font-weight: var(--weight-medium); color: var(--text-muted); }
+.dm-form .dm-field-optional { font-family: var(--font-body); font-weight: var(--weight-regular); }
+.dm-form [data-dm-picker] { display: flex; flex-direction: column; gap: var(--space-2); }
 .dm-form .field-hint {
     font-family: var(--font-body);
-    font-size: .85rem;
-    color: var(--text-faint);
-    margin: -8px 0 0;
+    font-size: var(--text-fine);
+    color: var(--text-muted);
+    margin: 0;
 }
 .dm-dialog-body .field-hint { margin: 0; }
 .dm-dialog-body .field-error { margin: 0; }
 
 /* ── Recipient picker: chips in the engraved field, suggestions in flow ── */
 .dm-to-field-wrap { display: flex; flex-direction: column; gap: 6px; }
-.dm-to-field-wrap .field-label { font-family: var(--font-label); font-size: .82rem; color: var(--text-muted); }
 .dm-to-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; min-height: 44px; cursor: text; }
 /* The chip field wears the shared engraved-field focus on its container (the
    inner input is borderless), so it matches every other field (ADR 0034). */

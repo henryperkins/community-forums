@@ -26,11 +26,11 @@ $cfTitleErrId = 'dm-title-error-' . $cfInstance;
 <noscript hidden><input type="hidden" name="land" value="letter"></noscript>
 <div data-dm-picker data-dm-allow-groups="<?= $cfGroups ? '1' : '0' ?>" data-dm-avatars="<?= ($show_avatars ?? true) ? '1' : '0' ?>">
 <div class="field">
-    <label for="<?= $e($cfToId) ?>">To</label>
+    <label class="field-label" for="<?= $e($cfToId) ?>">To</label>
     <input class="input input-engraved" type="text" id="<?= $e($cfToId) ?>" name="to" value="<?= $e($cfTo) ?>" maxlength="255" placeholder="<?= $cfGroups ? 'username, username' : 'username' ?>"<?= field_attrs($cfErrors, 'to', $cfToErrId) ?> required>
 </div>
 <?php if ($cfGroups): ?>
-    <p class="field-hint">Separate multiple usernames with commas to start a group.</p>
+    <p class="field-hint">Enter usernames separated by commas to start a group.</p>
 <?php endif; ?>
 <?= field_error($cfErrors, 'to', $cfToErrId) ?>
 
@@ -39,8 +39,8 @@ $cfTitleErrId = 'dm-title-error-' . $cfInstance;
 
 <?php if ($cfGroups): ?>
     <label data-dm-group-title class="field" for="<?= $e($cfTitleId) ?>">
-        <span>Group title</span>
-        <input class="input input-engraved" type="text" id="<?= $e($cfTitleId) ?>" name="title" value="<?= $e($cfTitle) ?>" maxlength="120" placeholder="Optional"<?= field_attrs($cfErrors, 'title', $cfTitleErrId) ?>>
+        <span class="field-label">Group title <span class="dm-field-optional">(optional)</span></span>
+        <input class="input input-engraved" type="text" id="<?= $e($cfTitleId) ?>" name="title" value="<?= $e($cfTitle) ?>" maxlength="120" placeholder="Name this group"<?= field_attrs($cfErrors, 'title', $cfTitleErrId) ?>>
     </label>
     <?= field_error($cfErrors, 'title', $cfTitleErrId) ?>
 <?php endif; ?>

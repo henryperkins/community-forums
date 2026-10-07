@@ -85,7 +85,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
         </div>
         <form class="dm-search" method="get" action="/messages" role="search">
             <?= $this->partial('partials/icon', ['name' => 'search']) ?>
-            <input type="search" enterkeyhint="search" name="q" value="<?= $e($dmQ) ?>" placeholder="Search messages…" aria-label="Search messages" maxlength="120">
+            <input type="search" enterkeyhint="search" name="q" value="<?= $e($dmQ) ?>" placeholder="Search conversations…" aria-label="Search conversations" maxlength="120">
             <?php if ($dmFilter === 'unread'): ?><input type="hidden" name="filter" value="unread"><?php endif; ?>
         </form>
         <nav class="dm-listpane-filters" aria-label="Message filters">
@@ -96,12 +96,17 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
 
     <?php if (!empty($first_run)): ?>
         <div class="dm-list-empty dm-list-empty-first">
-            <p>No conversations yet.</p>
-            <p class="dm-list-empty-sub">When a member writes to you, or you write to them, the exchange will keep here.</p>
+            <h2 class="dm-list-empty-title">No conversations yet</h2>
+            <p class="dm-list-empty-sub">Your conversations with other members will appear here.</p>
             <?= $this->partial('partials/dm_empty_actions', ['new_user_throttled' => $new_user_throttled ?? false]) ?>
         </div>
     <?php elseif (empty($dmConversations)): ?>
-        <p class="dm-list-empty"><?= $dmQ !== '' ? 'No conversations match your search.' : ($dmFilter === 'unread' ? 'No unread conversations.' : 'No conversations yet.') ?></p>
+        <div class="dm-list-empty">
+            <p><?= $dmQ !== '' ? 'No conversations match your search.' : ($dmFilter === 'unread' ? 'No unread conversations.' : 'No conversations yet.') ?></p>
+            <?php if ($dmQ !== '' || $dmFilter === 'unread'): ?>
+                <div class="dm-empty-actions"><a class="btn btn-ghost" href="<?= $e($dmQ !== '' && $dmFilter === 'unread' ? '/messages?filter=unread' : '/messages') ?>"><?= $dmQ !== '' ? 'Clear search' : 'View all messages' ?></a></div>
+            <?php endif; ?>
+        </div>
     <?php else: ?>
         <ul class="dm-list">
             <?php foreach ($dmConversations as $c): ?>
@@ -134,6 +139,6 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                 </li>
             <?php endforeach; ?>
         </ul>
-        <p class="dm-list-empty" data-search-empty role="status" hidden>No letters match your search.</p>
+        <p class="dm-list-empty" data-search-empty role="status" hidden>No conversations match your search.</p>
     <?php endif; ?>
 </section>

@@ -35,7 +35,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
         </header>
         <div class="dm-compose">
             <div class="dm-compose-wrap">
-                <?php if (!empty($new_user_throttled)): ?><p class="dm-empty-note">New accounts can reply to messages they receive. To start a conversation, make your first post or come back later.</p><?php endif; ?>
+                <?php if (!empty($new_user_throttled)): ?><p class="dm-empty-note">You can reply to messages you receive. To start a conversation, make your first post or try again later.</p><?php endif; ?>
 
                 <?= $this->partial('partials/composer_shell', [
                     'action' => '/messages',
