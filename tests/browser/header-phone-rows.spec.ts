@@ -344,10 +344,13 @@ test.describe('without JavaScript', () => {
     await page.screenshot({ path: shot('nojs-board-scrolled.png', info.project.name) });
     // The filter that the stuck rail intercepted (notifications-unified:139).
     await page.goto('/notifications');
-    const unread = page.getByRole('link', { name: 'Unread', exact: true });
+    const unread = page.getByRole('link', { name: 'Unread', exact: true, includeHidden: true });
+    await unread.locator('xpath=ancestor::details[1]').locator(':scope > summary').tap();
     await unread.tap();
     await expect(page).toHaveURL(/filter=unread/);
-    await expect(page.getByRole('link', { name: 'Unread', exact: true })).toHaveAttribute('aria-current', 'page');
+    await unread.locator('xpath=ancestor::details[1]').locator(':scope > summary').tap();
+    await expect(unread).toBeVisible();
+    await expect(unread).toHaveAttribute('aria-current', 'page');
   });
 });
 

@@ -2,7 +2,7 @@
 <?php $this->layout('layout'); $this->section('title', 'Tags'); ?>
 <div class="read-main read-pad tag-view">
     <header class="board-header">
-        <h1>Tags</h1>
+        <?= $this->partial('partials/page_heading', ['heading' => 'Tags']) ?>
         <p class="muted">Approved community topics you can follow for discovery.</p>
     </header>
 

@@ -5,7 +5,7 @@ $this->section('title', 'Privacy');
 $this->section('description', 'How community content and account data are handled.');
 ?>
 <article class="content-page">
-    <h1>Privacy</h1>
+    <?= $this->partial('partials/page_heading', ['heading' => 'Privacy']) ?>
     <section id="thread-intelligence" aria-labelledby="thread-intelligence-heading">
         <h2 id="thread-intelligence-heading">Thread intelligence</h2>
         <p>eligible public post text may be processed by OpenAI to prepare living summaries and explanations for related public discussions.</p>

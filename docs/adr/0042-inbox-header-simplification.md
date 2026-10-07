@@ -2,7 +2,7 @@
 
 **Status:** Accepted — 2026-09-28
 
-[ADR 0043](0043-create-menu-subheader.md) supersedes the 2026-10-07 phone first-row create-control clause: creation now lives in a shared content row; header heights and route rows stay as specified here.
+[ADR 0043](0043-create-menu-subheader.md) supersedes the 2026-10-07 phone first-row create-control clause and the Inbox's separate heading/view bands: creation and Inbox controls now share one content row; header heights and route rows stay as specified here.
 
 The mobile inbox put introductory copy, scope, three order pills, a bulk action,
 an appearance preference, and keyboard instructions before its topics. The
@@ -63,3 +63,16 @@ The subsequent [header review](0032-unified-member-chrome.md#header-review-regre
 refines the spacing budget: gaps and horizontal padding now follow the actual
 bar width, including classic scrollbar gutters and the Large text preference.
 Targets, complete route labels, row order and the 108px height stay intact.
+
+## Addendum — 2026-10-07: one shared page row
+
+The owner subsequently placed the Inbox heading, unread information, Show and
+topic count, Sort, actions disclosure and create control in one physical row.
+This supersedes the separate heading and view bands while retaining this ADR's
+independent choices, native disclosures, page-limited actions and count units.
+Compact captions follow the existing available-width step, including narrow
+desktop content columns; targets remain 44px and accessible names preserve the
+current choices. Native menus remain viewport-safe. The moved counters retain
+their read-preview updates; URLs, POST fields and server behavior are unchanged.
+See [ADR 0043](0043-create-menu-subheader.md) and the
+[shared page-row record](../evidence/shared-page-row-2026-10-07/README.md).

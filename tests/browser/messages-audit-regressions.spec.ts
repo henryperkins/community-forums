@@ -667,8 +667,10 @@ test('P2-2 Search and the To chip field wear the shared focus outline on keyboar
     return { style: cs.outlineStyle, width: parseFloat(cs.outlineWidth) };
   });
   await page.goto('/messages');
-  await page.locator('[data-create-trigger]').focus();
-  for (let i = 0; i < 8 && !await page.locator('.dm-search input').evaluate(el => el === document.activeElement); i++) await page.keyboard.press('Tab');
+  await page.locator('.dm-search-menu > summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.dm-search-menu')).toHaveAttribute('open', '');
+  await page.keyboard.press('Tab');
   await expect(page.locator('.dm-search input')).toBeFocused();
   await settle(page, 300);
   const search = await ring('.dm-search input');
@@ -843,6 +845,8 @@ test('P3-2 list previews read as words, not Markdown, and the instant filter sti
   expect.soft(text).toContain("echo 'hi'; See worker:packages, bold, em and the runbook.");
   expect.soft(text).toContain('Keep it quiet.');
   const row = page.locator(`.dm-list li:has(.dm-row[href="/messages/${unread.id}"])`);
+  await page.locator('.dm-search-menu > summary').click();
+  await expect(page.locator('.dm-search input[name=q]')).toBeVisible();
   await page.locator('.dm-search input[name=q]').fill('example.com');
   await expect.soft(row, 'the filter still matches a link URL').not.toHaveClass(/is-filtered/);
   await page.locator('.dm-search input[name=q]').fill('qqqzzz');

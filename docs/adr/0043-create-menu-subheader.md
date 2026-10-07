@@ -31,7 +31,14 @@ continue to apply.
   error pages. The skip link lands on the row within the main landmark.
 - Move board and topic breadcrumbs and the Boards directory's
   `nav.forum-directory__tabs` into the row's leading side. Each renders once;
-  page headings stay in their pages. Other pages leave the leading side empty.
+  their content headings remain in their pages.
+- Put the Inbox heading, unread information, Show with its topic count, Sort,
+  actions disclosure and create control in one physical row. Other simple
+  member-page headings and their applicable controls populate the shared row
+  instead of leaving an empty leading side above a separate page header.
+- Keep home, board and topic content headings, profile identity and the current
+  conversation heading in their content hierarchy. Guests retain original page
+  headings when they have no shared create control.
 - Guests get the row only where it carries leading content. They get no create
   control and no empty band.
 - The row scrolls with ordinary pages. In Messages and Inbox, the room's panes
@@ -87,6 +94,19 @@ after focus has moved elsewhere, Escape dismisses the dialog normally.
 
 ### Geometry and visual identity
 
+The owner's later 2026-10-07 correction supersedes the original rule that all
+page headings remain in their pages and other leading areas stay empty. Inbox
+identity and view controls share the create row at every width. Compact
+captions follow the existing in-pane available-width threshold, including when
+an open board rail constrains a desktop page. Controls retain 44px targets;
+their accessible names and menus retain the current choices and count units.
+Native menus stay within the viewport without clipping their contents or focus
+rings. Moving the Inbox counters into this row also moves their JavaScript
+lookup scope; read-preview updates retain the existing count behavior.
+
+This is a presentation change. Scope, order, creation destinations, query
+parameters, POST fields, write gates and native navigation remain unchanged.
+
 The shared row uses Imladris semantic surface, border, spacing, type, corner and
 focus tokens. Its trigger has a quiet hairline and tonal hover treatment. The
 leading breadcrumbs wrap long board names within their available width, including
@@ -141,3 +161,5 @@ The [review remediation record](../evidence/create-menu-2026-10-07/regression-fi
 adds dialog visibility through the 900px pane boundary, recipient blur/late-response
 cancellation and pointer selection, retained drafts, shared Messages colors,
 and full-length breadcrumb wrapping in Chromium and WebKit.
+The subsequent owner correction is tracked in the
+[shared page-row record](../evidence/shared-page-row-2026-10-07/README.md).

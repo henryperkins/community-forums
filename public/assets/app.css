@@ -7475,7 +7475,7 @@ textarea.textarea-engraved {
    composer, empty states, the New message page, the recipient picker, and last
    the responsive and input-mode rules that override them. Committed reference:
    .impeccable/mocks/messages/. */
-.dm-shell, .dm-compose-panel {
+.dm-shell, .dm-compose-panel, .forum-subheader:has(.dm-listpane-head) {
     /* Private-counsel "Bruinen" register — a cool river tint layered over the
        warm parchment/gold, scoped to the DM room and compose panel (the global
        topbar + nav rail stay warm, so the temperature shift IS the "you're in
@@ -16611,6 +16611,104 @@ body:is([data-route="boards"], [data-route="search"], [data-route="compose"], [d
     html:not(.has-js) .main:has(> :is(.dm-shell, .inbox-shell)) { display: flex; flex-direction: column; flex: 1; min-height: 0; }
     html:not(.has-js) .main > :is(.dm-shell, .inbox-shell) { height: auto; min-height: 0; flex: 1; }
     html:not(.has-js) .main > .dm-shell[data-dm-conversation] { flex: 1 0 auto; }
+}
+
+/* Route context shares creation's row rather than adding another heading band. */
+.forum-subheader { position: relative; container: member-page-row / inline-size; }
+.forum-page-title,
+.forum-subheader .dm-listpane-title {
+    margin: 0;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: var(--weight-medium);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+.page-toolbar { display: flex; align-items: center; min-width: 0; gap: var(--space-3); }
+.page-toolbar > .forum-page-title { flex: 1 1 auto; min-width: 0; }
+.page-toolbar-controls { display: flex; align-items: center; flex: none; gap: var(--space-2); min-width: 0; }
+.forum-subheader .inbox-title-line { flex: none; flex-direction: column; align-items: flex-start; gap: 0; }
+.forum-subheader .inbox-title-line .badge {
+    padding: 0; border: 0; background: transparent; color: var(--gold-ink);
+    font-family: var(--font-label); font-size: var(--text-chip); line-height: 1.4; text-transform: none;
+}
+.forum-subheader .inbox-view-bar { flex: 1 1 auto; flex-wrap: nowrap; justify-content: flex-end; min-width: 0; gap: var(--space-2); margin: 0; padding: 0; border: 0; }
+.forum-subheader .inbox-actions { flex: none; margin: 0; }
+.forum-subheader .inbox-menu > summary { min-width: 44px; min-height: 44px; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--text-fine); white-space: nowrap; }
+.forum-subheader .inbox-actions > summary,
+.forum-subheader .dm-search-menu > summary,
+.forum-subheader .notification-action-menu > summary { width: 44px; padding: 0; justify-content: center; }
+.forum-subheader :is(.inbox-actions, .dm-search-menu, .notification-action-menu) > summary .icon { width: 20px; height: 20px; }
+.inbox-order-short { display: none; }
+/* Every native popover anchors to the whole row, not a narrow trigger. */
+html:not(.has-js) .forum-subheader :is(.inbox-menu, .inbox-view-bar) { position: static; }
+html:not(.has-js) .forum-subheader .inbox-menu-panel { top: calc(100% + var(--space-1)); left: var(--space-2); max-width: calc(100% - var(--space-2) * 2); }
+html:not(.has-js) .forum-subheader :is(.inbox-actions, .dm-search-menu, .notification-action-menu) > .inbox-menu-panel { left: auto; right: var(--space-2); }
+.forum-subheader .dm-listpane-head { padding: 0; border: 0; position: static; }
+.forum-subheader .dm-listpane-top { flex: 1; min-width: 0; }
+.forum-subheader .dm-listpane-filters { flex: none; flex-wrap: nowrap; margin: 0; gap: var(--space-1); }
+.forum-subheader .dm-listpane-filters .pill { min-width: 44px; justify-content: center; padding-inline: var(--space-2); color: var(--text-body); }
+.forum-subheader .dm-listpane-filters .pill.is-active { color: var(--dm-on-brand); }
+.forum-subheader .dm-filter-n { color: var(--gold-ink); }
+.forum-subheader .dm-listpane-filters .pill.is-active .dm-filter-n { color: inherit; }
+.forum-subheader .dm-search { margin: 0; }
+.forum-subheader .dm-search input { background: var(--surface-sunken); border-color: var(--border-hair); border-radius: var(--radius-md); }
+.forum-subheader .dm-search input:focus { background: var(--surface-raised); }
+.forum-subheader .notification-heading { min-width: 0; flex: 1; }
+.forum-subheader [data-notification-heading] [data-notification-count]::after { content: none; }
+.forum-subheader .notification-history,
+.forum-subheader .notification-actions { display: grid; margin: 0; padding: 0; border: 0; gap: 0; }
+.forum-subheader .notification-actions button { width: 100%; padding: var(--space-2); font-size: var(--text-fine); text-align: left; }
+.page-toolbar-title-stack { flex: 1 1 auto; min-width: 0; }
+.forum-subheader .inbox-menu-panel .inbox-tabs { display: grid; margin: 0; border: 0; gap: 0; }
+.forum-subheader .inbox-menu-panel .inbox-tab { display: flex; align-items: center; min-height: 44px; padding: var(--space-2); border: 0; border-radius: var(--radius-md); font-size: var(--text-fine); }
+.forum-subheader .page-toolbar-controls > a { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-label); font-size: var(--text-fine); }
+.tag-toolbar .header-follow { display: flex; flex-direction: column; align-items: flex-start; gap: 0; margin: 0; }
+.tag-toolbar .header-follow button { min-height: 44px; font-size: var(--text-fine); white-space: nowrap; }
+.tag-toolbar .header-follow .muted { font-family: var(--font-label); font-size: var(--text-chip); }
+/* A feed can carry an unbroken title, name or excerpt from a topic. */
+.feed :is(.feed-thread, .feed-excerpt, .post-author) { overflow-wrap: anywhere; }
+.tag-cloud li { max-width: 100%; }
+.tag-card :is(.tag-name, .tag-desc) { overflow-wrap: anywhere; }
+@container member-page-row (max-width: 760px) {
+    .page-toolbar { gap: var(--space-1); }
+    .inbox-toolbar .inbox-view-bar { gap: var(--space-1); }
+    .inbox-toolbar .inbox-scope-menu { flex: 1 1 auto; min-width: 44px; }
+    .inbox-toolbar .inbox-scope-menu > summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding: var(--space-1) var(--space-2); }
+    .inbox-toolbar .inbox-control-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .inbox-toolbar .inbox-selected-scope { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .inbox-toolbar .inbox-scope-count { font-size: var(--text-chip); overflow: hidden; text-overflow: ellipsis; }
+    .inbox-toolbar .inbox-menu > summary > .icon { display: none; }
+    .inbox-toolbar .inbox-sort-menu { flex: none; }
+    .inbox-toolbar .inbox-order-full { display: none; }
+    .inbox-toolbar .inbox-order-short { display: inline; }
+    .inbox-toolbar .inbox-actions > summary > .icon { display: block; }
+    .page-toolbar-controls { gap: var(--space-1); }
+    .toolbar-control-prefix { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .search-toolbar .forum-page-title { font-size: var(--text-size-body); }
+    .search-toolbar .inbox-menu > summary { padding-inline: var(--space-2); }
+    .search-toolbar .inbox-menu > summary .icon { display: none; }
+    .forum-subheader-leading > .forum-page-title { font-size: var(--text-title); }
+}
+@container member-page-row (max-width: 460px) {
+    .inbox-toolbar .inbox-sort-menu > summary { display: grid; justify-items: center; gap: 0; padding: var(--space-1); }
+    .inbox-toolbar .inbox-sort-menu .inbox-control-label { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+    .inbox-toolbar .inbox-order-short { display: block; font-size: var(--text-chip); }
+    .forum-subheader .dm-lock-eyebrow { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .forum-subheader .dm-listpane-filters .pill { width: 44px; padding: 0; flex-direction: column; font-size: var(--text-chip); line-height: 1.2; }
+    .forum-subheader .dm-filter-n { margin: 0; font-size: var(--text-chip); }
+    .notification-toolbar .forum-page-title { font-size: var(--text-thread); }
+    .notification-toolbar [data-notification-count] { display: block; width: max-content; }
+    .notification-toolbar [data-notification-count][hidden] { display: none; }
+    .notification-toolbar .notification-filter-menu > summary { width: 44px; padding: 0; justify-content: center; }
+    .notification-toolbar .notification-filter-menu > summary .icon { display: none; }
+    .search-toolbar .inbox-menu > summary { width: 44px; padding: 0; justify-content: center; }
+    .search-toolbar .toolbar-control-prefix { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+    .search-toolbar .toolbar-control-value { display: none; }
+}
+@media (max-width: 860px) {
+    .forum-subheader:has(.page-toolbar) { padding-inline: var(--space-3); gap: var(--space-1); }
 }
 
 /* ══ Presence: rail rows, the /users-online directory, dots ══════════════════

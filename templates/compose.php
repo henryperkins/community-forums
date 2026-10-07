@@ -46,7 +46,7 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
 <div class="compose-surface" data-compose data-compose-selected-board="<?= $e($composeSelectedSlug) ?>">
     <div class="compose-column">
         <p class="compose-eyebrow" data-compose-board-name>Posting to <?= $e($composeSelectedName) ?></p>
-        <h1>Open a topic</h1>
+        <?= $this->partial('partials/page_heading', ['heading' => 'Open a topic']) ?>
         <p class="compose-lede">Say what you want the council to consider, and what would change your mind.</p>
 
         <?= $this->partial('partials/composer_shell', [

@@ -83,7 +83,7 @@ test('scope and sort preserve each other and menus support keyboard dismissal an
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
-  const audit = await new AxeBuilder({ page }).include('[data-inbox-list]').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+  const audit = await new AxeBuilder({ page }).include('[data-inbox-list]').include('[data-subheader]').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(audit.violations).toEqual([]);
   await capture(page, info.project.name, 'inbox-help');
   await page.keyboard.press('Escape');

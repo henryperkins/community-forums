@@ -15,9 +15,34 @@ $resultCount = count($results);
 $countLabel = $resultCount . ($resultCount === 1 ? ' result' : ' results');
 $orderCopy = $order === 'newest' ? 'newest first' : 'by relevance';
 ?>
+<?php if (($current_user ?? null) !== null): ?>
+<?php $this->start('subheader_leading'); ?>
+<div class="page-toolbar search-toolbar">
+    <h1 class="forum-page-title">Search the council</h1>
+    <nav class="page-toolbar-controls" aria-label="Search view">
+        <details class="inbox-menu" name="inbox-controls" data-inbox-menu>
+            <summary aria-label="Show: <?= $e($scopeLabels[$scope]) ?>" title="Show: <?= $e($scopeLabels[$scope]) ?>"><span class="toolbar-control-prefix">Show</span><span class="toolbar-control-value"><?= $e($scopeLabels[$scope]) ?></span><?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?></summary>
+            <div class="inbox-menu-panel" role="group" aria-label="Scope">
+                <?php foreach ($scopeLabels as $item => $label): ?>
+                    <a href="<?= $e($search_query->url($item, $order)) ?>"<?= $item === $scope ? ' class="is-active" aria-current="page"' : '' ?>><?= $e($label) ?></a>
+                <?php endforeach; ?>
+            </div>
+        </details>
+        <details class="inbox-menu" name="inbox-controls" data-inbox-menu>
+            <summary aria-label="Sort: <?= $e($orderLabels[$order]) ?>" title="Sort: <?= $e($orderLabels[$order]) ?>"><span class="toolbar-control-prefix">Sort</span><span class="toolbar-control-value"><?= $e($orderLabels[$order]) ?></span><?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?></summary>
+            <div class="inbox-menu-panel" role="group" aria-label="Order">
+                <?php foreach ($orderLabels as $item => $label): ?>
+                    <a href="<?= $e($search_query->url($scope, $item)) ?>"<?= $item === $order ? ' class="is-active" aria-current="page"' : '' ?>><?= $e($label) ?></a>
+                <?php endforeach; ?>
+            </div>
+        </details>
+    </nav>
+</div>
+<?php $this->stop(); ?>
+<?php endif; ?>
 <div class="search-surface" data-search-scope="<?= $e($scope) ?>" data-search-order="<?= $e($order) ?>">
     <div class="search-column">
-        <h1>Search the council</h1>
+        <?php if (($current_user ?? null) === null): ?><h1>Search the council</h1><?php endif; ?>
 
         <form class="search-form" method="get" action="/search" role="search" aria-label="Search the council">
             <div class="search-input-row">
@@ -33,6 +58,7 @@ $orderCopy = $order === 'newest' ? 'newest first' : 'by relevance';
             <?php if ($error !== null): ?><p class="field-error" id="search-query-error" role="alert"><?= $e($error) ?></p><?php endif; ?>
         </form>
 
+        <?php if (($current_user ?? null) === null): ?>
         <nav class="search-view-bar" aria-label="Search view">
             <span class="search-view-label">Viewing</span>
             <span class="search-scope-options" role="group" aria-label="Scope">
@@ -46,6 +72,7 @@ $orderCopy = $order === 'newest' ? 'newest first' : 'by relevance';
                 <?php endforeach; ?>
             </span>
         </nav>
+        <?php endif; ?>
 
         <?php if ($submitted && $error === null): ?>
             <p class="search-result-count"><?= $e($countLabel) ?> for “<?= $e($query) ?>” · <?= $e($orderCopy) ?></p>

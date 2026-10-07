@@ -11,14 +11,52 @@ $emptyTitle = match ($scope) {
 };
 $available = array_fill_keys($scopes, true);
 ?>
-<div class="inbox-shell" data-inbox data-inbox-scope="<?= $e($scope) ?>" data-inbox-order="<?= $e($order) ?>">
-    <section class="inbox-list" data-inbox-list tabindex="-1" aria-label="Topics">
-        <header class="board-header inbox-list-head">
-            <div class="inbox-title-line">
-                <h1>Inbox</h1>
-                <?php if ((int) $unread_count > 0): ?>
-                    <span class="badge" data-inbox-unread-count="<?= (int) $unread_count ?>"><?= (int) $unread_count ?> unread</span>
-                <?php endif; ?>
+<?php $this->start('subheader_leading'); ?>
+<div class="page-toolbar inbox-toolbar">
+    <div class="inbox-title-line">
+        <h1 class="forum-page-title">Inbox</h1>
+        <?php if ((int) $unread_count > 0): ?>
+            <span class="badge" data-inbox-unread-count="<?= (int) $unread_count ?>"><?= (int) $unread_count ?> unread</span>
+        <?php endif; ?>
+    </div>
+        <nav class="inbox-view-bar" aria-label="Inbox view">
+            <details class="inbox-scope-menu inbox-menu" name="inbox-controls" data-inbox-scope-menu data-inbox-menu>
+                <summary title="Show: <?= $e($scopeLabel) ?>">
+                    <span class="inbox-control-label">Show:</span>
+                    <span class="inbox-selected-scope"><?= $e($scopeLabel) ?></span>
+                    <span class="inbox-scope-count"><span data-inbox-current-count><?= (int) $total ?></span> <span data-inbox-count-label><?= (int) $total === 1 ? 'topic' : 'topics' ?></span></span>
+                    <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
+                </summary>
+                <div class="inbox-scope-menu-panel inbox-menu-panel">
+                    <?php foreach (\App\Support\InboxView::GROUPS as $groupLabel => $groupScopes): ?>
+                        <?php $visibleGroup = array_values(array_filter($groupScopes, static fn (string $item): bool => isset($available[$item]))); ?>
+                        <?php if ($visibleGroup !== []): ?>
+                            <span class="inbox-scope-group-label"><?= $e($groupLabel) ?></span>
+                            <?php foreach ($visibleGroup as $item): ?>
+                                <a href="<?= $e(\App\Support\InboxView::query($item, $order)) ?>"<?= $item === $scope ? ' class="is-active" aria-current="page"' : '' ?>>
+                                    <span><?= $e(\App\Support\InboxView::LABELS[$item]) ?></span>
+                                    <span data-inbox-scope-count="<?= $e($item) ?>"><?= (int) ($scope_counts[$item] ?? 0) ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </details>
+
+            <details class="inbox-sort-menu inbox-menu" name="inbox-controls" data-inbox-menu>
+                <summary aria-label="Sort: <?= $e(ucfirst($orderLabel['full'])) ?>" title="Sort: <?= $e(ucfirst($orderLabel['full'])) ?>">
+                    <span class="inbox-control-label">Sort:</span>
+                    <span class="inbox-order-full"><?= $e(ucfirst($orderLabel['full'])) ?></span><span class="inbox-order-short" aria-hidden="true"><?= $e($orderLabel['short']) ?></span>
+                    <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
+                </summary>
+                <div class="inbox-menu-panel">
+                    <?php foreach (\App\Support\InboxView::ORDERS as $item): ?>
+                        <?php $itemLabel = \App\Support\InboxView::ORDER_LABELS[$item]; ?>
+                        <a href="<?= $e(\App\Support\InboxView::query($scope, $item)) ?>"<?= $item === $order ? ' class="is-active" aria-current="page"' : '' ?>><?= $e(ucfirst($itemLabel['full'])) ?></a>
+                    <?php endforeach; ?>
+                </div>
+            </details>
+        </nav>
                 <details class="inbox-actions inbox-menu" name="inbox-controls" data-inbox-menu data-inbox-menu-align="end">
                     <summary aria-label="Inbox actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
                     <div class="inbox-menu-panel">
@@ -51,48 +89,10 @@ $available = array_fill_keys($scopes, true);
                         </details>
                     </div>
                 </details>
-            </div>
-        </header>
-
-        <nav class="inbox-view-bar" aria-label="Inbox view">
-            <details class="inbox-scope-menu inbox-menu" name="inbox-controls" data-inbox-scope-menu data-inbox-menu>
-                <summary>
-                    <span class="inbox-control-label">Show:</span>
-                    <span><?= $e($scopeLabel) ?></span>
-                    <span class="inbox-scope-count"><span data-inbox-current-count><?= (int) $total ?></span> <span data-inbox-count-label><?= (int) $total === 1 ? 'topic' : 'topics' ?></span></span>
-                    <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
-                </summary>
-                <div class="inbox-scope-menu-panel inbox-menu-panel">
-                    <?php foreach (\App\Support\InboxView::GROUPS as $groupLabel => $groupScopes): ?>
-                        <?php $visibleGroup = array_values(array_filter($groupScopes, static fn (string $item): bool => isset($available[$item]))); ?>
-                        <?php if ($visibleGroup !== []): ?>
-                            <span class="inbox-scope-group-label"><?= $e($groupLabel) ?></span>
-                            <?php foreach ($visibleGroup as $item): ?>
-                                <a href="<?= $e(\App\Support\InboxView::query($item, $order)) ?>"<?= $item === $scope ? ' class="is-active" aria-current="page"' : '' ?>>
-                                    <span><?= $e(\App\Support\InboxView::LABELS[$item]) ?></span>
-                                    <span data-inbox-scope-count="<?= $e($item) ?>"><?= (int) ($scope_counts[$item] ?? 0) ?></span>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
-            </details>
-
-            <details class="inbox-sort-menu inbox-menu" name="inbox-controls" data-inbox-menu>
-                <summary>
-                    <span class="inbox-control-label">Sort:</span>
-                    <span><?= $e(ucfirst($orderLabel['full'])) ?></span>
-                    <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
-                </summary>
-                <div class="inbox-menu-panel">
-                    <?php foreach (\App\Support\InboxView::ORDERS as $item): ?>
-                        <?php $itemLabel = \App\Support\InboxView::ORDER_LABELS[$item]; ?>
-                        <a href="<?= $e(\App\Support\InboxView::query($scope, $item)) ?>"<?= $item === $order ? ' class="is-active" aria-current="page"' : '' ?>><?= $e(ucfirst($itemLabel['full'])) ?></a>
-                    <?php endforeach; ?>
-                </div>
-            </details>
-        </nav>
-
+</div>
+<?php $this->stop(); ?>
+<div class="inbox-shell" data-inbox data-inbox-scope="<?= $e($scope) ?>" data-inbox-order="<?= $e($order) ?>">
+    <section class="inbox-list" data-inbox-list tabindex="-1" aria-label="Topics">
         <?php if (!empty($threads)): ?>
             <form class="inbox-sweep" id="inbox-bulk-form" method="post" action="/inbox/bulk" data-inbox-sweep>
                 <?= $this->csrfField() ?>

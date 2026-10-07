@@ -164,8 +164,14 @@ final class AppAccountConsoleTest extends TestCase
         $this->assertStatus(200, $response);
         $body = $response->body();
 
-        self::assertSame(1, substr_count($body, '<span class="eyebrow">Account</span>'));
-        self::assertSame(1, substr_count($body, '<h1>Account settings</h1>'));
+        $document = new \DOMDocument();
+        @$document->loadHTML($body);
+        $dom = new \DOMXPath($document);
+        self::assertSame(1, $dom->query('//main//h1')->length, $path);
+        self::assertSame(1, $dom->query('//*[@data-subheader]//h1[normalize-space(.)="Account settings"]')->length, $path);
+        self::assertSame(0, $dom->query('//header[contains(concat(" ", @class, " "), " settings-head ")]//h1')->length, $path);
+        self::assertSame(1, $dom->query('//header[contains(concat(" ", @class, " "), " settings-head ")]//p[normalize-space(.)="' . self::INTRO . '"]')->length, $path);
+        self::assertSame(0, substr_count($body, '<span class="eyebrow">Account</span>'));
         self::assertSame(1, substr_count($body, self::INTRO));
         self::assertSame(2, substr_count($body, 'aria-label="Settings sections"'));
         self::assertStringContainsString('data-settings-mobile-nav>', $body);

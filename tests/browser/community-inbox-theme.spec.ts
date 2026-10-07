@@ -227,7 +227,7 @@ test('Inbox opening reconciles an unread row and its count', async ({ page }, in
   await page.goto('/inbox?scope=unread&order=active');
 
   const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
-  const badge = page.locator('[data-inbox] [data-inbox-unread-count]');
+  const badge = page.locator('[data-subheader] [data-inbox-unread-count]');
   await expect(row).toHaveCount(1);
   await expect(row).toHaveClass(/\bthread-unread\b/);
   await expect(row).toHaveAttribute('data-inbox-unread', '1');
@@ -257,7 +257,7 @@ test('Inbox opening a muted unread row leaves the queue badge unchanged', async 
     await page.goto('/inbox?scope=for_you&order=active');
 
     const row = page.locator('[data-inbox-list] [data-inbox-row]').filter({ hasText: title });
-    const badge = page.locator('[data-inbox] [data-inbox-unread-count]');
+    const badge = page.locator('[data-subheader] [data-inbox-unread-count]');
     await expect(row).toHaveCount(1);
     await expect(row).toHaveClass(/\bthread-unread\b/);
     await expect(row).not.toHaveAttribute('data-inbox-unread', '1');
@@ -570,7 +570,7 @@ test('parchment and twilight preserve the Inbox layout', async ({ page }) => {
 
 test('Inbox and preview composer have no serious or critical axe violations', async ({ page }) => {
   await login(page);
-  await expectNoSeriousA11yViolations(page, '[data-inbox]');
+  await expectNoSeriousA11yViolations(page, '[data-inbox], [data-subheader]');
   await page.locator('[data-inbox-list] .thread-title').first().click();
   await expect(page.locator('[data-inbox-preview]')).toBeVisible();
   await expectNoSeriousA11yViolations(page, '[data-inbox-preview]');

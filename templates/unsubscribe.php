@@ -1,7 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('variant', 'plain'); $this->section('title', 'Email preferences'); ?>
 <div class="auth-card">
-    <h1>Email preferences</h1>
+    <?= $this->partial('partials/page_heading', ['heading' => 'Email preferences']) ?>
     <?php if ($done): ?>
         <p>Done — <strong><?= $e($email) ?></strong> will no longer receive notification emails.</p>
         <p class="muted">Changed your mind?</p>

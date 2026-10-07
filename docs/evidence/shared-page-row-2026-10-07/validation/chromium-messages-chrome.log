@@ -1,0 +1,19 @@
+
+Running 6 tests using 1 worker
+
+(node:930698) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › messages-audit-regressions.spec.ts:565:5 › P1-6 filter pills: the selected pill differs from the unselected one by 3:1 in day and carries aria-current (2.6s)
+
+  ✓  2 [desktop] › messages-audit-regressions.spec.ts:663:5 › P2-2 Search and the To chip field wear the shared focus outline on keyboard focus (1.6s)
+
+  ✓  3 [desktop] › messages-audit-regressions.spec.ts:719:5 › P2-4 touch: every Messages control takes a 44x44 tap (1.1s)
+
+  ✓  4 [desktop] › messages-audit-regressions.spec.ts:837:5 › P3-2 list previews read as words, not Markdown, and the instant filter still matches the raw letter (387ms)
+
+  ✓  5 [desktop] › messages-audit-regressions.spec.ts:858:5 › P3-5 one h1 per page, owner tools name the member, unread leads the row name, the details toggle is a button (1.2s)
+
+  ✓  6 [desktop] › unified-chrome.spec.ts:363:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (2.0s)
+
+  6 passed (10.2s)

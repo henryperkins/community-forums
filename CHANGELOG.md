@@ -10,6 +10,11 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   recovery and docked room geometry (ADR 0043). Keep the dialog outside hidden
   reading-room panes, cancel recipient suggestions when focus leaves the field,
   and wrap long board breadcrumbs within the shared row.
+- Put the Inbox heading, unread information, Show/topic count, Sort and actions
+  on the same row as creation. Fill other simple member-page rows with their
+  headings and applicable controls; keep content, profile and conversation
+  identity in place. Compact captions retain 44px targets and named choices,
+  with native menus and live counts preserved (ADR 0043, owner correction).
 - Use document scrolling on topics with a bottom-sticky reply dock and
   theme-aware scrollbar ink. Keep native fragments and keyboard focus visible
   between the header and dock (ADR 0030, document-scrolling follow-up).

@@ -21,24 +21,31 @@ $dmHeadingTag = ($heading_tag ?? 'h1') === 'h2' ? 'h2' : 'h1';
 $dmAllHref = '/messages' . ($dmQ !== '' ? '?q=' . urlencode($dmQ) : '');
 $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dmQ) : '');
 ?>
-<section class="dm-listpane" aria-label="Conversations">
-    <header class="dm-listpane-head">
-        <div class="dm-listpane-top">
-            <span>
-                <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
-                <<?= $dmHeadingTag ?> class="dm-listpane-title">Messages</<?= $dmHeadingTag ?>>
-            </span>
+<?php $this->start('subheader_leading'); ?>
+<header class="dm-listpane-head page-toolbar">
+    <div class="dm-listpane-top">
+        <span>
+            <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
+            <<?= $dmHeadingTag ?> class="dm-listpane-title">Messages</<?= $dmHeadingTag ?>>
+        </span>
+    </div>
+    <nav class="dm-listpane-filters" aria-label="Message filters">
+        <a class="pill<?= $dmFilter === 'all' ? ' is-active' : '' ?>" href="<?= $e($dmAllHref) ?>"<?= $dmFilter === 'all' ? ' aria-current="page"' : '' ?>>All</a>
+        <a class="pill<?= $dmFilter === 'unread' ? ' is-active' : '' ?>" href="<?= $e($dmUnreadHref) ?>"<?= $dmFilter === 'unread' ? ' aria-current="page"' : '' ?>>Unread<span class="dm-filter-n"><?= $dmUnreadCount > 0 ? $dmUnreadCount : '' ?></span></a>
+    </nav>
+    <details class="dm-search-menu inbox-menu" name="inbox-controls" data-inbox-menu data-inbox-menu-align="end">
+        <summary aria-label="Search conversations"><?= $this->partial('partials/icon', ['name' => 'search']) ?></summary>
+        <div class="inbox-menu-panel">
+            <form class="dm-search" method="get" action="/messages" role="search">
+                <?= $this->partial('partials/icon', ['name' => 'search']) ?>
+                <input type="search" enterkeyhint="search" name="q" value="<?= $e($dmQ) ?>" placeholder="Search conversations…" aria-label="Search conversations" maxlength="120">
+                <?php if ($dmFilter === 'unread'): ?><input type="hidden" name="filter" value="unread"><?php endif; ?>
+            </form>
         </div>
-        <form class="dm-search" method="get" action="/messages" role="search">
-            <?= $this->partial('partials/icon', ['name' => 'search']) ?>
-            <input type="search" enterkeyhint="search" name="q" value="<?= $e($dmQ) ?>" placeholder="Search conversations…" aria-label="Search conversations" maxlength="120">
-            <?php if ($dmFilter === 'unread'): ?><input type="hidden" name="filter" value="unread"><?php endif; ?>
-        </form>
-        <nav class="dm-listpane-filters" aria-label="Message filters">
-            <a class="pill<?= $dmFilter === 'all' ? ' is-active' : '' ?>" href="<?= $e($dmAllHref) ?>"<?= $dmFilter === 'all' ? ' aria-current="page"' : '' ?>>All</a>
-            <a class="pill<?= $dmFilter === 'unread' ? ' is-active' : '' ?>" href="<?= $e($dmUnreadHref) ?>"<?= $dmFilter === 'unread' ? ' aria-current="page"' : '' ?>>Unread<span class="dm-filter-n"><?= $dmUnreadCount > 0 ? $dmUnreadCount : '' ?></span></a>
-        </nav>
-    </header>
+    </details>
+</header>
+<?php $this->stop(); ?>
+<section class="dm-listpane" aria-label="Conversations">
 
     <?php if (!empty($first_run)): ?>
         <div class="dm-list-empty dm-list-empty-first">

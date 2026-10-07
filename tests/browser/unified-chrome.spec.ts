@@ -418,6 +418,7 @@ echo json_encode($fixture, JSON_THROW_ON_ERROR);
       await expect(page.locator('[data-inbox-preview]')).toBeVisible();
       await expect(count).toHaveAttribute('data-inbox-unread-count', String(remaining));
       await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
+      await expect(page.locator('[data-subheader] [data-inbox-count-label]')).toHaveText('topics');
       await expect(count).toHaveText(remaining > 99 ? '99+' : '99');
       await expect(inboxLink).toHaveAccessibleName(`Inbox, ${remaining} unread topics`);
       await expect(railCount).toHaveAttribute('data-board-unread-count', String(remaining));
@@ -442,10 +443,13 @@ foreach (array_slice($threads, 2) as $thread) {
 `);
     await page.goto('/inbox?scope=unread&order=newest');
     await expect(count).toHaveText('2');
+    await expect(page.locator('[data-subheader] [data-inbox-current-count]')).toHaveText('2');
+    await expect(page.locator('[data-subheader] [data-inbox-count-label]')).toHaveText('topics');
     for (const remaining of [1, 0]) {
       await page.locator('[data-inbox-row] .thread-title').first().click();
       await expect(page.locator('[data-inbox-preview]')).toBeVisible();
       await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
+      await expect(page.locator('[data-subheader] [data-inbox-count-label]')).toHaveText(remaining === 1 ? 'topic' : 'topics');
       if (remaining === 1) {
         await expect(count).toHaveText('1');
         await expect(inboxLink).toHaveAccessibleName('Inbox, 1 unread topic');

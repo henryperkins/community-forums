@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,10 +24,27 @@ async function capture(page: Page, info: TestInfo, name: string) {
   fs.mkdirSync(dir, { recursive: true });
   await page.screenshot({ path: path.join(dir, `${name}.png`), fullPage: false });
 }
+async function revealControl(control: Locator) {
+  const disclosure = control.locator('xpath=ancestor::details[1]');
+  if (await disclosure.count() && await disclosure.getAttribute('open') === null) {
+    await disclosure.locator(':scope > summary').click();
+  }
+  await expect(control).toBeVisible();
+}
+async function clickHistory(page: Page, name: string) {
+  const link = page.getByRole('link', { name, exact: true, includeHidden: true });
+  await revealControl(link);
+  await link.click();
+}
+async function bulkButton(page: Page, name: string) {
+  const button = page.getByRole('button', { name, exact: true, includeHidden: true });
+  await revealControl(button);
+  return button;
+}
 async function geometry(page: Page) {
   const panel = page.locator('.notification-panel');
   expect(await panel.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBeTruthy();
-  for (const button of await panel.locator('button:visible').all()) {
+  for (const button of await page.locator('.notification-panel button:visible, [data-subheader] button:visible, [data-subheader] summary:visible').all()) {
     const box = (await button.boundingBox())!;
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(box.x).toBeGreaterThanOrEqual(2);
@@ -61,13 +78,13 @@ test('both entry points render the same authorized rows, UTC time and reachable 
     expect(iso).toMatch(/T\d{2}:\d{2}:\d{2}(Z|\+00:00)$/);
     expect(Number.isFinite(Date.parse(iso!))).toBeTruthy();
     await capture(page, info, `${name}-populated`);
-    await page.getByRole('link', { name: 'Unread', exact: true }).click();
+    await clickHistory(page, 'Unread');
     await expect(rows.locator(`form[action="/notifications/${old_id}/read"]`)).toBeVisible();
     await capture(page, info, `${name}-unread-only`);
-    await page.getByRole('link', { name: 'All', exact: true }).click();
-    await page.getByRole('link', { name: 'Next', exact: true }).click();
+    await clickHistory(page, 'All');
+    await clickHistory(page, 'Next');
     await expect(rows.locator(`form[action="/notifications/${old_id}/read"]`)).toBeVisible();
-    await page.getByRole('link', { name: 'Latest', exact: true }).click();
+    await clickHistory(page, 'Latest');
     await expect(page.locator('.notification-panel')).toBeVisible();
   }
 });
@@ -107,7 +124,7 @@ test('long content wraps across desktop, phone, stress and 200 percent layouts i
       await zoomPage.goto(new URL(url, page.url()).href);
       await geometry(zoomPage);
       await capture(zoomPage, info, `${name}-${theme}-zoom200`);
-      const a11y = await new AxeBuilder({ page: zoomPage }).include('.notification-panel').withRules(['link-in-text-block', 'button-name', 'link-name', 'color-contrast']).analyze();
+      const a11y = await new AxeBuilder({ page: zoomPage }).include('.notification-panel').include('[data-subheader]').withRules(['link-in-text-block', 'button-name', 'link-name', 'color-contrast']).analyze();
       expect(a11y.violations).toEqual([]);
     }
     await zoom.close();
@@ -127,8 +144,8 @@ test('inaccessible and empty states remain consistent at both entry points', asy
   for (const [name, url] of surfaces) {
     await page.goto(url);
     await expect(page.getByText('No notifications yet.', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Mark all read', exact: true })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Clear all', exact: true })).toBeDisabled();
+    await expect(await bulkButton(page, 'Mark all read')).toBeDisabled();
+    await expect(await bulkButton(page, 'Clear all')).toBeDisabled();
     await capture(page, info, `${name}-empty`);
   }
 });
@@ -140,21 +157,21 @@ test.describe('progressive enhancement', () => {
       const { old_id } = fixture('inspect');
       await login(page);
       await page.goto(url);
-      await page.getByRole('link', { name: 'Unread', exact: true }).click();
+      await clickHistory(page, 'Unread');
       await page.locator(`form[action="/notifications/${old_id}/read"] button`).click();
       await expect(page).toHaveURL(/\/u\/notifications-reader$/);
       await page.goto(url);
       await page.getByRole('button', { name: /Your appeal has been resolved/ }).click();
       await expect(page).toHaveURL(/\/appeals$/);
       await page.goto(url);
-      await page.getByRole('button', { name: 'Mark all read', exact: true }).click();
+      await (await bulkButton(page, 'Mark all read')).click();
       expect(new URL(page.url()).pathname).toBe(new URL(url, 'http://localhost').pathname);
-      await expect(page.getByRole('button', { name: 'Mark all read', exact: true })).toBeDisabled();
+      await expect(await bulkButton(page, 'Mark all read')).toBeDisabled();
       expect(fixture('inspect').unread).toBe(0);
-      await page.getByRole('link', { name: 'Unread', exact: true }).click();
+      await clickHistory(page, 'Unread');
       await expect(page.getByText('All caught up. No unread notifications.')).toBeVisible();
-      await page.getByRole('link', { name: 'All', exact: true }).click();
-      await page.getByRole('button', { name: 'Clear all', exact: true }).click();
+      await clickHistory(page, 'All');
+      await (await bulkButton(page, 'Clear all')).click();
       await expect(page.getByText('No notifications yet.', { exact: true })).toBeVisible();
       await capture(page, info, `${name}-nojs-cleared`);
     });

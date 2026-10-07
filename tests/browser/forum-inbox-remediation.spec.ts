@@ -108,20 +108,22 @@ test('the unread count is a sentence, not a shout', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto('/inbox?scope=for_you&order=active');
-  const pill = page.locator('.inbox-list-head .badge');
+  const pill = page.locator('[data-subheader] [data-inbox-unread-count]');
   await expect(pill).toBeVisible();
   await expect(pill).toHaveCSS('text-transform', 'none');
   await expect(pill).toHaveText(/^\d+ unread$/);
 });
 
-/** The design rules the Viewing bar along its bottom edge only. */
-test('the viewing bar carries one rule, beneath it', async ({ page }) => {
+/** One hairline separates the consolidated context row from its topics. */
+test('the shared Inbox context carries one rule, beneath it', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto('/inbox?scope=for_you&order=active');
-  const bar = page.locator('.inbox-view-bar');
-  await expect(bar).toHaveCSS('border-top-width', '0px');
-  await expect(bar).toHaveCSS('border-bottom-width', '1px');
+  const row = page.locator('[data-subheader]');
+  await expect(row).toHaveCSS('border-top-width', '0px');
+  await expect(row).toHaveCSS('border-bottom-width', '1px');
+  await expect(row.locator('.inbox-view-bar')).toHaveCSS('border-bottom-width', '0px');
+  await expect(page.locator('[data-inbox] .inbox-view-bar')).toHaveCount(0);
 
   // Both independent choices have explicit visible labels; preferences live in Settings.
   await expect(page.locator('[data-inbox-scope-menu] > summary')).toContainText('Show:');

@@ -1,0 +1,31 @@
+{
+  "url": "https://obituaries-lucky-accordance-king.trycloudflare.com",
+  "asset_version": "049200d35635595d",
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ok",
+      "database": "ok"
+    }
+  },
+  "assets": {
+    "app.css": {
+      "url": "/assets/dist/app-style-CcZ7cXWF.css",
+      "status": 200,
+      "sha256": "3e934bde0b2f264c078f94eaab3a24f9d4b9c04b3e5c9dfba9b444694bcdda0c",
+      "matches_local": true
+    },
+    "app.js": {
+      "url": "/assets/dist/app-ae3b0de6dc889815.js",
+      "status": 200,
+      "sha256": "ae3b0de6dc889815cdb38404736d924f500850cf61c54b8e05276d4df2662f27",
+      "matches_local": true
+    },
+    "imladris.css": {
+      "url": "/assets/dist/imladris-style-DeGci5u_.css",
+      "status": 200,
+      "sha256": "669048ba1a45bf8ec73ff4e476d48f65eaad84a8d389424518558003200ed2a8",
+      "matches_local": true
+    }
+  }
+}

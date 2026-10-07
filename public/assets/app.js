@@ -1072,6 +1072,14 @@
         if (!event.target.closest || !event.target.closest(inboxMenuSelector)) { closeInboxMenus(false); }
     });
     document.addEventListener('keydown', function (event) {
+        // Native toggle is asynchronous. A quick Enter then Tab must see the
+        // revealed panel before the browser chooses its next focus target.
+        if (event.key === 'Tab' && event.target.closest) {
+            var focusedMenu = event.target.closest(openInboxMenuSelector);
+            if (focusedMenu && !focusedMenu.hasAttribute('data-inbox-menu-positioned')) {
+                positionInboxMenu(focusedMenu);
+            }
+        }
         if (event.key !== 'Escape' || !document.querySelector(openInboxMenuSelector)) { return; }
         event.preventDefault();
         closeInboxMenus(true);
@@ -1177,12 +1185,12 @@
                 });
             }
             if (queueUnread && inbox.getAttribute('data-inbox-scope') === 'unread') {
-                var scopeCount = inbox.querySelector('[data-inbox-current-count]');
+                var scopeCount = document.querySelector('[data-subheader] [data-inbox-current-count]');
                 var remaining = scopeCount ? parseInt(scopeCount.textContent || '', 10) : NaN;
                 if (!isNaN(remaining)) {
                     remaining = Math.max(0, remaining - 1);
                     scopeCount.textContent = String(remaining);
-                    var countLabel = inbox.querySelector('[data-inbox-count-label]');
+                    var countLabel = document.querySelector('[data-subheader] [data-inbox-count-label]');
                     if (countLabel) { countLabel.textContent = remaining === 1 ? 'topic' : 'topics'; }
                 }
                 row.remove();

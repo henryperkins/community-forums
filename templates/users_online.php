@@ -50,8 +50,8 @@ $queryFor = static function (array $over) use ($filter, $search): string {
 <div class="read-main users-online" data-users-online>
     <div class="users-online-column">
         <header class="users-online-hero">
-            <p class="eyebrow">Presence</p>
-            <h1>Who is at the council</h1>
+            <?php if ($current_user === null): ?><p class="eyebrow">Presence</p><?php endif; ?>
+            <?= $this->partial('partials/page_heading', ['heading' => 'Who is at the council']) ?>
             <p class="users-online-lede">Members who chose to show their presence and have been here recently. A leaf means here now; amber means stepped away.</p>
         </header>
 
