@@ -50,11 +50,13 @@ $watchLabel = ($notifications_on ?? false) && $current_user !== null
 // brief's own overlay or the deterministic fallback — the design has a single
 // `Related` rail and no cards inside the brief (ThreadView.dc.html:659).
 $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($related_fallback ?? []);
+$this->start('subheader_leading');
 ?>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
+<?php $this->stop(); ?>
 <article class="thread thread-conversation thread-study" data-thread-study>
     <div class="thread-scroll">
     <header class="thread-head thread-study-head">
-        <nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
         <?php /* Standing chips sit above the title, never inside it: an <h1> holding
                  three conditional chips announces itself as "Pinned Locked Solved Where
                  should ratified decisions live…" to anything that reads the page aloud.

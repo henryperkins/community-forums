@@ -995,6 +995,92 @@
         });
     }
 
+    var subheader = document.querySelector('[data-subheader]');
+    if (subheader && window.ResizeObserver) {
+        var measureSubheader = function () {
+            subheader.parentElement.style.setProperty('--subheader-h', subheader.getBoundingClientRect().height + 'px');
+        };
+        measureSubheader();
+        new ResizeObserver(measureSubheader).observe(subheader);
+    }
+
+    // Shared native disclosures: the inbox and subheader use one dismissal
+    // and viewport-positioning path. Their links remain the no-JS baseline.
+    var inboxMenuSelector = '[data-inbox-menu], [data-inbox-row-menu], [data-create-menu]';
+    var openInboxMenuSelector = '[data-inbox-menu][open], [data-inbox-row-menu][open], [data-create-menu][open]';
+    var clearInboxMenuPosition = function (menu) {
+        var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel, .create-menu-panel');
+        menu.removeAttribute('data-inbox-menu-positioned');
+        if (!panel) { return; }
+        panel.style.removeProperty('left');
+        panel.style.removeProperty('top');
+    };
+    var positionInboxMenu = function (menu) {
+        if (!menu) { return; }
+        var trigger = menu.querySelector(':scope > summary');
+        var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel, .create-menu-panel');
+        if (!menu || !menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
+        var margin = 8;
+        var gap = menu.matches('[data-inbox-scope-menu]') ? 7 : 4;
+        var triggerRect = trigger.getBoundingClientRect();
+        var panelRect = panel.getBoundingClientRect();
+        var alignEnd = menu.matches('[data-inbox-row-menu], [data-inbox-menu-align="end"]');
+        var left = alignEnd ? triggerRect.right - panelRect.width : triggerRect.left;
+        var top = triggerRect.bottom + gap;
+        left = Math.max(margin, Math.min(left, window.innerWidth - panelRect.width - margin));
+        if (top + panelRect.height > window.innerHeight - margin) {
+            top = triggerRect.top - panelRect.height - gap;
+        }
+        top = Math.max(margin, Math.min(top, window.innerHeight - panelRect.height - margin));
+        panel.style.left = Math.round(left) + 'px';
+        panel.style.top = Math.round(top) + 'px';
+        menu.setAttribute('data-inbox-menu-positioned', '1');
+    };
+    var closeInboxMenus = function (restoreFocus) {
+        Array.prototype.forEach.call(document.querySelectorAll(openInboxMenuSelector), function (menu) {
+            menu.removeAttribute('open');
+            clearInboxMenuPosition(menu);
+            if (restoreFocus) {
+                var summary = menu.querySelector(':scope > summary');
+                if (summary) { summary.focus(); }
+            }
+        });
+    };
+
+    document.addEventListener('toggle', function (event) {
+        var menu = event.target;
+        if (!menu.matches) { return; }
+        if (menu.matches('.inbox-help')) {
+            positionInboxMenu(menu.closest('[data-inbox-menu]'));
+            return;
+        }
+        if (!menu.matches(inboxMenuSelector)) { return; }
+        if (!menu.open) { clearInboxMenuPosition(menu); return; }
+        Array.prototype.forEach.call(document.querySelectorAll(openInboxMenuSelector), function (other) {
+            if (other !== menu) {
+                other.removeAttribute('open');
+                clearInboxMenuPosition(other);
+            }
+        });
+        positionInboxMenu(menu);
+    }, true);
+    window.addEventListener('resize', function () {
+        var openMenu = document.querySelector(openInboxMenuSelector);
+        if (openMenu) { positionInboxMenu(openMenu); }
+    });
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest || !event.target.closest(inboxMenuSelector)) { closeInboxMenus(false); }
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape' || !document.querySelector(openInboxMenuSelector)) { return; }
+        event.preventDefault();
+        closeInboxMenus(true);
+    });
+    document.addEventListener('scroll', function (event) {
+        if (event.target.closest && event.target.closest(inboxMenuSelector)) { return; }
+        closeInboxMenus(false);
+    }, { capture: true, passive: true });
+
     // Community Inbox — the bounded preview endpoint decorates canonical topic
     // links. Selection, cursor movement and actions all resolve back to native
     // forms/links, so the queue remains fully usable without this block.
@@ -1023,70 +1109,6 @@
         var allRows = function () { return inboxList.querySelectorAll('[data-inbox-row]'); };
         var linkIn = function (row) { return row ? row.querySelector('[data-inbox-preview-url]') : null; };
         var rowForId = function (id) { return /^\d+$/.test(String(id || '')) ? inboxList.querySelector('[data-thread-id="' + id + '"]') : null; };
-        var inboxMenuSelector = '[data-inbox-menu], [data-inbox-row-menu]';
-        var openInboxMenuSelector = '[data-inbox-menu][open], [data-inbox-row-menu][open]';
-        var clearInboxMenuPosition = function (menu) {
-            var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel');
-            menu.removeAttribute('data-inbox-menu-positioned');
-            if (!panel) { return; }
-            panel.style.removeProperty('left');
-            panel.style.removeProperty('top');
-        };
-        var positionInboxMenu = function (menu) {
-            var trigger = menu.querySelector(':scope > summary');
-            var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel');
-            if (!menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
-            var margin = 8;
-            var gap = menu.matches('[data-inbox-scope-menu]') ? 7 : 4;
-            var triggerRect = trigger.getBoundingClientRect();
-            var panelRect = panel.getBoundingClientRect();
-            var alignEnd = menu.matches('[data-inbox-row-menu], [data-inbox-menu-align="end"]');
-            var left = alignEnd ? triggerRect.right - panelRect.width : triggerRect.left;
-            var top = triggerRect.bottom + gap;
-            left = Math.max(margin, Math.min(left, window.innerWidth - panelRect.width - margin));
-            if (top + panelRect.height > window.innerHeight - margin) {
-                top = triggerRect.top - panelRect.height - gap;
-            }
-            top = Math.max(margin, Math.min(top, window.innerHeight - panelRect.height - margin));
-            panel.style.left = Math.round(left) + 'px';
-            panel.style.top = Math.round(top) + 'px';
-            menu.setAttribute('data-inbox-menu-positioned', '1');
-        };
-        var closeInboxMenus = function (restoreFocus) {
-            Array.prototype.forEach.call(inbox.querySelectorAll(openInboxMenuSelector), function (menu) {
-                menu.removeAttribute('open');
-                clearInboxMenuPosition(menu);
-                if (restoreFocus) {
-                    var summary = menu.querySelector(':scope > summary');
-                    if (summary) { summary.focus(); }
-                }
-            });
-        };
-
-        inbox.addEventListener('toggle', function (event) {
-            var menu = event.target;
-            if (!menu.matches) { return; }
-            if (menu.matches('.inbox-help')) {
-                positionInboxMenu(menu.closest('[data-inbox-menu]'));
-                return;
-            }
-            if (!menu.matches(inboxMenuSelector)) { return; }
-            if (!menu.open) { clearInboxMenuPosition(menu); return; }
-            Array.prototype.forEach.call(inbox.querySelectorAll(openInboxMenuSelector), function (other) {
-                if (other !== menu) {
-                    other.removeAttribute('open');
-                    clearInboxMenuPosition(other);
-                }
-            });
-            positionInboxMenu(menu);
-        }, true);
-        window.addEventListener('resize', function () {
-            var openMenu = inbox.querySelector(openInboxMenuSelector);
-            if (openMenu) { positionInboxMenu(openMenu); }
-        });
-        document.addEventListener('click', function (event) {
-            if (!event.target.closest || !event.target.closest(inboxMenuSelector)) { closeInboxMenus(false); }
-        });
         var markActive = function (link) {
             Array.prototype.forEach.call(allRows(), function (row) {
                 row.classList.toggle('is-active', !!link && linkIn(row) === link);
@@ -1232,11 +1254,6 @@
             catch (error) { /* History can be unavailable in privacy modes. */ }
 
             document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && inbox.querySelector(openInboxMenuSelector)) {
-                    event.preventDefault();
-                    closeInboxMenus(true);
-                    return;
-                }
                 if (event.ctrlKey || event.metaKey || event.altKey || editableTarget(event.target)) { return; }
                 // Nothing fires from inside an open menu or dialog — the account
                 // menu included — where e or s would mark or star a topic out of sight.
@@ -1273,10 +1290,6 @@
                 }
             });
 
-            document.addEventListener('scroll', function (event) {
-                if (event.target.closest && event.target.closest(inboxMenuSelector)) { return; }
-                closeInboxMenus(false);
-            }, { capture: true, passive: true });
             inboxList.addEventListener('click', function (event) {
                 var link = event.target.closest ? event.target.closest('[data-inbox-preview-url]') : null;
                 if (!link || !inboxList.contains(link)) { return; }
@@ -1831,12 +1844,22 @@
         // form already in view does not move).
         var dmDock = dmShell.querySelector('.dm-composer');
         if (dmDock) {
-            dmDock.addEventListener('focusin', function () {
+            var revealDmDock = function () {
                 window.requestAnimationFrame(function () {
                     var box = dmDock.getBoundingClientRect();
                     if (box.bottom > window.innerHeight || box.top < 0) { dmDock.scrollIntoView({ block: 'nearest' }); }
                 });
-            });
+            };
+            dmDock.addEventListener('focusin', revealDmDock);
+            // The shared row can make the readable-floor room grow even with
+            // the dock folded. Keep Send in view on that initial latest-letter
+            // visit, using the same document-scroll path as focus expansion.
+            // A fragment, parked reader or previous page scroll keeps its place.
+            var revealInitialDmDock = function () {
+                if (dmShell.dataset.dmLatest === '1' && !location.hash && window.scrollY === 0 && followingDmEnd()) { revealDmDock(); }
+            };
+            if (document.fonts) { document.fonts.ready.then(revealInitialDmDock); }
+            else { revealInitialDmDock(); }
         }
         if (dmShell.dataset.dmLatest === '1') {
             shortPoll('/messages/' + dmShell.dataset.dmConversation + '/poll', 20000, function (data) {
@@ -1930,6 +1953,12 @@
         function close() {
             list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant');
         }
+        function dismiss() {
+            sequence++;
+            clearTimeout(timer); timer = null;
+            if (request) { request.abort(); request = null; }
+            close();
+        }
         function renderChips() {
             chips.replaceChildren();
             selected.forEach(function (person, index) {
@@ -1953,7 +1982,7 @@
         function choose(index) {
             var item = matches[index]; if (!item) { return; }
             add(item.token, item.meta || item.label.replace(/^@/, ''));
-            input.value = ''; sequence++; close(); renderChips(); sync(); input.focus();
+            input.value = ''; dismiss(); renderChips(); sync(); input.focus();
         }
         function highlight(index) {
             active = index;
@@ -1963,11 +1992,11 @@
             if (list.children[active]) { input.setAttribute('aria-activedescendant', list.children[active].id); }
         }
         input.addEventListener('input', function () {
-            sync(); sequence++; var version = sequence;
-            clearTimeout(timer); if (request) { request.abort(); }
-            var query = input.value.trim().replace(/^@/, ''); close();
+            sync(); dismiss(); var version = sequence;
+            var query = input.value.trim().replace(/^@/, '');
             if (!query || (!allowGroups && selected.length)) { return; }
             timer = setTimeout(function () {
+                timer = null;
                 request = new AbortController();
                 fetch('/composer/suggest?' + new URLSearchParams({ trigger: '@', q: query, context: 'dm-recipient' }), { credentials: 'same-origin', signal: request.signal })
                     .then(function (r) { if (!r.ok) { throw new Error('suggestions unavailable'); } return r.json(); })
@@ -1984,6 +2013,9 @@
                             identity.append(name, handle);
                             if (picker.dataset.dmAvatars !== '0') { row.appendChild(mono); }
                             row.appendChild(identity);
+                            // Keep To focused through mousedown, including a
+                            // tap's compatibility events. Cancelling pointerdown
+                            // suppresses WebKit's click before it can commit.
                             row.addEventListener('mousedown', function (e) { e.preventDefault(); });
                             row.addEventListener('click', function () { choose(index); });
                             list.appendChild(row);
@@ -1997,28 +2029,27 @@
             }, 200);
         });
         input.addEventListener('focus', function () { field.classList.add('is-focus'); });
-        input.addEventListener('blur', function () { field.classList.remove('is-focus'); });
+        input.addEventListener('blur', function () { field.classList.remove('is-focus'); dismiss(); });
         input.addEventListener('keydown', function (e) {
             if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !list.hidden) {
                 e.preventDefault(); highlight((active + (e.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length);
             } else if (e.key === 'Escape') {
                 // An open list owns Escape; with it closed, Escape reaches the compose dialog.
                 if (!list.hidden) { e.stopPropagation(); }
-                sequence++; close();
+                dismiss();
             }
             else if (e.key === 'Enter' || e.key === ',') {
                 e.preventDefault();
                 if (!list.hidden && active >= 0) { choose(active); }
                 else {
                     // A delayed prefix match must not reopen a committed field.
-                    sequence++; clearTimeout(timer);
-                    if (request) { request.abort(); }
+                    dismiss();
                     input.value.split(/[\s,]+/).forEach(function (name) { add(name); });
-                    input.value = ''; renderChips(); sync(); close();
+                    input.value = ''; renderChips(); sync();
                 }
             } else if (e.key === 'Backspace' && input.value === '' && selected.length) { selected.pop(); renderChips(); sync(); }
         });
-        document.addEventListener('click', function (e) { if (!picker.contains(e.target)) { sequence++; close(); } });
+        document.addEventListener('click', function (e) { if (!picker.contains(e.target)) { dismiss(); } });
         form.addEventListener('submit', sync, true);
     });
 
@@ -2148,7 +2179,7 @@
         });
         window.addEventListener('hashchange', function () { setRail(location.hash === '#dm-rail', false, false); });
         document.addEventListener('keydown', function (e) {
-            if (!railIsOpen() || document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
+            if (!railIsOpen() || document.querySelector('.dm-compose-panel:not([hidden]), details.dm-menu[open], details.dm-report[open]')) { return; }
             if (e.key === 'Escape') { setRail(false, true, true); }
             if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { wrapOverlayTab(e, dmRail, false); }
         });
@@ -2191,7 +2222,7 @@
         document.addEventListener('keydown', function (e) {
             if (e.key !== 'Escape') { return; }
             // The compose dialog sits above the menus — let its handler take this one.
-            if (document.querySelector('details.dm-compose-details[open]')) { return; }
+            if (document.querySelector('.dm-compose-panel:not([hidden])')) { return; }
             dmMenus = document.querySelectorAll('details.dm-menu, details.dm-report');
             for (var ei = 0; ei < dmMenus.length; ei++) {
                 if (dmMenus[ei].open) {
@@ -2213,49 +2244,46 @@
         for (var ni = 0; ni < nested.length; ni++) { nested[ni].open = false; }
     }, true);
 
-    // Messages compose dialog (Phase 3): the list pane's round "+" is a native
-    // <details>; CSS under .has-js lifts the open dialog into a centred modal.
-    // Mirrors the new-topic composer-details enhancement: Esc, backdrop click
-    // (the open details' ::before hit-tests to the details itself), the Close/
-    // Cancel buttons, and focusing the To field on open. Without JS the same
-    // markup opens as a panel under the list header and the form posts normally.
-    var dmCompose = document.querySelector('details.dm-compose-details');
+    // The shared New message link decorates its canonical destination only
+    // while this page has a compose panel. Server validation can also reveal
+    // the panel, preserving origin=dialog drafts without JavaScript.
+    var dmCompose = document.querySelector('[data-dm-compose]');
     if (dmCompose) {
-        // Only the enhanced presentation is a dialog; the no-JS disclosure
-        // panel keeps plain details semantics, so the role is stamped here.
         var dmDialogEl = dmCompose.querySelector('.dm-dialog');
+        var dmComposeTrigger = document.querySelector('[data-create-trigger]');
         if (dmDialogEl) { dmDialogEl.setAttribute('role', 'dialog'); }
-        // aria-modal holds only while the dialog is open, which is exactly
-        // when the keydown handler below keeps Tab inside it.
         var markComposeModal = function () {
             if (!dmDialogEl) { return; }
-            if (dmCompose.open) { dmDialogEl.setAttribute('aria-modal', 'true'); }
+            if (!dmCompose.hidden) { dmDialogEl.setAttribute('aria-modal', 'true'); }
             else { dmDialogEl.removeAttribute('aria-modal'); }
         };
         markComposeModal();
-        var dmComposeSummary = dmCompose.querySelector('summary');
-        var closeCompose = function () {
-            if (!dmCompose.open) { return; }
-            dmCompose.open = false;
+        var closeCompose = function (event) {
+            if (event) { event.preventDefault(); }
+            if (dmCompose.hidden) { return; }
+            dmCompose.hidden = true;
             markComposeModal();
-            if (dmComposeSummary) { dmComposeSummary.focus(); }
+            if (dmComposeTrigger) { dmComposeTrigger.focus(); }
         };
-        dmCompose.addEventListener('toggle', function () {
+        document.addEventListener('click', function (event) {
+            var link = event.target.closest ? event.target.closest('[data-new-message]') : null;
+            if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) { return; }
+            event.preventDefault();
+            closeInboxMenus(false);
+            dmCompose.hidden = false;
             markComposeModal();
-            if (dmCompose.open) {
-                var toField = dmCompose.querySelector('.dm-to-input') || dmCompose.querySelector('input[name="to"]');
-                if (toField) { toField.focus(); }
-            }
+            var toField = dmCompose.querySelector('.dm-to-input') || dmCompose.querySelector('input[name="to"]');
+            if (toField) { toField.focus(); }
         });
-        dmCompose.addEventListener('click', function (e) {
-            if (e.target === dmCompose) { closeCompose(); }
+        dmCompose.addEventListener('click', function (event) {
+            if (event.target === dmCompose) { closeCompose(); }
         });
-        document.addEventListener('keydown', function (e) {
-            if (!dmCompose.open) { return; }
-            if (e.key === 'Tab' && dmDialogEl) { wrapOverlayTab(e, dmDialogEl, true); return; }
-            if (e.key !== 'Escape') { return; }
-            // Escape peels overlays outermost-first, as on the new-topic modal:
-            // an open composer popover owns this keypress, not the dialog.
+        document.addEventListener('keydown', function (event) {
+            if (dmCompose.hidden) { return; }
+            if (event.key === 'Tab' && dmDialogEl) { wrapOverlayTab(event, dmDialogEl, true); return; }
+            if (event.key !== 'Escape') { return; }
+            // The focused recipient picker consumes its own first Escape.
+            // Composer popovers retain their nested dismissal path.
             if (dmDialogEl && dmDialogEl.querySelector('.composer-slash-menu:not([hidden]), .composer-reference-menu:not([hidden]), [role="dialog"]:not([hidden])')) { return; }
             closeCompose();
         });

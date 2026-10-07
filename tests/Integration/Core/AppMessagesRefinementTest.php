@@ -201,7 +201,7 @@ final class AppMessagesRefinementTest extends TestCase
             $response = $this->post('/messages', ['to' => $to, 'body' => 'Keep this draft', 'origin' => 'dialog']);
             self::assertSame(422, $response->status());
             self::assertStringContainsString('Keep this draft', $response->body());
-            self::assertMatchesRegularExpression('/<details[^>]+class="dm-compose-details"[^>]*open/', $response->body());
+            self::assertMatchesRegularExpression('/<div[^>]+class="dm-compose-panel"[^>]*data-dm-compose(?![^>]*hidden)/', $response->body());
         }
         $this->db->run("UPDATE users SET allow_dms = 'none' WHERE id = ?", [$bob['id']]);
         $response = $this->post('/messages', ['to' => 'bob', 'body' => 'Keep the standalone draft']);

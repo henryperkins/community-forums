@@ -7475,11 +7475,11 @@ textarea.textarea-engraved {
    composer, empty states, the New message page, the recipient picker, and last
    the responsive and input-mode rules that override them. Committed reference:
    .impeccable/mocks/messages/. */
-.dm-shell {
+.dm-shell, .dm-compose-panel {
     /* Private-counsel "Bruinen" register — a cool river tint layered over the
-       warm parchment/gold, scoped to the DM room only (the global topbar + nav
-       rail stay warm, so the temperature shift IS the "you're in the private
-       room" cue). River = the private surface + every status signal; gold stays
+       warm parchment/gold, scoped to the DM room and compose panel (the global
+       topbar + nav rail stay warm, so the temperature shift IS the "you're in
+       the private room" cue). River = the private surface + every status signal; gold stays
        "my voice"/esteem; green stays actions. */
     --dm-ground: color-mix(in srgb, var(--info) 11%, var(--surface-page));
     --dm-raised: color-mix(in srgb, var(--info) 6%, var(--surface-raised));
@@ -7499,6 +7499,8 @@ textarea.textarea-engraved {
        on green-500), so it is named once here, in the token layer. */
     --dm-on-brand: var(--parchment-50);
     --dm-list-inset: var(--space-4);
+}
+.dm-shell {
     width: 100%;
     max-width: var(--maxw);
     margin: -24px auto -64px;
@@ -7541,7 +7543,7 @@ textarea.textarea-engraved {
 .dm-listpane-head {
     padding: var(--space-4) var(--dm-list-inset) var(--space-3);
     border-bottom: 1px solid var(--border-hair);
-    position: relative;   /* anchors the no-JS compose panel */
+    position: relative;   /* anchors a server-revealed compose error panel */
 }
 .dm-listpane-top {
     display: flex;
@@ -7581,41 +7583,6 @@ textarea.textarea-engraved {
 .dm-filter-n { margin-left: 6px; font-family: var(--font-mono); font-size: .69rem; color: var(--dm-accent-ink); }
 .dm-filter-n:empty { display: none; }
 .dm-listpane-filters .pill.is-active .dm-filter-n { color: inherit; }
-/* Round "new message" action — quiet gold, the one invitation in the header. */
-.dm-new-btn {
-    flex: 0 0 auto;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-raised);
-    border: 1px solid var(--border-hair);
-    color: var(--brand);
-    box-shadow: var(--shadow-xs);
-    transition: background 140ms var(--ease-calm), border-color 140ms var(--ease-calm), transform 140ms var(--ease-calm);
-}
-.dm-new-btn:hover {
-    background: var(--brand-subtle);
-    border-color: var(--dm-brand-line);
-    transform: translateY(-1px);
-    text-decoration: none;
-}
-.dm-new-btn .icon {
-    width: 17px;
-    height: 17px;
-}
-summary.dm-new-btn { list-style: none; cursor: pointer; }
-summary.dm-new-btn::-webkit-details-marker { display: none; }
-/* Twilight: the one control that failed 3:1. */
-[data-theme="dark"] .dm-shell .dm-new-btn { color: var(--accent); border-color: var(--border-strong); }
-/* The same for the default `system` theme on a dark OS (members default to it). */
-@media (prefers-color-scheme: dark) {
-    [data-theme="system"] .dm-shell .dm-new-btn { color: var(--accent); border-color: var(--border-strong); }
-}
-
-/* — List search: one quiet pill under the title; a real GET form. — */
 .dm-search {
     position: relative;
     display: flex;
@@ -7655,15 +7622,17 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 }
 .dm-list > li.is-filtered { display: none; }
 
-/* — Compose dialog: the round "+" is a native <details>. With no JS it opens
-   as a panel anchored under the list header (pure CSS on [open]); with JS the
-   same markup lifts into a centred modal (scrim via ::before, matching the
-   new-topic composer-details pattern). — */
-.dm-compose-details > .dm-dialog {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    top: calc(100% + 8px);
+/* — Compose panel: shared creation opens the canonical new-message page.
+   JS reveals this dialog in place; origin=dialog errors reveal the same form
+   on the server. No summary-less <details> or implicit browser control. — */
+.dm-compose-panel {
+    position: fixed;
+    left: 50%;
+    top: calc(var(--topbar-h) + var(--subheader-h) + var(--space-2));
+    transform: translateX(-50%);
+    width: min(540px, calc(100vw - 32px));
+    max-height: calc(100dvh - var(--topbar-h) - var(--subheader-h) - var(--space-4));
+    overflow-y: auto;
     z-index: 46;
     text-align: left;
 }
@@ -7702,11 +7671,6 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     cursor: pointer;
 }
 .dm-dialog-close:hover { background: var(--surface-sunken); color: var(--brand); }
-/* Close/Cancel are JS-wired; without JS the native <summary> is the one honest
-   toggle, so the inert controls stay out of the way (composer-cancel pattern). */
-.dm-compose-details [data-close-compose] { display: none; }
-.has-js .dm-compose-details .dm-dialog-close[data-close-compose] { display: inline-flex; }
-.has-js .dm-compose-details .btn[data-close-compose] { display: inline-block; }
 .dm-dialog-body {
     padding: 6px 22px 8px;
     display: flex;
@@ -7716,7 +7680,15 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 /* The message box sits inside the dialog's padded body, edge to edge with the fields. */
 .dm-dialog .composer-box { margin: 0 22px; }
 .dm-dialog .composer-meta-row { margin: 4px 22px 16px; }
-.has-js .dm-compose-details[open]::before {
+.has-js .dm-compose-panel:not([hidden]) {
+    inset: 0;
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    transform: none;
+    z-index: 80;
+}
+.has-js .dm-compose-panel:not([hidden])::before {
     content: "";
     position: fixed;
     inset: 0;
@@ -7724,7 +7696,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     background: var(--scrim);
     backdrop-filter: blur(2px);
 }
-.has-js .dm-compose-details[open] > .dm-dialog {
+.has-js .dm-compose-panel:not([hidden]) > .dm-dialog {
     position: fixed;
     z-index: 81;
     top: 10vh;
@@ -7741,7 +7713,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     to   { opacity: 1; transform: translate(-50%, 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .has-js .dm-compose-details[open] > .dm-dialog { animation: none; }
+    .has-js .dm-compose-panel:not([hidden]) > .dm-dialog { animation: none; }
 }
 .dm-list {
     list-style: none;
@@ -8593,8 +8565,8 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 @media (pointer: coarse) {
     .dm-back, .dm-iconbtn { width: 44px; height: 44px; }
     .dm-earlier, .dm-latest { min-height: 44px; }
-    .dm-new-btn, .dm-listpane-filters .pill, .dm-dotbtn { position: relative; }
-    .dm-new-btn::after, .dm-listpane-filters .pill::after, .dm-dotbtn::after {
+    .dm-listpane-filters .pill, .dm-dotbtn { position: relative; }
+    .dm-listpane-filters .pill::after, .dm-dotbtn::after {
         content: "";
         position: absolute;
         inset: min(0px, calc((100% - 44px) / 2));
@@ -16363,9 +16335,6 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 @media (max-width: 1279px) {
     .forum-bar-panel-form[data-panel-form="reading"] { display: none; }
 }
-/* New topic carries a glyph the design's button lacks: on a phone the label
-   goes and the glyph stays, because only a board page has a floating compose. */
-.forum-bar-compose .icon { display: none; }
 /* Colour and type. This file styles bare elements unlayered — `a { color:
    var(--accent) }`, the display rule on `h2` — and an unlayered declaration
    beats the layer's no matter its specificity, so the chrome's links went
@@ -16388,10 +16357,9 @@ h2.presence-title {
 .board-rail a:hover,
 a.presence-person:hover { text-decoration: none; }
 /* Focus — the ring every other member-surface control wears (bridge above).
-   The lockup, the drawer opener and New topic had only the bare outline. */
+   The lockup and the drawer opener had only the bare outline. */
 .forum-bar-brand:focus-visible,
 .forum-bar > .nav-toggle:focus-visible,
-.forum-bar-compose .btn:focus-visible,
 .forum-bar-surface:focus-visible,
 .forum-bar-search:focus-visible,
 .forum-bar-railtoggle:focus-visible,
@@ -16435,13 +16403,12 @@ a.presence-person:hover { text-decoration: none; }
     .forum-bar-searchwrap { flex: 0 0 44px; min-width: 44px; }
     .forum-bar-search { width: 44px; padding-inline: 0; justify-content: center; }
     /* With its label gone the glyph is the control, so it is drawn at the
-       compose glyph's size rather than as the field's 13px adornment. */
+       bell glyph's size rather than as the field's 13px adornment. */
     .forum-bar-search > svg { width: 16px; height: 16px; }
 }
 @media (max-width: 860px) {
     /* The phone bar. The design's phone steps (1080 / 900 / 720) assume a bar
-       with no hamburger, no compose and no account seat; ours carries all
-       three. Every control on the first row is a 44px target with 8px between
+       with no hamburger or account seat; ours carries both. Every control on the first row is a 44px target with 8px between
        targets. Spacing uses the bar's available width, including the space a
        classic scrollbar takes. The outer gutter eases to 4px, the gaps to 4px,
        and the counted bell's inner padding yields before any target does.
@@ -16459,7 +16426,6 @@ a.presence-person:hover { text-decoration: none; }
     .forum-bar-searchwrap { flex: 0 0 44px; min-width: 44px; }
     .forum-bar-search { width: 44px; height: 44px; padding: 0; justify-content: center; }
     .forum-bar-user { min-width: 44px; min-height: 44px; justify-content: center; }
-    .forum-bar-compose .btn { display: inline-flex; align-items: center; min-height: 44px; }
     /* The drawer replaces the persisted toggle on a phone, and the divider that
        sets the toggles apart from the actions goes with it. */
     .forum-bar-panel-form, .forum-bar-divider { display: none; }
@@ -16479,14 +16445,6 @@ a.presence-person:hover { text-decoration: none; }
     .forum-bar-signup, .forum-bar-signin { display: inline-flex; align-items: center; min-height: 44px; }
     .forum-bar-signup { padding-inline: 6px; }
     .forum-bar-signin { padding-block: 0; padding-inline: 12px; }
-}
-@media (max-width: 720px) {
-    /* The design drops New topic here; a board page has a floating compose, the
-       other surfaces do not, so the control stays as its glyph. */
-    .forum-bar-compose { display: inline-flex; }
-    .forum-bar-compose .btn { display: inline-flex; width: 44px; min-width: 44px; height: 44px; padding: 0; align-items: center; justify-content: center; }
-    .forum-bar-compose .icon { display: block; width: 16px; height: 16px; }
-    .forum-bar-compose .btn > span { display: none; }
 }
 /* At the drawer breakpoint, keep complete primary route labels on a second
    row instead of squeezing them behind the persistent controls (ADR 0042).
@@ -16525,7 +16483,6 @@ a.presence-person:hover { text-decoration: none; }
    single-row bar's controls keep the same 44px floor as the phone rows. */
 @media (min-width: 861px) and (pointer: coarse) {
     .forum-bar-brand, .forum-bar-surface { min-height: 44px; }
-    .forum-bar-compose .btn { display: inline-flex; align-items: center; min-height: 44px; }
     .forum-bar-search { height: 44px; }
     .forum-bar-railtoggle { width: 44px; height: 44px; }
     .forum-bar-user { min-width: 44px; min-height: 44px; justify-content: center; }
@@ -16534,6 +16491,126 @@ a.presence-person:hover { text-decoration: none; }
 }
 @media (prefers-reduced-motion: reduce) {
     .board-rail { transition: none; }
+}
+
+/* ══ Shared member subheader (ADR 0043) ════════════════════════════════ */
+.main, .container { --subheader-h: 0px; }
+.main:has(> .forum-subheader), .container:has(> .forum-subheader) {
+    --subheader-h: calc(44px + var(--space-2) * 2 + 1px);
+}
+.forum-subheader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: none;
+    min-width: 0;
+    min-height: calc(44px + var(--space-2) * 2 + 1px);
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-5);
+    border-bottom: 1px solid var(--border-hair);
+    background: var(--surface-page);
+}
+.main > .forum-subheader, .container > .forum-subheader { margin: -24px -24px 24px; }
+.forum-subheader-leading { flex: 1 1 auto; min-width: 0; }
+.forum-subheader .breadcrumb { margin: 0; font-size: var(--text-fine); overflow-wrap: anywhere; }
+.forum-subheader .breadcrumb a { color: var(--text-muted); }
+.forum-subheader .breadcrumb .hash { color: var(--gold-ink); }
+.forum-subheader .forum-directory__tabs { margin: 0; gap: var(--space-4); border: 0; }
+.forum-subheader .forum-directory__tabs a { display: inline-flex; align-items: center; min-height: 44px; padding-block: var(--space-2); }
+.create-menu { position: relative; flex: none; }
+.create-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 44px;
+    min-height: 44px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-strong);
+    font-family: var(--font-label);
+    font-size: var(--text-fine);
+    line-height: 1.2;
+    text-decoration: none;
+    list-style: none;
+    cursor: pointer;
+}
+.create-trigger::-webkit-details-marker { display: none; }
+.create-trigger > .icon { width: 16px; height: 16px; flex: none; }
+.create-trigger > .icon:last-child:not(:first-child) { width: 12px; height: 12px; }
+.create-trigger:hover { color: var(--text-strong); background: var(--surface-sunken); text-decoration: none; }
+.create-menu-panel {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + var(--space-1));
+    right: 0;
+    display: grid;
+    width: 200px;
+    max-width: calc(100vw - 32px);
+    padding: var(--space-2);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-lg);
+}
+.create-menu-panel > a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: var(--text-fine);
+    text-decoration: none;
+}
+.create-menu-panel > a:hover { background: var(--surface-sunken); text-decoration: none; }
+.create-menu-panel > a[aria-current="page"] { background: var(--surface-sunken); color: var(--text-strong); }
+.has-js .create-menu[open] > .create-menu-panel { position: fixed; top: 0; right: auto; left: 0; visibility: hidden; }
+.has-js .create-menu[data-inbox-menu-positioned="1"] > .create-menu-panel { visibility: visible; }
+.create-trigger:focus-visible,
+.create-menu-panel a:focus-visible,
+.forum-subheader .breadcrumb a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+/* Routes that already own their gutter keep this row inside the same column. */
+body:is([data-route="boards"], [data-route="search"], [data-route="compose"], [data-route="inbox"]) .main > .forum-subheader,
+.main:has(> .dm-shell) > .forum-subheader { margin: 0; }
+/* The row takes height from a room, not from the sticky header. Conversation
+   min-content growth on short/zoomed screens stays governed by the room. */
+.main:has(> .dm-shell) { padding: 0; }
+.main > .dm-shell { margin: 0; width: 100%; height: calc(100dvh - var(--topbar-h) - var(--subheader-h)); }
+.main > .dm-shell[data-dm-conversation] { height: auto; min-height: calc(100dvh - var(--topbar-h) - var(--subheader-h)); }
+.main > .inbox-shell { height: calc(100vh - var(--topbar-h) - var(--subheader-h)); height: calc(100dvh - var(--topbar-h) - var(--subheader-h)); }
+.inbox-reading.is-open { height: 100%; }
+.dm-compose-panel[hidden] { display: none; }
+@media (max-width: 860px) {
+    .forum-subheader { padding-inline: var(--space-4); }
+    .main > .forum-subheader { margin: -16px -14px 16px; }
+    /* Answer the actual 14px main gutter; the older -16px cancellation made
+       board/tag pages 4px wider than the phone's content column. */
+    .main > .read-main { margin-inline: -14px; }
+    body:is([data-route="boards"], [data-route="search"], [data-route="compose"], [data-route="inbox"]) .main > .forum-subheader,
+    .main:has(> .dm-shell) > .forum-subheader { margin-inline: 0; }
+    .create-trigger { width: 44px; height: 44px; padding: 0; }
+    .create-label, .create-trigger > .icon:last-child:not(:first-child) { display: none; }
+}
+@media (max-width: 860px) and (scripting: none) {
+    html:not(.has-js) .app-shell:has(> .main > :is(.dm-shell, .inbox-shell)) {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - var(--topbar-h));
+    }
+    html:not(.has-js) .app-shell:has(> .main > :is(.dm-shell, .inbox-shell)) > .board-rail { flex: 0 0 auto; }
+    html:not(.has-js) .main:has(> :is(.dm-shell, .inbox-shell)) { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    html:not(.has-js) .main > :is(.dm-shell, .inbox-shell) { height: auto; min-height: 0; flex: 1; }
+    html:not(.has-js) .main > .dm-shell[data-dm-conversation] { flex: 1 0 auto; }
 }
 
 /* ══ Presence: rail rows, the /users-online directory, dots ══════════════════

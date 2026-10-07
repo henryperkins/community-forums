@@ -990,3 +990,34 @@ The edits went in this order:
 The digest is refreshed in this change because the work lands on `main`, as in
 `34f13b00`. A branch would leave it to the merger (ADR 0024 obligation 4).
 `reconciled_through_commit` stays `6d81da59…`.
+
+## 2026-10-07 — production moves creation beneath ForumNav (ADR 0043)
+
+The owner moved New topic out of the production member header and combined
+topic/message creation in a shared content row. The mirrored
+`components/forum/ForumNav.jsx` still defaults `showCompose` to true and draws
+`.forum-bar-compose` in the bar. That component and the generated layer retain
+their existing compose markup/rules; production's `partials/topbar.php` no
+longer emits the class, and its application-only compose rules are removed.
+
+`partials/subheader.php` renders the new row inside the app/plain main landmark,
+ahead of flash messages. Board/topic breadcrumbs and Boards directory tabs
+move to its leading side once; signed-in members get a quiet trailing create
+control. It offers New topic and New message, showing "+ New" and a chevron
+above 860px and only a named 44px plus at smaller widths. With `dms` off it is a
+direct board-aware topic link. Guests get leading content only.
+
+The row uses the existing Imladris semantic tokens and focus treatment. The
+board slab, sticky echo, phone FAB and inline composer retain their existing
+actions. Header heights, `--topbar-h` and sticky scroll offsets remain intact.
+Messages and Inbox reserve the row's separate measured height (61px fallback)
+above their rooms, preserving docked controls and existing short-screen
+conversation growth. The create disclosure shares the existing Inbox menu
+enhancement, and New message decorates its native link with the Messages
+dialog only where that panel already exists.
+
+This is a documented production adaptation for a future ForumNav handoff. No
+mirror component or generated component rule is changed by this decision.
+See [ADR 0043](../../adr/0043-create-menu-subheader.md) for the superseded clauses
+and [the evidence record](../../evidence/create-menu-2026-10-07/README.md) for
+verification and its limits.

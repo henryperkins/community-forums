@@ -52,21 +52,23 @@ final class AppMemberShellTest extends TestCase
         self::assertStringNotContainsString('href="/search"', $this->topbar($this->get('/search')->body()));
     }
 
-    public function test_identity_menu_owns_secondary_routes_and_topbar_exposes_new_topic(): void
+    public function test_identity_menu_owns_secondary_routes_and_subheader_exposes_creation(): void
     {
         $user = $this->makeUser(['username' => 'shell_identity']);
         $this->actingAs($user);
 
-        $topbar = $this->topbar($this->get('/')->body());
+        $html = $this->get('/')->body();
+        $topbar = $this->topbar($html);
         self::assertStringContainsString('<details class="identity-menu"', $topbar);
         foreach (['/u/shell_identity', '/notifications', '/drafts', '/feed', '/leaderboard', '/settings/account'] as $route) {
             self::assertStringContainsString('href="' . $route . '"', $topbar);
         }
-        self::assertStringContainsString('href="/compose"', $topbar);
+        self::assertStringNotContainsString('href="/compose"', $topbar);
+        self::assertStringContainsString('href="/compose"', $this->subheader($html));
     }
 
     /**
-     * The header's New topic opens the composer on the board being read, not on
+     * The shared New topic opens the composer on the board being read, not on
      * the first board listed: a member who meant to post in Harbour watch was
      * handed whichever board sorted first. Plain error pages carry no board.
      */
@@ -80,17 +82,17 @@ final class AppMemberShellTest extends TestCase
         $thread = $this->makeThread($board, $user, 'A topic on the harbour');
         $this->actingAs($user);
 
-        self::assertStringContainsString('href="/compose"', $this->topbar($this->get('/')->body()));
+        self::assertStringContainsString('href="/compose"', $this->subheader($this->get('/')->body()));
         foreach (['/c/harbour-watch', '/t/' . $thread['thread_id'] . '-' . $thread['slug']] as $path) {
             $response = $this->get($path);
             $this->assertStatus(200, $response);
-            self::assertStringContainsString('href="/compose?board=harbour-watch"', $this->topbar($response->body()), $path);
+            self::assertStringContainsString('href="/compose?board=harbour-watch"', $this->subheader($response->body()), $path);
         }
 
         $denied = $this->get('/c/' . $private['slug']);
         $this->assertStatus(404, $denied);
-        self::assertStringContainsString('href="/compose"', $this->topbar($denied->body()));
-        self::assertStringNotContainsString('sealed-room', $this->topbar($denied->body()));
+        self::assertStringContainsString('href="/compose"', $this->subheader($denied->body()));
+        self::assertStringNotContainsString('sealed-room', $this->subheader($denied->body()));
 
         $compose = $this->get('/compose', ['board' => 'harbour-watch']);
         $this->assertStatus(200, $compose);
@@ -411,6 +413,15 @@ final class AppMemberShellTest extends TestCase
 
         self::assertSame([(int) $visible['id'] => 1], $counts);
         self::assertSame(1, $repo->unreadCount((int) $viewer['id'], false, $cutover));
+    }
+
+    private function subheader(string $html): string
+    {
+        $start = strpos($html, '<div class="forum-subheader"');
+        self::assertNotFalse($start);
+        $end = strpos($html, '</details>', $start);
+        self::assertNotFalse($end);
+        return substr($html, $start, $end - $start);
     }
 
     private function topbar(string $html): string

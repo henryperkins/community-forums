@@ -1,0 +1,92 @@
+
+Running 3 tests using 1 worker
+
+(node:798679) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [mobile] › create-menu-regressions.spec.ts:64:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary (5.9s)
+(node:798802) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [mobile] › create-menu-regressions.spec.ts:95:5 › leaving recipient suggestions restores Escape and cancels delayed reopening (6.0s)
+(node:798931) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  3 [mobile] › create-menu-regressions.spec.ts:164:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members (389ms)
+
+
+  1) [mobile] › create-menu-regressions.spec.ts:64:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary
+
+    Error: /messages/9 at 320px
+
+    expect(locator).toBeVisible() failed
+
+    Locator:  locator('.dm-dialog')
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+      - /messages/9 at 320px with timeout 5000ms
+      - waiting for locator('.dm-dialog')
+        14 × locator resolved to <div role="dialog" class="dm-dialog" aria-modal="true" aria-labelledby="dm-compose-title">…</div>
+           - unexpected value "hidden"
+
+
+      75 |         await expect(page).toHaveURL(new RegExp(`${route}$`));
+      76 |         const dialog = page.locator('.dm-dialog');
+    > 77 |         await expect(dialog, `${route} at ${width}px`).toBeVisible();
+         |                                                        ^
+      78 |         await expect(dialog).toHaveAttribute('aria-modal', 'true');
+      79 |         await expect(dialog.locator('.dm-to-input')).toBeFocused();
+      80 |         await page.keyboard.press('Shift+Tab');
+        at /home/ubuntu/community-forums/tests/browser/create-menu-regressions.spec.ts:77:56
+
+    Error Context: ../../../../../tmp/community-create-fix-red/.artifacts/create-menu-regressions-sh-3408a--through-the-900px-boundary-mobile/error-context.md
+
+  2) [mobile] › create-menu-regressions.spec.ts:95:5 › leaving recipient suggestions restores Escape and cancels delayed reopening
+
+    Error: expect(locator).toBeHidden() failed
+
+    Locator:  locator('.dm-dialog .dm-suggest')
+    Expected: hidden
+    Received: visible
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeHidden" with timeout 5000ms
+      - waiting for locator('.dm-dialog .dm-suggest')
+        14 × locator resolved to <ul role="listbox" class="dm-suggest" id="dm-to-dm-new-dialog-suggestions">…</ul>
+           - unexpected value "visible"
+
+
+      102 |   await expect(suggest).toBeVisible();
+      103 |   await page.keyboard.press('Tab');
+    > 104 |   await expect(suggest).toBeHidden();
+          |                         ^
+      105 |   await page.keyboard.press('Escape');
+      106 |   await expect(page.locator('.dm-dialog')).toBeHidden();
+      107 |   await expect(page.locator('[data-create-trigger]')).toBeFocused();
+        at /home/ubuntu/community-forums/tests/browser/create-menu-regressions.spec.ts:104:25
+
+    Error Context: ../../../../../tmp/community-create-fix-red/.artifacts/create-menu-regressions-le-0ae6f-d-cancels-delayed-reopening-mobile/error-context.md
+
+  3) [mobile] › create-menu-regressions.spec.ts:164:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 305
+    Received:    352
+
+      184 |             for (const child of bounds.children) {
+      185 |               expect(child.left).toBeGreaterThanOrEqual(bounds.leading.left - 1);
+    > 186 |               expect(child.right).toBeLessThanOrEqual(bounds.leading.right + 1);
+          |                                   ^
+      187 |               expect(child.scrollWidth).toBeLessThanOrEqual(child.width + 1);
+      188 |             }
+      189 |             // The board's separate heading has an existing long-token limit; isolate
+        at /home/ubuntu/community-forums/tests/browser/create-menu-regressions.spec.ts:186:35
+
+    Error Context: ../../../../../tmp/community-create-fix-red/.artifacts/create-menu-regressions-lo-99b9c--row-for-guests-and-members-mobile/error-context.md
+
+  3 failed
+    [mobile] › create-menu-regressions.spec.ts:64:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary
+    [mobile] › create-menu-regressions.spec.ts:95:5 › leaving recipient suggestions restores Escape and cancels delayed reopening
+    [mobile] › create-menu-regressions.spec.ts:164:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members

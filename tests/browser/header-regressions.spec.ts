@@ -54,7 +54,7 @@ async function headerGeometry(page: Page) {
       return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, width: r.width, height: r.height };
     };
     const controls = Array.from(header.querySelectorAll(
-      '[data-nav-toggle], .forum-bar-brand, .forum-bar-search, .forum-bar-compose .btn, [data-bell], .forum-bar-user',
+      '[data-nav-toggle], .forum-bar-brand, .forum-bar-search, [data-bell], .forum-bar-user',
     )).filter((element) => element.getClientRects().length > 0).map((element) => ({
       name: element.getAttribute('aria-label')!, ...rect(element),
     }));
@@ -67,7 +67,7 @@ async function headerGeometry(page: Page) {
 
 function contained(m: Awaited<ReturnType<typeof headerGeometry>>, where: string) {
   expect(m.header.height, `${where}: two header rows`).toBe(108);
-  expect(m.controls).toHaveLength(6);
+  expect(m.controls).toHaveLength(5);
   expect(new Set(m.controls.map((control) => Math.round(control.top))).size, `${where}: one controls row`).toBe(1);
   for (const control of m.controls) {
     expect(control.top, `${where}: ${control.name} is below the viewport top`).toBeGreaterThanOrEqual(m.header.top);

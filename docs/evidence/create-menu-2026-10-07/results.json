@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-07T13:34:24.728983+00:00",
+  "sourceSnapshot": "source-snapshot.json",
+  "sourceHashesVerifiedAfterBothFinalRuns": true,
+  "sourceSha256Count": 13,
+  "runner": {
+    "playwrightVersion": "1.61.1",
+    "nodeVersion": "24.21.0",
+    "localBaseUrl": "http://localhost:8024",
+    "isolatedDatabase": "retroboards_e2e_create_menu_evidence",
+    "databasePreparedBeforeEachBrowser": true,
+    "maxFailures": 0
+  },
+  "coverage": {
+    "routes": [
+      "/",
+      "/c/general",
+      "/compose",
+      "/drafts",
+      "/feed",
+      "/inbox",
+      "/messages",
+      "/messages/1",
+      "/messages/new",
+      "/missing-create-menu-page",
+      "/notifications",
+      "/search",
+      "/settings/account",
+      "/t/2-share-your-favourite-keyboard-shortcuts",
+      "/tags",
+      "/u/menu_member"
+    ],
+    "widthsCssPx": [
+      320,
+      390,
+      860,
+      861,
+      1024,
+      1280,
+      1440
+    ],
+    "viewportHeightCssPx": 844,
+    "states": [
+      "member",
+      "guest",
+      "member-dms-off"
+    ],
+    "javaScriptEnabled": [
+      true,
+      false
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "fontSizes": [
+      "medium",
+      "large"
+    ],
+    "desktopMatrixWidthsCssPx": [
+      861,
+      1024,
+      1280,
+      1440
+    ],
+    "mobileMatrixWidthsCssPx": [
+      320,
+      390,
+      860
+    ],
+    "pageFixtureMobileDeviceScaleFactor": 2,
+    "guestAndDmsOffMobileDeviceScaleFactor": 1,
+    "intentionalProjectSkipsPerBrowser": 8,
+    "extraClassicScrollbarWidthCssPx": 320,
+    "guestAppearance": "root attributes set by browser instrumentation",
+    "memberAppearance": "server-saved preference before navigation"
+  },
+  "totals": {
+    "browsers": 2,
+    "testsPassed": 36,
+    "testsFailed": 4,
+    "intentionalSkips": 16,
+    "recordedRouteChecks": 5602,
+    "requiredMatrixCombinations": 5376,
+    "missingRequiredCombinations": 0,
+    "recordedFailedGeometryRows": 16,
+    "uniqueFailedMatrixCombinations": 12,
+    "matrixAndRepresentativePngs": 318,
+    "supplementalPngs": 1
+  },
+  "browsers": [
+    {
+      "browser": "chromium",
+      "engineVersion": "149.0.7827.55",
+      "runnerExitCode": 1,
+      "status": "completed_with_documented_native_conversation_failures",
+      "tests": {
+        "passed": 18,
+        "failed": 2,
+        "intentionallySkipped": 8,
+        "total": 28,
+        "reportedDurationMinutes": 3.9
+      },
+      "failedTests": [
+        "[mobile] native without JS: representative page and open menu captures",
+        "[mobile] no JavaScript: member route matrix and native creation preserve leading content and draft errors"
+      ],
+      "routeChecks": 2801,
+      "requiredMatrixCombinations": 2688,
+      "missingRequiredCombinations": 0,
+      "recordedFailedGeometryRows": 8,
+      "uniqueFailedMatrixCombinations": 6,
+      "allHardAssertionsPassed": true,
+      "captureMetadataRecords": 167,
+      "distinctCapturedPngs": 159,
+      "projects": [
+        {
+          "project": "desktop",
+          "routeChecks": 1593,
+          "resultFile": "chromium-desktop-results.json"
+        },
+        {
+          "project": "mobile",
+          "routeChecks": 1208,
+          "resultFile": "chromium-mobile-results.json"
+        }
+      ]
+    },
+    {
+      "browser": "webkit",
+      "engineVersion": "26.5",
+      "runnerExitCode": 1,
+      "status": "completed_with_documented_native_conversation_failures",
+      "tests": {
+        "passed": 18,
+        "failed": 2,
+        "intentionallySkipped": 8,
+        "total": 28,
+        "reportedDurationMinutes": 6.2
+      },
+      "failedTests": [
+        "[mobile] native without JS: representative page and open menu captures",
+        "[mobile] no JavaScript: member route matrix and native creation preserve leading content and draft errors"
+      ],
+      "routeChecks": 2801,
+      "requiredMatrixCombinations": 2688,
+      "missingRequiredCombinations": 0,
+      "recordedFailedGeometryRows": 8,
+      "uniqueFailedMatrixCombinations": 6,
+      "allHardAssertionsPassed": true,
+      "captureMetadataRecords": 167,
+      "distinctCapturedPngs": 159,
+      "projects": [
+        {
+          "project": "desktop",
+          "routeChecks": 1593,
+          "resultFile": "webkit-desktop-results.json"
+        },
+        {
+          "project": "mobile",
+          "routeChecks": 1208,
+          "resultFile": "webkit-mobile-results.json"
+        }
+      ]
+    }
+  ],
+  "nativeConversationMatrixLimits": [
+    {
+      "browser": "chromium",
+      "width": 320,
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "fontSize": "large",
+      "javaScriptEnabled": false,
+      "state": "member",
+      "route": "/messages/1",
+      "viewportHeight": 844,
+      "documentHeight": 872,
+      "pageOverflow": 28,
+      "composerBottom": 872.1875,
+      "sendBottom": 832.1875,
+      "sendVisibleIntersection": 1,
+      "noPageScroll": false,
+      "composerInViewport": false,
+      "geometryPassed": false,
+      "passed": false
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "fontSize": "large",
+      "javaScriptEnabled": false,
+      "state": "member",
+      "route": "/messages/1",
+      "viewportHeight": 844,
+      "documentHeight": 861,
+      "pageOverflow": 17,
+      "composerBottom": 860.5,
+      "sendBottom": 820.5,
+      "sendVisibleIntersection": 1,
+      "noPageScroll": false,
+      "composerInViewport": false,
+      "geometryPassed": false,
+      "passed": false
+    },
+    {
+      "browser": "chromium",
+      "width": 860,
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "fontSize": "large",
+      "javaScriptEnabled": false,
+      "state": "member",
+      "route": "/messages/1",
+      "viewportHeight": 844,
+      "documentHeight": 861,
+      "pageOverflow": 17,
+      "composerBottom": 860.5,
+      "sendBottom": 820.5,
+      "sendVisibleIntersection": 1,
+      "noPageScroll": false,
+      "composerInViewport": false,
+      "geometryPassed": false,
+      "passed": false
+    },
+    {
+      "browser": "webkit",
+      "width": 320,
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "fontSize": "large",
+      "javaScriptEnabled": false,
+      "state": "member",
+      "route": "/messages/1",
+      "viewportHeight": 844,
+      "documentHeight": 872,
+      "pageOverflow": 28,
+      "composerBottom": 872.15625,
+      "sendBottom": 832.15625,
+      "sendVisibleIntersection": 1,
+      "noPageScroll": false,
+      "composerInViewport": false,
+      "geometryPassed": false,
+      "passed": false
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "fontSize": "large",
+      "javaScriptEnabled": false,
+      "state": "member",
+      "route": "/messages/1",
+      "viewportHeight": 844,
+      "documentHeight": 872,
+      "pageOverflow": 28,
+      "composerBottom": 872.15625,
+      "sendBottom": 832.15625,
+      "sendVisibleIntersection": 1,
+      "noPageScroll": false,
+      "composerInViewport": false,
+      "geometryPassed": false,
+      "passed": false
+    },
+    {
+      "browser": "webkit",
+      "width": 860,
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "fontSize": "large",
+      "javaScriptEnabled": false,
+      "state": "member",
+      "route": "/messages/1",
+      "viewportHeight": 844,
+      "documentHeight": 860,
+      "pageOverflow": 16,
+      "composerBottom": 860.46875,
+      "sendBottom": 820.46875,
+      "sendVisibleIntersection": 1,
+      "noPageScroll": false,
+      "composerInViewport": false,
+      "geometryPassed": false,
+      "passed": false
+    }
+  ],
+  "baselineComparison": {
+    "file": "baseline/native-room-comparison.json",
+    "checkCount": 112,
+    "baselineHead": "f8d4350ff417f3a8d68d7870fdc57947104a5643",
+    "baselineTrackedFilesUnmodified": true,
+    "baselineMatchingLanePageOverflowPx": 192,
+    "changedComparisonFixturePageOverflowPx": {
+      "chromium": {
+        "320": 28,
+        "390": 28,
+        "860": 17
+      },
+      "webkit": {
+        "320": 28,
+        "390": 28,
+        "860": 16
+      }
+    },
+    "changedComparisonFixtureSendBottomApproxPx": {
+      "320": 832,
+      "390": 832,
+      "860": 820
+    },
+    "largeTextLettersFloorPx": 144,
+    "fixtureScope": "Separate seeded conversation; Chromium390 has17px overflow in the main matrix and28px in this matched proof fixture."
+  },
+  "visualInspection": "visual-inspection.json",
+  "separateRepositoryGates": "ROOT_CHECKS.md",
+  "limits": [
+    "Native Large-text conversation page-height and outer-composer viewport assertions remain failed at320/390/860px; Send remains fully visible.",
+    "Keyboard coverage is limited to creation and Messages dialog actions.",
+    "Production and physical devices were not verified.",
+    "Suspended, banned and newcomer states are covered by separate PHP gates.",
+    "A previous Messages reference-copy assertion also fails on untouched HEAD; see ROOT_CHECKS.md."
+  ]
+}

@@ -6,7 +6,8 @@
  * server-side (ADR 0032).
  *
  * One register, identical on every app route: house lockup · surface
- * pills · search · rail toggle · New topic · the viewer. Below 861px the primary
+ * pills · search · rail toggle · the viewer. Creation lives in the shared
+ * subheader (ADR 0043). Below 861px the primary
  * routes use their own row so all labels remain readable; app.js moves that row
  * last in the reading order to match, and a lone route is not drawn there because
  * the lockup leads to the same place (ADR 0042, 2026-10-07). The class vocabulary is
@@ -19,16 +20,11 @@
  * logo, and the dynamic site name in the lockup), the two pane toggles as POST
  * forms so the rail and reading-pane state persist without JavaScript, the
  * `99+` cap on counts, a persistent notification bell (ADR 0032 adaptation),
- * the account menu behind the seat, a glyph on
- * New topic so it survives the phone breakpoint, and "Sign up" beside "Log in"
- * for a guest. New topic also opens the composer on the board being read
- * (`compose_board`, from the layout) rather than on the first board listed.
+ * the account menu behind the seat, and "Sign up" beside "Log in" for a guest.
  */
 $path = (string) ($request_path ?? '/');
 $hasBoardRail = !empty($has_board_rail);
 $hasReadingPane = !empty($has_reading_pane);
-$composeBoard = (string) ($compose_board ?? '');
-$composeHref = '/compose' . ($composeBoard !== '' ? '?board=' . rawurlencode($composeBoard) : '');
 $isBoards = $hasBoardRail && ($path === '/' || str_starts_with($path, '/c/')
     || $path === '/tags' || str_starts_with($path, '/tags/')
     || (int) ($active_thread_board_id ?? 0) > 0);
@@ -173,12 +169,6 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
             <?php // The divider sets the pane toggles apart from the actions, so it is drawn only beside one. ?>
             <?php if ($hasBoardRail): ?>
                 <span class="forum-bar-divider" aria-hidden="true"></span>
-            <?php endif; ?>
-
-            <?php if ($path !== '/compose'): ?>
-                <span class="forum-bar-compose">
-                    <a class="btn btn-small" href="<?= $e($composeHref) ?>" aria-label="New topic"><?= $this->partial('partials/icon', ['name' => 'plus']) ?><span>New topic</span></a>
-                </span>
             <?php endif; ?>
 
             <?php

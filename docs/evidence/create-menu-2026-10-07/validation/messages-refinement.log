@@ -1,0 +1,229 @@
+
+Running 10 tests using 1 worker
+
+(node:730289) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › messages-refinement.spec.ts:35:5 › refined Messages: responsive reading, picker, live incoming counsel, errors and no-JS (26.6s)
+  ✓   2 [desktop] › messages-refinement.spec.ts:150:5 › Messages accessibility in day and twilight, including the recipient picker (3.3s)
+  ✘   3 [desktop] › messages-refinement.spec.ts:168:5 › reference states: group counsel, first visit and list (8.1s)
+(node:730578) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   4 [desktop] › messages-refinement.spec.ts:209:5 › Messages recipient commits discard delayed suggestions (1.4s)
+  ✓   5 [desktop] › messages-refinement.spec.ts:245:5 › conversation poll backs off, pauses while hidden, resumes immediately and stops on 404 (920ms)
+(node:730685) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   6 [mobile] › messages-refinement.spec.ts:35:5 › refined Messages: responsive reading, picker, live incoming counsel, errors and no-JS
+  -   7 [mobile] › messages-refinement.spec.ts:150:5 › Messages accessibility in day and twilight, including the recipient picker
+  -   8 [mobile] › messages-refinement.spec.ts:168:5 › reference states: group counsel, first visit and list
+  -   9 [mobile] › messages-refinement.spec.ts:209:5 › Messages recipient commits discard delayed suggestions
+  -  10 [mobile] › messages-refinement.spec.ts:245:5 › conversation poll backs off, pauses while hidden, resumes immediately and stops on 404
+
+
+  1) [desktop] › messages-refinement.spec.ts:168:5 › reference states: group counsel, first visit and list
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.dm-listpane')
+    Timeout: 5000ms
+    - Expected substring  -  1
+    + Received string     + 88
+
+    - New accounts
+    +
+    +
+    +
+    +
+    +
+    + Private counsel
+    +                 Messages
+    +
+    +
+    +
+    +
+    +                         Private counselNew message
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +     To
+    +
+    +
+    +     Enter usernames separated by commas to start a group.
+    +
+    +
+    +
+    +
+    +
+    +         Group title (optional)
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +         ＋StrikeInline codeQuoteHeadingNumbered listCode blockSpoiler
+    +
+    +
+    +
+    +
+    +
+    +                 ＋Aa😊
+    +
+    +                             NI
+    +                         as Nimrodel
+    +
+    +
+    +
+    +                 Preview
+    +                 Cancel
+    +                     Send
+    +
+    +
+    +
+    +
+    +
+    +     Emoji×Search emoji
+    +
+    +         Up to 5 MiB per image
+    +         Draft saved · Discard
+    +                 0 / 5000
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +             All
+    +             Unread
+    +
+    +
+    +
+    +
+    +             No conversations yet
+    +             Your conversations with other members will appear here.
+    +
+    + You can reply to messages you receive. To start a conversation, make your first post or try again later.
+    + Write your first postNew message
+    +
+    +
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('.dm-listpane')
+        14 × locator resolved to <section class="dm-listpane" aria-label="Conversations">…</section>
+           - unexpected value "
+
+
+
+
+    Private counsel
+                    Messages
+
+
+
+
+                            Private counselNew message
+
+
+
+
+
+
+
+
+        To
+
+
+        Enter usernames separated by commas to start a group.
+
+
+
+
+
+            Group title (optional)
+
+
+
+
+
+
+
+            ＋StrikeInline codeQuoteHeadingNumbered listCode blockSpoiler
+
+
+
+
+
+                    ＋Aa😊
+
+                                NI
+                            as Nimrodel
+
+
+
+                    Preview
+                    Cancel
+                        Send
+
+
+
+
+
+        Emoji×Search emoji
+
+            Up to 5 MiB per image
+            Draft saved · Discard
+                    0 / 5000
+
+
+
+
+
+
+
+
+
+
+
+
+                All
+                Unread
+
+
+
+
+                No conversations yet
+                Your conversations with other members will appear here.
+
+    You can reply to messages you receive. To start a conversation, make your first post or try again later.
+    Write your first postNew message
+
+        "
+
+
+      196 |   await login(page, 'nimrodel');
+      197 |   await page.goto('/messages');
+    > 198 |   await expect(page.locator('.dm-listpane')).toContainText('New accounts');
+          |                                              ^
+      199 |   for (const [width, height, theme, name] of [
+      200 |     [1440, 1000, 'light', 'first-run-desktop-day'], [390, 844, 'dark', 'first-run-phone-twilight'],
+      201 |   ] as const) {
+        at /home/ubuntu/community-forums/tests/browser/messages-refinement.spec.ts:198:46
+
+    Error Context: ../../docs/evidence/create-menu-2026-10-07/regressions/chromium/.artifacts/messages-refinement-refere-4af5b-ounsel-first-visit-and-list-desktop/error-context.md
+
+  1 failed
+    [desktop] › messages-refinement.spec.ts:168:5 › reference states: group counsel, first visit and list
+  5 skipped
+  4 passed (42.1s)

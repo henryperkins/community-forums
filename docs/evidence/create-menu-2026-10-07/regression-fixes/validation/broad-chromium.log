@@ -1,0 +1,186 @@
+
+Running 124 tests using 1 worker
+
+(node:844153) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓    1 [desktop] › compose-destination.spec.ts:38:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (927ms)
+  ✓    2 [desktop] › compose-destination.spec.ts:38:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (441ms)
+  -    3 [desktop] › header-hardening.spec.ts:107:5 › page controls stay under the bar and its account menu
+
+  ✓    4 [desktop] › header-hardening.spec.ts:147:5 › a long community name shortens instead of pushing the account menu off-screen (1.7s)
+  -    5 [desktop] › header-hardening.spec.ts:194:5 › a wide operator logo scales down on the first row
+  ✓    6 [desktop] › header-hardening.spec.ts:235:5 › New topic opens the composer on the board being read (666ms)
+  ✓    7 [desktop] › header-hardening.spec.ts:256:5 › the pane toggles name the pane and appear only where it can show (1.5s)
+  -    8 [desktop] › header-phone-rows.spec.ts:110:5 › the phone rows give every control a 44px target, 8px apart, and the routes 13px labels
+  ✓    9 [desktop] › header-phone-rows.spec.ts:151:5 › the reading and focus order follow the rows (820ms)
+  ✓   10 [desktop] › header-phone-rows.spec.ts:195:5 › a guest's phone bar keeps one row, the community's name and 44px sign-in targets (192ms)
+  ✓   11 [desktop] › header-phone-rows.spec.ts:226:5 › the community's name shortens, and drops whole rather than to a stub (930ms)
+  ✓   12 [desktop] › header-phone-rows.spec.ts:263:5 › the divider stands only beside a pane toggle (313ms)
+  -   13 [desktop] › header-phone-rows.spec.ts:286:5 › the drawer closes from inside itself
+  -   14 [desktop] › header-phone-rows.spec.ts:324:7 › without JavaScript › the phone rail scrolls away instead of covering the page
+  ✓   15 [desktop] › header-phone-rows.spec.ts:354:5 › touch screens above the drawer breakpoint keep the 44px floor (356ms)
+  ✓   16 [desktop] › header-regressions.spec.ts:92:5 › classic desktop scrollbars do not create a third header row at narrow widths (1.9s)
+  ✓   17 [desktop] › header-regressions.spec.ts:114:5 › Large text and capped unread counts keep every phone route inside the viewport (1.0s)
+
+  ✓   18 [desktop] › messages-audit-regressions.spec.ts:318:5 › P1-1 compose dialog is modal: aria-modal, Tab and Shift+Tab stay inside, Escape peels list then dialog (3.4s)
+
+  ✓   19 [desktop] › messages-audit-regressions.spec.ts:376:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view (8.4s)
+
+  ✓   20 [desktop] › messages-audit-regressions.spec.ts:466:5 › P1-3 prose links are underlined in letters and posts; image links are not; pagers are controls (1.9s)
+
+  ✓   21 [desktop] › messages-audit-regressions.spec.ts:530:5 › P1-4 OS-dark on the default system theme: the "+" icon clears 3:1, same as explicit twilight (2.0s)
+
+  ✓   22 [desktop] › messages-audit-regressions.spec.ts:550:5 › P1-5 the ··· menu is a plain disclosure: no role="menu", no axe violations while open (1.6s)
+
+  ✓   23 [desktop] › messages-audit-regressions.spec.ts:565:5 › P1-6 filter pills: the selected pill differs from the unselected one by 3:1 in day and carries aria-current (1.9s)
+
+  ✓   24 [desktop] › messages-audit-regressions.spec.ts:595:5 › P2-1 the saved details choice reopens only a column; overlays start closed with the back control reachable (2.0s)
+
+  ✓   25 [desktop] › messages-audit-regressions.spec.ts:663:5 › P2-2 Search and the To chip field wear the shared focus outline on keyboard focus (1.6s)
+
+  ✓   26 [desktop] › messages-audit-regressions.spec.ts:700:5 › P2-3 a group composer addresses the group; a direct one keeps the counterpart (637ms)
+
+  ✓   27 [desktop] › messages-audit-regressions.spec.ts:717:5 › P2-4 touch: every Messages control takes a 44x44 tap (1.0s)
+
+  ✓   28 [desktop] › messages-audit-regressions.spec.ts:759:5 › P2-5 twilight: the own-letter edge is register-aware, not the pale day gold (3.3s)
+
+  ✓   29 [desktop] › messages-audit-regressions.spec.ts:789:5 › P2-6 a no-JS reply lands on its letter; a scripted reply stays unanchored at the end (2.4s)
+
+  ✓   30 [desktop] › messages-audit-regressions.spec.ts:835:5 › P3-2 list previews read as words, not Markdown, and the instant filter still matches the raw letter (375ms)
+
+  ✓   31 [desktop] › messages-audit-regressions.spec.ts:854:5 › P3-5 one h1 per page, owner tools name the member, unread leads the row name, the details toggle is a button (1.2s)
+
+  ✓   32 [desktop] › messages-audit-regressions.spec.ts:906:5 › P3-6 clocks, titles and the details presence read cleanly (en-US, America/Chicago) (496ms)
+
+  ✓   33 [desktop] › messages-audit-regressions.spec.ts:933:5 › axe: OS-dark system theme and 640x400 zoom over the list and a conversation with the rail and ··· menu open (18.7s)
+
+  ✓   34 [desktop] › unified-chrome.spec.ts:151:5 › the bar and the rail are the design system's, at its geometry, in both registers (1.3s)
+
+  ✓   35 [desktop] › unified-chrome.spec.ts:189:5 › long stored account names fit the bar and keep the account menu reachable (9.3s)
+
+  ✓   36 [desktop] › unified-chrome.spec.ts:291:5 › the seat's leaf and the profile dot still take the away colour from the layer (676ms)
+
+  ✓   37 [desktop] › unified-chrome.spec.ts:317:5 › a rail row without an avatar keeps a dot with a box (831ms)
+
+  ✓   38 [desktop] › unified-chrome.spec.ts:340:5 › rail rows hover without an underline and "See everyone online" takes the accent (494ms)
+
+  ✓   39 [desktop] › unified-chrome.spec.ts:363:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (2.0s)
+
+  ✓   40 [desktop] › unified-chrome.spec.ts:479:5 › the rail state persists and the drawer opens (535ms)
+
+  -   41 [desktop] › unified-chrome.spec.ts:516:5 › the closed phone drawer is excluded from keyboard navigation
+
+  -   42 [desktop] › unified-chrome.spec.ts:544:5 › phone primary navigation reaches Messages without horizontal page overflow
+
+  ✓   43 [desktop] › unified-chrome.spec.ts:558:5 › a guest gets the design's Log in pill and production's Sign up beside it (368ms)
+
+  -   44 [desktop] › unified-chrome.spec.ts:566:5 › shared creation survives the phone breakpoint as a 44px glyph
+
+  ✓   45 [desktop] › unified-chrome.spec.ts:585:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations (821ms)
+
+  -   46 [desktop] › unified-chrome.spec.ts:622:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls
+
+  ✓   47 [desktop] › unified-chrome.spec.ts:659:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.6s)
+
+  ✓   48 [desktop] › unified-chrome.spec.ts:736:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (684ms)
+(node:847189) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   49 [desktop] › messages-poll-regressions.spec.ts:55:5 › a late font load leaves a reader who scrolled away where they are (1.3s)
+  ✓   50 [desktop] › messages-poll-regressions.spec.ts:73:5 › a late font load re-bottoms a reader who is still pinned (1.2s)
+  ✓   51 [desktop] › messages-poll-regressions.spec.ts:99:5 › a has_more page requests the next page without waiting for the interval (1.3s)
+  ✓   52 [desktop] › messages-poll-regressions.spec.ts:131:5 › a has_more page that does not advance the cursor waits for the interval (1.2s)
+  ✓   53 [desktop] › messages-poll-regressions.spec.ts:152:5 › an unknown recipient focuses the combobox (1.3s)
+  ✓   54 [desktop] › messages-poll-regressions.spec.ts:168:5 › a body error keeps focus on the textarea (962ms)
+  ✓   55 [desktop] › messages-poll-regressions.spec.ts:187:5 › a closed compose dialog is not focused (696ms)
+  ✓   56 [desktop] › messages-poll-regressions.spec.ts:195:5 › the conversation poll waits for Retry-After on a 429 (1.3s)
+  ✓   57 [desktop] › messages-poll-regressions.spec.ts:220:5 › a tab return inside a Retry-After wait does not poll early (1.8s)
+  ✓   58 [desktop] › messages-poll-regressions.spec.ts:257:5 › catch-up yields after twenty immediate follow-ups (1.6s)
+  ✓   59 [desktop] › messages-poll-regressions.spec.ts:281:5 › a return while the throttled request is in flight obeys the deadline (1.2s)
+  ✓   60 [desktop] › messages-poll-regressions.spec.ts:316:5 › catch-up and late fonts preserve a parked reader and the new-message pill (1.3s)
+  ✓   61 [desktop] › messages-poll-regressions.spec.ts:345:5 › a poll can receive its Retry-After deadline from the JSON body (1.2s)
+  ✓   62 [desktop] › messages-refinement.spec.ts:209:5 › Messages recipient commits discard delayed suggestions (1.5s)
+(node:847677) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   63 [mobile] › compose-destination.spec.ts:38:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (987ms)
+  ✓   64 [mobile] › compose-destination.spec.ts:38:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (434ms)
+  ✓   65 [mobile] › header-hardening.spec.ts:107:5 › page controls stay under the bar and its account menu (1.6s)
+  -   66 [mobile] › header-hardening.spec.ts:147:5 › a long community name shortens instead of pushing the account menu off-screen
+
+  ✓   67 [mobile] › header-hardening.spec.ts:194:5 › a wide operator logo scales down on the first row (952ms)
+  -   68 [mobile] › header-hardening.spec.ts:235:5 › New topic opens the composer on the board being read
+  ✓   69 [mobile] › header-hardening.spec.ts:256:5 › the pane toggles name the pane and appear only where it can show (660ms)
+  ✓   70 [mobile] › header-phone-rows.spec.ts:110:5 › the phone rows give every control a 44px target, 8px apart, and the routes 13px labels (1.9s)
+  ✓   71 [mobile] › header-phone-rows.spec.ts:151:5 › the reading and focus order follow the rows (266ms)
+  ✓   72 [mobile] › header-phone-rows.spec.ts:195:5 › a guest's phone bar keeps one row, the community's name and 44px sign-in targets (913ms)
+  ✓   73 [mobile] › header-phone-rows.spec.ts:226:5 › the community's name shortens, and drops whole rather than to a stub (1.4s)
+  ✓   74 [mobile] › header-phone-rows.spec.ts:263:5 › the divider stands only beside a pane toggle (274ms)
+  ✓   75 [mobile] › header-phone-rows.spec.ts:286:5 › the drawer closes from inside itself (1.4s)
+  ✓   76 [mobile] › header-phone-rows.spec.ts:324:7 › without JavaScript › the phone rail scrolls away instead of covering the page (781ms)
+  -   77 [mobile] › header-phone-rows.spec.ts:354:5 › touch screens above the drawer breakpoint keep the 44px floor
+  -   78 [mobile] › header-regressions.spec.ts:92:5 › classic desktop scrollbars do not create a third header row at narrow widths
+  ✓   79 [mobile] › header-regressions.spec.ts:114:5 › Large text and capped unread counts keep every phone route inside the viewport (1.7s)
+  -   80 [mobile] › messages-audit-regressions.spec.ts:318:5 › P1-1 compose dialog is modal: aria-modal, Tab and Shift+Tab stay inside, Escape peels list then dialog
+  -   81 [mobile] › messages-audit-regressions.spec.ts:376:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view
+  -   82 [mobile] › messages-audit-regressions.spec.ts:466:5 › P1-3 prose links are underlined in letters and posts; image links are not; pagers are controls
+  -   83 [mobile] › messages-audit-regressions.spec.ts:530:5 › P1-4 OS-dark on the default system theme: the "+" icon clears 3:1, same as explicit twilight
+  -   84 [mobile] › messages-audit-regressions.spec.ts:550:5 › P1-5 the ··· menu is a plain disclosure: no role="menu", no axe violations while open
+  -   85 [mobile] › messages-audit-regressions.spec.ts:565:5 › P1-6 filter pills: the selected pill differs from the unselected one by 3:1 in day and carries aria-current
+  -   86 [mobile] › messages-audit-regressions.spec.ts:595:5 › P2-1 the saved details choice reopens only a column; overlays start closed with the back control reachable
+  -   87 [mobile] › messages-audit-regressions.spec.ts:663:5 › P2-2 Search and the To chip field wear the shared focus outline on keyboard focus
+  -   88 [mobile] › messages-audit-regressions.spec.ts:700:5 › P2-3 a group composer addresses the group; a direct one keeps the counterpart
+  -   89 [mobile] › messages-audit-regressions.spec.ts:717:5 › P2-4 touch: every Messages control takes a 44x44 tap
+  -   90 [mobile] › messages-audit-regressions.spec.ts:759:5 › P2-5 twilight: the own-letter edge is register-aware, not the pale day gold
+  -   91 [mobile] › messages-audit-regressions.spec.ts:789:5 › P2-6 a no-JS reply lands on its letter; a scripted reply stays unanchored at the end
+  -   92 [mobile] › messages-audit-regressions.spec.ts:835:5 › P3-2 list previews read as words, not Markdown, and the instant filter still matches the raw letter
+  -   93 [mobile] › messages-audit-regressions.spec.ts:854:5 › P3-5 one h1 per page, owner tools name the member, unread leads the row name, the details toggle is a button
+  -   94 [mobile] › messages-audit-regressions.spec.ts:906:5 › P3-6 clocks, titles and the details presence read cleanly (en-US, America/Chicago)
+  -   95 [mobile] › messages-audit-regressions.spec.ts:933:5 › axe: OS-dark system theme and 640x400 zoom over the list and a conversation with the rail and ··· menu open
+
+  ✓   96 [mobile] › unified-chrome.spec.ts:151:5 › the bar and the rail are the design system's, at its geometry, in both registers (976ms)
+
+  ✓   97 [mobile] › unified-chrome.spec.ts:189:5 › long stored account names fit the bar and keep the account menu reachable (1.8s)
+
+  ✓   98 [mobile] › unified-chrome.spec.ts:291:5 › the seat's leaf and the profile dot still take the away colour from the layer (626ms)
+
+  ✓   99 [mobile] › unified-chrome.spec.ts:317:5 › a rail row without an avatar keeps a dot with a box (849ms)
+
+  ✓  100 [mobile] › unified-chrome.spec.ts:340:5 › rail rows hover without an underline and "See everyone online" takes the accent (827ms)
+
+  ✓  101 [mobile] › unified-chrome.spec.ts:363:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (2.6s)
+
+  ✓  102 [mobile] › unified-chrome.spec.ts:479:5 › the rail state persists and the drawer opens (1.2s)
+
+  ✓  103 [mobile] › unified-chrome.spec.ts:516:5 › the closed phone drawer is excluded from keyboard navigation (886ms)
+
+  ✓  104 [mobile] › unified-chrome.spec.ts:544:5 › phone primary navigation reaches Messages without horizontal page overflow (565ms)
+
+  ✓  105 [mobile] › unified-chrome.spec.ts:558:5 › a guest gets the design's Log in pill and production's Sign up beside it (437ms)
+
+  ✓  106 [mobile] › unified-chrome.spec.ts:566:5 › shared creation survives the phone breakpoint as a 44px glyph (371ms)
+
+  -  107 [mobile] › unified-chrome.spec.ts:585:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations
+
+  ✓  108 [mobile] › unified-chrome.spec.ts:622:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls (1.2s)
+
+  ✓  109 [mobile] › unified-chrome.spec.ts:659:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (2.0s)
+
+  ✓  110 [mobile] › unified-chrome.spec.ts:736:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (855ms)
+(node:848803) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  111 [mobile] › messages-poll-regressions.spec.ts:55:5 › a late font load leaves a reader who scrolled away where they are
+  -  112 [mobile] › messages-poll-regressions.spec.ts:73:5 › a late font load re-bottoms a reader who is still pinned
+  -  113 [mobile] › messages-poll-regressions.spec.ts:99:5 › a has_more page requests the next page without waiting for the interval
+  -  114 [mobile] › messages-poll-regressions.spec.ts:131:5 › a has_more page that does not advance the cursor waits for the interval
+  -  115 [mobile] › messages-poll-regressions.spec.ts:152:5 › an unknown recipient focuses the combobox
+  -  116 [mobile] › messages-poll-regressions.spec.ts:168:5 › a body error keeps focus on the textarea
+  -  117 [mobile] › messages-poll-regressions.spec.ts:187:5 › a closed compose dialog is not focused
+  -  118 [mobile] › messages-poll-regressions.spec.ts:195:5 › the conversation poll waits for Retry-After on a 429
+  -  119 [mobile] › messages-poll-regressions.spec.ts:220:5 › a tab return inside a Retry-After wait does not poll early
+  -  120 [mobile] › messages-poll-regressions.spec.ts:257:5 › catch-up yields after twenty immediate follow-ups
+  -  121 [mobile] › messages-poll-regressions.spec.ts:281:5 › a return while the throttled request is in flight obeys the deadline
+  -  122 [mobile] › messages-poll-regressions.spec.ts:316:5 › catch-up and late fonts preserve a parked reader and the new-message pill
+  -  123 [mobile] › messages-poll-regressions.spec.ts:345:5 › a poll can receive its Retry-After deadline from the JSON body
+  -  124 [mobile] › messages-refinement.spec.ts:209:5 › Messages recipient commits discard delayed suggestions
+
+  44 skipped
+  80 passed (2.2m)

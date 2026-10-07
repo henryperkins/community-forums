@@ -1,0 +1,108 @@
+
+Running 64 tests using 1 worker
+
+(node:727915) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [desktop] › compose-destination.spec.ts:38:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (694ms)
+  ✓   2 [desktop] › compose-destination.spec.ts:38:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (284ms)
+  -   3 [desktop] › header-hardening.spec.ts:107:5 › page controls stay under the bar and its account menu
+
+  ✓   4 [desktop] › header-hardening.spec.ts:147:5 › a long community name shortens instead of pushing the account menu off-screen (1.3s)
+  -   5 [desktop] › header-hardening.spec.ts:194:5 › a wide operator logo scales down on the first row
+  ✓   6 [desktop] › header-hardening.spec.ts:235:5 › New topic opens the composer on the board being read (505ms)
+  ✓   7 [desktop] › header-hardening.spec.ts:256:5 › the pane toggles name the pane and appear only where it can show (1.3s)
+  -   8 [desktop] › header-phone-rows.spec.ts:110:5 › the phone rows give every control a 44px target, 8px apart, and the routes 13px labels
+  ✓   9 [desktop] › header-phone-rows.spec.ts:151:5 › the reading and focus order follow the rows (614ms)
+  ✓  10 [desktop] › header-phone-rows.spec.ts:195:5 › a guest's phone bar keeps one row, the community's name and 44px sign-in targets (135ms)
+  ✓  11 [desktop] › header-phone-rows.spec.ts:226:5 › the community's name shortens, and drops whole rather than to a stub (669ms)
+  ✓  12 [desktop] › header-phone-rows.spec.ts:263:5 › the divider stands only beside a pane toggle (222ms)
+  -  13 [desktop] › header-phone-rows.spec.ts:286:5 › the drawer closes from inside itself
+  -  14 [desktop] › header-phone-rows.spec.ts:324:7 › without JavaScript › the phone rail scrolls away instead of covering the page
+  ✓  15 [desktop] › header-phone-rows.spec.ts:354:5 › touch screens above the drawer breakpoint keep the 44px floor (245ms)
+  ✓  16 [desktop] › header-regressions.spec.ts:92:5 › classic desktop scrollbars do not create a third header row at narrow widths (1.3s)
+  ✓  17 [desktop] › header-regressions.spec.ts:114:5 › Large text and capped unread counts keep every phone route inside the viewport (708ms)
+
+  ✓  18 [desktop] › unified-chrome.spec.ts:151:5 › the bar and the rail are the design system's, at its geometry, in both registers (841ms)
+
+  ✓  19 [desktop] › unified-chrome.spec.ts:189:5 › long stored account names fit the bar and keep the account menu reachable (4.1s)
+
+  ✓  20 [desktop] › unified-chrome.spec.ts:291:5 › the seat's leaf and the profile dot still take the away colour from the layer (432ms)
+
+  ✓  21 [desktop] › unified-chrome.spec.ts:317:5 › a rail row without an avatar keeps a dot with a box (597ms)
+
+  ✓  22 [desktop] › unified-chrome.spec.ts:340:5 › rail rows hover without an underline and "See everyone online" takes the accent (364ms)
+
+  ✓  23 [desktop] › unified-chrome.spec.ts:363:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (1.5s)
+
+  ✓  24 [desktop] › unified-chrome.spec.ts:479:5 › the rail state persists and the drawer opens (431ms)
+
+  -  25 [desktop] › unified-chrome.spec.ts:516:5 › the closed phone drawer is excluded from keyboard navigation
+
+  -  26 [desktop] › unified-chrome.spec.ts:544:5 › phone primary navigation reaches Messages without horizontal page overflow
+
+  ✓  27 [desktop] › unified-chrome.spec.ts:558:5 › a guest gets the design's Log in pill and production's Sign up beside it (280ms)
+
+  -  28 [desktop] › unified-chrome.spec.ts:566:5 › shared creation survives the phone breakpoint as a 44px glyph
+
+  ✓  29 [desktop] › unified-chrome.spec.ts:585:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations (617ms)
+
+  -  30 [desktop] › unified-chrome.spec.ts:622:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls
+
+  ✓  31 [desktop] › unified-chrome.spec.ts:659:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.2s)
+
+  ✓  32 [desktop] › unified-chrome.spec.ts:736:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (512ms)
+(node:728596) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  33 [mobile] › compose-destination.spec.ts:38:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (710ms)
+  ✓  34 [mobile] › compose-destination.spec.ts:38:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (320ms)
+  ✓  35 [mobile] › header-hardening.spec.ts:107:5 › page controls stay under the bar and its account menu (1.1s)
+  -  36 [mobile] › header-hardening.spec.ts:147:5 › a long community name shortens instead of pushing the account menu off-screen
+
+  ✓  37 [mobile] › header-hardening.spec.ts:194:5 › a wide operator logo scales down on the first row (712ms)
+  -  38 [mobile] › header-hardening.spec.ts:235:5 › New topic opens the composer on the board being read
+  ✓  39 [mobile] › header-hardening.spec.ts:256:5 › the pane toggles name the pane and appear only where it can show (563ms)
+  ✓  40 [mobile] › header-phone-rows.spec.ts:110:5 › the phone rows give every control a 44px target, 8px apart, and the routes 13px labels (1.6s)
+  ✓  41 [mobile] › header-phone-rows.spec.ts:151:5 › the reading and focus order follow the rows (193ms)
+  ✓  42 [mobile] › header-phone-rows.spec.ts:195:5 › a guest's phone bar keeps one row, the community's name and 44px sign-in targets (843ms)
+  ✓  43 [mobile] › header-phone-rows.spec.ts:226:5 › the community's name shortens, and drops whole rather than to a stub (974ms)
+  ✓  44 [mobile] › header-phone-rows.spec.ts:263:5 › the divider stands only beside a pane toggle (209ms)
+  ✓  45 [mobile] › header-phone-rows.spec.ts:286:5 › the drawer closes from inside itself (1.4s)
+  ✓  46 [mobile] › header-phone-rows.spec.ts:324:7 › without JavaScript › the phone rail scrolls away instead of covering the page (579ms)
+  -  47 [mobile] › header-phone-rows.spec.ts:354:5 › touch screens above the drawer breakpoint keep the 44px floor
+  -  48 [mobile] › header-regressions.spec.ts:92:5 › classic desktop scrollbars do not create a third header row at narrow widths
+  ✓  49 [mobile] › header-regressions.spec.ts:114:5 › Large text and capped unread counts keep every phone route inside the viewport (1.2s)
+
+  ✓  50 [mobile] › unified-chrome.spec.ts:151:5 › the bar and the rail are the design system's, at its geometry, in both registers (726ms)
+
+  ✓  51 [mobile] › unified-chrome.spec.ts:189:5 › long stored account names fit the bar and keep the account menu reachable (1.2s)
+
+  ✓  52 [mobile] › unified-chrome.spec.ts:291:5 › the seat's leaf and the profile dot still take the away colour from the layer (430ms)
+
+  ✓  53 [mobile] › unified-chrome.spec.ts:317:5 › a rail row without an avatar keeps a dot with a box (612ms)
+
+  ✓  54 [mobile] › unified-chrome.spec.ts:340:5 › rail rows hover without an underline and "See everyone online" takes the accent (713ms)
+
+  ✓  55 [mobile] › unified-chrome.spec.ts:363:5 › reading a topic keeps the chrome unread counts capped, named, and synchronized (1.7s)
+
+  ✓  56 [mobile] › unified-chrome.spec.ts:479:5 › the rail state persists and the drawer opens (754ms)
+
+  ✓  57 [mobile] › unified-chrome.spec.ts:516:5 › the closed phone drawer is excluded from keyboard navigation (663ms)
+
+  ✓  58 [mobile] › unified-chrome.spec.ts:544:5 › phone primary navigation reaches Messages without horizontal page overflow (346ms)
+
+  ✓  59 [mobile] › unified-chrome.spec.ts:558:5 › a guest gets the design's Log in pill and production's Sign up beside it (288ms)
+
+  ✓  60 [mobile] › unified-chrome.spec.ts:566:5 › shared creation survives the phone breakpoint as a 44px glyph (250ms)
+
+  -  61 [mobile] › unified-chrome.spec.ts:585:7 › with JavaScript disabled › the desktop rail POST persists across reloads and destinations
+
+  ✓  62 [mobile] › unified-chrome.spec.ts:622:7 › with JavaScript disabled › mobile chrome reaches boards, messages, and account settings through native controls (657ms)
+
+  ✓  63 [mobile] › unified-chrome.spec.ts:659:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px (1.2s)
+
+  ✓  64 [mobile] › unified-chrome.spec.ts:736:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px (603ms)
+
+  14 skipped
+  50 passed (42.4s)

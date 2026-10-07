@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-10-07T13:09:27.120Z",
+  "head": "f8d4350ff417f3a8d68d7870fdc57947104a5643",
+  "uncommittedWorkingTree": true,
+  "sourceSha256": {
+    "templates/layout.php": "66440084f643fdd3c3c7e11f9d18484f20076c2d64cf02ed4bfee76a8fc339cf",
+    "templates/partials/topbar.php": "d9bbe7173f27bd522e5fd9082b7242fd900ab751206ae9eba9f6dc760b66c260",
+    "templates/partials/subheader.php": "055531908ea02a3d7b42cfcc8538723b72a7dfe6a589d0d1670479aa7998d90b",
+    "templates/partials/dm_list.php": "1c9aca01bd592e1e18faec1538f0f4739f26af90ff7370e9d9a2e7f43104f440",
+    "templates/home.php": "e27adc2748c35914dfe3fbfe1636c34bd7bf013c5015d0be46a4980690e6a70e",
+    "templates/board.php": "7617ea632117401a8161ce31aec964313e413c5a67e56431d035e355360f9e08",
+    "templates/thread.php": "0d5eb49d0b7fadffb7502b1050e158df2a0dda089744aa3b8e98170d2cf0dc28",
+    "public/assets/app.css": "8e90cf133952b92b162990cbf9e8ca79451eb769e1a1e1b8caadf7c433063e71",
+    "public/assets/app.js": "84715f586e4a395ac4f6833d755b14c597e8463c14e4d19d2a3860e8de440b44",
+    "public/assets/imladris.css": "d8acefca061a0c8914ffb204cfcfa52b435575ebc5d5df5de85fcf1c1fec22e8",
+    "config/assets.json": "cd8d807f085b6c48b52c8bde251d05b97cdb5f2a54097404bfda76d21703448d",
+    "tests/browser/create-menu-subheader.spec.ts": "792c4abea5c88d9b460c4a6aaaa0e3efef59b73c4421c8ad65ece4c04d9fd36f",
+    "tests/browser/create-menu-helpers.ts": "be5789a2ec160f3aca1dc7b0ba943b17fb8a8f6f8e1423dfe9100b32ca302a8e"
+  }
+}

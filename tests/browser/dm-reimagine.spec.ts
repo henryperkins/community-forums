@@ -8,7 +8,7 @@ import path from 'node:path';
  *
  * Drives the real server-rendered app in Chromium and proves the reimagined
  * Messages surface renders — and still works with JavaScript disabled:
- *   • list: de-boxed rows, the round `+`, a lone gold unread dot;
+ *   • list: de-boxed rows, shared creation, a lone gold unread dot;
  *   • conversation: grouped "letters" (consecutive messages share one author
  *     line; mine wear the one gold plate, theirs read plain), the hairline day
  *     divider, and the hover ··· report control;
@@ -88,7 +88,7 @@ test('DM reading room: de-boxed rows, grouped letters, no-JS report', async ({ b
 
   // ── List: de-boxed rows + round + + gold unread dot ───────────────────────
   await alice.goto('/messages');
-  await expect(alice.locator('.dm-new-btn')).toBeVisible();
+  await expect(alice.locator('[data-create-trigger]')).toBeVisible();
   await expect(alice.locator('.dm-unread-dot').first()).toBeVisible();
   await expect(alice.locator('.dm-group-meta')).toHaveCount(0); // the old participant-name line is gone
   await shot(alice, '01-list');

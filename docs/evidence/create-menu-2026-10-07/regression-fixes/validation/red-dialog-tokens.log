@@ -1,0 +1,27 @@
+
+Running 1 test using 1 worker
+
+(node:807468) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [mobile] › create-menu-regressions.spec.ts:159:5 › recipient suggestions remain selectable by pointer (1.0s)
+
+
+  1) [mobile] › create-menu-regressions.spec.ts:159:5 › recipient suggestions remain selectable by pointer
+
+    Error: expect(received).not.toBe(expected) // Object.is equality
+
+    Expected: not ""
+
+      167 |     await expect(option).toBeVisible();
+      168 |     await expect(option).toHaveAttribute('aria-selected', 'true');
+    > 169 |     expect(await option.evaluate(el => getComputedStyle(el).getPropertyValue('--dm-active-wash').trim())).not.toBe('');
+          |                                                                                                               ^
+      170 |     await expect(option).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      171 |     if (info.project.name === 'mobile') await option.tap();
+      172 |     else await option.click();
+        at /home/ubuntu/community-forums/tests/browser/create-menu-regressions.spec.ts:169:111
+
+    Error Context: ../../../../../tmp/community-create-fix-colors-red/.artifacts/create-menu-regressions-re-431fe-emain-selectable-by-pointer-mobile/error-context.md
+
+  1 failed
+    [mobile] › create-menu-regressions.spec.ts:159:5 › recipient suggestions remain selectable by pointer

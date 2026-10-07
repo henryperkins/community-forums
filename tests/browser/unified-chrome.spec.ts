@@ -121,7 +121,10 @@ function shot(name: string, project: string) {
   return path.join(dir, name);
 }
 
+const chromeSessions = new Map<string, Awaited<ReturnType<ReturnType<Page['context']>['cookies']>>>();
+
 async function signIn(page: Page, email = 'elrond@retro.test') {
+  if (chromeSessions.has(email)) { await page.context().addCookies(chromeSessions.get(email)!); return; }
   await page.goto('/login');
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', 'password123');
@@ -132,6 +135,7 @@ async function signIn(page: Page, email = 'elrond@retro.test') {
     await skip.first().click();
     await expect(skip.first()).toBeHidden();
   }
+  chromeSessions.set(email, await page.context().cookies());
 }
 
 const colour = (page: Page, selector: string, prop = 'backgroundColor') =>
@@ -559,18 +563,17 @@ test('a guest gets the design\'s Log in pill and production\'s Sign up beside it
   await page.screenshot({ path: shot('05-guest.png', testInfo.project.name), clip: { x: 0, y: 0, width: testInfo.project.name === 'desktop' ? 1280 : 390, height: 420 } });
 });
 
-test('New topic survives the phone breakpoint as its glyph', async ({ page }, testInfo) => {
+test('shared creation survives the phone breakpoint as a 44px glyph', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile', 'phone chrome contract');
   await signIn(page);
   await page.goto('/inbox');
-  // The design hides compose below 720px; only a board page has a floating
-  // compose, so the control stays as a 40px glyph everywhere else.
-  const compose = page.locator('.forum-bar-compose .btn');
+  // ADR 0043 keeps creation in the shared row as a 44px phone target.
+  const compose = page.locator('[data-create-trigger]');
   await expect(compose).toBeVisible();
   const box = (await compose.boundingBox())!;
-  expect(box.width).toBeGreaterThanOrEqual(40);
-  await expect(compose.locator('span')).toBeHidden();
-  await expect(compose.locator('.icon')).toBeVisible();
+  expect(box.width).toBeGreaterThanOrEqual(44);
+  await expect(compose.locator('.create-label')).toBeHidden();
+  await expect(compose.locator('.icon').first()).toBeVisible();
 });
 
 
@@ -657,7 +660,7 @@ test('persistent bell keeps complete primary routes and mobile controls reachabl
   await signIn(page);
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto('/');
-  for (const selector of ['[data-bell]', '.forum-bar-search', '.forum-bar-compose a', '[data-nav-toggle]', '.identity-menu > summary']) {
+  for (const selector of ['[data-bell]', '.forum-bar-search', '[data-create-trigger]', '[data-nav-toggle]', '.identity-menu > summary']) {
     const control = page.locator(selector);
     await expect(control).toBeVisible();
     const box = (await control.boundingBox())!;
@@ -696,7 +699,8 @@ test('persistent bell keeps complete primary routes and mobile controls reachabl
   await page.screenshot({ path: shot('11-bell-320-focus.png', info.project.name) });
   await page.locator('.forum-bar-search').click();
   await expect(page).toHaveURL(/\/search$/);
-  await page.locator('.forum-bar-compose a').click();
+  await page.locator('[data-create-trigger]').click();
+  await page.locator('[data-subheader] a[href="/compose"]').click();
   await expect(page).toHaveURL(/\/compose$/);
   await page.locator('[data-nav-toggle]').click();
   await expect(page.locator('.board-rail')).toBeVisible();
@@ -740,7 +744,7 @@ test.describe('narrow primary navigation without JavaScript', () => {
       await expect(page).toHaveURL(new RegExp(`${destination === '/' ? '/$' : destination + '$'}`));
     }
     await expect(page.locator('[data-bell] .icon')).toBeVisible();
-    await expect(page.locator('.forum-bar-compose .icon')).toBeVisible();
+    await expect(page.locator('[data-create-trigger] > .icon:first-child')).toBeVisible();
     await page.screenshot({ path: shot('12-primary-routes-320-nojs.png', info.project.name) });
   });
 });

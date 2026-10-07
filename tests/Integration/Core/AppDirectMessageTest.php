@@ -360,7 +360,7 @@ final class AppDirectMessageTest extends TestCase
         // …and the round "+" is a native <details> compose dialog posting to the
         // existing /messages endpoint, with the group-title field rendering by
         // default now that group_dms graduated (GA 2026-07-18; ADR 0022).
-        self::assertStringContainsString('dm-compose-details', $res->body());
+        self::assertStringContainsString('data-dm-compose', $res->body());
         self::assertStringContainsString('name="to"', $res->body());
         self::assertStringContainsString('name="title"', $res->body());
     }

@@ -35,12 +35,13 @@ for (const javaScriptEnabled of [true, false]) {
   test.describe(javaScriptEnabled ? 'with JavaScript' : 'without JavaScript', () => {
     test.use({ javaScriptEnabled });
 
-    test('the header keeps a numeric board slug as the posting destination', async ({ page }, info) => {
+    test('shared creation keeps a numeric board slug as the posting destination', async ({ page }, info) => {
       await signIn(page);
       const boardResponse = await page.goto('/c/' + destination.slug);
       expect(boardResponse?.status()).toBe(200);
-      const newTopic = page.locator('.forum-bar-compose a');
+      const newTopic = page.locator('[data-subheader] a[href^="/compose"]');
       await expect(newTopic).toHaveAttribute('href', '/compose?board=' + destination.slug);
+      await page.locator('[data-create-trigger]').click();
       await expect(newTopic).toHaveAccessibleName('New topic');
 
       await newTopic.click();

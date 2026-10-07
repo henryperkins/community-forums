@@ -33,8 +33,8 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
     ], $changes));
 };
 $paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notifications', 'connections' => 'Connections'];
+$this->start('subheader_leading');
 ?>
-<div class="read-main read-pad board-index" data-directory-pane="<?= $e($pane) ?>">
     <nav class="forum-directory__tabs" aria-label="Board index panes">
         <?php foreach ($paneLabels as $paneKey => $label): ?>
             <?php if (empty($availablePanes[$paneKey])) { continue; } ?>
@@ -45,7 +45,8 @@ $paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notificatio
             </a>
         <?php endforeach; ?>
     </nav>
-
+<?php $this->stop(); ?>
+<div class="read-main read-pad board-index" data-directory-pane="<?= $e($pane) ?>">
     <?php if ($pane === 'boards'): ?>
         <section class="forum-directory" data-directory-sort="<?= $e($sort) ?>" data-directory-peek="<?= $peek ?>">
             <header class="forum-directory__hero">

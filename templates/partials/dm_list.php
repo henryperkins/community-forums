@@ -6,8 +6,7 @@
  * the list and the conversation are one shell, not two page shapes.
  *
  * Params: conversations (list rows), filter ('all'|'unread'), active_id (the
- * open conversation id, marked .active), q (applied search term), allow_groups
- * (group_dms flag, gates the compose dialog's group fields), heading_tag ('h1'
+ * open conversation id, marked .active), q (applied search term), heading_tag ('h1'
  * on /messages where the list is the page; 'h2' beside a conversation or the
  * new-message form, whose own heading is the page's one h1) — all optional.
  */
@@ -15,10 +14,6 @@ $dmFilter = ($filter ?? 'all') === 'unread' ? 'unread' : 'all';
 $dmActiveId = (int) ($active_id ?? 0);
 $dmConversations = $conversations ?? [];
 $dmQ = trim((string) ($q ?? ''));
-$dmAllowGroups = !empty($allow_groups);
-$dmShowAvatars = $show_avatars ?? true;
-$dmCompose = $compose ?? [];
-$dmComposeErrors = $dmCompose['errors'] ?? [];
 $dmUnreadCount = count(array_filter($dmConversations, static fn ($row) => !empty($row['is_unread'])));
 $dmHeadingTag = ($heading_tag ?? 'h1') === 'h2' ? 'h2' : 'h1';
 // The pills keep an applied search; with no search they stay byte-identical
@@ -33,55 +28,6 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                 <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
                 <<?= $dmHeadingTag ?> class="dm-listpane-title">Messages</<?= $dmHeadingTag ?>>
             </span>
-            <details class="dm-compose-details"<?= !empty($dmCompose['open']) ? ' open' : '' ?>>
-                <summary class="dm-new-btn" aria-label="New message" title="New message"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></summary>
-                <div class="dm-dialog" aria-labelledby="dm-compose-title">
-                    <div class="dm-dialog-head">
-                        <div><span class="eyebrow">Private counsel</span><h2 id="dm-compose-title">New message</h2></div>
-                        <button type="button" class="dm-dialog-close" data-close-compose aria-label="Close"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
-                    </div>
-                    <?php
-                    $dmDialogInstance = 'dm-new-dialog';
-                    $dmDialogWrapper = function () use ($dmAllowGroups, $dmDialogInstance, $dmCompose, $dmComposeErrors, $dmShowAvatars): void {
-                        ?><div class="dm-dialog-body"><input type="hidden" name="origin" value="dialog"><?php
-                        echo $this->partial('partials/dm_compose_fields', [
-                            'to' => $dmCompose['to'] ?? '',
-                            'title' => $dmCompose['title'] ?? '',
-                            'errors' => $dmComposeErrors,
-                            'allow_groups' => $dmAllowGroups,
-                            'instance_id' => $dmDialogInstance,
-                            'show_avatars' => $dmShowAvatars,
-                        ]);
-                        ?></div><?php
-                    };
-                    $dmDialogBeforeSubmit = function (): void {
-                        ?><button class="btn btn-ghost" type="button" data-close-compose>Cancel</button><?php
-                    };
-                    ?>
-                    <?= $this->partial('partials/composer_shell', [
-                        'action' => '/messages',
-                        'context' => 'dm',
-                        'no_wysiwyg' => true,
-                        'target_id' => 0,
-                        'instance_id' => $dmDialogInstance,
-                        'placeholder' => 'Message @recipient…',
-                        'maxlength' => 5000,
-                        'body_value' => $dmCompose['body'] ?? '',
-                        'body_error' => $dmComposeErrors['body'] ?? '',
-                        'body_error_focus' => array_key_first($dmComposeErrors) === 'body',
-                        'submit_label' => 'Send',
-                        'form_class' => 'dm-form',
-                        'identity' => [
-                            'display_name' => $current_user->displayName(),
-                            'username' => $current_user->username(),
-                            'avatar_path' => $current_user->avatarPath(),
-                            'show_avatar' => $show_avatars ?? true,
-                        ],
-                                                'wrapper_slot' => $dmDialogWrapper,
-                        'before_submit_slot' => $dmDialogBeforeSubmit,
-                    ]) ?>
-                </div>
-            </details>
         </div>
         <form class="dm-search" method="get" action="/messages" role="search">
             <?= $this->partial('partials/icon', ['name' => 'search']) ?>

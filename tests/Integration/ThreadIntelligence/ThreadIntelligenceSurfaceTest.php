@@ -154,7 +154,7 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         $topicHeadEnd = strpos($curatorHtml, '</header>', (int) $studyStart);
         self::assertNotFalse($topicHeadEnd);
         $topicHead = substr($curatorHtml, (int) $studyStart, (int) $topicHeadEnd - (int) $studyStart);
-        self::assertStringContainsString('class="breadcrumb"', $topicHead, 'the slice is the topic head');
+        self::assertStringContainsString('class="thread-study-title"', $topicHead, 'the slice is the topic head; ADR 0043 moves its breadcrumb into the subheader');
         self::assertStringContainsString('living-brief-curator', $curatorHtml);
         self::assertStringNotContainsString('living-brief-curator', $topicHead);
         $this->logoutClient();

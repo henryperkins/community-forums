@@ -72,7 +72,7 @@ async function bar(page: Page) {
     });
     const row = [
       ...boxes('opener', ':scope > .nav-toggle'), ...boxes('lockup', '.forum-bar-brand'), ...boxes('search', '.forum-bar-search'),
-      ...boxes('compose', '.forum-bar-compose .btn'), ...boxes('bell', '[data-bell]'), ...boxes('seat', '.forum-bar-user'),
+      ...boxes('bell', '[data-bell]'), ...boxes('seat', '.forum-bar-user'),
       ...boxes('signup', '.forum-bar-signup'), ...boxes('signin', '.forum-bar-signin'),
     ].sort((a, b) => a.left - b.left);
     const routes = Array.from(header.querySelectorAll('.forum-bar-surface')).filter(shown).map((el) => {
@@ -120,7 +120,7 @@ test('the phone rows give every control a 44px target, 8px apart, and the routes
     expect(m.height, `${where}: ADR 0042's two rows`).toBe(108);
     expect(m.token).toBe('108px');
     expect(m.overflow, `${where}: no sideways scroll, even with "99+" counts`).toBeLessThanOrEqual(0);
-    expect(m.row.map((box) => box.name)).toEqual(['opener', 'lockup', 'search', 'compose', 'bell', 'seat']);
+    expect(m.row.map((box) => box.name)).toEqual(['opener', 'lockup', 'search', 'bell', 'seat']);
     expect(new Set(m.row.map((box) => Math.round(box.top))).size, `${where}: one first row`).toBe(1);
     for (const box of m.row) {
       expect(box.height, `${where}: ${box.name} height`).toBeGreaterThanOrEqual(44);
@@ -171,7 +171,7 @@ test('the reading and focus order follow the rows', async ({ page }, info) => {
   // Tab walks the first row left to right, then the routes' row.
   await page.locator('body').focus();
   const visited: { name: string; top: number; left: number }[] = [];
-  for (let step = 0; step < 16 && visited.length < 9; step++) {
+  for (let step = 0; step < 16 && visited.length < 8; step++) {
     await page.keyboard.press('Tab');
     const stop = await page.evaluate(() => {
       const el = document.activeElement as HTMLElement | null;
@@ -182,7 +182,7 @@ test('the reading and focus order follow the rows', async ({ page }, info) => {
     if (stop) visited.push(stop);
   }
   expect(visited.map((stop) => stop.name)).toEqual([
-    'Open board rail', 'RetroBoards', 'Search the council', 'New topic',
+    'Open board rail', 'RetroBoards', 'Search the council',
     expect.stringMatching(/^Notifications/), 'Account menu for Alice Avery', 'Boards', expect.stringMatching(/^Inbox/), expect.stringMatching(/^Messages/),
   ]);
   // Row by row: the top never climbs back, and within a row the stops run left to right.
@@ -267,7 +267,7 @@ test('the divider stands only beside a pane toggle', async ({ page }, info) => {
     await page.setViewportSize({ width: 800, height: 844 });
     await page.goto('/inbox');
     await expect(page.locator('.forum-bar-divider')).toBeHidden();
-    await expect(page.locator('.forum-bar-compose .btn span')).toBeVisible();
+    await expect(page.locator('[data-create-trigger] .create-label')).toBeHidden();
     await page.screenshot({ path: shot('divider-800.png', info.project.name), clip: { x: 0, y: 0, width: 800, height: 112 } });
     return;
   }
@@ -368,13 +368,13 @@ test('touch screens above the drawer breakpoint keep the 44px floor', async ({ b
         expect((await control.boundingBox())!.height, selector).toBeGreaterThanOrEqual(44);
       }
     }
-    const compose = page.locator('.forum-bar-compose .btn');
+    const compose = page.locator('[data-create-trigger]');
     const label = await compose.evaluate((el) => {
       const button = el.getBoundingClientRect();
-      const text = el.querySelector('span')!.getBoundingClientRect();
+      const text = el.querySelector('.create-label')!.getBoundingClientRect();
       return { above: text.top - button.top, below: button.bottom - text.bottom };
     });
-    expect(Math.abs(label.above - label.below), 'New topic stays centred in its taller target').toBeLessThanOrEqual(2);
+    expect(Math.abs(label.above - label.below), 'Creation stays centred in its taller target').toBeLessThanOrEqual(2);
     await page.screenshot({ path: shot('touch-1024.png', info.project.name), clip: { x: 0, y: 0, width: 1024, height: 64 } });
   } finally {
     await context.close();

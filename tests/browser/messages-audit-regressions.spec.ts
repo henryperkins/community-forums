@@ -1,3 +1,4 @@
+import { openNewMessage } from './create-menu-helpers';
 import { test, expect, type Browser, type BrowserContext, type BrowserContextOptions, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { execFileSync } from 'node:child_process';
@@ -319,12 +320,12 @@ test('P1-1 compose dialog is modal: aria-modal, Tab and Shift+Tab stay inside, E
   for (const [label, options] of [['1440', { viewport: DESKTOP }], ['390-touch', TOUCH]] as const) {
     const { context, page, errors } = await member(browser, baseURL!, 'alice', options);
     await page.goto('/messages');
-    const details = page.locator('details.dm-compose-details');
+    const details = page.locator('[data-dm-compose]');
     const dialog = page.locator('.dm-dialog');
     const to = page.locator('.dm-dialog .dm-to-input');
     await expect.soft(dialog, `${label}: closed dialog is not modal`).not.toHaveAttribute('aria-modal', /.*/);
-    await page.locator('.dm-new-btn').click();
-    await expect(details).toHaveAttribute('open', '');
+    await openNewMessage(page);
+    await expect(details).toBeVisible();
     await expect(dialog).toHaveAttribute('role', 'dialog');
     await expect.soft(dialog, `${label}: open dialog`).toHaveAttribute('aria-modal', 'true');
     await expect(to).toBeFocused();
@@ -343,29 +344,30 @@ test('P1-1 compose dialog is modal: aria-modal, Tab and Shift+Tab stay inside, E
     measure(`${label} escapes`, { tab: tabEscapes, shiftTab: shiftEscapes });
 
     // Escape with the suggestion list open closes only the list.
-    if (!await details.evaluate(d => (d as HTMLDetailsElement).open)) await page.locator('.dm-new-btn').click();
+    if (!await details.isVisible()) await openNewMessage(page);
     await to.focus();
     await to.fill('bo');
     const suggest = page.locator('.dm-dialog .dm-suggest');
     await expect(suggest).toBeVisible();
     await page.keyboard.press('Escape');
     await expect.soft(suggest, `${label}: Escape closes the list`).toBeHidden();
-    await expect.soft(details, `${label}: …and only the list`).toHaveAttribute('open', '');
+    await expect.soft(details, `${label}: …and only the list`).toBeVisible();
     // With the list closed, Escape closes the dialog and returns focus to "+".
     // At 027d878 the picker swallowed every Escape, so the dialog stayed open.
     await page.keyboard.press('Escape');
-    await expect.soft(details, `${label}: second Escape closes the dialog`).not.toHaveAttribute('open', /.*/);
-    await expect.soft(page.locator('.dm-new-btn'), `${label}: focus returns to "+"`).toBeFocused();
+    await expect.soft(details, `${label}: second Escape closes the dialog`).toBeHidden();
+    await expect.soft(page.locator('[data-create-trigger]'), `${label}: focus returns to "+"`).toBeFocused();
     await expect.soft(dialog, `${label}: closed dialog drops aria-modal`).not.toHaveAttribute('aria-modal', /.*/);
     expect.soft(errors).toEqual([]);
     await context.close();
   }
 
-  // Without JS the dialog is a plain disclosure panel: no role, no aria-modal.
+  // Without JS creation follows the canonical New message link.
   const { context, page } = await member(browser, baseURL!, 'alice', { viewport: DESKTOP, javaScriptEnabled: false });
   await page.goto('/messages');
-  await page.locator('.dm-new-btn').click();
-  await expect(page.locator('details.dm-compose-details')).toHaveAttribute('open', '');
+  await openNewMessage(page);
+  await expect(page).toHaveURL(/\/messages\/new$/);
+  await expect(page.locator('.dm-compose input[name=to]')).toBeVisible();
   await expect.soft(page.locator('.dm-dialog')).not.toHaveAttribute('role', /.*/);
   await expect.soft(page.locator('.dm-dialog')).not.toHaveAttribute('aria-modal', /.*/);
   await context.close();
@@ -422,7 +424,9 @@ test('P1-2 short screens: the letters keep a readable floor, the phone dock rest
         measure(`${mode} 390 at rest`, rest);
         await expect.soft(dock, `${mode} 390 rests folded`).not.toHaveClass(/is-expanded/);
         expect.soft(rest.dock, `${mode} 390 dock at rest`).toBeLessThan(120);
-        expect.soft(rest.pane, `${mode} 390 letters at rest`).toBeGreaterThan(500);
+        const subheaderHeight = (await page.locator('[data-subheader]').boundingBox())!.height;
+        // ADR 0043 reserves the shared row's height from the reading room.
+        expect.soft(rest.pane, `${mode} 390 letters at rest`).toBeGreaterThan(500 - subheaderHeight);
         await expect.soft.poll(() => paneGap(page), { message: `${mode} 390 opens at the newest letter` }).toBeLessThan(2);
         await shot(page, `conversation-390-touch-rest${wysiwyg ? '-wysiwyg' : ''}`);
         await page.locator(input).tap();
@@ -514,7 +518,7 @@ test('P1-3 prose links are underlined in letters and posts; image links are not;
 });
 
 async function newButtonContrast(page: Page) {
-  return page.locator('.dm-new-btn').evaluate(el => {
+  return page.locator('[data-create-trigger]').evaluate(el => {
     const C = (window as any).__rbColor;
     const icon = el.querySelector('svg') ?? el;
     const fg = C.rgba(getComputedStyle(icon).color);
@@ -663,13 +667,13 @@ test('P2-2 Search and the To chip field wear the shared focus outline on keyboar
     return { style: cs.outlineStyle, width: parseFloat(cs.outlineWidth) };
   });
   await page.goto('/messages');
-  await page.locator('.dm-new-btn').focus();
+  await page.locator('[data-create-trigger]').focus();
   for (let i = 0; i < 8 && !await page.locator('.dm-search input').evaluate(el => el === document.activeElement); i++) await page.keyboard.press('Tab');
   await expect(page.locator('.dm-search input')).toBeFocused();
   await settle(page, 300);
   const search = await ring('.dm-search input');
 
-  await page.locator('.dm-new-btn').click();
+  await openNewMessage(page);
   await expect(page.locator('.dm-dialog .dm-to-input')).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Tab');
@@ -716,7 +720,7 @@ test('P2-4 touch: every Messages control takes a 44x44 tap', async ({ browser, b
   const hits: Record<string, unknown> = {};
   await page.goto('/messages');
   await page.evaluate(() => window.scrollTo(0, 0));
-  hits['New message'] = await hitArea(page.locator('.dm-new-btn'));
+  hits['New message'] = await hitArea(page.locator('[data-create-trigger]'));
   const pills = page.locator('.dm-listpane-filters .pill');
   for (let i = 0; i < await pills.count(); i++) hits[`filter pill ${i}`] = await hitArea(pills.nth(i));
 

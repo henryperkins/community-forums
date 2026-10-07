@@ -72,7 +72,6 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
     'has_reading_pane' => $variant === 'app' && $this->block('route', '') === 'inbox',
     'active_thread_board_id' => str_starts_with($chromePath, '/t/')
         ? (int) ($thread['board_id'] ?? 0) : 0,
-    'compose_board' => $composeBoard,
 ]) ?>
 <?php endif; ?>
 <?php if (is_array($site_announcement ?? null) && !empty($site_announcement['active'])): ?>
@@ -88,6 +87,7 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
                 ? (int) ($thread['board_id'] ?? 0) : 0,
         ]) ?>
         <main class="main" id="main">
+            <?= $this->partial('partials/subheader', ['compose_board' => $composeBoard]) ?>
             <?= $this->partial('partials/flash') ?>
             <?= $content ?>
         </main>
@@ -107,6 +107,7 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
     </main>
 <?php else: ?>
     <main class="container" id="main">
+        <?= $this->partial('partials/subheader', ['compose_board' => $composeBoard]) ?>
         <?= $this->partial('partials/flash') ?>
         <?= $content ?>
     </main>

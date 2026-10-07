@@ -1,0 +1,8 @@
+No syntax errors detected in templates/dm/index.php
+No syntax errors detected in templates/dm/new.php
+No syntax errors detected in templates/dm/show.php
+No syntax errors detected in templates/partials/dm_list.php
+No syntax errors detected in templates/partials/dm_compose_panel.php
+No syntax errors detected in tests/Integration/Core/AppCreateMenuTest.php
+node --check public/assets/app.js: passed
+git diff --check: passed

@@ -4,6 +4,12 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Consistent headers and navigation
 
+- Move creation into one shared row beneath the member header: New topic and
+  New message share a quiet create menu, with a named 44px plus on phones.
+  Keep board-aware topic links, native navigation, Messages dialog draft
+  recovery and docked room geometry (ADR 0043). Keep the dialog outside hidden
+  reading-room panes, cancel recipient suggestions when focus leaves the field,
+  and wrap long board breadcrumbs within the shared row.
 - Use document scrolling on topics with a bottom-sticky reply dock and
   theme-aware scrollbar ink. Keep native fragments and keyboard focus visible
   between the header and dock (ADR 0030, document-scrolling follow-up).

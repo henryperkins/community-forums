@@ -235,7 +235,7 @@ test('a wide operator logo scales down on the first row', async ({ page }, info)
 test('New topic opens the composer on the board being read', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'one viewport proves the link; the phone glyph shares it');
   await signInAs(page, 'elrond@retro.test');
-  const newTopic = page.locator('header.forum-bar .forum-bar-compose a');
+  const newTopic = page.locator('[data-subheader] a[href^="/compose"]');
 
   await page.goto('/');
   await expect(newTopic).toHaveAttribute('href', '/compose');
@@ -243,6 +243,7 @@ test('New topic opens the composer on the board being read', async ({ page }, in
   await page.goto('/c/general');
   await expect(newTopic).toHaveAttribute('href', '/compose?board=general');
   const topic = await page.locator('main a[href^="/t/"]').first().getAttribute('href');
+  await page.locator('[data-create-trigger]').click();
   await newTopic.click();
   await expect(page).toHaveURL(/\/compose\?board=general$/);
   await expect(page.locator('select[name="board_id"] option:checked')).toHaveText('General');

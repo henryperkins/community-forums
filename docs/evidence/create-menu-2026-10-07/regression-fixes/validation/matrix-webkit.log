@@ -1,0 +1,333 @@
+
+Running 28 tests using 1 worker
+
+(node:840965) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  -   1 [desktop] › create-menu-subheader.spec.ts:199:9 › member route matrix 320px
+  -   2 [desktop] › create-menu-subheader.spec.ts:199:9 › member route matrix 390px
+  -   3 [desktop] › create-menu-subheader.spec.ts:199:9 › member route matrix 860px
+  ✓   4 [desktop] › create-menu-subheader.spec.ts:199:9 › member route matrix 861px (13.9s)
+  ✓   5 [desktop] › create-menu-subheader.spec.ts:199:9 › member route matrix 1024px (11.9s)
+  ✓   6 [desktop] › create-menu-subheader.spec.ts:199:9 › member route matrix 1280px (12.1s)
+  ✓   7 [desktop] › create-menu-subheader.spec.ts:199:9 › member route matrix 1440px (12.6s)
+  ✓   8 [desktop] › create-menu-subheader.spec.ts:218:5 › keyboard creation, shared menu dismissal and Messages focus/draft recovery (2.9s)
+  ✓   9 [desktop] › create-menu-subheader.spec.ts:267:5 › classic scrollbar and Large text fit 320px (794ms)
+
+  ✓  10 [desktop] › create-menu-subheader.spec.ts:271:13 › native with JS › guest and dms-off routes retain the conditional row (1.0m)
+  ✓  11 [desktop] › create-menu-subheader.spec.ts:307:13 › native with JS › representative page and open menu captures (9.4s)
+
+  ✓  12 [desktop] › create-menu-subheader.spec.ts:271:13 › native without JS › guest and dms-off routes retain the conditional row (1.0m)
+  ✓  13 [desktop] › create-menu-subheader.spec.ts:307:13 › native without JS › representative page and open menu captures (9.7s)
+  ✓  14 [desktop] › create-menu-subheader.spec.ts:338:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors (44.1s)
+(node:848386) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [mobile] › create-menu-subheader.spec.ts:199:9 › member route matrix 320px (14.5s)
+  ✓  16 [mobile] › create-menu-subheader.spec.ts:199:9 › member route matrix 390px (12.8s)
+  ✓  17 [mobile] › create-menu-subheader.spec.ts:199:9 › member route matrix 860px (13.2s)
+  -  18 [mobile] › create-menu-subheader.spec.ts:199:9 › member route matrix 861px
+  -  19 [mobile] › create-menu-subheader.spec.ts:199:9 › member route matrix 1024px
+  -  20 [mobile] › create-menu-subheader.spec.ts:199:9 › member route matrix 1280px
+  -  21 [mobile] › create-menu-subheader.spec.ts:199:9 › member route matrix 1440px
+  ✓  22 [mobile] › create-menu-subheader.spec.ts:218:5 › keyboard creation, shared menu dismissal and Messages focus/draft recovery (2.9s)
+  -  23 [mobile] › create-menu-subheader.spec.ts:267:5 › classic scrollbar and Large text fit 320px
+
+  ✓  24 [mobile] › create-menu-subheader.spec.ts:271:13 › native with JS › guest and dms-off routes retain the conditional row (45.3s)
+  ✓  25 [mobile] › create-menu-subheader.spec.ts:307:13 › native with JS › representative page and open menu captures (8.1s)
+
+  ✓  26 [mobile] › create-menu-subheader.spec.ts:271:13 › native without JS › guest and dms-off routes retain the conditional row (39.5s)
+  ✘  27 [mobile] › create-menu-subheader.spec.ts:307:13 › native without JS › representative page and open menu captures (8.3s)
+(node:851173) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  28 [mobile] › create-menu-subheader.spec.ts:338:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors (33.3s)
+
+
+  1) [mobile] › create-menu-subheader.spec.ts:307:13 › native without JS › representative page and open menu captures
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:321:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872.15625
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:321:25
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:321:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872.15625
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:321:25
+
+    Error Context: ../../../../../tmp/community-create-fix-matrix-webkit-complete/.artifacts/create-menu-subheader-nati-f8a9e-page-and-open-menu-captures-mobile/error-context.md
+
+    Error Context: ../../../../../tmp/community-create-fix-matrix-webkit-complete/.artifacts/create-menu-subheader-nati-f8a9e-page-and-open-menu-captures-mobile/error-context.md
+
+  2) [mobile] › create-menu-subheader.spec.ts:338:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872.15625
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872.15625
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872.15625
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    872.15625
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    860
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    860.46875
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: room adds no page scroll
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    860
+
+      173 |                 await capture(page, `${label}-full-page`, 'mobile', true);
+      174 |             }
+    > 175 |             expect.soft(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                     ^
+      176 |         } else
+      177 |             expect(g.sh, `${route}: room adds no page scroll`).toBeLessThanOrEqual(g.h + 1);
+      178 |         if (g.dock !== undefined) {
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:175:69)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error: /messages/1: composer dock
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 845
+    Received:    860.46875
+
+      179 |             expect(g.dock, `${route}: composer within room`).toBeLessThanOrEqual(g.roomBottom! + 1);
+      180 |             if (!javaScriptEnabled && width <= 860 && route === conversation)
+    > 181 |                 expect.soft(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+          |                                                                ^
+      182 |             else
+      183 |                 expect(g.dock, `${route}: composer dock`).toBeLessThanOrEqual(g.h + 1);
+      184 |             expect(g.send, `${route}: Send within viewport`).toBeLessThanOrEqual(g.h + 1);
+        at contract (/home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:181:64)
+        at /home/ubuntu/community-forums/tests/browser/create-menu-subheader.spec.ts:347:25
+
+    Error Context: ../../../../../tmp/community-create-fix-matrix-webkit-complete/.artifacts/create-menu-subheader-no-J-122f3-ng-content-and-draft-errors-mobile/error-context.md
+
+    Error Context: ../../../../../tmp/community-create-fix-matrix-webkit-complete/.artifacts/create-menu-subheader-no-J-122f3-ng-content-and-draft-errors-mobile/error-context.md
+
+  2 failed
+    [mobile] › create-menu-subheader.spec.ts:307:13 › native without JS › representative page and open menu captures
+    [mobile] › create-menu-subheader.spec.ts:338:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors
+  8 skipped
+  18 passed (7.1m)

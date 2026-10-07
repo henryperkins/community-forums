@@ -18,7 +18,7 @@ $this->layout('layout');
 $this->section('title', $title);
 ?>
 <div class="dm-shell reading has-rail" data-dm-conversation="<?= (int) $conversation_id ?>" data-dm-latest="<?= (int) $page === (int) $pages && !empty($can_reply) ? '1' : '0' ?>" data-dm-viewer="<?= $current_user->id() ?>" data-dm-group="<?= !empty($is_group) ? '1' : '0' ?>" data-dm-other="<?= (int) ($other['id'] ?? 0) ?>">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id, 'allow_groups' => $allow_groups ?? false, 'show_avatars' => $show_avatars ?? true, 'heading_tag' => 'h2']) ?>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id, 'show_avatars' => $show_avatars ?? true, 'heading_tag' => 'h2']) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head">
@@ -166,3 +166,4 @@ $this->section('title', $title);
     ]) ?>
     <a class="dm-rail-scrim" href="#" data-rail-scrim aria-label="Close details"></a>
 </div>
+<?= $this->partial('partials/dm_compose_panel', ['allow_groups' => $allow_groups ?? false, 'show_avatars' => $show_avatars ?? true]) ?>

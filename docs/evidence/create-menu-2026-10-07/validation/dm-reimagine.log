@@ -1,0 +1,14 @@
+
+Running 4 tests using 1 worker
+
+(node:717280) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › dm-reimagine.spec.ts:65:5 › DM reading room: de-boxed rows, grouped letters, no-JS report (3.8s)
+  ✓  2 [desktop] › dm-reimagine.spec.ts:145:5 › DM reading room: rail toggle, menu dismissal, mobile drawer (JS enhancement) (1.8s)
+(node:717502) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  3 [mobile] › dm-reimagine.spec.ts:65:5 › DM reading room: de-boxed rows, grouped letters, no-JS report
+  -  4 [mobile] › dm-reimagine.spec.ts:145:5 › DM reading room: rail toggle, menu dismissal, mobile drawer (JS enhancement)
+
+  2 skipped
+  2 passed (6.6s)

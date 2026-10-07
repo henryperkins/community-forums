@@ -2,6 +2,8 @@
 
 **Status:** Accepted — 2026-09-28
 
+[ADR 0043](0043-create-menu-subheader.md) supersedes the 2026-10-07 phone first-row create-control clause: creation now lives in a shared content row; header heights and route rows stay as specified here.
+
 The mobile inbox put introductory copy, scope, three order pills, a bulk action,
 an appearance preference, and keyboard instructions before its topics. The
 scope and order are independent product choices, but their presentation made

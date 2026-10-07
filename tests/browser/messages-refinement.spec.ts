@@ -1,3 +1,4 @@
+import { openNewMessage } from './create-menu-helpers';
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import fs from 'node:fs';
@@ -115,11 +116,11 @@ test('refined Messages: responsive reading, picker, live incoming counsel, error
   await page.locator('.dm-compose button[aria-label^="Remove Bob"]').click();
   await expect(page.locator('.dm-compose [name=to]')).toHaveValue('carol');
   await page.goto('/messages');
-  await page.locator('.dm-new-btn').click();
+  await openNewMessage(page);
   await page.locator('.dm-dialog .dm-to-input').fill('unknown_member');
   await page.locator('.dm-dialog textarea[name=body]').fill('Preserve my letter after an eligibility error.');
   await page.locator('.dm-dialog .composer-send').click();
-  await expect(page.locator('.dm-compose-details')).toHaveAttribute('open', '');
+  await expect(page.locator('[data-dm-compose]')).toBeVisible();
   await expect(page.locator('.dm-dialog')).toContainText('No member found');
   await expect(page.locator('.dm-dialog textarea[name=body]')).toHaveValue('Preserve my letter after an eligibility error.');
   await shot(page, 'dialog-validation-draft');

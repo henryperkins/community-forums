@@ -9,6 +9,8 @@ and its ADR 0031; the 2026-08-27 member-surfaces production transfer (the
 §13 (completion evidence); the mirror's `LOCAL_RECONCILIATION.md` entry of the
 same date.
 
+[ADR 0043](0043-create-menu-subheader.md) supersedes the header compose clauses in decisions 1, 3 and 4 and the phone first-row create control: creation now lives in a shared content row.
+
 ## Context
 
 The presence handoff shipped the design system's new **unified member chrome**:

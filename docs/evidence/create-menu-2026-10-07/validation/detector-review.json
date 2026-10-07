@@ -1,0 +1,10 @@
+{
+  "scannedFiles": "Changed production templates, app.css and app.js",
+  "totalFindings": 228,
+  "severity": {
+    "warning": 33,
+    "advisory": 195
+  },
+  "introducedFindings": [],
+  "review": "Existing warnings and advisories left within the established visual identity; no finding targets an added source line."
+}
