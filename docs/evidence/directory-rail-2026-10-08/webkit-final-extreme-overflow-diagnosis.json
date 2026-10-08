@@ -1,0 +1,62 @@
+[
+  {
+    "tag": "NAV",
+    "class": "forum-bar-surfaces",
+    "text": "Boards\n                                                                            Inbox\n                               ",
+    "rect": {
+      "x": 8,
+      "y": 56.484375,
+      "width": 345.546875,
+      "height": 55.21875,
+      "top": 56.484375,
+      "right": 353.546875,
+      "bottom": 111.703125,
+      "left": 8
+    },
+    "client": 346,
+    "scroll": 346,
+    "display": "flex",
+    "whiteSpace": "normal",
+    "flexWrap": "nowrap"
+  },
+  {
+    "tag": "A",
+    "class": "forum-bar-surface",
+    "text": "Messages0",
+    "rect": {
+      "x": 210.921875,
+      "y": 60.484375,
+      "width": 142.625,
+      "height": 47.21875,
+      "top": 60.484375,
+      "right": 353.546875,
+      "bottom": 107.703125,
+      "left": 210.921875
+    },
+    "client": 143,
+    "scroll": 143,
+    "display": "flex",
+    "whiteSpace": "nowrap",
+    "flexWrap": "nowrap"
+  },
+  {
+    "tag": "A",
+    "class": "",
+    "text": "Following 0",
+    "rect": {
+      "x": 180.3125,
+      "y": 912.203125,
+      "width": 143.625,
+      "height": 112.34375,
+      "top": 912.203125,
+      "right": 323.9375,
+      "bottom": 1024.546875,
+      "left": 180.3125
+    },
+    "client": 144,
+    "scroll": 144,
+    "display": "block",
+    "whiteSpace": "normal",
+    "flexWrap": "nowrap"
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "version": "dea42daf175bcd4b",
+  "served": [
+    {
+      "entry": "app.css",
+      "url": "/assets/dist/app-style-CeL3HeAb.css",
+      "sha256": "f7d48de10a9a7663f59951801877b08858cc186d55eac50430458711610a53b5"
+    },
+    {
+      "entry": "app.js",
+      "url": "/assets/dist/app-5ec499b2e6e78c4b.js",
+      "sha256": "5ec499b2e6e78c4ba2ace154ab81b3dfa478ebd45f37f585409d2d52946c563c"
+    }
+  ]
+}

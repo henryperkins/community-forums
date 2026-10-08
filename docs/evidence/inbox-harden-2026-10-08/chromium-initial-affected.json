@@ -1,0 +1,159 @@
+{
+  "engine": "chromium",
+  "assets": [
+    {
+      "url": "/assets/dist/app-style-D9QfswNc.css",
+      "status": 200,
+      "sha256": "6e471a9b37f6e4ec9c2e8228afc18d2488a9b5e46a2b0352ca82304719cdeabb"
+    },
+    {
+      "url": "/assets/dist/app-56e9b9a8f33fd541.js",
+      "status": 200,
+      "sha256": "56e9b9a8f33fd541d5f711640c7a65cda8b112ab1e98a34987ea0f94ee7965cf"
+    }
+  ],
+  "cases": [
+    {
+      "name": "rapid-preview-race",
+      "ids": [
+        "4",
+        "3"
+      ],
+      "current": "3",
+      "heading": "\u0645\u0631\u062d\u0628\u0627 \u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1 end",
+      "active": "3",
+      "url": "/inbox?scope=starred&order=active&t=3",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "H2",
+      "focusText": "\u0645\u0631\u062d\u0628\u0627 \u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4",
+      "documentWidth": 393,
+      "scrollWidth": 383
+    },
+    {
+      "name": "rtl-cjk-long-title",
+      "geometry": {
+        "row": {
+          "x": 26,
+          "y": 360.796875,
+          "width": 268,
+          "height": 289.40625,
+          "top": 360.796875,
+          "right": 294,
+          "bottom": 650.203125,
+          "left": 26
+        },
+        "title": {
+          "x": 33,
+          "y": 368.796875,
+          "width": 188,
+          "height": 176.25,
+          "top": 368.796875,
+          "right": 221,
+          "bottom": 545.046875,
+          "left": 33
+        },
+        "titleScroll": 188,
+        "titleClient": 188
+      },
+      "menu": {
+        "x": 8,
+        "y": 393,
+        "width": 304,
+        "height": 195.953125
+      },
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "SUMMARY",
+      "focusText": "\n",
+      "documentWidth": 320,
+      "scrollWidth": 1309
+    },
+    {
+      "name": "short-large-text",
+      "menus": [
+        {
+          "selector": ".create-menu",
+          "open": true,
+          "positioned": "1",
+          "box": {
+            "x": 8,
+            "y": 8,
+            "width": 304,
+            "height": 186.03125
+          },
+          "styles": {
+            "maxHeight": "none",
+            "overflow": "visible",
+            "scroll": 184,
+            "client": 184
+          }
+        },
+        {
+          "selector": ".inbox-compact-menu",
+          "open": false,
+          "positioned": null,
+          "box": {
+            "x": 130.8125,
+            "y": 334.1875,
+            "width": 288,
+            "height": 108
+          },
+          "styles": {
+            "maxHeight": "108px",
+            "overflow": "auto",
+            "scroll": 1281,
+            "client": 106
+          }
+        },
+        {
+          "selector": ".inbox-actions",
+          "open": true,
+          "positioned": "1",
+          "box": {
+            "x": 8,
+            "y": 9,
+            "width": 304,
+            "height": 108
+          },
+          "styles": {
+            "maxHeight": "108px",
+            "overflow": "auto",
+            "scroll": 212,
+            "client": 106
+          }
+        }
+      ],
+      "help": {
+        "x": 27,
+        "y": 32,
+        "width": 256,
+        "height": 116
+      },
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "BUTTON",
+      "focusText": "\n",
+      "documentWidth": 320,
+      "scrollWidth": 314
+    }
+  ],
+  "errors": [],
+  "build": "9cd60f8b2665c07a",
+  "limitations": [
+    "Linux Chromium/WebKit emulation; no physical Safari/Windows forced-colors",
+    "200% root text size emulates text scaling, not browser zoom",
+    "Hung request observed for 1.5 seconds plus static no-timeout confirmation"
+  ]
+}

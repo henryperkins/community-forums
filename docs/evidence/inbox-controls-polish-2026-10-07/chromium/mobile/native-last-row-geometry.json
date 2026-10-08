@@ -1,0 +1,44 @@
+[
+  {
+    "width": 320,
+    "clientWidth": 320,
+    "panel": {
+      "x": 24,
+      "right": 298,
+      "y": 638.890625,
+      "bottom": 842.328125,
+      "height": 203.4375
+    },
+    "owner": {
+      "y": 368.828125,
+      "bottom": 844,
+      "clientHeight": 475,
+      "scrollHeight": 975,
+      "scrollTop": 417
+    },
+    "position": "static",
+    "panelBottomInScroll": 890.5,
+    "paintedHeight": 203.4375
+  },
+  {
+    "width": 393,
+    "clientWidth": 393,
+    "panel": {
+      "x": 24,
+      "right": 371,
+      "y": 590.703125,
+      "bottom": 794.140625,
+      "height": 203.4375
+    },
+    "owner": {
+      "y": 351.203125,
+      "bottom": 844,
+      "clientHeight": 493,
+      "scrollHeight": 852,
+      "scrollTop": 324
+    },
+    "position": "static",
+    "panelBottomInScroll": 766.9375,
+    "paintedHeight": 203.4375
+  }
+]

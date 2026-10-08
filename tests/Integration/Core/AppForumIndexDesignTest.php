@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use Tests\Support\TestCase;
+use DOMDocument;
+use DOMXPath;
 
 final class AppForumIndexDesignTest extends TestCase
 {
@@ -33,7 +35,7 @@ final class AppForumIndexDesignTest extends TestCase
         self::assertStringContainsString('href="/inbox"', $body);
         self::assertStringContainsString('href="/?pane=boards"', $body);
         self::assertStringContainsString('href="/?pane=tags"', $body);
-        self::assertStringContainsString('href="/?pane=notices"', $body);
+        self::assertStringNotContainsString('href="/?pane=notices"', $body);
         self::assertStringContainsString('href="/?pane=connections"', $body);
         self::assertStringContainsString('data-forum-total="boards">1 board', $body);
         self::assertStringContainsString('data-forum-total="topics">7 topics', $body);
@@ -43,6 +45,12 @@ final class AppForumIndexDesignTest extends TestCase
         self::assertStringNotContainsString('hidden-design-board', $body);
         self::assertStringNotContainsString('data-inbox-list', $body);
         self::assertStringNotContainsString('composer-details', $body);
+        $document = new DOMDocument();
+        @$document->loadHTML($body);
+        $dom = new DOMXPath($document);
+        self::assertSame(1, $dom->query('//*[@id="sidebar-nav"]//*[@data-directory-nav]')->length);
+        self::assertSame(3, $dom->query('//*[@data-directory-nav]//a[@data-directory-link]')->length);
+        self::assertSame(0, $dom->query('//main//*[@data-directory-nav] | //*[@data-subheader]')->length, 'Guest navigation belongs to the rail and adds no empty creation row.');
     }
 
     public function test_signed_in_shared_navigation_places_and_marks_each_primary_route(): void

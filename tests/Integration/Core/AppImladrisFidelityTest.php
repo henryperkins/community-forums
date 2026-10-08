@@ -729,7 +729,7 @@ final class AppImladrisFidelityTest extends TestCase
         // both lived in a third group on the same nowrap row, and with five
         // items competing the byline gave up all of its width to an ellipsis.
         self::assertStringNotContainsString('Tended by', $match['byline']);
-        self::assertStringContainsString('Quiet until', $match['byline']);
+        self::assertStringContainsString('Til Jan 2, 2030', $match['byline']);
         self::assertStringNotContainsString('class="thread-operational-facts"', $res->body());
         self::assertStringContainsString('@thread_tender', $res->body());
         $this->assertSeeText($res, 'star-btn');

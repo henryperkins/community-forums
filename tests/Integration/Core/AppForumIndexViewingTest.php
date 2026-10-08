@@ -11,6 +11,8 @@ use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
 use App\Repository\TagRepository;
 use App\Repository\UserPreferenceRepository;
+use DOMDocument;
+use DOMXPath;
 use Tests\Support\TestCase;
 
 final class AppForumIndexViewingTest extends TestCase
@@ -44,6 +46,11 @@ final class AppForumIndexViewingTest extends TestCase
 
         $invalid = $this->get('/', ['pane' => 'elsewhere', 'sort' => 'secret', 'peek' => '4']);
         $this->assertDirectoryState($invalid->body(), 'boards', 'category', 3);
+        $this->assertDirectoryPane($invalid->body(), 'boards');
+        $arrayPane = $this->get('/', ['pane' => ['notices'], 'sort' => ['top'], 'peek' => ['5']]);
+        $this->assertStatus(200, $arrayPane);
+        $this->assertDirectoryState($arrayPane->body(), 'boards', 'category', 3);
+        $this->assertDirectoryPane($arrayPane->body(), 'boards');
 
         $reader = $this->makeUser(['username' => 'directory_reader']);
         (new UserPreferenceRepository($this->db))->merge((int) $reader['id'], [
@@ -60,6 +67,11 @@ final class AppForumIndexViewingTest extends TestCase
 
         $invalidSigned = $this->get('/', ['sort' => 'not-a-sort', 'peek' => '99']);
         $this->assertDirectoryState($invalidSigned->body(), 'boards', 'category', 3);
+        foreach (['unknown', ['tags']] as $invalidPane) {
+            $fallback = $this->get('/', ['pane' => $invalidPane]);
+            $this->assertStatus(200, $fallback);
+            $this->assertDirectoryPane($fallback->body(), 'boards');
+        }
     }
 
     public function test_all_public_orders_rank_the_full_directory_and_category_order_stays_grouped(): void
@@ -202,6 +214,7 @@ final class AppForumIndexViewingTest extends TestCase
         $this->actingAs($reader);
 
         $notices = $this->get('/', ['pane' => 'notices'])->body();
+        $this->assertDirectoryPane($notices, 'notices');
         self::assertStringContainsString('directory_author followed you', $notices);
         self::assertStringContainsString('action="/notifications/' . $noticeId . '/read"', $notices);
         self::assertStringContainsString('action="/notifications/read-all"', $notices);
@@ -229,6 +242,22 @@ final class AppForumIndexViewingTest extends TestCase
             $dark = $this->get('/', ['pane' => $pane])->body();
             $this->assertDirectoryPane($dark, 'boards');
             self::assertStringNotContainsString('href="/?pane=' . $pane . '"', $dark);
+        }
+
+        // The shared rail must honor the two independent discovery flags on
+        // every route, rather than a home-only list of available panes.
+        foreach ([[true, false], [false, true]] as [$tagsOn, $communityOn]) {
+            (new SettingRepository($this->db))->set('features', ['tags' => $tagsOn, 'community' => $communityOn]);
+            foreach (['/' => [], '/inbox' => [], '/compose' => []] as $path => $query) {
+                $response = $this->get($path, $query);
+                $this->assertStatus(200, $response);
+                $document = new DOMDocument();
+                @$document->loadHTML($response->body());
+                $dom = new DOMXPath($document);
+                self::assertSame($tagsOn ? 1 : 0, $dom->query('//*[@data-directory-nav]//a[@data-directory-link="tags"]')->length, $path);
+                self::assertSame($communityOn ? 1 : 0, $dom->query('//*[@data-directory-nav]//a[@data-directory-link="connections"]')->length, $path);
+                self::assertSame(0, $dom->query('//*[@data-directory-nav]//a[@data-directory-link="notices"]')->length);
+            }
         }
     }
 
@@ -286,10 +315,22 @@ final class AppForumIndexViewingTest extends TestCase
     private function assertDirectoryPane(string $body, string $pane): void
     {
         self::assertStringContainsString('data-directory-pane="' . $pane . '"', $body);
-        self::assertMatchesRegularExpression(
-            '~href="/\?pane=' . preg_quote($pane, '~') . '"[^>]*aria-current="page"~',
-            $body,
-        );
+        $document = new DOMDocument();
+        @$document->loadHTML($body);
+        $dom = new DOMXPath($document);
+        self::assertSame(1, $dom->query('//*[@id="sidebar-nav"]//*[@data-directory-nav]')->length);
+        self::assertSame(0, $dom->query('//*[@data-directory-nav]//a[@data-directory-link="notices"]')->length);
+        self::assertSame(0, $dom->query('//*[@data-subheader]//nav[@aria-label="Board index panes"]')->length);
+        if ($pane === 'notices') {
+            self::assertSame(0, $dom->query('//*[@data-directory-nav]//a[@aria-current="page"]')->length);
+            self::assertSame(0, $dom->query('//*[@data-primary-route="boards" and @aria-current="page"]')->length);
+            if ($dom->query('//*[@data-bell]')->length > 0) {
+                self::assertSame(1, $dom->query('//*[@data-bell and @aria-current="page"]')->length);
+            }
+        } else {
+            self::assertSame(1, $dom->query('//*[@data-directory-nav]//a[@data-directory-link="' . $pane . '" and @href="/?pane=' . $pane . '" and @aria-current="page"]')->length);
+            self::assertSame(1, $dom->query('//*[@data-directory-nav]//a[@aria-current="page"]')->length);
+        }
     }
 
     private function firstDirectoryBoard(string $body): string

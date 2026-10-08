@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.45 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
+**Status:** v1.46 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-10-07
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -386,12 +386,16 @@ CREATE TABLE thread_user (
   thread_id         BIGINT UNSIGNED NOT NULL,
   last_read_post_id BIGINT UNSIGNED NULL,                   -- cursor identity; compare its post's (created_at,id) with thread (last_post_at,last_post_id)
   is_starred        TINYINT(1)      NOT NULL DEFAULT 0,
+  snoozed_until     DATETIME        NULL,                   -- 0048: future deadline hides only from personal Inbox
+  snoozed_indefinitely TINYINT(1)   NOT NULL DEFAULT 0,      -- 0083: hidden until restored; writes clear the deadline
+  inbox_note        VARCHAR(120)   NULL,                   -- 0048: personal note
   PRIMARY KEY (user_id, thread_id),
   KEY idx_tu_starred (user_id, is_starred),
+  KEY idx_tu_snooze (user_id, snoozed_until),
   CONSTRAINT fk_tu_user   FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
   CONSTRAINT fk_tu_thread FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
--- FORESHADOWED (PRODUCT_DESIGN §6.18, not yet committed): snoozed_until DATETIME, assigned_to BIGINT UNSIGNED. See §8.
+-- Assignment is topic-wide in thread_assignments (0048), not a thread_user field.
 
 -- SUBSCRIPTIONS (PRODUCT_DESIGN §8.3) — supersedes thread_user.is_subscribed; per-channel + frequency.
 CREATE TABLE subscriptions (
@@ -895,6 +899,7 @@ Additive columns folded into existing tables:
 - `threads.status ENUM('open','needs_answer','solved','decision_made','archived') NOT NULL DEFAULT 'open'`, `status_changed_at DATETIME NULL`, `status_changed_by BIGINT UNSIGNED NULL`, index `idx_threads_status`, FK `status_changed_by → users.id`.
 - `posts.is_wiki TINYINT(1) NOT NULL DEFAULT 0`, index `idx_posts_wiki (thread_id, is_wiki)`.
 - `thread_user.snoozed_until DATETIME NULL`, `inbox_note VARCHAR(120) NULL`, index `idx_tu_snooze (user_id, snoozed_until)`.
+- `thread_user.snoozed_indefinitely TINYINT(1) NOT NULL DEFAULT 0` (migration `0083`): explicit manual Inbox hiding, separate from a deadline. Normal Inbox scopes exclude either active state; Snoozed includes both. Restore clears both without changing read state, subscriptions or notifications.
 - `boards.assignment_mode ENUM('off','self','staff') NOT NULL DEFAULT 'off'`, `tags_enabled TINYINT(1) NOT NULL DEFAULT 1`, `wiki_enabled TINYINT(1) NOT NULL DEFAULT 0`, `link_previews_enabled TINYINT(1) NOT NULL DEFAULT 0` (migration `0081`; the DECISIONS §6 #5 per-board unfurl opt-in — default 0 so enabling the feature flag never starts fetching for a board that did not ask).
 - `conversations.kind ENUM('direct','group') NOT NULL DEFAULT 'direct'`, `title VARCHAR(120) NULL`, `owner_user_id BIGINT UNSIGNED NULL`, `created_by BIGINT UNSIGNED NULL`, index `idx_conversations_kind`, FKs to `users`.
 - `conversation_participants.role ENUM('owner','member') NOT NULL DEFAULT 'member'`, `joined_after_message_id BIGINT UNSIGNED NOT NULL DEFAULT 0`, `joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `left_at DATETIME NULL`, `removed_by BIGINT UNSIGNED NULL`, `notification_mode ENUM('normal','muted') NOT NULL DEFAULT 'normal'`, index `idx_cp_active_user`, FK `removed_by → users.id`. `idx_cp_active_user (user_id, left_at)` supersedes `0025`'s `idx_cp_user (user_id)`, which migration `0080` drops as a redundant prefix (it also covers `fk_cp_user`).
@@ -1323,6 +1328,7 @@ The following candidates remain unspecced/uncommitted as of 2026-09-23. A mentio
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.46 | 2026-10-07 | Added migration `0083`'s explicit `thread_user.snoozed_indefinitely` state for hiding until manually restored. Folded the existing `0048` deadline, note and snooze index into the table definition and removed their stale foreshadowing comment. |
 | v1.45 | 2026-09-25 | Reconciled drift against the migrations: `users.status` shows the six-state `0059` ENUM; `oauth_identities` shows `0052`'s `VARCHAR(64)` provider plus `provider_config_id`, its index and FK; `email_deliveries` shows `0061`'s `payload`, with the idempotency-key comments corrected for digest and announcement keys; `posts.deleted_at` (`0047`), `idx_posts_pending`/`idx_threads_pending` (`0045`), and `idx_users_reputation` (`0041`) are folded in. `submission_idempotency` joins the table index as #116; `plugins` (#29) is marked planned-but-never-built. `appeals` and `custom_profile_fields` are recorded as graduated default-on (2026-07-02/03), and the `submission_idempotency` context comments list `mod_warn`/`api_token_mint`. Phase-plan and status pointers now name the `docs/history/` archive. |
 | v1.44 | 2026-09-23 | Replaced stale pre-implementation wording for shipped sessions and durable submission idempotency. The remaining candidate columns are explicitly scoped to uncommitted future schema work. |
 | v1.43 | 2026-08-27 | Chronological read-cursor migration `0082_posts_read_order_index` adds `posts.idx_posts_thread_read (thread_id,is_deleted,is_pending,created_at,id)`. `thread_user.last_read_post_id` remains the locked per-thread cursor identity; unread, first-unread, context, and repair logic resolve its post and compare `(created_at,id)` tuples so split/merge/import ID skew cannot move readers backward or hide later posts. No cursor column or per-post receipt table was added. |

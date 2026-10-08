@@ -33,6 +33,9 @@ $a = mask_author($t['author_display_name'] ?? null, $t['author_username'] ?? nul
 $unread = !empty($t['is_unread']);
 $inboxUnread = !empty($t['is_inbox_unread']);
 $starred = !empty($t['is_starred']);
+$manualSnooze = !empty($t['snoozed_indefinitely']);
+$snoozed = \App\Support\InboxSnooze::hidden($t['snoozed_until'] ?? null, $manualSnooze);
+$snoozeLabel = $manualSnooze ? 'Until you turn it back on' : ($snoozed ? 'Til ' . human_date($t['snoozed_until']) : '');
 $pinned = (int) ($t['is_pinned'] ?? 0) === 1;
 $locked = (int) ($t['is_locked'] ?? 0) === 1;
 $status = (string) ($t['status'] ?? 'open');
@@ -70,9 +73,9 @@ if ($inboxPresentation) {
 ?>
 <li class="<?= $rowClasses ?>"<?php if ($inboxPresentation): ?> data-inbox-row data-thread-id="<?= $threadId ?>" data-inbox-unread="<?= $inboxUnread ? '1' : '0' ?>" data-inbox-starred="<?= $starred ? '1' : '0' ?>" data-board-slug="<?= $e($t['board_slug']) ?>"<?php elseif ($inboxUnread): ?> data-inbox-unread="1"<?php endif; ?>>
     <?php if ($inboxPresentation): ?>
-        <span class="thread-row-select">
-            <input id="inbox-select-<?= $threadId ?>" type="checkbox" name="thread_ids[]" value="<?= $threadId ?>" form="inbox-bulk-form" data-inbox-select aria-label="Select <?= $e($title) ?>">
-        </span>
+        <label class="thread-row-select">
+            <input id="inbox-select-<?= $threadId ?>" type="checkbox" name="thread_ids[]" value="<?= $threadId ?>" form="inbox-bulk-form" data-inbox-select aria-label="Select <?= $e($title) ?>"<?= !empty($selected) ? ' checked' : '' ?>>
+        </label>
     <?php endif; ?>
     <?php if ($boardPresentation): ?>
         <?php /* The gutter is emitted read or unread, so every row shares one left edge. */ ?>
@@ -111,7 +114,7 @@ if ($inboxPresentation) {
                 <a class="thread-title" href="<?= $e($topicUrl) ?>" data-inbox-preview-url="/inbox/preview/<?= $threadId ?>"><?= $e($title) ?></a>
                 <?php /* The queue leads with why the topic is here, then the topic's own marks. */ ?>
                 <span class="thread-row-chips">
-                    <?php if (!empty($t['for_you_reason'])): ?><span class="chip chip-reason"><?= $this->partial('partials/icon', ['name' => 'commend-star']) ?><?= $e($t['for_you_reason']) ?></span><?php endif; ?>
+                    <?php if (!empty($t['for_you_reason'])): ?><span class="chip chip-reason"><?= $e($t['for_you_reason']) ?></span><?php endif; ?>
                     <?php if ($pinned): ?><span class="chip chip-pinned">Pinned</span><?php endif; ?>
                     <?php if ($statusChip !== null): ?><span class="chip <?= $e($statusChip[0]) ?>"><?= $e($statusChip[1]) ?></span><?php endif; ?>
                     <?php if ($locked): ?><span class="chip chip-locked">Locked</span><?php endif; ?>
@@ -131,7 +134,7 @@ if ($inboxPresentation) {
                 <span class="thread-meta-author">by <?= $e($a['label']) ?></span>
                 <?php if (!empty($t['assigned_username'])): ?><span class="thread-meta-aside">assigned to @<?= $e($t['assigned_username']) ?></span><?php endif; ?>
                 <?php /* The day, not the minute: a snooze is a date you are waiting on. */ ?>
-                <?php if (!empty($t['snoozed_until'])): ?><span class="thread-meta-aside">snoozed until <?= $e(human_date($t['snoozed_until'])) ?></span><?php endif; ?>
+                <?php if ($snoozed): ?><span class="thread-meta-aside"><?= $e($snoozeLabel) ?></span><?php endif; ?>
             <?php elseif ($inboxPresentation): ?>
                 <a href="/c/<?= $e($t['board_slug']) ?>"><span class="hash">#</span><?= $e($boardName) ?></a>
                 <span>by <?= $e($a['label']) ?></span>
@@ -139,7 +142,7 @@ if ($inboxPresentation) {
                 <time datetime="<?= $e(iso_datetime($activityAt)) ?>" title="<?= $e(human_datetime($activityAt)) ?>"><?= $e(relative_datetime($activityAt)) ?></time>
                 <?php if (($order ?? 'active') === 'commended' && (int) ($t['commend_count'] ?? 0) > 0): ?><span class="thread-meta-commends" title="Commends"><?= $this->partial('partials/icon', ['name' => 'commend-star']) ?><?= $e(number_format((int) $t['commend_count'])) ?></span><?php endif; ?>
                 <?php if (!empty($t['assigned_username'])): ?><span>assigned to @<?= $e($t['assigned_username']) ?></span><?php endif; ?>
-                <?php if (!empty($t['snoozed_until'])): ?><span>snoozed until <?= $e(human_date($t['snoozed_until'])) ?></span><?php endif; ?>
+                <?php if ($snoozed): ?><span><?= $e($snoozeLabel) ?></span><?php endif; ?>
             <?php else: ?>
                 <?php if (($show_board ?? false) && !empty($t['board_slug'])): ?><a class="thread-board" href="/c/<?= $e($t['board_slug']) ?>"><span class="hash">#</span><?= $e($boardName) ?></a> · <?php endif; ?>
                 by <?= $e($a['label']) ?>
@@ -148,8 +151,8 @@ if ($inboxPresentation) {
                 <?php if (!empty($t['assigned_username'])): ?>
                     · assigned to @<?= $e($t['assigned_username']) ?>
                 <?php endif; ?>
-                <?php if (!empty($t['snoozed_until'])): ?>
-                    · snoozed until <?= $e(human_date($t['snoozed_until'])) ?>
+                <?php if ($snoozed): ?>
+                    · <?= $e($snoozeLabel) ?>
                 <?php endif; ?>
             <?php endif; ?>
         </span>
@@ -194,21 +197,15 @@ if ($inboxPresentation) {
                     <button type="submit"><?= $unread ? 'Mark read' : 'Mark unread' ?></button>
                 </form>
                 <?php if (!empty($workflow_enabled) && $canWrite): ?>
-                    <?php foreach (['later_today' => 'Later today', 'tomorrow' => 'Tomorrow', 'monday' => 'Monday', 'week' => 'Next week'] as $until => $label): ?>
-                        <form method="post" action="/t/<?= $threadId ?>/snooze" data-inbox-action="snooze" data-inbox-snooze="<?= $e($until) ?>">
+                    <div class="inbox-menu-divider"></div>
+                        <form method="post" action="/t/<?= $threadId ?>/snooze" data-inbox-action="snooze" data-inbox-snooze="tomorrow">
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="return" value="<?= $e($returnTo) ?>">
-                            <input type="hidden" name="until" value="<?= $e($until) ?>">
-                            <button type="submit">Snooze · <?= $e($label) ?></button>
+                            <input type="hidden" name="until" value="tomorrow">
+                            <button type="submit">Til tomorrow</button>
                         </form>
-                    <?php endforeach; ?>
-                    <?php if (!empty($t['snoozed_until'])): ?>
-                        <form method="post" action="/t/<?= $threadId ?>/snooze">
-                            <?= $this->csrfField() ?>
-                            <input type="hidden" name="return" value="<?= $e($returnTo) ?>">
-                            <button type="submit">Clear snooze</button>
-                        </form>
-                    <?php endif; ?>
+                    <div class="inbox-menu-divider"></div>
+                    <?= $this->partial('partials/inbox_visibility', ['thread_id' => $threadId, 'hidden' => $snoozed, 'return_to' => $returnTo]) ?>
                 <?php endif; ?>
             </div>
         </details>

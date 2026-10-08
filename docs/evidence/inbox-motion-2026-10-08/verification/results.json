@@ -1,0 +1,31 @@
+{
+  "phpunit": {
+    "command": "DB_TEST_DATABASE=retroboards_ui_polish_full_20261008 composer test",
+    "exit_code": 0,
+    "tests": 3163,
+    "assertions": 24706,
+    "skipped": 1,
+    "build_version": "680700d52defa6f4"
+  },
+  "runtime": {
+    "command": "DB_TEST_DATABASE=retroboards_ui_polish_full_20261008 composer verify:imladris",
+    "exit_code": 0,
+    "tests": 24,
+    "assertions": 305,
+    "build_version": "9cd60f8b2665c07a"
+  },
+  "assets": {
+    "command": "npm run check:assets",
+    "exit_code": 0,
+    "build_version": "9cd60f8b2665c07a"
+  },
+  "diff": {
+    "command": "git diff --check",
+    "exit_code": 0
+  },
+  "javascript_syntax": {
+    "command": "node --check public/assets/app.js",
+    "exit_code": 0,
+    "build_version": "9cd60f8b2665c07a"
+  }
+}

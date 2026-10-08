@@ -25,6 +25,7 @@ const EVIDENCE_DIR = path.resolve(
   process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
 );
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
+test.use({ browserName: process.env.E2E_LAYOUT_BROWSER === 'webkit' ? 'webkit' : 'chromium' });
 const execFileAsync = promisify(execFile);
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
@@ -389,30 +390,35 @@ test('phase 4 topic workflow: status, snooze, and assignment via the server-rend
 
   // Status: staff moves the topic to "Needs answer".
   let standing = await openTopicTools(page, 'standing');
+  // Other layout fixtures may already set Needs answer without a history
+  // event. Exercise a real transition so the history journey remains valid.
+  if (await standing.details.locator('select[name="status"]').inputValue() === 'needs_answer') {
+    await standing.details.locator('select[name="status"]').selectOption('open');
+    await standing.details.locator('input[name="reason"]').fill('Reset workflow fixture');
+    await standing.details.getByRole('button', { name: 'Update status' }).click();
+    standing = await openTopicTools(page, 'standing');
+  }
   await standing.details.locator('select[name="status"]').selectOption('needs_answer');
   await standing.details.locator('input[name="reason"]').fill('Needs a reply');
   await standing.details.getByRole('button', { name: 'Update status' }).click();
   await expect(page.locator('[data-thread-status="needs_answer"]')).toBeVisible();
 
-  // Snooze: a personal reminder (no cross-user effect). ADR 0030 #27: one press
-  // per window, not a select plus a Save; the standing window comes back lit.
+  // Inbox visibility is personal. The same switch restores both tomorrow's
+  // timed hide and a persistent manual hide, without affecting another member.
   let watch = await openTopicTools(page, 'watch');
   // The desktop and mobile projects intentionally share one prepared database.
-  // If the earlier project left a window standing, pressing that lit pill again
-  // clears it by design. Normalize through the same UI so this journey proves
-  // both halves of the toggle and does not depend on project order.
-  const standingSnooze = watch.details.locator('.snooze-choice[aria-pressed="true"]');
-  if (await standingSnooze.count()) {
-    await expect(page.locator('.thread-byline')).toContainText('Quiet until');
-    await standingSnooze.click();
-    await expect(page.locator('.thread-byline')).not.toContainText('Quiet until');
+  // Normalize through the native visibility control if an earlier project left
+  // the topic hidden, so this journey does not depend on project order.
+  const visibility = watch.details.getByRole('switch', { name: 'Show in Inbox', exact: true });
+  if (await visibility.getAttribute('aria-checked') === 'false') {
+    await visibility.click();
     watch = await openTopicTools(page, 'watch');
   }
-  await watch.details.getByRole('button', { name: 'Tomorrow' }).click();
-  await expect(page.locator('.thread-byline')).toContainText('Quiet until');
+  await expect(watch.details.getByRole('switch', { name: 'Show in Inbox', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await watch.details.getByRole('button', { name: 'Til tomorrow', exact: true }).click();
   const watchAgain = await openTopicTools(page, 'watch');
-  await expect(watchAgain.details.getByRole('button', { name: 'Tomorrow' }))
-    .toHaveAttribute('aria-pressed', 'true');
+  await expect(watchAgain.details.getByRole('switch', { name: 'Show in Inbox', exact: true }))
+    .toHaveAttribute('aria-checked', 'false');
   await page.getByRole('button', { name: 'Close Topic tools' }).click();
 
   // Assignment: staff assigns the topic to @bob (board is opted into assignment).

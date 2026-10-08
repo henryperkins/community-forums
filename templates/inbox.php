@@ -10,6 +10,7 @@ $emptyTitle = match ($scope) {
     default => 'Nothing in ' . $scopeLabel . '.',
 };
 $available = array_fill_keys($scopes, true);
+$selectedIds = array_fill_keys($selected_thread_ids ?? [], true);
 ?>
 <?php $this->start('subheader_leading'); ?>
 <div class="page-toolbar inbox-toolbar">
@@ -19,44 +20,7 @@ $available = array_fill_keys($scopes, true);
             <span class="badge" data-inbox-unread-count="<?= (int) $unread_count ?>"><?= (int) $unread_count ?> unread</span>
         <?php endif; ?>
     </div>
-        <nav class="inbox-view-bar" aria-label="Inbox view">
-            <details class="inbox-scope-menu inbox-menu" name="inbox-controls" data-inbox-scope-menu data-inbox-menu>
-                <summary title="Show: <?= $e($scopeLabel) ?>">
-                    <span class="inbox-control-label">Show:</span>
-                    <span class="inbox-selected-scope"><?= $e($scopeLabel) ?></span>
-                    <span class="inbox-scope-count"><span data-inbox-current-count><?= (int) $total ?></span> <span data-inbox-count-label><?= (int) $total === 1 ? 'topic' : 'topics' ?></span></span>
-                    <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
-                </summary>
-                <div class="inbox-scope-menu-panel inbox-menu-panel">
-                    <?php foreach (\App\Support\InboxView::GROUPS as $groupLabel => $groupScopes): ?>
-                        <?php $visibleGroup = array_values(array_filter($groupScopes, static fn (string $item): bool => isset($available[$item]))); ?>
-                        <?php if ($visibleGroup !== []): ?>
-                            <span class="inbox-scope-group-label"><?= $e($groupLabel) ?></span>
-                            <?php foreach ($visibleGroup as $item): ?>
-                                <a href="<?= $e(\App\Support\InboxView::query($item, $order)) ?>"<?= $item === $scope ? ' class="is-active" aria-current="page"' : '' ?>>
-                                    <span><?= $e(\App\Support\InboxView::LABELS[$item]) ?></span>
-                                    <span data-inbox-scope-count="<?= $e($item) ?>"><?= (int) ($scope_counts[$item] ?? 0) ?></span>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
-            </details>
-
-            <details class="inbox-sort-menu inbox-menu" name="inbox-controls" data-inbox-menu>
-                <summary aria-label="Sort: <?= $e(ucfirst($orderLabel['full'])) ?>" title="Sort: <?= $e(ucfirst($orderLabel['full'])) ?>">
-                    <span class="inbox-control-label">Sort:</span>
-                    <span class="inbox-order-full"><?= $e(ucfirst($orderLabel['full'])) ?></span><span class="inbox-order-short" aria-hidden="true"><?= $e($orderLabel['short']) ?></span>
-                    <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
-                </summary>
-                <div class="inbox-menu-panel">
-                    <?php foreach (\App\Support\InboxView::ORDERS as $item): ?>
-                        <?php $itemLabel = \App\Support\InboxView::ORDER_LABELS[$item]; ?>
-                        <a href="<?= $e(\App\Support\InboxView::query($scope, $item)) ?>"<?= $item === $order ? ' class="is-active" aria-current="page"' : '' ?>><?= $e(ucfirst($itemLabel['full'])) ?></a>
-                    <?php endforeach; ?>
-                </div>
-            </details>
-        </nav>
+    <?= $this->partial('partials/inbox_view_controls', compact('scope', 'order', 'scopeLabel', 'orderLabel', 'available', 'scope_counts', 'total')) ?>
                 <details class="inbox-actions inbox-menu" name="inbox-controls" data-inbox-menu data-inbox-menu-align="end">
                     <summary aria-label="Inbox actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
                     <div class="inbox-menu-panel">
@@ -73,7 +37,10 @@ $available = array_fill_keys($scopes, true);
                         <?php endif; ?>
                         <details class="inbox-help">
                             <summary>Help</summary>
-                            <p>Show chooses which topics appear. Sort changes their order.</p>
+                            <div class="inbox-help-panel" data-inbox-help-content>
+                            <header class="inbox-help-head"><h2 id="inbox-help-heading">Inbox help</h2><button type="button" data-inbox-help-close hidden aria-label="Close Inbox help"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button></header>
+                            <p>The view chooses which topics appear. Sorting changes their order.</p>
+                            <?php if (!empty($features['topic_workflow'])): ?><p>Til tomorrow hides a topic for 24 hours. Turn Show in Inbox off to hide it until you restore it. Find either kind in Snoozed.</p><?php endif; ?>
                             <div class="inbox-keyboard-help">
                                 <p>Keyboard shortcuts</p>
                                 <dl>
@@ -82,33 +49,60 @@ $available = array_fill_keys($scopes, true);
                                     <div><dt><kbd>e</kbd></dt><dd>Mark read</dd></div>
                                     <?php if ($current_user !== null && $current_user->isActive()): ?>
                                         <div><dt><kbd>s</kbd></dt><dd>Star topic</dd></div>
-                                        <?php if (!empty($features['topic_workflow'])): ?><div><dt><kbd>#</kbd></dt><dd>Snooze until Monday</dd></div><?php endif; ?>
+                                        <?php if (!empty($features['topic_workflow'])): ?><div><dt><kbd>#</kbd></dt><dd>Til tomorrow</dd></div><?php endif; ?>
                                     <?php endif; ?>
                                 </dl>
                             </div>
+                            </div>
                         </details>
+                        <button type="button" class="inbox-help-open" data-inbox-help-open hidden>Help <?= $this->partial('partials/icon', ['name' => 'chevron-right']) ?></button>
                     </div>
                 </details>
 </div>
 <?php $this->stop(); ?>
-<div class="inbox-shell" data-inbox data-inbox-scope="<?= $e($scope) ?>" data-inbox-order="<?= $e($order) ?>">
+<div class="inbox-shell" data-inbox data-inbox-url="<?= $e($currentUrl) ?>" data-inbox-scope="<?= $e($scope) ?>" data-inbox-order="<?= $e($order) ?>">
     <section class="inbox-list" data-inbox-list tabindex="-1" aria-label="Topics">
+        <?php if (!empty($inbox_error)): ?><p class="inbox-feedback is-active" role="alert"><?= $e($inbox_error) ?> Your available selections have been kept.</p><?php endif; ?>
+        <div class="inbox-feedback" data-inbox-feedback>
+            <p role="status" aria-live="polite" aria-atomic="true" data-inbox-status></p>
+            <div class="inbox-recovery" data-inbox-recovery hidden>
+                <button class="btn btn-small" type="button" data-inbox-retry>Try again</button>
+                <a class="btn btn-small" data-inbox-full-topic>Open full topic</a>
+                <button class="btn btn-small" type="button" data-inbox-return-preview hidden>Return to previous topic</button>
+            </div>
+        </div>
+        <template data-inbox-empty-template><?= $this->partial('partials/inbox_empty', compact('emptyTitle', 'scope', 'order')) ?></template>
+        <template data-inbox-page-read-template><div class="inbox-empty-state" tabindex="-1" data-inbox-empty-state><p class="inbox-empty-title">You've read every topic on this page.</p><a class="btn btn-small" href="<?= $e($currentUrl) ?>">Load remaining topics</a></div></template>
         <?php if (!empty($threads)): ?>
-            <form class="inbox-sweep" id="inbox-bulk-form" method="post" action="/inbox/bulk" data-inbox-sweep>
+            <form class="inbox-sweep<?= $selectedIds !== [] ? ' is-active' : '' ?>" id="inbox-bulk-form" method="post" action="/inbox/bulk" data-inbox-sweep>
                 <?= $this->csrfField() ?>
                 <input type="hidden" name="scope" value="<?= $e($scope) ?>">
                 <input type="hidden" name="order" value="<?= $e($order) ?>">
                 <input type="hidden" name="page" value="<?= (int) $page ?>">
-                <input type="hidden" name="until" value="monday">
-                <span data-inbox-selection-label>Selected topics</span>
+                <input type="hidden" name="until" value="tomorrow">
+                <span data-inbox-selection-label aria-live="polite"><?= $selectedIds !== [] ? count($selectedIds) . ' selected' : 'Selected topics' ?></span>
                 <button type="submit" name="action" value="read">Mark read</button>
-                <button type="submit" name="action" value="unread">Mark unread</button>
-                <?php if ($current_user !== null && $current_user->isActive()): ?>
-                    <button type="submit" name="action" value="star">Star</button>
-                    <?php if (!empty($features['topic_workflow'])): ?><button type="submit" name="action" value="snooze">Snooze until Monday</button><?php endif; ?>
-                <?php endif; ?>
+                <details class="inbox-menu inbox-bulk-menu" name="inbox-controls" data-inbox-menu data-inbox-bulk-menu data-inbox-menu-align="end">
+                    <summary>Actions <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?></summary>
+                    <div class="inbox-menu-panel">
+                        <button type="submit" name="action" value="unread">Mark unread</button>
+                        <?php if ($current_user !== null && $current_user->isActive()): ?>
+                            <button type="submit" name="action" value="star">Star</button>
+                            <?php if (!empty($features['topic_workflow'])): ?>
+                                <div class="inbox-menu-divider"></div>
+                                <button type="submit" name="action" value="snooze">Til tomorrow</button>
+                                <?php if ($scope === 'snoozed'): ?>
+                                    <button type="submit" name="action" value="restore">Show in Inbox</button>
+                                <?php else: ?>
+                                    <button type="submit" name="action" value="hide"><span>Hide from Inbox</span><span class="inbox-menu-note">Until you restore them</span></button>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </details>
+                <button type="button" class="inbox-clear-selection" data-inbox-clear-selection hidden aria-label="Clear selection"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
             </form>
-            <label class="inbox-select-all"><input type="checkbox" data-inbox-select-all> <span>Select all on screen</span></label>
+            <label class="inbox-select-all"><input type="checkbox" data-inbox-select-all> <span>Select all on this page</span></label>
             <ul class="inbox-thread-list" data-inbox-thread-list>
                 <?php foreach ($threads as $thread): ?>
                     <?= $this->partial('partials/thread_row', [
@@ -117,15 +111,12 @@ $available = array_fill_keys($scopes, true);
                         'return_to' => $currentUrl,
                         'order' => $order,
                         'workflow_enabled' => !empty($features['topic_workflow']),
+                        'selected' => isset($selectedIds[(int) $thread['id']]),
                     ]) ?>
                 <?php endforeach; ?>
             </ul>
         <?php else: ?>
-            <div class="inbox-empty-state">
-                <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'inbox-empty-star']) ?>
-                <p class="inbox-empty-title"><?= $e($emptyTitle) ?></p>
-                <?php if ($scope !== 'for_you'): ?><a class="btn btn-small" href="<?= $e(\App\Support\InboxView::query('for_you', $order)) ?>">Back to For You</a><?php endif; ?>
-            </div>
+            <?= $this->partial('partials/inbox_empty', compact('emptyTitle', 'scope', 'order')) ?>
         <?php endif; ?>
 
         <?php if ($total > 0): ?><p class="inbox-shown-count">Showing <?= count($threads) ?> of <?= (int) $total ?> topics</p><?php endif; ?>
@@ -145,7 +136,7 @@ $available = array_fill_keys($scopes, true);
             <div class="inbox-empty">
                 <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'inbox-empty-star']) ?>
                 <p class="inbox-empty-title">Choose a topic</p>
-                <p class="muted">Select a topic on the left to read it here — your place in the list is kept. Without JavaScript, topics open as their own page.</p>
+                <p class="muted">Choose a topic to read it here. Your place in the list is kept.</p>
             </div>
         </div>
     </section>

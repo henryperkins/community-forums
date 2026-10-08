@@ -195,7 +195,8 @@ final class Request
      */
     public function wantsJson(): bool
     {
-        if ((string) ($this->input('format') ?? '') === 'json') {
+        $format = $this->input('format');
+        if (is_string($format) && $format === 'json') {
             return true;
         }
         $accept = (string) ($this->header('Accept') ?? '');

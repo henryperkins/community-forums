@@ -122,9 +122,9 @@ Roles are cumulative in capability (Admin ⊇ Moderator ⊇ User ⊇ Guest). Mod
 A single, full-height application screen uses one route-aware top bar and one
 board rail. The centre and optional reading pane belong to the current route:
 
-- **Top bar** — operator brand; primary Boards, Inbox, and Messages links; the Search entry; persisted rail/reading-pane controls; notification state; and the identity disclosure (see §6.6). Cross-surface routes live here. Its phone first row contains the drawer opener, lockup, search, bell and seat; the existing 62px/108px height rules remain.
-- **Shared subheader** — inside the content column's main landmark, ahead of flash messages, on every member-header page in the app and plain layouts. Inbox heading/unread information, Show/topic count, Sort and actions share one physical row with creation. Other simple member headings and applicable controls occupy this row; board/topic breadcrumbs and Boards directory tabs render once. Home, board and topic content headings, profile identity and conversation headings keep their content hierarchy, superseding the earlier blanket rule that all page headings stay below an otherwise empty row. Controls compact at the existing available-width step while retaining 44px targets and named current choices. Signed-in members get one quiet create control: "+ New" with a chevron above 860px, or a named 44px plus at 860px and below, offering board-aware New topic and New message. With `dms` off it is a direct New topic link. Guests retain original page headings and get only applicable leading navigation, with no empty row. Ordinary pages scroll the row; Messages and Inbox reserve its height above their internally scrolling panes. Existing URLs, POST fields and destination/write gates apply (ADR 0043).
-- **Pane 1 — board rail:** one policy-filtered, operator-ordered category/board query on every app route, with per-board unread pills and a public privacy-respecting presence roster. The rail answers *where*. It never contains Inbox scopes, Messages, Drafts, Following, leaderboards, or other route links. Muted boards stay visible but contribute no attention count.
+- **Top bar** — operator brand; primary Boards, Inbox, and Messages links; the Search entry; persisted rail/reading-pane controls; notification state; and the identity disclosure (see §6.6). Cross-surface routes live here. Its phone first row contains the drawer opener, lockup, search, bell and seat. The bar retains the 62px/108px minimums; extreme text enlargement wraps primary routes and enhancement measures the resulting height for drawer/pane offsets (ADR 0046).
+- **Shared subheader** — inside the content column's main landmark, ahead of flash messages, on every member-header page in the app and plain layouts. Inbox heading/unread information, Show/topic count, Sort and actions share one physical row with creation. Other simple member headings and applicable controls occupy this row; board/topic breadcrumbs render once. Directory pane navigation belongs in the rail. Signed-in Tags and Connections put their single H1 and applicable identity in this row; Boards retains its content hero beneath a quiet context label (ADR 0046). Board and topic content headings, profile identity and conversation headings keep their content hierarchy, superseding the earlier blanket rule that all page headings stay below an otherwise empty row. Controls compact at the existing available-width steps while retaining 44px targets and named current choices; at 460px container width, a single disclosure displays the current view/count and sort (ADR 0044). Signed-in members get one quiet create control: "+ New" with a chevron above 860px, or a named 44px plus at 860px and below, offering board-aware New topic and New message. With `dms` off it is a direct New topic link. Guests retain original page headings and get only applicable leading navigation, with no empty row. Ordinary pages scroll the row; Messages and Inbox reserve its height above their internally scrolling panes. Existing URLs, POST fields and destination/write gates apply (ADR 0043).
+- **Pane 1 — board rail:** an Explore group links Boards, feature-gated Tags and Connections before personal board folders, saved feeds and the policy-filtered, operator-ordered category/board query, per-board unread pills and public privacy-respecting presence roster. The same links appear in the phone drawer; the horizontal directory strip is removed (ADR 0046). Notifications uses the header bell, including current state for retained embedded deep links. Inbox scopes, Messages, Drafts, Following and leaderboards retain their existing surface/identity entry points. Muted boards stay visible but contribute no attention count.
 - **Pane 2 — current surface:** `/` is the non-personalized Board Index directory; `/inbox` is the member's personal queue; `/search` is scoped/ordered results; `/compose` is the focused new-topic editor; `/c/{slug}` is one board's fixed-order topic list. Each route owns its own scope/order/peek axes and server-rendered URL state.
 - **Pane 3 — bounded glance:** only `/inbox` may show a third pane, and it renders a bounded, read-gated topic preview. `/t/{id}-{slug}` alone owns the full thread stream, tools, and composer.
 
@@ -415,6 +415,31 @@ The Community-Inbox thesis makes **triage** and **status** first-class. Beyond t
 - **Community memory (P2/later):** solved/canonical answers, topic summaries ("what changed since you last read"), related topics, wiki-style posts, topic split/merge — how old discussions become reusable knowledge.
 
 These deepen the thesis without changing the v1 core; most are P1/P2 and additive to the schema (status flags / a `topic_status` enum on `threads`, plus `snoozed_until` and `assigned_to` on `thread_user`). Tracked in the roadmap (§13).
+
+Personal hiding under `topic_workflow` has two choices: **Til tomorrow** retains
+the 24-hour UTC deadline, and turning **Show in Inbox** off hides until restoration.
+Migration 0083 stores indefinite hiding explicitly in `snoozed_indefinitely`.
+The switch is OFF for either hidden state and ON after restoration or expiry.
+Snoozed contains both kinds and sits near the top of the view menu; normal Inbox
+scopes and unread counts exclude hidden topics. Restoration clears both states
+and returns the topic to eligibility under normal filters. Board reads and
+notification delivery are unaffected; feature rollback ignores hiding. Row,
+bulk, topic tools and `#` agree on these choices (ADR 0044).
+
+Enhanced preview recovery is bounded at 15 seconds. Transient HTTP/network errors
+and malformed or mismatched responses preserve the queue and prior preview or
+reply text, announce the failure, and offer retry or the canonical topic link.
+When a prior preview exists, **Return to previous topic** reveals the same editor
+and focuses its heading, including after its Unread row disappears. A failed
+history restoration replaces the current history entry only if needed to align
+the URL with the retained topic. Enhanced forms that prevent navigation preserve
+pending previews and recovery controls; native submissions invalidate requests.
+Redirected authentication and 401/403/404 responses retain canonical navigation.
+Superseded requests cannot render or reconcile state, including without
+AbortController. Empty Unread pages distinguish a caught-up queue from remaining
+topics on other pages. Rejected bulk actions re-render 422 with only readable,
+current-page selections retained; read/star use the canonical topic privacy gate,
+and rendered star forms express an idempotent target state (ADR 0045).
 
 ### 6.19 Thread Intelligence — sourced Living Briefs
 
@@ -782,7 +807,7 @@ The hybrid prototype (once the Phase 0 mockup is built — §13) maps one-to-one
 | Mockup region | Server template/partial | Data it needs |
 |---|---|---|
 | Top bar + identity | `layout.php` / `partials/topbar.php` | route, current user (or guest), unread total, pane preferences |
-| Board rail | `partials/sidebar.php` | policy-listed categories → boards, bulk unread counts, public presence |
+| Board rail | `partials/sidebar.php` | directory routes, personal organization, policy-listed categories → boards, bulk unread counts, public presence |
 | Board Index / Inbox / Search / Compose | `home.php` / `inbox.php` / `search.php` / `compose.php` | each route's server-owned query state and view model |
 | Inbox preview | `partials/inbox_preview.php` | bounded read-gated topic sample + canonical link |
 | Canonical conversation | `thread.php` + thread partials | thread + posts + authors + reactions |

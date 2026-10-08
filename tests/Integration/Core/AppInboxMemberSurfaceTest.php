@@ -230,7 +230,7 @@ final class AppInboxMemberSurfaceTest extends TestCase
 
         $forYou = $this->get('/inbox', ['scope' => 'for_you', 'order' => 'commended']);
         $this->assertSeeText($forYou, 'Nothing needs your attention right now.');
-        $this->assertSeeText($forYou, 'Show chooses which topics appear. Sort changes their order.');
+        $this->assertSeeText($forYou, 'The view chooses which topics appear. Sorting changes their order.');
 
         $unread = $this->get('/inbox', ['scope' => 'unread', 'order' => 'newest']);
         self::assertStringContainsString('You&#039;re all caught up — nothing unread.', $unread->body());
@@ -367,7 +367,7 @@ final class AppInboxMemberSurfaceTest extends TestCase
             'order' => 'active',
             'action' => 'star',
         ]);
-        $this->assertRedirectContains($missing, '/inbox?scope=mine&order=active');
+        $this->assertStatus(422, $missing);
         self::assertFalse($this->threadUsers()->isStarred((int) $member['id'], $firstId));
 
         $partial = $this->post('/inbox/bulk', [
@@ -376,7 +376,7 @@ final class AppInboxMemberSurfaceTest extends TestCase
             'action' => 'star',
             'thread_ids' => [$firstId, $outsideId],
         ]);
-        $this->assertRedirectContains($partial, '/inbox?scope=mine&order=active');
+        $this->assertStatus(422, $partial);
         self::assertFalse($this->threadUsers()->isStarred((int) $member['id'], $firstId));
         self::assertFalse($this->threadUsers()->isStarred((int) $member['id'], $outsideId));
 
@@ -421,7 +421,7 @@ final class AppInboxMemberSurfaceTest extends TestCase
             'order' => 'active',
             'action' => 'snooze',
             'thread_ids' => [$firstId],
-            'until' => 'monday',
+            'until' => 'tomorrow',
         ]);
         $this->assertRedirectContains($snooze, '/inbox?scope=mine&order=active');
         self::assertNotNull($this->threadUsers()->find((int) $member['id'], $firstId)['snoozed_until']);

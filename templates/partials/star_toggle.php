@@ -27,6 +27,7 @@ $starFormClass = trim(($starIcon ? 'star-form' : 'inline star-form') . ' ' . (st
 <form class="<?= $e($starFormClass) ?>" method="post" action="/t/<?= $starThreadId ?>/star"<?= !empty($inbox_action) ? ' data-inbox-action="star"' : '' ?>>
     <?= $this->csrfField() ?>
     <input type="hidden" name="return" value="<?= $e((string) ($return_to ?? '')) ?>">
+    <input type="hidden" name="starred" value="<?= $starOn ? '0' : '1' ?>">
     <?php if ($starIcon): ?>
         <button class="star-toggle" type="submit" aria-pressed="<?= $starPressed ?>" aria-label="Star <?= $e((string) ($topic_title ?? '')) ?>" title="<?= $starOn ? 'Starred' : 'Star' ?>"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => $starOn ? '' : 'is-outline']) ?></button>
     <?php else: ?>

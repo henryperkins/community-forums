@@ -56,7 +56,7 @@ final class AppCreateMenuTest extends TestCase
     {
         $board = $this->makeBoard($this->makeCategory());
         $topic = $this->makeThread($board, $this->makeUser());
-        foreach (['/' => 1, '/c/' . $board['slug'] => 1, '/t/' . $topic['thread_id'] . '-' . $topic['slug'] => 1,
+        foreach (['/' => 0, '/c/' . $board['slug'] => 1, '/t/' . $topic['thread_id'] . '-' . $topic['slug'] => 1,
             '/tags' => 0, '/search' => 0, '/missing-create-page' => 0] as $path => $bands) {
             $response = $this->get($path);
             self::assertNotSame('', $response->body(), $path . ' status ' . $response->status());
@@ -72,7 +72,7 @@ final class AppCreateMenuTest extends TestCase
         $board = $this->makeBoard($this->makeCategory());
         $topic = $this->makeThread($board, $member);
         $this->actingAs($member);
-        foreach (['/' => 'Board index panes', '/c/' . $board['slug'] => 'Breadcrumb',
+        foreach (['/c/' . $board['slug'] => 'Breadcrumb',
             '/t/' . $topic['thread_id'] . '-' . $topic['slug'] => 'Breadcrumb'] as $path => $label) {
             $response = $this->get($path);
             self::assertNotSame('', $response->body(), $path . ' status ' . $response->status());
@@ -81,6 +81,37 @@ final class AppCreateMenuTest extends TestCase
             self::assertSame(1, $dom->query('//*[@data-subheader]//nav[@aria-label="' . $label . '"]')->length);
             self::assertSame(1, $dom->query('//main//h1')->length);
             self::assertSame(0, $dom->query('//*[@data-subheader]//h1')->length);
+        }
+
+        $home = $this->get('/');
+        $this->assertStatus(200, $home);
+        $dom = $this->dom($home->body());
+        self::assertSame(1, $dom->query('//*[@id="sidebar-nav"]//*[@data-directory-nav]')->length);
+        self::assertSame(0, $dom->query('//main//*[@data-directory-nav] | //nav[@aria-label="Board index panes"]')->length);
+        self::assertSame(1, $dom->query('//*[@data-subheader]//*[@data-directory-context and normalize-space(.)="Boards"]')->length);
+        self::assertSame(0, $dom->query('//*[@data-subheader]//h1')->length);
+        self::assertSame(1, $dom->query('//main//h1')->length);
+
+        foreach (['tags' => 'Tags', 'connections' => 'Connections'] as $pane => $heading) {
+            $response = $this->get('/', ['pane' => $pane]);
+            $this->assertStatus(200, $response);
+            $dom = $this->dom($response->body());
+            self::assertSame(1, $dom->query('//main//h1')->length, $pane . ' retains one page heading.');
+            self::assertSame(1, $dom->query('//*[@data-subheader]//h1[starts-with(normalize-space(.), "' . $heading . '")]')->length);
+            self::assertSame(1, $dom->query('//*[@data-subheader]//*[@data-create-trigger]')->length);
+            self::assertSame(0, $dom->query('//*[contains(concat(" ", @class, " "), " directory-light-pane ")]//h1')->length);
+            if ($pane === 'connections') {
+                self::assertSame(1, $dom->query('//*[@data-subheader]//h1//a[@href="/u/' . $member['username'] . '"]')->length);
+            }
+        }
+
+        $this->logoutClient();
+        foreach (['boards', 'tags', 'connections'] as $pane) {
+            $response = $this->get('/', ['pane' => $pane]);
+            $this->assertStatus(200, $response);
+            $dom = $this->dom($response->body());
+            self::assertSame(0, $dom->query('//*[@data-subheader]')->length, $pane . ' adds no guest creation band.');
+            self::assertSame(1, $dom->query('//main//h1')->length, $pane . ' keeps its content heading.');
         }
     }
 

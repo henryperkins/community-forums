@@ -191,8 +191,8 @@ test('polling synchronizes every badge without replacing focused notification ro
   await page.goto('/?pane=notices');
   const counts = page.locator('[data-notification-count]');
   const links = page.locator('[data-notification-link]');
-  await expect(counts).toHaveCount(4);
-  await expect(counts).toHaveText(['99+', '99+', '99+', '99+']);
+  await expect(counts).toHaveCount(3);
+  await expect(counts).toHaveText(['99+', '99+', '99+']);
   const row = page.locator('.notification-open').first();
   await row.focus();
   await row.evaluate(el => el.setAttribute('data-preserved-row', 'yes'));
@@ -201,7 +201,7 @@ test('polling synchronizes every badge without replacing focused notification ro
     const before = requests;
     await page.clock.fastForward(60001);
     await expect.poll(() => requests).toBe(before + 1);
-    await expect(counts).toHaveText(Array(4).fill(String(value)));
+    await expect(counts).toHaveText(Array(3).fill(String(value)));
     for (const link of await links.all()) await expect(link).toHaveAttribute('aria-label', value ? 'Notifications, 7 unread' : 'Notifications');
     for (const count of await counts.all()) await expect(count).toHaveAttribute('aria-hidden', 'true');
     await expect(page.locator('.notification-heading h1')).toHaveAccessibleName(value ? 'Notifications, 7 unread' : 'Notifications');

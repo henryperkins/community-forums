@@ -1,0 +1,15 @@
+{
+  "status": 200,
+  "final_path": "/inbox",
+  "body_sha256": "b5e8dc1d2bd3324f1e201a6ef6816a9fd13794f6ed1b0fc9c0db646457208122",
+  "inbox_shell": true,
+  "compact_control": true,
+  "visibility_switch": true,
+  "compiled_css": true,
+  "compiled_js": true,
+  "manual_column_present": true,
+  "database": "retroboards",
+  "auth_method": "temporary local QA session for existing member; removed after GET; token omitted",
+  "url": "https://obituaries-lucky-accordance-king.trycloudflare.com/inbox",
+  "version": "f2dfa7a4c4d019ca"
+}

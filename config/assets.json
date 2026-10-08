@@ -1,9 +1,9 @@
 {
-  "version": "049200d35635595d",
+  "version": "5de73df06f287ae9",
   "urls": {
-    "app.css": "/assets/dist/app-style-CcZ7cXWF.css",
+    "app.css": "/assets/dist/app-style-DEqCyv6L.css",
     "imladris.css": "/assets/dist/imladris-style-DeGci5u_.css",
-    "app.js": "/assets/dist/app-ae3b0de6dc889815.js",
+    "app.js": "/assets/dist/app-854791801de6c0fa.js",
     "composer.js": "/assets/dist/composer-1e0c11d7b953e8d7.js",
     "passkeys.js": "/assets/dist/passkeys-27f8b05555555872.js",
     "tour.js": "/assets/dist/tour-2cb01893b54a8644.js",
@@ -27,11 +27,11 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "e5a63e69e5cdfbf2e815d62d5c2f4cdffdd6233192dcea93d9783372e923009a",
+      "sha256": "6c982321e49e431b540dd5deb167d79c76fdae8ed9fe2f222560185aef552df7",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "c2143dc6dfc3bf7236af11864d3ed35f5a480c11ff2f4284e4cf8ad9431daf92",
+      "sha256": "2ab047e349e75287300b7e96294d2eda7faa71c2a3c5798041fb45b3f6f30ac1",
       "immutable": false
     },
     "/assets/composer.js": {
@@ -46,8 +46,8 @@
       "sha256": "18e75fb4c256674b0c9c6627048fcd3cd753cdff2406e1b90f01e002a61401a5",
       "immutable": true
     },
-    "/assets/dist/app-ae3b0de6dc889815.js": {
-      "sha256": "ae3b0de6dc889815cdb38404736d924f500850cf61c54b8e05276d4df2662f27",
+    "/assets/dist/app-854791801de6c0fa.js": {
+      "sha256": "854791801de6c0fa300bfb1d10eca0ece27e812338675ce14271aaf55242b13d",
       "immutable": true
     },
     "/assets/dist/app-da2b715df2ea1a09.js": {
@@ -58,8 +58,8 @@
       "sha256": "36711c36d6ecac30dcb4c8f685160cd5b827935e7e3f694fbbe85aa169f614a6",
       "immutable": true
     },
-    "/assets/dist/app-style-CcZ7cXWF.css": {
-      "sha256": "3e934bde0b2f264c078f94eaab3a24f9d4b9c04b3e5c9dfba9b444694bcdda0c",
+    "/assets/dist/app-style-DEqCyv6L.css": {
+      "sha256": "f6772dc65f0fcda571d4aa6f11acd1ea4f9f3039b87b2574dca857f48583b29d",
       "immutable": true
     },
     "/assets/dist/app-style-DpcQqnu-.css": {
@@ -265,10 +265,10 @@
   },
   "releases": [
     {
-      "version": "049200d35635595d",
+      "version": "5de73df06f287ae9",
       "files": [
-        "/assets/dist/app-ae3b0de6dc889815.js",
-        "/assets/dist/app-style-CcZ7cXWF.css",
+        "/assets/dist/app-854791801de6c0fa.js",
+        "/assets/dist/app-style-DEqCyv6L.css",
         "/assets/dist/composer-1e0c11d7b953e8d7.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",

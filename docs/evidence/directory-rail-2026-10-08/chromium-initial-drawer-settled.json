@@ -1,0 +1,197 @@
+{
+  "engine": "chromium",
+  "build": "e26e139ee9899a8f",
+  "cases": [
+    {
+      "width": 393,
+      "drawer": {
+        "rect": {
+          "x": -0.07939769327640533,
+          "y": 108,
+          "width": 322,
+          "height": 736,
+          "top": 108,
+          "right": 321.9206023067236,
+          "bottom": 844,
+          "left": -0.07939769327640533
+        },
+        "focused": "Close board rail",
+        "links": [
+          {
+            "name": "Close board rail",
+            "href": "#main",
+            "height": 44
+          },
+          {
+            "name": "Announcements",
+            "href": "/c/announcements",
+            "height": 44
+          },
+          {
+            "name": "General",
+            "href": "/c/general",
+            "height": 44
+          },
+          {
+            "name": "My reading queue",
+            "href": "/feeds/saved/1",
+            "height": 44
+          },
+          {
+            "name": "Announcements",
+            "href": "/c/announcements",
+            "height": 44
+          },
+          {
+            "name": "General",
+            "href": "/c/general",
+            "height": 44
+          },
+          {
+            "name": "Feedback",
+            "href": "/c/feedback",
+            "height": 44
+          },
+          {
+            "name": "TI Briefs",
+            "href": "/c/ti-briefs",
+            "height": 44
+          },
+          {
+            "name": "Online",
+            "href": "/users-online",
+            "height": 12.5
+          },
+          {
+            "name": "AA\n                \n            \n                \n            Alice Averyyou\n            @alice \u00b7 Here now",
+            "href": "/u/alice",
+            "height": 46.125
+          },
+          {
+            "name": "EP\n                \n            \n                \n            Elrond PeredhelStaff\n            @elrond \u00b7 Here now",
+            "href": "/u/elrond",
+            "height": 46.125
+          },
+          {
+            "name": "CE\n                \n            \n                \n            Celebr\u00edan\n            @celebrian \u00b7 Here now",
+            "href": "/u/celebrian",
+            "height": 46.125
+          },
+          {
+            "name": "GA\n                \n            \n                \n            Galadriel\n            @galadriel \u00b7 Here now",
+            "href": "/u/galadriel",
+            "height": 46.125
+          },
+          {
+            "name": "GL\n                \n            \n                \n            Glorfindel\n            @glorfindel \u00b7 Away",
+            "href": "/u/glorfindel",
+            "height": 46.125
+          },
+          {
+            "name": "See everyone online",
+            "href": "/users-online",
+            "height": 15
+          }
+        ],
+        "mainInert": true
+      },
+      "focusRestored": true
+    },
+    {
+      "width": 320,
+      "drawer": {
+        "rect": {
+          "x": -0.8885653614997864,
+          "y": 108,
+          "width": 275.1875,
+          "height": 736,
+          "top": 108,
+          "right": 274.2989346385002,
+          "bottom": 844,
+          "left": -0.8885653614997864
+        },
+        "focused": "Close board rail",
+        "links": [
+          {
+            "name": "Close board rail",
+            "href": "#main",
+            "height": 44
+          },
+          {
+            "name": "Announcements",
+            "href": "/c/announcements",
+            "height": 44
+          },
+          {
+            "name": "General",
+            "href": "/c/general",
+            "height": 44
+          },
+          {
+            "name": "My reading queue",
+            "href": "/feeds/saved/1",
+            "height": 44
+          },
+          {
+            "name": "Announcements",
+            "href": "/c/announcements",
+            "height": 44
+          },
+          {
+            "name": "General",
+            "href": "/c/general",
+            "height": 44
+          },
+          {
+            "name": "Feedback",
+            "href": "/c/feedback",
+            "height": 44
+          },
+          {
+            "name": "TI Briefs",
+            "href": "/c/ti-briefs",
+            "height": 44
+          },
+          {
+            "name": "Online",
+            "href": "/users-online",
+            "height": 12.5
+          },
+          {
+            "name": "AA\n                \n            \n                \n            Alice Averyyou\n            @alice \u00b7 Here now",
+            "href": "/u/alice",
+            "height": 46.125
+          },
+          {
+            "name": "EP\n                \n            \n                \n            Elrond PeredhelStaff\n            @elrond \u00b7 Here now",
+            "href": "/u/elrond",
+            "height": 46.125
+          },
+          {
+            "name": "CE\n                \n            \n                \n            Celebr\u00edan\n            @celebrian \u00b7 Here now",
+            "href": "/u/celebrian",
+            "height": 46.125
+          },
+          {
+            "name": "GA\n                \n            \n                \n            Galadriel\n            @galadriel \u00b7 Here now",
+            "href": "/u/galadriel",
+            "height": 46.125
+          },
+          {
+            "name": "GL\n                \n            \n                \n            Glorfindel\n            @glorfindel \u00b7 Away",
+            "href": "/u/glorfindel",
+            "height": 46.125
+          },
+          {
+            "name": "See everyone online",
+            "href": "/users-online",
+            "height": 15
+          }
+        ],
+        "mainInert": true
+      },
+      "focusRestored": true
+    }
+  ],
+  "note": "Initial drawer screenshot helper repaired only to wait until the existing entrance transition reaches x0; no application changes."
+}

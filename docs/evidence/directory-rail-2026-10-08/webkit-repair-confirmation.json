@@ -1,0 +1,2952 @@
+{
+  "engine": "webkit",
+  "build": "73430ff743b90229",
+  "assets": [
+    {
+      "url": "/assets/dist/app-style-DKlwBpmI.css",
+      "status": 200,
+      "sha256": "bd246c54360f83c505534a9cef3d0fb5c72c2056b679fd256e634dc890795758"
+    },
+    {
+      "url": "/assets/dist/app-ade982dee46260d0.js",
+      "status": 200,
+      "sha256": "ade982dee46260d0006e71a6f6275c4f3016374c61eef8801a7392e82e9ead91"
+    }
+  ],
+  "checks": [
+    {
+      "name": "repair asset hashes",
+      "pass": true,
+      "detail": [
+        {
+          "url": "/assets/dist/app-style-DKlwBpmI.css",
+          "status": 200,
+          "sha256": "bd246c54360f83c505534a9cef3d0fb5c72c2056b679fd256e634dc890795758"
+        },
+        {
+          "url": "/assets/dist/app-ade982dee46260d0.js",
+          "status": 200,
+          "sha256": "ade982dee46260d0006e71a6f6275c4f3016374c61eef8801a7392e82e9ead91"
+        }
+      ]
+    },
+    {
+      "name": "light large long identity, title and plus contained",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "18px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 62.640625,
+            "y": 53.5,
+            "width": 58.46875,
+            "height": 44,
+            "top": 53.5,
+            "right": 121.109375,
+            "bottom": 97.5,
+            "left": 62.640625
+          },
+          {
+            "x": 125.109375,
+            "y": 53.5,
+            "width": 50.96875,
+            "height": 44,
+            "top": 53.5,
+            "right": 176.078125,
+            "bottom": 97.5,
+            "left": 125.109375
+          },
+          {
+            "x": 180.078125,
+            "y": 53.5,
+            "width": 77.28125,
+            "height": 44,
+            "top": 53.5,
+            "right": 257.359375,
+            "bottom": 97.5,
+            "left": 180.078125
+          }
+        ],
+        "measuredBar": 108,
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.427978515625,
+            "y": 123.84375,
+            "width": 9.033798217773438,
+            "height": 21,
+            "top": 123.84375,
+            "right": 148.46177673339844,
+            "bottom": 144.84375,
+            "left": 139.427978515625
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 262.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 306.5,
+          "bottom": 183.53125,
+          "left": 262.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 108.0625,
+          "top": 108,
+          "right": 320,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "light large primary routes contained in measured header",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "18px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 62.640625,
+            "y": 53.5,
+            "width": 58.46875,
+            "height": 44,
+            "top": 53.5,
+            "right": 121.109375,
+            "bottom": 97.5,
+            "left": 62.640625
+          },
+          {
+            "x": 125.109375,
+            "y": 53.5,
+            "width": 50.96875,
+            "height": 44,
+            "top": 53.5,
+            "right": 176.078125,
+            "bottom": 97.5,
+            "left": 125.109375
+          },
+          {
+            "x": 180.078125,
+            "y": 53.5,
+            "width": 77.28125,
+            "height": 44,
+            "top": 53.5,
+            "right": 257.359375,
+            "bottom": 97.5,
+            "left": 180.078125
+          }
+        ],
+        "measuredBar": 108,
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.427978515625,
+            "y": 123.84375,
+            "width": 9.033798217773438,
+            "height": 21,
+            "top": 123.84375,
+            "right": 148.46177673339844,
+            "bottom": 144.84375,
+            "left": 139.427978515625
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 262.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 306.5,
+          "bottom": 183.53125,
+          "left": 262.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 108.0625,
+          "top": 108,
+          "right": 320,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "light large Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      }
+    },
+    {
+      "name": "light large Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "light large enlarged drawer rows and long board name contained",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 266.1116156578064
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 266.1116156578064
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 266.1116156578064
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.07588426768779755,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 275.1116157323122,
+          "bottom": 568,
+          "left": -0.07588426768779755
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large drawer clears current header",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 266.1116156578064
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 266.1116156578064
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 266.1116156578064
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.07588426768779755,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 275.1116157323122,
+          "bottom": 568,
+          "left": -0.07588426768779755
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "light large drawer Tab wraps to Close",
+      "pass": true
+    },
+    {
+      "name": "light large-200 long identity, title and plus contained",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "36px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 60.53125,
+            "y": 70.1875,
+            "width": 104.96875,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 165.5,
+            "bottom": 117.40625,
+            "left": 60.53125
+          },
+          {
+            "x": 169.5,
+            "y": 70.1875,
+            "width": 89.953125,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 259.453125,
+            "bottom": 117.40625,
+            "left": 169.5
+          },
+          {
+            "x": 88.6875,
+            "y": 121.40625,
+            "width": 142.625,
+            "height": 47.21875,
+            "top": 121.40625,
+            "right": 231.3125,
+            "bottom": 168.625,
+            "left": 88.6875
+          }
+        ],
+        "measuredBar": 179,
+        "heading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 79.56900024414062,
+            "y": 269.7109375,
+            "width": 18.07689666748047,
+            "height": 41,
+            "top": 269.7109375,
+            "right": 97.6458969116211,
+            "bottom": 310.7109375,
+            "left": 79.56900024414062
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 249,
+          "y": 329.09375,
+          "width": 44,
+          "height": 44,
+          "top": 329.09375,
+          "right": 293,
+          "bottom": 373.09375,
+          "left": 249
+        },
+        "subheader": {
+          "x": 0,
+          "y": 178.625,
+          "width": 320,
+          "height": 333.953125,
+          "top": 178.625,
+          "right": 320,
+          "bottom": 512.578125,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "light large-200 primary routes contained in measured header",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "36px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 60.53125,
+            "y": 70.1875,
+            "width": 104.96875,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 165.5,
+            "bottom": 117.40625,
+            "left": 60.53125
+          },
+          {
+            "x": 169.5,
+            "y": 70.1875,
+            "width": 89.953125,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 259.453125,
+            "bottom": 117.40625,
+            "left": 169.5
+          },
+          {
+            "x": 88.6875,
+            "y": 121.40625,
+            "width": 142.625,
+            "height": 47.21875,
+            "top": 121.40625,
+            "right": 231.3125,
+            "bottom": 168.625,
+            "left": 88.6875
+          }
+        ],
+        "measuredBar": 179,
+        "heading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 79.56900024414062,
+            "y": 269.7109375,
+            "width": 18.07689666748047,
+            "height": 41,
+            "top": 269.7109375,
+            "right": 97.6458969116211,
+            "bottom": 310.7109375,
+            "left": 79.56900024414062
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 249,
+          "y": 329.09375,
+          "width": 44,
+          "height": 44,
+          "top": 329.09375,
+          "right": 293,
+          "bottom": 373.09375,
+          "left": 249
+        },
+        "subheader": {
+          "x": 0,
+          "y": 178.625,
+          "width": 320,
+          "height": 333.953125,
+          "top": 178.625,
+          "right": 320,
+          "bottom": 512.578125,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "light large-200 Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 112,
+        "width": 304,
+        "height": 209.03125,
+        "top": 112,
+        "right": 312,
+        "bottom": 321.03125,
+        "left": 8
+      }
+    },
+    {
+      "name": "light large-200 Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "light large-200 enlarged drawer rows and long board name contained",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 266.16295337677
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 266.16295337677
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 266.1737356185913
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.013764601200819016,
+          "y": 179,
+          "width": 275.1875,
+          "height": 389,
+          "top": 179,
+          "right": 275.1737353987992,
+          "bottom": 568,
+          "left": -0.013764601200819016
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large-200 drawer clears current header",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 266.16295337677
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 266.16295337677
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 266.1737356185913
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.013764601200819016,
+          "y": 179,
+          "width": 275.1875,
+          "height": 389,
+          "top": 179,
+          "right": 275.1737353987992,
+          "bottom": 568,
+          "left": -0.013764601200819016
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large-200 drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "light large-200 drawer Tab wraps to Close",
+      "pass": true
+    },
+    {
+      "name": "dark large long identity, title and plus contained",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "18px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 62.640625,
+            "y": 53.5,
+            "width": 58.46875,
+            "height": 44,
+            "top": 53.5,
+            "right": 121.109375,
+            "bottom": 97.5,
+            "left": 62.640625
+          },
+          {
+            "x": 125.109375,
+            "y": 53.5,
+            "width": 50.96875,
+            "height": 44,
+            "top": 53.5,
+            "right": 176.078125,
+            "bottom": 97.5,
+            "left": 125.109375
+          },
+          {
+            "x": 180.078125,
+            "y": 53.5,
+            "width": 77.28125,
+            "height": 44,
+            "top": 53.5,
+            "right": 257.359375,
+            "bottom": 97.5,
+            "left": 180.078125
+          }
+        ],
+        "measuredBar": 108,
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.427978515625,
+            "y": 123.84375,
+            "width": 9.033798217773438,
+            "height": 21,
+            "top": 123.84375,
+            "right": 148.46177673339844,
+            "bottom": 144.84375,
+            "left": 139.427978515625
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 262.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 306.5,
+          "bottom": 183.53125,
+          "left": 262.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 108.0625,
+          "top": 108,
+          "right": 320,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "dark large primary routes contained in measured header",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "18px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 62.640625,
+            "y": 53.5,
+            "width": 58.46875,
+            "height": 44,
+            "top": 53.5,
+            "right": 121.109375,
+            "bottom": 97.5,
+            "left": 62.640625
+          },
+          {
+            "x": 125.109375,
+            "y": 53.5,
+            "width": 50.96875,
+            "height": 44,
+            "top": 53.5,
+            "right": 176.078125,
+            "bottom": 97.5,
+            "left": 125.109375
+          },
+          {
+            "x": 180.078125,
+            "y": 53.5,
+            "width": 77.28125,
+            "height": 44,
+            "top": 53.5,
+            "right": 257.359375,
+            "bottom": 97.5,
+            "left": 180.078125
+          }
+        ],
+        "measuredBar": 108,
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.427978515625,
+            "y": 123.84375,
+            "width": 9.033798217773438,
+            "height": 21,
+            "top": 123.84375,
+            "right": 148.46177673339844,
+            "bottom": 144.84375,
+            "left": 139.427978515625
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 262.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 306.5,
+          "bottom": 183.53125,
+          "left": 262.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 108.0625,
+          "top": 108,
+          "right": 320,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "dark large Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      }
+    },
+    {
+      "name": "dark large Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "dark large enlarged drawer rows and long board name contained",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 265.9609217643738
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 265.9609217643738
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 265.9609217643738
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.22657817602157593,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.9609218239784,
+          "bottom": 568,
+          "left": -0.22657817602157593
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large drawer clears current header",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 265.9609217643738
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 265.9609217643738
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 265.9609217643738
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.22657817602157593,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.9609218239784,
+          "bottom": 568,
+          "left": -0.22657817602157593
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "dark large drawer Tab wraps to Close",
+      "pass": true
+    },
+    {
+      "name": "dark large-200 long identity, title and plus contained",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "36px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 60.53125,
+            "y": 70.1875,
+            "width": 104.96875,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 165.5,
+            "bottom": 117.40625,
+            "left": 60.53125
+          },
+          {
+            "x": 169.5,
+            "y": 70.1875,
+            "width": 89.953125,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 259.453125,
+            "bottom": 117.40625,
+            "left": 169.5
+          },
+          {
+            "x": 88.6875,
+            "y": 121.40625,
+            "width": 142.625,
+            "height": 47.21875,
+            "top": 121.40625,
+            "right": 231.3125,
+            "bottom": 168.625,
+            "left": 88.6875
+          }
+        ],
+        "measuredBar": 179,
+        "heading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 79.56900024414062,
+            "y": 269.7109375,
+            "width": 18.07689666748047,
+            "height": 41,
+            "top": 269.7109375,
+            "right": 97.6458969116211,
+            "bottom": 310.7109375,
+            "left": 79.56900024414062
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 249,
+          "y": 329.09375,
+          "width": 44,
+          "height": 44,
+          "top": 329.09375,
+          "right": 293,
+          "bottom": 373.09375,
+          "left": 249
+        },
+        "subheader": {
+          "x": 0,
+          "y": 178.625,
+          "width": 320,
+          "height": 333.953125,
+          "top": 178.625,
+          "right": 320,
+          "bottom": 512.578125,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "dark large-200 primary routes contained in measured header",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "36px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 60.53125,
+            "y": 70.1875,
+            "width": 104.96875,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 165.5,
+            "bottom": 117.40625,
+            "left": 60.53125
+          },
+          {
+            "x": 169.5,
+            "y": 70.1875,
+            "width": 89.953125,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 259.453125,
+            "bottom": 117.40625,
+            "left": 169.5
+          },
+          {
+            "x": 88.6875,
+            "y": 121.40625,
+            "width": 142.625,
+            "height": 47.21875,
+            "top": 121.40625,
+            "right": 231.3125,
+            "bottom": 168.625,
+            "left": 88.6875
+          }
+        ],
+        "measuredBar": 179,
+        "heading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 79.56900024414062,
+            "y": 269.7109375,
+            "width": 18.07689666748047,
+            "height": 41,
+            "top": 269.7109375,
+            "right": 97.6458969116211,
+            "bottom": 310.7109375,
+            "left": 79.56900024414062
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 249,
+          "y": 329.09375,
+          "width": 44,
+          "height": 44,
+          "top": 329.09375,
+          "right": 293,
+          "bottom": 373.09375,
+          "left": 249
+        },
+        "subheader": {
+          "x": 0,
+          "y": 178.625,
+          "width": 320,
+          "height": 333.953125,
+          "top": 178.625,
+          "right": 320,
+          "bottom": 512.578125,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "dark large-200 Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 112,
+        "width": 304,
+        "height": 209.03125,
+        "top": 112,
+        "right": 312,
+        "bottom": 321.03125,
+        "left": 8
+      }
+    },
+    {
+      "name": "dark large-200 Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "dark large-200 enlarged drawer rows and long board name contained",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 265.92073011398315
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 265.92073011398315
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 265.92073011398315
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.2667699158191681,
+          "y": 179,
+          "width": 275.1875,
+          "height": 389,
+          "top": 179,
+          "right": 274.92073008418083,
+          "bottom": 568,
+          "left": -0.2667699158191681
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large-200 drawer clears current header",
+      "pass": true,
+      "detail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 265.92073011398315
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 265.92073011398315
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 265.92073011398315
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.2667699158191681,
+          "y": 179,
+          "width": 275.1875,
+          "height": 389,
+          "top": 179,
+          "right": 274.92073008418083,
+          "bottom": 568,
+          "left": -0.2667699158191681
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large-200 drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "dark large-200 drawer Tab wraps to Close",
+      "pass": true
+    },
+    {
+      "name": "shrink and resize 320 clear override / no overflow",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "inlineBar": "108px",
+        "measured": 108,
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 96.171875,
+          "top": 108,
+          "right": 320,
+          "bottom": 204.171875,
+          "left": 0
+        },
+        "font": "16px"
+      }
+    },
+    {
+      "name": "shrink and resize 861 clear override / no overflow",
+      "pass": true,
+      "detail": {
+        "client": 861,
+        "scroll": 861,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 861,
+          "height": 62,
+          "top": 0,
+          "right": 861,
+          "bottom": 62,
+          "left": 0
+        },
+        "inlineBar": "",
+        "measured": 62,
+        "subheader": {
+          "x": 272,
+          "y": 62,
+          "width": 589,
+          "height": 61,
+          "top": 62,
+          "right": 861,
+          "bottom": 123,
+          "left": 272
+        },
+        "font": "16px"
+      }
+    },
+    {
+      "name": "shrink and resize 1440 clear override / no overflow",
+      "pass": true,
+      "detail": {
+        "client": 1440,
+        "scroll": 1440,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 62,
+          "top": 0,
+          "right": 1440,
+          "bottom": 62,
+          "left": 0
+        },
+        "inlineBar": "",
+        "measured": 62,
+        "subheader": {
+          "x": 352,
+          "y": 62,
+          "width": 1008,
+          "height": 61,
+          "top": 62,
+          "right": 1360,
+          "bottom": 123,
+          "left": 352
+        },
+        "font": "16px"
+      }
+    },
+    {
+      "name": "shrink and resize 393 clear override / no overflow",
+      "pass": true,
+      "detail": {
+        "client": 393,
+        "scroll": 393,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 393,
+          "height": 108,
+          "top": 0,
+          "right": 393,
+          "bottom": 108,
+          "left": 0
+        },
+        "inlineBar": "",
+        "measured": 108,
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 393,
+          "height": 69.78125,
+          "top": 108,
+          "right": 393,
+          "bottom": 177.78125,
+          "left": 0
+        },
+        "font": "16px"
+      }
+    },
+    {
+      "name": "native noJS enlarged rail/content flow contains",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": 0,
+          "y": 178.625,
+          "width": 320,
+          "height": 176,
+          "top": 178.625,
+          "right": 320,
+          "bottom": 354.625,
+          "left": 0
+        },
+        "main": {
+          "x": 0,
+          "y": 354.625,
+          "width": 320,
+          "height": 284,
+          "top": 354.625,
+          "right": 320,
+          "bottom": 638.625,
+          "left": 0
+        },
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards"
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags"
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections"
+          }
+        ]
+      }
+    },
+    {
+      "name": "native noJS Explore routes after enlarged layout",
+      "pass": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "light large",
+      "metrics": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "18px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 62.640625,
+            "y": 53.5,
+            "width": 58.46875,
+            "height": 44,
+            "top": 53.5,
+            "right": 121.109375,
+            "bottom": 97.5,
+            "left": 62.640625
+          },
+          {
+            "x": 125.109375,
+            "y": 53.5,
+            "width": 50.96875,
+            "height": 44,
+            "top": 53.5,
+            "right": 176.078125,
+            "bottom": 97.5,
+            "left": 125.109375
+          },
+          {
+            "x": 180.078125,
+            "y": 53.5,
+            "width": 77.28125,
+            "height": 44,
+            "top": 53.5,
+            "right": 257.359375,
+            "bottom": 97.5,
+            "left": 180.078125
+          }
+        ],
+        "measuredBar": 108,
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.427978515625,
+            "y": 123.84375,
+            "width": 9.033798217773438,
+            "height": 21,
+            "top": 123.84375,
+            "right": 148.46177673339844,
+            "bottom": 144.84375,
+            "left": 139.427978515625
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 262.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 306.5,
+          "bottom": 183.53125,
+          "left": 262.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 108.0625,
+          "top": 108,
+          "right": 320,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 266.1116156578064
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 266.1116156578064
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 266.1116156578064
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.07588426768779755,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 275.1116157323122,
+          "bottom": 568,
+          "left": -0.07588426768779755
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large-200",
+      "metrics": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "36px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 60.53125,
+            "y": 70.1875,
+            "width": 104.96875,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 165.5,
+            "bottom": 117.40625,
+            "left": 60.53125
+          },
+          {
+            "x": 169.5,
+            "y": 70.1875,
+            "width": 89.953125,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 259.453125,
+            "bottom": 117.40625,
+            "left": 169.5
+          },
+          {
+            "x": 88.6875,
+            "y": 121.40625,
+            "width": 142.625,
+            "height": 47.21875,
+            "top": 121.40625,
+            "right": 231.3125,
+            "bottom": 168.625,
+            "left": 88.6875
+          }
+        ],
+        "measuredBar": 179,
+        "heading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 79.56900024414062,
+            "y": 269.7109375,
+            "width": 18.07689666748047,
+            "height": 41,
+            "top": 269.7109375,
+            "right": 97.6458969116211,
+            "bottom": 310.7109375,
+            "left": 79.56900024414062
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 249,
+          "y": 329.09375,
+          "width": 44,
+          "height": 44,
+          "top": 329.09375,
+          "right": 293,
+          "bottom": 373.09375,
+          "left": 249
+        },
+        "subheader": {
+          "x": 0,
+          "y": 178.625,
+          "width": 320,
+          "height": 333.953125,
+          "top": 178.625,
+          "right": 320,
+          "bottom": 512.578125,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 112,
+        "width": 304,
+        "height": 209.03125,
+        "top": 112,
+        "right": 312,
+        "bottom": 321.03125,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 266.16295337677
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 266.16295337677
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 266.1737356185913
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.013764601200819016,
+          "y": 179,
+          "width": 275.1875,
+          "height": 389,
+          "top": 179,
+          "right": 275.1737353987992,
+          "bottom": 568,
+          "left": -0.013764601200819016
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large",
+      "metrics": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "18px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 62.640625,
+            "y": 53.5,
+            "width": 58.46875,
+            "height": 44,
+            "top": 53.5,
+            "right": 121.109375,
+            "bottom": 97.5,
+            "left": 62.640625
+          },
+          {
+            "x": 125.109375,
+            "y": 53.5,
+            "width": 50.96875,
+            "height": 44,
+            "top": 53.5,
+            "right": 176.078125,
+            "bottom": 97.5,
+            "left": 125.109375
+          },
+          {
+            "x": 180.078125,
+            "y": 53.5,
+            "width": 77.28125,
+            "height": 44,
+            "top": 53.5,
+            "right": 257.359375,
+            "bottom": 97.5,
+            "left": 180.078125
+          }
+        ],
+        "measuredBar": 108,
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 244.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 258,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.427978515625,
+            "y": 123.84375,
+            "width": 9.033798217773438,
+            "height": 21,
+            "top": 123.84375,
+            "right": 148.46177673339844,
+            "bottom": 144.84375,
+            "left": 139.427978515625
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 153.53125,
+            "width": 243.91253662109375,
+            "height": 21,
+            "top": 153.53125,
+            "right": 257.41253662109375,
+            "bottom": 174.53125,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 183.21875,
+            "width": 54.20271301269531,
+            "height": 21,
+            "top": 183.21875,
+            "right": 67.70271301269531,
+            "bottom": 204.21875,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 262.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 306.5,
+          "bottom": 183.53125,
+          "left": 262.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 108.0625,
+          "top": 108,
+          "right": 320,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 265.9609217643738
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 265.9609217643738
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 265.9609217643738
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.22657817602157593,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.9609218239784,
+          "bottom": 568,
+          "left": -0.22657817602157593
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large-200",
+      "metrics": {
+        "client": 320,
+        "scroll": 320,
+        "fontSize": "36px",
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "routeRects": [
+          {
+            "x": 60.53125,
+            "y": 70.1875,
+            "width": 104.96875,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 165.5,
+            "bottom": 117.40625,
+            "left": 60.53125
+          },
+          {
+            "x": 169.5,
+            "y": 70.1875,
+            "width": 89.953125,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 259.453125,
+            "bottom": 117.40625,
+            "left": 169.5
+          },
+          {
+            "x": 88.6875,
+            "y": 121.40625,
+            "width": 142.625,
+            "height": 47.21875,
+            "top": 121.40625,
+            "right": 231.3125,
+            "bottom": 168.625,
+            "left": 88.6875
+          }
+        ],
+        "measuredBar": 179,
+        "heading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 79.56900024414062,
+            "y": 269.7109375,
+            "width": 18.07689666748047,
+            "height": 41,
+            "top": 269.7109375,
+            "right": 97.6458969116211,
+            "bottom": 310.7109375,
+            "left": 79.56900024414062
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 249,
+          "y": 329.09375,
+          "width": 44,
+          "height": 44,
+          "top": 329.09375,
+          "right": 293,
+          "bottom": 373.09375,
+          "left": 249
+        },
+        "subheader": {
+          "x": 0,
+          "y": 178.625,
+          "width": 320,
+          "height": 333.953125,
+          "top": 178.625,
+          "right": 320,
+          "bottom": 512.578125,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 112,
+        "width": 304,
+        "height": 209.03125,
+        "top": 112,
+        "right": 312,
+        "bottom": 321.03125,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 320,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 265.92073011398315
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 265.92073011398315
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 265.92073011398315
+          }
+        ],
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.2667699158191681,
+          "y": 179,
+          "width": 275.1875,
+          "height": 389,
+          "top": 179,
+          "right": 274.92073008418083,
+          "bottom": 568,
+          "left": -0.2667699158191681
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    }
+  ],
+  "adaptation": [
+    {
+      "width": 320,
+      "metrics": {
+        "client": 320,
+        "scroll": 320,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 108,
+          "top": 0,
+          "right": 320,
+          "bottom": 108,
+          "left": 0
+        },
+        "inlineBar": "108px",
+        "measured": 108,
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 320,
+          "height": 96.171875,
+          "top": 108,
+          "right": 320,
+          "bottom": 204.171875,
+          "left": 0
+        },
+        "font": "16px"
+      }
+    },
+    {
+      "width": 861,
+      "metrics": {
+        "client": 861,
+        "scroll": 861,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 861,
+          "height": 62,
+          "top": 0,
+          "right": 861,
+          "bottom": 62,
+          "left": 0
+        },
+        "inlineBar": "",
+        "measured": 62,
+        "subheader": {
+          "x": 272,
+          "y": 62,
+          "width": 589,
+          "height": 61,
+          "top": 62,
+          "right": 861,
+          "bottom": 123,
+          "left": 272
+        },
+        "font": "16px"
+      }
+    },
+    {
+      "width": 1440,
+      "metrics": {
+        "client": 1440,
+        "scroll": 1440,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 62,
+          "top": 0,
+          "right": 1440,
+          "bottom": 62,
+          "left": 0
+        },
+        "inlineBar": "",
+        "measured": 62,
+        "subheader": {
+          "x": 352,
+          "y": 62,
+          "width": 1008,
+          "height": 61,
+          "top": 62,
+          "right": 1360,
+          "bottom": 123,
+          "left": 352
+        },
+        "font": "16px"
+      }
+    },
+    {
+      "width": 393,
+      "metrics": {
+        "client": 393,
+        "scroll": 393,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 393,
+          "height": 108,
+          "top": 0,
+          "right": 393,
+          "bottom": 108,
+          "left": 0
+        },
+        "inlineBar": "",
+        "measured": 108,
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 393,
+          "height": 69.78125,
+          "top": 108,
+          "right": 393,
+          "bottom": 177.78125,
+          "left": 0
+        },
+        "font": "16px"
+      }
+    }
+  ],
+  "noJS": {
+    "client": 320,
+    "scroll": 320,
+    "bar": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 178.625,
+      "top": 0,
+      "right": 320,
+      "bottom": 178.625,
+      "left": 0
+    },
+    "rail": {
+      "x": 0,
+      "y": 178.625,
+      "width": 320,
+      "height": 176,
+      "top": 178.625,
+      "right": 320,
+      "bottom": 354.625,
+      "left": 0
+    },
+    "main": {
+      "x": 0,
+      "y": 354.625,
+      "width": 320,
+      "height": 284,
+      "top": 354.625,
+      "right": 320,
+      "bottom": 638.625,
+      "left": 0
+    },
+    "links": [
+      {
+        "key": "boards",
+        "href": "/?pane=boards"
+      },
+      {
+        "key": "tags",
+        "href": "/?pane=tags"
+      },
+      {
+        "key": "connections",
+        "href": "/?pane=connections"
+      }
+    ]
+  },
+  "limits": [
+    "32-character username, 64-character board name with emoji",
+    "App Large=18px and 200% of Large=36px set through CSSOM; no physical browser zoom",
+    "320x568 CSS pixel viewport; theme attributes changed for computed cascade probes",
+    "Targeted repair confirmation only; full prior navigation matrix was not repeated"
+  ]
+}

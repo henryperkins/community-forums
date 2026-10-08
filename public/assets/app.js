@@ -7,6 +7,27 @@
     // off-canvas nav drawer) without ever trapping no-JS users behind them.
     document.documentElement.classList.add('has-js');
 
+    // Enlarged phone text can add a primary-route line. Measure the content
+    // height for the drawer and pane offsets; CSS owns an independent minimum
+    // so a later reduction in text size can shrink the bar again.
+    var memberBar = document.querySelector('.forum-bar');
+    if (memberBar) {
+        var compactMemberBar = window.matchMedia('(max-width: 860px)');
+        var syncMemberBarHeight = function () {
+            if (!compactMemberBar.matches) {
+                document.documentElement.style.removeProperty('--topbar-h');
+                return;
+            }
+            var height = Math.ceil(memberBar.getBoundingClientRect().height) + 'px';
+            if (document.documentElement.style.getPropertyValue('--topbar-h') !== height) {
+                document.documentElement.style.setProperty('--topbar-h', height);
+            }
+        };
+        syncMemberBarHeight();
+        window.addEventListener('resize', syncMemberBarHeight);
+        if (window.ResizeObserver) { new ResizeObserver(syncMemberBarHeight).observe(memberBar); }
+    }
+
     // Auto-grow composer textareas as you type.
     function autosize(el) {
         el.style.height = 'auto';
@@ -1014,6 +1035,7 @@
         if (!panel) { return; }
         panel.style.removeProperty('left');
         panel.style.removeProperty('top');
+        panel.style.removeProperty('max-width');
     };
     var positionInboxMenu = function (menu) {
         if (!menu) { return; }
@@ -1021,13 +1043,14 @@
         var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel, .create-menu-panel');
         if (!menu || !menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
         var margin = 8;
-        var gap = menu.matches('[data-inbox-scope-menu]') ? 7 : 4;
+        var gap = 8;
+        panel.style.maxWidth = Math.max(0, document.documentElement.clientWidth - margin * 2) + 'px';
         var triggerRect = trigger.getBoundingClientRect();
         var panelRect = panel.getBoundingClientRect();
         var alignEnd = menu.matches('[data-inbox-row-menu], [data-inbox-menu-align="end"]');
         var left = alignEnd ? triggerRect.right - panelRect.width : triggerRect.left;
         var top = triggerRect.bottom + gap;
-        left = Math.max(margin, Math.min(left, window.innerWidth - panelRect.width - margin));
+        left = Math.max(margin, Math.min(left, document.documentElement.clientWidth - panelRect.width - margin));
         if (top + panelRect.height > window.innerHeight - margin) {
             top = triggerRect.top - panelRect.height - gap;
         }
@@ -1089,6 +1112,43 @@
         closeInboxMenus(false);
     }, { capture: true, passive: true });
 
+    // Help is a separate, nonmodal reading panel. Unsupported browsers and
+    // no-JS requests retain the complete native disclosure in page actions.
+    var helpFallback = document.querySelector('.inbox-help');
+    var helpOpen = document.querySelector('[data-inbox-help-open]');
+    if (helpFallback && helpOpen && window.HTMLDialogElement && typeof HTMLDialogElement.prototype.show === 'function') {
+        var helpContent = helpFallback.querySelector('[data-inbox-help-content]');
+        var helpDialog = document.createElement('dialog');
+        helpDialog.className = 'inbox-help-dialog';
+        helpDialog.setAttribute('data-inbox-help-dialog', '');
+        helpDialog.setAttribute('aria-labelledby', 'inbox-help-heading');
+        helpDialog.setAttribute('role', 'dialog');
+        helpDialog.appendChild(helpContent);
+        document.body.appendChild(helpDialog);
+        helpFallback.hidden = true;
+        helpOpen.hidden = false;
+        var helpClose = helpDialog.querySelector('[data-inbox-help-close]');
+        var helpReturn = helpOpen.closest('.inbox-actions').querySelector(':scope > summary');
+        helpClose.hidden = false;
+        helpOpen.addEventListener('click', function () {
+            closeInboxMenus(false);
+            if (!helpDialog.open) { helpDialog.show(); }
+            helpClose.focus();
+        });
+        helpClose.addEventListener('click', function () { helpDialog.close(); });
+        helpDialog.addEventListener('close', function () {
+            // The close event is queued: preserve focus if the user has already
+            // moved to another control before it arrives.
+            var focused = document.activeElement;
+            if (!focused || focused === document.body || focused === document.documentElement || focused === helpOpen || helpDialog.contains(focused)) {
+                helpReturn.focus();
+            }
+        });
+        helpDialog.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') { event.preventDefault(); helpDialog.close(); }
+        });
+    }
+
     // Community Inbox — the bounded preview endpoint decorates canonical topic
     // links. Selection, cursor movement and actions all resolve back to native
     // forms/links, so the queue remains fully usable without this block.
@@ -1104,15 +1164,41 @@
         var cursorRow = null;
         var inboxRequest = null;
         var inboxRequestGeneration = 0;
+        var inboxRequestTimer = null;
+        var failedPreview = null;
+        var inboxFeedback = inbox.querySelector('[data-inbox-feedback]');
+        var inboxStatus = inbox.querySelector('[data-inbox-status]');
+        var inboxRecovery = inbox.querySelector('[data-inbox-recovery]');
+        var inboxRetry = inbox.querySelector('[data-inbox-retry]');
+        var inboxFullTopic = inbox.querySelector('[data-inbox-full-topic]');
+        var inboxReturnPreview = inbox.querySelector('[data-inbox-return-preview]');
         var idOf = function (href) { var match = href && href.match(/\/t\/(\d+)/); return match ? match[1] : null; };
+        var setInboxFeedback = function (message, recover, announceOnly) {
+            if (inboxFeedback) { inboxFeedback.classList.toggle('is-active', !!message && !announceOnly); }
+            if (inboxStatus) {
+                inboxStatus.classList.toggle('sr-only', !!announceOnly);
+                inboxStatus.textContent = message || '';
+            }
+            if (inboxRecovery) { inboxRecovery.hidden = !recover; }
+            if (inboxReturnPreview) { inboxReturnPreview.hidden = !recover || !readingContent || !readingContent.querySelector('[data-inbox-preview]'); }
+        };
         var cancelInboxRequest = function () {
             inboxRequestGeneration++;
+            window.clearTimeout(inboxRequestTimer);
+            inboxRequestTimer = null;
             if (inboxRequest && typeof inboxRequest.abort === 'function') { inboxRequest.abort(); }
             inboxRequest = null;
+            failedPreview = null;
+            if (reading) { reading.removeAttribute('aria-busy'); }
+            setInboxFeedback('');
             return inboxRequestGeneration;
         };
         var clearInboxRequest = function (generation, request) {
-            if (generation === inboxRequestGeneration && inboxRequest === request) { inboxRequest = null; }
+            if (generation === inboxRequestGeneration && inboxRequest === request) {
+                window.clearTimeout(inboxRequestTimer);
+                inboxRequestTimer = null;
+                inboxRequest = null;
+            }
         };
         var allRows = function () { return inboxList.querySelectorAll('[data-inbox-row]'); };
         var linkIn = function (row) { return row ? row.querySelector('[data-inbox-preview-url]') : null; };
@@ -1149,9 +1235,21 @@
             markActive(null);
             setMobileReading(false);
             if (restoreFocus && selectedLink && document.documentElement.contains(selectedLink)) { selectedLink.focus(); }
-            else if (restoreFocus) { inboxList.focus(); }
+            else if (restoreFocus) { (inboxList.querySelector('[data-inbox-empty-state]') || inboxList).focus(); }
         };
         var canonicalFallback = function (href) { window.location.href = href; };
+        var showPreviewFailure = function (attempt, message) {
+            failedPreview = attempt;
+            reading.removeAttribute('aria-busy');
+            // Leave the previous preview and any reply draft untouched. On a
+            // phone, reveal the queue where the recovery commands live.
+            setMobileReading(false);
+            if (inboxFullTopic) { inboxFullTopic.setAttribute('href', attempt.canonical); }
+            setInboxFeedback(message, true);
+            // A retry briefly hides its own control while loading. Restore it
+            // only if focus has not since moved to another usable control.
+            if (attempt.restoreRetryFocus && inboxRetry && (document.activeElement === document.body || document.activeElement === document.documentElement)) { inboxRetry.focus(); }
+        };
         var decrementUnreadBadge = function (badge, attribute, capped) {
             var count = parseInt(badge.getAttribute(attribute) || '', 10);
             if (isNaN(count) || count < 1) { return; }
@@ -1170,9 +1268,17 @@
             var queueUnread = row.getAttribute('data-inbox-unread') === '1';
             row.setAttribute('data-inbox-unread', '0');
             row.classList.remove('thread-unread');
+            var readForm = row.querySelector('[data-inbox-action="read"]');
+            if (readForm) {
+                readForm.querySelector('input[name="state"]').value = 'unread';
+                readForm.querySelector('button[type="submit"]').textContent = 'Mark unread';
+            }
             var dot = row.querySelector('.unread-dot');
             if (dot) { dot.remove(); }
             if (queueUnread) {
+                Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-scope-count="unread"]'), function (count) {
+                    count.textContent = String(Math.max(0, (parseInt(count.textContent || '', 10) || 0) - 1));
+                });
                 Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-unread-count]'), function (badge) {
                     decrementUnreadBadge(badge, 'data-inbox-unread-count', badge.classList.contains('forum-bar-count'));
                 });
@@ -1189,29 +1295,64 @@
                 var remaining = scopeCount ? parseInt(scopeCount.textContent || '', 10) : NaN;
                 if (!isNaN(remaining)) {
                     remaining = Math.max(0, remaining - 1);
-                    scopeCount.textContent = String(remaining);
-                    var countLabel = document.querySelector('[data-subheader] [data-inbox-count-label]');
-                    if (countLabel) { countLabel.textContent = remaining === 1 ? 'topic' : 'topics'; }
+                    Array.prototype.forEach.call(document.querySelectorAll('[data-subheader] [data-inbox-current-count]'), function (count) { count.textContent = String(remaining); });
+                    Array.prototype.forEach.call(document.querySelectorAll('[data-subheader] [data-inbox-count-label]'), function (label) { label.textContent = remaining === 1 ? 'topic' : 'topics'; });
+                    Array.prototype.forEach.call(document.querySelectorAll('.inbox-view-bar summary[aria-label^="Show:"]'), function (summary) {
+                        summary.setAttribute('aria-label', summary.getAttribute('aria-label').replace(/, \d+ topics?/, ', ' + remaining + (remaining === 1 ? ' topic' : ' topics')));
+                    });
+                }
+                var readPageForm = document.querySelector('[data-subheader] .inbox-mark-all');
+                if (readPageForm) {
+                    Array.prototype.forEach.call(readPageForm.querySelectorAll('input[name="thread_ids[]"]'), function (field) {
+                        if (field.value === row.getAttribute('data-thread-id')) { field.remove(); }
+                    });
+                    if (!readPageForm.querySelector('input[name="thread_ids[]"]')) { readPageForm.remove(); }
                 }
                 row.remove();
+                if (selectionAnchor && !selectionAnchor.isConnected) { selectionAnchor = null; }
+                selections = selections.filter(function (box) { return box.isConnected; });
+                syncSelection();
+                var shownCount = inbox.querySelector('.inbox-shown-count');
+                if (shownCount) { shownCount.textContent = 'Showing ' + allRows().length + ' of ' + remaining + ' topics'; }
                 if (cursorRow === row) { cursorRow = null; }
+                if (!allRows().length) {
+                    if (threadList) { threadList.hidden = true; }
+                    if (selectAll) { selectAll.closest('label').hidden = true; }
+                    if (sweep) { sweep.hidden = true; }
+                    if (shownCount) { shownCount.hidden = true; }
+                    var emptyTemplate = inbox.querySelector(remaining === 0 ? '[data-inbox-empty-template]' : '[data-inbox-page-read-template]');
+                    if (emptyTemplate) { inboxList.appendChild(emptyTemplate.content.cloneNode(true)); }
+                }
             }
         };
         var loadThread = function (link, push, focus, historyTarget) {
             var canonical = link ? link.getAttribute('href') : historyTarget && historyTarget.href;
             var endpoint = link ? link.getAttribute('data-inbox-preview-url') : historyTarget && historyTarget.endpoint;
             if (!canonical || !endpoint) { canonicalFallback(canonical || '/inbox'); return; }
+            var restoreRetryFocus = document.activeElement === inboxRetry;
             var generation = cancelInboxRequest();
             var request = window.AbortController ? new window.AbortController() : null;
             inboxRequest = request;
+            var attempt = { link: link, push: push, focus: focus, historyTarget: historyTarget, canonical: canonical, restoreRetryFocus: restoreRetryFocus };
             reading.setAttribute('aria-busy', 'true');
+            setInboxFeedback('Loading topic…');
+            inboxRequestTimer = window.setTimeout(function () {
+                if (generation !== inboxRequestGeneration) { return; }
+                cancelInboxRequest();
+                showPreviewFailure(attempt, 'This topic is taking longer than expected. Try again, or open the full topic.');
+            }, 15000);
             var options = { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' };
             if (request) { options.signal = request.signal; }
             fetch(endpoint, options).then(function (response) {
                 if (generation !== inboxRequestGeneration) { return null; }
-                if (response.redirected || !response.ok) {
-                    clearInboxRequest(generation, request);
+                if (response.redirected || response.status === 401 || response.status === 403 || response.status === 404) {
+                    cancelInboxRequest();
                     canonicalFallback(canonical);
+                    return null;
+                }
+                if (!response.ok) {
+                    clearInboxRequest(generation, request);
+                    showPreviewFailure(attempt, response.status === 429 ? 'Too many requests. Wait a moment, then try again.' : "Couldn't load this topic. Try again, or open the full topic.");
                     return null;
                 }
                 return response.text();
@@ -1219,9 +1360,10 @@
                 if (generation !== inboxRequestGeneration || html === null) { return; }
                 var probe = document.createElement('template');
                 probe.innerHTML = html;
-                if (!probe.content.querySelector('[data-inbox-preview]')) {
+                var preview = probe.content.querySelector('[data-inbox-preview]');
+                if (!preview || preview.getAttribute('data-inbox-preview') !== idOf(canonical)) {
                     clearInboxRequest(generation, request);
-                    canonicalFallback(canonical);
+                    showPreviewFailure(attempt, "Couldn't load this topic. Try again, or open the full topic.");
                     return;
                 }
                 if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
@@ -1241,7 +1383,8 @@
                     var id = idOf(canonical);
                     var url = new URL(window.location.href);
                     if (id) { url.searchParams.set('t', id); }
-                    history.pushState({ rbInboxTopic: true, href: canonical, endpoint: endpoint }, '', url.toString());
+                    try { history.pushState({ rbInboxTopic: true, href: canonical, endpoint: endpoint }, '', url.toString()); }
+                    catch (error) { /* The preview remains usable when history is unavailable. */ }
                 }
                 if (focus) {
                     var heading = readingContent.querySelector('h2, h1');
@@ -1249,15 +1392,63 @@
                     else { reading.focus(); }
                 }
                 clearInboxRequest(generation, request);
+                var emptyState = inboxList.querySelector('[data-inbox-empty-state] .inbox-empty-title');
+                setInboxFeedback(emptyState ? emptyState.textContent : 'Topic loaded.', false, true);
             }).catch(function (error) {
                 if (generation !== inboxRequestGeneration || (error && error.name === 'AbortError')) { return; }
                 clearInboxRequest(generation, request);
-                canonicalFallback(canonical);
+                showPreviewFailure(attempt, navigator.onLine === false ? "You're offline. Reconnect and try again." : "Couldn't load this topic. Try again, or open the full topic.");
             });
         };
 
         if (reading && readingContent && inboxList) {
+            // Enhanced forms decide whether to navigate in their submit handlers.
+            // Only native submissions own the next page and invalidate previews
+            // before an access error can trigger a competing canonical fallback.
+            document.addEventListener('submit', function (event) {
+                if (!event.defaultPrevented) { cancelInboxRequest(); }
+            });
+            window.addEventListener('pagehide', cancelInboxRequest);
+            if (inboxRetry) {
+                inboxRetry.addEventListener('click', function () {
+                    var attempt = failedPreview;
+                    if (attempt) { loadThread(attempt.link, attempt.push, attempt.focus, attempt.historyTarget); }
+                });
+            }
+            if (inboxReturnPreview) {
+                inboxReturnPreview.addEventListener('click', function () {
+                    var preview = readingContent.querySelector('[data-inbox-preview]');
+                    if (!preview) { return; }
+                    cancelInboxRequest();
+                    var id = preview.getAttribute('data-inbox-preview');
+                    var row = rowForId(id);
+                    var link = linkIn(row);
+                    selectedLink = link;
+                    setCursor(row, false);
+                    markActive(link);
+                    // Retain the same composer and DOM, even if reading removed
+                    // its originating Unread row from the queue.
+                    setMobileReading(true);
+                    var url = new URL(window.location.href);
+                    if (url.searchParams.get('t') !== id) {
+                        var canonical = preview.querySelector('.inbox-preview-open');
+                        url.searchParams.set('t', id);
+                        try {
+                            history.replaceState({ rbInboxTopic: true, href: canonical ? canonical.getAttribute('href') : '/t/' + id, endpoint: '/inbox/preview/' + id }, '', url.toString());
+                        } catch (error) { /* The retained draft remains usable without history. */ }
+                    }
+                    var heading = preview.querySelector('h2, h1');
+                    if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus(); }
+                    else { reading.focus(); }
+                    setInboxFeedback('Previous topic restored.', false, true);
+                });
+            }
             var initialUrl = new URL(window.location.href);
+            // Validation re-renders at the POST route. Preview history still
+            // belongs to the server's canonical Inbox view and page.
+            if (initialUrl.pathname !== '/inbox' && inbox.getAttribute('data-inbox-url')) {
+                initialUrl = new URL(inbox.getAttribute('data-inbox-url'), window.location.href);
+            }
             try { history.replaceState(initialUrl.searchParams.has('t') ? { rbInboxDirect: true } : { rbInboxList: true }, '', initialUrl.toString()); }
             catch (error) { /* History can be unavailable in privacy modes. */ }
 
@@ -1265,7 +1456,7 @@
                 if (event.ctrlKey || event.metaKey || event.altKey || editableTarget(event.target)) { return; }
                 // Nothing fires from inside an open menu or dialog — the account
                 // menu included — where e or s would mark or star a topic out of sight.
-                if (event.target.closest && event.target.closest('details[open], [role="dialog"]')) { return; }
+                if (event.target.closest && event.target.closest('details[open], [role="dialog"], dialog[open]')) { return; }
                 var rows = Array.prototype.slice.call(allRows());
                 if (!rows.length) { return; }
                 var index = cursorRow ? rows.indexOf(cursorRow) : -1;
@@ -1293,7 +1484,7 @@
                     var starForm = activeRow.querySelector('[data-inbox-action="star"]');
                     if (starForm) { event.preventDefault(); starForm.requestSubmit(); }
                 } else if (event.key === '#') {
-                    var snoozeForm = activeRow.querySelector('[data-inbox-action="snooze"][data-inbox-snooze="monday"]');
+                    var snoozeForm = activeRow.querySelector('[data-inbox-action="snooze"][data-inbox-snooze="tomorrow"]');
                     if (snoozeForm) { event.preventDefault(); snoozeForm.requestSubmit(); }
                 }
             });
@@ -1311,7 +1502,8 @@
             var selectAll = inbox.querySelector('[data-inbox-select-all]');
             var sweep = inbox.querySelector('[data-inbox-sweep]');
             var selectionLabel = inbox.querySelector('[data-inbox-selection-label]');
-            var selectionAnchor = -1;
+            var clearSelection = inbox.querySelector('[data-inbox-clear-selection]');
+            var selectionAnchor = null;
             var syncSelection = function () {
                 var count = selections.filter(function (box) { return box.checked; }).length;
                 if (sweep) { sweep.classList.toggle('is-active', count > 0); }
@@ -1321,14 +1513,16 @@
                     selectAll.indeterminate = count > 0 && count < selections.length;
                 }
             };
-            selections.forEach(function (box, index) {
+            selections.forEach(function (box) {
                 box.addEventListener('click', function (event) {
-                    if (event.shiftKey && selectionAnchor >= 0) {
-                        var start = Math.min(index, selectionAnchor);
-                        var end = Math.max(index, selectionAnchor);
+                    var index = selections.indexOf(box);
+                    var anchorIndex = selections.indexOf(selectionAnchor);
+                    if (event.shiftKey && index >= 0 && anchorIndex >= 0) {
+                        var start = Math.min(index, anchorIndex);
+                        var end = Math.max(index, anchorIndex);
                         for (var offset = start; offset <= end; offset++) { selections[offset].checked = box.checked; }
                     }
-                    selectionAnchor = index;
+                    selectionAnchor = box;
                     syncSelection();
                 });
                 box.addEventListener('change', syncSelection);
@@ -1337,6 +1531,15 @@
                 selectAll.addEventListener('change', function () {
                     selections.forEach(function (box) { box.checked = selectAll.checked; });
                     syncSelection();
+                });
+            }
+            if (clearSelection) {
+                clearSelection.hidden = false;
+                clearSelection.addEventListener('click', function () {
+                    selections.forEach(function (box) { box.checked = false; });
+                    closeInboxMenus(false);
+                    syncSelection();
+                    if (selectAll) { selectAll.focus(); }
                 });
             }
             syncSelection();

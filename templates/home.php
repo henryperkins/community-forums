@@ -6,7 +6,6 @@ $this->section('route', 'boards');
 $pane = (string) ($pane ?? 'boards');
 $sort = (string) ($directory_sort ?? 'category');
 $peek = (int) ($directory_peek ?? 3);
-$availablePanes = is_array($available_panes ?? null) ? $available_panes : ['boards' => true];
 $groups = is_array($directory_groups ?? null) ? $directory_groups : [];
 $totals = is_array($directory_totals ?? null) ? $directory_totals : ['boards' => 0, 'topics' => 0, 'posts' => 0];
 $sortLabels = [
@@ -32,20 +31,18 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
         'peek' => $peek,
     ], $changes));
 };
-$paneLabels = ['boards' => 'Boards', 'tags' => 'Tags', 'notices' => 'Notifications', 'connections' => 'Connections'];
-$this->start('subheader_leading');
 ?>
-    <nav class="forum-directory__tabs" aria-label="Board index panes">
-        <?php foreach ($paneLabels as $paneKey => $label): ?>
-            <?php if (empty($availablePanes[$paneKey])) { continue; } ?>
-            <?php $paneCount = $paneKey === 'notices' && $current_user !== null ? $notification_unread() : 0; ?>
-            <a<?= $paneKey === 'notices' && $current_user !== null ? ' data-notification-link aria-label="' . ($paneCount > 0 ? 'Notifications, ' . $paneCount . ' unread' : 'Notifications') . '"' : '' ?> href="/?pane=<?= $e($paneKey) ?>"<?= $pane === $paneKey ? ' aria-current="page"' : '' ?>>
-                <?= $e($label) ?>
-                <?php if ($paneKey === 'notices' && $current_user !== null): ?><span class="notification-count" data-notification-count aria-hidden="true"<?= $paneCount === 0 ? ' hidden' : '' ?>><?= $paneCount > 99 ? '99+' : $paneCount ?></span><?php endif; ?>
-            </a>
-        <?php endforeach; ?>
-    </nav>
-<?php $this->stop(); ?>
+<?php if ($current_user !== null && $pane !== 'notices'): $this->start('subheader_leading'); ?>
+    <div class="page-toolbar directory-toolbar">
+        <?php if ($pane === 'boards'): ?>
+            <span class="forum-page-title" data-directory-context>Boards</span>
+        <?php elseif ($pane === 'tags'): ?>
+            <h1 class="forum-page-title">Tags</h1>
+        <?php else: ?>
+            <h1 class="forum-page-title">Connections <span class="directory-identity">· <a href="/u/<?= $e($current_user->username()) ?>">@<?= $e($current_user->username()) ?></a></span></h1>
+        <?php endif; ?>
+    </div>
+<?php $this->stop(); endif; ?>
 <div class="read-main read-pad board-index" data-directory-pane="<?= $e($pane) ?>">
     <?php if ($pane === 'boards'): ?>
         <section class="forum-directory" data-directory-sort="<?= $e($sort) ?>" data-directory-peek="<?= $peek ?>">
@@ -165,7 +162,7 @@ $this->start('subheader_leading');
         </section>
     <?php elseif ($pane === 'tags'): ?>
         <section class="directory-light-pane directory-tags-pane">
-            <h1>Tags</h1>
+            <?php if ($current_user === null): ?><h1>Tags</h1><?php endif; ?>
             <p>A tag crosses boards; a board does not cross tags.</p>
             <?php if (empty($tags)): ?>
                 <p class="muted empty">No public tags are available yet.</p>
@@ -188,7 +185,7 @@ $this->start('subheader_leading');
         </section>
     <?php else: ?>
         <section class="directory-light-pane directory-connections-pane" data-connection-mode="<?= $e((string) ($connection_mode ?? 'followers')) ?>">
-            <h1>Connections<?php if ($current_user !== null): ?> <span>· <a href="/u/<?= $e($current_user->username()) ?>">@<?= $e($current_user->username()) ?></a></span><?php endif; ?></h1>
+            <?php if ($current_user === null): ?><h1>Connections</h1><?php endif; ?>
             <p>Following a member brings their new topics into your inbox. It tells them nothing you would not say aloud.</p>
             <?php if ($current_user === null): ?>
                 <p class="directory-signin-state"><a href="/login?next=%2F%3Fpane%3Dconnections">Log in</a> to see your followers and the people you follow.</p>

@@ -15,6 +15,14 @@ test.beforeEach(() => {
   });
 });
 
+function scopeMenu(page: Page) {
+  return page.locator('[data-inbox-scope-menu]:visible, .inbox-compact-menu:visible');
+}
+
+function sortMenu(page: Page) {
+  return page.locator('.inbox-sort-menu:visible, .inbox-compact-menu:visible');
+}
+
 async function login(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Email', { exact: true }).fill('alice@retro.test');
@@ -63,22 +71,22 @@ test('topics appear early and every primary destination fits without horizontal 
 test('scope and sort preserve each other and menus support keyboard dismissal and help', async ({ page }, info) => {
   await login(page);
   await page.goto('/inbox?scope=for_you&order=active');
-  await page.locator('[data-inbox-scope-menu] > summary').click();
-  await page.locator('[data-inbox-scope-menu] a[href="/inbox?scope=starred&order=active"]').click();
+  await scopeMenu(page).locator(':scope > summary').click();
+  await scopeMenu(page).locator('a[href="/inbox?scope=starred&order=active"]').click();
   await expect(page).toHaveURL(/scope=starred&order=active$/);
-  await page.locator('.inbox-sort-menu > summary').click();
-  await page.locator('.inbox-sort-menu').getByRole('link', { name: 'Most commended', exact: true }).click();
+  await sortMenu(page).locator(':scope > summary').click();
+  await sortMenu(page).getByRole('link', { name: 'Most commended', exact: true }).click();
   await expect(page).toHaveURL(/scope=starred&order=commended$/);
-  await page.locator('[data-inbox-scope-menu] > summary').click();
+  await scopeMenu(page).locator(':scope > summary').click();
   await page.keyboard.press('Escape');
-  await expect(page.locator('[data-inbox-scope-menu] > summary')).toBeFocused();
+  await expect(scopeMenu(page).locator(':scope > summary')).toBeFocused();
   const actions = page.locator('.inbox-actions > summary');
   await actions.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Mark this page read', exact: true })).toBeVisible();
-  await page.locator('.inbox-help > summary').click();
-  await expect(page.locator('.inbox-keyboard-help')).toBeVisible();
-  const panel = page.locator('.inbox-actions > .inbox-menu-panel');
+  await page.locator('[data-inbox-help-open]').click();
+  await expect(page.locator('[data-inbox-help-dialog] .inbox-keyboard-help')).toBeVisible();
+  const panel = page.locator('[data-inbox-help-dialog]');
   const box = (await panel.boundingBox())!;
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -101,21 +109,28 @@ test('scope, sort and page actions work without JavaScript', async ({ browser, b
     for (const width of info.project.name === 'mobile' ? [390, 430] : [1280]) {
       await page.setViewportSize({ width, height: 844 });
       if (width === 430) {
-        const show = (await page.locator('[data-inbox-scope-menu] > summary').boundingBox())!;
-        const sort = (await page.locator('.inbox-sort-menu > summary').boundingBox())!;
+        const show = (await scopeMenu(page).locator(':scope > summary').boundingBox())!;
+        const sort = (await sortMenu(page).locator(':scope > summary').boundingBox())!;
         expect(Math.abs(show.y - sort.y), 'Pin the side-by-side case that previously overflowed').toBeLessThan(1);
       }
-      await page.locator('.inbox-sort-menu > summary').click();
-      const panel = (await page.locator('.inbox-sort-menu > .inbox-menu-panel').boundingBox())!;
+      await sortMenu(page).locator(':scope > summary').click();
+      const panel = (await sortMenu(page).locator('.inbox-menu-panel').boundingBox())!;
       expect(panel.x).toBeGreaterThanOrEqual(0);
       expect(panel.x + panel.width).toBeLessThanOrEqual(width);
-      await page.locator('.inbox-sort-menu > summary').click();
+      await sortMenu(page).locator(':scope > summary').click();
     }
-    await page.locator('[data-inbox-scope-menu] > summary').click();
-    await page.locator('[data-inbox-scope-menu] a[href="/inbox?scope=unread&order=active"]').click();
-    await page.locator('.inbox-sort-menu > summary').click();
-    await page.locator('.inbox-sort-menu').getByRole('link', { name: 'Newest first', exact: true }).click();
+    await scopeMenu(page).locator(':scope > summary').click();
+    await scopeMenu(page).locator('a[href="/inbox?scope=unread&order=active"]').click();
+    await sortMenu(page).locator(':scope > summary').click();
+    await sortMenu(page).getByRole('link', { name: 'Newest first', exact: true }).click();
     await expect(page).toHaveURL(/scope=unread&order=newest$/);
+    await page.locator('.inbox-actions > summary').click();
+    await page.locator('.inbox-help > summary').click();
+    await expect(page.locator('.inbox-help-panel')).toContainText('Find either kind in Snoozed');
+    const helpBox = (await page.locator('.inbox-actions > .inbox-menu-panel').boundingBox())!;
+    expect(helpBox.x).toBeGreaterThanOrEqual(0);
+    expect(helpBox.x + helpBox.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+    await page.locator('.inbox-actions > summary').click();
     const count = await page.locator('[data-inbox-row]').count();
     const displayedIds = await page.locator('[data-inbox-row]').evaluateAll(rows => rows.map(row => row.getAttribute('data-thread-id')));
     expect(count).toBeGreaterThan(0);

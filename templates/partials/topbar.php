@@ -25,13 +25,14 @@
 $path = (string) ($request_path ?? '/');
 $hasBoardRail = !empty($has_board_rail);
 $hasReadingPane = !empty($has_reading_pane);
-$isBoards = $hasBoardRail && ($path === '/' || str_starts_with($path, '/c/')
+$isBoards = $hasBoardRail && (($path === '/' && ($home_pane ?? null) !== 'notices') || str_starts_with($path, '/c/')
     || $path === '/tags' || str_starts_with($path, '/tags/')
     || (int) ($active_thread_board_id ?? 0) > 0);
 $isInbox = $hasBoardRail && ($path === '/inbox' || str_starts_with($path, '/inbox/'));
 $isMessages = $hasBoardRail && ($path === '/messages' || str_starts_with($path, '/messages/'));
 // The bell is the Notifications surface's entry, so it is current there.
-$isNotifications = $path === '/notifications' || str_starts_with($path, '/notifications/');
+$isNotifications = $path === '/notifications' || str_starts_with($path, '/notifications/')
+    || ($path === '/' && ($home_pane ?? null) === 'notices');
 $surfaces = is_array($member_surfaces ?? null)
     ? $member_surfaces
     : ['rail_open' => true, 'inbox_reading_open' => true];

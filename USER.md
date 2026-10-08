@@ -249,8 +249,28 @@ preferences; changing a filter cannot add previously unqueued activity.
   keep one left edge) but carries no control.
 
 The board row also shows the member's **own** state on a topic — starred,
-assigned to, snoozed until — because a topic you starred must read as starred
+assigned to, hidden until tomorrow or until restoration — because a topic you starred must read as starred
 on its own board and not only in your inbox. A guest sees none of it.
+
+With `topic_workflow` enabled, **Til tomorrow** hides a topic from the normal Inbox
+scopes for 24 hours. Turning **Show in Inbox** off hides it until you turn it back
+on. Either kind remains available in **Snoozed**, near the top of the view menu;
+turning the switch on restores normal Inbox eligibility. Bulk actions offer
+**Hide from Inbox**, **Show in Inbox** in Snoozed, and **Til tomorrow**. The `#`
+shortcut uses tomorrow. Hiding does not change board access or notification
+delivery (ADR 0044).
+
+Enhanced Inbox previews announce loading and allow 15 seconds before offering
+**Try again** or **Open full topic**. Transient errors keep the queue, selections
+and existing preview/reply text intact; authentication and access errors use the
+canonical topic page. **Return to previous topic** reopens the retained preview
+and its reply draft without reloading, even after its row leaves Unread. Pane
+toggles keep pending previews and recovery commands available. Reading the last
+Unread topic shows the caught-up state,
+or a **Load remaining topics** link when unread topics remain on another page.
+Rejected bulk actions preserve only available selections on the current page.
+Star forms submit their intended state, so repeating a submission keeps that
+state (ADR 0045). Native links and forms remain complete without JavaScript.
 
 ### 4.4 Bookmarks & saved
 

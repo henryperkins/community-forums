@@ -1,0 +1,97 @@
+
+Running 44 tests using 1 worker
+
+(node:1533046) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [desktop] › inbox-controls-polish.spec.ts:163:5 › long scope and order labels preserve one row, counts and readable content across constrained layouts (4.8s)
+
+  ✓   2 [desktop] › inbox-controls-polish.spec.ts:189:5 › shared panels stay contained, expose recovery early and use consistent touch targets and dismissal (9.7s)
+
+  ✓   3 [desktop] › inbox-controls-polish.spec.ts:292:7 › row hiding, tomorrow and restoration work enhanced (2.5s)
+
+  ✓   4 [desktop] › inbox-controls-polish.spec.ts:363:7 › bulk hide, tomorrow and restore operate on the selected page enhanced (2.9s)
+
+  ✓   5 [desktop] › inbox-controls-polish.spec.ts:292:7 › row hiding, tomorrow and restoration work without JavaScript (3.1s)
+
+  ✓   6 [desktop] › inbox-controls-polish.spec.ts:363:7 › bulk hide, tomorrow and restore operate on the selected page without JavaScript (3.0s)
+
+  ✓   7 [desktop] › inbox-controls-polish.spec.ts:405:5 › the snooze shortcut uses the same tomorrow action as the menu (1.6s)
+
+  ✓   8 [desktop] › inbox-controls-polish.spec.ts:425:5 › preview removal preserves live range selection and page actions; persistent rows offer the current read action (2.4s)
+
+  ✓   9 [desktop] › inbox-controls-polish.spec.ts:490:5 › long unbroken topic text stays within its content column at default and large type (3.0s)
+
+  ✓  10 [desktop] › inbox-header.spec.ts:42:5 › topics appear early and every primary destination fits without horizontal scrolling (2.7s)
+
+  ✓  11 [desktop] › inbox-header.spec.ts:71:5 › scope and sort preserve each other and menus support keyboard dismissal and help (2.6s)
+
+  ✓  12 [desktop] › inbox-header.spec.ts:102:5 › scope, sort and page actions work without JavaScript (2.1s)
+
+  ✓  13 [desktop] › shared-subheader-context.spec.ts:117:7 › Inbox context, Show/count, Sort, actions and creation share one row enhanced (8.0s)
+
+  ✓  14 [desktop] › shared-subheader-context.spec.ts:152:7 › representative page contexts sit beside shared creation enhanced (5.2s)
+
+  ✓  15 [desktop] › shared-subheader-context.spec.ts:175:7 › Search scope and order remain native URL choices in the shared row enhanced (1.1s)
+
+  ✓  16 [desktop] › shared-subheader-context.spec.ts:201:7 › Feed and Leaderboard choices remain native destinations beside creation enhanced (1.2s)
+
+  ✓  17 [desktop] › shared-subheader-context.spec.ts:117:7 › Inbox context, Show/count, Sort, actions and creation share one row native (7.1s)
+
+  ✓  18 [desktop] › shared-subheader-context.spec.ts:152:7 › representative page contexts sit beside shared creation native (4.9s)
+
+  ✓  19 [desktop] › shared-subheader-context.spec.ts:175:7 › Search scope and order remain native URL choices in the shared row native (1.3s)
+
+  ✓  20 [desktop] › shared-subheader-context.spec.ts:201:7 › Feed and Leaderboard choices remain native destinations beside creation native (1.4s)
+
+  ✓  21 [desktop] › shared-subheader-context.spec.ts:228:5 › the Messages search disclosure preserves native search and unread filters (1.2s)
+
+  ✓  22 [desktop] › shared-subheader-context.spec.ts:255:5 › the consolidated Inbox choices preserve URLs, shared dismissal and accessible menus (2.5s)
+(node:1536781) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  23 [mobile] › inbox-controls-polish.spec.ts:163:5 › long scope and order labels preserve one row, counts and readable content across constrained layouts (5.6s)
+
+  ✓  24 [mobile] › inbox-controls-polish.spec.ts:189:5 › shared panels stay contained, expose recovery early and use consistent touch targets and dismissal (12.4s)
+
+  ✓  25 [mobile] › inbox-controls-polish.spec.ts:292:7 › row hiding, tomorrow and restoration work enhanced (3.5s)
+
+  ✓  26 [mobile] › inbox-controls-polish.spec.ts:363:7 › bulk hide, tomorrow and restore operate on the selected page enhanced (3.9s)
+
+  ✓  27 [mobile] › inbox-controls-polish.spec.ts:292:7 › row hiding, tomorrow and restoration work without JavaScript (3.9s)
+
+  ✓  28 [mobile] › inbox-controls-polish.spec.ts:363:7 › bulk hide, tomorrow and restore operate on the selected page without JavaScript (3.4s)
+
+  ✓  29 [mobile] › inbox-controls-polish.spec.ts:405:5 › the snooze shortcut uses the same tomorrow action as the menu (1.9s)
+
+  ✓  30 [mobile] › inbox-controls-polish.spec.ts:425:5 › preview removal preserves live range selection and page actions; persistent rows offer the current read action (3.1s)
+
+  ✓  31 [mobile] › inbox-controls-polish.spec.ts:490:5 › long unbroken topic text stays within its content column at default and large type (3.8s)
+
+  ✓  32 [mobile] › inbox-header.spec.ts:42:5 › topics appear early and every primary destination fits without horizontal scrolling (3.3s)
+
+  ✓  33 [mobile] › inbox-header.spec.ts:71:5 › scope and sort preserve each other and menus support keyboard dismissal and help (2.9s)
+
+  ✓  34 [mobile] › inbox-header.spec.ts:102:5 › scope, sort and page actions work without JavaScript (2.6s)
+
+  ✓  35 [mobile] › shared-subheader-context.spec.ts:117:7 › Inbox context, Show/count, Sort, actions and creation share one row enhanced (10.0s)
+
+  ✓  36 [mobile] › shared-subheader-context.spec.ts:152:7 › representative page contexts sit beside shared creation enhanced (5.3s)
+
+  ✓  37 [mobile] › shared-subheader-context.spec.ts:175:7 › Search scope and order remain native URL choices in the shared row enhanced (1.0s)
+
+  ✓  38 [mobile] › shared-subheader-context.spec.ts:201:7 › Feed and Leaderboard choices remain native destinations beside creation enhanced (1.2s)
+
+  ✓  39 [mobile] › shared-subheader-context.spec.ts:117:7 › Inbox context, Show/count, Sort, actions and creation share one row native (8.0s)
+
+  ✓  40 [mobile] › shared-subheader-context.spec.ts:152:7 › representative page contexts sit beside shared creation native (4.6s)
+
+  ✓  41 [mobile] › shared-subheader-context.spec.ts:175:7 › Search scope and order remain native URL choices in the shared row native (1.0s)
+
+  ✓  42 [mobile] › shared-subheader-context.spec.ts:201:7 › Feed and Leaderboard choices remain native destinations beside creation native (1.2s)
+
+  ✓  43 [mobile] › shared-subheader-context.spec.ts:228:5 › the Messages search disclosure preserves native search and unread filters (892ms)
+
+  ✓  44 [mobile] › shared-subheader-context.spec.ts:255:5 › the consolidated Inbox choices preserve URLs, shared dismissal and accessible menus (2.1s)
+
+  44 passed (2.7m)

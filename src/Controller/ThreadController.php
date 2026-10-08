@@ -334,6 +334,7 @@ final class ThreadController extends Controller
         $canStaffAssign = false;
         $canChangeStatuses = [];
         $mySnooze = null;
+        $mySnoozeIndefinitely = false;
         if ($workflowOn) {
             $workflow = $this->container->get(ThreadWorkflowService::class);
             $statusHistory = $this->container->get(ThreadRepository::class)->statusHistory((int) $thread['id'], 5);
@@ -360,6 +361,7 @@ final class ThreadController extends Controller
                 }
                 $myState = $this->container->get(ThreadUserRepository::class)->find($user->id(), (int) $thread['id']);
                 $mySnooze = $myState['snoozed_until'] ?? null;
+                $mySnoozeIndefinitely = !empty($myState['snoozed_indefinitely']);
             }
         }
 
@@ -510,6 +512,7 @@ final class ThreadController extends Controller
             'can_staff_assign' => $canStaffAssign,
             'can_change_statuses' => $canChangeStatuses,
             'my_snooze' => $mySnooze,
+            'my_snooze_indefinitely' => $mySnoozeIndefinitely,
             'tags_on' => $tagsOn,
             'thread_tags' => $threadTags,
             'all_tags' => $allTags,

@@ -109,7 +109,7 @@ async function contract(page: Page, route: string, width: number, theme: string,
     await page.goto(route);
     await appearance(page, theme, large, signedIn);
     const hasHeader = await page.locator('header.forum-bar').count() > 0;
-    const leading = route === '/' || route === '/c/general' || route === topic;
+    const leading = (route === '/' && signedIn) || route === '/c/general' || route === topic;
     const row = page.locator('[data-subheader]');
     await expect(row, route).toHaveCount(hasHeader && (signedIn || leading) ? 1 : 0);
     const result = { route, finalRoute: new URL(page.url()).pathname, width, height: 844, theme, fontSize: large ? 'large' : 'medium',
@@ -186,9 +186,14 @@ async function contract(page: Page, route: string, width: number, theme: string,
         }
     }
     if (leading) {
-        const label = route === '/' ? 'Board index panes' : 'Breadcrumb';
-        await expect(page.getByRole('navigation', { name: label, exact: true })).toHaveCount(1);
-        await expect(row.getByRole('navigation', { name: label, exact: true })).toHaveCount(1);
+        if (route === '/') {
+            await expect(row.locator('[data-directory-context]')).toHaveText('Boards');
+            await expect(page.locator('[data-sidebar] [data-directory-nav]')).toHaveCount(1);
+            await expect(row.locator('[data-directory-nav]')).toHaveCount(0);
+        } else {
+            await expect(page.getByRole('navigation', { name: 'Breadcrumb', exact: true })).toHaveCount(1);
+            await expect(row.getByRole('navigation', { name: 'Breadcrumb', exact: true })).toHaveCount(1);
+        }
         await expect(page.locator('main h1')).toHaveCount(1);
     }
     const composerInViewport = g.dock === undefined || g.dock <= g.h + 1;

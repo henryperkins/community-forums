@@ -8,6 +8,8 @@ $this->section('route', 'thread');
 // gate already blocks crawlers).
 $this->section('canonical', '/t/' . (int) $thread['id'] . '-' . $thread['slug']);
 $threadPageUrl = '/t/' . (int) $thread['id'] . '-' . $thread['slug'] . '?page=' . max(1, (int) $page);
+$hiddenFromInbox = ($workflow_on ?? false) && \App\Support\InboxSnooze::hidden($my_snooze ?? null, !empty($my_snooze_indefinitely));
+$inboxVisibilityLabel = !empty($my_snooze_indefinitely) ? 'Until you turn it back on' : 'Til ' . human_date($my_snooze ?? null);
 $this->section('og_type', 'article');
 $this->section('description', mb_strimwidth(preg_replace('/\s+/', ' ', (string) $thread['title']) ?? '', 0, 160, '…'));
 if (($thread['board_visibility'] ?? 'public') !== 'public') {
@@ -99,7 +101,7 @@ $this->start('subheader_leading');
                  is the reader's own, like the reply count beside it — folds into the
                  byline exactly as the design's `bylineTail` does. */ ?>
         <div class="thread-facts-identity">
-        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?php if (($thread['created_at'] ?? '') !== ''): ?><time datetime="<?= $e(iso_datetime($thread['created_at'])) ?>" title="<?= $e(human_datetime($thread['created_at'])) ?>"><?= $e(gmdate('M j', strtotime((string) $thread['created_at'] . ' UTC') ?: 0)) ?></time> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if (!empty($my_snooze)): ?> · Quiet until <?= $e(human_datetime($my_snooze)) ?><?php endif; ?></p>
+        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?php if (($thread['created_at'] ?? '') !== ''): ?><time datetime="<?= $e(iso_datetime($thread['created_at'])) ?>" title="<?= $e(human_datetime($thread['created_at'])) ?>"><?= $e(gmdate('M j', strtotime((string) $thread['created_at'] . ' UTC') ?: 0)) ?></time> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if ($hiddenFromInbox): ?> · <?= $e($inboxVisibilityLabel) ?><?php endif; ?></p>
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
             <span class="thread-participants-rule">
@@ -155,6 +157,7 @@ $this->start('subheader_leading');
         'notifications_on' => $notifications_on,
         'workflow_on' => $workflow_on,
         'my_snooze' => $my_snooze,
+        'my_snooze_indefinitely' => $my_snooze_indefinitely ?? false,
         'is_staff' => !empty($can_pin) || !empty($can_lock) || !empty($can_split_merge) || !empty($can_move),
         'can_write' => $can_write,
         'can_change_statuses' => $can_change_statuses,

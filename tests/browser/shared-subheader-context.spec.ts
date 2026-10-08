@@ -16,6 +16,14 @@ test.beforeEach(() => {
   execFileSync('php', ['tests/browser/member-surfaces-fixture.php'], { cwd: ROOT, env: process.env });
 });
 
+function scopeMenu(page: Page) {
+  return page.locator('[data-inbox-scope-menu]:visible, .inbox-compact-menu:visible');
+}
+
+function sortMenu(page: Page) {
+  return page.locator('.inbox-sort-menu:visible, .inbox-compact-menu:visible');
+}
+
 async function login(page: Page) {
   if (memberCookies) {
     await page.context().addCookies(memberCookies);
@@ -45,8 +53,9 @@ async function expectSharedRow(page: Page, inbox = false) {
   const row = page.locator('[data-subheader]');
   await expect(row).toHaveCount(1);
   await expect(page.locator('main h1')).toHaveCount(1);
+  const compact = inbox && await page.locator('.inbox-compact-menu').isVisible();
   const selectors = inbox
-    ? ['h1', '[data-inbox-scope-menu] > summary', '.inbox-sort-menu > summary', '.inbox-actions > summary', '[data-create-trigger]']
+    ? ['h1', ...(compact ? ['.inbox-compact-menu > summary'] : ['[data-inbox-scope-menu] > summary', '.inbox-sort-menu > summary']), '.inbox-actions > summary', '[data-create-trigger]']
     : ['h1', '[data-create-trigger]'];
   for (const selector of selectors) {
     await expect(row.locator(selector), selector).toHaveCount(1);
@@ -80,11 +89,11 @@ async function expectSharedRow(page: Page, inbox = false) {
   }
   if (inbox) {
     await expect(page.locator('[data-inbox] h1, [data-inbox] .inbox-list-head, [data-inbox] [data-inbox-scope-menu], [data-inbox] .inbox-sort-menu, [data-inbox] .inbox-actions')).toHaveCount(0);
-    await expect(row.locator('[data-inbox-current-count]')).toHaveCount(1);
-    await expect(row.locator('[data-inbox-current-count]')).toBeVisible();
-    await expect(row.locator('[data-inbox-count-label]')).toHaveText(/^(topic|topics)$/);
-    await expect(row.locator('[data-inbox-scope-menu] > summary')).toContainText('Show:');
-    await expect(row.locator('.inbox-sort-menu > summary')).toContainText('Sort:');
+    await expect(row.locator('[data-inbox-current-count]:visible')).toHaveCount(1);
+    await expect(row.locator('[data-inbox-current-count]:visible')).toBeVisible();
+    await expect(row.locator('[data-inbox-count-label]:visible')).toHaveText(/^(topic|topics)$/);
+    await expect(scopeMenu(page).locator(':scope > summary')).toHaveAccessibleName(/Show:/);
+    await expect(sortMenu(page).locator(':scope > summary')).toHaveAccessibleName(/Sort:/);
   }
 }
 
@@ -120,14 +129,14 @@ for (const javaScriptEnabled of [true, false]) {
             await page.goto('/inbox?scope=starred&order=commended');
             if (javaScriptEnabled) await page.evaluate(() => document.fonts.ready);
             await expectSharedRow(page, true);
-            await page.locator('[data-inbox-scope-menu] > summary').click();
-            await expectPanelContained(page, '.inbox-scope-menu-panel');
-            await expect(page.locator('[data-inbox-scope-menu] a[aria-current="page"]')).toContainText('Starred');
-            await page.locator('[data-inbox-scope-menu] > summary').click();
-            await page.locator('.inbox-sort-menu > summary').click();
-            await expectPanelContained(page, '.inbox-sort-menu > .inbox-menu-panel');
-            await expect(page.locator('.inbox-sort-menu a[aria-current="page"]')).toContainText('Most commended');
-            await page.locator('.inbox-sort-menu > summary').click();
+            await scopeMenu(page).locator(':scope > summary').click();
+            await expectPanelContained(page, '.inbox-scope-menu[open] > .inbox-menu-panel, .inbox-compact-menu[open] > .inbox-menu-panel');
+            await expect(scopeMenu(page).getByRole('link', { name: /^Starred/ })).toHaveAttribute('aria-current', 'page');
+            await scopeMenu(page).locator(':scope > summary').click();
+            await sortMenu(page).locator(':scope > summary').click();
+            await expectPanelContained(page, '.inbox-sort-menu[open] > .inbox-menu-panel, .inbox-compact-menu[open] > .inbox-menu-panel');
+            await expect(sortMenu(page).getByRole('link', { name: 'Most commended', exact: true })).toHaveAttribute('aria-current', 'page');
+            await sortMenu(page).locator(':scope > summary').click();
             await page.locator('.inbox-actions > summary').click();
             await expectPanelContained(page, '.inbox-actions > .inbox-menu-panel');
             await page.locator('.inbox-actions > summary').click();
@@ -248,32 +257,32 @@ test('the consolidated Inbox choices preserve URLs, shared dismissal and accessi
   await login(page);
   await page.goto('/inbox?scope=for_you&order=newest');
   await expectSharedRow(page, true);
-  await page.locator('[data-inbox-scope-menu] > summary').click();
-  await page.locator('[data-inbox-scope-menu] a[href="/inbox?scope=starred&order=newest"]').click();
+  await scopeMenu(page).locator(':scope > summary').click();
+  await scopeMenu(page).locator('a[href="/inbox?scope=starred&order=newest"]').click();
   await expect(page).toHaveURL(/scope=starred&order=newest$/);
-  await page.locator('.inbox-sort-menu > summary').click();
-  await page.locator('.inbox-sort-menu').getByRole('link', { name: 'Most commended', exact: true }).click();
+  await sortMenu(page).locator(':scope > summary').click();
+  await sortMenu(page).getByRole('link', { name: 'Most commended', exact: true }).click();
   await expect(page).toHaveURL(/scope=starred&order=commended$/);
-  const show = page.locator('[data-inbox-scope-menu] > summary');
+  const show = scopeMenu(page).locator(':scope > summary');
   await show.click();
   await page.locator('[data-create-trigger]').click();
-  await expect(page.locator('[data-inbox-scope-menu]')).not.toHaveAttribute('open', '');
+  await expect(scopeMenu(page)).not.toHaveAttribute('open', '');
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-create-trigger]')).toBeFocused();
   const actions = page.locator('.inbox-actions > summary');
   await actions.focus();
   await page.keyboard.press('Enter');
-  await page.locator('.inbox-help > summary').click();
-  await expect(page.locator('.inbox-keyboard-help')).toBeVisible();
-  await expectPanelContained(page, '.inbox-actions > .inbox-menu-panel');
+  await page.locator('[data-inbox-help-open]').click();
+  await expect(page.locator('[data-inbox-help-dialog] .inbox-keyboard-help')).toBeVisible();
+  await expectPanelContained(page, '[data-inbox-help-dialog]');
   const audit = await new AxeBuilder({ page }).include('[data-subheader]').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(audit.violations).toEqual([]);
   await page.keyboard.press('Escape');
   await expect(actions).toBeFocused();
-  await expect(page.locator('.inbox-actions > .inbox-menu-panel')).toBeHidden();
+  await expect(page.locator('[data-inbox-help-dialog]')).toBeHidden();
   await page.setViewportSize({ width: page.viewportSize()!.width, height: 300 });
   await show.click();
   await expect.poll(() => page.locator('[data-inbox-list]').evaluate(element => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
   await page.locator('[data-inbox-list]').evaluate(element => { element.scrollTop = element.scrollHeight; });
-  await expect(page.locator('[data-inbox-scope-menu]')).not.toHaveAttribute('open', '');
+  await expect(scopeMenu(page)).not.toHaveAttribute('open', '');
 });

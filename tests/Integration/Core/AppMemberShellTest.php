@@ -11,6 +11,8 @@ use App\Repository\TagRepository;
 use App\Repository\ThreadUserRepository;
 use App\Repository\UserBoardPrefRepository;
 use App\Repository\UserPreferenceRepository;
+use DOMDocument;
+use DOMXPath;
 use Tests\Support\TestCase;
 
 final class AppMemberShellTest extends TestCase
@@ -21,14 +23,14 @@ final class AppMemberShellTest extends TestCase
         $this->makeAdmin();
     }
 
-    public function test_shared_shell_puts_routes_in_the_topbar_and_only_boards_in_the_rail(): void
+    public function test_shared_shell_keeps_primary_routes_in_the_topbar_and_directory_navigation_in_the_rail(): void
     {
         $category = $this->makeCategory('Council places');
         $board = $this->makeBoard($category, ['slug' => 'council-fire', 'name' => 'Council fire']);
         $user = $this->makeUser(['username' => 'shell_routes']);
         $this->actingAs($user);
 
-        foreach (['/', '/inbox', '/search', '/c/' . $board['slug']] as $path) {
+        foreach (['/', '/inbox', '/search', '/c/' . $board['slug'], '/compose'] as $path) {
             $response = $this->get($path);
             $this->assertStatus(200, $response);
             $html = $response->body();
@@ -38,7 +40,17 @@ final class AppMemberShellTest extends TestCase
             self::assertStringContainsString('data-primary-route="messages"', $html);
 
             $rail = $this->boardRail($html);
-            self::assertStringContainsString('/c/council-fire', $rail);
+            $dom = $this->dom($html);
+            self::assertSame(1, $dom->query('//*[@id="sidebar-nav"]//*[@data-directory-nav]')->length, $path);
+            foreach (['boards', 'tags', 'connections'] as $directory) {
+                self::assertSame(1, $dom->query('//*[@data-directory-nav]//a[@data-directory-link="' . $directory . '" and @href="/?pane=' . $directory . '"]')->length, $path);
+            }
+            self::assertSame(0, $dom->query('//main//*[@data-directory-nav] | //*[@data-directory-nav]//a[@data-directory-link="notices"]')->length);
+            if ($path === '/compose') {
+                self::assertStringContainsString('data-compose-board-picker="council-fire"', $rail);
+            } else {
+                self::assertStringContainsString('/c/council-fire', $rail);
+            }
             foreach (['/inbox', '/messages', '/feed', '/drafts', '/leaderboard', '/search'] as $route) {
                 self::assertStringNotContainsString('href="' . $route . '"', $rail);
             }
@@ -144,8 +156,10 @@ final class AppMemberShellTest extends TestCase
             '/class="board-rail-item is-active"[^>]*href="\/c\/thread-home"[^>]*aria-current="page"/',
             $rail,
         );
-        self::assertSame(1, substr_count($rail, 'aria-current="page"'));
-        self::assertStringNotContainsString('aria-current="page"', $this->boardRail($this->get('/')->body()));
+        self::assertSame(1, $this->dom($response->body())->query('//*[@id="sidebar-nav"]//a[@data-board-slug and @aria-current="page"]')->length);
+        $home = $this->dom($this->get('/')->body());
+        self::assertSame(0, $home->query('//*[@id="sidebar-nav"]//a[@data-board-slug and @aria-current="page"]')->length);
+        self::assertSame(1, $home->query('//*[@data-directory-nav]//a[@data-directory-link="boards" and @aria-current="page"]')->length);
     }
 
     public function test_boards_primary_route_covers_tag_pages_and_authorized_topics(): void
@@ -164,7 +178,21 @@ final class AppMemberShellTest extends TestCase
                 $this->topbar($response->body()),
                 $path,
             );
+            if (str_starts_with($path, '/tags')) {
+                $dom = $this->dom($response->body());
+                self::assertSame(1, $dom->query('//*[@data-directory-nav]//a[@data-directory-link="tags" and @aria-current="page"]')->length, $path);
+                self::assertSame(1, $dom->query('//*[@data-directory-nav]//a[@aria-current="page"]')->length, $path);
+            }
         }
+
+        // A person's profile Connections tab is distinct from the viewer's
+        // home Connections destination, even when both links share a caption.
+        $other = $this->makeUser(['username' => 'other_connections']);
+        $profile = $this->get('/u/' . $other['username'], ['tab' => 'connections']);
+        $this->assertStatus(200, $profile);
+        $profileDom = $this->dom($profile->body());
+        self::assertSame(1, $profileDom->query('//nav[@aria-label="Profile activity"]//a[@aria-current="page" and contains(@href, "tab=connections")]')->length);
+        self::assertSame(0, $profileDom->query('//*[@data-directory-nav]//a[@data-directory-link="connections" and @aria-current="page"]')->length);
     }
 
     public function test_plain_error_header_omits_controls_for_panes_that_do_not_exist(): void
@@ -315,11 +343,16 @@ final class AppMemberShellTest extends TestCase
         // The menu's groups, and Settings no longer wearing Profile's person.
         self::assertMatchesRegularExpression('~<a class="identity-menu-break" href="/settings/account"><svg class="icon icon-settings"~', $topbar);
         self::assertStringContainsString('<form class="identity-menu-break" method="post" action="/logout">', $topbar);
-        // The bell is current only on its own page.
+        // The bell owns both the canonical page and the retained legacy pane.
         self::assertStringContainsString('<a class="forum-bar-bell bell" href="/notifications" data-bell data-notification-link aria-label=', $topbar);
-        $notices = $this->topbar($this->get('/notifications')->body());
-        self::assertStringContainsString('<a class="forum-bar-bell bell is-active" href="/notifications" data-bell data-notification-link aria-current="page" aria-label=', $notices);
-        self::assertSame(0, substr_count($notices, 'forum-bar-surface is-active'));
+        foreach ([['/notifications', []], ['/', ['pane' => 'notices']]] as [$path, $query]) {
+            $response = $this->get($path, $query);
+            $this->assertStatus(200, $response);
+            $notices = $this->topbar($response->body());
+            self::assertStringContainsString('<a class="forum-bar-bell bell is-active" href="/notifications" data-bell data-notification-link aria-current="page" aria-label=', $notices);
+            self::assertSame(0, substr_count($notices, 'forum-bar-surface is-active'));
+            self::assertSame(0, $this->dom($response->body())->query('//*[@data-directory-nav]//a[@aria-current="page"]')->length);
+        }
     }
 
     public function test_contextual_surface_preference_persists_without_overwriting_siblings(): void
@@ -422,6 +455,13 @@ final class AppMemberShellTest extends TestCase
         $end = strpos($html, '</details>', $start);
         self::assertNotFalse($end);
         return substr($html, $start, $end - $start);
+    }
+
+    private function dom(string $html): DOMXPath
+    {
+        $document = new DOMDocument();
+        @$document->loadHTML($html);
+        return new DOMXPath($document);
     }
 
     private function topbar(string $html): string

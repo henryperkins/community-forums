@@ -1,0 +1,261 @@
+{
+  "engine": "webkit",
+  "assets": [
+    {
+      "url": "/assets/dist/app-style-D9QfswNc.css",
+      "status": 200,
+      "sha256": "6e471a9b37f6e4ec9c2e8228afc18d2488a9b5e46a2b0352ca82304719cdeabb"
+    },
+    {
+      "url": "/assets/dist/app-56e9b9a8f33fd541.js",
+      "status": 200,
+      "sha256": "56e9b9a8f33fd541d5f711640c7a65cda8b112ab1e98a34987ea0f94ee7965cf"
+    }
+  ],
+  "cases": [
+    {
+      "name": "last-unread",
+      "before": {
+        "url": "/inbox?scope=unread&order=active",
+        "busy": null,
+        "rows": 1,
+        "empty": null,
+        "master": true,
+        "shown": "Showing 1 of 1 topics",
+        "focus": "BODY",
+        "focusText": "\nSkip to content\n\n            \n        \n    \n    \n        \n ",
+        "documentWidth": 393,
+        "scrollWidth": 393
+      },
+      "after": {
+        "url": "/inbox?scope=unread&order=active",
+        "busy": null,
+        "rows": 0,
+        "empty": null,
+        "master": true,
+        "shown": "Showing 0 of 0 topics",
+        "focus": "SECTION",
+        "focusText": "\n                    \n                                \n     ",
+        "documentWidth": 393,
+        "scrollWidth": 393
+      },
+      "semantic": "- region \"Topics\":\n  - checkbox \"Select all on this page\"\n  - text: Select all on this page\n  - list\n  - paragraph: Showing 0 of 0 topics"
+    },
+    {
+      "name": "preview-500",
+      "url": "/t/4-ti-fallback-reference-desktop",
+      "rows": 0,
+      "empty": null,
+      "master": false,
+      "focus": "BODY",
+      "focusText": "\nSkip to content\n\n            \n        \n    \n    \n        \n ",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-network-abort",
+      "url": "/t/4-ti-fallback-reference-desktop",
+      "rows": 0,
+      "empty": null,
+      "master": false,
+      "focus": "BODY",
+      "focusText": "\nSkip to content\n\n            \n        \n    \n    \n        \n ",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-malformed",
+      "url": "/t/4-ti-fallback-reference-desktop",
+      "rows": 0,
+      "empty": null,
+      "master": false,
+      "focus": "BODY",
+      "focusText": "\nSkip to content\n\n            \n        \n    \n    \n        \n ",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-hung",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": "true",
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "A",
+      "focusText": "TI Fallback Reference desktop",
+      "documentWidth": 1440,
+      "scrollWidth": 1440,
+      "readingText": "Choose a topic\n\nChoose a topic to read it here. Your place in the list is kept."
+    },
+    {
+      "name": "rapid-preview-race",
+      "ids": [
+        "4",
+        "3"
+      ],
+      "current": "3",
+      "heading": "\u0645\u0631\u062d\u0628\u0627 \u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1 end",
+      "active": "3",
+      "url": "/inbox?scope=starred&order=active&t=3",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "H2",
+      "focusText": "\u0645\u0631\u062d\u0628\u0627 \u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "rtl-cjk-long-title",
+      "geometry": {
+        "row": {
+          "x": 16,
+          "y": 337.71875,
+          "width": 288,
+          "height": 311.40625,
+          "top": 337.71875,
+          "right": 304,
+          "bottom": 649.125,
+          "left": 16
+        },
+        "title": {
+          "x": 23,
+          "y": 345.71875,
+          "width": 208,
+          "height": 198.28125,
+          "top": 345.71875,
+          "right": 231,
+          "bottom": 544,
+          "left": 23
+        },
+        "titleScroll": 208,
+        "titleClient": 208
+      },
+      "menu": {
+        "x": 8,
+        "y": 392,
+        "width": 304,
+        "height": 195.9375
+      },
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "SUMMARY",
+      "focusText": "\n",
+      "documentWidth": 320,
+      "scrollWidth": 1319
+    },
+    {
+      "name": "short-large-text",
+      "menus": [
+        {
+          "selector": ".create-menu",
+          "open": true,
+          "positioned": "1",
+          "box": {
+            "x": 8,
+            "y": 8,
+            "width": 304,
+            "height": 186.03125
+          },
+          "styles": {
+            "maxHeight": "none",
+            "overflow": "visible",
+            "scroll": 184,
+            "client": 184
+          }
+        },
+        {
+          "selector": ".inbox-compact-menu",
+          "open": false,
+          "positioned": null,
+          "box": {
+            "x": 138.484375,
+            "y": 333.140625,
+            "width": 304,
+            "height": 108
+          },
+          "styles": {
+            "maxHeight": "108px",
+            "overflow": "auto",
+            "scroll": 1281,
+            "client": 106
+          }
+        },
+        {
+          "selector": ".inbox-actions",
+          "open": true,
+          "positioned": "1",
+          "box": {
+            "x": 8,
+            "y": 16,
+            "width": 304,
+            "height": 108
+          },
+          "styles": {
+            "maxHeight": "108px",
+            "overflow": "auto",
+            "scroll": 212,
+            "client": 106
+          }
+        }
+      ],
+      "help": {
+        "x": 32,
+        "y": 32,
+        "width": 256,
+        "height": 116
+      },
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "BUTTON",
+      "focusText": "\n",
+      "documentWidth": 320,
+      "scrollWidth": 320
+    },
+    {
+      "name": "forced-colors-switch",
+      "switchState": {
+        "checked": "true",
+        "forced": true,
+        "track": {
+          "background": "rgb(46, 74, 58)",
+          "color": "rgb(49, 59, 51)",
+          "border": "rgb(46, 74, 58)"
+        },
+        "thumb": {
+          "background": "rgb(250, 246, 236)",
+          "border": "rgb(49, 59, 51)",
+          "borderWidth": "0px"
+        }
+      },
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "SUMMARY",
+      "focusText": "\n",
+      "documentWidth": 393,
+      "scrollWidth": 393
+    }
+  ],
+  "errors": [],
+  "build": "9cd60f8b2665c07a",
+  "limitations": [
+    "Linux Chromium/WebKit emulation; no physical Safari/Windows forced-colors",
+    "200% root text size emulates text scaling, not browser zoom",
+    "Hung request observed for 1.5 seconds plus static no-timeout confirmation"
+  ]
+}

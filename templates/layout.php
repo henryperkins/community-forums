@@ -60,6 +60,7 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
 // or an authorized topic's. Compose re-checks posting rights and falls back to
 // the first board the member may post in.
 $chromePath = (string) ($request_path ?? '');
+$homePane = $chromePath === '/' && is_string($pane ?? null) ? $pane : null;
 $composeBoard = '';
 if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
     $composeBoard = (string) ($thread['board_slug'] ?? '');
@@ -70,6 +71,7 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
 <?= $this->partial('partials/topbar', [
     'has_board_rail' => $variant === 'app',
     'has_reading_pane' => $variant === 'app' && $this->block('route', '') === 'inbox',
+    'home_pane' => $homePane,
     'active_thread_board_id' => str_starts_with($chromePath, '/t/')
         ? (int) ($thread['board_id'] ?? 0) : 0,
 ]) ?>
@@ -83,6 +85,7 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
         <?= $this->partial('partials/sidebar', [
             'compose_boards' => $compose_boards ?? null,
             'selected_board' => $selected_board ?? null,
+            'home_pane' => $homePane ?? null,
             'active_thread_board_id' => str_starts_with((string) ($request_path ?? ''), '/t/')
                 ? (int) ($thread['board_id'] ?? 0) : 0,
         ]) ?>

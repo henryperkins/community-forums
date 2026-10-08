@@ -11,12 +11,12 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\BoardRepository;
-use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Service\BadgeService;
 use App\Service\ReactionService;
+use App\Service\ThreadReadService;
 
 /**
  * Personal engagement actions: react to a post, star a thread (P2-01/P2-02),
@@ -76,17 +76,27 @@ final class EngagementController extends Controller
         $this->container->get(WriteGate::class)->assertCanWrite($user);
         $threadId = (int) ($params['id'] ?? 0);
 
-        $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
-        if ($thread === null || (int) $thread['is_deleted'] === 1) {
-            throw new NotFoundException('Thread not found.');
-        }
-        $isMember = $this->container->get(\App\Repository\BoardMemberRepository::class)
-            ->isMember((int) $thread['board_id'], $user->id());
-        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)) {
-            throw new NotFoundException('Thread not found.');
-        }
+        $thread = $this->container->get(ThreadReadService::class)->loadForUser($user, $threadId);
 
-        $starred = $this->container->get(ThreadUserRepository::class)->toggleStar($user->id(), $threadId);
+        $threadUsers = $this->container->get(ThreadUserRepository::class);
+        if (array_key_exists('starred', $request->allInput())) {
+            $intent = $request->post('starred');
+            if (!in_array($intent, ['0', '1', 0, 1], true)) {
+                $message = 'Choose whether to star this topic.';
+                if ($request->wantsJson()) {
+                    return Response::json(['ok' => false, 'error' => $message], 422);
+                }
+                return $this->redirectWithFlash(
+                    $this->localReturn($request, '/t/' . $threadId . '-' . $thread['slug']),
+                    $message,
+                );
+            }
+            $starred = $intent === '1' || $intent === 1;
+            $threadUsers->setStar($user->id(), $threadId, $starred);
+        } else {
+            // Retained clients omit the desired state and keep the legacy toggle.
+            $starred = $threadUsers->toggleStar($user->id(), $threadId);
+        }
 
         if ($request->wantsJson()) {
             return Response::json(['ok' => true, 'starred' => $starred]);
@@ -114,17 +124,19 @@ final class EngagementController extends Controller
         $this->requireEngagement();
         $user = $this->requireUser();
         $threadId = (int) ($params['id'] ?? 0);
-        $unread = (string) $request->post('state', 'read') === 'unread';
-
-        $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
-        if ($thread === null || (int) $thread['is_deleted'] === 1) {
-            throw new NotFoundException('Thread not found.');
+        $thread = $this->container->get(ThreadReadService::class)->loadForUser($user, $threadId);
+        $state = $request->post('state');
+        if (!is_string($state) || !in_array($state, ['read', 'unread'], true)) {
+            $message = 'Choose Mark read or Mark unread.';
+            if ($request->wantsJson()) {
+                return Response::json(['ok' => false, 'error' => $message], 422);
+            }
+            return $this->redirectWithFlash(
+                $this->localReturn($request, '/t/' . $threadId . '-' . $thread['slug']),
+                $message,
+            );
         }
-        $isMember = $this->container->get(\App\Repository\BoardMemberRepository::class)
-            ->isMember((int) $thread['board_id'], $user->id());
-        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)) {
-            throw new NotFoundException('Thread not found.');
-        }
+        $unread = $state === 'unread';
 
         $threadUsers = $this->container->get(ThreadUserRepository::class);
         if ($unread) {

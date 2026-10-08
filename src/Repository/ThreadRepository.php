@@ -162,6 +162,7 @@ final class ThreadRepository
             $viewerSelect = ',
                     COALESCE(tu.is_starred, 0) AS is_starred,
                     tu.snoozed_until AS snoozed_until,
+                    COALESCE(tu.snoozed_indefinitely, 0) AS snoozed_indefinitely,
                     ta.assigned_user_id,
                     assignee.username AS assigned_username';
             $viewerJoin = '
@@ -199,6 +200,7 @@ final class ThreadRepository
             foreach ($rows as &$row) {
                 if (!$workflowEnabled) {
                     $row['snoozed_until'] = null;
+                    $row['snoozed_indefinitely'] = 0;
                     $row['assigned_user_id'] = null;
                     $row['assigned_username'] = null;
                 }

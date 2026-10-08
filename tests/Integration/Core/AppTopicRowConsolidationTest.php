@@ -34,7 +34,7 @@ final class AppTopicRowConsolidationTest extends TestCase
         self::assertStringContainsString('data-inbox-row data-thread-id="' . $id . '"', $body);
         self::assertStringContainsString('<a class="thread-title" href="/t/' . $id . '-', $body);
         self::assertStringContainsString('data-inbox-preview-url="/inbox/preview/' . $id . '"', $body);
-        self::assertStringContainsString('<span class="thread-row-select">', $body);
+        self::assertStringContainsString('<label class="thread-row-select">', $body);
         self::assertStringContainsString('<details class="thread-row-menu" data-inbox-row-menu>', $body);
         self::assertStringContainsString('<div class="thread-row-menu-panel">', $body);
         self::assertDoesNotMatchRegularExpression('~class="[^"]*\binbox-(?:thread-row|row-)~', $body);

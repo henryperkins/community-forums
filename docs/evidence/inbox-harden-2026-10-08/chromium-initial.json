@@ -1,0 +1,138 @@
+{
+  "engine": "chromium",
+  "assets": [
+    {
+      "url": "/assets/dist/app-style-D9QfswNc.css",
+      "status": 200,
+      "sha256": "6e471a9b37f6e4ec9c2e8228afc18d2488a9b5e46a2b0352ca82304719cdeabb"
+    },
+    {
+      "url": "/assets/dist/app-56e9b9a8f33fd541.js",
+      "status": 200,
+      "sha256": "56e9b9a8f33fd541d5f711640c7a65cda8b112ab1e98a34987ea0f94ee7965cf"
+    }
+  ],
+  "cases": [
+    {
+      "name": "last-unread",
+      "before": {
+        "url": "/inbox?scope=unread&order=active",
+        "busy": null,
+        "rows": 1,
+        "empty": null,
+        "master": true,
+        "shown": "Showing 1 of 1 topics",
+        "focus": "BUTTON",
+        "focusText": "Next",
+        "documentWidth": 393,
+        "scrollWidth": 383
+      },
+      "after": {
+        "url": "/inbox?scope=unread&order=active",
+        "busy": null,
+        "rows": 0,
+        "empty": null,
+        "master": true,
+        "shown": "Showing 0 of 0 topics",
+        "focus": "SECTION",
+        "focusText": "\n                    \n                                \n     ",
+        "documentWidth": 393,
+        "scrollWidth": 383
+      },
+      "semantic": "- region \"Topics\":\n  - checkbox \"Select all on this page\"\n  - text: Select all on this page\n  - list\n  - paragraph: Showing 0 of 0 topics"
+    },
+    {
+      "name": "preview-500",
+      "url": "/t/29-ti-admin-recovery-mobile",
+      "rows": 0,
+      "empty": null,
+      "master": false,
+      "focus": "BUTTON",
+      "focusText": "Next",
+      "documentWidth": 1440,
+      "scrollWidth": 1430
+    },
+    {
+      "name": "preview-network-abort",
+      "url": "/t/29-ti-admin-recovery-mobile",
+      "rows": 0,
+      "empty": null,
+      "master": false,
+      "focus": "BUTTON",
+      "focusText": "Next",
+      "documentWidth": 1440,
+      "scrollWidth": 1430
+    },
+    {
+      "name": "preview-malformed",
+      "url": "/t/29-ti-admin-recovery-mobile",
+      "rows": 0,
+      "empty": null,
+      "master": false,
+      "focus": "BUTTON",
+      "focusText": "Next",
+      "documentWidth": 1440,
+      "scrollWidth": 1430
+    },
+    {
+      "name": "preview-hung",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": "true",
+      "rows": 20,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 20 of 29 topics",
+      "focus": "A",
+      "focusText": "TI Admin Recovery mobile",
+      "documentWidth": 1440,
+      "scrollWidth": 1430,
+      "readingText": "Choose a topic\n\nChoose a topic to read it here. Your place in the list is kept."
+    },
+    {
+      "name": "rapid-preview-race",
+      "harnessError": "locator.innerText: Error: strict mode violation: locator('[data-inbox-preview] h2') resolved to 2 elements:\n    1) <h2 tabindex=\"-1\">TI Budget Last Good mobile</h2> aka getByRole('heading', { name: 'TI Budget Last Good mobile' })\n    2) <h2 class=\"composer-emoji-title\" id=\"composer-emoji-dialog-1-title\">Emoji</h2> aka getByText('Emoji', { exact: true })\n\nCall log:\n\u001b[2m  - waiting for locator('[data-inbox-preview] h2')\u001b[22m\n"
+    },
+    {
+      "name": "rtl-cjk-long-title",
+      "harnessError": "locator.scrollIntoViewIfNeeded: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-inbox-row][data-thread-id=\"3\"]')\u001b[22m\n"
+    },
+    {
+      "name": "short-large-text",
+      "harnessError": "page.waitForFunction: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "forced-colors-switch",
+      "switchState": {
+        "checked": "true",
+        "forced": true,
+        "track": {
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(0, 0, 0)",
+          "border": "rgb(0, 0, 0)"
+        },
+        "thumb": {
+          "background": "rgb(255, 255, 255)",
+          "border": "rgb(0, 0, 0)",
+          "borderWidth": "0px"
+        }
+      },
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "master": true,
+      "shown": "Showing 4 of 4 topics",
+      "focus": "SUMMARY",
+      "focusText": "\n",
+      "documentWidth": 393,
+      "scrollWidth": 383
+    }
+  ],
+  "errors": [],
+  "build": "9cd60f8b2665c07a",
+  "limitations": [
+    "Linux Chromium/WebKit emulation; no physical Safari/Windows forced-colors",
+    "200% root text size emulates text scaling, not browser zoom",
+    "Hung request observed for 1.5 seconds plus static no-timeout confirmation"
+  ]
+}

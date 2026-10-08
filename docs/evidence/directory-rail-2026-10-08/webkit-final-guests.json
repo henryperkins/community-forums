@@ -1,0 +1,524 @@
+{
+  "engine": "webkit",
+  "checks": [
+    {
+      "name": "guest 1440 boards single content heading and no empty creation row",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Every board in the valley"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 1440 boards global current and no overflow",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Every board in the valley"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 1440 tags single content heading and no empty creation row",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Tags"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 1440 tags global current and no overflow",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Tags"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 1440 connections single content heading and no empty creation row",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Connections"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": "page"
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 1440 connections global current and no overflow",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Connections"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": "page"
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 393 boards single content heading and no empty creation row",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Every board in the valley"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 boards global current and no overflow",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Every board in the valley"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 boards drawer focus/inert",
+      "pass": true
+    },
+    {
+      "name": "guest 393 boards drawer first stop Boards",
+      "pass": true
+    },
+    {
+      "name": "guest 393 boards drawer restores opener",
+      "pass": true
+    },
+    {
+      "name": "guest 393 tags single content heading and no empty creation row",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Tags"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 tags global current and no overflow",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Tags"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 tags drawer focus/inert",
+      "pass": true
+    },
+    {
+      "name": "guest 393 tags drawer first stop Boards",
+      "pass": true
+    },
+    {
+      "name": "guest 393 tags drawer restores opener",
+      "pass": true
+    },
+    {
+      "name": "guest 393 connections single content heading and no empty creation row",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Connections"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": "page"
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 connections global current and no overflow",
+      "pass": true,
+      "detail": {
+        "h1": [
+          "Connections"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": "page"
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 connections drawer focus/inert",
+      "pass": true
+    },
+    {
+      "name": "guest 393 connections drawer first stop Boards",
+      "pass": true
+    },
+    {
+      "name": "guest 393 connections drawer restores opener",
+      "pass": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "guest 1440 boards",
+      "metrics": {
+        "h1": [
+          "Every board in the valley"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 1440 tags",
+      "metrics": {
+        "h1": [
+          "Tags"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 1440 connections",
+      "metrics": {
+        "h1": [
+          "Connections"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": "page"
+          }
+        ],
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "name": "guest 393 boards",
+      "metrics": {
+        "h1": [
+          "Every board in the valley"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 tags",
+      "metrics": {
+        "h1": [
+          "Tags"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    },
+    {
+      "name": "guest 393 connections",
+      "metrics": {
+        "h1": [
+          "Connections"
+        ],
+        "subheader": false,
+        "oldTabs": false,
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "current": "page"
+          }
+        ],
+        "client": 393,
+        "scroll": 393
+      }
+    }
+  ],
+  "build": "73430ff743b90229"
+}

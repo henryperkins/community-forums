@@ -73,15 +73,37 @@ final class InboxBulkController extends Controller
             if ($ids === [] || array_filter($ids, static fn (int $id): bool => $id <= 0 || !isset($available[$id])) !== []) {
                 throw new ValidationException(['selection' => 'That selection is not available in this Inbox view.']);
             }
+            $action = $request->post('action', '');
+            $until = $request->post('until', '');
+            if (!is_string($action) || !is_string($until)) {
+                throw new ValidationException(['action' => 'Choose a valid Inbox action.']);
+            }
             $count = $this->container->get(InboxBulkService::class)->apply(
                 $user,
                 $ids,
-                (string) $request->post('action', ''),
+                $action,
                 $workflowEnabled,
-                (string) $request->post('until', ''),
+                $until,
             );
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash($return, $e->first());
+            return $this->view('inbox', [
+                'scope' => $state['scope'],
+                'order' => $state['order'],
+                'scopes' => $state['scopes'],
+                'scope_counts' => $repo->countInboxScopes(
+                    $user->id(), $user->isAdmin(), $cutover, $workflowEnabled, $mentionsEnabled,
+                ),
+                'threads' => $currentRows,
+                'total' => $total,
+                'page' => $page,
+                'pages' => $pages,
+                'unread_count' => $repo->unreadCount($user->id(), $user->isAdmin(), $cutover, $workflowEnabled),
+                'selected_thread_ids' => array_values(array_filter(
+                    $ids,
+                    static fn (int $id): bool => $id > 0 && isset($available[$id]),
+                )),
+                'inbox_error' => $e->first(),
+            ], 422);
         }
 
         return $this->redirectWithFlash($return, $count . ($count === 1 ? ' topic updated.' : ' topics updated.'));

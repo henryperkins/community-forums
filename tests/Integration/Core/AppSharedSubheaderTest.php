@@ -59,11 +59,22 @@ final class AppSharedSubheaderTest extends TestCase
             self::assertSame(1, $dom->query('//*[@data-subheader]//h1[normalize-space(.)="Inbox"]')->length);
             foreach (['@data-inbox-scope-menu', 'contains(concat(" ", @class, " "), " inbox-sort-menu ")',
                 'contains(concat(" ", @class, " "), " inbox-actions ")', '@data-create-trigger',
-                '@data-inbox-current-count', '@data-inbox-count-label'] as $predicate) {
+                'contains(concat(" ", @class, " "), " inbox-compact-menu ")'] as $predicate) {
                 self::assertSame(1, $dom->query('//*[@data-subheader]//*[' . $predicate . ']')->length, $predicate);
                 self::assertSame(1, $dom->query('//*[' . $predicate . ']')->length, $predicate . ' must render once');
                 self::assertSame(0, $dom->query('//*[@data-inbox]//*[' . $predicate . ']')->length, $predicate . ' must not remain in the queue');
             }
+            foreach (['@data-inbox-current-count', '@data-inbox-count-label'] as $predicate) {
+                self::assertSame(2, $dom->query('//*[@data-subheader]//*[' . $predicate . ']')->length, 'Wide and compact controls carry matching current metadata.');
+                self::assertSame(0, $dom->query('//*[@data-inbox]//*[' . $predicate . ']')->length);
+            }
+            $compact = $dom->query('//*[@data-subheader]//*[contains(concat(" ", @class, " "), " inbox-compact-menu ")]')->item(0);
+            self::assertSame('Show: Starred, ' . ($perPage + 2) . ' topics; Sort: Newest first', $dom->query('./summary', $compact)->item(0)->getAttribute('aria-label'));
+            self::assertSame(2, $dom->query('.//a[@aria-current="page" and @href="/inbox?scope=starred&order=newest"]', $compact)->length, 'Each independent axis retains the current URL.');
+            $compactScopes = $dom->query('.//a[contains(@href, "scope=") and contains(@href, "order=newest")]', $compact);
+            $scopeUrls = [];
+            foreach ($compactScopes as $link) { $scopeUrls[] = $link->getAttribute('href'); }
+            self::assertLessThan(array_search('/inbox?scope=unread&order=newest', $scopeUrls, true), array_search('/inbox?scope=snoozed&order=newest', $scopeUrls, true), 'Snoozed is before Unread for recovery.');
             self::assertSame(0, $dom->query('//*[@data-inbox]//h1 | //*[@data-inbox]//header[contains(concat(" ", @class, " "), " inbox-list-head ")]')->length);
             self::assertSame((string) ($perPage + 2), $dom->query('//*[@data-subheader]//*[@data-inbox-current-count]')->item(0)->textContent);
             self::assertSame('topics', $dom->query('//*[@data-subheader]//*[@data-inbox-count-label]')->item(0)->textContent);

@@ -1,0 +1,129 @@
+{
+  "current_build": "a8b813712a571dff",
+  "status": "reconciled confirmation; not an uninterrupted green run",
+  "selected_required_assertions": 558,
+  "passing_selected_required_assertions": 558,
+  "lanes": [
+    {
+      "engine": "chromium",
+      "lane": "main layout/navigation/native/noJS",
+      "build": "350617f1bb175373",
+      "count": 171,
+      "passing": 171,
+      "reconciled_tag_fixture": false
+    },
+    {
+      "engine": "chromium",
+      "lane": "tags-off",
+      "build": "350617f1bb175373",
+      "count": 11,
+      "passing": 11
+    },
+    {
+      "engine": "chromium",
+      "lane": "community-off",
+      "build": "350617f1bb175373",
+      "count": 11,
+      "passing": 11
+    },
+    {
+      "engine": "chromium",
+      "lane": "gates-off",
+      "build": "350617f1bb175373",
+      "count": 11,
+      "passing": 11
+    },
+    {
+      "engine": "chromium",
+      "lane": "notifications-off",
+      "build": "350617f1bb175373",
+      "count": 12,
+      "passing": 12
+    },
+    {
+      "engine": "chromium",
+      "lane": "repair-confirmation",
+      "build": "73430ff743b90229",
+      "count": 39,
+      "passing": 39
+    },
+    {
+      "engine": "chromium",
+      "lane": "final-guests",
+      "build": "73430ff743b90229",
+      "count": 21,
+      "passing": 21
+    },
+    {
+      "engine": "chromium",
+      "lane": "current-ownership-receipt",
+      "build": "a8b813712a571dff",
+      "count": 3,
+      "passing": 3
+    },
+    {
+      "engine": "webkit",
+      "lane": "main layout/navigation/native/noJS",
+      "build": "350617f1bb175373",
+      "count": 171,
+      "passing": 171,
+      "reconciled_tag_fixture": true
+    },
+    {
+      "engine": "webkit",
+      "lane": "tags-off",
+      "build": "350617f1bb175373",
+      "count": 11,
+      "passing": 11
+    },
+    {
+      "engine": "webkit",
+      "lane": "community-off",
+      "build": "350617f1bb175373",
+      "count": 11,
+      "passing": 11
+    },
+    {
+      "engine": "webkit",
+      "lane": "gates-off",
+      "build": "350617f1bb175373",
+      "count": 11,
+      "passing": 11
+    },
+    {
+      "engine": "webkit",
+      "lane": "notifications-off",
+      "build": "350617f1bb175373",
+      "count": 12,
+      "passing": 12
+    },
+    {
+      "engine": "webkit",
+      "lane": "repair-confirmation",
+      "build": "73430ff743b90229",
+      "count": 39,
+      "passing": 39
+    },
+    {
+      "engine": "webkit",
+      "lane": "final-guests",
+      "build": "73430ff743b90229",
+      "count": 21,
+      "passing": 21
+    },
+    {
+      "engine": "webkit",
+      "lane": "current-ownership-receipt",
+      "build": "a8b813712a571dff",
+      "count": 3,
+      "passing": 3
+    }
+  ],
+  "limits": [
+    "Initial full main matrix ran on 350617f1bb175373; 73430ff743b90229 received only defect repair and pending guest confirmation",
+    "a8b813712a571dff ownership-only rebuild received asset receipts plus one previously failing 320px/36px case per engine",
+    "Missing tag fixture and interrupted gutter click were evidence-helper issues; genuine enlarged-text overflow was repaired",
+    "Linux Chromium 155.0.8059.12 / WebKit 26.6; no physical Safari/iPhone, Firefox or assistive technology testing",
+    "Large=18px; 200% of Large=36px via CSSOM, not physical browser zoom"
+  ]
+}

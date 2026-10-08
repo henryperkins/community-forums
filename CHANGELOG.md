@@ -4,6 +4,38 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Consistent headers and navigation
 
+- Move Boards, Tags and Connections from the directory's horizontal strip into
+  an Explore group at the top of the shared rail and phone drawer. Remove that
+  group's Notifications entry while retaining the bell and embedded deep links.
+  Tags and Connections headings share creation for signed-in members; guest
+  headings, feature gates, board privacy and composer selection remain intact.
+  Extreme phone text enlargement wraps primary routes and Connections list
+  choices, with drawer offsets following the header height (ADR 0046).
+- Recover from failed or stalled Inbox previews with announced loading, a
+  15-second deadline, retry and a canonical topic link, preserving the queue and
+  existing reply text. Return directly to the retained editor after a failure,
+  including topics removed from Unread, and keep pane toggles from cancelling
+  previews or recovery controls. Align restored previews with failed history
+  navigation without adding entries. Restore useful empty Unread states and rejected bulk
+  selections. Validate action intent, apply canonical held-topic privacy to
+  read/star actions, and make repeated star forms idempotent. Bound creation
+  menus on short screens and keep switch markers visible in forced colors
+  (ADR 0045).
+- Add calm motion to shared control menus, Inbox view carets and the selection
+  action bar. Reveals preserve menu placement and immediate keyboard access;
+  both account and operating-system reduced-motion settings keep state feedback
+  instant. Native forms and disclosure dismissal retain their existing timing.
+  Keep delayed Help dismissal from pulling focus away from a newly opened menu.
+- Give Inbox controls readable captions, consistent 44px targets, quiet menu
+  borders and straight topic dividers. At narrow available widths, one view/sort
+  disclosure keeps both current values beside creation. Put phone row actions
+  below topic text, selection commands in Actions, and enhanced Help in a bounded
+  nonmodal dialog while preserving native forms and disclosures (ADR 0044).
+- Replace the four snooze durations with Til tomorrow and a Show in Inbox switch.
+  Timed hiding retains 24 hours; turning the switch off hides until restoration.
+  Snoozed recovers both states, bulk actions name their intent, and the shortcut
+  and topic tools match. Migration 0083 adds explicit manual hiding; invalid
+  choices preserve prior state and workflow rollback ignores hiding (ADR 0044).
 - Move creation into one shared row beneath the member header: New topic and
   New message share a quiet create menu, with a named 44px plus on phones.
   Keep board-aware topic links, native navigation, Messages dialog draft

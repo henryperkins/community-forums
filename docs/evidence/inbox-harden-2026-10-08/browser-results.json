@@ -1,0 +1,49 @@
+{
+  "build": "e26e139ee9899a8f",
+  "versions": [
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12"
+    },
+    {
+      "engine": "webkit",
+      "version": "26.6"
+    }
+  ],
+  "scenarioExecutions": 38,
+  "checks": 164,
+  "failures": 0,
+  "reports": [
+    {
+      "file": "chromium-confirmation.json",
+      "engine": "chromium",
+      "build": "e26e139ee9899a8f",
+      "checks": 77,
+      "failures": []
+    },
+    {
+      "file": "webkit-confirmation.json",
+      "engine": "webkit",
+      "build": "e26e139ee9899a8f",
+      "checks": 77,
+      "failures": []
+    },
+    {
+      "file": "chromium-page-drain-confirmation.json",
+      "engine": "chromium",
+      "build": "e26e139ee9899a8f",
+      "checks": 5,
+      "failures": []
+    },
+    {
+      "file": "webkit-page-drain-confirmation.json",
+      "engine": "webkit",
+      "build": "e26e139ee9899a8f",
+      "checks": 5,
+      "failures": []
+    }
+  ],
+  "scope": "One correction confirmation after the initial source/browser inspection, preserving initial harness failures separately",
+  "privateDatabase": "retroboards_e2e_inbox_harden_20261008",
+  "ownedPort": 8484
+}

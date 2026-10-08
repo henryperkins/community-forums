@@ -3,7 +3,7 @@
 /**
  * The board rail — the design system's BoardRail
  * (docs/design-system/imladris/components/forum/BoardRail.jsx), rendered
- * server-side (ADR 0032). Boards, personal folders and saved feeds, with the
+ * server-side (ADRs 0032, 0046). Directory navigation, boards, personal folders and saved feeds, with the
  * active board marked the same way on every surface that has one; the presence
  * widget hangs in the footer slot, so the same roster and the same "See everyone
  * online" travel with the member across every route.
@@ -36,6 +36,12 @@ if ($composeMode) {
     }
 }
 $composeSelectedId = (int) ($selected_board ?? 0);
+$railPath = (string) ($request_path ?? '');
+$directoryPane = $railPath === '/' ? ($home_pane ?? 'boards')
+    : ($railPath === '/tags' || str_starts_with($railPath, '/tags/') ? 'tags' : null);
+$directoryLinks = ['boards' => 'Boards'];
+if (!empty($features['tags'])) { $directoryLinks['tags'] = 'Tags'; }
+if (!empty($features['community'])) { $directoryLinks['connections'] = 'Connections'; }
 
 $unreadPill = static function (int $unread) use ($e): string {
     if ($unread <= 0) {
@@ -48,6 +54,12 @@ $unreadPill = static function (int $unread) use ($e): string {
 ?>
 <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards" tabindex="<?= $this->block('account_settings', '') === '1' ? '0' : '-1' ?>">
     <a class="nav-close" data-nav-close href="#main" aria-label="Close board rail"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
+    <div class="board-rail-directory" data-directory-nav>
+        <span class="board-rail-cat">Explore</span>
+        <?php foreach ($directoryLinks as $key => $label): ?>
+            <a class="board-rail-item<?= $directoryPane === $key ? ' is-active' : '' ?>" data-directory-link="<?= $e($key) ?>" href="/?pane=<?= $e($key) ?>"<?= $directoryPane === $key ? ' aria-current="page"' : '' ?>><span class="board-rail-name"><?= $e($label) ?></span></a>
+        <?php endforeach; ?>
+    </div>
     <?php $organization = !$composeMode && is_callable($organization_nav ?? null) ? $organization_nav() : []; ?>
     <?php foreach (($organization['board_folders'] ?? []) as $folder): ?>
         <span class="board-rail-cat"><?= $e($folder['name']) ?></span>
