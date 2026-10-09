@@ -42,6 +42,37 @@ final class DatabaseTlsTest extends TestCase
         );
     }
 
+    public function test_dsn_uses_host_and_port_without_a_socket(): void
+    {
+        $database = new Database(['host' => '10.0.0.5', 'port' => 3307, 'database' => 'retroboards', 'socket' => '']);
+
+        self::assertSame('mysql:host=10.0.0.5;port=3307;dbname=retroboards;charset=utf8mb4', $this->dsn($database));
+    }
+
+    /** Cloud Run's Cloud SQL connector is a Unix socket named after the instance. */
+    public function test_dsn_prefers_a_configured_unix_socket_over_host_and_port(): void
+    {
+        $database = new Database([
+            'host' => '127.0.0.1',
+            'port' => 3306,
+            'socket' => '/cloudsql/project:us-east4:instance',
+            'database' => 'retroboards',
+        ]);
+
+        self::assertSame(
+            'mysql:unix_socket=/cloudsql/project:us-east4:instance;dbname=retroboards;charset=utf8mb4',
+            $this->dsn($database),
+        );
+    }
+
+    private function dsn(Database $database): string
+    {
+        $method = new ReflectionMethod($database, 'dsn');
+        $method->setAccessible(true);
+
+        return (string) $method->invoke($database);
+    }
+
     /** @return array<int,mixed> */
     private function tlsOptions(Database $database): array
     {

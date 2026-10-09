@@ -25,16 +25,30 @@ final class CloudflareDeploymentContractTest extends TestCase
         self::assertStringNotContainsString('"pattern": "*/*"', $config);
     }
 
-    public function test_worker_replaces_untrusted_forwarding_and_passes_runtime_secrets_to_php(): void
+    /**
+     * The Worker forwards dynamic requests to Cloud Run with a token only it can
+     * mint, and replaces the client-supplied forwarding header on the way.
+     * Header and token semantics run against real Requests in
+     * tests/worker/origin.test.mjs; the app's side is CloudRunDeploymentContractTest.
+     */
+    public function test_worker_forwards_to_the_cloud_run_origin_with_its_own_token_and_client_ip(): void
     {
         $worker = $this->read('worker/index.js');
+        $origin = $this->read('worker/origin.mjs');
+        $config = $this->read('wrangler.jsonc');
 
-        self::assertStringContainsString('request.headers.get("CF-Connecting-IP")', $worker);
-        self::assertStringContainsString('forwarded.headers.set("X-Forwarded-For", clientIp)', $worker);
-        self::assertStringContainsString('forwarded.headers.delete("X-Forwarded-For")', $worker);
-        foreach (['APP_KEY', 'DB_PASSWORD', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'CLOUDFLARE_EMAIL_API_TOKEN'] as $secret) {
-            self::assertStringContainsString($secret . ': env.' . $secret, $worker);
-        }
+        self::assertStringContainsString('return await fetchOrigin(request, env);', $worker);
+        // A failed token mint or origin fetch is a retryable 502, not a 1101.
+        self::assertStringContainsString('status: 502', $worker);
+        self::assertStringContainsString('request.headers.get("CF-Connecting-IP")', $origin);
+        self::assertStringContainsString('upstream.headers.set("X-Forwarded-For", clientIp)', $origin);
+        self::assertStringContainsString('upstream.headers.delete("X-Forwarded-For")', $origin);
+        self::assertStringContainsString('"X-Serverless-Authorization"', $origin);
+        self::assertStringContainsString('"ORIGIN_URL": "https://retroboards-616731728350.us-east4.run.app"', $config);
+        // Cron work moved to Cloud Scheduler. Only an explicit empty list removes
+        // deployed schedules; a missing key would leave them firing.
+        self::assertStringContainsString('"triggers": { "crons": [] }', $config);
+        self::assertStringNotContainsString('scheduled(', $worker);
     }
 
     /**

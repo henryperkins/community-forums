@@ -23,6 +23,11 @@ return [
     'db' => [
         'host' => Env::get('DB_HOST', '127.0.0.1'),
         'port' => (int) Env::get('DB_PORT', '3306'),
+        // A Unix socket path replaces host/port when set. Cloud Run's Cloud SQL
+        // connector exposes the instance at /cloudsql/<connection name> and
+        // encrypts and authenticates the link itself (runbook
+        // docs/runbooks/deployment-cloud-run.md).
+        'socket' => Env::get('DB_SOCKET', ''),
         'database' => Env::get('DB_DATABASE', 'retroboards'),
         'username' => Env::get('DB_USERNAME', 'retro'),
         'password' => Env::get('DB_PASSWORD', 'retropw'),
