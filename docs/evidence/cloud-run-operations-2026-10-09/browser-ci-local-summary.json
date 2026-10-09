@@ -1,0 +1,25 @@
+{
+  "scope": "Local source and synthetic runner checks; not hosted suite execution",
+  "php": "8.2.34",
+  "node": "24.21.0",
+  "docker_compose": "2.40.3",
+  "nested_docker_command_passed": true,
+  "chromium_launch_passed": true,
+  "webkit_launch_passed": true,
+  "contract_tests": 10,
+  "contract_assertions": 81,
+  "hosted_lane_result": "first hosted attempt failed; corrected complete rerun pending",
+  "contract_php_versions": [
+    "8.4.26",
+    "8.2.34"
+  ],
+  "outer_docker_failure_gate_verified": true,
+  "archive_failure_does_not_publish_success": true,
+  "credential_alias_redaction_verified": true,
+  "all_independent_suite_groups_attempted_after_failure": true,
+  "first_failure_exit_and_stage_preserved": true,
+  "dependency_initialization_still_failfast": true,
+  "uploader_python_behavior_contracts": 7,
+  "uploader_php_wrapper_tests": 2,
+  "uploader_php_wrapper_assertions": 11
+}

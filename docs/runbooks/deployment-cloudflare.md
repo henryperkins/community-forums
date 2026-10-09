@@ -1021,12 +1021,15 @@ As of 2026-08-06 the deployment serves traffic:
   custom domains, routes, or Cron Triggers. Only
   `retroboards-forumcontainer` remains provisioned.
 
+The former email verification carryover was completed on 2026-10-09 using
+the native REST transport in Cloud Run; one operator test reached the intended
+inbox with SPF/DKIM/DMARC passing. SMTP rejected the sender envelope. Current
+setup and bounded evidence are in [Cloud Run §7](deployment-cloud-run.md#7-email).
+
 Not yet done, tracked here so it is not lost:
 
 - Upgrade the Cloudflare zone before adding a method-aware `POST /login` WAF
   rate rule; the Free plan cannot express it.
-- Perform a recipient-level SMTP test send from `/admin/email`; configuration
-  and cron execution are proven, but mailbox delivery has not yet been observed.
 - Web Analytics is injected by the zone but blocked by the app's strict CSP
   (`script-src 'self'`, no nonce) — disable it in the dashboard or add
   `static.cloudflareinsights.com` to `script-src`; it currently only produces a

@@ -78,9 +78,10 @@ and a deploy path to maintain.
   PR #86 deploy on 2026-10-09. Verified storage retention and production checks
   are recorded in [the evidence](../evidence/cloudflare-origin-retirement-2026-10-09/README.md).
 - An email-only Cloudflare Email Sending token was stored in Secret Manager
-  on 2026-10-09 with runtime read access. Configuration rollout and actual-relay
-  authentication were verified; actual-provider message acceptance and
-  recipient receipt remain untested (runbook §7). An unconfigured sender
-  retains queued mail.
+  on 2026-10-09 with runtime read access. Production uses the existing REST
+  mailer: SMTP authentication succeeded but the sender envelope was rejected.
+  One native operator test using permanent REST configuration was accepted
+  and received in the intended inbox with SPF/DKIM/DMARC passing (runbook §7).
+  An unconfigured sender retains queued mail.
 - The `0.0.0.0/0` authorized network was removed right after the cutover, so
   only connector and Auth Proxy traffic reaches the database.

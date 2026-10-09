@@ -1,0 +1,118 @@
+{
+  "captured_at": "2026-10-09T07:15:33.881223+00:00",
+  "scope": "Isolated Cloud SQL backup restore and current GCS/key recovery rehearsal; no production restore, private content inspection, message submission or scheduled worker execution.",
+  "project": "rising-woods-449718-v6",
+  "production_source_after_rehearsal": {
+    "instance": "imladris-boards",
+    "state": "RUNNABLE",
+    "tier": "db-f1-micro",
+    "deletion_protection": true,
+    "closed_authorized_networks": true,
+    "ssl_mode": "ENCRYPTED_ONLY"
+  },
+  "retained_backup": {
+    "source_instance": "imladris-boards",
+    "id": "1791528734171",
+    "status": "SUCCESSFUL",
+    "type": "ON_DEMAND",
+    "start_time": "2026-10-09T06:52:14.179Z",
+    "end_time": "2026-10-09T06:53:55.599Z",
+    "retained": true
+  },
+  "restore": {
+    "target": "retroboards-recovery-20261009",
+    "operation": "db605afd-fa0a-45a8-96e7-195a0000002c",
+    "status": "DONE",
+    "end_time": "2026-10-09T07:10:26.515Z",
+    "scratch_config": {
+      "restore_target_state": "RUNNABLE",
+      "tier": "db-f1-micro",
+      "closed_networks": true,
+      "sslMode": "ENCRYPTED_ONLY",
+      "deletionProtectionEnabled": false,
+      "app_user_restored": true
+    }
+  },
+  "runtime": {
+    "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c10faca411d014e018a34c49270647f27dfb9b13",
+    "execution": "retroboards-recovery-20261009-ln2wb",
+    "completed_at": "2026-10-09T07:11:32.282915Z",
+    "success": true,
+    "probe": {
+      "applied_migrations": 83,
+      "check_table_failures": 0,
+      "copied_fixture_hash_matches": true,
+      "core_counts_match_live": true,
+      "email_disabled": true,
+      "event": "retroboards_isolated_recovery_probe",
+      "foreign_keys_checked": 198,
+      "health_database": "ok",
+      "health_status": 200,
+      "http_health_database": "ok",
+      "http_health_status": 200,
+      "key_recovered": true,
+      "migrations_disabled": true,
+      "orphan_rows": 0,
+      "php_version": "8.2.34",
+      "restored_core_row_counts": {
+        "attachments": 0,
+        "boards": 3,
+        "installed_packages": 0,
+        "posts": 1,
+        "service_secret_versions": 0,
+        "threads": 1,
+        "users": 1
+      },
+      "schema_matches_live": true,
+      "tables_checked": 116,
+      "unauthenticated_http_status": 403
+    }
+  },
+  "gcs": {
+    "current_live_objects": 3,
+    "current_live_bytes": 0,
+    "copied_objects": 3,
+    "all_current_object_checksums_match": true,
+    "private_scratch_bucket": true,
+    "synthetic_copy_bytes": 128,
+    "current_upload_content_coverage": "all existing live objects copied"
+  },
+  "key_recovery": {
+    "secret": "retroboards-app-key",
+    "version": "1",
+    "protected_access": true,
+    "synthetic_encryption_decryption_round_trip": true,
+    "private_service_secret_values_inspected": false
+  },
+  "limits": [
+    "Current post-move upload storage contains only three zero-byte objects and the restored attachments table contains zero rows. No real uploaded attachment bytes existed to test; a scratch-only 128-byte synthetic server-side copy and mounted SHA-256 verification exercised nonempty content.",
+    "Database comparison uses full column schema equality, 116 table checks, 198 foreign-key orphan checks and stable core aggregate counts; no private row contents or full-row checksums were read.",
+    "APP_KEY proof retrieves the existing protected Secret Manager version and uses a synthetic AES-GCM challenge; a full project-loss or off-project secret recovery was not exercised.",
+    "No real outgoing email or scheduled background jobs ran in the scratch resources."
+  ],
+  "cleanup": {
+    "cloudrun_service_delete_exit_code": 0,
+    "cloudrun_job_delete_exit_code": 0,
+    "gcs_objects_deleted": 5,
+    "gcs_bucket_deleted": true,
+    "sql_delete_operation": "450185fc-a466-448a-bc2b-f58d0000002c",
+    "sql_delete_operation_initial_status": "PENDING",
+    "started_at": "2026-10-09T07:12:23.904949+00:00",
+    "sql_delete_status": "DONE",
+    "sql_delete_end_time": "2026-10-09T07:14:21.984Z",
+    "scratch_absence_http_status": {
+      "cloudrun_service": 404,
+      "cloudrun_job": 404,
+      "gcs_bucket": 404,
+      "cloudsql": 404
+    },
+    "all_scratch_resources_absent": true,
+    "complete": true
+  },
+  "retained_production_resources": [
+    "on-demand backup 1791528734171",
+    "imladris-boards",
+    "current production upload bucket",
+    "existing APP_KEY and database-password secret versions"
+  ]
+}

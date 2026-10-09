@@ -51,9 +51,8 @@ final class MailerFactory
         }
 
         // SMTPS submission — a separate transport from the REST driver above,
-        // reading its own credentials. This is the driver the deployed Worker
-        // pins (wrangler.jsonc), so it must resolve here: falling through to
-        // sendmail on a container with no MTA stops mail with no error.
+        // reading its own credentials. It must resolve explicitly: falling
+        // through to sendmail on a container with no MTA stops mail with no error.
         if ($driver === 'cloudflare_smtp') {
             return new CloudflareSmtpMailer(
                 (string) ($mail['cloudflare_api_token'] ?? ''),

@@ -87,3 +87,12 @@ steps:
         for job in $$jobs; do
           gcloud run jobs update "$$job" --image=${_IMAGE}:${_SHA} --region=${_REGION} --quiet
         done
+        # Monitoring is optional until its one-time configure.py setup. Its
+        # PHP collector source is supplied in job args; keep its runtime image
+        # current without changing that operations-only command or identity.
+        monitors=$$(gcloud run jobs list --region=${_REGION} \
+          --filter="metadata.labels.app=retroboards AND metadata.labels.role=monitor" \
+          --format="value(metadata.name)")
+        for job in $$monitors; do
+          gcloud run jobs update "$$job" --image=${_IMAGE}:${_SHA} --region=${_REGION} --quiet
+        done

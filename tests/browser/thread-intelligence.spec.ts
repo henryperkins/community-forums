@@ -34,33 +34,13 @@ function fixture(action: string, info: TestInfo): FixtureState {
 }
 
 /**
- * `fullPage` is the wrong instrument for the Living Brief. The Study's thread
- * column is its own scroll container, so the document stays viewport-height and
- * a page-level capture records only what the pane has not scrolled past. That
- * was survivable while curation lived in the viewport-pinned Topic tools drawer;
- * the redesign moved it into the scroller, and a page-level shot then framed the
- * footer's header while leaving the disclosure body it is named for out of frame.
- *
- * Naming the element is necessary but not sufficient: what a scroll container
- * clips is never painted, and no capture can record pixels the compositor did
- * not draw — an element shot of a surface taller than the pane comes back with
- * the overflow as flat background.
- *
- * What has to be measured is the scroller, not the viewport. `.thread-conversation`
- * is `calc(100dvh - var(--topbar-h) - 48px)` and pins `.thread-dock` below the
- * scroller (app.css:1942-1955), so the visible budget is the viewport less the
- * topbar, that 48px, and the reply dock — roughly 290px on desktop. Padding by a
- * constant guesses at that chrome and gets it wrong; `fit()` reads `clientHeight`
- * off the element's own scrolling ancestor instead, so the pad is whatever the
- * chrome actually costs, on either viewport, and survives a change to it.
- *
- * The assertion is containment for the same reason. Comparing the element's
- * height against a viewport height set two lines earlier is near-tautological,
- * and it stayed silent on a genuinely clipped capture. Whether the element's rect
- * lies inside the scroller's rect is the question the artifact depends on, and it
- * cannot be satisfied while any part of the surface is still cut off.
- *
- * The admin console is an ordinary document and keeps its page-level capture.
+ * An element capture still records only painted pixels. Fit the whole brief
+ * inside its actual scrollport before capturing it, including any scroll padding
+ * reserved for the sticky header and reply dock. Threads currently scroll in the
+ * document; the same measurement also supports a contained scrolling pane.
+ * Keep the containment assertion: matching heights alone misses a surface left
+ * partly out of frame by fragment navigation or native scroll alignment.
+ * The admin console keeps its page-level capture.
  */
 type Fit = { height: number; port: number; deficit: number; clipped: boolean };
 
@@ -74,17 +54,21 @@ const fit = (node: Element): Fit => {
   }
   const rect = node.getBoundingClientRect();
   const height = Math.ceil(rect.height);
-  if (scroller === null || scroller === document.body || scroller === document.documentElement) {
-    const port = document.documentElement.clientHeight;
-    return { height, port, deficit: height - port, clipped: rect.top < -1 || rect.bottom > port + 1 };
-  }
-  const box = scroller.getBoundingClientRect();
+  const documentScroll = scroller === null || scroller === document.body || scroller === document.documentElement;
+  const frame = documentScroll ? document.documentElement : scroller!;
+  const style = getComputedStyle(frame);
+  const paddingTop = parseFloat(style.scrollPaddingTop) || 0;
+  const paddingBottom = parseFloat(style.scrollPaddingBottom) || 0;
+  const frameTop = documentScroll ? 0 : frame.getBoundingClientRect().top + frame.clientTop;
+  const top = frameTop + paddingTop;
+  const bottom = frameTop + frame.clientHeight - paddingBottom;
+  const port = bottom - top;
   return {
     height,
-    port: scroller.clientHeight,
-    deficit: height - scroller.clientHeight,
+    port,
+    deficit: height - port,
     // A pixel of tolerance for subpixel layout; a clipped surface misses by far more.
-    clipped: rect.top < box.top - 1 || rect.bottom > box.bottom + 1,
+    clipped: rect.top < top - 1 || rect.bottom > bottom + 1,
   };
 };
 
@@ -114,7 +98,9 @@ async function shot(page: Page, info: TestInfo, name: string, element?: string):
       const current = page.viewportSize()!;
       await page.setViewportSize({ width: current.width, height: current.height + measured.deficit + 8 });
     }
-    await locator.scrollIntoViewIfNeeded();
+    // Native centering uses the same scroll-padding budget measured above;
+    // minimal scrolling can leave a tall brief aligned to its curator fragment.
+    await locator.evaluate((node) => node.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }));
 
     const framed = await locator.evaluate(fit);
     expect(

@@ -1,0 +1,128 @@
+{
+  "reviewed_head": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "current_head_matches": true,
+  "checks": [
+    {
+      "name": "capture",
+      "context": null,
+      "status": "COMPLETED",
+      "conclusion": "FAILURE",
+      "state": null,
+      "completedAt": "2026-10-09T11:16:59Z"
+    },
+    {
+      "name": "upload-http",
+      "context": null,
+      "status": "COMPLETED",
+      "conclusion": "FAILURE",
+      "state": null,
+      "completedAt": "2026-10-09T11:16:58Z"
+    },
+    {
+      "name": "Cursor Security Agent: Security Reviewer",
+      "context": null,
+      "status": "COMPLETED",
+      "conclusion": "NEUTRAL",
+      "state": null,
+      "completedAt": "2026-10-09T11:16:59Z"
+    },
+    {
+      "name": "vortex-v2",
+      "context": null,
+      "status": "COMPLETED",
+      "conclusion": "NEUTRAL",
+      "state": null,
+      "completedAt": "2026-10-09T11:18:52Z"
+    },
+    {
+      "name": "Sourcery review",
+      "context": null,
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "state": null,
+      "completedAt": "2026-10-09T11:17:03Z"
+    },
+    {
+      "name": null,
+      "context": "CodeRabbit",
+      "status": null,
+      "conclusion": null,
+      "state": "SUCCESS",
+      "completedAt": null
+    },
+    {
+      "name": "GitGuardian Security Checks",
+      "context": null,
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "state": null,
+      "completedAt": "2026-10-09T11:17:01Z"
+    },
+    {
+      "name": "Workers Builds: retroboards",
+      "context": null,
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "state": null,
+      "completedAt": "2026-10-09T11:18:01Z"
+    },
+    {
+      "name": null,
+      "context": "qlty check",
+      "status": null,
+      "conclusion": null,
+      "state": "SUCCESS",
+      "completedAt": null
+    }
+  ],
+  "review_outcomes": {
+    "CodeRabbit": {
+      "exact_head_completed": true,
+      "review_id": 5469359651,
+      "new_comments": [
+        {
+          "id": 4229556628,
+          "path": "docs/evidence/cloud-run-operations-2026-10-09/README.md",
+          "line": 100,
+          "classification": "Minor stale provisioning-pending wording on committed d9; already corrected in pending docs snapshot."
+        },
+        {
+          "id": 4229556640,
+          "path": "tests/browser/upload-http.spec.ts",
+          "line": 204,
+          "classification": "Trivial optional finally cleanup for failed held-pointer assertion; no confirmed cross-test contamination because page/context close after each test."
+        }
+      ]
+    },
+    "Vortex": {
+      "exact_head_completed": true,
+      "files_reviewed": 65,
+      "review_id": 5469331411,
+      "new_comment": {
+        "id": 4229532041,
+        "path": "config/imladris-runtime-baseline.json",
+        "line": 24,
+        "classification": "Documented baseline refresh sequencing discrepancy against ADR0024:255-256, owner process decision; no demonstrated runtime or visual drift.",
+        "owner_resolution_plan": "Honor ADR0024 and ADR0041: C restores the two checksum fields from current main; after merge deployment and live hashes are verified, immediately following mainR records the deployed release through the existing CLI and refreshes its reviewed presentation checksum. R may prune expired retained files and differ in checksum metadata. Application/test/control source plus current entrypoint/lazy/font closure bytes will be compared to B; fresh R local checks and exact automatic deployment remain planned, not executed in this receipt.",
+        "owner_resolution_plan_updated_after_review": true
+      },
+      "old_launcher_claim": "Same previously disproved top-level Build.id allegation; actual create response and parent-child launches prove current Operation.metadata.build.id path."
+    },
+    "GitGuardian": "Exact-head success;8 commits scanned without detected secrets.",
+    "qlty": {
+      "status": "success",
+      "provider_description": "16 blocking issues, including1 vulnerability",
+      "detail_access": "Public issues URL redirects to Login; underlying details not newly verified, no credentials borrowed."
+    },
+    "Worker_preview": "Exact-head success.",
+    "Cursor": "Neutral; security review failed to start due existing free-trial limit.",
+    "Sourcery": "Skipped because diff exceeds150000-character review limit.",
+    "Amazon_Q": "Only stale946 review; old inline comments rebased to d9 do not establish fresh review.",
+    "Codex": "Only stale946 security-review summary; no fresh d9 review found.",
+    "GitHub_Actions": "Both exact-head job annotations confirm job never started due account billing lock.",
+    "CircleCI": "Known unavailable/no configuration; no new exact-head result in current rollup."
+  },
+  "new_confirmed_consequential_app_or_security_findings": 0,
+  "repository_or_production_mutations": false,
+  "reviewer_messages_or_reruns_requested": false
+}

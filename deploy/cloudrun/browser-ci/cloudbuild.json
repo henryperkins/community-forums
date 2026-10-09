@@ -1,0 +1,50 @@
+{
+  "substitutions": {
+    "_SHA": "",
+    "_CONTROL_SHA": "",
+    "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence",
+    "_VERIFY_BUCKET": "rising-woods-449718-v6-retroboards-browser-verification"
+  },
+  "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "options": {
+    "logging": "CLOUD_LOGGING_ONLY",
+    "substitutionOption": "ALLOW_LOOSE"
+  },
+  "timeout": "6300s",
+  "tags": [
+    "retroboards-browser-evidence"
+  ],
+  "steps": [
+    {
+      "id": "trusted-parent-controls",
+      "name": "gcr.io/cloud-builders/git",
+      "entrypoint": "bash",
+      "env": [
+        "CI_CONTROL_SHA=${_CONTROL_SHA}"
+      ],
+      "args": [
+        "-c",
+        "set -euo pipefail\n[[ \"$$CI_CONTROL_SHA\" =~ ^[0-9a-f]{40}$ ]] || exit 2\nmkdir -p /workspace/control\ncd /workspace/control\ngit init -q .\ngit remote add origin https://github.com/henryperkins/community-forums.git\ngit fetch -q --depth=1 origin \"$$CI_CONTROL_SHA\"\nfor file in launcher.py child-cloudbuild.json enforce.py upload.py; do\n  git show \"$$CI_CONTROL_SHA:deploy/cloudrun/browser-ci/$$file\" > \"/workspace/control/$$file\"\ndone\n"
+      ]
+    },
+    {
+      "id": "isolated-child-and-parent-verification",
+      "name": "gcr.io/google.com/cloudsdktool/cloud-sdk:slim",
+      "entrypoint": "python3",
+      "args": [
+        "-I",
+        "/workspace/control/launcher.py",
+        "--source-sha",
+        "${_SHA}",
+        "--control-sha",
+        "${_CONTROL_SHA}",
+        "--parent-build-id",
+        "$BUILD_ID",
+        "--bucket",
+        "${_BUCKET}",
+        "--verify-bucket",
+        "${_VERIFY_BUCKET}"
+      ]
+    }
+  ]
+}

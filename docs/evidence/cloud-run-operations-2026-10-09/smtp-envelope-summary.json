@@ -1,0 +1,9 @@
+{
+  "execution": "retroboards-cron-5m-m9hgt",
+  "completed_at": "2026-10-09T06:58:49.947570Z",
+  "tls_verified": true,
+  "authenticated_code": 235,
+  "mail_from_code": 550,
+  "message_submitted": false,
+  "scope": "Sender envelope diagnostic; no recipient or DATA command; raw metadata omitted"
+}

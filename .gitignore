@@ -63,6 +63,10 @@ Thumbs.db
 # wrangler local state (the deployment worktree writes this on every deploy)
 .wrangler/
 
+# Python bytecode from operations tooling.
+__pycache__/
+*.pyc
+
 # design-pull tooling output (extracted design-system bundles; not used at runtime)
 .design-pull/
 
