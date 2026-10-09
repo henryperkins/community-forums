@@ -72,7 +72,18 @@ export async function fetchOrigin(request, env, deps = {}) {
 	const { fetchImpl = fetch } = deps;
 	const origin = new URL(String(env.ORIGIN_URL ?? ""));
 	const url = new URL(request.url);
-	const target = new URL(upstreamPath(url.pathname) + url.search, origin);
+
+	// Copy the path ONTO the fixed origin; never resolve it against the
+	// origin. A path like `//evil.example/x` (or `/\evil.example/x`, which the
+	// URL parser turns into one) is scheme-relative, and resolving it would
+	// send the visitor's cookies, their Authorization header and our service
+	// token to that host, then serve its reply as forum content.
+	const target = new URL(origin.origin);
+	target.pathname = upstreamPath(url.pathname);
+	target.search = url.search;
+	if (target.origin !== origin.origin) {
+		throw new Error(`refusing to forward outside ORIGIN_URL (${target.origin})`);
+	}
 
 	// Method, headers and body stream carry over from the visitor's request.
 	const upstream = new Request(target, request);

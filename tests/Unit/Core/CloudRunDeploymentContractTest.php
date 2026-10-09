@@ -56,6 +56,9 @@ final class CloudRunDeploymentContractTest extends TestCase
         }
         self::assertStringContainsString('SECRETS="${SECRETS:+$SECRETS,}$var=$secret:latest"', $configure);
         self::assertStringContainsString('--set-secrets="$SECRETS"', $configure);
+        // --set-secrets replaces the whole mapping: only a definite NOT_FOUND
+        // may leave the email token out; any other lookup failure must stop.
+        self::assertStringContainsString('elif [[ "$email_state" != *NOT_FOUND* ]]; then', $configure);
     }
 
     /**

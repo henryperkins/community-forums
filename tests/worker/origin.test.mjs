@@ -150,6 +150,33 @@ test('dynamic requests reach the service on the same path and query, carrying bo
   assert.equal(init.redirect, 'manual');
 });
 
+// Regression (Codex security review on PR #84): the target was built with
+// `new URL(path, origin)`, which reads `//host/x` as scheme-relative and sent
+// the visitor's cookies, Authorization and the service token to that host.
+test('paths that look like another authority stay on the service, with the token never leaving it', async () => {
+  const { calls, fetchImpl } = fakeNetwork();
+
+  for (const path of ['//attacker.example/collect?x=1', '/\\attacker.example/x', '/..//attacker.example/y', '/%2F%2Fattacker.example']) {
+    await fetchOrigin(new Request(`https://forum.example${path}`, { headers: { Cookie: 'rb_session=secret' } }), env, {
+      fetchImpl,
+      now: at(NOW_S),
+    });
+  }
+
+  assert.deepEqual(
+    calls.origin.map(({ request }) => request.url),
+    [
+      `${ORIGIN}//attacker.example/collect?x=1`,
+      `${ORIGIN}//attacker.example/x`,
+      `${ORIGIN}//attacker.example/y`,
+      `${ORIGIN}/%2F%2Fattacker.example`,
+    ],
+  );
+  for (const { request } of calls.origin) {
+    assert.equal(new URL(request.url).host, new URL(ORIGIN).host);
+  }
+});
+
 test('/healthz, which Cloud Run reserves, reaches the app as /healthz/; other paths are untouched', async () => {
   const { calls, fetchImpl } = fakeNetwork();
 

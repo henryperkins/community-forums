@@ -42,10 +42,20 @@ SECRET_REFS=(
     "DB_PASSWORD imladris-boards-app-password"
 )
 # Until this secret exists the mailer reports itself unconfigured and the
-# outbox holds every message; nothing is dropped.
-if gcloud secrets versions describe latest --secret=retroboards-cloudflare-email-token \
-    --project="$PROJECT" >/dev/null 2>&1; then
+# outbox holds every message; nothing is dropped. Only a definite NOT_FOUND
+# leaves it out: --set-secrets replaces the whole mapping, so reading any other
+# failure (a transient API error, a disabled version mid-rotation) as "absent"
+# would silently unwire a working token on the service and every job.
+if email_state=$(gcloud secrets versions describe latest --secret=retroboards-cloudflare-email-token \
+    --project="$PROJECT" --format='value(state)' 2>&1); then
+    if [ "$email_state" != "ENABLED" ]; then
+        echo "configure.sh: retroboards-cloudflare-email-token's latest version is $email_state; enable one first" >&2
+        exit 1
+    fi
     SECRET_REFS+=("CLOUDFLARE_EMAIL_API_TOKEN retroboards-cloudflare-email-token")
+elif [[ "$email_state" != *NOT_FOUND* ]]; then
+    echo "configure.sh: cannot check retroboards-cloudflare-email-token: $email_state" >&2
+    exit 1
 fi
 SECRETS=""
 for ref in "${SECRET_REFS[@]}"; do
