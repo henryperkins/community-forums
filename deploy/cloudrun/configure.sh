@@ -52,7 +52,7 @@ if email_state=$(gcloud secrets versions describe latest --secret=retroboards-cl
         echo "configure.sh: retroboards-cloudflare-email-token's latest version is $email_state; enable one first" >&2
         exit 1
     fi
-    SECRET_REFS+=("CLOUDFLARE_EMAIL_API_TOKEN retroboards-cloudflare-email-token")
+    SECRET_REFS+=("MAIL_CLOUDFLARE_API_TOKEN retroboards-cloudflare-email-token")
 elif [[ "$email_state" != *NOT_FOUND* ]]; then
     echo "configure.sh: cannot check retroboards-cloudflare-email-token: $email_state" >&2
     exit 1

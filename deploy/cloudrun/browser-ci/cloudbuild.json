@@ -1,0 +1,64 @@
+{
+  "substitutions": {
+    "_SHA": "",
+    "_CONTROL_SHA": "",
+    "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence"
+  },
+  "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "options": {
+    "logging": "CLOUD_LOGGING_ONLY",
+    "substitutionOption": "ALLOW_LOOSE"
+  },
+  "timeout": "5400s",
+  "tags": [
+    "retroboards-browser-evidence"
+  ],
+  "steps": [
+    {
+      "id": "source",
+      "name": "gcr.io/cloud-builders/git",
+      "entrypoint": "bash",
+      "env": [
+        "CI_SOURCE_SHA=${_SHA}",
+        "CI_CONTROL_SHA=${_CONTROL_SHA}"
+      ],
+      "args": [
+        "-c",
+        "set -euo pipefail\n[[ \"$$CI_SOURCE_SHA\" =~ ^[0-9a-f]{40}$ && \"$$CI_CONTROL_SHA\" =~ ^[0-9a-f]{40}$ ]] || { echo 'Exact source and trusted control commit SHAs are required' >&2; exit 2; }\nmkdir -p /workspace/source /workspace/control /workspace/results\ncd /workspace/source\ngit init -q .\ngit remote add origin https://github.com/henryperkins/community-forums.git\ngit fetch -q --depth=1 origin \"$$CI_SOURCE_SHA\" \"$$CI_CONTROL_SHA\"\nfor file in Dockerfile run.sh package.py; do\n  git show \"$$CI_CONTROL_SHA:deploy/cloudrun/browser-ci/$$file\" > \"/workspace/control/$$file\"\ndone\ngit checkout -q \"$$CI_SOURCE_SHA\"\n"
+      ]
+    },
+    {
+      "id": "browser-suites",
+      "name": "gcr.io/cloud-builders/docker",
+      "entrypoint": "bash",
+      "allowFailure": true,
+      "env": [
+        "CI_SOURCE_SHA=${_SHA}",
+        "CI_CONTROL_SHA=${_CONTROL_SHA}"
+      ],
+      "args": [
+        "-c",
+        "set -euo pipefail\ndocker build -f /workspace/control/Dockerfile -t retroboards-browser-ci /workspace/source/tests/browser\ndocker run --rm --network host --shm-size=1g \\\n  --volume /workspace/source:/workspace/source --volume /workspace/results:/workspace/results \\\n  --volume /workspace/control:/workspace/control:ro --volume /var/run/docker.sock:/var/run/docker.sock \\\n  --env CI_SOURCE_SHA --env CI_CONTROL_SHA \\\n  retroboards-browser-ci bash /workspace/control/run.sh\n"
+      ]
+    },
+    {
+      "id": "publish-evidence",
+      "name": "gcr.io/google.com/cloudsdktool/cloud-sdk:slim",
+      "entrypoint": "bash",
+      "args": [
+        "-c",
+        "set -euo pipefail\nif [ ! -f /workspace/results/result.json ]; then\n  printf '%s\\n' '{\"passed\":false,\"last_stage\":\"runner-startup\",\"artifact_count\":0}' > /workspace/results/result.json\nfi\ngcloud storage cp /workspace/results/result.json \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/result.json\"\nif [ -f /workspace/results/evidence.tar.gz ]; then\n  gcloud storage cp /workspace/results/evidence.tar.gz \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/evidence.tar.gz\"\nfi\n"
+      ]
+    },
+    {
+      "id": "enforce-result",
+      "name": "python:3.12-slim",
+      "entrypoint": "python",
+      "args": [
+        "-c",
+        "import json,sys; from pathlib import Path; r=json.loads(Path(sys.argv[1]).read_text()); raise SystemExit(0 if r.get('passed') is True else 1)",
+        "/workspace/results/result.json"
+      ]
+    }
+  ]
+}

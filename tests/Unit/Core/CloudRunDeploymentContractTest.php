@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Core;
 
+use App\Core\Config;
 use App\Core\Request;
+use App\Mail\CloudflareMailer;
+use App\Mail\MailerFactory;
 use App\Security\ClientIdentifier;
 use PHPUnit\Framework\TestCase;
 
@@ -49,7 +52,7 @@ final class CloudRunDeploymentContractTest extends TestCase
         foreach ([
             'APP_KEY' => 'retroboards-app-key',
             'DB_PASSWORD' => 'imladris-boards-app-password',
-            'CLOUDFLARE_EMAIL_API_TOKEN' => 'retroboards-cloudflare-email-token',
+            'MAIL_CLOUDFLARE_API_TOKEN' => 'retroboards-cloudflare-email-token',
         ] as $var => $secret) {
             self::assertArrayNotHasKey($var, $env);
             self::assertStringContainsString('"' . $var . ' ' . $secret . '"', $configure);
@@ -59,6 +62,36 @@ final class CloudRunDeploymentContractTest extends TestCase
         // --set-secrets replaces the whole mapping: only a definite NOT_FOUND
         // may leave the email token out; any other lookup failure must stop.
         self::assertStringContainsString('elif [[ "$email_state" != *NOT_FOUND* ]]; then', $configure);
+    }
+
+    public function test_production_mail_configuration_selects_the_configured_rest_transport(): void
+    {
+        $env = $this->env();
+        $keys = ['MAIL_DRIVER', 'MAIL_FROM', 'MAIL_CLOUDFLARE_ACCOUNT_ID', 'MAIL_TIMEOUT_SECONDS'];
+        $previous = [];
+        foreach ([...$keys, 'MAIL_CLOUDFLARE_API_TOKEN'] as $key) {
+            $previous[$key] = getenv($key);
+        }
+        try {
+            foreach ($keys as $key) {
+                putenv($key . '=' . $env[$key]);
+            }
+            // Stand-in for the Secret Manager binding, never a real token.
+            putenv('MAIL_CLOUDFLARE_API_TOKEN=unit-test-token');
+            $config = Config::fromFile(self::ROOT . '/config/config.php');
+            $mailer = MailerFactory::fromConfig($config, static fn (): string => 'RetroBoards');
+            self::assertInstanceOf(CloudflareMailer::class, $mailer);
+            self::assertTrue($mailer->isConfigured());
+            putenv('MAIL_CLOUDFLARE_API_TOKEN=');
+            self::assertFalse(MailerFactory::fromConfig(
+                Config::fromFile(self::ROOT . '/config/config.php'),
+                static fn (): string => 'RetroBoards',
+            )->isConfigured());
+        } finally {
+            foreach ($previous as $key => $value) {
+                putenv($value === false ? $key : $key . '=' . $value);
+            }
+        }
     }
 
     /**
