@@ -25,9 +25,12 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Retire the unused Cloudflare container origin: remove its Worker class,
   binding, dependency and app configuration, and append the Durable Object
   deletion migration. Recovery now uses Cloud Run revisions; pre-retirement
-  Worker versions are no longer supported rollback targets. The approved
-  hosted container, old Worker secrets and pre-move R2 cleanup are tracked
-  separately in the Cloud Run runbook §9.
+  Worker versions are no longer supported rollback targets. The retired
+  hosted container, six unused Worker secrets and pre-move R2 bucket were
+  deleted after the successful deploy; current Google storage was retained.
+  Production routes, all 64 published asset hashes, guest browser rendering
+  and a scheduled 5-minute tick are verified in the Cloud Run runbook §9 and
+  linked evidence.
 - Close the database's public authorized network (`0.0.0.0/0`) and move it
   to `db-f1-micro`. Page latency did not change.
 - `DB_SOCKET` connects over a Unix socket in place of host and port. The

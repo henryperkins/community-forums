@@ -73,11 +73,14 @@ and a deploy path to maintain.
 - Retirement removes the old container rollback path irreversibly. Recovery
   uses a Cloud Run revision and its corresponding cron images, retaining the
   current schema, keys and Google storage. Worker rollbacks must use versions
-  without the retired class binding (runbook §10). Hosted resource deletion is
-  pending verification in the runbook execution record.
+  without the retired class binding (runbook §10). The retired container, six
+  old Worker secrets and pre-move R2 bucket were deleted after the successful
+  PR #86 deploy on 2026-10-09. Verified storage retention and production checks
+  are recorded in [the evidence](../evidence/cloudflare-origin-retirement-2026-10-09/README.md).
 - An email-only Cloudflare Email Sending token was stored in Secret Manager
-  on 2026-10-09 with runtime read access. Configuration rollout and SMTP
-  acceptance are verified separately (runbook §7); an unconfigured sender
+  on 2026-10-09 with runtime read access. Configuration rollout and actual-relay
+  authentication were verified; actual-provider message acceptance and
+  recipient receipt remain untested (runbook §7). An unconfigured sender
   retains queued mail.
 - The `0.0.0.0/0` authorized network was removed right after the cutover, so
   only connector and Auth Proxy traffic reaches the database.
