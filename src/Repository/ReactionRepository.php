@@ -114,6 +114,7 @@ final class ReactionRepository
      * Newest eligible other members, capped at six per post/emoji in one query.
      * Call only after authorizing the viewer's read of every supplied post.
      * Counts intentionally stay aggregate; these names are a private member hint.
+     * Account state mirrors User::isActive(): an elapsed timed suspension is active.
      *
      * @param list<int> $postIds
      * @return array<int,array<string,list<string>>>
@@ -134,7 +135,9 @@ final class ReactionRepository
                 JOIN posts p ON p.id = r.post_id
                 JOIN threads t ON t.id = p.thread_id
                 JOIN boards b ON b.id = t.board_id
-                WHERE r.post_id IN ($place) AND r.user_id <> ? AND u.status = 'active'
+                WHERE r.post_id IN ($place) AND r.user_id <> ?
+                    AND (u.status = 'active' OR (u.status = 'suspended'
+                        AND u.suspended_until IS NOT NULL AND u.suspended_until <= UTC_TIMESTAMP()))
                     AND (p.is_anonymous = 0 OR r.user_id <> p.user_id)
                     AND NOT EXISTS (
                         SELECT 1 FROM blocks blocked

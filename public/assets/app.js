@@ -112,10 +112,24 @@
         btn.removeAttribute('title');
         positionReactionTip(btn);
     }
+    // A stalled response must not leave every copy of the chip locked; use the
+    // Inbox preview's bound. The toggle may still commit, so offer Reload.
+    var REACTION_TIMEOUT_MS = 15000;
+    var reactionAnnounceTimer = null;
+    function announceReaction(message) {
+        var announcer = document.querySelector('[data-reaction-announcer]');
+        if (!announcer) { return; }
+        // The region exists before any failure. Clear it first so an identical
+        // second failure is still a change a screen reader announces.
+        window.clearTimeout(reactionAnnounceTimer);
+        announcer.textContent = '';
+        if (message) {
+            reactionAnnounceTimer = window.setTimeout(function () { announcer.textContent = message; }, 50);
+        }
+    }
     function reactionFailure(tray, error) {
         var status = document.createElement('span');
         status.className = 'muted reaction-status';
-        status.setAttribute('role', 'status');
         if (error) { status.textContent = error; }
         else {
             status.appendChild(document.createTextNode('Could not confirm the reaction. '));
@@ -127,6 +141,7 @@
             status.appendChild(reload);
         }
         tray.appendChild(status);
+        announceReaction(status.textContent);
     }
     function reactionResponse(response) {
         // A definite refusal has not toggled anything. Keep its server reason,
@@ -160,6 +175,7 @@
         e.preventDefault();
         var status = tray.querySelector('.reaction-status');
         if (status) { status.remove(); }
+        announceReaction('');
         var initiatingButton = form.querySelector('button');
         var restoreReactionFocus = document.activeElement === initiatingButton;
         function reactionFocusMoved(event) {
@@ -178,12 +194,23 @@
         });
         var body = new FormData(form);
         body.append('format', 'json');
-        fetch(form.action, {
+        var request = window.AbortController ? new window.AbortController() : null;
+        var deadline = null;
+        // Racing the deadline also releases the lock where fetch cannot abort.
+        var stalled = new Promise(function (resolve, reject) {
+            deadline = window.setTimeout(function () {
+                if (request) { request.abort(); }
+                reject(new Error('Reaction response timed out'));
+            }, REACTION_TIMEOUT_MS);
+        });
+        var options = {
             method: 'POST',
             body: body,
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin'
-        }).then(reactionResponse).then(function (data) {
+        };
+        if (request) { options.signal = request.signal; }
+        Promise.race([fetch(form.action, options).then(reactionResponse), stalled]).then(function (data) {
             if (!data || !data.ok) { reactionFailure(tray, data && data.error); return; }
             var emoji = input.value;
             var n = Number((data.counts && data.counts[emoji]) || 0);
@@ -237,6 +264,7 @@
             // could undo it, so let the reader reload to confirm the state.
             reactionFailure(tray);
         }).then(function () {
+            window.clearTimeout(deadline);
             related.forEach(function (candidate) {
                 candidate.removeAttribute('data-reaction-pending');
                 candidate.querySelector('button').removeAttribute('aria-disabled');

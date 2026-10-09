@@ -313,6 +313,9 @@ $this->start('subheader_leading');
                 <?php if ((int) $p['is_op'] === 1): ?><?= $afterOpeningPost ?><?php $afterOpeningPost = ''; endif; ?>
             <?php endforeach; ?>
         </div>
+        <?php /* Enhanced reaction failures write here: a live region inserted
+                 together with its message is often never announced. */ ?>
+        <?php if ($engagement ?? false): ?><p class="sr-only" role="status" data-reaction-announcer></p><?php endif; ?>
     <?php endif; ?>
 
     <?= $this->partial('partials/pagination', [

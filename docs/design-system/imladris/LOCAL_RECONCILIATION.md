@@ -1083,3 +1083,14 @@ GET while definite refusals retain their server reason. Source completion and
 mention paint share a cached block-aware scanner; rich serialization preserves
 intraword handle underscores and one final handoff space. Regression evidence
 is indexed in the conversation evidence record's review-fixes section.
+
+### Conversation-interactions follow-ups — 2026-10-09
+
+Enhanced reaction requests are bounded at 15 seconds, the Inbox preview's bound.
+A stalled toggle aborts, unlocks every copy of the chip and offers the same GET
+reload as a lost response, because the server may still have committed it. The
+thread renders one empty `role="status"` region before any failure; refusals and
+uncertain toggles write into it (cleared first, so a repeat is still announced),
+while the visible tray message carries the reload link without a second live
+region. Reactor names follow `User::isActive()`, so a member whose timed
+suspension has elapsed is named again.

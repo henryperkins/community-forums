@@ -158,8 +158,9 @@ test('an ambiguous lost response offers Reload and never automatically reposts t
     await route.abort('failed');
   });
   await button.click();
-  const status = post.locator('.reactions [role=status]');
+  const status = post.locator('.reaction-status');
   await expect(status).toContainText('Could not confirm the reaction.');
+  await expect(page.locator('[data-reaction-announcer]')).toHaveText('Could not confirm the reaction. Reload to check its state.');
   const reload = status.getByRole('link', { name: 'Reload to check its state.' });
   await expect(reload).toBeVisible();
   await expect(button).not.toHaveAttribute('aria-disabled');
@@ -175,6 +176,62 @@ test('an ambiguous lost response offers Reload and never automatically reposts t
   expect(requests).toBe(1);
 });
 
+test('a stalled reaction response is bounded, unlocks every chip copy and offers Reload', async ({ page }) => {
+  await page.clock.install();
+  const post = await open(page);
+  let requests = 0;
+  // Never answer: only the client's bound can release the pending lock.
+  await page.route(`**/posts/${fixture.post}/react`, () => { requests++; });
+  const button = chip(post);
+  await button.focus();
+  await button.click();
+  const related = post.locator('.reaction-form').filter({ has: page.locator('input[name=emoji][value="👍"]') });
+  await expect(related.locator('button[aria-disabled=true]')).toHaveCount(3);
+  await page.clock.runFor(14_000);
+  await expect(related.locator('button[aria-disabled=true]')).toHaveCount(3);
+  await page.clock.runFor(1_500);
+  await expect(related.locator('button[aria-disabled=true]')).toHaveCount(0);
+  await expect(post.locator('.reaction-form[data-reaction-pending]')).toHaveCount(0);
+  await expect(post.locator('.reaction-status')).toContainText('Could not confirm the reaction.');
+  await expect(post.locator('.reaction-status').getByRole('link', { name: 'Reload to check its state.' })).toBeVisible();
+  await page.clock.runFor(100);
+  await expect(page.locator('[data-reaction-announcer]')).toHaveText('Could not confirm the reaction. Reload to check its state.');
+  await expect(button).toBeFocused();
+  await expect(button).toHaveAttribute('aria-pressed', 'false');
+  expect(requests).toBe(1);
+  // The recovered chip toggles normally once the server answers again.
+  await page.unroute(`**/posts/${fixture.post}/react`);
+  await toggle(page, button);
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+  await expect(post.locator('.reaction-status')).toHaveCount(0);
+  expect(requests).toBe(1);
+});
+
+test('reaction failures speak through a status region that exists before they happen', async ({ page }) => {
+  const post = await open(page);
+  const announcer = page.locator('[data-reaction-announcer]');
+  // A live region inserted together with its message is often never read, so
+  // the thread renders one empty region up front and failures write into it.
+  await expect(announcer).toHaveAttribute('role', 'status');
+  await expect(announcer).toHaveText('');
+  await announcer.evaluate(node => {
+    const records: string[] = [];
+    (window as unknown as { rbAnnounced: string[] }).rbAnnounced = records;
+    new MutationObserver(() => records.push(node.textContent ?? '')).observe(node, { childList: true, characterData: true, subtree: true });
+  });
+  await page.route(`**/posts/${fixture.post}/react`, route => route.abort('failed'));
+  const button = chip(post);
+  const message = 'Could not confirm the reaction. Reload to check its state.';
+  await button.click();
+  await expect(announcer).toHaveText(message);
+  await expect(post.locator('.reaction-status')).toBeVisible();
+  await expect(post.locator('.reactions :is([role=status], [role=alert], [aria-live])')).toHaveCount(0);
+  // An identical second failure must still be a change the region announces.
+  await button.click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { rbAnnounced: string[] }).rbAnnounced.length)).toBe(3);
+  expect(await page.evaluate(() => (window as unknown as { rbAnnounced: string[] }).rbAnnounced)).toEqual([message, '', message]);
+});
+
 test('reaction refusals show the kernel reason without claiming an uncertain toggle', async ({ page }) => {
   const post = await open(page);
   const button = chip(post);
@@ -184,6 +241,7 @@ test('reaction refusals show the kernel reason without claiming an uncertain tog
     php(`$db->run('UPDATE boards SET is_archived=1 WHERE id=?',[${board}]);`);
     await button.click();
     await expect(post.locator('.reaction-status')).toHaveText('This board is archived and is read-only.');
+    await expect(page.locator('[data-reaction-announcer]')).toHaveText('This board is archived and is read-only.');
     await expect(button).not.toHaveAttribute('aria-disabled');
   } finally { php(`$db->run('UPDATE boards SET is_archived=0 WHERE id=?',[${board}]);`); }
   const action = await button.evaluate(el => (el.closest('form') as HTMLFormElement).action);

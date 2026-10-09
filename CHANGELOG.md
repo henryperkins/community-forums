@@ -18,6 +18,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   share block-aware Source completion/highlighting and bound email scanning.
   Keep accent-insensitive name suggestions, assigned private-board moderators,
   and the design layer's 28px person-row avatars.
+- Bound stalled reaction requests at 15 seconds so every chip copy unlocks and
+  offers Reload, announce reaction failures through a status region that exists
+  before them, and name reactors again once a timed suspension has elapsed.
 - Fade conversation identity and gently reveal letters after a Messages row
   switch. Keep newest-letter positioning and native navigation; reloads, history
   restoration and both reduced-motion settings do not replay the transition.

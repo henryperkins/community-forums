@@ -251,6 +251,48 @@ final class AppReactionTest extends TestCase
         self::assertStringNotContainsString('formerreactor', $html);
     }
 
+    public function testReactionNamesFollowTheEffectiveSuspensionState(): void
+    {
+        $s = $this->scenario();
+        $repo = new ReactionRepository($this->db);
+        // Mirrors User::isActive(): an elapsed timed suspension names its member
+        // again, while current and indefinite suspensions only count.
+        $restored = $this->makeUser(['username' => 'restoredreactor', 'status' => 'suspended',
+            'suspended_until' => gmdate('Y-m-d H:i:s', time() - 3600)]);
+        $current = $this->makeUser(['username' => 'currentreactor', 'status' => 'suspended',
+            'suspended_until' => gmdate('Y-m-d H:i:s', time() + 3600)]);
+        $indefinite = $this->makeUser(['username' => 'indefinitereactor', 'status' => 'suspended']);
+        foreach ([$indefinite, $current, $restored] as $fan) {
+            $repo->toggle($s['op_id'], (int) $fan['id'], '👍');
+        }
+
+        $this->actingAs($s['author']);
+        $response = $this->post('/posts/' . $s['op_id'] . '/react', ['emoji' => '👍', 'format' => 'json']);
+        $this->assertStatus(200, $response);
+        $data = json_decode($response->body(), true);
+        self::assertSame(['restoredreactor'], $data['reactors']);
+        self::assertSame(4, $data['counts']['👍']);
+        $html = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug'])->body();
+        self::assertStringContainsString('You, @restoredreactor and 2 others', $html);
+        self::assertStringNotContainsString('currentreactor', $html);
+        self::assertStringNotContainsString('indefinitereactor', $html);
+    }
+
+    public function testThreadRendersOneEmptyReactionAnnouncerOnlyWithEngagement(): void
+    {
+        $s = $this->scenario();
+        $this->actingAs($s['author']);
+        $path = '/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug'];
+        // Enhanced failures write into this region; it must already exist and
+        // be empty, because a region inserted with its message may stay silent.
+        $html = $this->get($path)->body();
+        self::assertSame(1, substr_count($html, 'data-reaction-announcer'));
+        self::assertStringContainsString('<p class="sr-only" role="status" data-reaction-announcer></p>', $html);
+
+        (new \App\Repository\SettingRepository($this->db))->set('features', ['engagement' => false]);
+        self::assertStringNotContainsString('data-reaction-announcer', $this->get($path)->body());
+    }
+
     public function testReactionMarkupHasAccessibleMemberTipAndNoGuestNames(): void
     {
         $s = $this->scenario();
