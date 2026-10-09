@@ -1,0 +1,21 @@
+# Cold-load FCP/DCL (ms), Chromium, CDP latency+throughput emulation, cache disabled, 7 samples (median)
+## before (head script on every page; real fetch vs instantly fulfilled script)
+100ms/10Mbps /inbox real-script fcpMedian=852 range=848-856 dclMedian=836 script=124-234 blocking cssEnd=797
+100ms/10Mbps /inbox instant-script fcpMedian=860 range=848-860 dclMedian=841 script=125-131 blocking cssEnd=799
+100ms/10Mbps /t/<topic> real-script fcpMedian=868 range=860-868 dclMedian=855 script=123-232 blocking cssEnd=796
+100ms/10Mbps /t/<topic> instant-script fcpMedian=872 range=864-876 dclMedian=860 script=126-134 blocking cssEnd=801
+100ms/10Mbps /messages/1 real-script fcpMedian=880 range=872-884 dclMedian=869 script=123-233 blocking cssEnd=797
+100ms/10Mbps /messages/1 instant-script fcpMedian=884 range=876-892 dclMedian=876 script=126-131 blocking cssEnd=802
+150ms/100Mbps /inbox real-script fcpMedian=440 range=436-448 dclMedian=499 script=173-333 blocking cssEnd=385
+150ms/100Mbps /inbox instant-script fcpMedian=448 range=436-452 dclMedian=497 script=177-183 blocking cssEnd=394
+150ms/100Mbps /t/<topic> real-script fcpMedian=452 range=448-456 dclMedian=505 script=174-330 blocking cssEnd=382
+150ms/100Mbps /t/<topic> instant-script fcpMedian=464 range=460-472 dclMedian=503 script=179-183 blocking cssEnd=396
+150ms/100Mbps /messages/1 real-script fcpMedian=464 range=456-468 dclMedian=507 script=175-332 blocking cssEnd=384
+150ms/100Mbps /messages/1 instant-script fcpMedian=472 range=448-484 dclMedian=505 script=173-177 blocking cssEnd=390
+## after (scoped to /messages/{id})
+100ms/10Mbps /inbox real-script fcpMedian=852 range=848-856 dclMedian=835 script=absent cssEnd=794
+100ms/10Mbps /t/<topic> real-script fcpMedian=868 range=860-868 dclMedian=855 script=absent cssEnd=795
+100ms/10Mbps /messages/1 real-script fcpMedian=876 range=868-884 dclMedian=868 script=123-233 blocking cssEnd=796
+150ms/100Mbps /inbox real-script fcpMedian=444 range=440-464 dclMedian=491 script=absent cssEnd=395
+150ms/100Mbps /t/<topic> real-script fcpMedian=456 range=448-468 dclMedian=496 script=absent cssEnd=394
+150ms/100Mbps /messages/1 real-script fcpMedian=464 range=460-472 dclMedian=508 script=175-333 blocking cssEnd=385

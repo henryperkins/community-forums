@@ -1,0 +1,10 @@
+[group 1]   4 skipped
+[group 1]   82 passed (1.4m)
+[group 2]   33 skipped
+[group 2]   93 passed (2.3m)
+[group 3]   13 skipped
+[group 3]   13 passed (15.5s)
+[group 4]   1) [desktop] › messages-refinement.spec.ts:168:5 › reference states: group counsel, first visit and list 
+[group 4]   1 failed
+[group 4]   5 skipped
+[group 4]   4 passed (42.5s)

@@ -142,6 +142,12 @@ this batch is deployed, verify and record that release from an export of
 `8206122d` (runbook §14, as `inbox-header` did for `a160f1a21c51fcb2`) and
 rebuild so this candidate retains its files.
 
+## Follow-ups
+
+The follow-up review items (reaction recovery and announcements, mention
+eligibility, Inbox avatar preference, zoom alignment and performance) are
+recorded in [the 2026-10-09 follow-up record](../conversation-followups-2026-10-09/README.md).
+
 ## Limits
 
 This is local implementation and verification, without a push or deployment. Production feature overrides were not queried. Operating-system
