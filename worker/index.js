@@ -91,6 +91,7 @@ export class ForumContainer extends Container {
 			CLOUDFLARE_EMAIL_API_TOKEN: env.CLOUDFLARE_EMAIL_API_TOKEN,
 
 			DB_HOST: env.DB_HOST,
+			DB_HOST_IP: env.DB_HOST_IP,
 			DB_PORT: env.DB_PORT,
 			DB_DATABASE: env.DB_DATABASE,
 			DB_USERNAME: env.DB_USERNAME,
@@ -99,6 +100,7 @@ export class ForumContainer extends Container {
 			DB_SSL: env.DB_SSL,
 			DB_SSL_CA: env.DB_SSL_CA,
 			DB_SSL_CA_PEM: env.DB_SSL_CA_PEM,
+			DB_SSL_VERIFY: env.DB_SSL_VERIFY,
 
 			R2_BUCKET: env.R2_BUCKET,
 			R2_ACCOUNT_ID: env.R2_ACCOUNT_ID,

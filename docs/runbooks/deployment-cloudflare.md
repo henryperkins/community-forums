@@ -115,7 +115,75 @@ schema imposes:
 - **Foreign keys.** 198 constraints once migrated.
 - **InnoDB `FULLTEXT`.** `ft_threads_title` and `ft_posts_body` back search.
 
-### PlanetScale (current deployment)
+### Google Cloud SQL (current deployment, created 2026-10-09)
+
+Cloud SQL for MySQL, instance **`imladris-boards`** in project
+**`rising-woods-449718-v6`** (connection name
+`rising-woods-449718-v6:us-east4:imladris-boards`), created with:
+
+```sh
+gcloud sql instances create imladris-boards --project=rising-woods-449718-v6 \
+  --database-version=MYSQL_8_4 --edition=ENTERPRISE --tier=db-g1-small \
+  --region=us-east4 --availability-type=ZONAL \
+  --storage-type=SSD --storage-size=10GB --storage-auto-increase \
+  --backup-start-time=07:00 --enable-bin-log --retained-backups-count=7 \
+  --retained-transaction-log-days=7 \
+  --maintenance-window-day=SUN --maintenance-window-hour=8 \
+  --deletion-protection --assign-ip --authorized-networks=0.0.0.0/0 \
+  --ssl-mode=ENCRYPTED_ONLY --server-ca-mode=GOOGLE_MANAGED_CAS_CA \
+  --root-password=…    # from Secret Manager, see below
+gcloud sql databases create retroboards --instance imladris-boards --charset=utf8mb4
+```
+
+- **Server:** `8.4.11-google`, zone `us-east4-c`, public IP `34.145.179.39`,
+  `system_time_zone` UTC, default MySQL 8.4 `sql_mode` (same as PlanetScale),
+  `innodb_ft_min_token_size` 3. us-east4 sits next to the container's ENAM
+  placement (§14).
+- **Database / user:** `retroboards` (utf8mb4). `retroboards_app`@`%` was created
+  over SQL, not `gcloud sql users create` (which grants `cloudsqlsuperuser`):
+  `REQUIRE SSL`, `ALL PRIVILEGES ON retroboards.*` and nothing global. DDL is
+  needed because migrations run on boot.
+- **Passwords** live only in Secret Manager in the same project:
+  `imladris-boards-root-password` and `imladris-boards-app-password`. Read one
+  with `gcloud secrets versions access latest --secret=<name> --project
+  rising-woods-449718-v6`.
+- **Network:** public IP open to `0.0.0.0/0`, the same exposure PlanetScale had.
+  Cloudflare Containers have no stable egress range to allowlist. TLS is
+  mandatory (`ENCRYPTED_ONLY`), so a plaintext connection is refused. Hardening
+  option: run the Cloud SQL Auth Proxy in the container with a service-account
+  key, then drop the authorized network entirely.
+- **TLS needs two pieces, and both are wired:**
+  1. The server certificate chains to the instance's **Cloud SQL CA**, not a
+     public root. Put it in the `DB_SSL_CA_PEM` secret (`gcloud sql ssl
+     server-ca-certs list --instance imladris-boards --format="value(cert)"`).
+     `DB_SSL_CA` is set to `/run/db-ca.pem` explicitly, because cron `exec()`s
+     get the Worker's vars and not the entrypoint's environment.
+  2. The certificate's only SAN is the instance DNS name
+     `d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog` (`recordManager: CUSTOMER`:
+     Google does not publish it). `DB_HOST` is that name, and the entrypoint
+     pins it to `DB_HOST_IP` in `/etc/hosts`. Connecting by bare IP with
+     `DB_SSL_VERIFY=true` fails with `[2002] Cannot connect to MySQL using SSL`.
+     Turning verification off instead would leave the password open to a
+     man-in-the-middle.
+- **No Vitess:** the schema-propagation race below does not exist here, and
+  `SchemaRaceRetry` is inert (it keys off `SELECT VERSION()`).
+
+Verified 2026-10-09 from a workstation and from the production image (`docker
+build`, booted with this `wrangler.jsonc`'s `DB_*` vars plus `DB_SSL_CA_PEM`):
+all **83** migrations applied as `retroboards_app` on the first pass, giving 116
+tables, 198 FK constraints and both FULLTEXT indexes. Orphan inserts are
+rejected with 1452 and a `MATCH … AGAINST` query runs. `/healthz` returned `200
+{"status":"ok","database":"ok"}`, `/` → `302 /setup`, and a cron-style `exec`
+with a bare environment connected. The distro CA bundle was rejected, which
+proves verification is really on.
+
+### PlanetScale (previous deployment, asleep since 2026-09-30)
+
+The `perkinism` org has no payment method (`has_card: false`,
+`valid_billing_info: false`). Its first billing period ended 2026-10-01 and the
+database has been `sleeping` (branch `ready: false`) since 2026-09-30. That is
+when the container's boot-time `migrate` began failing, which is the cause of
+the 1101 outage. The history below is kept for the Vitess caveats.
 
 Verified working on `gcp.connect.psdb.cloud:3306`, server `8.4.9-Vitess`, with
 all 78 migrations applied (116 tables, 198 FK constraints, 2 FULLTEXT indexes).
@@ -520,7 +588,7 @@ Rough monthly figures from published rates, always-on:
 | Workers Paid plan | $5 |
 | Container, `basic` (1/4 vCPU, 1 GiB) | ≈ $8 |
 | Container, `standard-1` (1/2 vCPU, 4 GiB) | ≈ $28 |
-| Managed MySQL (external) | ≈ $15 |
+| Managed MySQL — Cloud SQL `db-g1-small`, 10 GB SSD, backups + binlog, us-east4 | ≈ $30 (list price, approximate) |
 | R2 | free under 10 GB |
 | Container egress | $0.025/GB after 1 TB (NA/EU) |
 
@@ -737,6 +805,32 @@ rollback restores the prior `DB_*` values and known-good Worker version; do not
 delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
+
+### Cloud SQL cutover — PREPARED 2026-10-09, not yet live
+
+The instance, database, user and schema exist and are verified (§3).
+`wrangler.jsonc`, `worker/index.js` (`DB_HOST_IP` passthrough) and
+`deploy/entrypoint.sh` (host pin) point at it. To go live, in this order:
+
+1. `gcloud secrets versions access latest --secret=imladris-boards-app-password
+   --project rising-woods-449718-v6 | npx wrangler secret put DB_PASSWORD`
+2. `gcloud sql ssl server-ca-certs list --instance imladris-boards --project
+   rising-woods-449718-v6 --format="value(cert)" | npx wrangler secret put
+   DB_SSL_CA_PEM`
+3. Merge to `main` (Workers Builds deploys). The secrets alone switch nothing:
+   the vars change only on deploy.
+4. Confirm `/healthz` → `200 {"status":"ok","database":"ok"}`. The schema is
+   already at `0083`, so the boot-time migrate is a no-op. The database is
+   empty, so `/` → `/setup` until first-run setup is done again, unless
+   PlanetScale's rows are restored first. That needs the sleeping database
+   woken (payment method), then `pscale database dump` and a restore into a
+   dropped-and-recreated `retroboards`.
+
+One unknown that only the real platform can answer: whether Cloudflare
+Containers let the entrypoint append to `/etc/hosts`. It works under Docker. If
+the boot log shows the append failing, the explicit stop-gap is `DB_HOST` =
+`34.145.179.39` with `DB_SSL_VERIFY=false`: still encrypted, but the server is
+unauthenticated. Treat that as temporary.
 
 ### PlanetScale account cutover — EXECUTED 2026-09-12, verified 07:40 UTC
 
