@@ -134,22 +134,20 @@ final class CloudflareDeploymentContractTest extends TestCase
     }
 
     /**
-     * Cloud SQL's certificate names only <uid>.<region>.sql.goog, which public
-     * DNS does not resolve. The entrypoint pins that name to DB_HOST_IP so the
-     * connection is verified by host name; the pin must exist before the
-     * boot-time migrate opens the first connection.
+     * Cloudflare mounts /etc/hosts read-only, so the entrypoint cannot pin
+     * Cloud SQL's certificate name to its IP; booting died on the attempt.
+     * Until the Auth Proxy lands, the Worker must forward DB_SSL_VERIFY or the
+     * by-IP connection fails PDO's host-name check (runbook §3).
      */
-    public function test_database_host_pin_reaches_the_container_before_migrations(): void
+    public function test_database_tls_settings_reach_the_container_and_hosts_stays_untouched(): void
     {
         $worker = $this->read('worker/index.js');
         $entrypoint = $this->read('deploy/entrypoint.sh');
 
-        self::assertStringContainsString('DB_HOST_IP: env.DB_HOST_IP', $worker);
-        self::assertStringContainsString('>> /etc/hosts', $entrypoint);
-        self::assertLessThan(
-            strpos($entrypoint, 'php /var/www/html/bin/console migrate'),
-            strpos($entrypoint, '>> /etc/hosts'),
-        );
+        foreach (['DB_SSL', 'DB_SSL_CA', 'DB_SSL_CA_PEM', 'DB_SSL_VERIFY'] as $var) {
+            self::assertStringContainsString($var . ': env.' . $var, $worker);
+        }
+        self::assertStringNotContainsString('/etc/hosts', $entrypoint);
     }
 
     private function read(string $relativePath): string

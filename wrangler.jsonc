@@ -83,23 +83,25 @@
     // Google Cloud SQL for MySQL 8.4, reached over the public internet with
     // TLS required. Instance `imladris-boards` in project
     // `rising-woods-449718-v6`, region us-east4 (replaced PlanetScale
-    // `imladris-boards`, runbook §3). DB_HOST is the instance DNS name -- the
-    // only name its server certificate carries -- which public DNS does not
-    // resolve, so the entrypoint pins it to DB_HOST_IP in /etc/hosts. The
-    // certificate chains to the instance's Cloud SQL CA, not a public one:
-    // DB_SSL_CA_PEM (secret) holds that CA and the entrypoint writes it to
-    // DB_SSL_CA. DB_SSL_CA is set here, not derived, because cron commands
-    // exec() with these vars rather than the entrypoint's environment.
+    // `imladris-boards`, runbook §3). TEMPORARY: DB_SSL_VERIFY is false. The
+    // server certificate names only the instance DNS name
+    // (d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog), which public DNS does
+    // not resolve, and Cloudflare mounts /etc/hosts read-only, so the
+    // container connects by IP and cannot pass PDO's host-name check. The link
+    // is encrypted (the instance refuses plaintext) but the server is not
+    // authenticated. The fix is the Cloud SQL Auth Proxy (runbook §3).
+    // DB_SSL_CA_PEM (secret) holds the Cloud SQL CA, written to DB_SSL_CA;
+    // DB_SSL_CA is set here because cron commands exec() with these vars.
     // DB_PASSWORD is a secret (Secret Manager `imladris-boards-app-password`);
     // `retroboards_app` holds ALL on `retroboards`.* only -- migrations run on boot.
-    "DB_HOST": "d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog",
-    "DB_HOST_IP": "34.145.179.39",
+    "DB_HOST": "34.145.179.39",
     "DB_PORT": "3306",
     "DB_DATABASE": "retroboards",
     "DB_USERNAME": "retroboards_app",
     "DB_EMULATE_PREPARES": "true",
     "DB_SSL": "true",
     "DB_SSL_CA": "/run/db-ca.pem",
+    "DB_SSL_VERIFY": "false",
 
     // /data is an R2 mount -- the container filesystem does not survive restarts.
     "R2_BUCKET": "retroboards-data",

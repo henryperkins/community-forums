@@ -152,19 +152,28 @@ gcloud sql databases create retroboards --instance imladris-boards --charset=utf
   mandatory (`ENCRYPTED_ONLY`), so a plaintext connection is refused. Hardening
   option: run the Cloud SQL Auth Proxy in the container with a service-account
   key, then drop the authorized network entirely.
-- **TLS needs two pieces, and both are wired:**
+- **TLS: encrypted, but the server is NOT authenticated (temporary).** Two
+  facts collide:
   1. The server certificate chains to the instance's **Cloud SQL CA**, not a
-     public root. Put it in the `DB_SSL_CA_PEM` secret (`gcloud sql ssl
-     server-ca-certs list --instance imladris-boards --format="value(cert)"`).
-     `DB_SSL_CA` is set to `/run/db-ca.pem` explicitly, because cron `exec()`s
-     get the Worker's vars and not the entrypoint's environment.
+     public root. That CA goes in the `DB_SSL_CA_PEM` secret (`gcloud sql ssl
+     server-ca-certs list --instance imladris-boards --format="value(cert)"`),
+     and `DB_SSL_CA=/run/db-ca.pem` is a var because cron `exec()`s get the
+     Worker's vars, not the entrypoint's environment.
   2. The certificate's only SAN is the instance DNS name
      `d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog` (`recordManager: CUSTOMER`:
-     Google does not publish it). `DB_HOST` is that name, and the entrypoint
-     pins it to `DB_HOST_IP` in `/etc/hosts`. Connecting by bare IP with
-     `DB_SSL_VERIFY=true` fails with `[2002] Cannot connect to MySQL using SSL`.
-     Turning verification off instead would leave the password open to a
-     man-in-the-middle.
+     Google does not publish it). Connecting by IP with `DB_SSL_VERIFY=true`
+     fails with `[2002] Cannot connect to MySQL using SSL`. PDO ties the chain
+     check to the host-name check, so there is no chain-only mode.
+
+  Pinning the name in `/etc/hosts` works under Docker but **not on Cloudflare**:
+  the first deploy (PR #82, 2026-10-09 02:27 UTC) died in the entrypoint with
+  `cannot create /etc/hosts: Read-only file system`. Production therefore runs
+  with `DB_HOST=34.145.179.39` and `DB_SSL_VERIFY=false`. The instance refuses
+  plaintext, but a man-in-the-middle on the path could present its own
+  certificate and read the password. **Fix:** run the Cloud SQL Auth Proxy in
+  the container. It authenticates the instance itself over mTLS with a
+  service-account credential, the app talks to it on `127.0.0.1`, and the
+  `0.0.0.0/0` authorized network can then be removed.
 - **No Vitess:** the schema-propagation race below does not exist here, and
   `SchemaRaceRetry` is inert (it keys off `SELECT VERSION()`).
 
@@ -173,9 +182,8 @@ build`, booted with this `wrangler.jsonc`'s `DB_*` vars plus `DB_SSL_CA_PEM`):
 all **83** migrations applied as `retroboards_app` on the first pass, giving 116
 tables, 198 FK constraints and both FULLTEXT indexes. Orphan inserts are
 rejected with 1452 and a `MATCH … AGAINST` query runs. `/healthz` returned `200
-{"status":"ok","database":"ok"}`, `/` → `302 /setup`, and a cron-style `exec`
-with a bare environment connected. The distro CA bundle was rejected, which
-proves verification is really on.
+{"status":"ok","database":"ok"}` and `/` → `302 /setup`, both with the
+`/etc/hosts` pin (since removed) and by IP with `DB_SSL_VERIFY=false`.
 
 ### PlanetScale (previous deployment, asleep since 2026-09-30)
 
@@ -806,31 +814,23 @@ delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
 
-### Cloud SQL cutover — PREPARED 2026-10-09, not yet live
+### Cloud SQL cutover — EXECUTED 2026-10-09
 
-The instance, database, user and schema exist and are verified (§3).
-`wrangler.jsonc`, `worker/index.js` (`DB_HOST_IP` passthrough) and
-`deploy/entrypoint.sh` (host pin) point at it. To go live, in this order:
+Instance, database, user and schema are described in §3. Secrets set with
+`wrangler secret put`: `DB_PASSWORD` (from Secret Manager
+`imladris-boards-app-password`) and `DB_SSL_CA_PEM` (the Cloud SQL CA).
 
-1. `gcloud secrets versions access latest --secret=imladris-boards-app-password
-   --project rising-woods-449718-v6 | npx wrangler secret put DB_PASSWORD`
-2. `gcloud sql ssl server-ca-certs list --instance imladris-boards --project
-   rising-woods-449718-v6 --format="value(cert)" | npx wrangler secret put
-   DB_SSL_CA_PEM`
-3. Merge to `main` (Workers Builds deploys). The secrets alone switch nothing:
-   the vars change only on deploy.
-4. Confirm `/healthz` → `200 {"status":"ok","database":"ok"}`. The schema is
-   already at `0083`, so the boot-time migrate is a no-op. The database is
-   empty, so `/` → `/setup` until first-run setup is done again, unless
-   PlanetScale's rows are restored first. That needs the sleeping database
-   woken (payment method), then `pscale database dump` and a restore into a
-   dropped-and-recreated `retroboards`.
+1. **PR #82** (`f4d9b5c5`) pointed `DB_HOST` at the instance DNS name and pinned
+   it in `/etc/hosts`. Workers Builds succeeded, but every boot died with
+   `cannot create /etc/hosts: Read-only file system`. The pin has been removed.
+2. **Follow-up**: `DB_HOST=34.145.179.39`, `DB_SSL_VERIFY=false` (forwarded by
+   the Worker). This is encrypted but unauthenticated; see §3 for the Auth
+   Proxy fix.
 
-One unknown that only the real platform can answer: whether Cloudflare
-Containers let the entrypoint append to `/etc/hosts`. It works under Docker. If
-the boot log shows the append failing, the explicit stop-gap is `DB_HOST` =
-`34.145.179.39` with `DB_SSL_VERIFY=false`: still encrypted, but the server is
-unauthenticated. Treat that as temporary.
+The database is empty, so `/` → `/setup` until first-run setup is done again.
+PlanetScale's rows can only come back by waking that database (payment
+method), then `pscale database dump` and a restore into a dropped-and-recreated
+`retroboards`.
 
 ### PlanetScale account cutover — EXECUTED 2026-09-12, verified 07:40 UTC
 

@@ -4,8 +4,7 @@ set -eu
 # Container entrypoint. Three jobs before Apache takes over:
 #   1. give the app a writable /data (an R2 bucket when one is configured,
 #      otherwise plain local disk / a mounted volume),
-#   2. materialise the database TLS trust anchor (and host pin) from the
-#      environment,
+#   2. materialise the database TLS trust anchor from the environment,
 #   3. bring the schema up to date.
 # Every step is a no-op unless its environment variable is set, so the same
 # image runs unchanged on Cloudflare Containers, a VPS, or docker compose.
@@ -63,19 +62,6 @@ if [ -n "${DB_SSL_CA_PEM:-}" ]; then
     chmod 644 /run/db-ca.pem
     DB_SSL_CA="${DB_SSL_CA:-/run/db-ca.pem}"
     export DB_SSL_CA
-fi
-
-# Cloud SQL's server certificate names only the instance's DNS name
-# (<uid>.<region>.sql.goog), and Google does not publish that name in public
-# DNS. Pinning it to the instance's public IP lets PDO verify the certificate
-# and its host name instead of connecting by bare IP with verification off.
-# Cron commands exec() inside this same container, so they see the pin too.
-if [ -n "${DB_HOST_IP:-}" ]; then
-    : "${DB_HOST:?DB_HOST_IP is set but DB_HOST is missing}"
-    if ! grep -qs "[[:space:]]${DB_HOST}\$" /etc/hosts; then
-        printf '%s %s\n' "$DB_HOST_IP" "$DB_HOST" >> /etc/hosts
-    fi
-    echo "entrypoint: pinned ${DB_HOST} to ${DB_HOST_IP}"
 fi
 
 # --- 3. schema ---------------------------------------------------------------
