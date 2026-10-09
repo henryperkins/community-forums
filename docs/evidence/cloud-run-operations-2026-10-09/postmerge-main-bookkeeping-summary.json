@@ -1,0 +1,45 @@
+{
+  "captured_at": "2026-10-09T12:41:14.704894+00:00",
+  "source_stage": "post-merge main working tree before follow-up commit",
+  "parent_merge_sha": "3e56aff5449478b189196323fb8c277decd22b4f",
+  "accepted_browser_source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "trusted_control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "passed": true,
+  "app_test_control_source_unchanged": true,
+  "unexpected_source_changes": [],
+  "current_entrypoint_urls_unchanged": true,
+  "current_release_file_count": 25,
+  "current_release_files_unchanged": true,
+  "all_retained_delivery_bytes_match_accepted_source": true,
+  "verified_merge_manifest_version": "d8529d5d0f5e0219",
+  "recorded_manifest_version": "d8529d5d0f5e0219",
+  "previous_delivery_asset_count": 64,
+  "recorded_delivery_asset_count": 61,
+  "recorded_deployed_release_pins": [
+    "d8529d5d0f5e0219",
+    "85b4bc099e7bdac1",
+    "ffc423564f256d2f"
+  ],
+  "retired_immutable_asset_paths": [
+    "/assets/dist/app-da2b715df2ea1a09.js",
+    "/assets/dist/app-style-DpcQqnu-.css",
+    "/assets/dist/imladris-style-CU9grDIH.css"
+  ],
+  "retired_files_exclude_current_release": true,
+  "presentation_checksum": "8eaba67fcda2327b4770f4f1ee28b87676c929683c718d140b8b2db8ba3192d1",
+  "local_checks": {
+    "php_runtime": "8.4.26",
+    "php_process_exit_code": 0,
+    "tests": 3231,
+    "assertions": 25601,
+    "existing_guard_skip": 1,
+    "duration_seconds": 98.284,
+    "node_tests_passed": 35,
+    "node_tests_skipped": 0,
+    "generated_assets_check_exit_code": 0,
+    "imladris_check_exit_code": 0,
+    "autoload_resolves_main_worktree": true
+  },
+  "final_followup_commit_deployment_claimed": false,
+  "scope": "Actual verified merge-release recording and post-merge source checks; no self-referential follow-up commit SHA or unobserved deployment pass."
+}

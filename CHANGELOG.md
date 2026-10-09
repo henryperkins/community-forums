@@ -55,8 +55,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   with zero failures and 92 existing exclusions.
 - Pin the hash-verified active asset release before building its replacement,
   retaining its published bundles under the existing three-deploy policy.
-  Live baseline delivery and generated-source checks passed; post-merge
-  delivery of the new release remains pending.
+  Live baseline delivery and generated-source checks passed, and the merge's
+  automatic deployment delivered all 64 assets with matching hashes. Record
+  that verified release on main and retire three expired immutable files
+  under the existing retention policy.
 - Close the database's public authorized network (`0.0.0.0/0`) and move it
   to `db-f1-micro`. Page latency did not change.
 - `DB_SOCKET` connects over a Unix socket in place of host and port. The

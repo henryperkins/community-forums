@@ -4,8 +4,8 @@
   "image_id": "sha256:d4b13461c2608d7fcdee919508fe69ea0fd229880d7d5d6fb60ac88a94ab636a",
   "runtime": {
     "php": "8.2.34",
-    "database": "MariaDB11.4",
-    "browser": "real Chromium through Playwright1.61.1"
+    "database": "MariaDB 11.4",
+    "browser": "real Chromium through Playwright 1.61.1"
   },
   "synthetic_only": true,
   "production_access": false,

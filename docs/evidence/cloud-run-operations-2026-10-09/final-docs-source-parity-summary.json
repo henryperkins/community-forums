@@ -1,0 +1,141 @@
+{
+  "captured_at": "2026-10-09T12:16:58.928386+00:00",
+  "tested_source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "release_source_sha": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+  "mode": "deferred-baseline",
+  "passed": true,
+  "checks": {
+    "app_test_control_source_unchanged": true,
+    "current_version_unchanged": true,
+    "current_entrypoint_urls_unchanged": true,
+    "current_entrypoint_lazy_font_closure_unchanged": true,
+    "deployed_release_pins_match_required_operation": true,
+    "delivery_release_set_matches_pins": true,
+    "delivery_file_set_matches_retained_closure": true,
+    "all_candidate_asset_bytes_match_tested_source": true,
+    "retired_files_are_only_immutable_assets": true,
+    "retired_files_exclude_current_closure": true,
+    "guard_scope_and_contract_unchanged": true,
+    "runtime_manifest_contract_unchanged": true,
+    "linked_presentation_digests_match": true,
+    "presentation_digest_matches_required_release_stage": true
+  },
+  "unexpected_source_changes": [],
+  "deferred_baseline_sha": "c10faca411d014e018a34c49270647f27dfb9b13",
+  "computed_presentation_digest": "cd74ad6c615af34fde1dcb9fdb5c4605ac464b433c4947d57e7326fb439bd8d3",
+  "presentation_checksum_valid": false,
+  "changed_paths": [
+    {
+      "status": "M",
+      "path": "CHANGELOG.md"
+    },
+    {
+      "status": "M",
+      "path": "config/imladris-runtime-baseline.json"
+    },
+    {
+      "status": "M",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/asset-delivery-premerge-baseline-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/asset-retention-source-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-account-console-budget-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-036-hosted-failure-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-boundary-probe-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-d6-functional-failure-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-d9b-hosted-acceptance-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-d9b-native-push-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-d9b-operator-download-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-d9b-previous-failure-cases-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-d9b-review-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-final-native-push-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-isolated-native-push-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-isolated-setup-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-ci-provider-step-check-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-dm-pointer-isolation-cleanup-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-dm-pointer-lifecycle-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-dm-pointer-scroll-fix-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-unified-preflight-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/browser-upload-webkit-hosted-diagnostic-summary.json"
+    },
+    {
+      "status": "M",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/local-source-verification.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/cloud-run-operations-2026-10-09/premerge-scheduled-execution-summary.json"
+    },
+    {
+      "status": "M",
+      "path": "docs/runbooks/deployment-cloud-run.md"
+    },
+    {
+      "status": "M",
+      "path": "resources/imladris/manifest.json"
+    }
+  ],
+  "retired_immutable_asset_paths": [],
+  "current_closure_file_count": 25,
+  "candidate_asset_count": 64,
+  "scope": "Git source and current runtime byte parity; hosted browser acceptance and production deployment are separate receipts"
+}

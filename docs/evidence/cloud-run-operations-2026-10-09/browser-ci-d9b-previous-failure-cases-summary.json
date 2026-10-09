@@ -25,5 +25,5 @@
       "timestamp": "2026-10-09T12:10:50.535125424Z"
     }
   ],
-  "scope": "Prior036failedWebKitcases reported by fullB; no claim that the pointer fix caused unrelated cases to pass."
+  "scope": "Prior 036 failed WebKit cases reported by full B; no claim that the pointer fix caused unrelated cases to pass."
 }

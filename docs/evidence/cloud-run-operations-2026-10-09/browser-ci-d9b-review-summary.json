@@ -102,23 +102,23 @@
         "id": 4229532041,
         "path": "config/imladris-runtime-baseline.json",
         "line": 24,
-        "classification": "Documented baseline refresh sequencing discrepancy against ADR0024:255-256, owner process decision; no demonstrated runtime or visual drift.",
-        "owner_resolution_plan": "Honor ADR0024 and ADR0041: C restores the two checksum fields from current main; after merge deployment and live hashes are verified, immediately following mainR records the deployed release through the existing CLI and refreshes its reviewed presentation checksum. R may prune expired retained files and differ in checksum metadata. Application/test/control source plus current entrypoint/lazy/font closure bytes will be compared to B; fresh R local checks and exact automatic deployment remain planned, not executed in this receipt.",
+        "classification": "Documented baseline refresh sequencing discrepancy against ADR 0024:255-256, owner process decision; no demonstrated runtime or visual drift.",
+        "owner_resolution_plan": "Honor ADR 0024 and ADR 0041: C restores the two checksum fields from current main; after merge deployment and live hashes are verified, immediately following main R records the deployed release through the existing CLI and refreshes its reviewed presentation checksum. R may prune expired retained files and differ in checksum metadata. Application/test/control source plus current entrypoint/lazy/font closure bytes will be compared to B; fresh R local checks and exact automatic deployment remain planned, not executed in this receipt.",
         "owner_resolution_plan_updated_after_review": true
       },
       "old_launcher_claim": "Same previously disproved top-level Build.id allegation; actual create response and parent-child launches prove current Operation.metadata.build.id path."
     },
-    "GitGuardian": "Exact-head success;8 commits scanned without detected secrets.",
+    "GitGuardian": "Exact-head success; 8 commits scanned without detected secrets.",
     "qlty": {
       "status": "success",
-      "provider_description": "16 blocking issues, including1 vulnerability",
+      "provider_description": "16 blocking issues, including 1 vulnerability",
       "detail_access": "Public issues URL redirects to Login; underlying details not newly verified, no credentials borrowed."
     },
     "Worker_preview": "Exact-head success.",
     "Cursor": "Neutral; security review failed to start due existing free-trial limit.",
-    "Sourcery": "Skipped because diff exceeds150000-character review limit.",
-    "Amazon_Q": "Only stale946 review; old inline comments rebased to d9 do not establish fresh review.",
-    "Codex": "Only stale946 security-review summary; no fresh d9 review found.",
+    "Sourcery": "Skipped because diff exceeds 150,000-character review limit.",
+    "Amazon_Q": "Only stale 946 review; old inline comments rebased to d9 do not establish fresh review.",
+    "Codex": "Only stale 946 security-review summary; no fresh d9 review found.",
     "GitHub_Actions": "Both exact-head job annotations confirm job never started due account billing lock.",
     "CircleCI": "Known unavailable/no configuration; no new exact-head result in current rollup."
   },

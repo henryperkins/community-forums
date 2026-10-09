@@ -494,7 +494,8 @@ override of an actual cron job can alert too. Diagnostic jobs with different
 names are excluded. A successful manual cron execution does not reset the
 collector's scheduled-tick check.
 
-Preview, apply and verify from the checked-in configuration:
+Preview and apply the checked-in configuration, then check managed resource
+state and selected collector/scheduler settings:
 
 ```sh
 python3 deploy/cloudrun/monitoring/configure.py plan
@@ -503,6 +504,10 @@ python3 deploy/cloudrun/monitoring/configure.py verify --evidence /private/monit
 ```
 
 The recipient file contains one `address` key, mode `0600`; never commit it.
+`verify` checks managed policy keys, enabled/error/channel state, one managed
+uptime check, and selected collector/scheduler settings. It reports selected
+uptime fields. For a full drift audit, compare live policy conditions and
+uptime settings with the `plan` output separately.
 See [the operations evidence](../evidence/cloud-run-operations-2026-10-09/README.md)
 for policy validation, checker locations, actual collector execution and
 notification receipt limits. An enabled channel alone does not prove an alert

@@ -62,8 +62,8 @@ verified actual Scheduler-created successes for the six-hour job `84g8m` at
 06:00:31, five-minute job `dqxbp` at 11:40:30 and monitor `6rrgq` at 11:30:33,
 with matching image, identity and command. The collector reported no due
 outbox rows, recent failures or missed schedules, and a healthy automated
-backup. These executions use baseline `c10faca`; they do not prove the pending
-M/R rollout.
+backup. These executions use baseline `c10faca`; they precede the merged
+rollout recorded below.
 
 Monitoring source and sanitized current configuration/runtime receipts live
 under [`deploy/cloudrun/monitoring`](../../../deploy/cloudrun/monitoring) and
@@ -206,8 +206,8 @@ deploy retention policy. The new `app-5839ddd55290c1d1.js` carries the pointer
 fix; CSS is unchanged. Generated-asset checks and 35 Node tests passed after
 the retention correction. The [source retention receipt](asset-retention-source-summary.json)
 confirms all 25 files in the previous current release retain identical bytes
-in committed source `d9b2295e`. This is baseline delivery and new source proof;
-post-merge delivery of the replacement remains unverified.
+in committed source `d9b2295e`. These are the pre-merge retention checks;
+the replacement's actual merge deployment is recorded below.
 
 [Local runner receipt](browser-ci-local-summary.json) records PHP 8.2.34,
 Node 24.21.0, Compose 2.40.3, successful nested Docker execution and actual
@@ -361,20 +361,19 @@ The revised isolated parent/child controls passed 16 targeted tests with 136
 assertions in the actual PHP 8.2.34 runner, with no PHP warnings after using a
 writable cache path (1.554 seconds); the Python provider contracts exercise
 missing/failed/nonzero provider steps as well as artifact enforcement.
-These full local results belong to source `d9b2295e` (B). The planned final
-documentation commit (C) will retain main's two Imladris checksum metadata
-files until merge, following [ADR 0024](../../adr/0024-imladris-admin-account-adoption.md).
-Its temporary checksum-guard difference is not described as a passing full
-local run. After the merge's automatic deployment and live current hashes are
-verified, the immediately following main commit (R) will record that deployed
-release using the existing CLI, then refresh its reviewed presentation checksum
-under ADR 0024 and [ADR 0041](../../adr/0041-asset-release-retention.md).
-Recording the release can prune expired retained files and change the checksum;
-R is not promised to share B's entire asset tree or checksum metadata.
-Application, browser-test and trusted-control source, plus current entrypoint,
-lazy-chunk and font bytes, will be compared to B. Fresh R local checks and its
-exact automatic production deployment will be verified separately. Merge/R
-and these production results are still pending.
+These full local results belong to source `d9b2295e` (B). The final
+documentation commit `8fe3ba1c` (C) and merge `3e56aff5` (M) retained main's two
+Imladris checksum metadata files until the post-merge refresh, following
+[ADR 0024](../../adr/0024-imladris-admin-account-adoption.md).
+The [C comparison](final-docs-source-parity-summary.json) and
+[M comparison](merged-source-parity-summary.json) prove application,
+browser-test, trusted-control and current asset closure parity to B.
+Their temporary checksum-guard difference is explicit and is not described
+as a passing full local run. The redundant
+[C browser run](final-docs-redundant-browser-cancellation-summary.json) and
+[M browser run](merged-redundant-browser-cancellation-summary.json) were
+canceled after exact launch/binding and source-parity proof, saving another
+complete execution; neither is represented as a hosted suite pass.
 
 The [exact-B review receipt](browser-ci-d9b-review-summary.json) records
 completed CodeRabbit and Vortex reviews, the checksum-sequencing correction,
@@ -384,3 +383,38 @@ issues; their authenticated details were unavailable and are not represented
 as cleared. Older review summaries are identified as stale.
 Source verification, hosted browser results and production rollout remain
 separate receipts.
+
+## Verified merge deployment and release recording
+
+PR #88 merged as `3e56aff5449478b189196323fb8c277decd22b4f` at 12:30:09 UTC.
+Its [automatic Google build](merged-main-build-summary.json)
+`5b18d446-5d42-4039-9b1b-5854c01b02ad` succeeded at 12:32:30.744657, with every
+reviewed build/deploy/job-update step successful. The
+[runtime check](merged-runtime-release-summary.json) confirms the exact merge
+image on the web service, all four cron jobs and monitor; ready web revision
+`retroboards-00010-l2g` serves all traffic. Web/cron configuration uses the REST
+mailer and protected token reference; the monitor has no sensitive app env.
+The [Worker check](merged-worker-production-summary.json) links successful
+main build `17bab600-8f73-4556-bc81-b530ff04216b` to active version
+`117a5fe5-df58-40d7-a328-3ac429122b65` at 100%.
+
+The [live merge check](merged-live-summary.json) verified all 64 asset hashes
+for manifest `d8529d5d0f5e0219`, healthy application/database, home/login 200
+with native login fields, direct-origin 403 and the alias 301 retaining its
+next path. This is actual merge delivery, separate from B's full hosted
+browser acceptance.
+
+After those live checks, the existing release-recording CLI recorded the
+verified deployed release under [ADR 0041](../../adr/0041-asset-release-retention.md).
+The following main bookkeeping working tree retains 61 delivery assets and
+prunes three expired immutable files; current application/test/control source
+and current entrypoint, lazy-chunk and font bytes remain the comparison target
+to accepted B. Its refreshed presentation checksum is
+`8eaba67fcda2327b4770f4f1ee28b87676c929683c718d140b8b2db8ba3192d1`.
+
+For the release-recording commit, verify its automatic Google and Worker
+deployments against its exact main SHA, ready web traffic and all five jobs;
+then repeat live asset/health/origin checks and observe fresh Scheduler-created
+five-minute and monitor executions. These are release checks, not an assertion
+that an unknown subsequent deployment has passed. The actual final deployment
+receipt is reported separately from this committed evidence snapshot.
