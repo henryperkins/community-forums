@@ -24,7 +24,7 @@
       ],
       "args": [
         "-c",
-        "set -euo pipefail\n[[ \"$$CI_SOURCE_SHA\" =~ ^[0-9a-f]{40}$ && \"$$CI_CONTROL_SHA\" =~ ^[0-9a-f]{40}$ ]] || { echo 'Exact source and trusted control commit SHAs are required' >&2; exit 2; }\nmkdir -p /workspace/source /workspace/control /workspace/results\ncd /workspace/source\ngit init -q .\ngit remote add origin https://github.com/henryperkins/community-forums.git\ngit fetch -q --depth=1 origin \"$$CI_SOURCE_SHA\" \"$$CI_CONTROL_SHA\"\nfor file in Dockerfile run.sh package.py; do\n  git show \"$$CI_CONTROL_SHA:deploy/cloudrun/browser-ci/$$file\" > \"/workspace/control/$$file\"\ndone\ngit checkout -q \"$$CI_SOURCE_SHA\"\n"
+        "set -euo pipefail\n[[ \"$$CI_SOURCE_SHA\" =~ ^[0-9a-f]{40}$ && \"$$CI_CONTROL_SHA\" =~ ^[0-9a-f]{40}$ ]] || { echo 'Exact source and trusted control commit SHAs are required' >&2; exit 2; }\nmkdir -p /workspace/source /workspace/control /workspace/results\ncd /workspace/source\ngit init -q .\ngit remote add origin https://github.com/henryperkins/community-forums.git\ngit fetch -q --depth=1 origin \"$$CI_SOURCE_SHA\" \"$$CI_CONTROL_SHA\"\nfor file in Dockerfile run.sh package.py enforce.py; do\n  git show \"$$CI_CONTROL_SHA:deploy/cloudrun/browser-ci/$$file\" > \"/workspace/control/$$file\"\ndone\ngit checkout -q \"$$CI_SOURCE_SHA\"\n"
       ]
     },
     {
@@ -38,7 +38,7 @@
       ],
       "args": [
         "-c",
-        "set -euo pipefail\ndocker build -f /workspace/control/Dockerfile -t retroboards-browser-ci /workspace/source/tests/browser\ndocker run --rm --network host --shm-size=1g \\\n  --volume /workspace/source:/workspace/source --volume /workspace/results:/workspace/results \\\n  --volume /workspace/control:/workspace/control:ro --volume /var/run/docker.sock:/var/run/docker.sock \\\n  --env CI_SOURCE_SHA --env CI_CONTROL_SHA \\\n  retroboards-browser-ci bash /workspace/control/run.sh\n"
+        "set -uo pipefail\nrm -f /workspace/runner-exit.json\ndocker build -f /workspace/control/Dockerfile -t retroboards-browser-ci /workspace/source/tests/browser\nci_runner_status=$$?\nif ((ci_runner_status == 0)); then\ndocker run --rm --network host --shm-size=1g \\\n  --volume /workspace/source:/workspace/source --volume /workspace/results:/workspace/results \\\n  --volume /workspace/control:/workspace/control:ro --volume /var/run/docker.sock:/var/run/docker.sock \\\n  --env CI_SOURCE_SHA --env CI_CONTROL_SHA \\\n  retroboards-browser-ci bash /workspace/control/run.sh\nci_runner_status=$$?\nfi\nprintf '{\"docker_exit_code\":%s}\\n' \"$$ci_runner_status\" > /workspace/runner-exit.json\nexit \"$$ci_runner_status\"\n"
       ]
     },
     {
@@ -47,7 +47,7 @@
       "entrypoint": "bash",
       "args": [
         "-c",
-        "set -euo pipefail\nif [ ! -f /workspace/results/result.json ]; then\n  printf '%s\\n' '{\"passed\":false,\"last_stage\":\"runner-startup\",\"artifact_count\":0}' > /workspace/results/result.json\nfi\ngcloud storage cp /workspace/results/result.json \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/result.json\"\nif [ -f /workspace/results/evidence.tar.gz ]; then\n  gcloud storage cp /workspace/results/evidence.tar.gz \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/evidence.tar.gz\"\nfi\n"
+        "set -euo pipefail\nif [ ! -f /workspace/results/result.json ]; then\n  printf '%s\\n' '{\"passed\":false,\"last_stage\":\"runner-startup\",\"artifact_count\":0}' > /workspace/results/result.json\nfi\ngcloud storage cp /workspace/results/result.json \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/result.json\"\nif [ -f /workspace/runner-exit.json ]; then\n  gcloud storage cp /workspace/runner-exit.json \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/runner-exit.json\"\nfi\nif [ -f /workspace/results/evidence.tar.gz ]; then\n  gcloud storage cp /workspace/results/evidence.tar.gz \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/evidence.tar.gz\"\nfi\n"
       ]
     },
     {
@@ -55,9 +55,15 @@
       "name": "python:3.12-slim",
       "entrypoint": "python",
       "args": [
-        "-c",
-        "import json,sys; from pathlib import Path; r=json.loads(Path(sys.argv[1]).read_text()); raise SystemExit(0 if r.get('passed') is True else 1)",
-        "/workspace/results/result.json"
+        "/workspace/control/enforce.py",
+        "--results",
+        "/workspace/results",
+        "--outer-result",
+        "/workspace/runner-exit.json",
+        "--source-sha",
+        "${_SHA}",
+        "--control-sha",
+        "${_CONTROL_SHA}"
       ]
     }
   ]

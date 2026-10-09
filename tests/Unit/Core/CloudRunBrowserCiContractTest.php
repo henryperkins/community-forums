@@ -38,21 +38,67 @@ final class CloudRunBrowserCiContractTest extends TestCase
         }
     }
 
-    public function test_final_build_step_requires_boolean_success_after_artifact_publication(): void
+    public function test_final_step_requires_outer_success_and_a_complete_matching_archive(): void
     {
         $steps = $this->build()['steps'];
         self::assertTrue($steps[1]['allowFailure']);
         self::assertSame('publish-evidence', $steps[2]['id']);
         self::assertSame('enforce-result', $steps[3]['id']);
-        $path = $this->scratch . '/result.json';
-        // Each case executes the exact final-step Python command, not a duplicate predicate.
-        foreach ([[true, 0], [false, 1], ['true', 1], [null, 1]] as [$passed, $expected]) {
-            file_put_contents($path, json_encode(['passed' => $passed], JSON_THROW_ON_ERROR));
-            $command = ['python3', ...$steps[3]['args']];
-            $command[count($command) - 1] = $path;
+        $source = $this->completeSource();
+        $output = $this->scratch . '/output';
+        $this->packageSource($source, $output);
+        $outer = $this->scratch . '/runner-exit.json';
+        $args = $steps[3]['args'];
+        $args[0] = self::ROOT . '/deploy/cloudrun/browser-ci/enforce.py';
+        $args[2] = $output;
+        $args[4] = $outer;
+        $args[6] = str_repeat('a', 40);
+        $args[8] = str_repeat('b', 40);
+        $command = ['python3', ...$args];
+        foreach ([[0, 0], [7, 1], [false, 1], ['0', 1]] as [$exit, $expected]) {
+            file_put_contents($outer, json_encode(['docker_exit_code' => $exit], JSON_THROW_ON_ERROR));
             $result = $this->command($command);
             self::assertSame($expected, $result['exit'], $result['stderr']);
         }
+        unlink($outer);
+        self::assertSame(1, $this->command($command)['exit']);
+        file_put_contents($outer, '{"docker_exit_code":0}');
+        unlink($output . '/evidence.tar.gz');
+        self::assertSame(1, $this->command($command)['exit']);
+    }
+
+    public function test_outer_command_records_actual_docker_failure_after_it_returns(): void
+    {
+        $bin = $this->scratch . '/bin';
+        mkdir($bin);
+        file_put_contents($bin . '/docker', "#!/bin/sh\nif [ \"\$1\" = build ]; then exit 0; fi\nexit 7\n");
+        chmod($bin . '/docker', 0755);
+        $script = str_replace(['$$', '/workspace/runner-exit.json'], ['$', $this->scratch . '/runner-exit.json'],
+            $this->build()['steps'][1]['args'][1]);
+        $result = $this->command(['bash', '-c', $script], ['PATH' => $bin . ':' . getenv('PATH')]);
+        self::assertSame(7, $result['exit'], $result['stderr']);
+        self::assertSame(['docker_exit_code' => 7], json_decode(
+            (string) file_get_contents($this->scratch . '/runner-exit.json'), true, flags: JSON_THROW_ON_ERROR));
+    }
+
+    public function test_archive_creation_failure_cannot_leave_a_success_record_or_old_archive(): void
+    {
+        $source = $this->completeSource();
+        $output = $this->scratch . '/output';
+        $this->packageSource($source, $output);
+        $script = 'import importlib.util,json,sys; from unittest.mock import patch;'
+            . ' s=importlib.util.spec_from_file_location("ci",sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m);'
+            . "\n" . 'with patch.object(m.tarfile,"open",side_effect=OSError("private-archive-error")):'
+            . "\n" . ' print(json.dumps(m.package(sys.argv[2],sys.argv[3],0,"complete")))';
+        $result = $this->command(['python3', '-c', $script,
+            self::ROOT . '/deploy/cloudrun/browser-ci/package.py', $source, $output]);
+        self::assertSame(0, $result['exit'], $result['stderr']);
+        $record = json_decode($result['stdout'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertFalse($record['passed']);
+        self::assertTrue($record['packaging_failed']);
+        self::assertSame('complete', $record['last_stage']);
+        self::assertFileDoesNotExist($output . '/evidence.tar.gz');
+        self::assertStringNotContainsString('private-archive-error', (string) file_get_contents($output . '/result.json'));
     }
 
     public function test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure(): void
@@ -65,11 +111,14 @@ final class CloudRunBrowserCiContractTest extends TestCase
             'headers' => ['Authorization' => 'private-header-value'],
             'cookies' => [['value' => 'private-cookie-value']],
             'api_token' => 'private-token-value',
+            'apiKey' => 'private-api-key-alias',
+            'Proxy-Authorization' => 'private-auth-alias',
             'has_password' => true,
             'status' => 200,
         ], JSON_THROW_ON_ERROR));
         file_put_contents($evidence . '/synthetic.png', "\x89PNG\r\n\x1a\nsynthetic-fixture");
         file_put_contents($evidence . '/raw.log', 'private-raw-log');
+        file_put_contents($evidence . '/malformed.json', '{private-malformed-content');
         $outside = $this->scratch . '/outside.json';
         file_put_contents($outside, '{"outside":"private-outside-value"}');
         symlink($outside, $evidence . '/outside.json');
@@ -81,6 +130,7 @@ final class CloudRunBrowserCiContractTest extends TestCase
         self::assertFalse($record['passed']);
         self::assertSame(1, $record['exit_code']);
         self::assertSame('uploads', $record['last_stage']);
+        self::assertSame(1, $record['omitted_invalid_json_count']);
         self::assertSame(['browser/synthetic.json', 'browser/synthetic.png'], $record['artifacts']);
         $inspect = $this->command(['python3', '-c',
             'import sys,tarfile; a=tarfile.open(sys.argv[1]); print(a.extractfile("browser/synthetic.json").read().decode())',
@@ -173,6 +223,35 @@ final class CloudRunBrowserCiContractTest extends TestCase
             'https://example.invalid/v1/triggers/retroboards-main:webhook']);
         self::assertSame(1, $invalid['exit']);
         self::assertStringContainsString('expected Cloud Build endpoint', $invalid['stderr']);
+    }
+
+    private function completeSource(): string
+    {
+        $source = $this->scratch . '/complete-source';
+        $files = [
+            'browser/desktop/home.png' => "\x89PNG\r\n\x1a\nsynthetic",
+            'unified-notifications-and-settings/browser-results.json' => '{"completed":true}',
+            'image-upload-reliability/runtime-limits.json' => '{"php":"8.2.34"}',
+        ];
+        foreach (['desktop', 'mobile', 'webkit-mobile'] as $project) {
+            $files['image-upload-reliability/' . $project . '-published.png'] = "\x89PNG\r\n\x1a\nsynthetic";
+        }
+        foreach ($files as $name => $content) {
+            $path = $source . '/docs/evidence/' . $name;
+            if (!is_dir(dirname($path))) {
+                mkdir(dirname($path), 0700, true);
+            }
+            file_put_contents($path, $content);
+        }
+        return $source;
+    }
+
+    private function packageSource(string $source, string $output): void
+    {
+        $result = $this->command(['python3', self::ROOT . '/deploy/cloudrun/browser-ci/package.py',
+            '--source', $source, '--output', $output, '--exit-code', '0', '--stage', 'complete'],
+            ['CI_SOURCE_SHA' => str_repeat('a', 40), 'CI_CONTROL_SHA' => str_repeat('b', 40)]);
+        self::assertSame(0, $result['exit'], $result['stderr']);
     }
 
     /** @return array<string,mixed> */

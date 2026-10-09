@@ -3,30 +3,37 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import tarfile
 import tempfile
 from datetime import datetime, timezone
 
 ROOTS = ('browser', 'unified-notifications-and-settings', 'image-upload-reliability')
-PRIVATE_KEYS = {'env', 'environment', 'headers', 'cookies', 'storagestate'}
+PRIVATE_KEYS = {'env', 'environment', 'headers', 'cookies', 'storagestate', 'auth', 'authentication'}
+
+
+def private_key(key, item):
+    normalized = re.sub(r'[^a-z0-9]', '', key.lower())
+    return normalized in PRIVATE_KEYS or (any(word in normalized for word in
+        ('password', 'secret', 'token', 'apikey', 'authorization', 'credential', 'accesskey', 'privatekey', 'bearer'))
+        and not isinstance(item, bool))
 
 
 def redact(value):
     if isinstance(value, dict):
         return {key: redact(item) for key, item in value.items()
-                if key.lower() not in PRIVATE_KEYS
-                and not (any(word in key.lower() for word in ('password', 'secret', 'token'))
-                         and not isinstance(item, bool))}
+                if not private_key(key, item)}
     if isinstance(value, list):
         return [redact(item) for item in value]
     return value
 
 
-def package(source, output, exit_code, stage):
+def build_package(source, output, exit_code, stage):
     source, output = Path(source).resolve(), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     included = []
+    invalid_json = 0
     with tempfile.TemporaryDirectory(prefix='retroboards-ci-publish-') as scratch:
         scratch = Path(scratch)
         for name in ROOTS:
@@ -46,7 +53,12 @@ def package(source, output, exit_code, stage):
                 target = scratch / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 if path.suffix == '.json':
-                    target.write_text(json.dumps(redact(json.loads(path.read_text())), indent=2) + '\n')
+                    try:
+                        payload = redact(json.loads(path.read_text()))
+                    except (ValueError, UnicodeError):
+                        invalid_json += 1
+                        continue
+                    target.write_text(json.dumps(payload, indent=2) + '\n')
                 else:
                     data = path.read_bytes()
                     if not data.startswith(b'\x89PNG\r\n\x1a\n'):
@@ -69,17 +81,46 @@ def package(source, output, exit_code, stage):
                   'source_sha': os.environ.get('CI_SOURCE_SHA', ''),
                   'control_sha': os.environ.get('CI_CONTROL_SHA', ''),
                   'exit_code': exit_code, 'last_stage': stage,
-                  'passed': exit_code == 0 and stage == 'complete' and not missing,
+                  'passed': exit_code == 0 and stage == 'complete' and not missing and invalid_json == 0,
+                  'omitted_invalid_json_count': invalid_json,
                   'missing_required_artifacts': missing,
                   'artifact_count': len(included), 'artifacts': included,
                   'scope': 'Synthetic local databases and mailer; no production credentials',
                   'omitted': ['host environment', 'request headers/cookies', 'traces', 'raw logs']}
-        (output / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
-        with tarfile.open(output / 'evidence.tar.gz', 'w:gz') as archive:
-            archive.add(output / 'result.json', arcname='result.json')
+        # A successful public result may exist only after the complete archive.
+        staged_result = scratch / 'result.json'
+        staged_result.write_text(json.dumps(result, indent=2) + '\n')
+        temporary_archive = output / '.evidence.tar.gz.tmp'
+        with tarfile.open(temporary_archive, 'w:gz') as archive:
+            archive.add(staged_result, arcname='result.json')
             for relative in included:
                 archive.add(scratch / relative, arcname=relative)
+        os.replace(temporary_archive, output / 'evidence.tar.gz')
+        temporary_result = output / '.result.json.tmp'
+        temporary_result.write_text(staged_result.read_text())
+        os.replace(temporary_result, output / 'result.json')
     return result
+
+
+def package(source, output, exit_code, stage):
+    output = Path(output).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    for name in ('result.json', 'evidence.tar.gz', '.result.json.tmp', '.evidence.tar.gz.tmp'):
+        (output / name).unlink(missing_ok=True)
+    try:
+        return build_package(source, output, exit_code, stage)
+    except Exception:
+        # Preserve the actual suite stage, never exception text or private values.
+        for name in ('evidence.tar.gz', '.result.json.tmp', '.evidence.tar.gz.tmp'):
+            (output / name).unlink(missing_ok=True)
+        result = {'passed': False, 'exit_code': exit_code, 'last_stage': stage,
+                  'packaging_failed': True, 'artifact_count': 0, 'artifacts': [],
+                  'source_sha': os.environ.get('CI_SOURCE_SHA', ''),
+                  'control_sha': os.environ.get('CI_CONTROL_SHA', '')}
+        temporary = output / '.result.json.tmp'
+        temporary.write_text(json.dumps(result, indent=2) + '\n')
+        os.replace(temporary, output / 'result.json')
+        return result
 
 
 if __name__ == '__main__':
