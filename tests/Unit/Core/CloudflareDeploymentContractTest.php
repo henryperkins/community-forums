@@ -133,6 +133,25 @@ final class CloudflareDeploymentContractTest extends TestCase
         );
     }
 
+    /**
+     * Cloud SQL's certificate names only <uid>.<region>.sql.goog, which public
+     * DNS does not resolve. The entrypoint pins that name to DB_HOST_IP so the
+     * connection is verified by host name; the pin must exist before the
+     * boot-time migrate opens the first connection.
+     */
+    public function test_database_host_pin_reaches_the_container_before_migrations(): void
+    {
+        $worker = $this->read('worker/index.js');
+        $entrypoint = $this->read('deploy/entrypoint.sh');
+
+        self::assertStringContainsString('DB_HOST_IP: env.DB_HOST_IP', $worker);
+        self::assertStringContainsString('>> /etc/hosts', $entrypoint);
+        self::assertLessThan(
+            strpos($entrypoint, 'php /var/www/html/bin/console migrate'),
+            strpos($entrypoint, '>> /etc/hosts'),
+        );
+    }
+
     private function read(string $relativePath): string
     {
         $path = self::ROOT . '/' . $relativePath;

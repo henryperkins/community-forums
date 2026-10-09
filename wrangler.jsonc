@@ -33,10 +33,10 @@
       // 1/2 vCPU, 4 GiB, 8 GB disk. `basic` (1/4 vCPU, 1 GiB) also runs it but
       // leaves little headroom for Apache + PHP under concurrent renders.
       "instance_type": "standard-1",
-      // Pin the container to ENAM (current node ewr14). Added with the
-      // 2026-08-06 DB move to gcp-us-east4; since the 2026-09-12 cutover the
-      // database is in gcp-us-central1 again, so this pair is cross-region --
-      // see docs/runbooks/deployment-cloudflare.md §14 before changing either.
+      // Pin the container to ENAM (current node ewr14), next to the Cloud SQL
+      // instance in us-east4. A cross-region pair costs a WAN round trip per
+      // query -- see docs/runbooks/deployment-cloudflare.md §14 before
+      // changing either side.
       "constraints": {
         "regions": ["ENAM"]
       }
@@ -80,24 +80,26 @@
     "MAIL_FROM_NAME": "",
     "MAIL_TIMEOUT_SECONDS": "30",
 
-    // PlanetScale, reached over the public internet. Database `imladris-boards`
-    // (org `perkinism`), branch `main`, region gcp-us-central1 -- cut over
-    // 2026-09-12 from the previous account's `imladris-db`/`production-east`.
-    // Always use the region-scoped access host: the generic anycast host
-    // (gcp.connect.psdb.cloud) is not location-predictable and measured ~3x
-    // slower per query than gcp-us-central1.connect.psdb.cloud. The container
-    // is still pinned to ENAM (see §14 of the runbook for the latency cost of
-    // a cross-region pair). Only DB_PASSWORD is a secret (PlanetScale password
-    // `production-app`, role admin -- migrations run on boot). PlanetScale
-    // serves a publicly-trusted certificate, so the trust anchor is the distro
-    // CA bundle already in the image -- no DB_SSL_CA_PEM secret is needed.
-    "DB_HOST": "gcp-us-central1.connect.psdb.cloud",
+    // Google Cloud SQL for MySQL 8.4, reached over the public internet with
+    // TLS required. Instance `imladris-boards` in project
+    // `rising-woods-449718-v6`, region us-east4 (replaced PlanetScale
+    // `imladris-boards`, runbook §3). DB_HOST is the instance DNS name -- the
+    // only name its server certificate carries -- which public DNS does not
+    // resolve, so the entrypoint pins it to DB_HOST_IP in /etc/hosts. The
+    // certificate chains to the instance's Cloud SQL CA, not a public one:
+    // DB_SSL_CA_PEM (secret) holds that CA and the entrypoint writes it to
+    // DB_SSL_CA. DB_SSL_CA is set here, not derived, because cron commands
+    // exec() with these vars rather than the entrypoint's environment.
+    // DB_PASSWORD is a secret (Secret Manager `imladris-boards-app-password`);
+    // `retroboards_app` holds ALL on `retroboards`.* only -- migrations run on boot.
+    "DB_HOST": "d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog",
+    "DB_HOST_IP": "34.145.179.39",
     "DB_PORT": "3306",
-    "DB_DATABASE": "imladris-boards",
-    "DB_USERNAME": "jfi825th4rola9t3c6pw",
+    "DB_DATABASE": "retroboards",
+    "DB_USERNAME": "retroboards_app",
     "DB_EMULATE_PREPARES": "true",
     "DB_SSL": "true",
-    "DB_SSL_CA": "/etc/ssl/certs/ca-certificates.crt",
+    "DB_SSL_CA": "/run/db-ca.pem",
 
     // /data is an R2 mount -- the container filesystem does not survive restarts.
     "R2_BUCKET": "retroboards-data",
