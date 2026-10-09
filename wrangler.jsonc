@@ -27,35 +27,12 @@
     "not_found_handling": "none"
   },
 
-  // DORMANT since the Cloud Run move: nothing calls this container, so its
-  // instance sleeps and costs nothing. It stays declared only so `wrangler
-  // rollback` to a pre-move version still finds its Durable Object class. The
-  // DB_*/R2_* vars below feed only this container. Removal: runbook
-  // deployment-cloud-run.md §9.
-  "containers": [
-    {
-      "class_name": "ForumContainer",
-      "image": "./Dockerfile",
-      // The app is stateful and single-writer: one instance, always the same one.
-      "max_instances": 1,
-      // 1/2 vCPU, 4 GiB, 8 GB disk. `basic` (1/4 vCPU, 1 GiB) also runs it but
-      // leaves little headroom for Apache + PHP under concurrent renders.
-      "instance_type": "standard-1",
-      // Pin the container to ENAM (current node ewr14), next to the Cloud SQL
-      // instance in us-east4. A cross-region pair costs a WAN round trip per
-      // query -- see docs/runbooks/deployment-cloudflare.md §14 before
-      // changing either side.
-      "constraints": {
-        "regions": ["ENAM"]
-      }
-    }
+  // Preserve the creation record and delete the retired container's class.
+  // A pre-Cloud Run version now needs a new deploy instead of rollback (§9).
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ForumContainer"] },
+    { "tag": "v2", "deleted_classes": ["ForumContainer"] }
   ],
-
-  "durable_objects": {
-    "bindings": [{ "class_name": "ForumContainer", "name": "FORUM" }]
-  },
-
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ForumContainer"] }],
 
   // Wrangler manages the canonical Custom Domain only. The existing SaaS
   // route boards.hperkins.blog/* belongs to the candidary.online zone and is
@@ -78,62 +55,6 @@
     // callers with an ID token for this URL get in (worker/origin.mjs).
     "ORIGIN_URL": "https://retroboards-616731728350.us-east4.run.app",
 
-    "APP_ENV": "production",
-    "APP_DEBUG": "false",
-    "APP_URL": "https://forum.candidary.online",
-    "SESSION_SECURE": "true",
-    "SECURITY_HSTS": "true",
-    "MAIL_DRIVER": "cloudflare_smtp",
-    "MAIL_FROM": "noreply@candidary.online",
-    "MAIL_FROM_NAME": "",
-    "MAIL_TIMEOUT_SECONDS": "30",
-
-    // DORMANT CONTAINER ONLY from here down to RUN_MIGRATIONS: production's
-    // app settings live in deploy/cloudrun/env.yaml, and Cloud Run reaches the
-    // database through its authenticated connector.
-    //
-    // Google Cloud SQL for MySQL 8.4, reached over the public internet with
-    // TLS required. Instance `imladris-boards` in project
-    // `rising-woods-449718-v6`, region us-east4 (replaced PlanetScale
-    // `imladris-boards`, runbook §3). DB_SSL_VERIFY is false: the server
-    // certificate names only the instance DNS name
-    // (d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog), which public DNS does
-    // not resolve, and Cloudflare mounts /etc/hosts read-only, so the
-    // container connects by IP and cannot pass PDO's host-name check. The link
-    // is encrypted (the instance refuses plaintext) but the server is not
-    // authenticated.
-    // DB_SSL_CA_PEM (secret) holds the Cloud SQL CA, written to DB_SSL_CA;
-    // DB_SSL_CA is set here because cron commands exec() with these vars.
-    // DB_PASSWORD is a secret (Secret Manager `imladris-boards-app-password`);
-    // `retroboards_app` holds ALL on `retroboards`.* only -- migrations run on boot.
-    "DB_HOST": "34.145.179.39",
-    "DB_PORT": "3306",
-    "DB_DATABASE": "retroboards",
-    "DB_USERNAME": "retroboards_app",
-    "DB_EMULATE_PREPARES": "true",
-    "DB_SSL": "true",
-    "DB_SSL_CA": "/run/db-ca.pem",
-    "DB_SSL_VERIFY": "false",
-
-    // /data is an R2 mount -- the container filesystem does not survive restarts.
-    "R2_BUCKET": "retroboards-data",
-    "R2_ACCOUNT_ID": "a77e479f6736120eadd99973dbeb705e",
-    "UPLOADS_PATH": "/data/media",
-    "PACKAGES_STORAGE_PATH": "/data/packages",
-    // The single instance owns this ephemeral ledger; restart resets its limits.
-    "RATELIMIT_PATH": "/var/www/html/storage/ratelimit",
-
-    // The Worker overwrites X-Forwarded-For with the verified client IP, so the
-    // app must trust the hop it sees, or every request is attributed to one
-    // address and per-IP rate limiting collapses into a single global bucket.
-    // Apache logs the Cloudflare-side peer as 10.1.0.0; that address is not a
-    // documented stable value, so trust the private range that contains it.
-    // Safe here because the container has no public address (network mode is
-    // "private", assign_ipv4/assign_ipv6 both "none") -- the only thing that can
-    // reach it is the Worker, which discards any client-sent header first.
-    "TRUSTED_PROXIES": "10.0.0.0/8",
-
-    // Migrations run in the entrypoint on boot (single instance, no race).
-    "RUN_MIGRATIONS": "true"
+    "APP_URL": "https://forum.candidary.online"
   }
 }

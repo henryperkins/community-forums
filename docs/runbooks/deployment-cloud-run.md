@@ -6,8 +6,8 @@ lives in project `rising-woods-449718-v6` (number `616731728350`), region
 **us-east4**, next to the Cloud SQL instance.
 
 The Cloudflare **Worker** is still the front door: canonical host, static
-assets, the visitor's IP, and the domains. It and the dormant Cloudflare
-container are covered by [`deployment-cloudflare.md`](deployment-cloudflare.md).
+assets, the visitor's IP, and the domains. Its current procedure and the retired
+container's history are in [`deployment-cloudflare.md`](deployment-cloudflare.md).
 
 > **Merging to `main` deploys both halves.** Workers Builds deploys the Worker
 > and assets; the `retroboards-main` Cloud Build trigger builds the image from
@@ -42,7 +42,7 @@ Secrets (Secret Manager), read by the runtime account only:
 | --- | --- | --- |
 | `retroboards-app-key` | `APP_KEY` | Generated 2026-10-09 for the move; the container's key was unreadable (Cloudflare secrets are write-only) |
 | `imladris-boards-app-password` | `DB_PASSWORD` | `retroboards_app` |
-| `retroboards-cloudflare-email-token` | `CLOUDFLARE_EMAIL_API_TOKEN` | **Not created yet**, see §7 |
+| `retroboards-cloudflare-email-token` | `CLOUDFLARE_EMAIL_API_TOKEN` | Version 1 stored 2026-10-09; email-only account permission (§7) |
 | `retroboards-deploy-webhook` | — | The deploy webhook's shared secret (§5) |
 
 Service accounts, each holding only what it uses:
@@ -213,25 +213,61 @@ before the move.
 ## 7. Email
 
 Mail goes through Cloudflare's SMTP relay (`MAIL_DRIVER=cloudflare_smtp`) with
-an API token. The container's token could not be read back from Cloudflare.
-Until `retroboards-cloudflare-email-token` exists, the mailer reports itself
-unconfigured. `worker:email` then returns `sender_unconfigured` and the outbox
-**holds** every message. Nothing is dropped; it drains on the first tick after
-the token arrives.
+an account API token scoped to **Email Sending: Edit**. The old container token
+could not be read back from Cloudflare. A new email-only token was created on
+2026-10-09 and stored as version 1 of `retroboards-cloudflare-email-token` in
+Google Secret Manager. The `retroboards-app` runtime account has secret read
+access. Applying `configure.sh` wires that secret into the service and all four
+jobs; SMTP acceptance and delivery must be checked separately after a tick.
+
+If the mailer is unconfigured, `worker:email` returns `sender_unconfigured` and
+the outbox **holds** messages. After configuration, eligible queued messages
+are retried by scheduled ticks. A successful job alone does not prove SMTP
+acceptance or receipt; inspect the email worker result and delivery records.
+
+To rotate the token:
 
 1. Cloudflare dashboard → My Profile → API Tokens → Create Token → Custom. Add
-   the account permission **Email Sending: Edit** for the account that owns
+   only the account permission **Email Sending: Edit** for the account that owns
    `candidary.online`.
-2. Store it without echoing it:
+2. Add a version to the existing Google secret without echoing the token. Run
+   this Bash block; the subshell and exit trap clear the variable even if the
+   upload fails:
+
+   ```bash
+   (
+     set +x
+     set -o pipefail
+     trap 'unset retroboards_email_token' EXIT
+     IFS= read -rs -p 'Cloudflare Email Sending token: ' retroboards_email_token || exit 1
+     printf '\n'
+     [ -n "$retroboards_email_token" ] || exit 1
+     printf '%s' "$retroboards_email_token" | gcloud secrets versions add retroboards-cloudflare-email-token \
+       --project=rising-woods-449718-v6 --data-file=-
+   )
+   ```
+
+   For a new installation where the secret does not exist, replace the final
+   pipeline inside that same prompt block with:
+
+   ```bash
+   printf '%s' "$retroboards_email_token" | gcloud secrets create retroboards-cloudflare-email-token \
+     --project=rising-woods-449718-v6 --replication-policy=automatic --data-file=-
+   ```
+
+   Then grant runtime read access once:
 
    ```sh
-   read -rs TOKEN && printf %s "$TOKEN" | gcloud secrets create retroboards-cloudflare-email-token \
-     --replication-policy=automatic --data-file=- && unset TOKEN
    gcloud secrets add-iam-policy-binding retroboards-cloudflare-email-token \
+     --project=rising-woods-449718-v6 \
      --member=serviceAccount:retroboards-app@rising-woods-449718-v6.iam.gserviceaccount.com \
      --role=roles/secretmanager.secretAccessor
-   deploy/cloudrun/configure.sh        # picks the secret up for the service and jobs
    ```
+
+3. Run `deploy/cloudrun/configure.sh` to update the web service and every job.
+   Run or wait for a 5-minute tick (§4), then verify the worker result and mail
+   delivery before revoking the previous Cloudflare token. Keep token values
+   out of command arguments, logs and documentation.
 
 ## 8. Operations
 
@@ -283,58 +319,66 @@ encrypted end to end, but MySQL does not see it as a TLS session
 was verified after the change: a plaintext login is refused, while the
 connector and TLS paths succeed.
 
-## 9. Removing the dormant Cloudflare container
+## 9. Retiring the Cloudflare container and pre-move R2 uploads
 
-Nothing calls `ForumContainer` since the move, so it sleeps and costs nothing.
-It stays declared so `wrangler rollback` to a pre-move version still finds its
-Durable Object class. Remove it once the origin has proved itself, and only
-deliberately: **after this, rolling back to the container needs a new
-deploy, not `wrangler rollback`.**
+The owner approved retirement on 2026-10-09. Production has used Cloud Run
+since the move; the old `ForumContainer` and R2 bucket are no longer a recovery
+path. Deleting the Durable Object class removes its state, and deleting
+`retroboards-data` removes the pre-move uploads that were deliberately not
+migrated. Keep the Google Cloud Storage bucket
+`rising-woods-449718-v6-retroboards-data`, which holds current uploads.
 
-1. In one PR:
-   - delete the `ForumContainer` class and the `@cloudflare/containers`
-     dependency;
-   - remove the `containers` and `durable_objects` config, and the vars only
-     the container read (`DB_*`, `R2_*`, `UPLOADS_PATH`,
-     `PACKAGES_STORAGE_PATH`, `RATELIMIT_PATH`, `RUN_MIGRATIONS`, `MAIL_*`,
-     `SESSION_SECURE`, `SECURITY_HSTS`, `TRUSTED_PROXIES`, `APP_ENV`,
-     `APP_DEBUG`). Keep `APP_URL` and `ORIGIN_URL`;
-   - append the migration
-     `{ "tag": "v2", "deleted_classes": ["ForumContainer"] }`;
-   - update `CloudflareDeploymentContractTest`.
-2. After it deploys:
-   - `npx wrangler containers list`, then delete the `retroboards-forumcontainer`
-     application if it is still listed;
-   - `npx wrangler secret delete` the container-only secrets: `APP_KEY`,
-     `DB_PASSWORD`, `DB_SSL_CA_PEM`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
-     and `CLOUDFLARE_EMAIL_API_TOKEN`.
-3. The R2 bucket `retroboards-data` holds only pre-move uploads, which were
-   deliberately not migrated. Delete it when nobody needs them.
+The retirement change removes the `ForumContainer` class, the
+`@cloudflare/containers` dependency, the `containers` / `durable_objects`
+configuration, and all container-only Worker vars. `APP_URL`, `ORIGIN_URL`,
+static assets, canonical routing, and the empty cron list stay in the Worker.
+The migration history keeps `v1` and appends
+`{ "tag": "v2", "deleted_classes": ["ForumContainer"] }`. This deletion
+migration is irreversible; pre-retirement Worker versions are not supported
+rollback targets (§10).
 
-## 10. Rolling back to the Cloudflare container
+After the retirement commit deploys through Workers Builds:
 
-Only while §9 has not happened. `faf20758-ff41-415a-8d99-59f1605a43ef` is the
-last container-backed Worker version (PR #83).
+1. Verify the active Worker version, `/healthz`, pages and login, hashed static
+   assets, the `boards.hperkins.blog` redirect, and denial of unauthenticated
+   direct Cloud Run requests. Confirm the Cloud Run service and scheduler
+   still run normally.
+2. List Cloudflare container applications and delete `retroboards-forumcontainer`
+   if the deployment has not already removed it. Confirm it is absent.
+3. Delete the container-only Worker secrets: `APP_KEY`, `DB_PASSWORD`,
+   `DB_SSL_CA_PEM`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and
+   `CLOUDFLARE_EMAIL_API_TOKEN`. Keep `GCP_INVOKER_KEY`; Cloud Run's application
+   key and database password stay in Google Secret Manager. The old mail token
+   cannot be read back or copied into Google (§7).
+4. Delete the objects in the old R2 bucket `retroboards-data`, then delete the
+   bucket and confirm it is absent. The current Google bucket is a separate
+   resource and must remain.
 
-```sh
-npx wrangler rollback faf20758-ff41-415a-8d99-59f1605a43ef
-for j in 5m 6h 0310 0700; do gcloud scheduler jobs pause retroboards-cron-$j --location=us-east4; done
-```
+**Execution record:** source retirement is prepared; deployment and hosted
+resource deletion are pending verification. Record the active Worker version,
+container application absence, secret-name inventory, old R2 bucket absence,
+and post-cleanup production checks when complete.
 
-Then put back what the move changed:
+## 10. Recovery after container retirement
 
-- **Cron triggers are not part of a version.** Put the pre-move `crons` list
-  back into `wrangler.jsonc` (see `git show 16529ede:wrangler.jsonc`) and run
-  `npx wrangler triggers deploy` from the repository root.
-- **The database network.** The container reaches Cloud SQL by public IP over
-  TLS, and `0.0.0.0/0` was removed from the authorized networks on 2026-10-09.
-  Re-add it:
-  `gcloud sql instances patch imladris-boards --authorized-networks=0.0.0.0/0`.
-- **`APP_KEY` differs.** Data encrypted on Cloud Run (MFA secrets, OAuth and
-  package secrets) only decrypts under the new key. Give the container the same
-  one: `gcloud secrets versions access latest --secret=retroboards-app-key |
-  npx wrangler secret put APP_KEY`.
-- **Uploads made on Cloud Run** are in the Cloud Storage bucket, not in R2.
+Roll the PHP app back by switching Cloud Run traffic to a known-good revision
+and pinning all four cron jobs to its image (§3). Keep the current database,
+Secret Manager keys, and Cloud Storage uploads. A revision rollback does not
+undo additive migrations; the selected image must support the current schema.
+The next deploy sends traffic to its new revision again.
+
+For a Worker regression, inspect `npx wrangler deployments list` and choose a
+known-good version that includes the retirement migration and has no
+`ForumContainer` binding. A pre-retirement Worker version may depend on the
+deleted class, secrets and R2 data, so do not use it as a `wrangler rollback`
+target. If the needed code predates retirement, restore that code in a new
+commit with the current Cloud Run forwarding and retirement configuration,
+then deploy it through the normal `main` path.
+
+There is no one-command return to the old Cloudflare origin. Restoring a
+container origin would be a new hosting change requiring a fresh deployment,
+authenticated database access, storage and key configuration, and explicit
+scheduler handoff. Keep Cloud SQL's authorized networks closed during recovery.
 
 ## 11. Cost
 

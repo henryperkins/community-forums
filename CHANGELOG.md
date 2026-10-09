@@ -15,6 +15,16 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   - Uploads live on a Cloud Storage volume.
   - The cron workers run as Cloud Run jobs on the same UTC schedules.
   - A failed boot migration now leaves the previous revision serving.
+- Add an email-only Cloudflare Email Sending token to Google Secret Manager
+  with runtime read access, restoring the mail configuration path for Cloud
+  Run. The runbook documents safe token rotation through new secret versions
+  and separate SMTP acceptance/delivery verification.
+- Retire the unused Cloudflare container origin: remove its Worker class,
+  binding, dependency and app configuration, and append the Durable Object
+  deletion migration. Recovery now uses Cloud Run revisions; pre-retirement
+  Worker versions are no longer supported rollback targets. The approved
+  hosted container, old Worker secrets and pre-move R2 cleanup are tracked
+  separately in the Cloud Run runbook §9.
 - Close the database's public authorized network (`0.0.0.0/0`) and move it
   to `db-f1-micro`. Page latency did not change.
 - `DB_SOCKET` connects over a Unix socket in place of host and port. The

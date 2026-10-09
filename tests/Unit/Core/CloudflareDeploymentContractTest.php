@@ -10,17 +10,27 @@ final class CloudflareDeploymentContractTest extends TestCase
 {
     private const ROOT = __DIR__ . '/../../..';
 
-    public function test_worker_keeps_one_stateful_container_behind_the_production_custom_domain(): void
+    public function test_worker_keeps_the_production_custom_domain_without_the_retired_container(): void
     {
         $config = $this->read('wrangler.jsonc');
+        $worker = $this->read('worker/index.js');
+        $package = json_decode($this->read('package.json'), true, flags: JSON_THROW_ON_ERROR);
+        $lock = json_decode($this->read('package-lock.json'), true, flags: JSON_THROW_ON_ERROR);
 
         self::assertStringContainsString('"name": "retroboards"', $config);
-        self::assertStringContainsString('"class_name": "ForumContainer"', $config);
-        self::assertStringContainsString('"max_instances": 1', $config);
         self::assertStringContainsString('"pattern": "forum.candidary.online"', $config);
         self::assertStringContainsString('"custom_domain": true', $config);
+        self::assertStringNotContainsString('ForumContainer', $worker);
+        self::assertStringNotContainsString('@cloudflare/containers', $worker);
+        self::assertArrayNotHasKey('@cloudflare/containers', $package['dependencies']);
+        self::assertArrayNotHasKey('@cloudflare/containers', $lock['packages']['']['dependencies']);
+        self::assertArrayNotHasKey('node_modules/@cloudflare/containers', $lock['packages']);
+        foreach (['APP_KEY', 'DB_PASSWORD', 'DB_SSL_CA_PEM', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'CLOUDFLARE_EMAIL_API_TOKEN'] as $secret) {
+            self::assertStringNotContainsString($secret, $worker);
+        }
         // SaaS zone-route ownership and the resulting Wrangler trigger inputs
-        // are checked with Wrangler's real config parser in
+        // plus migration continuity and the removed bindings/vars are checked
+        // with Wrangler's real config parser in
         // tests/worker/deployment-routes.test.mjs (runbook §16).
         self::assertStringNotContainsString('"pattern": "*/*"', $config);
     }
@@ -76,93 +86,6 @@ final class CloudflareDeploymentContractTest extends TestCase
 
     // Asset routing/cache semantics run against actual Requests/Responses and
     // the Workers Assets binding in `npm run test:assets` (tests/worker/).
-
-    public function test_worker_allows_cold_start_time_for_mounts_and_migrations(): void
-    {
-        $worker = $this->read('worker/index.js');
-
-        self::assertStringContainsString('startAndWaitForPorts', $worker);
-        self::assertStringContainsString('instanceGetTimeoutMS: 120_000', $worker);
-
-        // Readiness is deliberately NOT given a cold-start-sized window. The SDK
-        // retries the probe every 300ms for the whole duration, so a long window
-        // does not rescue a broken boot -- it floods the container instead.
-        self::assertStringContainsString('portReadyTimeoutMS: 30_000', $worker);
-    }
-
-    /**
-     * Regression: readiness probed `GET /`, which this app answers with a 302 to
-     * /setup. The Workers fetch follows redirects, so a single probe cost two
-     * full PHP+MySQL renders and exceeded the SDK's fixed 5s PING_TIMEOUT_MS.
-     * The container was never marked ready and every request hung.
-     */
-    public function test_readiness_probe_targets_a_static_file_not_an_app_route(): void
-    {
-        $worker = $this->read('worker/index.js');
-        $vhost = $this->read('deploy/apache-vhost.conf');
-
-        self::assertStringContainsString('pingEndpoint = "ping/ping.txt"', $worker);
-        self::assertFileExists(self::ROOT . '/public/ping.txt');
-
-        // Apache only rewrites to index.php when the target does not exist, so a
-        // real file under public/ is served without entering PHP at all.
-        self::assertStringContainsString('RewriteCond %{REQUEST_FILENAME} !-f', $vhost);
-    }
-
-    /**
-     * Regression: exec() starts with an almost empty environment (HOME, PATH,
-     * PWD) rather than inheriting the variables handed to the container, so the
-     * cron workers ran with no DB_* configuration until this was passed through.
-     */
-    public function test_cron_console_commands_receive_the_container_environment(): void
-    {
-        $worker = $this->read('worker/index.js');
-
-        self::assertMatchesRegularExpression(
-            '/exec\(\s*\["php", CONSOLE, \.\.\.args\],\s*\{\s*env: this\.envVars,/',
-            $worker,
-        );
-        // output() buffers stdout/stderr as ArrayBuffers, not strings.
-        self::assertStringContainsString('new TextDecoder()', $worker);
-    }
-
-    public function test_container_boot_requires_persistent_storage_and_migrates_before_apache(): void
-    {
-        $dockerfile = $this->read('Dockerfile');
-        $apacheVhost = $this->read('deploy/apache-vhost.conf');
-        $entrypoint = $this->read('deploy/entrypoint.sh');
-
-        self::assertStringContainsString('s3fs', $dockerfile);
-        self::assertStringContainsString('EXPOSE 8080', $dockerfile);
-        self::assertStringContainsString('ErrorLog /var/log/apache2/error.log', $apacheVhost);
-        self::assertStringContainsString('CustomLog /var/log/apache2/access.log combined', $apacheVhost);
-        self::assertStringContainsString('rm -f /var/log/apache2/error.log', $dockerfile);
-        self::assertStringContainsString('tail -n 0 -F /var/log/apache2/error.log', $entrypoint);
-        self::assertStringContainsString(': "${R2_ACCESS_KEY_ID:', $entrypoint);
-        self::assertStringContainsString(': "${R2_SECRET_ACCESS_KEY:', $entrypoint);
-        self::assertStringContainsString('php /var/www/html/bin/console migrate', $entrypoint);
-        self::assertLessThan(
-            strpos($entrypoint, 'exec docker-php-entrypoint'),
-            strpos($entrypoint, 'php /var/www/html/bin/console migrate'),
-        );
-    }
-
-    /**
-     * Cloudflare mounts /etc/hosts read-only, so the entrypoint cannot pin
-     * Cloud SQL's certificate name to its IP; booting died on the attempt.
-     * Until the Auth Proxy lands, the Worker must forward DB_SSL_VERIFY or the
-     * by-IP connection fails PDO's host-name check (runbook §3).
-     */
-    public function test_database_tls_settings_reach_the_container_and_hosts_stays_untouched(): void
-    {
-        $worker = $this->read('worker/index.js');
-        $entrypoint = $this->read('deploy/entrypoint.sh');
-
-        foreach (['DB_SSL', 'DB_SSL_CA', 'DB_SSL_CA_PEM', 'DB_SSL_VERIFY'] as $var) {
-            self::assertStringContainsString($var . ': env.' . $var, $worker);
-        }
-        self::assertStringNotContainsString('/etc/hosts', $entrypoint);
-    }
 
     private function read(string $relativePath): string
     {

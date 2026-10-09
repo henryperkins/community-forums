@@ -1,17 +1,18 @@
-# RetroBoards — Cloudflare Containers deployment runbook
+# RetroBoards — Cloudflare Worker deployment and retired container history
 
-Operating procedure for the Cloudflare deployment defined by `wrangler.jsonc`,
-`worker/index.js`, `Dockerfile`, and `deploy/`, with `wrangler` authenticated
-against the account that owns the zone.
+Operating procedure for the Cloudflare Worker defined by `wrangler.jsonc` and
+`worker/index.js`, with `wrangler` authenticated against the account that owns
+the zone. The PHP image and jobs deploy separately on Google Cloud Run.
 
-> **Since 2026-10-09 the app runs on Google Cloud Run, not in the container**
-> (ADR 0047, [`deployment-cloud-run.md`](deployment-cloud-run.md)). This
-> runbook still owns the Worker, its assets, the canonical-host policy and the
-> domains (§7, §8, §16). The container sections (§1, §4–§6, §9, §10) describe
-> the **dormant** `ForumContainer`. It stays declared, unused and asleep, so
-> `wrangler rollback` keeps working until it is removed (Cloud Run runbook §9,
-> rollback in §10 there). Merging to `main` now deploys the Worker here *and*
-> the image to Cloud Run.
+> **Since 2026-10-09 the app runs on Google Cloud Run** (ADR 0047,
+> [`deployment-cloud-run.md`](deployment-cloud-run.md)). The owner approved
+> retiring the unused Cloudflare container and pre-move R2 bucket that day.
+> This runbook owns the Worker, static assets, canonical-host policy and domains
+> (§7, §8, §16). Container examples in §1–§6, §9–§11 and the older deployment
+> records are **retired history**, not deploy or recovery instructions. The
+> current Worker has no `ForumContainer` binding, and the class deletion means
+> a pre-retirement Worker is not a supported rollback target (§12). Hosted
+> cleanup evidence is tracked in the Cloud Run runbook §9.
 
 > **Merging to `main` IS the deploy.** Production is built and released by a
 > git-connected **Workers Builds** pipeline watching `main`. There is no manual
@@ -20,9 +21,9 @@ against the account that owns the zone.
 > still comments "Deployment successful" on the PR and the dashboard URL still
 > contains `/production/`, so treat neither as evidence that a branch went live.
 >
-> **Corrected 2026-08-27. This box previously said the opposite**, and following
-> it now would cause the outage it warned about. It directed every `wrangler`
-> command at the worktree `.worktrees/cloudflare-production-20260804` (branch
+> **Historical build-path correction, 2026-08-27.** This box previously said
+> the opposite; its obsolete instruction would have shipped stale code. It
+> directed every `wrangler` command at the worktree `.worktrees/cloudflare-production-20260804` (branch
 > `deploy/cloudflare-production-20260804`). That branch is **~47 commits behind
 > `main`** and is no longer the deploy path, so deploying from it would ship a
 > stale Worker *and* rebuild the container image from stale source — the same
@@ -42,30 +43,17 @@ against the account that owns the zone.
 > "the main checkout's copies are older and uncommitted" hazard is also gone.
 >
 > `wrangler` is still the right tool for reading and for recovery —
-> `wrangler tail`, `containers list`, `deployments list`, `rollback` (§12). Run
-> those from the main checkout, whose config now matches what is deployed.
+> `wrangler tail`, `deployments list`, and supported Worker `rollback` (§12).
+> Run those from the main checkout with the current configuration. Container
+> commands are only for the retirement cleanup, not the production origin.
 >
-> **Before merging**, since production rebuilds the image from source on every
-> merge: confirm that
-> `git diff --name-only origin/main...HEAD -- database/migrations/` is empty. A
-> migration makes the entrypoint's `RUN_MIGRATIONS=true` live, and a failure there
-> aborts the boot rather than serving. **Three dots, run from the PR branch** —
-> two named refs (`<base> origin/main`) compare `main` with itself and report a
-> migration on your branch as absent, which is the one answer this check must
-> never get wrong. Confirm too that `wrangler.jsonc`,
-> `worker/`, `Dockerfile` and `deploy/` are untouched — `ForumContainer.
-> pingEndpoint` must stay a static file (see §6). Propagation is not instant:
-> container provisioning is asynchronous, so the edge keeps serving the previous
-> assets for minutes after the merge commit lands, and a single Cloudflare `1101`
-> during the swap is normal.
-
-> **Cloudflare cannot host the whole stack.** Workers runs JavaScript, Python and
-> WebAssembly — not PHP — so the application runs as a *container* fronted by a
-> Worker. Cloudflare has no managed MySQL: D1 is SQLite, and Hyperdrive is a
-> Workers binding that PDO cannot use. The schema carries **213 `FOREIGN KEY`
-> constraints** and **2 InnoDB `FULLTEXT` indexes**, so it needs a real MySQL 8 or
-> MariaDB from another provider. **The database is the one piece that is not on
-> Cloudflare, and there is no way around that.**
+> **Before merging**, inspect migrations with
+> `git diff --name-only origin/main...HEAD -- database/migrations/` (three dots,
+> from the PR branch). Cloud Run runs them on boot; a failed startup leaves the
+> previous revision serving. A half-applied DDL statement remains applied.
+> Workers Builds and Cloud Build deploy independently, so verify the active
+> Worker, Cloud Run revision and asset hashes after each release (Cloud Run
+> runbook §3). The Worker no longer builds or provisions a PHP container.
 
 ## 1. What the deployment looks like
 
@@ -73,7 +61,7 @@ against the account that owns the zone.
 > requests to Cloud Run (`worker/origin.mjs`), and `/data`, migrations, cron and
 > the database link work as in
 > [`deployment-cloud-run.md`](deployment-cloud-run.md) §1–§4. The list below is
-> the container origin the Worker no longer calls.
+> the retired container origin the Worker no longer calls.
 
 - **Worker** (`worker/index.js`) on a Custom Domain, so all paths route to it.
   It rewrites the client-IP header and forwards every request to the container.
@@ -97,6 +85,9 @@ against the account that owns the zone.
   internet **with TLS** (`DB_SSL=true`).
 
 ## 2. Outbound MySQL — settled, it works
+
+> **Retired container history.** Production uses the authenticated Cloud SQL
+> connector; do not reproduce the public-IP connection described below.
 
 Cloudflare never affirmatively documents arbitrary TCP egress from containers
 (`enableInternet` is described purely in terms of HTTP), so this was the open
@@ -124,13 +115,17 @@ dozens of queries, so pages render in ~3s. See §14.
 
 ## 3. Provision the database
 
+> **Historical provisioning record.** The commands and container settings below
+> document earlier deployments. Current connector access, closed authorized
+> networks and database operations are in the Cloud Run runbook §8.
+
 Any managed MySQL 8 / MariaDB with a public TLS endpoint. Two requirements the
 schema imposes:
 
 - **Foreign keys.** 198 constraints once migrated.
 - **InnoDB `FULLTEXT`.** `ft_threads_title` and `ft_posts_body` back search.
 
-### Google Cloud SQL (current deployment, created 2026-10-09)
+### Google Cloud SQL (container cutover history, 2026-10-09)
 
 Cloud SQL for MySQL, instance **`imladris-boards`** in project
 **`rising-woods-449718-v6`** (connection name
@@ -194,9 +189,9 @@ gcloud sql databases create retroboards --instance imladris-boards --charset=utf
   plaintext, but a man-in-the-middle on the path could present its own
   certificate and read the password. **Resolved by the Cloud Run move:**
   production now uses Cloud Run's built-in connector, which authenticates the
-  instance over mTLS with IAM. The by-IP link survives only in the dormant
-  container's config, so the `0.0.0.0/0` authorized network was removed after
-  the cutover. A rollback to the container has to re-add it (Cloud Run
+  instance over mTLS with IAM. The by-IP link is retired, and the
+  `0.0.0.0/0` authorized network was removed after the cutover. Recovery uses
+  Cloud Run revisions and keeps authorized networks closed (Cloud Run
   runbook §10).
 - **No Vitess:** the schema-propagation race below does not exist here, and
   `SchemaRaceRetry` is inert (it keys off `SELECT VERSION()`).
@@ -275,6 +270,9 @@ a region close to where the container will run.
 
 ## 4. Create the R2 bucket
 
+> **Retired container procedure.** These examples no longer configure or deploy
+> production. Use the Cloud Run runbook for the image, storage and secrets.
+
 ```sh
 npx wrangler r2 bucket create retroboards-data
 ```
@@ -287,6 +285,9 @@ Keep this bucket **private**. Attachments are authorization-gated in PHP
 bypass `BoardPolicy` entirely and serve private-board attachments to anyone.
 
 ## 5. Configure vars and secrets
+
+> **Retired container procedure.** These examples no longer configure or deploy
+> production. Use the Cloud Run runbook for the image, storage and secrets.
 
 Edit the `vars` block in `wrangler.jsonc`: `APP_URL`, the `DB_*` host/port/name/
 user, `R2_BUCKET`, `R2_ACCOUNT_ID`, and the `routes` pattern. Changing `APP_URL`
@@ -313,6 +314,9 @@ perform. The email token needs **Email Sending: Edit** on the account that owns
 the already-onboarded `candidary.online` sending domain.
 
 ## 6. Deploy
+
+> **Retired container procedure.** These examples no longer configure or deploy
+> production. Use the Cloud Run runbook for the image, storage and secrets.
 
 **The normal path is to merge to `main`.** Workers Builds runs `npm ci`, then its
 configured build command, then the deploy — no local step.
@@ -485,6 +489,15 @@ Local evidence proves a Docker-volume restart, not R2 durability or an actual iP
 
 ## 7. Fix the client IP (do not skip)
 
+The Worker replaces client `X-Forwarded-For` with `CF-Connecting-IP` before
+forwarding to the IAM-protected Cloud Run service. Current proxy ranges and
+header behavior are in [`deployment-cloud-run.md`](deployment-cloud-run.md)
+§2 and `deploy/cloudrun/env.yaml`.
+
+> **Historical container peer measurement.** The private `10.0.0.0/8` trust
+> below belonged to the retired Cloudflare container. Do not use it to configure
+> Cloud Run.
+
 `RateLimitService` keys per-IP, and `App\Security\ClientIdentifier` only honours
 `X-Forwarded-For` when the immediate peer is listed in `TRUSTED_PROXIES`. With
 `TRUSTED_PROXIES` empty, **every request is attributed to one Cloudflare address
@@ -522,7 +535,7 @@ Zone settings, all of which matter to this app specifically:
 - **Static assets** are built by `npm run build`, described by
   `config/assets.json`, and staged under `.build/static` for Workers Static
   Assets. The Worker serves allowlisted `/assets/*` without invoking the PHP
-  container. Content-hashed CSS, JS and fonts receive
+  origin. Content-hashed CSS, JS and fonts receive
   `public, max-age=31536000, immutable`; mutable source URLs revalidate.
   Conditional requests retain `304` behavior. The PHP layout and preload
   headers use the same manifest as the Worker. `/brand.css` and `/theme/*.css`
@@ -567,7 +580,7 @@ Zone settings, all of which matter to this app specifically:
 > (`"crons": []`, which is what removes deployed ones; a missing key would not).
 > The same schedules run as Cloud Run jobs on Cloud Scheduler:
 > [`deployment-cloud-run.md`](deployment-cloud-run.md) §4. What follows
-> describes the dormant container's `runConsole()` path.
+> describes the retired container's `runConsole()` path.
 
 `worker/index.js` mapped cron expressions to `bin/console` commands:
 
@@ -598,6 +611,9 @@ content to process. Check **Cron Events** after the first `*/5` tick.
 
 ## 10. Known caveats
 
+> **Retired container caveats.** Current origin operation and email setup are in
+> the Cloud Run runbook §7–§8.
+
 - **Cold starts.** `sleepAfter` is `1h` and the cron ticks keep the instance
   warm, but after a genuine idle period the first request pays image start,
   Apache boot, and migrations.
@@ -620,8 +636,7 @@ content to process. Check **Cron Events** after the first `*/5` tick.
 ## 11. Cost
 
 > Current costs are in [`deployment-cloud-run.md`](deployment-cloud-run.md)
-> §11. The dormant container costs nothing while it sleeps. The table below
-> is the container-era estimate.
+> §11. The table below is the retired container-era estimate.
 
 Rough monthly figures from published rates, always-on:
 
@@ -636,25 +651,35 @@ Rough monthly figures from published rates, always-on:
 
 ## 12. Rolling back
 
-To go back from Cloud Run to the container, follow
-[`deployment-cloud-run.md`](deployment-cloud-run.md) §10. A Worker rollback
-alone does not restore cron triggers, the database network or the container's
-`APP_KEY`. To roll back the app itself, revert the Cloud Run revision (§3
-there).
+Roll the PHP app back through Cloud Run revisions and pin all cron jobs to the
+same image ([`deployment-cloud-run.md`](deployment-cloud-run.md) §3, §10).
+Keep the current schema, Secret Manager keys and Google storage.
 
-`wrangler deployments list` / `wrangler rollback` revert the Worker. **A rollback
-does not undo migrations** — they are additive and forward-only, and
-`migrate:rollback` is greenfield-only. Do not delete container images that older
-Worker versions still reference (`wrangler containers images delete` breaks those
-versions).
+`wrangler deployments list` / `wrangler rollback` recover the Worker only.
+Choose a known-good version that includes the retirement migration and has no
+`ForumContainer` binding. The `v2` Durable Object deletion is irreversible;
+older versions that need the deleted class, old secrets or R2 data are not
+supported rollback targets. Restore earlier code in a new commit with the
+current Cloud Run forwarding/configuration if necessary.
+
+A rollback does not undo migrations: they are additive and forward-only, and
+`migrate:rollback` is greenfield-only. Returning to a container origin would
+require a new hosting deployment, not a Worker rollback.
 
 ## 13. Backups
 
-R2 holds uploads; the database is the provider's responsibility. `tests/backup/
-rehearse.sh` rehearses restore against a throwaway database. Point off-site dumps
-at a second R2 bucket over the S3 API — egress is free.
+Current uploads and package storage live in Google Cloud Storage, and Cloud
+SQL owns database backups (Cloud Run runbook §1, §8, §11). The R2 bucket
+`retroboards-data` held only pre-move uploads and is covered by the approved
+retirement (§9 there); it must not be used as a backup of current uploads.
+`tests/backup/rehearse.sh` rehearses restore against a throwaway database.
 
 ## 14. Measured latency — the open performance problem
+
+> **Historical measurements and optimization record.** The production origin
+> and database have since moved to us-east4; current measurements are in the
+> Cloud Run runbook §11. Host, region, R2 and Worker-env references below
+> describe the container deployment at the recorded dates.
 
 **Repository optimization work, 2026-09-20:** the September account cutover
 in §15 supersedes the August placement below. The checked-in database host is
@@ -857,12 +882,16 @@ delete the old branch until parity and backup evidence are complete.
 ### Cloud Run origin — EXECUTED 2026-10-09
 
 The app moved off this container onto Cloud Run (ADR 0047). The Worker forwards
-to it with an ID token; the container is dormant. Everything about the origin
-is in [`deployment-cloud-run.md`](deployment-cloud-run.md). Of the Cloud SQL
-notes below, the by-IP, `DB_SSL_VERIFY=false` link now serves only the dormant
-container. Cloud Run uses the connector.
+to it with an ID token. The owner approved retiring the old container and R2
+uploads the same day; source retirement removes the class and binding, while
+hosted cleanup evidence is tracked in
+[`deployment-cloud-run.md`](deployment-cloud-run.md) §9. Cloud Run uses the
+authenticated connector. The cutover records below are historical.
 
 ### Cloud SQL cutover — EXECUTED 2026-10-09
+
+> **Historical container cutover.** First-run setup and the Cloud Run move
+> subsequently superseded this temporary public-IP origin configuration.
 
 Instance, database, user and schema are described in §3. Secrets set with
 `wrangler secret put`: `DB_PASSWORD` (from Secret Manager
@@ -1082,10 +1111,11 @@ and leaves the independently provisioned zone route in place. Adding even an
 in-zone route would resume the bulk replacement and could remove the alias.
 `tests/worker/deployment-routes.test.mjs` checks the parsed Wrangler inputs.
 
-This failure happens after the Worker upload and container application update.
-It does **not** roll those changes back. Check the active Worker version,
-container image and `/healthz` even when Workers Builds marks the deploy failed;
-a successful alias redirect alone does not prove the container is healthy.
+The 2026-10-07 failure happened after the Worker upload and container
+application update, without rolling either back. A failed Workers Build can
+still have uploaded a Worker: check the active Worker version, `/healthz` and
+the independently deployed Cloud Run revision. A successful alias redirect
+alone does not prove the origin is healthy.
 
 The same investigation on 2026-10-07 found a separate startup outage:
 the container mounted R2 successfully, then boot-time migrations failed with

@@ -47,8 +47,10 @@ and a deploy path to maintain.
 - Configuration is code. `deploy/cloudrun/env.yaml` holds the non-secret
   environment, and `configure.sh` converges the service, jobs, schedules and
   trigger. Secrets live in Secret Manager.
-- The Cloudflare container stays declared but unused until it is removed
-  deliberately, so `wrangler rollback` keeps working in the meantime.
+- The container was initially retained unused for a rollback window. The owner
+  approved retirement on 2026-10-09: remove its Worker class, binding, dependency
+  and configuration, apply the Durable Object deletion migration, and delete
+  the old container resources and pre-move R2 uploads (runbook §9).
 
 ## Consequences
 
@@ -68,8 +70,14 @@ and a deploy path to maintain.
 - `APP_KEY` was regenerated. Rows encrypted under the old key (MFA, OAuth or
   package secrets set up after the 2026-10-09 setup) no longer decrypt; the
   owner accepted starting fresh.
-- Open: email needs a new Cloudflare Email Sending token in Secret Manager
-  (until then the outbox holds mail). The dormant container should be
-  removed after a soak (runbook §9). The `0.0.0.0/0` authorized network was
-  removed right after the cutover, so only connector and Auth Proxy traffic
-  reaches the database.
+- Retirement removes the old container rollback path irreversibly. Recovery
+  uses a Cloud Run revision and its corresponding cron images, retaining the
+  current schema, keys and Google storage. Worker rollbacks must use versions
+  without the retired class binding (runbook §10). Hosted resource deletion is
+  pending verification in the runbook execution record.
+- An email-only Cloudflare Email Sending token was stored in Secret Manager
+  on 2026-10-09 with runtime read access. Configuration rollout and SMTP
+  acceptance are verified separately (runbook §7); an unconfigured sender
+  retains queued mail.
+- The `0.0.0.0/0` authorized network was removed right after the cutover, so
+  only connector and Auth Proxy traffic reaches the database.
