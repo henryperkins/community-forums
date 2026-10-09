@@ -1,0 +1,11 @@
+{
+  "received_at_utc": "2026-10-09T07:07:47.000Z",
+  "subject_matches": true,
+  "from_expected_domain": true,
+  "in_inbox": true,
+  "spf_pass": true,
+  "dkim_pass": true,
+  "dmarc_pass": true,
+  "recipient_redacted": true,
+  "production_configuration_used": true
+}

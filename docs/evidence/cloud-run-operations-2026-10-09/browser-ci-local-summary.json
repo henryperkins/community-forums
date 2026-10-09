@@ -1,0 +1,12 @@
+{
+  "scope": "Local source and synthetic runner checks; not hosted suite execution",
+  "php": "8.2.34",
+  "node": "24.21.0",
+  "docker_compose": "2.40.3",
+  "nested_docker_command_passed": true,
+  "chromium_launch_passed": true,
+  "webkit_launch_passed": true,
+  "contract_tests": 7,
+  "contract_assertions": 53,
+  "hosted_lane_result": "pending"
+}

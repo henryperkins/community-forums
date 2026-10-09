@@ -18,7 +18,11 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Add an email-only Cloudflare Email Sending token to Google Secret Manager
   with runtime read access, restoring the mail configuration path for Cloud
   Run. The runbook documents safe token rotation through new secret versions
-  and separate SMTP acceptance/delivery verification.
+  and separate provider acceptance/recipient verification.
+- Use the existing Cloudflare REST mailer in production after the SMTP relay
+  accepted authentication but rejected the sender envelope. A native operator
+  test using permanent configuration was accepted and received in the intended
+  inbox with SPF, DKIM and DMARC passing.
 - Make the SMTP transport compatible with production's PHP 8.2 runtime while
   retaining TLS verification and provider message IDs. Capture server replies
   without collecting verbose transport traces.
@@ -31,6 +35,18 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   Production routes, all 64 published asset hashes, guest browser rendering
   and a scheduled 5-minute tick are verified in the Cloud Run runbook §9 and
   linked evidence.
+- Add operational Monitoring alerts with a 15-minute aggregate collector,
+  including missed scheduled ticks, due outbox age and backup health. The actual
+  mail-failure policy fired and its notification reached the owner inbox.
+- Rehearse an isolated Cloud SQL backup restore, current storage copy and APP_KEY
+  recovery, then remove all scratch resources. Retain the successful backup;
+  current upload content was empty, so nonempty byte coverage used a synthetic
+  scratch fixture.
+- Add a restricted Cloud Build browser evidence fallback while GitHub Actions
+  cannot start jobs because of an account billing lock. It runs the existing
+  capture, unified settings and production-Docker upload suites, with private
+  expiring synthetic artifacts and no production credentials. Hosted receipts
+  are tracked separately from local source checks.
 - Close the database's public authorized network (`0.0.0.0/0`) and move it
   to `db-f1-micro`. Page latency did not change.
 - `DB_SOCKET` connects over a Unix socket in place of host and port. The

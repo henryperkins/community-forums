@@ -41,13 +41,27 @@ def build_config(control_sha):
 
 def hook_target(old_url, old_id, new_id):
     parsed = urlsplit(old_url)
-    expected = f'/v1/projects/{PROJECT}/locations/{REGION}/triggers/{old_id}:webhook'
-    if parsed.scheme != 'https' or parsed.hostname != 'cloudbuild.googleapis.com' or parsed.path != expected:
+    prefix = f'/v1/projects/{PROJECT}/locations/{REGION}/triggers/'
+    expected = {f'{prefix}{identifier}:webhook' for identifier in (old_id, 'retroboards-main')}
+    if parsed.scheme != 'https' or parsed.netloc != 'cloudbuild.googleapis.com' or parsed.path not in expected:
         raise ValueError('Existing deploy hook is not the expected Cloud Build endpoint')
     path = f'/v1/projects/{PROJECT}/locations/{REGION}/triggers/{new_id}:webhook'
     query = parse_qsl(parsed.query, keep_blank_values=True)
     query = [(key, new_id if key == 'trigger' else value) for key, value in query]
     return urlunsplit((parsed.scheme, parsed.netloc, path, urlencode(query), ''))
+
+
+def hook_pages(raw):
+    """gh 2.46 paginates as consecutive JSON arrays; --slurp is newer."""
+    decoder = json.JSONDecoder()
+    hooks = []
+    while raw.strip():
+        page, end = decoder.raw_decode(raw.lstrip())
+        if not isinstance(page, list) or any(not isinstance(hook, dict) for hook in page):
+            raise ValueError('Unexpected webhook page shape; private response omitted')
+        hooks.extend(page)
+        raw = raw.lstrip()[end:]
+    return hooks
 
 
 def configure(control_sha, apply=False):
@@ -61,9 +75,9 @@ def configure(control_sha, apply=False):
     if not apply:
         return {'plan': plan, 'build': config}
     deploy = json.loads(gc('builds', 'triggers', 'describe', 'retroboards-main', f'--region={REGION}', '--format=json'))
-    pages = json.loads(invoke(['gh', 'api', f'repos/{REPO}/hooks', '--paginate', '--slurp']))
-    hooks = [hook for page in pages for hook in page]
-    deploy_hooks = [h for h in hooks if urlsplit(h.get('config', {}).get('url', '')).path.endswith(f"/{deploy['id']}:webhook")]
+    hooks = hook_pages(invoke(['gh', 'api', f'repos/{REPO}/hooks', '--paginate']))
+    deploy_hooks = [h for h in hooks if any(urlsplit(h.get('config', {}).get('url', '')).path.endswith(f'/{identifier}:webhook')
+                                         for identifier in (deploy['id'], 'retroboards-main'))]
     if len(deploy_hooks) != 1:
         raise RuntimeError('Exactly one existing main deployment webhook is required')
     if gc('iam', 'service-accounts', 'describe', SA, '--format=json', optional=True) is None:
@@ -92,7 +106,8 @@ def configure(control_sha, apply=False):
         gc('builds', 'triggers', 'import', f'--source={path}', f'--region={REGION}')
         current = json.loads(gc('builds', 'triggers', 'describe', TRIGGER, f'--region={REGION}', '--format=json'))
         target = hook_target(deploy_hooks[0]['config']['url'], deploy['id'], current['id'])
-        matches = [h for h in hooks if urlsplit(h.get('config', {}).get('url', '')).path.endswith(f"/{current['id']}:webhook")]
+        matches = [h for h in hooks if any(urlsplit(h.get('config', {}).get('url', '')).path.endswith(f'/{identifier}:webhook')
+                                          for identifier in (current['id'], TRIGGER))]
         if len(matches) > 1:
             raise RuntimeError('Duplicate browser CI webhooks; inspect privately before changing them')
         payload = {'name': 'web', 'active': True, 'events': ['push'], 'config': {'url': target, 'content_type': 'json', 'insecure_ssl': '0'}}

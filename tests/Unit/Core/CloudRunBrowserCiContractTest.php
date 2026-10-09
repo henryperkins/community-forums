@@ -141,6 +141,40 @@ final class CloudRunBrowserCiContractTest extends TestCase
         self::assertSame(1, $this->command($command)['exit']);
     }
 
+    public function test_setup_reads_paginated_webhooks_with_the_installed_gh_cli_format(): void
+    {
+        $script = 'import importlib.util,json,sys; s=importlib.util.spec_from_file_location("ci",sys.argv[1]);'
+            . ' m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(json.dumps(m.hook_pages(sys.argv[2])))';
+        $result = $this->command(['python3', '-c', $script,
+            self::ROOT . '/deploy/cloudrun/browser-ci/configure.py', " [{\"id\":1}]\n[{\"id\":2}]\n"]);
+        self::assertSame(0, $result['exit'], $result['stderr']);
+        self::assertSame([['id' => 1], ['id' => 2]], json_decode($result['stdout'], true, flags: JSON_THROW_ON_ERROR));
+        $invalid = $this->command(['python3', '-c', $script,
+            self::ROOT . '/deploy/cloudrun/browser-ci/configure.py', '{"unexpected":"private-value"}']);
+        self::assertSame(1, $invalid['exit']);
+        self::assertStringContainsString('Unexpected webhook page shape', $invalid['stderr']);
+        self::assertStringNotContainsString('private-value', $invalid['stderr']);
+    }
+
+    public function test_setup_accepts_existing_named_cloud_build_hook_without_changing_private_query_values(): void
+    {
+        $script = 'import importlib.util,sys; s=importlib.util.spec_from_file_location("ci",sys.argv[1]);'
+            . ' m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(m.hook_target(sys.argv[2],"old-id","new-id"))';
+        $prefix = 'https://cloudbuild.googleapis.com/v1/projects/rising-woods-449718-v6/locations/us-east4/triggers/';
+        foreach (['old-id', 'retroboards-main'] as $identifier) {
+            $result = $this->command(['python3', '-c', $script,
+                self::ROOT . '/deploy/cloudrun/browser-ci/configure.py',
+                $prefix . $identifier . ':webhook?key=dummy-key&secret=dummy-secret&trigger=old-id']);
+            self::assertSame(0, $result['exit'], $result['stderr']);
+            self::assertSame($prefix . 'new-id:webhook?key=dummy-key&secret=dummy-secret&trigger=new-id', trim($result['stdout']));
+        }
+        $invalid = $this->command(['python3', '-c', $script,
+            self::ROOT . '/deploy/cloudrun/browser-ci/configure.py',
+            'https://example.invalid/v1/triggers/retroboards-main:webhook']);
+        self::assertSame(1, $invalid['exit']);
+        self::assertStringContainsString('expected Cloud Build endpoint', $invalid['stderr']);
+    }
+
     /** @return array<string,mixed> */
     private function build(): array
     {

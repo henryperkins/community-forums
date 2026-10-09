@@ -1,0 +1,38 @@
+{
+  "captured_scope": "Verified setup metadata; private webhook URLs/keys/secrets omitted",
+  "service_account": "retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "assigned_project_roles": [
+    "roles/logging.logWriter"
+  ],
+  "bucket": "rising-woods-449718-v6-retroboards-browser-evidence",
+  "bucket_public_access_prevention": "enforced",
+  "bucket_uniform_access": true,
+  "bucket_lifecycle": {
+    "rule": [
+      {
+        "action": {
+          "type": "Delete"
+        },
+        "condition": {
+          "age": 14
+        }
+      }
+    ]
+  },
+  "bucket_soft_delete_policy": {
+    "retentionDurationSeconds": "0"
+  },
+  "trigger": "retroboards-browser-evidence",
+  "trigger_id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+  "trigger_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "control_sha": "94604517843eec78fb917aad15d6d7278270b5be",
+  "filter": "_REPO == \"henryperkins/community-forums\" && _REF.matches(\"^refs/heads/.*\") && _SHA != \"0000000000000000000000000000000000000000\"",
+  "github_hook_id": 694573802,
+  "github_status_publication": "unavailable",
+  "hosted_lane_result": "pending",
+  "assigned_bucket_roles": [
+    "roles/storage.objectCreator"
+  ],
+  "manual_build_id": "d4d2a221-a50c-48de-89b5-a31379e8b6f6",
+  "manual_source_sha": "94604517843eec78fb917aad15d6d7278270b5be"
+}

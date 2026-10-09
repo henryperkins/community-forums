@@ -36,13 +36,13 @@ container's history are in [`deployment-cloudflare.md`](deployment-cloudflare.md
 | Images | `us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app` | Tagged with the commit SHA and `latest`; cleanup keeps the newest 10, deletes the rest after 30 days |
 | Deploys | Cloud Build trigger `retroboards-main` (us-east4) | GitHub push webhook → `deploy/cloudrun/cloudbuild.yaml` (§3, §5) |
 
-Secrets (Secret Manager), read by the runtime account only:
+Secrets (Secret Manager), read only by the accounts that need each value:
 
 | Secret | Env var | Notes |
 | --- | --- | --- |
 | `retroboards-app-key` | `APP_KEY` | Generated 2026-10-09 for the move; the container's key was unreadable (Cloudflare secrets are write-only) |
-| `imladris-boards-app-password` | `DB_PASSWORD` | `retroboards_app` |
-| `retroboards-cloudflare-email-token` | `CLOUDFLARE_EMAIL_API_TOKEN` | Version 1 stored 2026-10-09; email-only account permission (§7) |
+| `imladris-boards-app-password` | `DB_PASSWORD` | `retroboards_app`; app runtime and the aggregate monitoring collector read it |
+| `retroboards-cloudflare-email-token` | `MAIL_CLOUDFLARE_API_TOKEN` | Version 1 stored 2026-10-09; email-only account permission (§7) |
 | `retroboards-deploy-webhook` | — | The deploy webhook's shared secret (§5) |
 
 Service accounts, each holding only what it uses:
@@ -52,7 +52,9 @@ Service accounts, each holding only what it uses:
 | `retroboards-app` | Runs the service and jobs: `cloudsql.client`, read its secrets, `storage.objectUser` on the data bucket |
 | `retroboards-edge` | Invoke the service (`run.invoker` on it). Its key is the Worker's `GCP_INVOKER_KEY` (§6) |
 | `retroboards-scheduler` | Run the cron jobs (`run.invoker` on each job) |
-| `retroboards-deploy` | Cloud Build: push images, `run.developer`, act as `retroboards-app`, write build logs |
+| `retroboards-deploy` | Cloud Build: push images, `run.developer`, act as `retroboards-app` and `retroboards-monitor`, write build logs |
+| `retroboards-monitor` | Read database aggregates through the connector with the existing app DB credential; view cron executions and Cloud SQL backup metadata (§8). No app key, mail token or data bucket access |
+| `retroboards-browser-ci` | Write browser build logs and create synthetic artifacts in its private CI bucket (§5a). No production secrets, database, deployment or invocation rights |
 
 ## 2. The request path and the visitor's IP
 
@@ -184,6 +186,69 @@ file, run `configure.sh`, which refreshes the copy. GitHub's delivery log for
 the hook (repository Settings → Webhooks) shows each push and Cloud Build's
 reply.
 
+## 5a. Hosted browser evidence while GitHub Actions is locked
+
+GitHub Actions currently cannot start jobs because the account is locked for
+billing. The latest checked main run (`37888488447`) failed with zero job
+steps; there is no CircleCI configuration. Keep
+`.github/workflows/browser-evidence.yml` available for billing recovery.
+The independent Cloud Build lane uses
+`deploy/cloudrun/browser-ci/{configure.py,cloudbuild.json,Dockerfile,run.sh,package.py}`.
+It is the hosted browser evidence source while Actions cannot run; inspect its
+actual build result before calling a commit verified.
+
+The lane fetches an exact source SHA and a separately pinned reviewed control
+SHA, runs the existing capture, unified notification/settings and production
+Docker upload suites, and uploads sanitized synthetic PNG/JSON evidence to a
+private bucket with 14-day expiry. Capture and unified settings use a disposable
+MariaDB; uploads use their own Compose project and ports. The suites run
+sequentially in one build, and separate builds have separate VMs. Chromium and
+WebKit are installed in the runner. Failure artifacts publish before a final
+step enforces success; a complete run also requires outputs from all three
+suite groups, including every upload browser project.
+
+The dedicated `retroboards-browser-ci` service account can write build logs
+and create objects in the evidence bucket. It cannot read production secrets,
+connect to Cloud SQL, deploy services or invoke production jobs. Pinning the
+reviewed recipe records its provenance; branch test scripts have Docker daemon
+access within the build VM. Restricted IAM is the production access boundary.
+Neither GitHub credentials nor a production `.env` enter the runner. Published
+artifacts omit environment variables, cookies, headers, traces and raw logs.
+
+Setup or refresh after pushing a reviewed control commit:
+
+```sh
+python3 deploy/cloudrun/browser-ci/configure.py --control-sha=<REVIEWED_CONTROL_SHA>
+python3 deploy/cloudrun/browser-ci/configure.py --control-sha=<REVIEWED_CONTROL_SHA> --apply
+```
+
+The first command previews the exact plan without API calls. The apply command
+converges the restricted account, private expiring bucket, inline webhook
+trigger and owner-repository GitHub push hook. It uses the existing protected
+Cloud Build webhook configuration; private callback URLs remain out of its
+output. Owner-repository branch pushes include PR branches and `main`. Fork
+PRs require a deliberate manual run; there is no public unauthenticated
+arbitrary-build endpoint.
+
+Run a pushed commit manually with the same lane:
+
+```sh
+gcloud builds submit --no-source --project=rising-woods-449718-v6 --region=us-east4 \
+  --config=deploy/cloudrun/browser-ci/cloudbuild.json \
+  --substitutions=_SHA=<EXACT_SOURCE_SHA>,_CONTROL_SHA=<REVIEWED_CONTROL_SHA>
+gcloud builds describe <BUILD_ID> --region=us-east4
+# For an authorized operator, download the private result and synthetic archive:
+gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/result.json /private/result.json
+gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/evidence.tar.gz /private/evidence.tar.gz
+```
+
+Both SHAs must be full lowercase 40-character commit IDs. The build result and
+private artifacts are authoritative for this lane. GitHub check/status
+publication is unavailable with the current webhook integration; a Cloud Build
+pass is not a recovered GitHub Actions check. PHPUnit remains a separate local
+verification lane. Current setup receipts and coverage limits are recorded in
+[the operations evidence](../evidence/cloud-run-operations-2026-10-09/README.md).
+
 ## 6. The Worker's key (`GCP_INVOKER_KEY`)
 
 It is a JSON key for `retroboards-edge`, stored only as a Worker secret. Local
@@ -212,36 +277,44 @@ before the move.
 
 ## 7. Email
 
-Mail goes through Cloudflare's SMTP relay (`MAIL_DRIVER=cloudflare_smtp`) with
-an account API token scoped to **Email Sending: Edit**. The old container token
-could not be read back from Cloudflare. A new email-only token was created on
-2026-10-09 and stored as version 1 of `retroboards-cloudflare-email-token` in
-Google Secret Manager. The `retroboards-app` runtime account has secret read
-access. `configure.sh` applied the secret to the web service and all four jobs.
+Mail uses Cloudflare Email Sending's REST API (`MAIL_DRIVER=cloudflare`),
+through the existing `CloudflareMailer` and native `EmailOpsService` path.
+`MAIL_CLOUDFLARE_ACCOUNT_ID=a77e479f6736120eadd99973dbeb705e` is ordinary
+account configuration in `env.yaml`; it is not a credential. The email-only
+API token requires **Email Sending: Edit** on that account and is mapped from
+Google Secret Manager to `MAIL_CLOUDFLARE_API_TOKEN`. Version 1 of
+`retroboards-cloudflare-email-token` was stored on 2026-10-09 and the
+`retroboards-app` account has runtime read access. `configure.sh` applies this
+configuration to the web service and all four cron jobs.
 
-**Live worker check, 2026-10-09:** execution `retroboards-cron-5m-xv7lq`
-succeeded. The email result reported `blocked_reason=none`; `sent`,
-`suppressed`, `retrying`, `failed`, `skipped` were all zero. Post-retirement
-manual execution `retroboards-cron-5m-c87d7` succeeded on the new merge image at
-05:33:11.170 UTC. Scheduled execution `retroboards-cron-5m-qppsb`, created by
-`retroboards-scheduler`, succeeded at 05:35:37.257720 UTC. Both reported the
-same empty-queue result. The empty queue
-verified configuration availability without testing message acceptance or
-recipient delivery. A separate no-message probe from the same Cloud Run job
-(`retroboards-cron-5m-2j22c`, PHP 8.2.34) authenticated with the new token
-(`235`) and completed `NOOP` (`250`) with no cURL error. It submitted no
-message; SMTP message acceptance and recipient receipt remain untested.
+**Recipient verification, 2026-10-09:** a native operator test using the
+permanent production REST configuration recorded delivery `3` as `sent` with
+a transport message identifier on PHP 8.2.34. The intended mailbox received
+the exact test subject in its inbox at **07:07:47 UTC**, from the expected
+domain; SPF, DKIM and DMARC passed. This verifies one operator test message,
+provider acceptance and recipient receipt. It does not test every notification
+kind, a backlog drain or future delivery. Sanitized receipts are in
+[the operations evidence](../evidence/cloud-run-operations-2026-10-09/README.md).
+The REST API returns accepted recipient outcomes rather than a provider message
+ID; `CloudflareMailer` records its own `cf-…` transport identifier.
 
-The Cloud Run image uses PHP 8.2. SMTP response capture uses compatible
-`CURLOPT_HEADERFUNCTION`; the old `CURLOPT_DEBUGFUNCTION` required PHP 8.4.
-Post-deploy execution `retroboards-cron-5m-l8k29` verified a typed transport
-failure on PHP 8.2.34 against a refused loopback connection, with no external
-message submitted. An empty outbox does not exercise that transport path.
+**Why REST:** earlier SMTP probes authenticated (`235`) and completed `NOOP`
+(`250`), but the actual sender envelope was rejected (`550`) in execution
+`retroboards-cron-5m-m9hgt`, despite the sending domain being onboarded. No
+message was submitted by that probe. Successful SMTP authentication and an
+empty outbox had masked this backend mismatch; production now uses the REST
+backend that accepted and delivered the native test. The alternate SMTP
+transport remains PHP 8.2-compatible: server response capture uses
+`CURLOPT_HEADERFUNCTION`, with TLS verification and no verbose traces. Its
+deployed refused-loopback failure path was verified earlier; see
+[the retirement evidence](../evidence/cloudflare-origin-retirement-2026-10-09/README.md).
 
 If the mailer is unconfigured, `worker:email` returns `sender_unconfigured` and
 the outbox **holds** messages. After configuration, eligible queued messages
-are retried by scheduled ticks. A successful job alone does not prove SMTP
-acceptance or receipt; inspect the email worker result and delivery records.
+are retried by scheduled ticks. A successful job with zero sends proves neither
+provider acceptance nor receipt; inspect the worker result and delivery rows,
+then verify the intended mailbox. Do not expose recipients, bodies or token
+values in logs or evidence.
 
 To rotate the token:
 
@@ -337,6 +410,50 @@ encrypted end to end, but MySQL does not see it as a TLS session
 was verified after the change: a plaintext login is refused, while the
 connector and TLS paths succeed.
 
+### Monitoring and operational alerts
+
+The operations-only `retroboards-monitor` job samples aggregate database,
+scheduler and backup state every 15 minutes in UTC. Its collector starts a
+read-only SQL transaction and logs counts/ages rather than members, recipients
+or message content. It currently reuses the app database user, whose underlying
+SQL grants allow writes; the collector's read-only transaction enforces this
+probe's query behavior. Its separate Google account has bounded secret,
+Cloud SQL and cron-viewer access. It receives no APP_KEY, mail token or storage
+mount. The deployment pipeline updates optional jobs labelled
+`app=retroboards,role=monitor` to the current app image.
+
+Nine enabled policies notify the privately configured owner email channel:
+
+| Signal | Trigger |
+| --- | --- |
+| Public `/healthz` | At least two checker locations fail for 3 minutes; TLS and JSON status checked |
+| Cloud Run HTTP errors | At least five 5xx responses per 5-minute window, sustained 5 minutes |
+| Failed cron or collector execution | Any native failed execution in the 5-minute evaluation window |
+| Collector failure or absence | Error log immediately, or no successful heartbeat for 45 minutes |
+| Missed scheduled cron | No scheduler-created successful tick after its 30-minute grace; daily jobs exempt until their first due tick after creation |
+| Stalled outbox | Oldest queued job due for at least 30 minutes, excluding future retry backoff; 15-minute sampling gives roughly 30–45-minute detection |
+| Mail failures | Recent retries, terminal failures or transport blocks in worker/aggregate logs; notification rate capped at one per hour |
+| Backup failure | Final `FAILED`/`SKIPPED` backup, or newest successful automated backup older than 36 hours |
+
+An execution failure metric does not identify the initiating actor: a diagnostic
+override of an actual cron job can alert too. Diagnostic jobs with different
+names are excluded. A successful manual cron execution does not reset the
+collector's scheduled-tick check.
+
+Preview, apply and verify from the checked-in configuration:
+
+```sh
+python3 deploy/cloudrun/monitoring/configure.py plan
+python3 deploy/cloudrun/monitoring/configure.py apply --recipient-file /private/owner.json
+python3 deploy/cloudrun/monitoring/configure.py verify --evidence /private/monitoring-summary.json
+```
+
+The recipient file contains one `address` key, mode `0600`; never commit it.
+See [the operations evidence](../evidence/cloud-run-operations-2026-10-09/README.md)
+for policy validation, checker locations, actual collector execution and
+notification receipt limits. An enabled channel alone does not prove an alert
+reached the mailbox.
+
 ## 9. Retiring the Cloudflare container and pre-move R2 uploads
 
 The owner approved retirement on 2026-10-09. Production has used Cloud Run
@@ -412,6 +529,75 @@ container origin would be a new hosting change requiring a fresh deployment,
 authenticated database access, storage and key configuration, and explicit
 scheduler handoff. Keep Cloud SQL's authorized networks closed during recovery.
 
+## 10a. Rehearse backup, storage and key recovery in isolated resources
+
+A revision rollback is not a data restore. For a recovery rehearsal, retain a
+successful source backup and restore it into a new disposable SQL instance;
+never pass the production instance as the restore target. Keep the source's
+authorized networks closed and use the authenticated connector for the scratch
+runtime too. Do not run `configure.sh` against scratch resources: it owns
+production service/jobs/schedules.
+
+Create the backup and select its successful numeric ID:
+
+```sh
+gcloud sql backups create --instance=imladris-boards --project=rising-woods-449718-v6
+gcloud sql backups list --instance=imladris-boards --project=rising-woods-449718-v6
+```
+
+Use a fresh target name and verify the guards before any restore:
+
+```bash
+recover_sql="retroboards-recovery-$(date -u +%Y%m%d%H%M%S)"
+recover_backup_id='SUCCESSFUL_BACKUP_ID'
+[[ "$recover_sql" =~ ^retroboards-recovery-[0-9]+$ && "$recover_sql" != imladris-boards ]] || exit 1
+[[ "$recover_backup_id" =~ ^[0-9]+$ ]] || exit 1
+gcloud sql instances create "$recover_sql" --project=rising-woods-449718-v6 \
+  --region=us-east4 --database-version=MYSQL_8_4 --edition=ENTERPRISE \
+  --tier=db-f1-micro --storage-size=10 --ssl-mode=ENCRYPTED_ONLY --no-deletion-protection
+gcloud sql backups restore "$recover_backup_id" --project=rising-woods-449718-v6 \
+  --backup-instance=imladris-boards --restore-instance="$recover_sql"
+gcloud sql instances describe "$recover_sql" --project=rising-woods-449718-v6 \
+  --format='json(state,settings.ipConfiguration,settings.tier)'
+```
+
+Confirm no authorized networks before connecting. Create a private temporary
+bucket with uniform access/public access prevention. Snapshot current production
+object metadata privately, copy each exact source generation into the scratch
+bucket, then compare count, sizes and provider checksums. Never empty or overwrite
+the production bucket. If no nonempty uploaded content exists, label that limit
+and add a clearly synthetic scratch-only fixture to prove mounted byte reads.
+
+Run a temporary IAM-only Cloud Run service/job using the selected immutable app
+image, the scratch SQL connector and scratch bucket mount. Bind needed existing
+Secret Manager versions by reference, with no plaintext keys in env files or
+arguments. Pin `RUN_MIGRATIONS=false`, disable real email and all schedulers, and
+use only the scratch targets. Verify schema/migration equality, table checks,
+foreign-key orphan counts and stable aggregates without logging private rows.
+Verify private HTTP health plus unauthenticated 403, a nonempty mounted fixture
+hash, and a synthetic encryption/decryption challenge with the recovered APP_KEY.
+Do not run application repair or cron workers during this read-only rehearsal.
+
+After collecting sanitized results, delete only the explicitly named scratch
+service, job, copied objects/bucket and SQL instance. Wait for asynchronous SQL
+deletion to reach `DONE`; verify every scratch resource is absent. Retain the
+source backup, production uploads and Secret Manager versions. The temporary
+runtime can use the existing app account for a bounded rehearsal; that account's
+production access is not proof of a separate disaster-recovery identity.
+
+**2026-10-09 rehearsal:** backup `1791528734171` was retained successfully;
+the isolated restore passed 116 table checks, 198 zero-orphan FK checks, 83
+migrations, full column-schema equality and selected stable totals. Private
+HTTP/database health and unauthenticated denial passed. Three live zero-byte
+objects copied with matching checksums, and a separate synthetic 128-byte
+fixture passed mounted SHA-256 verification. APP_KEY version 1 passed a
+synthetic recovery challenge. All scratch resources were absent after SQL
+deletion completed at 07:14:21.984 UTC. There were no nonempty member uploads
+or attachment rows to restore; whole-project loss and off-project key recovery
+were not rehearsed. [The recovery receipt](../evidence/cloud-run-operations-2026-10-09/recovery-summary.json)
+records those limits. No reusable recovery script was added: each scratch probe
+must be reviewed against its exact temporary targets and retained versions.
+
 ## 11. Cost
 
 Monthly estimates at us-east4 list prices (Cloud Billing Catalog, 2026-10-09):
@@ -419,10 +605,12 @@ Monthly estimates at us-east4 list prices (Cloud Billing Catalog, 2026-10-09):
 | Component | Cost |
 | --- | --- |
 | Cloud Run service, request-based, scale to zero | ≈ $0–5: $0.000024/vCPU-s and $0.0000025/GiB-s while serving; free tier 180k vCPU-s, 360k GiB-s and 2M requests per billing account |
-| Cron jobs | ≈ $0–2: the 5-minute job is ~11 s × 8,640 runs ≈ 95k vCPU-s at $0.000018, inside the 240k vCPU-s jobs free tier |
-| Cloud Scheduler | $0.10: 4 jobs, 3 free per billing account |
+| Application cron jobs | ≈ $0–2: the 5-minute job is ~11 s × 8,640 runs ≈ 95k vCPU-s at $0.000018, inside the 240k vCPU-s jobs free tier |
+| Cloud Scheduler | $0.20: 5 jobs including monitoring, 3 free per billing account |
 | Cloud SQL `db-f1-micro` ($0.0112/h), 10 GB SSD, backups and binlog | ≈ $10–11. `db-g1-small` ($0.0375/h) was ≈ $30 |
-| Cloud Storage, Artifact Registry, Cloud Build, Logging | ≈ $0, within free tiers at this size |
+| Monitoring collector | ≈ $3.30 gross before shared free-tier credits: 2,880 monthly ticks, 1 vCPU / 512 MiB with the one-minute minimum |
+| Cloud Storage, Artifact Registry, Logging | Usage dependent; synthetic CI artifacts expire after 14 days |
+| Browser Cloud Build lane | Separate usage-based build cost; each owner-repository push runs the complete browser lane |
 | Workers Paid plan | $5, shared with the account's other Workers |
 
 Versus about $63–73 for the Cloudflare `standard-1` container that kept itself
