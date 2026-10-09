@@ -217,8 +217,20 @@ an account API token scoped to **Email Sending: Edit**. The old container token
 could not be read back from Cloudflare. A new email-only token was created on
 2026-10-09 and stored as version 1 of `retroboards-cloudflare-email-token` in
 Google Secret Manager. The `retroboards-app` runtime account has secret read
-access. Applying `configure.sh` wires that secret into the service and all four
-jobs; SMTP acceptance and delivery must be checked separately after a tick.
+access. `configure.sh` applied the secret to the web service and all four jobs.
+
+**Live worker check, 2026-10-09:** execution `retroboards-cron-5m-xv7lq`
+succeeded. The email result reported `blocked_reason=none`; `sent`,
+`suppressed`, `retrying`, `failed`, `skipped` were all zero. The empty queue
+verified configuration availability without testing message acceptance or
+recipient delivery. A separate no-message probe from the same Cloud Run job
+(`retroboards-cron-5m-2j22c`, PHP 8.2.34) authenticated with the new token
+(`235`) and completed `NOOP` (`250`) with no cURL error. It submitted no
+message; SMTP message acceptance and recipient receipt remain untested.
+
+The Cloud Run image uses PHP 8.2. The SMTP transport must keep its response
+capture compatible with that runtime; `CURLOPT_DEBUGFUNCTION` requires PHP
+8.4. An empty outbox does not exercise that transport path.
 
 If the mailer is unconfigured, `worker:email` returns `sender_unconfigured` and
 the outbox **holds** messages. After configuration, eligible queued messages

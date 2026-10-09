@@ -19,6 +19,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   with runtime read access, restoring the mail configuration path for Cloud
   Run. The runbook documents safe token rotation through new secret versions
   and separate SMTP acceptance/delivery verification.
+- Make the SMTP transport compatible with production's PHP 8.2 runtime while
+  retaining TLS verification and provider message IDs. Capture server replies
+  without collecting verbose transport traces.
 - Retire the unused Cloudflare container origin: remove its Worker class,
   binding, dependency and app configuration, and append the Durable Object
   deletion migration. Recovery now uses Cloud Run revisions; pre-retirement
