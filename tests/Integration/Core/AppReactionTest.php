@@ -278,6 +278,56 @@ final class AppReactionTest extends TestCase
         self::assertStringNotContainsString('indefinitereactor', $html);
     }
 
+    public function testNativeTogglesSkipTheJsonSummaryReads(): void
+    {
+        $s = $this->scenario();
+        $this->actingAs($s['author']);
+        $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug']); // settle the session first
+        $path = '/posts/' . $s['op_id'] . '/react';
+        $queries = function (array $fields) use ($path): int {
+            $before = $this->db->metrics()['queries'];
+            $response = $this->post($path, $fields);
+            self::assertContains($response->status(), [200, 303]);
+            return $this->db->metrics()['queries'] - $before;
+        };
+        // A self-reaction has no reputation, notification or badge side effects,
+        // so each pair below performs the same toggle. JSON pays two reads for
+        // its counts and reactor names; the native path pays two for the post's
+        // page in its redirect, and must not also pay for the unused summary.
+        $nativeAdd = $queries(['emoji' => '👍']);
+        $nativeRemove = $queries(['emoji' => '👍']);
+        $jsonAdd = $queries(['emoji' => '👍', 'format' => 'json']);
+        $jsonRemove = $queries(['emoji' => '👍', 'format' => 'json']);
+        self::assertSame($jsonAdd, $nativeAdd);
+        self::assertSame($jsonRemove, $nativeRemove);
+        self::assertSame(0, $this->reactionRows($s['op_id']));
+    }
+
+    public function testReactorNamesAreReadOnlyForViewersWhoSeeThem(): void
+    {
+        $board = $this->makeBoard($this->makeCategory());
+        $author = $this->makeUser();
+        $reactor = $this->makeUser(['username' => 'unseenreactor']);
+        // One reaction adds exactly the batched names read for a member who can
+        // see the tip; a viewer who cannot write is shown no names, so skips it.
+        // Each viewer is measured on its own topic with nothing in between.
+        foreach ([[$this->makeUser(), 1, true], [$this->makeUser(['status' => 'suspended']), 0, false]] as [$viewer, $extra, $named]) {
+            $thread = $this->makeThread($board, $author);
+            $path = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+            $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+            $this->actingAs($viewer);
+            $this->get($path); // settle the session first
+            $before = $this->db->metrics()['queries'];
+            $this->get($path);
+            $quiet = $this->db->metrics()['queries'] - $before;
+            (new ReactionRepository($this->db))->toggle($postId, (int) $reactor['id'], '👍');
+            $before = $this->db->metrics()['queries'];
+            $html = $this->get($path)->body();
+            self::assertSame($quiet + $extra, $this->db->metrics()['queries'] - $before);
+            self::assertSame($named, str_contains($html, '@unseenreactor'));
+        }
+    }
+
     public function testThreadRendersOneEmptyReactionAnnouncerOnlyWithEngagement(): void
     {
         $s = $this->scenario();

@@ -1104,3 +1104,16 @@ its size from the textarea's observed content box rather than the rounded
 `clientWidth`/`clientHeight`: at fractional widths (90%/110% zoom, fluid columns)
 half a pixel re-wrapped a line and every later highlight drifted. Glyph-level
 comparisons now match in Chromium and WebKit at both zoom levels.
+
+The Messages entry script now loads only at `/messages/{id}`, its own path rule.
+Cold-load measurements found no first-paint cost from it elsewhere (the preloaded
+stylesheets finish later), but it was a parser-blocking request on every page;
+`app.js` consumes an abandoned signal on other pages so none can replay later.
+Native reaction posts no longer read the JSON summary (counts and names), the
+membership re-check reuses the read gate's memoized lookup, and viewers who
+cannot see reactor names skip that read. The source mirror stays empty while it
+has nothing to highlight and skips unchanged style writes: copying each
+keystroke into it re-ran page-wide style matching, and typing cost returns to
+its pre-handoff level. Because the exact width follows a resize one frame late,
+`max-width: 100%` keeps a stale mirror inside its wrap so it never widens the
+page (the Messages phone check caught a 624px mirror at 390px).

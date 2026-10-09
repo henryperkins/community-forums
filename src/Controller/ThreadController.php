@@ -231,7 +231,10 @@ final class ThreadController extends Controller
             $tuRepo = $this->container->get(ThreadUserRepository::class);
             if ($engagement) {
                 $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
-                $reactionReactors = $reactionRepo->reactorsForPosts($user->id(), array_keys($reactionCounts));
+                // Names appear only in a writer's tips; others skip the read.
+                $reactionReactors = $this->container->get(WriteGate::class)->canWrite($user)
+                    ? $reactionRepo->reactorsForPosts($user->id(), array_keys($reactionCounts))
+                    : [];
                 $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
             }
             if (($engagement || $automatedContext) && $request->method() === 'GET' && $posts !== []) {

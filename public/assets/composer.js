@@ -2150,32 +2150,43 @@
             'tab-size', 'white-space', 'overflow-wrap', 'word-break', 'direction',
             'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
             'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width'];
-        var frame = null, lastValue = null, lastKnownSize = -1, contentBox = null;
+        var frame = null, lastValue = null, lastKnownSize = -1, contentBox = null, lastGeometry = null;
 
         function scroll() { mirror.scrollTop = ta.scrollTop; mirror.scrollLeft = ta.scrollLeft; }
         function sync() {
             frame = null;
             if (form._rbComposerDestroyed) { return; }
             var rich = ta.classList.contains('is-wysiwyg-source-hidden');
-            wrap.setAttribute('data-rich-active', rich ? 'true' : 'false');
-            mirror.hidden = rich;
+            // Every composer syncs on resize, hidden ones included: skip writes
+            // that would not change anything rather than dirtying style again.
+            var richState = rich ? 'true' : 'false';
+            if (wrap.getAttribute('data-rich-active') !== richState) { wrap.setAttribute('data-rich-active', richState); }
+            if (mirror.hidden !== rich) { mirror.hidden = rich; }
             if (rich || !ta.getClientRects().length) { return; }
             var style = window.getComputedStyle(ta);
-            properties.forEach(function (property) { mirror.style.setProperty(property, style.getPropertyValue(property)); });
+            var values = properties.map(function (property) { return style.getPropertyValue(property); });
             // clientWidth/clientHeight round to whole pixels, but zoom and fluid
             // columns give the textarea fractional sizes, and half a pixel wraps
             // a line differently. The observed content box is exact and already
             // excludes any scrollbar.
             var innerWidth = contentBox ? contentBox.width + parseFloat(style.paddingLeft || 0) + parseFloat(style.paddingRight || 0) : ta.clientWidth;
             var innerHeight = contentBox ? contentBox.height + parseFloat(style.paddingTop || 0) + parseFloat(style.paddingBottom || 0) : ta.clientHeight;
-            mirror.style.width = (innerWidth + parseFloat(style.borderLeftWidth || 0) + parseFloat(style.borderRightWidth || 0)) + 'px';
-            mirror.style.height = (innerHeight + parseFloat(style.borderTopWidth || 0) + parseFloat(style.borderBottomWidth || 0)) + 'px';
+            values.push((innerWidth + parseFloat(style.borderLeftWidth || 0) + parseFloat(style.borderRightWidth || 0)) + 'px',
+                (innerHeight + parseFloat(style.borderTopWidth || 0) + parseFloat(style.borderBottomWidth || 0)) + 'px');
+            var geometry = values.join('|');
+            if (geometry !== lastGeometry) {
+                lastGeometry = geometry;
+                properties.forEach(function (property, index) { mirror.style.setProperty(property, values[index]); });
+                mirror.style.width = values[properties.length];
+                mirror.style.height = values[properties.length + 1];
+            }
             if (lastValue === ta.value && lastKnownSize === known.size) { scroll(); return; }
             lastValue = ta.value; lastKnownSize = known.size;
             var fragment = document.createDocumentFragment();
-            var code = referenceCodeRanges(ta);
+            var painted = false;
+            var code = known.size ? referenceCodeRanges(ta) : [];
             var lineOffset = 0, codeIndex = 0;
-            ta.value.split(/(\n)/).forEach(function (line) {
+            (known.size ? ta.value.split(/(\n)/) : []).forEach(function (line) {
                 // Match an email as a whole; Markdown emphasis delimiters such
                 // as **@alice** are not an email local-part by themselves. The
                 // boundary prevents retrying a long local-part at every character.
@@ -2199,11 +2210,19 @@
                     mark.className = 'composer-mention-mark';
                     mark.textContent = line.slice(start, finish);
                     fragment.appendChild(mark);
+                    painted = true;
                     offset = finish;
                 }
                 fragment.appendChild(document.createTextNode(line.slice(offset)));
                 lineOffset += line.length;
             });
+            // The mirror's text is transparent and only positions highlights.
+            // Without one it stays empty instead of copying every keystroke,
+            // since each rebuild re-runs style matching across the page.
+            if (!painted) {
+                if (mirror.firstChild) { mirror.replaceChildren(); }
+                return;
+            }
             if (/\n$/.test(ta.value)) { fragment.appendChild(document.createTextNode('\u200b')); }
             mirror.replaceChildren(fragment);
             scroll();

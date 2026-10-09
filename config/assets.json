@@ -1,11 +1,11 @@
 {
-  "version": "ea8a4803210ea5e6",
+  "version": "85b4bc099e7bdac1",
   "urls": {
-    "app.css": "/assets/dist/app-style-CoHttSB7.css",
+    "app.css": "/assets/dist/app-style-kNCnSn5Q.css",
     "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
-    "app.js": "/assets/dist/app-a59ad2ede48c7ffe.js",
-    "composer.js": "/assets/dist/composer-30a9c90c0501d2de.js",
+    "app.js": "/assets/dist/app-ead709125428cd4d.js",
+    "composer.js": "/assets/dist/composer-d0210ad65bc6975b.js",
     "passkeys.js": "/assets/dist/passkeys-27f8b05555555872.js",
     "tour.js": "/assets/dist/tour-2cb01893b54a8644.js",
     "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-D9tMbjJ1.js",
@@ -28,15 +28,15 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "0930a70ce4220a59dc8ddbe0020769f568b065c307db31f54c14ba509a2c21a3",
+      "sha256": "7b1d84a32bde553b4c7a2cf2da5bab3005ed61a91d94c65d2506ec6ee9b7af4b",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "571aa9f8c5c527be4ba0ed5f2f267f92be172972439d999cfb23815780e681de",
+      "sha256": "31a19fcfa8819aab5d65aec5595f261de8cb63e9651efa7927dd2b14601601f4",
       "immutable": false
     },
     "/assets/composer.js": {
-      "sha256": "233310dbc3662315dd412ea4d6f0eca647b2506503efb7a365e48bc421d71082",
+      "sha256": "d3264c4ef376a7a16b3874f05140cf657876244e89862bee01825bed6ca133eb",
       "immutable": false
     },
     "/assets/conversation-entry.js": {
@@ -51,32 +51,32 @@
       "sha256": "18e75fb4c256674b0c9c6627048fcd3cd753cdff2406e1b90f01e002a61401a5",
       "immutable": true
     },
-    "/assets/dist/app-a59ad2ede48c7ffe.js": {
-      "sha256": "a59ad2ede48c7ffe611621fdb574eb338b3e35b9cb7df9123c9061e631a92750",
-      "immutable": true
-    },
     "/assets/dist/app-da2b715df2ea1a09.js": {
       "sha256": "da2b715df2ea1a091f10e967a3a1540e082abe79f13729068ba20b8771e7877d",
+      "immutable": true
+    },
+    "/assets/dist/app-ead709125428cd4d.js": {
+      "sha256": "ead709125428cd4d51cdafd616ec76171f47bd0b7e756c6ddd550417316bc1d1",
       "immutable": true
     },
     "/assets/dist/app-style-Bf8aCOiP.css": {
       "sha256": "36711c36d6ecac30dcb4c8f685160cd5b827935e7e3f694fbbe85aa169f614a6",
       "immutable": true
     },
-    "/assets/dist/app-style-CoHttSB7.css": {
-      "sha256": "1d7ba786e9b67e425248b69499d43f84b7176ef648dc41f38b0cee08cebfc31c",
-      "immutable": true
-    },
     "/assets/dist/app-style-DpcQqnu-.css": {
       "sha256": "827c24a866fdb63090486ba647e2a499a7cd031b6d680ba54d444e33dfe2401e",
       "immutable": true
     },
-    "/assets/dist/composer-30a9c90c0501d2de.js": {
-      "sha256": "30a9c90c0501d2de2bb304b01ab4ab2831593b7dd16d002577184a7823e386a1",
+    "/assets/dist/app-style-kNCnSn5Q.css": {
+      "sha256": "8d54b816c2d4ed50eed984eda4f3bdb7531139d773abfebf7dc839fe66976915",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {
       "sha256": "afe872655b72f60dcedc1e6e077b8f2bb410aeeea4409178d9ddb412ab1a9f32",
+      "immutable": true
+    },
+    "/assets/dist/composer-d0210ad65bc6975b.js": {
+      "sha256": "d0210ad65bc6975b446a7e1935d5682352594e121a2dfde114a87944b3f1350d",
       "immutable": true
     },
     "/assets/dist/conversation-entry-74964ff3b56c482d.js": {
@@ -286,11 +286,11 @@
   },
   "releases": [
     {
-      "version": "ea8a4803210ea5e6",
+      "version": "85b4bc099e7bdac1",
       "files": [
-        "/assets/dist/app-a59ad2ede48c7ffe.js",
-        "/assets/dist/app-style-CoHttSB7.css",
-        "/assets/dist/composer-30a9c90c0501d2de.js",
+        "/assets/dist/app-ead709125428cd4d.js",
+        "/assets/dist/app-style-kNCnSn5Q.css",
+        "/assets/dist/composer-d0210ad65bc6975b.js",
         "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",

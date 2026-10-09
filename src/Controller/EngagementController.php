@@ -55,12 +55,13 @@ final class EngagementController extends Controller
         }
 
         if ($request->wantsJson()) {
+            $summary = $this->container->get(ReactionService::class)->summary($user, $postId, $emoji);
             return Response::json([
                 'ok' => true,
                 'state' => $result['state'],
                 'emoji' => $emoji,
-                'counts' => $result['counts'],
-                'reactors' => $result['reactors'],
+                'counts' => $summary['counts'],
+                'reactors' => $summary['reactors'],
             ]);
         }
 

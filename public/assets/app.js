@@ -2152,6 +2152,11 @@
     // Its target and short lifetime prevent an abandoned click from animating a
     // later visit, and the blocking head script consumes it before first paint.
     var dmSwitchKey = 'rb:dm-switch';
+    // Only a conversation page loads the head script that reads the signal, so
+    // any other page load consumes an abandoned one before it can replay later.
+    if (!/^\/messages\/[0-9]+$/.test(location.pathname)) {
+        try { sessionStorage.removeItem(dmSwitchKey); } catch (error) {}
+    }
     function finishDmSwitch() {
         document.documentElement.removeAttribute('data-dm-switch');
     }

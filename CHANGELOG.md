@@ -18,6 +18,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   share block-aware Source completion/highlighting and bound email scanning.
   Keep accent-insensitive name suggestions, assigned private-board moderators,
   and the design layer's 28px person-row avatars.
+- Load the Messages entry script only on conversations, skip reaction reads a
+  response never shows (native-post summaries, names for viewers who cannot see
+  them, a duplicate membership lookup), and keep the source mention mirror empty
+  when it has nothing to highlight, restoring pre-handoff typing cost.
 - Omit yourself and people blocked either way from the bare `@` participant list,
   honor Show avatars in Inbox rows, previews and their mention rows, and keep source
   highlights on their handles at fractional widths such as 90% and 110% zoom.

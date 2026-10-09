@@ -194,3 +194,20 @@ test('account reduced motion suppresses the switch and consumes a previously wri
     php(`$users = new \\App\\Repository\\UserRepository($db); $id = (int) $users->findByUsername('alice')['id']; (new \\App\\Repository\\UserPreferenceRepository($db))->merge($id, ['reduced_motion' => false]);`);
   }
 });
+
+test('only conversations load the head script, and other pages consume an abandoned signal', async ({ page }) => {
+  await login(page);
+  await observeEntry(page);
+  await page.goto('/messages');
+  await expect(page.locator('script[src*="conversation-entry"]')).toHaveCount(0);
+  // As if a row click were abandoned: the next page load, even one without the
+  // head script, must consume it before a later conversation visit can replay.
+  await marker(page, { path: paths[0], at: Date.now() });
+  await page.goto('/inbox');
+  await expect(page.locator('script[src*="conversation-entry"]')).toHaveCount(0);
+  expect(await page.evaluate(key => sessionStorage.getItem(key), KEY)).toBeNull();
+  await page.goto(paths[0]);
+  await expect(page.locator('script[src*="conversation-entry"]')).toHaveCount(1);
+  expect((await evidence(page)).animations).toEqual([]);
+  await expect(page.locator('html')).not.toHaveAttribute('data-dm-switch');
+});

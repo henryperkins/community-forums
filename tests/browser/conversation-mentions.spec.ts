@@ -470,3 +470,41 @@ $db->transaction(function() use($db,$s){$db->run('DELETE FROM user_preferences W
 if($s['prefs']) $db->run('INSERT INTO user_preferences(user_id,prefs,updated_at) VALUES(?,?,?)',[$s['bob'],$s['prefs']['prefs'],$s['prefs']['updated_at']]);});`);
   }
 });
+
+test('the source mirror stays empty while there is nothing to highlight', async ({ page }) => {
+  const { form, input, menu } = await reply(page, false);
+  const mirror = form.locator('.composer-input-mirror');
+  await mirror.evaluate(el => {
+    (window as any).__mirrorWrites = 0;
+    new MutationObserver(records => { (window as any).__mirrorWrites += records.length; }).observe(el, { childList: true, subtree: true, characterData: true });
+  });
+  // Its text is transparent and only positions highlights, so ordinary typing
+  // (unknown handles included) never copies the draft or re-runs page styles.
+  await input.pressSequentially('Plain prose with an @nobodyhere handle and more words', { delay: 5 });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  expect(await page.evaluate(() => (window as any).__mirrorWrites)).toBe(0);
+  await expect(mirror).toBeEmpty();
+  await input.fill('@');
+  await expect(menu).toBeVisible();
+  await input.press('Escape');
+  await input.fill('Hello @alice');
+  await expect(mirror.locator('mark')).toHaveText('@alice');
+  await input.fill('Hello again');
+  await expect(mirror).toBeEmpty();
+});
+
+test('a shrinking window cannot let the source mirror widen the page', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'resizes a desktop window');
+  const { form, input, menu } = await reply(page, false);
+  await input.fill('@');
+  await expect(menu).toBeVisible();
+  await input.press('Escape');
+  await input.fill('Hello @alice, this draft keeps its highlight while the window narrows.');
+  const mirror = form.locator('.composer-input-mirror');
+  await expect(mirror.locator('mark')).toHaveText('@alice');
+  await page.setViewportSize({ width: 390, height: 844 });
+  // Read before the mirror's next frame: its stale width is clamped to the wrap.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect.poll(() => mirror.evaluate(el => Math.abs(el.getBoundingClientRect().width
+    - el.parentElement!.querySelector('textarea')!.getBoundingClientRect().width) < 0.02)).toBe(true);
+});

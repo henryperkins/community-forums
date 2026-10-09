@@ -9,6 +9,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\BoardMemberRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\UserRepository;
@@ -68,6 +69,7 @@ final class ReactionService
         private BoardPolicy $policy,
         private WriteGate $writeGate,
         private ThreadReadService $threadRead,
+        private BoardMemberRepository $members,
         private ?NotificationService $notifications = null,
         private ?ReputationLedgerService $reputation = null,
         private ?CustomEmojiService $customEmoji = null,
@@ -87,7 +89,10 @@ final class ReactionService
     /**
      * Toggle the user's $emoji reaction on $postId.
      *
-     * @return array{state:string, counts:array<string,int>, reactors:list<string>, post:array<string,mixed>, notify_author:bool}
+     * The enhanced response's counts and reactor names are a separate
+     * summary() read, so a native POST that redirects never pays for them.
+     *
+     * @return array{state:string, post:array<string,mixed>, notify_author:bool}
      */
     public function toggle(User $user, int $postId, string $emoji): array
     {
@@ -102,7 +107,9 @@ final class ReactionService
             throw new NotFoundException('Post not found.');
         }
         $this->threadRead->loadForUser($user, (int) $post['thread_id']);
-        $isMember = $this->users->isBoardMember((int) $post['board_id'], $user->id());
+        // Reactions stay member-only on private boards (the read gate also
+        // admits assigned moderators); the gate's memoized lookup answers it.
+        $isMember = $this->members->isMember((int) $post['board_id'], $user->id());
         if (!$this->policy->canRead(['visibility' => $post['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Post not found.');
         }
@@ -139,12 +146,24 @@ final class ReactionService
 
         return [
             'state' => $state,
-            'counts' => $this->reactions->countsForPost($postId),
-            'reactors' => $this->reactions->reactorsForPosts($user->id(), [$postId])[$postId][$emoji] ?? [],
             'post' => $post,
             // A new reaction from someone other than the author triggers a
             // 'reaction' notification (wired in M2 / P2-03).
             'notify_author' => $state === 'added' && !$isSelf,
+        ];
+    }
+
+    /**
+     * Counts and the viewer's reactor names for the enhanced response. Call
+     * only after toggle() has authorized the viewer's read of $postId.
+     *
+     * @return array{counts:array<string,int>, reactors:list<string>}
+     */
+    public function summary(User $viewer, int $postId, string $emoji): array
+    {
+        return [
+            'counts' => $this->reactions->countsForPost($postId),
+            'reactors' => $this->reactions->reactorsForPosts($viewer->id(), [$postId])[$postId][$emoji] ?? [],
         ];
     }
 }

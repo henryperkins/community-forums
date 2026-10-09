@@ -105,6 +105,22 @@ final class AppMessagesRefinementTest extends TestCase
         }
     }
 
+    public function testOnlyConversationPagesLoadTheBlockingEntryScript(): void
+    {
+        [$alice, , $id] = $this->pair();
+        $this->actingAs($alice);
+        // The row-switch signal is read before first paint only on a
+        // conversation; every other page skips the parser-blocking request.
+        $conversation = $this->get('/messages/' . $id);
+        $this->assertStatus(200, $conversation);
+        self::assertSame(1, preg_match_all('#<script src="[^"]*conversation-entry[^"]*"></script>#', $conversation->body()));
+        foreach (['/messages', '/messages/new', '/inbox', '/'] as $path) {
+            $response = $this->get($path);
+            $this->assertStatus(200, $response);
+            self::assertStringNotContainsString('conversation-entry', $response->body(), $path);
+        }
+    }
+
     public function testDmPickerFiltersBlocksOptOutSuspensionAndSelfButOrdinaryMentionsRemain(): void
     {
         [$alice, $bob] = $this->pair();

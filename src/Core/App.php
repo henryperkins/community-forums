@@ -1652,6 +1652,7 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(WriteGate::class),
             $c->get(ThreadReadService::class),
+            $c->get(BoardMemberRepository::class),
             $c->get(NotificationService::class),
             $c->get(ReputationLedgerService::class),
             $c->get(FeatureFlags::class)->enabled('custom_emoji') ? $c->get(CustomEmojiService::class) : null,

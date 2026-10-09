@@ -31,7 +31,12 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php /* Only a Messages conversation reads the row-switch signal before first
+             paint (the script's own path rule); other pages skip this parser-blocking
+             request, and app.js clears an abandoned signal there. */ ?>
+    <?php if (preg_match('#^/messages/[0-9]+$#', (string) ($request_path ?? '')) === 1): ?>
     <script src="<?= $e($assetUrl('conversation-entry.js')) ?>"></script>
+    <?php endif; ?>
     <title><?= $e($this->block('title', $brand['name'])) ?></title>
     <meta name="description" content="<?= $e($desc) ?>">
     <?php if ($robots !== ''): ?><meta name="robots" content="<?= $e($robots) ?>"><?php endif; ?>

@@ -16870,6 +16870,8 @@ html:not(.has-js) :is(.inbox-menu, .thread-row-menu, .create-menu)[open] > :is(.
     width: revert-layer; height: revert-layer; font-size: revert-layer;
 }
 .composer-input-wrap > .composer-input { background: transparent; }
+/* Its exact width follows a resize one frame late; it never widens the page. */
+.composer-input-wrap > .composer-input-mirror { max-width: 100%; }
 .formatted-content a.mention {
     color: var(--on-brand-subtle);
     font-weight: var(--weight-medium);
