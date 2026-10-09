@@ -165,7 +165,11 @@ gcloud sql databases create retroboards --instance imladris-boards --charset=utf
   `imladris-boards-root-password` and `imladris-boards-app-password`. Read one
   with `gcloud secrets versions access latest --secret=<name> --project
   rising-woods-449718-v6`.
-- **Network:** public IP open to `0.0.0.0/0`, the same exposure PlanetScale had.
+- **Network (closed 2026-10-09):** the public IP was open to `0.0.0.0/0`, the
+  same exposure PlanetScale had, until the Cloud Run move removed it. Today
+  only Cloud SQL connectors and the Auth Proxy, both IAM-authenticated, get
+  in. The tier also dropped to `db-f1-micro` that day (Cloud Run runbook §11).
+  The rest of this bullet is the container-era reasoning.
   Cloudflare Containers have no stable egress range to allowlist. TLS is
   mandatory (`ENCRYPTED_ONLY`), so a plaintext connection is refused. Hardening
   option: run the Cloud SQL Auth Proxy in the container with a service-account
@@ -191,8 +195,9 @@ gcloud sql databases create retroboards --instance imladris-boards --charset=utf
   certificate and read the password. **Resolved by the Cloud Run move:**
   production now uses Cloud Run's built-in connector, which authenticates the
   instance over mTLS with IAM. The by-IP link survives only in the dormant
-  container's config. Once rollback to it is no longer wanted, the `0.0.0.0/0`
-  authorized network can go.
+  container's config, so the `0.0.0.0/0` authorized network was removed after
+  the cutover. A rollback to the container has to re-add it (Cloud Run
+  runbook §10).
 - **No Vitess:** the schema-propagation race below does not exist here, and
   `SchemaRaceRetry` is inert (it keys off `SELECT VERSION()`).
 

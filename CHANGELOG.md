@@ -15,6 +15,8 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   - Uploads live on a Cloud Storage volume.
   - The cron workers run as Cloud Run jobs on the same UTC schedules.
   - A failed boot migration now leaves the previous revision serving.
+- Close the database's public authorized network (`0.0.0.0/0`) and move it
+  to `db-f1-micro`. Page latency did not change.
 - `DB_SOCKET` connects over a Unix socket in place of host and port. The
   entrypoint no longer `chown`s FUSE mounts, which a platform-mounted bucket
   refuses.
