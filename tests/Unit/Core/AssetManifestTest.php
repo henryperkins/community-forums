@@ -26,9 +26,11 @@ final class AssetManifestTest extends TestCase
         mkdir($root . '/config', 0777, true);
         mkdir($root . '/public/assets', 0777, true);
         file_put_contents($root . '/public/assets/app.js', 'window.example = true;');
+        file_put_contents($root . '/public/assets/conversation-entry.js', 'window.entry = true;');
         try {
             $missing = new AssetManifest($root);
             self::assertMatchesRegularExpression('#^/assets/app\.js\?v=[a-f0-9]{16}$#', $missing->urls()['app.js']);
+            self::assertMatchesRegularExpression('#^/assets/conversation-entry\.js\?v=[a-f0-9]{16}$#', $missing->urls()['conversation-entry.js']);
             self::assertArrayNotHasKey('wysiwyg-composer.js', $missing->urls());
 
             file_put_contents($root . '/config/assets.json', json_encode([
@@ -45,6 +47,7 @@ final class AssetManifestTest extends TestCase
         } finally {
             unlink($root . '/config/assets.json');
             unlink($root . '/public/assets/app.js');
+            unlink($root . '/public/assets/conversation-entry.js');
             rmdir($root . '/public/assets');
             rmdir($root . '/public');
             rmdir($root . '/config');

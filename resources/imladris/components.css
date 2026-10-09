@@ -162,12 +162,15 @@
 
 /* ── Reactions — "✦ name · count"; on-state warms to gold ──────────────────── */
 .reaction {
-    display: inline-flex; align-items: center; gap: 5px;
+    position: relative; display: inline-flex; align-items: center; gap: 5px;
     font: inherit; font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; line-height: 1;
     padding: 5px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill);
     background: var(--surface-raised); color: var(--text-body); cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
 }
 .reaction:hover { background: var(--surface-sunken); }
+.reaction:not(.reaction-static):hover { transform: translateY(-.5px); }
+.reaction:not(.reaction-static):active { transform: scale(.97); }
 .reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
 .reaction-static { cursor: default; }
 .reaction-glyph { color: var(--star); }
@@ -179,6 +182,32 @@
    between the glyph and the number — "👍 · 4". Dropped with the label. */
 .reaction-bare .reaction-n::before { content: none; }
 .reaction-on .reaction-n { color: var(--gold-700); }
+.reaction-n-val { display: inline-block; }
+.reaction-n-val.is-up { animation: reaction-tick-up var(--dur-base) var(--ease-calm) both; }
+.reaction-n-val.is-down { animation: reaction-tick-down var(--dur-base) var(--ease-calm) both; }
+@keyframes reaction-tick-up { from { opacity: 0; transform: translateY(.4em); } to { opacity: 1; transform: none; } }
+@keyframes reaction-tick-down { from { opacity: 0; transform: translateY(-.4em); } to { opacity: 1; transform: none; } }
+.reaction-tip {
+    position: absolute; z-index: 70; left: 50%; bottom: calc(100% + 7px);
+    translate: calc(-50% + var(--reaction-tip-shift, 0px)) 2px;
+    display: none; flex-direction: column; gap: 2px;
+    width: max-content; max-width: min(240px, calc(100vw - 32px));
+    padding: 5px 8px 6px; border-radius: var(--radius-sm);
+    background: var(--surface-inverse); color: var(--text-inverse); box-shadow: var(--shadow-md);
+    font: .72rem/1.35 var(--font-label); letter-spacing: .01em; text-align: left; text-wrap: pretty;
+    opacity: 0; pointer-events: none;
+    transition: opacity 120ms var(--ease-calm), translate 120ms var(--ease-calm);
+}
+.reaction-tip-label { font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+.reaction-tip.is-measuring { display: flex; visibility: hidden; }
+.reaction:hover .reaction-tip, .reaction:focus-visible .reaction-tip {
+    display: flex; translate: calc(-50% + var(--reaction-tip-shift, 0px)) 0; opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+    .reaction-n-val.is-up, .reaction-n-val.is-down { animation: none; }
+    .reaction:not(.reaction-static):hover, .reaction:not(.reaction-static):active { transform: none; }
+    .reaction-tip { transition: none; }
+}
 
 /* ── Inputs / textarea — serif, gold focus halo ───────────────────────────── */
 .input, .textarea {
@@ -1026,6 +1055,19 @@
 .composer-reference-option[aria-selected="true"],
 .composer-reference-option:hover { background: var(--surface-3); }
 .composer-reference-option .badge { grid-row: span 2; align-self: center; }
+.composer-reference-option.is-person { font: inherit; cursor: pointer; grid-template-columns: auto minmax(0, 1fr); }
+.composer-reference-option.is-person > .monogram { grid-row: span 2; align-self: center; width: 28px; height: 28px; font-size: .66rem; }
+.composer-reference-option.is-person > :not(.monogram) { min-width: 0; overflow-wrap: anywhere; }
+.composer-reference-option.is-person.is-avatarless { grid-template-columns: minmax(0, 1fr); }
+.composer-input-wrap { position: relative; min-width: 0; }
+.composer-input-wrap > .composer-input { position: relative; }
+.composer-input-mirror { display: none; position: absolute; top: 0; left: 0; overflow: hidden; pointer-events: none; color: transparent; border-style: solid; border-color: transparent; }
+.has-mention-mirror:not([data-rich-active="true"]) > .composer-input-mirror:not([hidden]) { display: block; }
+.composer-mention-mark {
+    color: transparent; background: color-mix(in srgb, var(--brand) 14%, transparent); border-radius: 3px;
+    padding: 0; border: 0;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 14%, transparent), 0 0 0 3px color-mix(in srgb, var(--brand) 45%, transparent);
+}
 .composer-reference-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); font-size: .86rem; }
 .composer-reference-option.is-emoji .badge { min-width: 28px; padding: 2px; text-align: center; font-size: 1.2rem; }
 .composer-reference-option.is-emoji .badge img { display: block; width: 24px; height: 24px; object-fit: contain; }

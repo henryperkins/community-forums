@@ -1,0 +1,4 @@
+
+  ✓  1 [mobile] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field (2.4s)
+
+  1 passed (3.6s)

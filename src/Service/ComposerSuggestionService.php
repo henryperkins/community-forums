@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\FeatureFlags;
+use App\Core\NotFoundException;
 use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
-use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Search\SearchService;
 use App\Search\SearchQuery;
@@ -23,7 +23,7 @@ final class ComposerSuggestionService
         private UserRepository $users,
         private BoardRepository $boards,
         private TagRepository $tags,
-        private ThreadRepository $threads,
+        private ThreadReadService $threadRead,
         private PostRepository $posts,
         private BoardMemberRepository $members,
         private BoardPolicy $policy,
@@ -39,7 +39,7 @@ final class ComposerSuggestionService
     public function suggest(string $trigger, string $query, string $context, int $targetId, User $viewer): array
     {
         $query = $this->normalizeQuery($query, $trigger);
-        if ($query === '' && $trigger !== ':') {
+        if ($query === '' && !in_array($trigger, ['@', ':'], true)) {
             return [];
         }
 
@@ -70,17 +70,33 @@ final class ComposerSuggestionService
     /** @return list<ComposerSuggestion> */
     private function userSuggestions(string $query, string $context, int $targetId, User $viewer): array
     {
-        $threadId = $this->readableContextThreadId($context, $targetId, $viewer);
-        $participantRanks = $threadId !== null ? $this->posts->nonAnonymousParticipantRanks($threadId) : [];
+        $thread = $this->readableContextThread($context, $targetId, $viewer);
+        $participantRanks = $thread !== null ? $this->posts->nonAnonymousParticipantRanks((int) $thread['id']) : [];
+        $privateBoardId = $thread !== null && $thread['board_visibility'] === 'private' ? (int) $thread['board_id'] : null;
+        if ($query === '' && $participantRanks === []) {
+            return [];
+        }
         $out = [];
 
-        $candidates = $context === 'dm-recipient'
-            ? $this->users->suggestDmRecipients($query, $viewer->id(), $viewer->isAdmin())
-            : $this->users->suggestByPrefix($query, 25);
+        if ($context === 'dm-recipient') {
+            $candidates = $this->users->suggestDmRecipients($query, $viewer->id(), $viewer->isAdmin());
+        } else {
+            // Fetch participant matches separately so a matching participant
+            // beyond the alphabetical global cap still reaches the picker.
+            $candidates = $this->users->suggestByPrefix($query, 20, array_keys($participantRanks), $privateBoardId);
+            if ($query !== '') {
+                $candidates = array_merge($candidates, $this->users->suggestByPrefix($query, 20, null, $privateBoardId));
+            }
+        }
         foreach ($candidates as $row) {
             $username = (string) $row['username'];
             $display = trim((string) ($row['display_name'] ?? ''));
-            $rank = 100 + ($participantRanks[(int) $row['id']] ?? 0);
+            $participant = isset($participantRanks[(int) $row['id']]);
+            $meta = $display !== '' && $display !== $username ? $display : '';
+            if ($participant) {
+                $meta = $meta !== '' ? $meta . ' · in this topic' : 'in this topic';
+            }
+            $avatar = trim((string) ($row['avatar_path'] ?? ''));
             $out[] = new ComposerSuggestion(
                 type: 'user',
                 id: (int) $row['id'],
@@ -88,13 +104,17 @@ final class ComposerSuggestionService
                 token: '@' . $username,
                 url: '/u/' . $username,
                 markdown: '@' . $username,
-                meta: $display !== '' && $display !== $username ? $display : '',
+                meta: $meta,
                 group: 'People',
-                rank: $rank,
+                rank: $participant ? 200 : 100,
+                initials: monogram_initials($display !== '' ? $display : $username),
+                mono: monogram_class($username),
+                avatar: $avatar !== '' ? $avatar : null,
+                participant: $participant,
             );
         }
 
-        return $out;
+        return $this->dedupe($out);
     }
 
     /** @return list<ComposerSuggestion> */
@@ -247,21 +267,21 @@ final class ComposerSuggestionService
         );
     }
 
-    private function readableContextThreadId(string $context, int $targetId, User $viewer): ?int
+    /** @return array<string,mixed>|null */
+    private function readableContextThread(string $context, int $targetId, User $viewer): ?array
     {
         if ($targetId <= 0 || !in_array($context, ['thread', 'reply'], true)) {
             return null;
         }
-        $thread = $this->threads->findWithBoard($targetId);
-        if ($thread === null || (int) $thread['is_deleted'] === 1 || (int) $thread['is_pending'] === 1) {
+        try {
+            $thread = $this->threadRead->loadForUser($viewer, $targetId);
+        } catch (NotFoundException) {
             return null;
         }
-        $boardId = (int) $thread['board_id'];
-        $isMember = $this->members->isMember($boardId, $viewer->id());
-        if (!$this->policy->canRead(['visibility' => $thread['board_visibility']], $viewer, $isMember)) {
+        if ((int) $thread['is_pending'] === 1) {
             return null;
         }
-        return (int) $thread['id'];
+        return $thread;
     }
 
     private function markdownLabel(string $label): string

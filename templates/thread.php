@@ -286,6 +286,7 @@ $this->start('subheader_leading');
                     'engagement' => $engagement ?? false,
                     'counts' => ($reaction_counts ?? [])[(int) $p['id']] ?? [],
                     'mine' => ($my_reactions ?? [])[(int) $p['id']] ?? [],
+                    'reactors' => ($reaction_reactors ?? [])[(int) $p['id']] ?? [],
                     'allowed_emoji' => $allowed_emoji ?? [],
                     'reference_cards' => ($reference_cards ?? [])[(int) $p['id']] ?? [],
                     'link_preview_cards' => ($link_preview_cards ?? [])[(int) $p['id']] ?? [],

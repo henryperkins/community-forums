@@ -16862,6 +16862,40 @@ html:not(.has-js) :is(.inbox-menu, .thread-row-menu, .create-menu)[open] > :is(.
 }
 [data-reduced-motion="1"] :is(.inbox-menu-panel, .thread-row-menu-panel, .create-menu-panel, .inbox-sweep, .inbox-help-dialog) { animation: none !important; }
 [data-reduced-motion="1"] .inbox-view-bar .inbox-menu > summary > .icon { transition: none; }
+
+/* Conversation handoff: local feedback only; native drafts and navigation own
+   state. The mirror paints behind the textarea without changing glyph metrics. */
+.composer-reference-option.is-person { grid-template-columns: revert-layer; }
+.composer-reference-option.is-person > .monogram {
+    width: revert-layer; height: revert-layer; font-size: revert-layer;
+}
+.composer-input-wrap > .composer-input { background: transparent; }
+.formatted-content a.mention {
+    color: var(--on-brand-subtle);
+    font-weight: var(--weight-medium);
+    background: color-mix(in srgb, var(--brand) 14%, transparent);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 14%, transparent);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+.reaction-status { flex-basis: 100%; font-size: .85rem; }
+[data-reduced-motion="1"] :is(.reaction-n-val.is-up, .reaction-n-val.is-down) { animation: none !important; }
+[data-reduced-motion="1"] .reaction:not(.reaction-static):is(:hover, :active) { transform: none; }
+[data-reduced-motion="1"] .reaction-tip { transition: none; }
+
+html[data-dm-switch="1"] .dm-shell[data-dm-conversation] .dm-thread-id {
+    animation: dm-switch-identity var(--dur-fast) var(--ease-calm) both;
+}
+html[data-dm-switch="1"] .dm-shell[data-dm-conversation] [data-dm-messages] {
+    animation: dm-switch-rise var(--dur-base) var(--ease-calm) 40ms both;
+}
+@keyframes dm-switch-identity { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dm-switch-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    html[data-dm-switch="1"] .dm-shell[data-dm-conversation] :is(.dm-thread-id, [data-dm-messages]) { animation: none !important; }
+}
+[data-reduced-motion="1"][data-dm-switch="1"] .dm-shell[data-dm-conversation] :is(.dm-thread-id, [data-dm-messages]) { animation: none !important; }
 @media (forced-colors: active) {
     :is(.inbox-menu-panel, .thread-row-menu-panel, .create-menu-panel, .inbox-sweep, .inbox-help-dialog) { animation: none !important; }
     .inbox-switch-thumb,

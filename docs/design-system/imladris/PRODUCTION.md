@@ -45,6 +45,13 @@ pass touched. Local application reconciliations and production-transfer updates
 are recorded chronologically in `LOCAL_RECONCILIATION.md`; do not infer runtime
 parity from an old inspected-commit table.
 
+The 2026-10-08 conversation-interactions handoff is a selective production
+adaptation: calm reaction ticks and name tips, mention identity/highlight
+treatments, and navigation-only Messages entry motion. It adds no React runtime
+or new feature flag. The existing topic/DM routes, aggregate reaction counts,
+Markdown submit source and newest-letter scroll remain authoritative. See the
+dated reconciliation entry for the retained local contracts and evidence.
+
 ## Retired duplicate contracts
 
 `RUNTIME_CONTRACT.md` and `PRODUCTION_PARITY.md` are compatibility pointers to

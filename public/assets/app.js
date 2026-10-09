@@ -41,18 +41,141 @@
         }
     });
 
-    // Reactions: toggle an EXISTING reaction chip over fetch and update it in
-    // place. The "add a reaction" menu uses a normal POST (full reload) so a
-    // brand-new chip is server-rendered with a valid CSRF token. Either way the
-    // no-JavaScript path is unchanged.
+    // Existing chips and the touch picker share one toggle path. The desktop
+    // add disclosure remains a native POST; cloned touch chips retain the
+    // server's emoji face, action and CSRF field.
+    var reactionTipSequence = 0;
+    function reactionForms(post, emoji) {
+        return Array.prototype.filter.call(post.querySelectorAll('.reaction-form'), function (form) {
+            var input = form.querySelector('input[name=emoji]');
+            return input && input.value === emoji;
+        });
+    }
+    function reactionNames(reactors, mine, count) {
+        var names = (Array.isArray(reactors) ? reactors : []).map(function (name) { return '@' + name; });
+        if (mine) { names.unshift('You'); }
+        names = names.slice(0, Math.max(0, Math.min(6, count)));
+        if (!names.length) { return ''; }
+        var others = Math.max(0, count - names.length);
+        if (others) { return names.join(', ') + ' and ' + others + (others === 1 ? ' other' : ' others'); }
+        var last = names.pop();
+        return names.length ? names.join(', ') + ' and ' + last : last;
+    }
+    function positionReactionTip(btn) {
+        var tip = btn.querySelector('.reaction-tip');
+        if (!tip) { return; }
+        // Hidden tips have no box (and cannot widen the document). Measure only
+        // while positioning, before the hovered/focused tip is painted.
+        tip.classList.add('is-measuring');
+        var box = btn.getBoundingClientRect();
+        var width = tip.getBoundingClientRect().width;
+        var left = box.left + box.width / 2 - width / 2;
+        var rightEdge = document.documentElement.clientWidth - 16;
+        var shift = Math.max(16 - left, Math.min(0, rightEdge - left - width));
+        tip.style.setProperty('--reaction-tip-shift', shift + 'px');
+        tip.classList.remove('is-measuring');
+    }
+    ['pointerover', 'focusin'].forEach(function (eventName) {
+        document.addEventListener(eventName, function (e) {
+            var btn = e.target.closest && e.target.closest('button.reaction[data-label]');
+            if (btn) { positionReactionTip(btn); }
+        });
+    });
+    window.addEventListener('resize', function () {
+        document.querySelectorAll('button.reaction:is(:hover, :focus-visible)[data-label]').forEach(positionReactionTip);
+    });
+    function updateReactionTip(btn, reactors, on, count, postId) {
+        var label = btn.getAttribute('data-label') || '';
+        var copy = reactionNames(reactors, on, count);
+        var tip = btn.querySelector('.reaction-tip');
+        if (!copy) {
+            if (tip) { tip.remove(); }
+            btn.removeAttribute('aria-describedby');
+            btn.title = on ? 'Remove your ' + label : label;
+            return;
+        }
+        if (!tip) {
+            tip = document.createElement('span');
+            tip.className = 'reaction-tip';
+            do { tip.id = 'reaction-tip-' + postId + '-added-' + reactionTipSequence++; }
+            while (document.getElementById(tip.id));
+            tip.setAttribute('aria-hidden', 'true');
+            var heading = document.createElement('span');
+            heading.className = 'reaction-tip-label';
+            heading.textContent = label;
+            tip.appendChild(heading);
+            tip.appendChild(document.createElement('span'));
+            btn.appendChild(tip);
+        }
+        tip.lastElementChild.textContent = copy;
+        btn.setAttribute('aria-describedby', tip.id);
+        btn.removeAttribute('title');
+        positionReactionTip(btn);
+    }
+    function reactionFailure(tray, error) {
+        var status = document.createElement('span');
+        status.className = 'muted reaction-status';
+        status.setAttribute('role', 'status');
+        if (error) { status.textContent = error; }
+        else {
+            status.appendChild(document.createTextNode('Could not confirm the reaction. '));
+            var reload = document.createElement('a');
+            // A failed reply/edit may be rendered at a POST-only URL. Use the
+            // thread's GET destination, without a fragment that would only scroll.
+            reload.href = tray.getAttribute('data-reaction-return');
+            reload.textContent = 'Reload to check its state.';
+            status.appendChild(reload);
+        }
+        tray.appendChild(status);
+    }
+    function reactionResponse(response) {
+        // A definite refusal has not toggled anything. Keep its server reason,
+        // including kernel-rendered HTML for authorization/CSRF/not-found errors.
+        if (!response.ok && response.status >= 400 && response.status < 500) {
+            if ((response.headers.get('Content-Type') || '').includes('application/json')) {
+                return response.json();
+            }
+            return response.text().then(function (html) {
+                var page = new DOMParser().parseFromString(html, 'text/html');
+                var message = page.querySelector('.error-card > p, body > p');
+                return { ok: false, error: message && message.textContent.trim()
+                    || 'The reaction was refused (HTTP ' + response.status + ').' };
+            });
+        }
+        if (!response.ok) { throw new Error('Reaction response uncertain'); }
+        return response.json();
+    }
     document.addEventListener('submit', function (e) {
         var form = e.target;
         if (!form.classList || !form.classList.contains('reaction-form')) { return; }
-        if (form.closest('.reaction-add')) { return; }          // adding a new emoji → normal submit
         if (!window.fetch || !window.FormData) { return; }
-
-        var btn = form.querySelector('button');
+        var post = form.closest('article.post');
+        var tray = post && post.querySelector('.reactions');
+        var input = form.querySelector('input[name=emoji]');
+        if (!post || !tray || !input) { return; }
+        var related = reactionForms(post, input.value);
+        var pending = related.some(function (candidate) { return candidate.hasAttribute('data-reaction-pending'); });
+        if (pending) { e.preventDefault(); return; }
+        if (form.closest('.reaction-add')) { return; }
         e.preventDefault();
+        var status = tray.querySelector('.reaction-status');
+        if (status) { status.remove(); }
+        var initiatingButton = form.querySelector('button');
+        var restoreReactionFocus = document.activeElement === initiatingButton;
+        function reactionFocusMoved(event) {
+            if (event.target !== initiatingButton) { restoreReactionFocus = false; }
+        }
+        function canRestoreReactionFocus() {
+            return restoreReactionFocus && document.hasFocus()
+                && (document.activeElement === document.body || document.activeElement === initiatingButton);
+        }
+        document.addEventListener('focusin', reactionFocusMoved);
+        // Keep the focused chip in the focus order while blocking duplicate
+        // submits in every picker copy. Native disabled drops focus to body.
+        related.forEach(function (candidate) {
+            candidate.setAttribute('data-reaction-pending', '');
+            candidate.querySelector('button').setAttribute('aria-disabled', 'true');
+        });
         var body = new FormData(form);
         body.append('format', 'json');
         fetch(form.action, {
@@ -60,17 +183,67 @@
             body: body,
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin'
-        }).then(function (r) { return r.json(); }).then(function (data) {
-            if (!data || !data.ok) { form.submit(); return; }
-            var emoji = (form.querySelector('input[name=emoji]') || {}).value;
-            var n = (data.counts && data.counts[emoji]) || 0;
-            if (n === 0) { form.remove(); return; }
+        }).then(reactionResponse).then(function (data) {
+            if (!data || !data.ok) { reactionFailure(tray, data && data.error); return; }
+            var emoji = input.value;
+            var n = Number((data.counts && data.counts[emoji]) || 0);
             var on = data.state === 'added';
-            btn.classList.toggle('reaction-on', on);
-            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-            var ncell = btn.querySelector('.reaction-n');
-            if (ncell) { ncell.textContent = n; }
-        }).catch(function () { form.submit(); });
+            var chipForm = related.filter(function (candidate) { return candidate.parentNode === tray; })[0];
+            var existing = !!chipForm;
+            if (n === 0) {
+                if (chipForm) {
+                    var focused = canRestoreReactionFocus() && chipForm.querySelector('button') === initiatingButton;
+                    chipForm.remove();
+                    if (focused) {
+                        var add = post.querySelector('.reaction-add');
+                        var menu = post.querySelector(add && window.getComputedStyle(add).display !== 'none'
+                            ? '.reaction-add > summary' : '.post-menu > summary');
+                        if (menu) { menu.focus({ preventScroll: true }); }
+                    }
+                }
+            } else {
+                if (!chipForm) {
+                    chipForm = form.cloneNode(true);
+                    chipForm.removeAttribute('data-reaction-pending');
+                    var countCell = document.createElement('span');
+                    countCell.className = 'reaction-n';
+                    var countValue = document.createElement('span');
+                    countValue.className = 'reaction-n-val';
+                    countCell.appendChild(countValue);
+                    chipForm.querySelector('button').appendChild(countCell);
+                    tray.appendChild(chipForm);
+                }
+                var btn = chipForm.querySelector('button');
+                btn.removeAttribute('aria-disabled');
+                btn.classList.toggle('reaction-on', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                var val = btn.querySelector('.reaction-n-val');
+                var old = Number(val.textContent);
+                val.classList.remove('is-up', 'is-down', 'is-bump');
+                val.textContent = n;
+                if (existing && n !== old) {
+                    void val.offsetWidth;
+                    val.classList.add(n > old ? 'is-up' : 'is-down');
+                }
+                updateReactionTip(btn, data.reactors, on, n, tray.getAttribute('data-post'));
+            }
+            reactionForms(post, emoji).forEach(function (candidate) {
+                var btn = candidate.querySelector('button');
+                btn.classList.toggle('reaction-on', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }).catch(function () {
+            // A lost response may follow a committed toggle. Reposting here
+            // could undo it, so let the reader reload to confirm the state.
+            reactionFailure(tray);
+        }).then(function () {
+            related.forEach(function (candidate) {
+                candidate.removeAttribute('data-reaction-pending');
+                candidate.querySelector('button').removeAttribute('aria-disabled');
+            });
+            document.removeEventListener('focusin', reactionFocusMoved);
+            if (initiatingButton.isConnected && canRestoreReactionFocus()) { initiatingButton.focus({ preventScroll: true }); }
+        });
     });
 
     /**
@@ -1946,6 +2119,43 @@
         });
     }
     localiseDmTimes(document);
+
+    // Only following a different Messages row offers the calm entry transition.
+    // Its target and short lifetime prevent an abandoned click from animating a
+    // later visit, and the blocking head script consumes it before first paint.
+    var dmSwitchKey = 'rb:dm-switch';
+    function finishDmSwitch() {
+        document.documentElement.removeAttribute('data-dm-switch');
+    }
+    document.addEventListener('click', function (event) {
+        var row = event.target.closest && event.target.closest('a.dm-row.dm-link');
+        if (!row || event.defaultPrevented || event.button !== 0
+            || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+            || row.hasAttribute('download') || (row.target && row.target !== '_self')
+            || document.documentElement.hasAttribute('data-reduced-motion')
+            || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+        var target = new URL(row.href, location.href);
+        if (target.origin !== location.origin || !/^\/messages\/[0-9]+$/.test(target.pathname)
+            || target.pathname === location.pathname) { return; }
+        try { sessionStorage.setItem(dmSwitchKey, JSON.stringify({ path: target.pathname, at: Date.now() })); } catch (error) {}
+    });
+    if (document.documentElement.hasAttribute('data-dm-switch')) {
+        var switchedMessages = document.querySelector('.dm-shell[data-dm-conversation] [data-dm-messages]');
+        if (switchedMessages) {
+            var dmSwitchTimer = setTimeout(finishDmSwitch, 1000);
+            switchedMessages.addEventListener('animationend', function (event) {
+                if (event.target === switchedMessages && event.animationName === 'dm-switch-rise') {
+                    clearTimeout(dmSwitchTimer);
+                    finishDmSwitch();
+                }
+            });
+        } else { finishDmSwitch(); }
+    }
+    window.addEventListener('pageshow', function (event) {
+        if (!event.persisted) { return; }
+        finishDmSwitch();
+        try { sessionStorage.removeItem(dmSwitchKey); } catch (error) {}
+    });
 
     var dmShell = document.querySelector('.dm-shell');
     var dmStream = document.querySelector('[data-dm-messages]');

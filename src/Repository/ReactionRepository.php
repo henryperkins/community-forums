@@ -110,6 +110,51 @@ final class ReactionRepository
         return $out;
     }
 
+    /**
+     * Newest eligible other members, capped at six per post/emoji in one query.
+     * Call only after authorizing the viewer's read of every supplied post.
+     * Counts intentionally stay aggregate; these names are a private member hint.
+     *
+     * @param list<int> $postIds
+     * @return array<int,array<string,list<string>>>
+     */
+    public function reactorsForPosts(int $viewerId, array $postIds): array
+    {
+        $postIds = array_values(array_unique(array_map('intval', $postIds)));
+        if ($viewerId <= 0 || $postIds === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($postIds), '?'));
+        $rows = $this->db->fetchAll(
+            "SELECT post_id, emoji, username FROM (
+                SELECT r.post_id, r.emoji, u.username,
+                    ROW_NUMBER() OVER (PARTITION BY r.post_id, r.emoji ORDER BY r.created_at DESC, r.id DESC) AS reactor_rank
+                FROM reactions r
+                JOIN users u ON u.id = r.user_id
+                JOIN posts p ON p.id = r.post_id
+                JOIN threads t ON t.id = p.thread_id
+                JOIN boards b ON b.id = t.board_id
+                WHERE r.post_id IN ($place) AND r.user_id <> ? AND u.status = 'active'
+                    AND (p.is_anonymous = 0 OR r.user_id <> p.user_id)
+                    AND NOT EXISTS (
+                        SELECT 1 FROM blocks blocked
+                        WHERE (blocked.user_id = ? AND blocked.blocked_user_id = r.user_id)
+                            OR (blocked.user_id = r.user_id AND blocked.blocked_user_id = ?)
+                    )
+                    AND (b.visibility <> 'private' OR u.role = 'admin' OR EXISTS (
+                        SELECT 1 FROM board_members membership
+                        WHERE membership.board_id = b.id AND membership.user_id = r.user_id
+                    ))
+            ) eligible WHERE reactor_rank <= 6 ORDER BY post_id, emoji, reactor_rank",
+            array_merge($postIds, [$viewerId, $viewerId, $viewerId]),
+        );
+        $out = [];
+        foreach ($rows as $row) {
+            $out[(int) $row['post_id']][(string) $row['emoji']][] = (string) $row['username'];
+        }
+        return $out;
+    }
+
     /** Reactions received on a post from users other than $authorId (reputation contribution). */
     public function receivedCount(int $postId, int $authorId): int
     {

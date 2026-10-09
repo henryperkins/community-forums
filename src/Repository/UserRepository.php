@@ -90,16 +90,52 @@ final class UserRepository
         return $out;
     }
 
-    /** @return array<int,array{id:int,username:string,display_name:?string,role:string,status:string}> */
-    public function suggestByPrefix(string $query, int $limit): array
+    /**
+     * Match a handle prefix or any display-name word prefix. Optional ids let
+     * the caller fetch participants before applying the global candidate cap.
+     *
+     * @param list<int>|null $ids null searches all active users; [] searches none
+     * @param int|null $privateBoardId Require the candidate's current read access before limiting.
+     * @return list<array{id:int,username:string,display_name:?string,avatar_path:?string,role:string,status:string}>
+     */
+    public function suggestByPrefix(string $query, int $limit, ?array $ids = null, ?int $privateBoardId = null): array
     {
+        if ($ids === [] || ($query === '' && $ids === null)) {
+            return [];
+        }
+        $where = "status = 'active'";
+        $params = [];
+        if ($query !== '') {
+            $prefix = addcslashes($query, '\\%_') . '%';
+            // REGEXP performs only word-boundary normalization. LIKE owns the
+            // actual match so the column's accent-insensitive collation applies
+            // on both MariaDB and MySQL. Preserve literal query punctuation (e.g.
+            // Ann-M) while turning other separators into a searchable space.
+            $punctuation = preg_replace('/[\p{L}\p{N}_]/u', '', $query) ?? '';
+            $separators = '[^[:alnum:]_' . preg_quote($punctuation) . ']+';
+            $where .= " AND (username LIKE ? OR display_name LIKE ? OR REGEXP_REPLACE(display_name, ?, ' ') LIKE ?)";
+            array_push($params, $prefix, $prefix, $separators, '% ' . $prefix);
+        }
+        if ($ids !== null) {
+            $ids = array_values(array_unique(array_map('intval', $ids)));
+            $where .= ' AND id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')';
+            array_push($params, ...$ids);
+        }
+        if ($privateBoardId !== null) {
+            $where .= " AND (role = 'admin' OR EXISTS (
+                SELECT 1 FROM board_members membership
+                WHERE membership.user_id = users.id AND membership.board_id = ?)
+                OR EXISTS (SELECT 1 FROM board_moderators moderator
+                    WHERE moderator.user_id = users.id AND moderator.board_id = ?))";
+            array_push($params, $privateBoardId, $privateBoardId);
+        }
         return $this->db->fetchAll(
-            "SELECT id, username, display_name, role, status
+            "SELECT id, username, display_name, avatar_path, role, status
              FROM users
-             WHERE status = 'active' AND (username LIKE ? OR display_name LIKE ?)
+             WHERE " . $where . "
              ORDER BY username ASC
              LIMIT " . max(1, min(25, $limit)),
-            [$query . '%', $query . '%'],
+            $params,
         );
     }
 
@@ -108,7 +144,7 @@ final class UserRepository
     {
         $prefix = addcslashes($query, '\\%_') . '%';
         return $this->db->fetchAll(
-            "SELECT u.id, u.username, u.display_name, u.role, u.status
+            "SELECT u.id, u.username, u.display_name, u.avatar_path, u.role, u.status
              FROM users u
              WHERE u.status = 'active' AND u.id <> ?
                AND (u.suspended_until IS NULL OR u.suspended_until <= UTC_TIMESTAMP())

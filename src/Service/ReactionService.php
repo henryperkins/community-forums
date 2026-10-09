@@ -67,6 +67,7 @@ final class ReactionService
         private UserRepository $users,
         private BoardPolicy $policy,
         private WriteGate $writeGate,
+        private ThreadReadService $threadRead,
         private ?NotificationService $notifications = null,
         private ?ReputationLedgerService $reputation = null,
         private ?CustomEmojiService $customEmoji = null,
@@ -86,7 +87,7 @@ final class ReactionService
     /**
      * Toggle the user's $emoji reaction on $postId.
      *
-     * @return array{state:string, counts:array<string,int>, post:array<string,mixed>, notify_author:bool}
+     * @return array{state:string, counts:array<string,int>, reactors:list<string>, post:array<string,mixed>, notify_author:bool}
      */
     public function toggle(User $user, int $postId, string $emoji): array
     {
@@ -97,9 +98,10 @@ final class ReactionService
         }
 
         $post = $this->posts->findWithContext($postId);
-        if ($post === null || (int) $post['is_deleted'] === 1) {
+        if ($post === null || (int) $post['is_deleted'] === 1 || (int) ($post['is_pending'] ?? 0) === 1) {
             throw new NotFoundException('Post not found.');
         }
+        $this->threadRead->loadForUser($user, (int) $post['thread_id']);
         $isMember = $this->users->isBoardMember((int) $post['board_id'], $user->id());
         if (!$this->policy->canRead(['visibility' => $post['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Post not found.');
@@ -138,6 +140,7 @@ final class ReactionService
         return [
             'state' => $state,
             'counts' => $this->reactions->countsForPost($postId),
+            'reactors' => $this->reactions->reactorsForPosts($user->id(), [$postId])[$postId][$emoji] ?? [],
             'post' => $post,
             // A new reaction from someone other than the author triggers a
             // 'reaction' notification (wired in M2 / P2-03).

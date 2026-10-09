@@ -31,6 +31,7 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="<?= $e($assetUrl('conversation-entry.js')) ?>"></script>
     <title><?= $e($this->block('title', $brand['name'])) ?></title>
     <meta name="description" content="<?= $e($desc) ?>">
     <?php if ($robots !== ''): ?><meta name="robots" content="<?= $e($robots) ?>"><?php endif; ?>

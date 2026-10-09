@@ -192,6 +192,7 @@ final class ThreadController extends Controller
         $reactionRepo = $this->container->get(ReactionRepository::class);
         $reactionCounts = $engagement ? $reactionRepo->countsForPosts($postIds) : [];
         $myReactions = [];
+        $reactionReactors = [];
         $isStarred = false;
         $referenceCards = [];
         $linkPreviewCards = [];
@@ -230,6 +231,7 @@ final class ThreadController extends Controller
             $tuRepo = $this->container->get(ThreadUserRepository::class);
             if ($engagement) {
                 $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
+                $reactionReactors = $reactionRepo->reactorsForPosts($user->id(), array_keys($reactionCounts));
                 $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
             }
             if (($engagement || $automatedContext) && $request->method() === 'GET' && $posts !== []) {
@@ -493,6 +495,7 @@ final class ThreadController extends Controller
             'show_reactions' => $reading['show_reactions'],
             'reaction_counts' => $reactionCounts,
             'my_reactions' => $myReactions,
+            'reaction_reactors' => $reactionReactors,
             'allowed_emoji' => $allowedEmoji,
             'reference_cards' => $referenceCards,
             'link_preview_cards' => $linkPreviewCards,

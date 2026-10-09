@@ -60,6 +60,7 @@ final class EngagementController extends Controller
                 'state' => $result['state'],
                 'emoji' => $emoji,
                 'counts' => $result['counts'],
+                'reactors' => $result['reactors'],
             ]);
         }
 

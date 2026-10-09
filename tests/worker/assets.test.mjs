@@ -93,7 +93,7 @@ test('published manifest names only verified asset bytes and font preload matche
   }
   const css = await readFile(new URL(`../../public${manifest.urls['imladris.css']}`, import.meta.url), 'utf8');
   assert.ok(css.includes(manifest.urls['fonts/imladris/eb-garamond-latin-400-normal.woff2']));
-  for (const name of ['app.js', 'composer.js', 'passkeys.js', 'tour.js']) {
+  for (const name of ['conversation-entry.js', 'app.js', 'composer.js', 'passkeys.js', 'tour.js']) {
     const script = await readFile(new URL(`../../public${manifest.urls[name]}`, import.meta.url), 'utf8');
     assert.match(script, /^['"]use strict['"];\s/, `${name} must preserve strict semantics when loaded as a classic script`);
   }

@@ -176,6 +176,27 @@ Identical in all four contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 - Pasting a same-origin board/tag/topic/post URL into the WYSIWYG surface rewrites it to the same canonical Markdown link when it can be resolved; otherwise it remains a normal URL.
 - The `#` trigger intentionally ignores Markdown heading starts such as `# `.
 
+The conversation-interactions handoff adds a bounded enhancement to this picker:
+bare `@` lists active, named participants only in a readable topic/reply context;
+other contexts need a query. Results put participant matches before other handle
+or display-name word-prefix matches, then sort by handle, with a 20-item cap.
+Person rows show the existing avatar/monogram preference, display name and
+"in this topic" metadata. Accepting a mention adds a space unless the following
+character is whitespace, `. , ; : ! ? ) ]`, or a closing `* _ ~ |` formatting
+delimiter. A following rich paragraph already supplies a separator. Intraword
+handle underscores remain literal and a single final typing space stays
+whitespace, never an encoded entity. Source and rich editing preserve canonical
+text and caret position; accepting a suggestion stays dismissed until the query
+or caret changes.
+
+The source editor may highlight handles returned by its own suggestion endpoint
+using an `aria-hidden` mirror behind the textarea. It excludes email addresses,
+inline code and fenced code, follows input size and scroll, and never changes
+submitted text. Accepted rich mentions and posted mention links use the same
+semantic evergreen wash; posted links keep their underline. Suggestion/chip
+enhancement belongs to `rich_composer`; the `mentions` flag still controls new
+server-rendered links and notifications, not previously stored HTML.
+
 ## 7. Attachments, Images & Media
 
 Identical across all four contexts (DMs can attach too); a board may tighten limits.

@@ -172,6 +172,12 @@
     TextareaComposerAdapter.prototype.setDisabled = function (disabled) { this.ta.disabled = !!disabled; };
     TextareaComposerAdapter.prototype.enterShouldSubmit = function () { return textareaEnterShouldSubmit(this.ta); };
     TextareaComposerAdapter.prototype.isSourceMode = function () { return true; };
+    TextareaComposerAdapter.prototype.referenceState = function () { return referenceState(this.ta); };
+    TextareaComposerAdapter.prototype.replaceReferenceSelection = function (state, item) {
+        var markdown = item.markdown || item.token || item.label || '';
+        if (state.trigger === '@' && !/^[\s.,;:!?)\]*_~|]/.test(this.ta.value.slice(state.end))) { markdown += ' '; }
+        replaceRange(this.ta, state.start, state.end, markdown);
+    };
     TextareaComposerAdapter.prototype.destroy = function () {
         this.ta.removeEventListener('input', this.inputHandler);
         this.changeHandlers = [];
@@ -1941,18 +1947,138 @@
     }
 
     var referenceMenuSeq = 0;
+    var referenceCodeCache = new WeakMap();
+    function referenceCodeRanges(ta) {
+        var cached = referenceCodeCache.get(ta);
+        if (cached && cached.text === ta.value) { return cached.ranges; }
+        var text = ta.value;
+        var ranges = [];
+        var fence = null;
+        var lists = [];
+        var quoteDepth = 0;
+        var paragraphStart = null;
+        var paragraphEnd = 0;
+        var blankBefore = true;
+        function flushParagraph() {
+            if (paragraphStart === null) { return; }
+            var paragraph = text.slice(paragraphStart, paragraphEnd);
+            var ticks = /`+/g, run, delimiter = null, start = 0;
+            while ((run = ticks.exec(paragraph)) !== null) {
+                if (delimiter) {
+                    if (run[0] === delimiter) {
+                        ranges.push([paragraphStart + start, paragraphStart + ticks.lastIndex]);
+                        delimiter = null;
+                    }
+                } else {
+                    var slashes = 0;
+                    for (var i = run.index - 1; i >= 0 && paragraph[i] === '\\'; i--) { slashes++; }
+                    if (slashes % 2) { continue; }
+                    delimiter = run[0]; start = run.index;
+                }
+            }
+            // An unfinished code span suppresses completion only in its own
+            // paragraph, never across a blank line or a new Markdown block.
+            if (delimiter) { ranges.push([paragraphStart + start, paragraphEnd + 1]); }
+            paragraphStart = null;
+        }
+        var offset = 0;
+        text.split('\n').forEach(function (line) {
+            var end = offset + line.length;
+            var content = line;
+            var depth = 0, quote, quoteIndent = 0;
+            while ((quote = content.match(/^( {0,3})>[ \t]?/))) {
+                quoteIndent += quote[1].length;
+                content = content.slice(quote[0].length); depth++;
+            }
+            if (depth !== quoteDepth) { flushParagraph(); fence = null; lists = []; }
+            quoteDepth = depth;
+            // Tabs advance to a four-column stop. Only leading whitespace is
+            // expanded; painted text continues to use the original offsets.
+            content = content.replace(/^[ \t]+/, function (space) {
+                var width = 0;
+                for (var i = 0; i < space.length; i++) { width += space[i] === '\t' ? 4 - width % 4 : 1; }
+                return ' '.repeat(width);
+            });
+            var indent = (content.match(/^ */) || [''])[0].length;
+            var blank = content.trim() === '';
+            var marker = content.match(/^( *)(?:[-+*]|\d{1,9}[.)])([ \t]+)/);
+            if (fence && (depth !== fence.quote || (!blank && indent < fence.indent)
+                || (fence.quoteIndent !== null && quoteIndent < fence.quoteIndent))) { fence = null; }
+            if (fence) {
+                var closing = content.slice(fence.indent).match(/^ {0,3}(`{3,}|~{3,})\s*$/);
+                ranges.push([offset, end + 1]);
+                if (closing && closing[1][0] === fence.marker[0] && closing[1].length >= fence.marker.length) { fence = null; }
+                blankBefore = blank;
+                offset = end + 1;
+                return;
+            }
+            if (blank) {
+                flushParagraph(); blankBefore = true; offset = end + 1; return;
+            }
+            var previousIndent = lists.length ? lists[lists.length - 1] : 0;
+            // A list paragraph can continue lazily without indentation. Fences
+            // cannot, and after a blank the next line must belong to the list.
+            if (marker || blankBefore || paragraphStart === null) {
+                while (lists.length && indent < lists[lists.length - 1]) { lists.pop(); }
+            }
+            var base = lists.length ? lists[lists.length - 1] : 0;
+            var newItem = marker && indent - base <= 3;
+            if (newItem) {
+                flushParagraph();
+                base = marker[0].length;
+                lists.push(base);
+                content = content.slice(base);
+                // Multiple list containers may start on one line: - - ```.
+                var nested;
+                while ((nested = content.match(/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/))) {
+                    base += nested[0].length; lists.push(base);
+                    content = content.slice(nested[0].length);
+                }
+            } else {
+                content = content.slice(Math.min(indent, base));
+                if (previousIndent !== base) { flushParagraph(); }
+            }
+            // Quotes can start inside a list item as well as outside it. Their
+            // continuation leaders consume the list indentation on later lines.
+            var innerQuotes = 0;
+            while ((quote = content.match(/^ {0,3}>[ \t]?/))) {
+                content = content.slice(quote[0].length); innerQuotes++;
+            }
+            if (innerQuotes) { flushParagraph(); depth += innerQuotes; quoteDepth = depth; }
+            var opening = content.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+            if (opening && !(opening[1][0] === '`' && opening[2].includes('`'))) {
+                flushParagraph();
+                fence = { marker: opening[1], quote: depth, indent: innerQuotes ? 0 : base, quoteIndent: innerQuotes ? base : null };
+                ranges.push([offset, end + 1]);
+            } else if (/^ {4}/.test(content) && paragraphStart === null) {
+                ranges.push([offset, end + 1]);
+            } else {
+                var block = /^ {0,3}(?:#{1,6}(?:\s|$)|(?:\*\s*){3,}$|(?:-\s*){3,}$|(?:_\s*){3,}$)/.test(content);
+                if (block) { flushParagraph(); }
+                if (paragraphStart === null) { paragraphStart = offset; }
+                paragraphEnd = end;
+                if (block) { flushParagraph(); }
+            }
+            blankBefore = false;
+            offset = end + 1;
+        });
+        flushParagraph();
+        ranges.sort(function (a, b) { return a[0] - b[0]; });
+        referenceCodeCache.set(ta, { text: text, ranges: ranges });
+        return ranges;
+    }
     function referenceState(ta) {
         if (ta.selectionStart !== ta.selectionEnd) { return null; }
         var pos = ta.selectionStart || 0;
         var before = ta.value.slice(0, pos);
-        var m = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{1,80})$/);
+        var m = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{0,80})$/);
         if (!m) { return null; }
         var trigger = m[2];
         var query = m[3];
+        if (query === '' && trigger !== '@') { return null; }
         var line = before.slice(before.lastIndexOf('\n') + 1);
         if (trigger === '#' && /^\s*#{1,3}\s?$/.test(line)) { return null; }
-        if (inFence(ta)) { return null; }
-        if (textareaInlineCodeOpen(ta)) { return null; }
+        if (referenceCodeRanges(ta).some(function (range) { return pos > range[0] && pos < range[1]; })) { return null; }
         return {
             trigger: trigger,
             query: query,
@@ -2005,7 +2131,107 @@
                 return;
             } catch (e) {}
         }
+        if (state.trigger === '@' && !/^[\s.,;:!?)\]*_~|]/.test(ta.value.slice(state.end))) {
+            markdown += ' ';
+        }
         replaceRange(ta, state.start, state.end, markdown);
+    }
+
+    // Paint only names this composer has received from its visibility-gated
+    // suggestion endpoint. The textarea remains the editable/submitted draft.
+    function wireMentionMirror(form, ta, known) {
+        var wrap = ta.closest('.composer-input-wrap');
+        var mirror = wrap && wrap.querySelector('.composer-input-mirror');
+        if (!mirror) { return function () {}; }
+        wrap.classList.add('has-mention-mirror');
+        var properties = ['box-sizing', 'font-family', 'font-size', 'font-weight', 'font-style',
+            'font-kerning', 'font-feature-settings', 'font-variant-numeric', 'letter-spacing',
+            'word-spacing', 'line-height', 'text-transform', 'text-indent', 'text-rendering',
+            'tab-size', 'white-space', 'overflow-wrap', 'word-break', 'direction',
+            'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+            'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width'];
+        var frame = null, lastValue = null, lastKnownSize = -1;
+
+        function scroll() { mirror.scrollTop = ta.scrollTop; mirror.scrollLeft = ta.scrollLeft; }
+        function sync() {
+            frame = null;
+            if (form._rbComposerDestroyed) { return; }
+            var rich = ta.classList.contains('is-wysiwyg-source-hidden');
+            wrap.setAttribute('data-rich-active', rich ? 'true' : 'false');
+            mirror.hidden = rich;
+            if (rich || !ta.getClientRects().length) { return; }
+            var style = window.getComputedStyle(ta);
+            properties.forEach(function (property) { mirror.style.setProperty(property, style.getPropertyValue(property)); });
+            mirror.style.width = (ta.clientWidth + parseFloat(style.borderLeftWidth || 0) + parseFloat(style.borderRightWidth || 0)) + 'px';
+            mirror.style.height = (ta.clientHeight + parseFloat(style.borderTopWidth || 0) + parseFloat(style.borderBottomWidth || 0)) + 'px';
+            if (lastValue === ta.value && lastKnownSize === known.size) { scroll(); return; }
+            lastValue = ta.value; lastKnownSize = known.size;
+            var fragment = document.createDocumentFragment();
+            var code = referenceCodeRanges(ta);
+            var lineOffset = 0, codeIndex = 0;
+            ta.value.split(/(\n)/).forEach(function (line) {
+                // Match an email as a whole; Markdown emphasis delimiters such
+                // as **@alice** are not an email local-part by themselves. The
+                // boundary prevents retrying a long local-part at every character.
+                var emails = [];
+                var emailPattern = /(^|[^A-Za-z0-9.!#$%&'*+/=?^_`{|}~-])([A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)/g;
+                var email;
+                while ((email = emailPattern.exec(line)) !== null) { emails.push([email.index + email[1].length, emailPattern.lastIndex]); }
+                var mentions = /(^|[^\w@])@([A-Za-z0-9_]{1,32})\b/g;
+                var match;
+                var offset = 0;
+                while ((match = mentions.exec(line)) !== null) {
+                    var start = match.index + match[1].length;
+                    var finish = start + match[2].length + 1;
+                    var absolute = lineOffset + start;
+                    while (codeIndex < code.length && code[codeIndex][1] <= absolute) { codeIndex++; }
+                    if (!known.has(match[2].toLowerCase())
+                        || emails.some(function (range) { return start >= range[0] && start < range[1]; })
+                        || (codeIndex < code.length && absolute >= code[codeIndex][0])) { continue; }
+                    fragment.appendChild(document.createTextNode(line.slice(offset, start)));
+                    var mark = document.createElement('mark');
+                    mark.className = 'composer-mention-mark';
+                    mark.textContent = line.slice(start, finish);
+                    fragment.appendChild(mark);
+                    offset = finish;
+                }
+                fragment.appendChild(document.createTextNode(line.slice(offset)));
+                lineOffset += line.length;
+            });
+            if (/\n$/.test(ta.value)) { fragment.appendChild(document.createTextNode('\u200b')); }
+            mirror.replaceChildren(fragment);
+            scroll();
+        }
+        function schedule() {
+            if (frame === null) { frame = window.requestAnimationFrame(sync); }
+        }
+        listenWithCleanup(form, ta, 'input', schedule);
+        listenWithCleanup(form, ta, 'scroll', scroll);
+        listenWithCleanup(form, form, 'retroboards:composer-statechange', schedule);
+        listenWithCleanup(form, window, 'resize', schedule);
+        var resize = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+        if (resize) { resize.observe(ta); }
+        var mutation = typeof MutationObserver === 'function' ? new MutationObserver(schedule) : null;
+        if (mutation) { mutation.observe(ta, { attributes: true, attributeFilter: ['class', 'style'] }); }
+        addCleanup(form, function () {
+            if (frame !== null) { window.cancelAnimationFrame(frame); }
+            if (resize) { resize.disconnect(); }
+            if (mutation) { mutation.disconnect(); }
+            wrap.classList.remove('has-mention-mirror');
+        });
+        schedule();
+        return schedule;
+    }
+
+    function mentionAvatarPath(value) {
+        if (typeof value !== 'string' || !value) { return ''; }
+        try {
+            var url = new URL(value, window.location.origin);
+            if (url.origin !== window.location.origin || !/^https?:$/.test(url.protocol) || url.username || url.password) { return ''; }
+            // Keep the checked origin in the assigned src. A pathname starting
+            // with // would otherwise be reparsed as a different origin.
+            return url.href;
+        } catch (e) { return ''; }
     }
 
     function wireReferencePickers(form, adapter) {
@@ -2021,6 +2247,16 @@
         var activeState = null;
         var lastRenderKey = null;
         var requestSeq = 0;
+        var accepting = false;
+        var acceptedState = null;
+
+        var known = new Set();
+        var syncMirror = wireMentionMirror(form, ta, known);
+        function rememberPerson(item) {
+            if (item.type !== 'user') { return; }
+            var handle = String(item.token || item.markdown || item.label || '').match(/^@([A-Za-z0-9_]{1,32})$/);
+            if (handle) { known.add(handle[1].toLowerCase()); }
+        }
 
         menu.id = menuId;
         menu.className = 'composer-reference-menu composer-suggestion-popover';
@@ -2079,7 +2315,12 @@
             if (!state) { hide(); return; }
             var markdown = item.markdown || item.token || item.label || '';
             if (markdown === '') { hide(); return; }
+            rememberPerson(item);
+            accepting = true;
             replaceReferenceSelection(adapter, ta, state, item, markdown);
+            acceptedState = currentReferenceState(adapter, ta);
+            accepting = false;
+            syncMirror();
             hide();
         }
         function renderItems(items, state, key) {
@@ -2089,6 +2330,7 @@
             activeState = state;
             lastRenderKey = key;
             items.forEach(function (item) {
+                rememberPerson(item);
                 var b = document.createElement('button');
                 b.type = 'button';
                 b.className = 'composer-reference-option';
@@ -2103,7 +2345,21 @@
 
                 var badge = document.createElement('span');
                 badge.className = 'badge';
-                if (item.type === 'emoji') {
+                if (item.type === 'user') {
+                    b.classList.add('is-person');
+                    if (box.getAttribute('data-composer-avatars') === '0') { b.classList.add('is-avatarless'); }
+                    var avatar = mentionAvatarPath(item.avatar);
+                    if (avatar) {
+                        badge = document.createElement('img');
+                        badge.className = 'monogram avatar-img';
+                        badge.src = avatar;
+                        badge.alt = '';
+                    } else {
+                        badge.className = 'monogram' + (/^mono-\d+$/.test(item.mono || '') ? ' ' + item.mono : '');
+                        badge.textContent = item.initials || '';
+                    }
+                    badge.setAttribute('aria-hidden', 'true');
+                } else if (item.type === 'emoji') {
                     badge.textContent = item.markdown || item.token || '😊';
                 } else if (item.type === 'custom_emoji' && emojiImagePath(item.url)) {
                     var emojiImage = document.createElement('img');
@@ -2120,7 +2376,7 @@
                 meta.className = 'composer-reference-meta';
                 meta.textContent = item.meta || item.group || item.url || '';
 
-                b.appendChild(badge);
+                if (item.type !== 'user' || box.getAttribute('data-composer-avatars') !== '0') { b.appendChild(badge); }
                 b.appendChild(label);
                 b.appendChild(meta);
                 b.addEventListener('mousedown', function (e) { e.preventDefault(); });
@@ -2131,18 +2387,24 @@
                 menu.appendChild(b);
                 options.push(b);
             });
+            syncMirror();
             openMenu();
             highlight(0);
         }
         function render() {
+            if (accepting) { return; }
             var state = currentReferenceState(adapter, ta);
+            if (state && acceptedState && state.trigger === acceptedState.trigger
+                && state.query === acceptedState.query && state.start === acceptedState.start && state.end === acceptedState.end) { return; }
+            acceptedState = null;
             if (!state) { hide(); return; }
             if (state.trigger === ':' && state.query.length < 2) { hide(); return; }
             var key = state.trigger + '|' + state.query + '|'
                 + (form.getAttribute('data-composer-context') || '') + '|'
                 + (form.getAttribute('data-composer-target-id') || '0');
             activeState = state;
-            if (key === lastRenderKey && !menu.hidden) { return; }
+            if (key === lastRenderKey) { return; }
+            lastRenderKey = key;
             var seq = ++requestSeq;
             composerFetch(form, suggestionUrl(form, state), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -2152,7 +2414,7 @@
             }).then(function (j) {
                 if (seq !== requestSeq) { return; }
                 if (!j || !j.ok || !Array.isArray(j.items)) { hide(); return; }
-                renderItems(j.items, state, key);
+                renderItems(j.items, activeState || state, key);
             }).catch(function () {
                 if (seq === requestSeq) { hide(); }
             });

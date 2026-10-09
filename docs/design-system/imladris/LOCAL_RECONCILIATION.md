@@ -1021,3 +1021,65 @@ mirror component or generated component rule is changed by this decision.
 See [ADR 0043](../../adr/0043-create-menu-subheader.md) for the superseded clauses
 and [the evidence record](../../evidence/create-menu-2026-10-07/README.md) for
 verification and its limits.
+
+## 2026-10-08 — conversation interactions, selective adoption
+
+`CommunityForumsDesignSystem.zip` (SHA-256
+`49fd7cedf13f1d59f9ee855aaa10859667668d286451eaeca65ffe7b5bc34200`)
+supplies the conversation-interactions handoff. The complete `components.css`
+would remove existing local contracts, so only reaction ticks/tips and mention
+person/mirror primitives are taken into the authoring mirror. React components
+and the DM preview remain source references; PHP and progressive JavaScript
+implement the behavior through existing routes.
+
+- Reaction counts use the calm 240ms rise/fall on the viewer's surviving chip.
+  The proposed bump/spring alternative is held back under DESIGN's no-bounce
+  rule. Member chips have the handoff's half-pixel hover lift and quiet press;
+  guest spans stay static. Reactor tips show up to six names including "You",
+  with aggregate residual counts, excluding inactive, blocked and former private
+  board members. The current topic read gate applies before identity retrieval.
+  Touch additions immediately create a visible chip; pending duplicates are
+  blocked and uncertain responses offer a GET reload without replaying a toggle.
+- Bare `@` offers named topic participants in readable topic/reply contexts.
+  Person rows follow avatar preferences and use existing monogram colors.
+  Mention insertion preserves canonical Markdown and adds appropriate spacing.
+  Source highlighting uses a hidden, metric-matched mirror for known handles,
+  excluding email and code. Rich mentions retain the muted over-cap cue; posted
+  links retain underlines. Evergreen washes use semantic `--brand`, including
+  twilight, and do not add padding or change source glyph widths.
+- Messages identity fades over 140ms; letters rise 8px over 240ms after 40ms.
+  A tiny external head script consumes a target-specific navigation signal
+  before first paint. Only ordinary row switches offer it; reload/history,
+  other navigation and reduced-motion paths do not replay it. The list, details,
+  actions and composer stay still. The existing newest-letter scroll contract
+  remains; the handoff's separate top-of-conversation proposal is held back.
+
+Both account and OS reduced motion suppress decorative transforms/animations.
+Native links, forms and the textarea remain the no-JS contract. Existing
+`engagement`, `mentions`, `dms`, `rich_composer` and `wysiwyg_composer` flag roles
+stay intact; this work introduces no subsystem flag. The generated compatibility
+bridge is preserved, with application-only rules outside it.
+
+The runtime digest is refreshed on `main` after contract review and the hashed
+asset build; the inspected-mirror commit remains unchanged. Recent deployed
+assets remain governed by ADR 0041. Validation and browser artifacts are recorded
+in [the evidence record](../../evidence/conversation-interactions-2026-10-08/README.md).
+
+### Conversation-interactions review fixes
+
+The reviewed tooltip geometry now uses `display: none` at rest, a temporary
+hidden measurement class, and viewport-clamped placement when shown. This closes
+the document-width regression without changing its tokenized face or motion
+preferences. The application bridge hands `.is-person > .monogram` width,
+height and font size back with `revert-layer`, so the layer's 28px/.66rem row
+contract wins over legacy `.monogram` rules. These are targeted corrections to
+the same adopted primitives; generated resources and hashed delivery assets
+are rebuilt from the authoring mirror.
+
+Reaction names also suppress anonymous authors' self-reactions. Pending buttons
+use `aria-disabled` with the submit lock to preserve focus, removed chips focus
+the visible menu with `preventScroll`, and error recovery uses a canonical topic
+GET while definite refusals retain their server reason. Source completion and
+mention paint share a cached block-aware scanner; rich serialization preserves
+intraword handle underscores and one final handoff space. Regression evidence
+is indexed in the conversation evidence record's review-fixes section.

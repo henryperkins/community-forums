@@ -4,6 +4,23 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Consistent headers and navigation
 
+- Add calm reaction count motion, member reactor-name tips with privacy filters,
+  and immediate touch-picker updates. Keep chip focus, synchronize picker state,
+  prevent overlapping toggles and offer reload after an uncertain response.
+- Complete mention person rows, bare-`@` topic participant suggestions, accepted
+  mention spacing and evergreen highlights in source/rich editors and posts.
+  The source mirror follows draft wrapping and scroll without altering text.
+- Harden conversation interactions after review: anonymous self-reactions never
+  disclose their author, refusals retain the server reason, and uncertain-toggle
+  recovery uses a real topic GET. Hidden tips cannot widen the page; keyboard
+  focus stays in place or returns to the visible menu without scrolling. Preserve
+  mention handles, line-final whitespace and closing formatting delimiters;
+  share block-aware Source completion/highlighting and bound email scanning.
+  Keep accent-insensitive name suggestions, assigned private-board moderators,
+  and the design layer's 28px person-row avatars.
+- Fade conversation identity and gently reveal letters after a Messages row
+  switch. Keep newest-letter positioning and native navigation; reloads, history
+  restoration and both reduced-motion settings do not replay the transition.
 - Move Boards, Tags and Connections from the directory's horizontal strip into
   an Explore group at the top of the shared rail and phone drawer. Remove that
   group's Notifications entry while retaining the bell and embedded deep links.

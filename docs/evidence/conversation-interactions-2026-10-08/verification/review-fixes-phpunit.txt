@@ -1,0 +1,5 @@
+shard 0: Tests: 897, Assertions: 7061, Skipped: 1.
+shard 1: OK (726 tests, 4798 assertions)
+shard 2: OK (723 tests, 8102 assertions)
+shard 3: OK (847 tests, 5328 assertions)
+total: 3193 tests, 25289 assertions, 1 skipped (4 private-database shards)

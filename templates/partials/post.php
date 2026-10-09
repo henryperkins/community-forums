@@ -168,19 +168,25 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
         $allowed = $allowed_emoji ?? [];
         if ($engagement && ($show_reactions ?? true)):
         ?>
-        <div class="reactions" data-post="<?= (int) $p['id'] ?>">
-            <?php foreach ($counts as $emoji => $n): ?>
+        <div class="reactions" data-post="<?= (int) $p['id'] ?>" data-reaction-return="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>?page=<?= max(1, (int) ($page ?? 1)) ?>">
+            <?php $reactionIndex = 0; foreach ($counts as $emoji => $n): ?>
                 <?php $on = in_array($emoji, $mine, true); ?>
                 <?php $reactionLabel = reaction_label((string) $emoji); ?>
+                <?php
+                $reactorNames = $current_user !== null && $canWrite
+                    ? reaction_reactor_names(($reactors ?? [])[$emoji] ?? [], $on, (int) $n)
+                    : '';
+                $reactionTipId = 'reaction-tip-' . (int) $p['id'] . '-' . $reactionIndex++;
+                ?>
                 <?php if ($current_user !== null && $canWrite): ?>
                     <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                        <button type="submit" class="reaction<?= $on ? ' reaction-on' : '' ?>" aria-pressed="<?= $on ? 'true' : 'false' ?>"
-                                title="<?= $e($on ? 'Remove your ' . $reactionLabel : $reactionLabel) ?>"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><?= (int) $n ?></span></button>
+                        <button type="submit" class="reaction<?= $on ? ' reaction-on' : '' ?>" aria-pressed="<?= $on ? 'true' : 'false' ?>" data-label="<?= $e($reactionLabel) ?>"
+                                <?php if ($reactorNames !== ''): ?>aria-describedby="<?= $e($reactionTipId) ?>"<?php else: ?>title="<?= $e($on ? 'Remove your ' . $reactionLabel : $reactionLabel) ?>"<?php endif; ?>><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><span class="reaction-n-val"><?= (int) $n ?></span></span><?php if ($reactorNames !== ''): ?><span id="<?= $e($reactionTipId) ?>" class="reaction-tip" aria-hidden="true"><span class="reaction-tip-label"><?= $e($reactionLabel) ?></span><span><?= $e($reactorNames) ?></span></span><?php endif; ?></button>
                     </form>
                 <?php else: ?>
-                    <span class="reaction reaction-static"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><?= (int) $n ?></span></span>
+                    <span class="reaction reaction-static"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><span class="reaction-n-val"><?= (int) $n ?></span></span></span>
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>
@@ -198,6 +204,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
             'engagement' => $engagement,
             'show_reactions' => $show_reactions ?? true,
             'allowed' => $allowed,
+            'mine' => $mine,
             'can_mark_solved' => $can_mark_solved ?? false,
             'can_reveal_anon' => $can_reveal_anon ?? false,
             'memory_on' => $memory_on ?? false,

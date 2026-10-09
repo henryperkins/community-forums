@@ -50,6 +50,7 @@ $shellExpanded = !empty($expanded);
 $shellBodyError = trim((string) ($body_error ?? ''));
 $shellBodyErrorFocus = (bool) ($body_error_focus ?? true);
 $shellIdentity = is_array($identity ?? null) ? $identity : null;
+$shellShowAvatars = (bool) ($shellIdentity['show_avatar'] ?? (isset($rail_avatars) && $rail_avatars instanceof \Closure ? $rail_avatars() : true));
 $shellAllowAnonymous = !empty($allow_anonymous);
 $shellAnonymousHidden = !empty($anonymous_hidden);
 $shellAnonymousChecked = !empty($anonymous_checked);
@@ -86,7 +87,7 @@ $shellUploadMax = max(1, (int) ($upload_max_bytes ?? 5242880));
         <input type="hidden" name="<?= $e((string) $hiddenName) ?>" value="<?= $e((string) $hiddenValue) ?>">
     <?php endforeach; ?>
     <?php if ($shellWrapperSlot !== null): ?><?php $shellWrapperSlot(); ?><?php endif; ?>
-    <div class="composer-box">
+    <div class="composer-box" data-composer-avatars="<?= $shellShowAvatars ? '1' : '0' ?>">
         <?php if ($shellHeaderSlot !== null): ?><div class="composer-header"><?php $shellHeaderSlot(); ?></div><?php endif; ?>
         <div class="composer-format-slot" data-composer-format-slot>
             <span class="composer-format-aside">
@@ -100,7 +101,10 @@ $shellUploadMax = max(1, (int) ($upload_max_bytes ?? 5242880));
             </span>
         </div>
         <?php if ($shellBodyError !== ''): ?><p class="field-error" id="<?= $e($shellBodyErrorId) ?>"><?= $e($shellBodyError) ?></p><?php endif; ?>
-        <textarea class="composer-input" id="<?= $e($shellBodyId) ?>" name="<?= $e($shellBodyName) ?>" rows="4" maxlength="<?= $shellMaxlength ?>" placeholder="<?= $e($shellPlaceholder) ?>"<?= $shellBodyError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($shellBodyErrorId) . '"' . ($shellBodyErrorFocus ? ' autofocus' : '') : '' ?> required><?= $e($shellBodyValue) ?></textarea>
+        <div class="composer-input-wrap">
+            <div class="composer-input-mirror" aria-hidden="true"></div>
+            <textarea class="composer-input" id="<?= $e($shellBodyId) ?>" name="<?= $e($shellBodyName) ?>" rows="4" maxlength="<?= $shellMaxlength ?>" placeholder="<?= $e($shellPlaceholder) ?>"<?= $shellBodyError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($shellBodyErrorId) . '"' . ($shellBodyErrorFocus ? ' autofocus' : '') : '' ?> required><?= $e($shellBodyValue) ?></textarea>
+        </div>
         <?php if ($shellBelowInputSlot !== null): ?><?php $shellBelowInputSlot(); ?><?php endif; ?>
         <div class="composer-upload-tray" data-composer-upload-tray aria-live="polite"></div>
         <p class="composer-upload-summary" id="<?= $e($shellUploadStatusId) ?>" data-composer-upload-summary hidden></p>

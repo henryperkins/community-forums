@@ -257,3 +257,21 @@ if (!function_exists('reaction_label')) {
         return \App\Service\ReactionService::label($emoji);
     }
 }
+
+if (!function_exists('reaction_reactor_names')) {
+    /** Capped member tip copy; aggregate-only actors are never identified. */
+    function reaction_reactor_names(array $reactors, bool $mine, int $count): string
+    {
+        $handles = array_map(static fn (string $username): string => '@' . $username, $reactors);
+        $names = array_slice($mine ? array_merge(['You'], $handles) : $handles, 0, max(0, min(6, $count)));
+        if ($names === []) {
+            return '';
+        }
+        $others = max(0, $count - count($names));
+        if ($others > 0) {
+            return implode(', ', $names) . ' and ' . $others . ($others === 1 ? ' other' : ' others');
+        }
+        $last = array_pop($names);
+        return $names === [] ? $last : implode(', ', $names) . ' and ' . $last;
+    }
+}

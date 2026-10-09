@@ -1,0 +1,2 @@
+✓ built in 429ms
+Generated assets and manifest are current.

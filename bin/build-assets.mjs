@@ -15,7 +15,7 @@ if (args.length && !check && !recordVersion) {
   throw new Error('Usage: node bin/build-assets.mjs [--check | --record-release <deployed-version>]');
 }
 const temporary = await mkdtemp(path.join(os.tmpdir(), 'retroboards-assets-'));
-const sourceNames = ['app.css', 'imladris.css', 'app.js', 'composer.js', 'passkeys.js', 'tour.js'];
+const sourceNames = ['app.css', 'imladris.css', 'conversation-entry.js', 'app.js', 'composer.js', 'passkeys.js', 'tour.js'];
 const sha256 = (content) => createHash('sha256').update(content).digest('hex');
 
 async function filesWithin(directory, prefix = '') {

@@ -49,6 +49,15 @@ final class AppMentionTest extends TestCase
         self::assertSame(1, $this->mentionCount((int) $bob['id']));
     }
 
+    public function testEscapedRichMentionNotifiesTheFullHandleAndNeverItsPrefix(): void
+    {
+        $alice = $this->makeUser(['username' => 'alice']);
+        $target = $this->makeUser(['username' => 'alice_w']);
+        $this->createThread('Thanks @alice\\_w.');
+        self::assertSame(1, $this->mentionCount((int) $target['id']));
+        self::assertSame(0, $this->mentionCount((int) $alice['id']));
+    }
+
     public function testNonexistentMentionIsIgnored(): void
     {
         $bob = $this->makeUser(['username' => 'bob']);
