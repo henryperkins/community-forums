@@ -89,11 +89,15 @@ the check annotation reported an account billing lock. No CircleCI config
 exists. The unchanged GitHub workflow remains available when its account can
 run again; no payment details or billing changes were made.
 
-The restricted Cloud Build fallback source runs the existing capture, unified
+The restricted Cloud Build child runs the existing capture, unified
 notification/settings and production-Docker upload suites, with synthetic
-local data and no production credentials. The trusted inline configuration
-pins a separately reviewed control SHA; restricted IAM is the production
-boundary. Branch scripts can access the build VM's Docker daemon.
+local data and no production credentials. Review found that its Docker daemon
+access could rewrite later controls on the same VM. The revised source places
+the trusted controller and artifact validator on a separate parent VM that
+executes only the pinned reviewed controls, hardcodes the child identity and
+publishes a receipt to a separate private bucket. Child test semantics remain
+branch-reported. Provisioning and hosted proof of this revised parent lane
+remain pending; earlier single-VM runs are functional diagnostic evidence.
 
 [Local runner receipt](browser-ci-local-summary.json) records PHP 8.2.34,
 Node 24.21.0, Compose 2.40.3, successful nested Docker execution and actual
@@ -107,11 +111,19 @@ while preserving the first nonzero exit/status and failed stage. Dependency
 initialization remains fail-fast. Seven uploader behavior contracts and a
 two-test PHP wrapper passed; the uploader creates objects over verified HTTPS
 with `ifGenerationMatch=0` and validates the creation response's size/checksum,
-without reading, listing or replacing existing objects. These local checks do not establish
+without reading, listing or replacing existing objects. The
+[restricted uploader runtime proof](browser-ci-uploader-runtime-summary.json)
+used the actual child account in build `9c42d086-d3a8-4dfd-a8c1-001e8f92bfc5`:
+three synthetic artifacts were created, overwrite was refused with 412 and
+object GET was refused with 403. Operator size/MD5/SHA-256 checks confirmed
+the original bytes; exactly those three objects were deleted and then returned
+404. No IAM was widened. This proves object publication under restricted IAM;
+it does not establish browser suite execution. These local checks do not establish
 hosted suite execution. The [setup receipt](browser-ci-setup-summary.json) verifies dedicated CI IAM,
 private uniform access/public access prevention, the 14-day object lifecycle
 and the owner-branch push hook. Trigger `ba3fce53-93e6-42bb-a4eb-cd3839574a60`
-pins reviewed control `661876a8abf0b23ef3fe9e017e53925dfe866721`. The initial
+pinned reviewed control `661876a8abf0b23ef3fe9e017e53925dfe866721` at that historical
+capture. The initial
 manual build against `9460451` was canceled after review found incomplete
 success gates; it is not a suite pass. Hardened manual build
 `f215672e-72c9-4a27-8dc2-96d80561fc6e` finished **FAILURE** at 07:57:44.325222.

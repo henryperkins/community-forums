@@ -1,0 +1,41 @@
+{
+  "event": "browser_ci_create_only_uploader_verified",
+  "build_id": "9c42d086-d3a8-4dfd-a8c1-001e8f92bfc5",
+  "control_sha": "d6cc5acad5378fd7967991deb605192083c1958b",
+  "build_status": "SUCCESS",
+  "build_started_at": "2026-10-09T08:22:56.126642328Z",
+  "build_finished_at": "2026-10-09T08:23:52.547817Z",
+  "restricted_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "synthetic_only": true,
+  "created_objects": 3,
+  "duplicate_refused_http_status": 412,
+  "restricted_object_get_denied_http_status": 403,
+  "iam_permissions_added": false,
+  "operator_read_hash_verification": true,
+  "original_result_retained_after_duplicate": true,
+  "cleanup_complete": true,
+  "objects": [
+    {
+      "name": "permission-probe/d6cc5acad5378fd7967991deb605192083c1958b/9c42d086-d3a8-4dfd-a8c1-001e8f92bfc5/result.json",
+      "bytes": 66,
+      "content_and_metadata_hashes_match": true,
+      "delete_http_status": 204,
+      "after_delete_http_status": 404
+    },
+    {
+      "name": "permission-probe/d6cc5acad5378fd7967991deb605192083c1958b/9c42d086-d3a8-4dfd-a8c1-001e8f92bfc5/runner-exit.json",
+      "bytes": 23,
+      "content_and_metadata_hashes_match": true,
+      "delete_http_status": 204,
+      "after_delete_http_status": 404
+    },
+    {
+      "name": "permission-probe/d6cc5acad5378fd7967991deb605192083c1958b/9c42d086-d3a8-4dfd-a8c1-001e8f92bfc5/evidence.tar.gz",
+      "bytes": 253,
+      "content_and_metadata_hashes_match": true,
+      "delete_http_status": 204,
+      "after_delete_http_status": 404
+    }
+  ],
+  "success": true
+}

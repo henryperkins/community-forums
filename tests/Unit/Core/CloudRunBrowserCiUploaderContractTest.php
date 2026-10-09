@@ -28,7 +28,7 @@ final class CloudRunBrowserCiUploaderContractTest extends TestCase
 
     public function test_publish_uses_trusted_uploader_and_retains_fallback_receipt_and_final_enforcement(): void
     {
-        $build = json_decode((string) file_get_contents(self::ROOT . '/deploy/cloudrun/browser-ci/cloudbuild.json'),
+        $build = json_decode((string) file_get_contents(self::ROOT . '/deploy/cloudrun/browser-ci/child-cloudbuild.json'),
             true, flags: JSON_THROW_ON_ERROR);
         self::assertStringContainsString('enforce.py upload.py', $build['steps'][0]['args'][1]);
         $publish = $build['steps'][2]['args'][1];

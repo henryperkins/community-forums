@@ -55,6 +55,7 @@ Service accounts, each holding only what it uses:
 | `retroboards-deploy` | Cloud Build: push images, `run.developer`, act as `retroboards-app` and `retroboards-monitor`, write build logs |
 | `retroboards-monitor` | Read database aggregates through the connector with the existing app DB credential; view cron executions and Cloud SQL backup metadata (§8). No app key, mail token or data bucket access |
 | `retroboards-browser-ci` | Write browser build logs and create synthetic artifacts in its private CI bucket (§5a). No production secrets, database, deployment or invocation rights |
+| `retroboards-browser-verifier` | Trusted browser controller: create/get builds, act as `retroboards-browser-ci`, read its artifact bucket and create receipts in a separate private verification bucket (§5a). Build creation carries indirect orchestration capability; only pinned reviewed controls execute here |
 
 ## 2. The request path and the visitor's IP
 
@@ -193,36 +194,62 @@ billing. The latest checked main run (`37888488447`) failed with zero job
 steps; there is no CircleCI configuration. Keep
 `.github/workflows/browser-evidence.yml` available for billing recovery.
 The independent Cloud Build lane uses
-`deploy/cloudrun/browser-ci/{configure.py,cloudbuild.json,Dockerfile,run.sh,package.py,upload.py,enforce.py}`.
+`deploy/cloudrun/browser-ci/{configure.py,cloudbuild.json,launcher.py,child-cloudbuild.json,Dockerfile,run.sh,package.py,upload.py,enforce.py}`.
 It is the hosted browser evidence source while Actions cannot run; inspect its
 actual build result before calling a commit verified.
 
-The lane fetches an exact source SHA and a separately pinned reviewed control
-SHA, runs the existing capture, unified notification/settings and production
-Docker upload suites, and uploads sanitized synthetic PNG/JSON evidence to a
-private bucket with 14-day expiry. Capture and unified settings use a disposable
+The parent build fetches only the separately pinned reviewed control SHA.
+Its controller submits an exact source SHA to a child build on a separate VM,
+using the fixed `retroboards-browser-ci` identity. The child runs the existing
+capture, unified notification/settings and production Docker upload suites,
+and uploads sanitized synthetic PNG/JSON evidence to a private bucket with
+14-day expiry. Capture and unified settings use a disposable
 MariaDB; uploads use their own Compose project and ports. The suites run
-sequentially in one build, and separate builds have separate VMs. Chromium and
+sequentially in the child build. Chromium and
 WebKit are installed in the runner. Dependency initialization fails immediately.
 After a suite fails, the other independent groups still run to collect evidence;
 the first nonzero status and failed stage remain the final result.
-The outer build step records the actual Docker exit after the runner returns.
+The child build step records the Docker exit after the runner returns.
 The packager publishes its candidate success JSON atomically after the complete
-archive; failure artifacts publish before a final validator enforces success.
-That validator requires outer Docker exit 0, matching source/control IDs and a
-readable archive matching the required manifest; a complete run also requires outputs from all three
-suite groups, including every upload browser project.
+archive; failure artifacts publish before the child validator enforces success.
+The parent checks Cloud Build's child status, account and exact substitutions,
+then downloads the three artifacts as bounded data without extracting or
+executing them. Its separately pinned validator requires Docker exit 0,
+matching source/control IDs and a readable archive matching the required
+manifest, including outputs from all three suite groups and every upload
+browser project. Among the two CI accounts, only the parent can create `verification.json` in
+`rising-woods-449718-v6-retroboards-browser-verification`.
 
 The dedicated `retroboards-browser-ci` service account can write build logs
-and create objects in the evidence bucket. It cannot read production secrets,
-connect to Cloud SQL, deploy services or invoke production jobs. Pinning the
-reviewed recipe records its provenance; branch test scripts have Docker daemon
-access within the build VM. Restricted IAM is the production access boundary.
+and create objects in the child evidence bucket. It cannot read production secrets,
+connect to Cloud SQL, deploy services, invoke production jobs, create builds or
+act as another service account. Branch scripts have Docker daemon access only
+on that child's VM, where they can alter child controls or forge their own test
+reports. They cannot alter the parent's controls, identity or receipt bucket.
+Parent verification therefore proves isolated acceptance of the reported
+artifacts and provider build status; it does not attest the semantics of
+arbitrary branch-authored tests.
+
+The parent `retroboards-browser-verifier` has a custom project role containing
+only `cloudbuild.builds.create` and `cloudbuild.builds.get`, log writing,
+ActAs on the child account alone, object viewing on the child evidence bucket
+and object creation on the verification bucket. It never checks out or executes
+branch source. These are trusted orchestration privileges:
+[Google documents](https://docs.cloud.google.com/build/docs/iam-roles-permissions)
+that build creation also covers trigger mutation/execution and can launch
+builds as the legacy build account. The project's existing default Compute
+account has `roles/editor`, and its legacy build account has
+`roles/cloudbuild.builds.builder`; neither was changed for this lane. The
+controller hardcodes the restricted child identity. It has no direct app
+Secret Manager, Cloud SQL, Cloud Run or deployment roles.
+
 Neither GitHub credentials nor a production `.env` enter the runner. Published
 artifacts omit environment variables, cookies, headers, traces and raw logs.
 The uploader uses authenticated HTTPS object creation with `ifGenerationMatch=0`
 and checks the creation response's size/checksum. It needs no object read/list/delete
-permission and refuses overwriting an existing artifact.
+permission and refuses overwriting an existing artifact. Both private buckets
+have uniform access, enforced public access prevention, a 14-day deletion
+lifecycle and soft delete disabled.
 
 Setup or refresh after pushing a reviewed control commit:
 
@@ -232,10 +259,11 @@ python3 deploy/cloudrun/browser-ci/configure.py --control-sha=<REVIEWED_CONTROL_
 ```
 
 The first command previews the exact plan without API calls. The apply command
-converges the restricted account, private expiring bucket, inline webhook
+converges the two accounts, narrow bindings, private expiring buckets, inline webhook
 trigger and owner-repository GitHub push hook. It uses the existing protected
 Cloud Build webhook configuration; private callback URLs remain out of its
-output. Owner-repository branch pushes include PR branches and `main`. Fork
+output. Existing hook selection requires the exact HTTPS host, project, region
+and trigger path. Owner-repository branch pushes include PR branches and `main`. Fork
 PRs require a deliberate manual run; there is no public unauthenticated
 arbitrary-build endpoint.
 
@@ -245,19 +273,24 @@ Run a pushed commit manually with the same lane:
 gcloud builds submit --no-source --project=rising-woods-449718-v6 --region=us-east4 \
   --config=deploy/cloudrun/browser-ci/cloudbuild.json \
   --substitutions=_SHA=<EXACT_SOURCE_SHA>,_CONTROL_SHA=<REVIEWED_CONTROL_SHA>
-gcloud builds describe <BUILD_ID> --region=us-east4
-# For an authorized operator, download the private result and synthetic archive:
-gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/result.json /private/result.json
-gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/runner-exit.json /private/runner-exit.json
-gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/evidence.tar.gz /private/evidence.tar.gz
+gcloud builds describe <PARENT_BUILD_ID> --project=rising-woods-449718-v6 --region=us-east4
+# For an authorized operator, download the parent receipt first:
+gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-verification/<SOURCE_SHA>/<PARENT_BUILD_ID>/verification.json /private/verification.json
+# Use its child_build_id to inspect the corresponding synthetic artifacts:
+gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<CHILD_BUILD_ID>/result.json /private/result.json
+gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<CHILD_BUILD_ID>/runner-exit.json /private/runner-exit.json
+gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<CHILD_BUILD_ID>/evidence.tar.gz /private/evidence.tar.gz
 python3 deploy/cloudrun/browser-ci/enforce.py --results=/private \
   --outer-result=/private/runner-exit.json --source-sha=<EXACT_SOURCE_SHA> \
   --control-sha=<REVIEWED_CONTROL_SHA>
 ```
 
-Both SHAs must be full lowercase 40-character commit IDs. The final Cloud Build result, independent `runner-exit.json` and complete
-private archive are authoritative for this lane. `result.json` is a candidate
-receipt and must not be treated as a pass by itself. GitHub check/status
+Both SHAs must be full lowercase 40-character commit IDs. A successful parent
+Cloud Build result and its separately published `verification.json` establish
+this lane's acceptance; check matching parent/child/source/control IDs,
+`metadata_verified`, `enforcement_passed`, `passed` and the artifact SHA-256
+receipts. The child `result.json` and `runner-exit.json` are reported evidence
+and cannot establish a pass by themselves. GitHub check/status
 publication is unavailable with the current webhook integration; a Cloud Build
 pass is not a recovered GitHub Actions check. PHPUnit remains a separate local
 verification lane. Current setup receipts and coverage limits are recorded in

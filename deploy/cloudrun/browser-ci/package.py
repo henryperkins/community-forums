@@ -75,8 +75,10 @@ def build_package(source, output, exit_code, stage):
         if not any(name.startswith('browser/') and name.endswith('.png') for name in included):
             missing.append('browser/*.png')
         unified = scratch / 'unified-notifications-and-settings/browser-results.json'
-        if unified.is_file() and json.loads(unified.read_text()).get('completed') is not True:
-            missing.append('unified-notifications-and-settings: completed=true')
+        if unified.is_file():
+            value = json.loads(unified.read_text())
+            if not isinstance(value, dict) or value.get('completed') is not True:
+                missing.append('unified-notifications-and-settings: completed=true')
         result = {'completed_at': datetime.now(timezone.utc).isoformat(),
                   'source_sha': os.environ.get('CI_SOURCE_SHA', ''),
                   'control_sha': os.environ.get('CI_CONTROL_SHA', ''),

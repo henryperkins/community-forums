@@ -38,7 +38,7 @@ final class CloudRunBrowserCiContractTest extends TestCase
         }
     }
 
-    public function test_final_step_requires_outer_success_and_a_complete_matching_archive(): void
+    public function test_child_final_step_requires_outer_success_and_a_complete_matching_archive(): void
     {
         $steps = $this->build()['steps'];
         self::assertTrue($steps[1]['allowFailure']);
@@ -216,7 +216,7 @@ SH);
             json_decode($inspect['stdout'], true, flags: JSON_THROW_ON_ERROR));
     }
 
-    public function test_configuration_dry_run_has_only_ci_permissions_and_rejects_invalid_control(): void
+    public function test_configuration_dry_run_preserves_child_permissions_and_rejects_invalid_control(): void
     {
         $script = self::ROOT . '/deploy/cloudrun/browser-ci/configure.py';
         $result = $this->command(['python3', $script, '--control-sha', str_repeat('a', 40)]);
@@ -225,6 +225,13 @@ SH);
         self::assertSame(['roles/logging.logWriter'], $config['plan']['project_roles']);
         self::assertSame('roles/storage.objectCreator', $config['plan']['bucket_role']);
         self::assertSame(14, $config['plan']['artifact_expiry_days']);
+        $parent = $config['plan']['parent'];
+        self::assertSame(['cloudbuild.builds.create', 'cloudbuild.builds.get'], $parent['custom_role_permissions']);
+        self::assertSame('retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com', $parent['act_as_service_account']);
+        self::assertSame('roles/storage.objectViewer', $parent['child_bucket_role']);
+        self::assertSame('roles/storage.objectCreator', $parent['verification_bucket_role']);
+        self::assertFalse($parent['branch_source_execution']);
+        self::assertStringContainsString('/retroboards-browser-verifier@', $config['build']['serviceAccount']);
         self::assertSame(str_repeat('a', 40), $config['build']['substitutions']['_CONTROL_SHA']);
         self::assertStringNotContainsString('retroboards-app@', $result['stdout']);
         $invalid = $this->command(['python3', $script, '--control-sha', 'main']);
@@ -332,7 +339,7 @@ SH);
     /** @return array<string,mixed> */
     private function build(): array
     {
-        return json_decode((string) file_get_contents(self::ROOT . '/deploy/cloudrun/browser-ci/cloudbuild.json'),
+        return json_decode((string) file_get_contents(self::ROOT . '/deploy/cloudrun/browser-ci/child-cloudbuild.json'),
             true, flags: JSON_THROW_ON_ERROR);
     }
 
