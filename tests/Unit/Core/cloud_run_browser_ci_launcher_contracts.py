@@ -22,6 +22,8 @@ CHILD = '22222222-2222-2222-2222-222222222222'
 
 def metadata(status='SUCCESS'):
     return {'id': CHILD, 'projectId': u.PROJECT, 'serviceAccount': u.CHILD_SA, 'status': status,
+            'steps': [{'id': step.get('id'), 'status': 'SUCCESS'}
+                      for step in u.child_recipe(SOURCE, CONTROL)['steps']],
             'substitutions': {'_SHA': SOURCE, '_CONTROL_SHA': CONTROL, '_BUCKET': u.BUCKET}}
 
 
@@ -80,7 +82,7 @@ class LauncherContracts(unittest.TestCase):
             with patch.object(u, 'HERE', path):
                 result = u.child_recipe(SOURCE, CONTROL)
         self.assertEqual(u.CHILD_SA, result['serviceAccount'])
-        self.assertEqual(metadata()['substitutions'], result['substitutions'])
+        self.assertEqual({'_SHA': SOURCE, '_CONTROL_SHA': CONTROL, '_BUCKET': u.BUCKET}, result['substitutions'])
         self.assertEqual([{'id': 'test'}], result['steps'])
 
     def test_metadata_mismatch_or_unknown_status_is_rejected(self):
@@ -111,6 +113,42 @@ class LauncherContracts(unittest.TestCase):
             self.assertEqual('child-provider-failure', result['stage'])
             download.assert_not_called();enforce.assert_not_called();publish.assert_called_once()
 
+    def test_overall_success_with_allowed_step_failure_is_rejected_before_artifacts(self):
+        build = metadata()
+        build['steps'][1].update({'status': 'FAILURE', 'exitCode': 7, 'allowFailure': True})
+        with tempfile.TemporaryDirectory() as scratch, patch.object(u, 'create_child', return_value=CHILD), \
+                patch.object(u, 'await_child', return_value=build), \
+                patch.object(u, 'download_artifact') as download, patch.object(u, 'enforce') as enforce, \
+                patch.object(u, 'publish_receipt') as publish:
+            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification')
+        self.assertFalse(result['passed'])
+        self.assertEqual('SUCCESS', result['child_provider_status'])
+        self.assertFalse(result['provider_steps_verified'])
+        self.assertEqual('child-provider-steps', result['stage'])
+        download.assert_not_called();enforce.assert_not_called();publish.assert_called_once()
+
+    def test_every_expected_provider_step_requires_matching_id_success_and_integer_zero(self):
+        recipe = u.child_recipe(SOURCE, CONTROL)
+        variants = [dict(metadata(), steps=[]), dict(metadata(), steps=None)]
+        build = metadata();build['steps'].pop();variants.append(build)
+        build = metadata();build['steps'].append({'id': 'unexpected', 'status': 'SUCCESS'});variants.append(build)
+        for change in [{'id': 'wrong'}, {'status': 'FAILURE'}, {'status': None},
+                       {'exitCode': 1}, {'exitCode': True}, {'exitCode': False}, {'exitCode': '0'}, {'exitCode': None}]:
+            build = metadata();build['steps'][1].update(change);variants.append(build)
+        build = metadata();del build['steps'][1]['status'];variants.append(build)
+        build = metadata();del build['steps'][1]['id'];variants.append(build)
+        for build in variants:
+            with self.assertRaises(u.VerificationError):u.verify_child_steps(build, recipe)
+        for exit_code in ['absent', 0]:
+            build = metadata()
+            if exit_code != 'absent':
+                for step in build['steps']:step['exitCode'] = exit_code
+            self.assertIsNone(u.verify_child_steps(build, recipe))
+        # Operator-owned tiny probe recipes may omit IDs; matched counts and statuses still apply.
+        tiny_recipe = {'steps': [{'name': 'trusted-toy'}, {'name': 'trusted-toy'}]}
+        tiny_build = {'steps': [{'status': 'SUCCESS'}, {'status': 'SUCCESS', 'exitCode': 0}]}
+        self.assertIsNone(u.verify_child_steps(tiny_build, tiny_recipe))
+
     def test_invalid_archive_is_rejected_by_real_parent_enforcer(self):
         def download(name, destination, limit):
             if name.endswith('/result.json'):
@@ -140,6 +178,7 @@ class LauncherContracts(unittest.TestCase):
             result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification')
         self.assertTrue(result['passed'])
         self.assertTrue(result['metadata_verified'])
+        self.assertTrue(result['provider_steps_verified'])
         self.assertTrue(result['enforcement_passed'])
         self.assertEqual('complete', result['stage'])
         self.assertEqual([SOURCE+'/'+CHILD+'/'+n for n in ['result.json','runner-exit.json','evidence.tar.gz']],

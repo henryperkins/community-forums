@@ -101,6 +101,19 @@ def await_child(child_id, source_sha, control_sha):
     raise VerificationError('child-wait-timeout')
 
 
+def verify_child_steps(build, recipe):
+    expected = recipe.get('steps')
+    actual = build.get('steps')
+    if (not isinstance(expected, list) or not expected or not isinstance(actual, list)
+            or len(actual) != len(expected)
+            or any(not isinstance(step, dict) for step in expected + actual)
+            or [step.get('id') for step in actual] != [step.get('id') for step in expected]
+            or any(step.get('status') != 'SUCCESS'
+                   or ('exitCode' in step and (type(step['exitCode']) is not int or step['exitCode'] != 0))
+                   for step in actual)):
+        raise VerificationError('child-provider-steps')
+
+
 def download_artifact(name, destination, limit):
     connection = http.client.HTTPSConnection('storage.googleapis.com', timeout=120,
                                               context=ssl.create_default_context())
@@ -158,6 +171,7 @@ def verify(source_sha, control_sha, parent_id, bucket=BUCKET, verify_bucket=VERI
                'parent_build_id': None, 'child_build_id': None, 'source_sha': None, 'control_sha': None,
                'parent_service_account': PARENT_SA, 'child_service_account': CHILD_SA,
                'child_provider_status': None, 'metadata_verified': False, 'enforcement_passed': False,
+               'provider_steps_verified': False,
                'artifact_receipts': [], 'stage': 'input-validation',
                'trust_limit': 'Child test receipts are branch-reported; parent enforcement is isolated'}
     valid_inputs = (isinstance(source_sha, str) and re.fullmatch('[0-9a-f]{40}', source_sha)
@@ -173,13 +187,16 @@ def verify(source_sha, control_sha, parent_id, bucket=BUCKET, verify_bucket=VERI
         results = directory / 'results'
         results.mkdir()
         receipt['stage'] = 'child-create'
-        child_id = create_child(child_recipe(source_sha, control_sha))
+        recipe = child_recipe(source_sha, control_sha)
+        child_id = create_child(recipe)
         receipt['child_build_id'] = child_id
         receipt['stage'] = 'child-await'
         child = await_child(child_id, source_sha, control_sha)
         receipt.update({'child_provider_status': child['status'], 'metadata_verified': True})
         if child['status'] != 'SUCCESS':
             raise VerificationError('child-provider-failure')
+        verify_child_steps(child, recipe)
+        receipt['provider_steps_verified'] = True
         receipt['stage'] = 'artifact-download'
         for filename, target, limit in [('result.json', results / 'result.json', JSON_LIMIT),
                                         ('runner-exit.json', directory / 'runner-exit.json', JSON_LIMIT),

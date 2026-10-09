@@ -22,7 +22,7 @@ final class CloudRunBrowserCiLauncherContractTest extends TestCase
         fclose($pipes[2]);
         self::assertSame(0, proc_close($process), $stderr);
         self::assertSame('', $stdout);
-        self::assertStringContainsString('Ran 10 tests', $stderr);
+        self::assertStringContainsString('Ran 12 tests', $stderr);
         self::assertStringContainsString('OK', $stderr);
     }
 
