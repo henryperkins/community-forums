@@ -52,8 +52,8 @@ and a deploy path to maintain.
 
 ## Consequences
 
-- Cost falls to about $35–40/month with `db-g1-small`, or about $15–20 with
-  `db-f1-micro`, from about $63–73.
+- Cost falls to about $15–20/month from about $63–73. The database moved to
+  `db-f1-micro` the same day, with no measurable latency change (runbook §11).
 - A failed boot migration no longer takes the site down: the new revision
   never takes traffic, and the old one keeps serving.
 - Scale to zero brings cold starts after about 15 idle minutes (≈1.5 s of
@@ -69,6 +69,7 @@ and a deploy path to maintain.
   package secrets set up after the 2026-10-09 setup) no longer decrypt; the
   owner accepted starting fresh.
 - Open: email needs a new Cloudflare Email Sending token in Secret Manager
-  (until then the outbox holds mail). The authorized network `0.0.0.0/0` on
-  Cloud SQL can go once nothing reaches the database by IP. The dormant
-  container should be removed after a soak (runbook §9).
+  (until then the outbox holds mail). The dormant container should be
+  removed after a soak (runbook §9). The `0.0.0.0/0` authorized network was
+  removed right after the cutover, so only connector and Auth Proxy traffic
+  reaches the database.

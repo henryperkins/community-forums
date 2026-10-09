@@ -30,7 +30,7 @@ container are covered by [`deployment-cloudflare.md`](deployment-cloudflare.md).
 | Front door | Cloudflare Worker `retroboards` on `forum.candidary.online` | Forwards dynamic requests to `ORIGIN_URL` with an ID token (`worker/origin.mjs`) |
 | Origin | Cloud Run service `retroboards` | Image from `Dockerfile`, Apache on 8080, gen2, 1 vCPU / 1 GiB, concurrency 16, **0–1 instances**, startup CPU boost, IAM-only |
 | URL | `https://retroboards-616731728350.us-east4.run.app` | Also answers as `retroboards-3h5icvhrwq-uk.a.run.app`; neither is reachable without a token |
-| Database | Cloud SQL `imladris-boards` (MySQL 8.4) | Through Cloud Run's built-in connector: Unix socket `DB_SOCKET=/cloudsql/rising-woods-449718-v6:us-east4:imladris-boards` |
+| Database | Cloud SQL `imladris-boards` (MySQL 8.4, `db-f1-micro`) | Through Cloud Run's built-in connector: Unix socket `DB_SOCKET=/cloudsql/rising-woods-449718-v6:us-east4:imladris-boards`. **No authorized networks**: nothing reaches it by IP |
 | `/data` | Bucket `rising-woods-449718-v6-retroboards-data` | Cloud Storage FUSE volume, `uid=33;gid=33` (www-data); holds `media/` and `packages/` |
 | Cron | Cloud Run jobs `retroboards-cron-{5m,6h,0310,0700}` | Started by Cloud Scheduler entries of the same names (§4) |
 | Images | `us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app` | Tagged with the commit SHA and `latest`; cleanup keeps the newest 10, deletes the rest after 30 days |
@@ -266,7 +266,9 @@ startup probe. One warm instance (`--min-instances=1`) removes this. At the
 idle rates it costs about $13/month for 1 vCPU / 1 GiB.
 
 **Database access** from a workstation: run the Cloud SQL Auth Proxy (v2) with
-your gcloud credentials. No authorized network is needed. A Unix socket path
+your gcloud credentials. That is the only way in: the instance has had no
+authorized networks since 2026-10-09, so a direct connection by IP times out.
+A Unix socket path
 must stay under 108 bytes, so bind it in a short directory, or use TCP:
 
 ```sh
@@ -325,7 +327,8 @@ Then put back what the move changed:
   back into `wrangler.jsonc` (see `git show 16529ede:wrangler.jsonc`) and run
   `npx wrangler triggers deploy` from the repository root.
 - **The database network.** The container reaches Cloud SQL by public IP over
-  TLS. If `0.0.0.0/0` was removed from the authorized networks, re-add it:
+  TLS, and `0.0.0.0/0` was removed from the authorized networks on 2026-10-09.
+  Re-add it:
   `gcloud sql instances patch imladris-boards --authorized-networks=0.0.0.0/0`.
 - **`APP_KEY` differs.** Data encrypted on Cloud Run (MFA secrets, OAuth and
   package secrets) only decrypts under the new key. Give the container the same
@@ -342,9 +345,17 @@ Monthly estimates at us-east4 list prices (Cloud Billing Catalog, 2026-10-09):
 | Cloud Run service, request-based, scale to zero | ≈ $0–5: $0.000024/vCPU-s and $0.0000025/GiB-s while serving; free tier 180k vCPU-s, 360k GiB-s and 2M requests per billing account |
 | Cron jobs | ≈ $0–2: the 5-minute job is ~11 s × 8,640 runs ≈ 95k vCPU-s at $0.000018, inside the 240k vCPU-s jobs free tier |
 | Cloud Scheduler | $0.10: 4 jobs, 3 free per billing account |
-| Cloud SQL `db-g1-small` | ≈ $30; `db-f1-micro` ≈ $10 |
+| Cloud SQL `db-f1-micro` ($0.0112/h), 10 GB SSD, backups and binlog | ≈ $10–11. `db-g1-small` ($0.0375/h) was ≈ $30 |
 | Cloud Storage, Artifact Registry, Cloud Build, Logging | ≈ $0, within free tiers at this size |
 | Workers Paid plan | $5, shared with the account's other Workers |
 
 Versus about $63–73 for the Cloudflare `standard-1` container that kept itself
 awake on cron ticks.
+
+**Tier change, 2026-10-09:** `db-g1-small` → `db-f1-micro` with
+`gcloud sql instances patch imladris-boards --tier=db-f1-micro`. The patch
+ran 6.5 minutes. The forum answered 503 for 1 minute 42 seconds of it
+(04:34:23–04:36:05 UTC) while the instance restarted. Warm time to first byte
+through the Worker was unchanged: 10-request medians of 24 ms for `/` and
+21 ms for `/login`, against 24 and 24 ms before. Scaling back up is the same
+command with `--tier=db-g1-small` and the same short restart.
