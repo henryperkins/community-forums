@@ -2,6 +2,23 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Hosting on Google Cloud
+
+- Move production's database from PlanetScale, asleep since 2026-09-30, to
+  Cloud SQL for MySQL 8.4 in us-east4 (2026-10-09). This ended the 1101 outage.
+  Existing rows were not carried over.
+- Serve the app from Cloud Run behind the existing Cloudflare Worker (ADR 0047,
+  `docs/runbooks/deployment-cloud-run.md`). The Worker forwards with an ID
+  token, so only it can reach the service.
+  - The database link goes through Cloud Run's Cloud SQL connector, which is
+    authenticated, unlike the container's unverified TLS.
+  - Uploads live on a Cloud Storage volume.
+  - The cron workers run as Cloud Run jobs on the same UTC schedules.
+  - A failed boot migration now leaves the previous revision serving.
+- `DB_SOCKET` connects over a Unix socket in place of host and port. The
+  entrypoint no longer `chown`s FUSE mounts, which a platform-mounted bucket
+  refuses.
+
 ## [Unreleased] - Consistent headers and navigation
 
 - Add calm reaction count motion, member reactor-name tips with privacy filters,

@@ -4,6 +4,15 @@ Operating procedure for the Cloudflare deployment defined by `wrangler.jsonc`,
 `worker/index.js`, `Dockerfile`, and `deploy/`, with `wrangler` authenticated
 against the account that owns the zone.
 
+> **Since 2026-10-09 the app runs on Google Cloud Run, not in the container**
+> (ADR 0047, [`deployment-cloud-run.md`](deployment-cloud-run.md)). This
+> runbook still owns the Worker, its assets, the canonical-host policy and the
+> domains (§7, §8, §16). The container sections (§1, §4–§6, §9, §10) describe
+> the **dormant** `ForumContainer`. It stays declared, unused and asleep, so
+> `wrangler rollback` keeps working until it is removed (Cloud Run runbook §9,
+> rollback in §10 there). Merging to `main` now deploys the Worker here *and*
+> the image to Cloud Run.
+
 > **Merging to `main` IS the deploy.** Production is built and released by a
 > git-connected **Workers Builds** pipeline watching `main`. There is no manual
 > `wrangler deploy` step in the normal path, and no branch to fast-forward by
@@ -59,6 +68,12 @@ against the account that owns the zone.
 > Cloudflare, and there is no way around that.**
 
 ## 1. What the deployment looks like
+
+> **Historical (before 2026-10-09).** Today the Worker forwards dynamic
+> requests to Cloud Run (`worker/origin.mjs`), and `/data`, migrations, cron and
+> the database link work as in
+> [`deployment-cloud-run.md`](deployment-cloud-run.md) §1–§4. The list below is
+> the container origin the Worker no longer calls.
 
 - **Worker** (`worker/index.js`) on a Custom Domain, so all paths route to it.
   It rewrites the client-IP header and forwards every request to the container.
@@ -141,8 +156,11 @@ gcloud sql databases create retroboards --instance imladris-boards --charset=utf
   placement (§14).
 - **Database / user:** `retroboards` (utf8mb4). `retroboards_app`@`%` was created
   over SQL, not `gcloud sql users create` (which grants `cloudsqlsuperuser`):
-  `REQUIRE SSL`, `ALL PRIVILEGES ON retroboards.*` and nothing global. DDL is
-  needed because migrations run on boot.
+  `ALL PRIVILEGES ON retroboards.*` and nothing global. DDL is needed because
+  migrations run on boot. It was `REQUIRE SSL` until the Cloud Run move, which
+  made it `REQUIRE NONE`: the connector's traffic is encrypted but is not a
+  MySQL TLS session. The instance's `ENCRYPTED_ONLY` still refuses plaintext
+  direct connections (Cloud Run runbook §8).
 - **Passwords** live only in Secret Manager in the same project:
   `imladris-boards-root-password` and `imladris-boards-app-password`. Read one
   with `gcloud secrets versions access latest --secret=<name> --project
@@ -167,13 +185,14 @@ gcloud sql databases create retroboards --instance imladris-boards --charset=utf
 
   Pinning the name in `/etc/hosts` works under Docker but **not on Cloudflare**:
   the first deploy (PR #82, 2026-10-09 02:27 UTC) died in the entrypoint with
-  `cannot create /etc/hosts: Read-only file system`. Production therefore runs
+  `cannot create /etc/hosts: Read-only file system`. The container therefore ran
   with `DB_HOST=34.145.179.39` and `DB_SSL_VERIFY=false`. The instance refuses
   plaintext, but a man-in-the-middle on the path could present its own
-  certificate and read the password. **Fix:** run the Cloud SQL Auth Proxy in
-  the container. It authenticates the instance itself over mTLS with a
-  service-account credential, the app talks to it on `127.0.0.1`, and the
-  `0.0.0.0/0` authorized network can then be removed.
+  certificate and read the password. **Resolved by the Cloud Run move:**
+  production now uses Cloud Run's built-in connector, which authenticates the
+  instance over mTLS with IAM. The by-IP link survives only in the dormant
+  container's config. Once rollback to it is no longer wanted, the `0.0.0.0/0`
+  authorized network can go.
 - **No Vitess:** the schema-propagation race below does not exist here, and
   `SchemaRaceRetry` is inert (it keys off `SELECT VERSION()`).
 
@@ -539,7 +558,13 @@ Zone settings, all of which matter to this app specifically:
 
 ## 9. Cron workers
 
-`worker/index.js` maps cron expressions to `bin/console` commands:
+> **Moved 2026-10-09.** The Worker's cron triggers are emptied
+> (`"crons": []`, which is what removes deployed ones; a missing key would not).
+> The same schedules run as Cloud Run jobs on Cloud Scheduler:
+> [`deployment-cloud-run.md`](deployment-cloud-run.md) §4. What follows
+> describes the dormant container's `runConsole()` path.
+
+`worker/index.js` mapped cron expressions to `bin/console` commands:
 
 | Cron | Commands |
 | --- | --- |
@@ -589,6 +614,10 @@ content to process. Check **Cron Events** after the first `*/5` tick.
 
 ## 11. Cost
 
+> Current costs are in [`deployment-cloud-run.md`](deployment-cloud-run.md)
+> §11. The dormant container costs nothing while it sleeps. The table below
+> is the container-era estimate.
+
 Rough monthly figures from published rates, always-on:
 
 | Component | Cost |
@@ -601,6 +630,12 @@ Rough monthly figures from published rates, always-on:
 | Container egress | $0.025/GB after 1 TB (NA/EU) |
 
 ## 12. Rolling back
+
+To go back from Cloud Run to the container, follow
+[`deployment-cloud-run.md`](deployment-cloud-run.md) §10. A Worker rollback
+alone does not restore cron triggers, the database network or the container's
+`APP_KEY`. To roll back the app itself, revert the Cloud Run revision (§3
+there).
 
 `wrangler deployments list` / `wrangler rollback` revert the Worker. **A rollback
 does not undo migrations** — they are additive and forward-only, and
@@ -813,6 +848,14 @@ rollback restores the prior `DB_*` values and known-good Worker version; do not
 delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
+
+### Cloud Run origin — EXECUTED 2026-10-09
+
+The app moved off this container onto Cloud Run (ADR 0047). The Worker forwards
+to it with an ID token; the container is dormant. Everything about the origin
+is in [`deployment-cloud-run.md`](deployment-cloud-run.md). Of the Cloud SQL
+notes below, the by-IP, `DB_SSL_VERIFY=false` link now serves only the dormant
+container. Cloud Run uses the connector.
 
 ### Cloud SQL cutover — EXECUTED 2026-10-09
 
