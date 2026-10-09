@@ -80,7 +80,6 @@ final class CloudflareSmtpMailer implements Mailer
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_PROTOCOLS => CURLPROTO_SMTPS,
-            CURLOPT_VERBOSE => true,
             CURLOPT_READFUNCTION => static function (
                 CurlHandle $handle,
                 mixed $stream,
@@ -90,15 +89,14 @@ final class CloudflareSmtpMailer implements Mailer
                 $offset += strlen($chunk);
                 return $chunk;
             },
-            CURLOPT_DEBUGFUNCTION => static function (
+            // SMTP replies reach this PHP 8.2 compatible callback too. Capture
+            // incoming replies only; verbose output would include AUTH data.
+            CURLOPT_HEADERFUNCTION => static function (
                 CurlHandle $handle,
-                int $type,
                 string $data,
             ) use (&$serverReplies): int {
-                if ($type === CURLINFO_HEADER_IN) {
-                    $serverReplies .= $data;
-                }
-                return 0;
+                $serverReplies .= $data;
+                return strlen($data);
             },
         ];
 

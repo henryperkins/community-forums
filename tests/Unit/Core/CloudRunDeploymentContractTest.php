@@ -154,6 +154,26 @@ final class CloudRunDeploymentContractTest extends TestCase
         self::assertMatchesRegularExpression('/case "\$data_fstype" in\s+fuse\*\) ;;\s+\*\) chown -R www-data:www-data "\$DATA_DIR" ;;/', $entrypoint);
     }
 
+    public function test_shared_image_migrates_before_apache_and_forwards_its_logs(): void
+    {
+        $dockerfile = $this->read('Dockerfile');
+        $vhost = $this->read('deploy/apache-vhost.conf');
+        $entrypoint = $this->read('deploy/entrypoint.sh');
+
+        self::assertStringContainsString('EXPOSE 8080', $dockerfile);
+        self::assertStringContainsString('ENTRYPOINT ["retroboards-entrypoint"]', $dockerfile);
+        self::assertStringContainsString('ErrorLog /var/log/apache2/error.log', $vhost);
+        self::assertStringContainsString('CustomLog /var/log/apache2/access.log combined', $vhost);
+        self::assertStringContainsString('rm -f /var/log/apache2/error.log', $dockerfile);
+        self::assertStringContainsString('tail -n 0 -F /var/log/apache2/error.log', $entrypoint);
+        self::assertStringContainsString('php /var/www/html/bin/console migrate', $entrypoint);
+        self::assertLessThan(
+            strpos($entrypoint, 'exec docker-php-entrypoint'),
+            strpos($entrypoint, 'php /var/www/html/bin/console migrate'),
+        );
+        self::assertStringNotContainsString('/etc/hosts', $entrypoint);
+    }
+
     /** @param list<string> $commands */
     private function batch(string $bin, string $log, array $commands): int
     {
