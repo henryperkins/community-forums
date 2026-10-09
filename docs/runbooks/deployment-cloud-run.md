@@ -221,16 +221,22 @@ access. `configure.sh` applied the secret to the web service and all four jobs.
 
 **Live worker check, 2026-10-09:** execution `retroboards-cron-5m-xv7lq`
 succeeded. The email result reported `blocked_reason=none`; `sent`,
-`suppressed`, `retrying`, `failed`, `skipped` were all zero. The empty queue
+`suppressed`, `retrying`, `failed`, `skipped` were all zero. Post-retirement
+manual execution `retroboards-cron-5m-c87d7` succeeded on the new merge image at
+05:33:11.170 UTC. Scheduled execution `retroboards-cron-5m-qppsb`, created by
+`retroboards-scheduler`, succeeded at 05:35:37.257720 UTC. Both reported the
+same empty-queue result. The empty queue
 verified configuration availability without testing message acceptance or
 recipient delivery. A separate no-message probe from the same Cloud Run job
 (`retroboards-cron-5m-2j22c`, PHP 8.2.34) authenticated with the new token
 (`235`) and completed `NOOP` (`250`) with no cURL error. It submitted no
 message; SMTP message acceptance and recipient receipt remain untested.
 
-The Cloud Run image uses PHP 8.2. The SMTP transport must keep its response
-capture compatible with that runtime; `CURLOPT_DEBUGFUNCTION` requires PHP
-8.4. An empty outbox does not exercise that transport path.
+The Cloud Run image uses PHP 8.2. SMTP response capture uses compatible
+`CURLOPT_HEADERFUNCTION`; the old `CURLOPT_DEBUGFUNCTION` required PHP 8.4.
+Post-deploy execution `retroboards-cron-5m-l8k29` verified a typed transport
+failure on PHP 8.2.34 against a refused loopback connection, with no external
+message submitted. An empty outbox does not exercise that transport path.
 
 If the mailer is unconfigured, `worker:email` returns `sender_unconfigured` and
 the outbox **holds** messages. After configuration, eligible queued messages
@@ -366,10 +372,24 @@ After the retirement commit deploys through Workers Builds:
    bucket and confirm it is absent. The current Google bucket is a separate
    resource and must remain.
 
-**Execution record:** source retirement is prepared; deployment and hosted
-resource deletion are pending verification. Record the active Worker version,
-container application absence, secret-name inventory, old R2 bucket absence,
-and post-cleanup production checks when complete.
+**Execution record, 2026-10-09:** PR #86 merged as
+`e2b7506353fcb928377a6461cc4c41ac123122ad`. Workers Builds and Cloud Build
+both succeeded; the web service runs revision `retroboards-00007-gfn`, and
+the service plus all four jobs use the merge image. The retired container
+application and its Durable Object namespace are absent, the six
+container-only Worker secrets were deleted,
+and the old R2 bucket was deleted after its 38 objects (4,923,029 bytes) were
+removed and emptiness verified. After secret cleanup, active Worker version
+`5a035f03-e0cd-48fd-a2a0-09608410c110` serves 100% of traffic with only
+`APP_URL`, `ASSETS`, `GCP_INVOKER_KEY` and `ORIGIN_URL` bindings. The current
+Google bucket remains in us-east4 with public access prevention enforced; SQL
+authorized networks remain empty. Post-cleanup health, guest pages/login,
+alias routing, all 64 published asset hashes and cache expectations, direct
+Cloud Run denial, and manual plus scheduled 5-minute job executions passed.
+The other three schedules were enabled but had not fired during verification.
+Deployment identifiers, resource receipts, browser comparison and coverage
+limits are in
+[the retirement evidence](../evidence/cloudflare-origin-retirement-2026-10-09/README.md).
 
 ## 10. Recovery after container retirement
 
