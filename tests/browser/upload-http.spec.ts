@@ -155,6 +155,54 @@ for (const mode of ['rich', 'source']) {
   });
 }
 
+test('a held pointer publishes a ready DM image without moving Send before release', async ({ page }, info) => {
+  test.setTimeout(90_000);
+  if (info.project.name === 'desktop') await page.setViewportSize({ width: 390, height: 844 });
+  fixture('rich');
+  await login(page);
+  await page.goto('/messages/new');
+  let form = page.locator('form[data-composer-instance=dm-new-page]');
+  await form.locator('.dm-to-input').fill('bob, admin');
+  await form.locator('.dm-to-input').press(',');
+  await publishImage(page, form, 'Group upload fixture.', true);
+
+  form = page.locator('form[data-composer-instance^=dm-conversation-]');
+  await setBody(form, 'Pointer-held reply.');
+  const response = page.waitForResponse(res => new URL(res.url()).pathname === '/upload' && res.request().method() === 'POST');
+  await form.locator('[data-composer-upload-input]').setInputFiles(imageFile());
+  const upload = await response;
+  expect(upload.status()).toBe(200);
+  const image = await upload.json();
+  await expect(form.locator('.composer-upload-card.is-complete')).toBeVisible();
+  const send = form.locator('.composer-send');
+  await expect(send).toBeEnabled();
+  await send.scrollIntoViewIfNeeded();
+  const before = await form.evaluate(node => {
+    const button = node.querySelector('.composer-send')!.getBoundingClientRect();
+    return { formBottom: node.getBoundingClientRect().bottom, height: window.innerHeight,
+      button: { x: button.x, y: button.y, width: button.width, height: button.height } };
+  });
+  expect(before.formBottom).toBeGreaterThan(before.height);
+  expect(before.button.y).toBeGreaterThanOrEqual(0);
+  expect(before.button.y + before.button.height).toBeLessThanOrEqual(before.height);
+  const action = await form.getAttribute('action');
+  const conversationPath = new URL(action!, page.url()).pathname;
+  await page.mouse.move(before.button.x + before.button.width / 2, before.button.y + before.button.height / 2);
+  await page.mouse.down();
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  const held = await send.boundingBox();
+  expect(held).not.toBeNull();
+  expect(Math.abs(held!.y - before.button.y)).toBeLessThan(1);
+  const sent = page.waitForResponse(res => res.request().method() === 'POST'
+    && new URL(res.url()).pathname === conversationPath);
+  await page.mouse.up();
+  expect((await sent).status()).toBe(303);
+  await expect(page.locator(`.formatted-content img[src="${image.url}"]`).last()).toBeVisible();
+  const row = fixture('attachment', String(image.id));
+  expect(row.status).toBe('finalized');
+  expect(row.body).toContain(image.url);
+});
+
 test('wiki editing preserves rejected text and publishes its own uploaded image', async ({ page }) => {
   const info = fixture('wiki');
   await login(page, 'admin@retro.test');

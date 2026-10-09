@@ -2298,12 +2298,39 @@
         // form already in view does not move).
         var dmDock = dmShell.querySelector('.dm-composer');
         if (dmDock) {
+            var dmDockPointers = new Set();
+            var dmDockRevealPending = false;
+            var dmDockRevealFrame = null;
             var revealDmDock = function () {
-                window.requestAnimationFrame(function () {
+                dmDockRevealPending = true;
+                if (dmDockRevealFrame !== null) { return; }
+                dmDockRevealFrame = window.requestAnimationFrame(function () {
+                    dmDockRevealFrame = null;
+                    if (!dmDock.isConnected || dmDock._rbComposerDestroyed) {
+                        dmDockRevealPending = false;
+                        return;
+                    }
+                    // Focusing Send can reveal the dock before pointerup. Moving
+                    // it then changes the release target and loses the click.
+                    if (dmDockPointers.size) { return; }
+                    dmDockRevealPending = false;
                     var box = dmDock.getBoundingClientRect();
                     if (box.bottom > window.innerHeight || box.top < 0) { dmDock.scrollIntoView({ block: 'nearest' }); }
                 });
             };
+            dmDock.addEventListener('pointerdown', function (event) {
+                dmDockPointers.add(event.pointerId);
+            }, true);
+            var releaseDmDockPointer = function (event) {
+                if (!dmDockPointers.delete(event.pointerId)) { return; }
+                // Native click dispatch finishes before this task. A cancelled
+                // pointer also releases deferred keyboard/focus visibility.
+                window.setTimeout(function () {
+                    if (!dmDockPointers.size && dmDockRevealPending) { revealDmDock(); }
+                }, 0);
+            };
+            document.addEventListener('pointerup', releaseDmDockPointer, true);
+            document.addEventListener('pointercancel', releaseDmDockPointer, true);
             dmDock.addEventListener('focusin', revealDmDock);
             // The shared row can make the readable-floor room grow even with
             // the dock folded. Keep Send in view on that initial latest-letter
