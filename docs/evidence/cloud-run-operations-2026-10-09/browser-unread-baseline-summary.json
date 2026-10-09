@@ -1,0 +1,31 @@
+{
+  "scope": "Isolated synthetic browser fixture; no production data/credentials or shared DB reset",
+  "runner_image": "retroboards-browser-ci:local-20261009",
+  "runner_image_id": "d4b13461c260",
+  "php": "8.2.34",
+  "node": "24.21.0",
+  "database_image": "mariadb:11.4",
+  "current_commit": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "baseline_commit": "c10faca411d014e018a34c49270647f27dfb9b13",
+  "unchanged_browser_app_source_except_unrelated_mailer_comments": true,
+  "before_fix": {
+    "current": "failed",
+    "baseline": "failed",
+    "failure": "strict locator resolved two responsive count spans",
+    "expected": "101",
+    "both_actual_values": [
+      "101",
+      "101"
+    ],
+    "assertion_line": 420
+  },
+  "after_fix": {
+    "desktop": "passed",
+    "mobile": "passed",
+    "tests_passed": 2,
+    "assertions": "Six generic counter/label expectations assert both responsive DOM copies; unread caps/names/rail/removal assertions retained"
+  },
+  "fixed_test_sha256": "96aba88b2f0cb0009eacd37cd4ca227433f1f8d9c000768958323bbd2506710b",
+  "hosted_f215_error_match": "CI owner confirmed identical strict locator failure for desktop and mobile",
+  "production_mutations": false
+}

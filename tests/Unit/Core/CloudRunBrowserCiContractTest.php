@@ -101,6 +101,81 @@ final class CloudRunBrowserCiContractTest extends TestCase
         self::assertStringNotContainsString('private-archive-error', (string) file_get_contents($output . '/result.json'));
     }
 
+    public function test_runner_attempts_every_independent_suite_and_retains_the_first_failure(): void
+    {
+        $bin = $this->scratch . '/bin';
+        $source = $this->scratch . '/runner-source';
+        mkdir($bin);
+        mkdir($source . '/tests/browser', 0700, true);
+        mkdir($source . '/tests/uploads', 0700, true);
+        $commands = [
+            'composer' => <<<'SH'
+#!/bin/bash
+echo composer >> "$RB_FAKE_EVENTS"
+exit "${RB_FAKE_COMPOSER_STATUS:-0}"
+SH,
+            'docker' => <<<'SH'
+#!/bin/bash
+if [[ "$1" == inspect ]]; then echo healthy; fi
+exit 0
+SH,
+            'mysql' => <<<'SH'
+#!/bin/bash
+echo unified-database >> "$RB_FAKE_EVENTS"
+exit "${RB_FAKE_DATABASE_STATUS:-0}"
+SH,
+            'npm' => <<<'SH'
+#!/bin/bash
+if [[ "$*" == 'run evidence' ]]; then
+  echo capture >> "$RB_FAKE_EVENTS"
+  exit "${RB_FAKE_CAPTURE_STATUS:-0}"
+fi
+if [[ "$*" == 'run evidence:notifications-settings' ]]; then
+  echo unified >> "$RB_FAKE_EVENTS"
+  exit "${RB_FAKE_UNIFIED_STATUS:-0}"
+fi
+exit 0
+SH,
+        ];
+        foreach ($commands as $name => $contents) {
+            file_put_contents($bin . '/' . $name, $contents . "\n");
+            chmod($bin . '/' . $name, 0755);
+        }
+        file_put_contents($source . '/tests/uploads/run.sh', <<<'SH'
+#!/bin/bash
+echo uploads >> "$RB_FAKE_EVENTS"
+exit "${RB_FAKE_UPLOAD_STATUS:-0}"
+SH);
+        $events = $this->scratch . '/events';
+        $output = $this->scratch . '/runner-results';
+        foreach ([
+            [7, 0, 3, 11, 0, 7, 'capture', ['composer', 'capture', 'unified-database', 'unified', 'uploads']],
+            [0, 9, 0, 0, 0, 9, 'notifications-settings', ['composer', 'capture', 'unified-database', 'uploads']],
+            [0, 0, 0, 0, 5, 5, 'dependencies', ['composer']],
+        ] as [$capture, $database, $unified, $uploads, $composer, $exit, $stage, $expectedEvents]) {
+            file_put_contents($events, '');
+            $result = $this->command(['bash', self::ROOT . '/deploy/cloudrun/browser-ci/run.sh'], [
+                'PATH' => $bin . ':' . getenv('PATH'),
+                'RB_CI_SOURCE' => $source,
+                'RB_CI_RESULTS' => $output,
+                'RB_CI_CONTROL' => self::ROOT . '/deploy/cloudrun/browser-ci',
+                'RB_CI_CONTAINER' => 'retroboards-browser-ci-contract',
+                'RB_FAKE_EVENTS' => $events,
+                'RB_FAKE_CAPTURE_STATUS' => (string) $capture,
+                'RB_FAKE_DATABASE_STATUS' => (string) $database,
+                'RB_FAKE_UNIFIED_STATUS' => (string) $unified,
+                'RB_FAKE_UPLOAD_STATUS' => (string) $uploads,
+                'RB_FAKE_COMPOSER_STATUS' => (string) $composer,
+            ]);
+            self::assertSame($exit, $result['exit'], $result['stderr']);
+            self::assertSame($expectedEvents, file($events, FILE_IGNORE_NEW_LINES));
+            $record = json_decode((string) file_get_contents($output . '/result.json'), true, flags: JSON_THROW_ON_ERROR);
+            self::assertFalse($record['passed']);
+            self::assertSame($exit, $record['exit_code']);
+            self::assertSame($stage, $record['last_stage']);
+        }
+    }
+
     public function test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure(): void
     {
         $source = $this->scratch . '/source';

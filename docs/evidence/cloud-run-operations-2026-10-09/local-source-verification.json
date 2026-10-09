@@ -1,0 +1,8 @@
+{
+  "tests": 3227,
+  "assertions": 25557,
+  "skipped": 1,
+  "runtime": "PHP 8.4.26",
+  "duration_seconds": 101.952,
+  "scope": "Full composer test on isolated retroboards_ops_root_20261009 database; Node 35 tests passed and generated assets current."
+}

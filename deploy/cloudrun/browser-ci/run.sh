@@ -55,12 +55,28 @@ for attempt in {1..50}; do
   ((attempt < 50)) || { echo 'Disposable database did not become healthy' >&2; exit 1; }
   sleep 2
 done
+ci_first_failure=0
+ci_first_failed_stage=''
+record_suite_failure() {
+  if ((ci_first_failure == 0)); then
+    ci_first_failure=$1
+    ci_first_failed_stage="$ci_stage"
+  fi
+  return 0
+}
+# Independent suites still produce diagnostic evidence after an earlier failure.
+# Dependencies above remain fail-fast; every suite failure keeps the final gate red.
 ci_stage=capture
-(cd tests/browser && npm run evidence)
+(cd tests/browser && npm run evidence) || record_suite_failure "$?"
 ci_stage=notifications-settings
-mysql --host=127.0.0.1 --port="$ci_db_port" --user=root --password=browser-ci-local \
-  --execute='CREATE DATABASE retroboards_unified_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
-(cd tests/browser && DB_DATABASE=retroboards_unified_e2e E2E_PORT=8034 npm run evidence:notifications-settings)
+(mysql --host=127.0.0.1 --port="$ci_db_port" --user=root --password=browser-ci-local \
+  --execute='CREATE DATABASE retroboards_unified_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' \
+  && (cd tests/browser && DB_DATABASE=retroboards_unified_e2e E2E_PORT=8034 npm run evidence:notifications-settings)) \
+  || record_suite_failure "$?"
 ci_stage=uploads
-bash tests/uploads/run.sh
+bash tests/uploads/run.sh || record_suite_failure "$?"
 ci_stage=complete
+if ((ci_first_failure != 0)); then
+  ci_stage="$ci_first_failed_stage"
+  exit "$ci_first_failure"
+fi

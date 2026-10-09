@@ -97,20 +97,34 @@ boundary. Branch scripts can access the build VM's Docker daemon.
 
 [Local runner receipt](browser-ci-local-summary.json) records PHP 8.2.34,
 Node 24.21.0, Compose 2.40.3, successful nested Docker execution and actual
-Chromium/WebKit launches. Nine command/packaging contract tests passed with
-66 assertions on PHP 8.4.26 and in the actual PHP 8.2.34 runner image: exact-SHA rejection, boolean final success enforcement,
+Chromium/WebKit launches. Ten command/packaging contract tests passed with
+81 assertions on PHP 8.4.26 and in the actual PHP 8.2.34 runner image: exact-SHA rejection, boolean final success enforcement,
 redaction and symlink exclusion, required capture/unified/all-upload artifacts,
 restricted setup dry-run behavior, installed-gh paginated webhook parsing, and strict named/UUID Cloud Build
-callback validation. These local checks do not establish
+callback validation. The runner also proves that capture failure and unified
+database preparation failure still allow the other independent suites to run,
+while preserving the first nonzero exit/status and failed stage. Dependency
+initialization remains fail-fast. Seven uploader behavior contracts and a
+two-test PHP wrapper passed; the uploader creates objects over verified HTTPS
+with `ifGenerationMatch=0` and validates the creation response's size/checksum,
+without reading, listing or replacing existing objects. These local checks do not establish
 hosted suite execution. The [setup receipt](browser-ci-setup-summary.json) verifies dedicated CI IAM,
 private uniform access/public access prevention, the 14-day object lifecycle
 and the owner-branch push hook. Trigger `ba3fce53-93e6-42bb-a4eb-cd3839574a60`
 pins reviewed control `661876a8abf0b23ef3fe9e017e53925dfe866721`. The initial
 manual build against `9460451` was canceled after review found incomplete
 success gates; it is not a suite pass. Hardened manual build
-`f215672e-72c9-4a27-8dc2-96d80561fc6e` and automatic owner-push replay
-`6ce5b5a1-896a-4481-b1ba-b058cd4aa95b` both use exact source/control `661876a`.
-The manual hosted suite result is pending. The automatic replay was canceled
+`f215672e-72c9-4a27-8dc2-96d80561fc6e` finished **FAILURE** at 07:57:44.325222.
+Its thread-view groups passed 34 cases; broad capture passed 162, failed 14,
+skipped 38 existing project-specific cases and left 14 unexecuted. The old
+fail-fast runner did not reach the independent notifications/settings or
+production-Docker upload suites. Artifact publication also failed with 403:
+`gcloud storage cp` requested object read permission that the restricted
+account does not have. The replacement uploader preserves create-only IAM.
+The [failed-build receipt](browser-ci-first-hosted-failure.json) records these
+limits. A complete corrected hosted result remains pending.
+Automatic owner-push replay `6ce5b5a1-896a-4481-b1ba-b058cd4aa95b` used exact
+source/control `661876a`. The automatic replay was canceled
 after source/ref/repository launch proof to avoid duplicate suite cost; it is
 not a hosted suite pass.
 
@@ -121,7 +135,36 @@ original compound owner-branch filter then each created builds with correctly
 resolved source, ref and repository bindings. Intermediate diagnostic builds
 were canceled after launch proof to avoid duplicate suites. The intended
 combined filter was restored; no unfiltered replay or extra CI IAM privilege
-was needed. A fresh final branch push remains separate evidence from replay.
+was needed. A [native branch push](browser-ci-native-push-summary.json) at
+07:46:42 created build `1ebef3c0-ba89-42f7-9699-344f31e6f5a6` for exact source
+`2c6503667a731cadbafb393753675dbf4ce7b7b7` with reviewed controls `661876a`.
+It was canceled after successful source/binding proof to avoid duplicate suites;
+this is automatic launch evidence, not a hosted test pass.
+
+The [Gate A baseline receipt](browser-gate-a-baseline-summary.json) reproduces
+hidden mobile rail selections, desktop-only admin navigation selection,
+ambiguous no-JS controls and stale custom-emoji accessible names against both
+the initial CI source and unchanged baseline `c10faca`. Corrections scope board
+identity to visible main content, follow the console's native mobile disclosure,
+check both no-JS controls and use the humanized reaction label while proving
+the exact stored custom token and active state. The affected desktop/mobile
+batch passed 15 cases with one existing desktop exclusion. A separate fresh
+no-JS run passed after the login helper stopped requesting a JavaScript-only
+tour dismissal in that context; native authentication, roles and simulator
+assertions remain. The [unread baseline receipt](browser-unread-baseline-summary.json)
+confirms both responsive counters already contained `101`; the stale single-
+element assertion now checks both copies, with desktop/mobile targeted passes.
+These are isolated browser checks; complete hosted execution remains pending.
+
+The [framing and animation receipt](browser-framing-and-animation-summary.json)
+also reproduces the curator capture and mobile pointer failures on the baseline.
+The corrected helper measures the scroll-padding budget and preserves full
+containment; the formatting test waits for the actual entrance animation and
+retains its hover, click and keyboard assertions. All five affected cases pass.
+A wider three-file run passed 54 cases with 11 existing skips and one intermittent
+failure in an untouched shortcut test. That test passed three isolated retries
+on both sources; the complete composer-file retry passed 12 cases with six
+existing skips and no failures, using unchanged source.
 
 Success publication now requires the outer Docker command to return zero,
 complete suite outputs and a readable archive matching the manifest and
@@ -140,11 +183,12 @@ Build results and private artifacts must be inspected instead.
 
 ## Source verification
 
-The root agent reran the full suite against hardened source `661876a`:
-3,224 tests, 25,531 assertions and one existing dedicated-schema guard skip on
-PHP 8.4.26, plus 35 Node asset tests and current generated-asset checks.
-The CI controls additionally passed nine scoped contract tests with
-66 assertions on PHP 8.4.26 and 8.2.34; the later named-webhook administrator fix
-retained the same passing checks and does not change the pinned runner files.
+The root agent reran the full suite against the reviewed follow-up working tree:
+3,227 tests, 25,557 assertions and one existing dedicated-schema guard skip on
+PHP 8.4.26 in 101.952 seconds, as recorded in the
+[source verification receipt](local-source-verification.json).
+The unchanged asset source passed 35 Node tests and generated-asset checks.
+The CI controls additionally passed ten scoped contract tests with
+81 assertions on PHP 8.4.26 and 8.2.34, plus the uploader contracts above.
 Source verification, hosted browser results and production rollout remain
 separate receipts.

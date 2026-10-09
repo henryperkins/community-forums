@@ -24,7 +24,7 @@
       ],
       "args": [
         "-c",
-        "set -euo pipefail\n[[ \"$$CI_SOURCE_SHA\" =~ ^[0-9a-f]{40}$ && \"$$CI_CONTROL_SHA\" =~ ^[0-9a-f]{40}$ ]] || { echo 'Exact source and trusted control commit SHAs are required' >&2; exit 2; }\nmkdir -p /workspace/source /workspace/control /workspace/results\ncd /workspace/source\ngit init -q .\ngit remote add origin https://github.com/henryperkins/community-forums.git\ngit fetch -q --depth=1 origin \"$$CI_SOURCE_SHA\" \"$$CI_CONTROL_SHA\"\nfor file in Dockerfile run.sh package.py enforce.py; do\n  git show \"$$CI_CONTROL_SHA:deploy/cloudrun/browser-ci/$$file\" > \"/workspace/control/$$file\"\ndone\ngit checkout -q \"$$CI_SOURCE_SHA\"\n"
+        "set -euo pipefail\n[[ \"$$CI_SOURCE_SHA\" =~ ^[0-9a-f]{40}$ && \"$$CI_CONTROL_SHA\" =~ ^[0-9a-f]{40}$ ]] || { echo 'Exact source and trusted control commit SHAs are required' >&2; exit 2; }\nmkdir -p /workspace/source /workspace/control /workspace/results\ncd /workspace/source\ngit init -q .\ngit remote add origin https://github.com/henryperkins/community-forums.git\ngit fetch -q --depth=1 origin \"$$CI_SOURCE_SHA\" \"$$CI_CONTROL_SHA\"\nfor file in Dockerfile run.sh package.py enforce.py upload.py; do\n  git show \"$$CI_CONTROL_SHA:deploy/cloudrun/browser-ci/$$file\" > \"/workspace/control/$$file\"\ndone\ngit checkout -q \"$$CI_SOURCE_SHA\"\n"
       ]
     },
     {
@@ -47,7 +47,7 @@
       "entrypoint": "bash",
       "args": [
         "-c",
-        "set -euo pipefail\nif [ ! -f /workspace/results/result.json ]; then\n  printf '%s\\n' '{\"passed\":false,\"last_stage\":\"runner-startup\",\"artifact_count\":0}' > /workspace/results/result.json\nfi\ngcloud storage cp /workspace/results/result.json \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/result.json\"\nif [ -f /workspace/runner-exit.json ]; then\n  gcloud storage cp /workspace/runner-exit.json \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/runner-exit.json\"\nfi\nif [ -f /workspace/results/evidence.tar.gz ]; then\n  gcloud storage cp /workspace/results/evidence.tar.gz \"gs://${_BUCKET}/${_SHA}/$BUILD_ID/evidence.tar.gz\"\nfi\n"
+        "set -euo pipefail\nif [ ! -f /workspace/results/result.json ]; then\n  printf '%s\\n' '{\"passed\":false,\"last_stage\":\"runner-startup\",\"artifact_count\":0}' > /workspace/results/result.json\nfi\npython3 /workspace/control/upload.py --results /workspace/results --outer-result /workspace/runner-exit.json --bucket \"${_BUCKET}\" --prefix \"${_SHA}/$BUILD_ID\"\n"
       ]
     },
     {

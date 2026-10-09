@@ -193,7 +193,7 @@ billing. The latest checked main run (`37888488447`) failed with zero job
 steps; there is no CircleCI configuration. Keep
 `.github/workflows/browser-evidence.yml` available for billing recovery.
 The independent Cloud Build lane uses
-`deploy/cloudrun/browser-ci/{configure.py,cloudbuild.json,Dockerfile,run.sh,package.py,enforce.py}`.
+`deploy/cloudrun/browser-ci/{configure.py,cloudbuild.json,Dockerfile,run.sh,package.py,upload.py,enforce.py}`.
 It is the hosted browser evidence source while Actions cannot run; inspect its
 actual build result before calling a commit verified.
 
@@ -203,7 +203,10 @@ Docker upload suites, and uploads sanitized synthetic PNG/JSON evidence to a
 private bucket with 14-day expiry. Capture and unified settings use a disposable
 MariaDB; uploads use their own Compose project and ports. The suites run
 sequentially in one build, and separate builds have separate VMs. Chromium and
-WebKit are installed in the runner. The outer build step records the actual Docker exit after the runner returns.
+WebKit are installed in the runner. Dependency initialization fails immediately.
+After a suite fails, the other independent groups still run to collect evidence;
+the first nonzero status and failed stage remain the final result.
+The outer build step records the actual Docker exit after the runner returns.
 The packager publishes its candidate success JSON atomically after the complete
 archive; failure artifacts publish before a final validator enforces success.
 That validator requires outer Docker exit 0, matching source/control IDs and a
@@ -217,6 +220,9 @@ reviewed recipe records its provenance; branch test scripts have Docker daemon
 access within the build VM. Restricted IAM is the production access boundary.
 Neither GitHub credentials nor a production `.env` enter the runner. Published
 artifacts omit environment variables, cookies, headers, traces and raw logs.
+The uploader uses authenticated HTTPS object creation with `ifGenerationMatch=0`
+and checks the creation response's size/checksum. It needs no object read/list/delete
+permission and refuses overwriting an existing artifact.
 
 Setup or refresh after pushing a reviewed control commit:
 
@@ -242,7 +248,11 @@ gcloud builds submit --no-source --project=rising-woods-449718-v6 --region=us-ea
 gcloud builds describe <BUILD_ID> --region=us-east4
 # For an authorized operator, download the private result and synthetic archive:
 gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/result.json /private/result.json
+gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/runner-exit.json /private/runner-exit.json
 gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<BUILD_ID>/evidence.tar.gz /private/evidence.tar.gz
+python3 deploy/cloudrun/browser-ci/enforce.py --results=/private \
+  --outer-result=/private/runner-exit.json --source-sha=<EXACT_SOURCE_SHA> \
+  --control-sha=<REVIEWED_CONTROL_SHA>
 ```
 
 Both SHAs must be full lowercase 40-character commit IDs. The final Cloud Build result, independent `runner-exit.json` and complete

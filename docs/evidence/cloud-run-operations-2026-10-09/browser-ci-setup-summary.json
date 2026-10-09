@@ -29,7 +29,7 @@
   "filter": "_REPO == \"henryperkins/community-forums\" && _REF.matches(\"^refs/heads/.*\") && _SHA != \"0000000000000000000000000000000000000000\"",
   "github_hook_id": 694573802,
   "github_status_publication": "unavailable",
-  "hosted_lane_result": "pending",
+  "hosted_lane_result": "first hosted attempt failed; corrected complete rerun pending",
   "assigned_bucket_roles": [
     "roles/storage.objectCreator"
   ],
@@ -41,5 +41,6 @@
   "webhook_endpoint_and_query_use_trigger_name": true,
   "initial_uuid_endpoint_returned_200_without_build": true,
   "selected_ci_account_permissions_widened": false,
-  "automatic_status": "CANCELLED after launch proof to avoid duplicate suite cost"
+  "automatic_status": "CANCELLED after launch proof to avoid duplicate suite cost",
+  "manual_build_status": "FAILURE"
 }
