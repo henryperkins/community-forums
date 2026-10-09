@@ -212,13 +212,20 @@ the first nonzero status and failed stage remain the final result.
 The child build step records the Docker exit after the runner returns.
 The packager publishes its candidate success JSON atomically after the complete
 archive; failure artifacts publish before the child validator enforces success.
-The parent checks Cloud Build's child status, account and exact substitutions,
-then downloads the three artifacts as bounded data without extracting or
-executing them. Its separately pinned validator requires Docker exit 0,
+The parent checks Cloud Build's child status, account, exact substitutions and
+every provider-reported step against the pinned recipe: matching ordered IDs,
+`SUCCESS` and no nonzero exit code. Overall build success cannot excuse a
+failed `allowFailure` step. It then downloads the three artifacts as bounded
+data without extracting or executing them. Its separately pinned validator
+requires the child-reported Docker exit 0,
 matching source/control IDs and a readable archive matching the required
 manifest, including outputs from all three suite groups and every upload
 browser project. Among the two CI accounts, only the parent can create `verification.json` in
 `rising-woods-449718-v6-retroboards-browser-verification`.
+Artifact downloads are capped at 1 MiB per JSON receipt and 256 MiB for the
+compressed archive. Validation separately caps the entire inflated gzip
+stream, including tar/PAX headers, at 256 MiB; accepts at most 1,024 regular
+members; and caps each member at 20 MiB.
 
 The dedicated `retroboards-browser-ci` service account can write build logs
 and create objects in the child evidence bucket. It cannot read production secrets,
@@ -288,7 +295,7 @@ python3 deploy/cloudrun/browser-ci/enforce.py --results=/private \
 Both SHAs must be full lowercase 40-character commit IDs. A successful parent
 Cloud Build result and its separately published `verification.json` establish
 this lane's acceptance; check matching parent/child/source/control IDs,
-`metadata_verified`, `enforcement_passed`, `passed` and the artifact SHA-256
+`metadata_verified`, `provider_steps_verified`, `enforcement_passed`, `passed` and the artifact SHA-256
 receipts. The child `result.json` and `runner-exit.json` are reported evidence
 and cannot establish a pass by themselves. GitHub check/status
 publication is unavailable with the current webhook integration; a Cloud Build

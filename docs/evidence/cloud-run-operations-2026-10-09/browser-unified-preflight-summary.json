@@ -1,0 +1,267 @@
+{
+  "captured_at_utc": "2026-10-09T09:09:08.493806+00:00",
+  "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+  "image_id": "sha256:d4b13461c2608d7fcdee919508fe69ea0fd229880d7d5d6fb60ac88a94ab636a",
+  "runtime": {
+    "php": "8.2.34",
+    "database": "MariaDB11.4",
+    "browser": "real Chromium through Playwright1.61.1"
+  },
+  "synthetic_only": true,
+  "production_access": false,
+  "environment_file_copied": false,
+  "credentials": "fixed dummy only",
+  "per_project_database_reset": true,
+  "suite_filters_and_environment_preserved": true,
+  "individual_project_reports": [
+    {
+      "suite": "board-index-remediation",
+      "project": "desktop",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 5638
+    },
+    {
+      "suite": "board-index-remediation",
+      "project": "mobile",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 6507
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "desktop",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 21938
+    },
+    {
+      "suite": "chamfer-removal",
+      "project": "mobile",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 23725
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "desktop",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 9299
+    },
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "mobile",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 1,
+      "flaky": 0,
+      "duration_ms": 8344
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "desktop",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 5353
+    },
+    {
+      "suite": "profile-media-accessibility",
+      "project": "mobile",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 4530
+    },
+    {
+      "suite": "profile-surface",
+      "project": "desktop",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 48862
+    },
+    {
+      "suite": "profile-surface",
+      "project": "mobile",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 55484
+    },
+    {
+      "suite": "totp",
+      "project": "desktop",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 9211
+    },
+    {
+      "suite": "totp",
+      "project": "mobile",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 21491
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 4,
+      "flaky": 0,
+      "duration_ms": 13972
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "mobile",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 1,
+      "flaky": 0,
+      "duration_ms": 11974
+    }
+  ],
+  "totals": {
+    "passed": 144,
+    "failed": 0,
+    "skipped": 6,
+    "flaky": 0
+  },
+  "existing_skips": [
+    {
+      "suite": "gate-a-account-notifications",
+      "project": "mobile",
+      "title": "admin notifications keep filters, tabs, counter, and email warning useful without JavaScript",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "one explicit no-JS notification journey is sufficient",
+          "location": {
+            "file": "/workspace/source/tests/browser/gate-a.spec.ts",
+            "line": 1573,
+            "column": 8
+          }
+        }
+      ]
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "title": "the closed phone drawer is excluded from keyboard navigation",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "phone drawer accessibility contract",
+          "location": {
+            "file": "/workspace/source/tests/browser/unified-chrome.spec.ts",
+            "line": 523,
+            "column": 8
+          }
+        }
+      ]
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "title": "phone primary navigation reaches Messages without horizontal page overflow",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "phone primary navigation contract",
+          "location": {
+            "file": "/workspace/source/tests/browser/unified-chrome.spec.ts",
+            "line": 551,
+            "column": 8
+          }
+        }
+      ]
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "title": "shared creation survives the phone breakpoint as a 44px glyph",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "phone chrome contract",
+          "location": {
+            "file": "/workspace/source/tests/browser/unified-chrome.spec.ts",
+            "line": 573,
+            "column": 8
+          }
+        }
+      ]
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "desktop",
+      "title": "mobile chrome reaches boards, messages, and account settings through native controls",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "phone progressive-enhancement contract",
+          "location": {
+            "file": "/workspace/source/tests/browser/unified-chrome.spec.ts",
+            "line": 629,
+            "column": 10
+          }
+        }
+      ]
+    },
+    {
+      "suite": "unified-chrome",
+      "project": "mobile",
+      "title": "the desktop rail POST persists across reloads and destinations",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "the persisted toggle is desktop-only",
+          "location": {
+            "file": "/workspace/source/tests/browser/unified-chrome.spec.ts",
+            "line": 592,
+            "column": 10
+          }
+        }
+      ]
+    }
+  ],
+  "runner_completed": true,
+  "individual_commands": 28,
+  "all_prepare_and_test_commands_exit_zero": true,
+  "elapsed_seconds": 355.98,
+  "selected_spec_files_match_worktree": true,
+  "repository_files_edited": [],
+  "baseline_comparison": "Not required: no failure in these requested groups",
+  "cleanup": {
+    "database_container_removed": true,
+    "owned_anonymous_db_volumes_removed": true,
+    "runner_container_automatically_removed": true,
+    "per_project_scratch_removed": true
+  },
+  "limits": [
+    "Targeted isolated preflight, not complete hosted CI",
+    "First three unified groups excluded because handled separately",
+    "Six existing viewport-specific skips preserved"
+  ],
+  "log_sha256": "a820a8c34bee048a63a4ec8821c7e8797fd1543640884416c50aa686a998e24f"
+}

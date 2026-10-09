@@ -1,0 +1,190 @@
+{
+  "event": "targeted_hosted_webkit_diagnostic_verified",
+  "targeted_diagnostic": true,
+  "accepted": false,
+  "full_parent_acceptance": false,
+  "build_id": "83e3ec66-6242-4804-9e41-c68696338014",
+  "provider_status": "SUCCESS",
+  "source_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "provider_recipe_source_identity_verified": true,
+  "all_provider_steps_successful": true,
+  "provider_objects": [
+    {
+      "filename": "result.json",
+      "name": "targeted-webkit-diagnostic/03690ff92e26b5c3413c2d4d799b402599179676/83e3ec66-6242-4804-9e41-c68696338014/result.json",
+      "generation": "1791543847755214",
+      "bytes": 944,
+      "sha256": "fd3129a2b52d40c8d569743436acb5ac5b66f7423a4864c78510c2ba2c9601c7",
+      "provider_size_md5_match": true
+    },
+    {
+      "filename": "runner-exit.json",
+      "name": "targeted-webkit-diagnostic/03690ff92e26b5c3413c2d4d799b402599179676/83e3ec66-6242-4804-9e41-c68696338014/runner-exit.json",
+      "generation": "1791543847962682",
+      "bytes": 23,
+      "sha256": "34de0b5dab231de578c472d79a7c305e6920933ad646c18c3243db107c13b068",
+      "provider_size_md5_match": true
+    },
+    {
+      "filename": "evidence.tar.gz",
+      "name": "targeted-webkit-diagnostic/03690ff92e26b5c3413c2d4d799b402599179676/83e3ec66-6242-4804-9e41-c68696338014/evidence.tar.gz",
+      "generation": "1791543848157961",
+      "bytes": 129427,
+      "sha256": "aa459ccf6422b21ec657f1188e76126b713b6fc11e0677b037b5b99a3204588a",
+      "provider_size_md5_match": true
+    }
+  ],
+  "all_47_cases_completed_passed": true,
+  "counts": {
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0
+  },
+  "instrumentation_original_source_hashes_match_pin": true,
+  "archive": {
+    "artifact_count": 10,
+    "member_count": 11,
+    "compressed_bytes": 129427,
+    "inflated_bytes_including_headers": 184320,
+    "max_member_bytes": 59759,
+    "png_count": 3,
+    "json_count": 8,
+    "within_bounds": true
+  },
+  "application_runtime": {
+    "php": "8.2.34",
+    "file_bytes": 8388608,
+    "post_bytes": 10485760,
+    "application_bytes": 5242880
+  },
+  "runtime_before": {
+    "targeted_diagnostic": true,
+    "full_parent_acceptance": false,
+    "logical_cpus": 2,
+    "available_cpu_affinity_count": 2,
+    "runner_php_version": "8.2.34",
+    "runner_node_version": "24.21.0",
+    "memory_limit_bytes": "unavailable",
+    "memory_current_bytes": "unavailable",
+    "memory_events": {
+      "available": false
+    },
+    "cpu_stats": {
+      "available": false
+    },
+    "cpu_quota": {
+      "available": false
+    },
+    "host_memory_kib": {
+      "MemTotal": 8147688,
+      "MemAvailable": 6885708
+    },
+    "pressure": {
+      "cpu": {
+        "some": {
+          "avg10": 19.58,
+          "avg60": 20.48,
+          "avg300": 10.5,
+          "total": 61175886.0
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 0.13,
+          "avg60": 0.26,
+          "avg300": 0.08,
+          "total": 446380.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.01,
+          "avg300": 0.0,
+          "total": 155470.0
+        }
+      },
+      "io": {
+        "some": {
+          "avg10": 7.65,
+          "avg60": 13.78,
+          "avg300": 6.78,
+          "total": 35095014.0
+        },
+        "full": {
+          "avg10": 6.78,
+          "avg60": 11.3,
+          "avg300": 5.44,
+          "total": 26097066.0
+        }
+      }
+    }
+  },
+  "runtime_after": {
+    "targeted_diagnostic": true,
+    "full_parent_acceptance": false,
+    "logical_cpus": 2,
+    "available_cpu_affinity_count": 2,
+    "runner_php_version": "8.2.34",
+    "runner_node_version": "24.21.0",
+    "memory_limit_bytes": "unavailable",
+    "memory_current_bytes": "unavailable",
+    "memory_events": {
+      "available": false
+    },
+    "cpu_stats": {
+      "available": false
+    },
+    "cpu_quota": {
+      "available": false
+    },
+    "host_memory_kib": {
+      "MemTotal": 8147688,
+      "MemAvailable": 7357016
+    },
+    "pressure": {
+      "cpu": {
+        "some": {
+          "avg10": 19.54,
+          "avg60": 24.16,
+          "avg300": 19.42,
+          "total": 151778655.0
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.03,
+          "avg300": 0.06,
+          "total": 1228080.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0,
+          "total": 443344.0
+        }
+      },
+      "io": {
+        "some": {
+          "avg10": 0.26,
+          "avg60": 0.37,
+          "avg300": 2.94,
+          "total": 46621646.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.23,
+          "avg300": 2.25,
+          "total": 33622234.0
+        }
+      }
+    }
+  },
+  "failure_state_files": [],
+  "limits": [
+    "Targeted WebKit-only diagnostic; not full isolated-parent acceptance.",
+    "Passive instrumentation may affect timing; a passing run does not refute separately reproduced baseline pointer/layout failure.",
+    "No machineType override was present; resource values are observed availability, not a claim about configured numeric VM size.",
+    "No production credentials/data or token/cookie/body values recorded."
+  ]
+}

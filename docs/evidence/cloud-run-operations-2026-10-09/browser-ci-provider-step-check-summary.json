@@ -1,0 +1,54 @@
+{
+  "reviewed_control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "launcher_sha256": "b0a2d2cae18e0896b197abcb245b4560314e7eadc6bb7943814c8ace26052a03",
+  "scope": "Current step verifier exercised against three real provider metadata responses; no synthetic browser pass claim",
+  "cases": [
+    {
+      "scenario": "pass",
+      "build_id": "bf3b4f01-84fe-475a-a622-922531655859",
+      "provider_status": "SUCCESS",
+      "provider_step_statuses": [
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS"
+      ],
+      "accepted_by_step_gate": true,
+      "expected_result_matched": true
+    },
+    {
+      "scenario": "tamper",
+      "build_id": "8f37fc35-56b9-4069-9348-cd81c5885447",
+      "provider_status": "SUCCESS",
+      "provider_step_statuses": [
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS",
+        "SUCCESS"
+      ],
+      "accepted_by_step_gate": true,
+      "expected_result_matched": true
+    },
+    {
+      "scenario": "earlier_allowed_failure",
+      "build_id": "f215672e-72c9-4a27-8dc2-96d80561fc6e",
+      "provider_status": "FAILURE",
+      "provider_step_statuses": [
+        "SUCCESS",
+        "FAILURE",
+        "FAILURE",
+        "QUEUED"
+      ],
+      "accepted_by_step_gate": false,
+      "expected_result_matched": true
+    }
+  ],
+  "passed": true
+}

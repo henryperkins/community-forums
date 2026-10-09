@@ -1,0 +1,127 @@
+{
+  "event": "independent_native_push_linkage",
+  "captured_at": "2026-10-09T11:19:55.966574+00:00",
+  "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "native_google_hook_deliveries": [
+    {
+      "hook_id": 694573802,
+      "hook_active": true,
+      "target_project_region_trigger_matched": true,
+      "delivery_id": 3847312766824112128,
+      "guid": "ee9a0d76-c3d2-11f1-9c3d-4f10480e7c8b",
+      "delivered_at": "2026-10-09T11:16:55.72Z",
+      "event": "push",
+      "redelivery": false,
+      "status_code": 200,
+      "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+      "ref": "refs/heads/chore/cloud-run-operations",
+      "repository_matches": true
+    }
+  ],
+  "parent": {
+    "id": "48afc71c-cb4f-468c-9294-58f510c89bd1",
+    "projectId": "rising-woods-449718-v6",
+    "status": "WORKING",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+    "createTime": "2026-10-09T11:16:56.586096Z",
+    "startTime": "2026-10-09T11:16:57.101066325Z",
+    "finishTime": null,
+    "safe_substitutions": {
+      "_SHA": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence",
+      "_VERIFY_BUCKET": "rising-woods-449718-v6-retroboards-browser-verification",
+      "_REF": "refs/heads/chore/cloud-run-operations",
+      "_REPO": "henryperkins/community-forums"
+    },
+    "substitution_keys": [
+      "TRIGGER_BUILD_CONFIG_PATH",
+      "TRIGGER_NAME",
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_REF",
+      "_REPO",
+      "_SHA",
+      "_VERIFY_BUCKET"
+    ],
+    "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "exact_sha_match": true,
+    "steps": [
+      {
+        "id": "trusted-parent-controls",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "isolated-child-and-parent-verification",
+        "status": "WORKING",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ]
+  },
+  "child": {
+    "id": "4b4d18e8-0c22-4457-b386-a3244ff6a563",
+    "projectId": "rising-woods-449718-v6",
+    "status": "WORKING",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": null,
+    "createTime": "2026-10-09T11:18:10.798163095Z",
+    "startTime": "2026-10-09T11:18:11.382021180Z",
+    "finishTime": null,
+    "safe_substitutions": {
+      "_SHA": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence"
+    },
+    "substitution_keys": [
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_SHA"
+    ],
+    "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "exact_sha_match": true,
+    "steps": [
+      {
+        "id": "source",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "browser-suites",
+        "status": "WORKING",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": true
+      },
+      {
+        "id": "publish-evidence",
+        "status": "QUEUED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "enforce-result",
+        "status": "QUEUED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ]
+  },
+  "parent_trusted_identity_verified": true,
+  "child_restricted_identity_verified": true,
+  "source_control_pins_verified": true,
+  "full_acceptance": false,
+  "read_only_audit": true
+}

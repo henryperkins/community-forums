@@ -47,6 +47,16 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   capture, unified settings and production-Docker upload suites, with private
   expiring synthetic artifacts and no production credentials. Hosted receipts
   are tracked separately from local source checks.
+- Fix an existing Messages submission bug found by hosted browser investigation:
+  focusing Send could scroll the composer between pointer press and release,
+  losing the native click. Defer that reveal until pointers release, preserving
+  keyboard and initial positioning. Isolated baseline/fix regressions pass in
+  all three browser projects; the complete hosted B lane passed 726 cases
+  with zero failures and 92 existing exclusions.
+- Pin the hash-verified active asset release before building its replacement,
+  retaining its published bundles under the existing three-deploy policy.
+  Live baseline delivery and generated-source checks passed; post-merge
+  delivery of the new release remains pending.
 - Close the database's public authorized network (`0.0.0.0/0`) and move it
   to `db-f1-micro`. Page latency did not change.
 - `DB_SOCKET` connects over a Unix socket in place of host and port. The

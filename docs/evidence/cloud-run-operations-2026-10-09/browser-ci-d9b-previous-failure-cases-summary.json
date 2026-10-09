@@ -1,0 +1,29 @@
+{
+  "captured_at": "2026-10-09T12:12:20.106481+00:00",
+  "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "provider_log_case_outcomes": [
+    {
+      "case": "source_pending_preview_reload",
+      "case_index": 22,
+      "project": "webkit-mobile",
+      "reported_result": "passed",
+      "timestamp": "2026-10-09T12:09:19.377454109Z"
+    },
+    {
+      "case": "no_js_markdown_and_existing_images",
+      "case_index": 39,
+      "project": "webkit-mobile",
+      "reported_result": "passed",
+      "timestamp": "2026-10-09T12:10:13.528273718Z"
+    },
+    {
+      "case": "rich_topic_edit_dm_and_group_images",
+      "case_index": 43,
+      "project": "webkit-mobile",
+      "reported_result": "passed",
+      "timestamp": "2026-10-09T12:10:50.535125424Z"
+    }
+  ],
+  "scope": "Prior036failedWebKitcases reported by fullB; no claim that the pointer fix caused unrelated cases to pass."
+}

@@ -1,0 +1,198 @@
+{
+  "event": "browser_ci_d6_functional_diagnostic_artifacts",
+  "build_id": "7fd092fc-9dec-4507-b93f-d53fe639ab61",
+  "source_sha": "d6cc5acad5378fd7967991deb605192083c1958b",
+  "control_sha": "d6cc5acad5378fd7967991deb605192083c1958b",
+  "overall_provider_status": "FAILURE",
+  "finish_time": "2026-10-09T09:05:00.871891Z",
+  "candidate_passed": false,
+  "candidate_exit_code": 1,
+  "first_failed_stage": "notifications-settings",
+  "child_reported_docker_exit_code": 1,
+  "artifact_count": 521,
+  "artifact_counts_by_root": {
+    "browser": 290,
+    "unified-notifications-and-settings": 217,
+    "image-upload-reliability": 14
+  },
+  "artifact_payload_bytes_by_root": {
+    "browser": 51202416,
+    "unified-notifications-and-settings": 26633128,
+    "image-upload-reliability": 383346
+  },
+  "archive_compressed_bytes": 71225261,
+  "archive_inflated_bytes_including_headers": 79196160,
+  "archive_member_count": 522,
+  "archive_member_payload_bytes": 78257777,
+  "archive_max_member_bytes": 982137,
+  "manifest_paths_and_embedded_result_match": true,
+  "json_and_png_validation_passed": true,
+  "within_new_archive_resource_limits": true,
+  "archive_limits": {
+    "inflated_bytes": 268435456,
+    "members": 1024,
+    "single_member_bytes": 20971520
+  },
+  "required_artifacts_missing": [
+    "unified-notifications-and-settings: completed=true"
+  ],
+  "unified_runtime_summary": [
+    {
+      "path": "unified-notifications-and-settings/browser-results.json",
+      "completed": false,
+      "recorded_commands": 10,
+      "failed_commands": 1
+    }
+  ],
+  "trusted_local_enforcer_exit_code": 1,
+  "artifact_receipts": [
+    {
+      "name": "result.json",
+      "bytes": 38887,
+      "sha256": "ea45e7240a5edace785187f6d0663b0d8a9faa737746a3b4dfa124ba2710a670"
+    },
+    {
+      "name": "runner-exit.json",
+      "bytes": 23,
+      "sha256": "c7668a314373f3e3846d2b46093459fc49a1cbdd8472af18cc701ae61a6cd46d"
+    },
+    {
+      "name": "evidence.tar.gz",
+      "bytes": 71225261,
+      "sha256": "86165f45fb4cef115a24f822d5c3c44fe3f988194a9d45ecaf0bbfd9f1509848"
+    }
+  ],
+  "limits": [
+    "Single-VM acceptance controls were reachable through the child Docker socket; functional diagnostic only.",
+    "Unified suite stopped at the account-console desktop timeout; later unified subgroups were not executed.",
+    "This incomplete unified run is a lower bound for the final complete archive size and member count."
+  ],
+  "playwright_group_results": {
+    "capture": {
+      "passed": 334,
+      "failed": 0,
+      "skipped": 74,
+      "summaries": [
+        {
+          "timestamp": "2026-10-09T08:27:28.325462625Z",
+          "kind": "skipped",
+          "count": 2
+        },
+        {
+          "timestamp": "2026-10-09T08:27:28.325477875Z",
+          "kind": "passed",
+          "count": 22
+        },
+        {
+          "timestamp": "2026-10-09T08:28:13.838018517Z",
+          "kind": "skipped",
+          "count": 12
+        },
+        {
+          "timestamp": "2026-10-09T08:28:13.838027917Z",
+          "kind": "passed",
+          "count": 12
+        },
+        {
+          "timestamp": "2026-10-09T08:40:08.866068085Z",
+          "kind": "skipped",
+          "count": 38
+        },
+        {
+          "timestamp": "2026-10-09T08:40:08.866081025Z",
+          "kind": "passed",
+          "count": 190
+        },
+        {
+          "timestamp": "2026-10-09T08:41:45.448418170Z",
+          "kind": "passed",
+          "count": 12
+        },
+        {
+          "timestamp": "2026-10-09T08:43:28.696137510Z",
+          "kind": "passed",
+          "count": 66
+        },
+        {
+          "timestamp": "2026-10-09T08:44:33.262610601Z",
+          "kind": "passed",
+          "count": 6
+        },
+        {
+          "timestamp": "2026-10-09T08:46:04.299120582Z",
+          "kind": "skipped",
+          "count": 22
+        },
+        {
+          "timestamp": "2026-10-09T08:46:04.299135162Z",
+          "kind": "passed",
+          "count": 26
+        }
+      ]
+    },
+    "notifications-settings": {
+      "passed": 96,
+      "failed": 1,
+      "skipped": 4,
+      "summaries": [
+        {
+          "timestamp": "2026-10-09T08:47:21.748345940Z",
+          "kind": "passed",
+          "count": 10
+        },
+        {
+          "timestamp": "2026-10-09T08:48:30.391170996Z",
+          "kind": "passed",
+          "count": 10
+        },
+        {
+          "timestamp": "2026-10-09T08:50:01.664169890Z",
+          "kind": "passed",
+          "count": 33
+        },
+        {
+          "timestamp": "2026-10-09T08:51:38.381401530Z",
+          "kind": "passed",
+          "count": 33
+        },
+        {
+          "timestamp": "2026-10-09T08:53:22.993192574Z",
+          "kind": "failed",
+          "count": 1
+        },
+        {
+          "timestamp": "2026-10-09T08:53:22.993194323Z",
+          "kind": "skipped",
+          "count": 4
+        },
+        {
+          "timestamp": "2026-10-09T08:53:22.993195443Z",
+          "kind": "passed",
+          "count": 10
+        }
+      ]
+    },
+    "uploads": {
+      "passed": 141,
+      "failed": 0,
+      "skipped": 0,
+      "summaries": [
+        {
+          "timestamp": "2026-10-09T08:58:07.658261Z",
+          "kind": "passed",
+          "count": 47
+        },
+        {
+          "timestamp": "2026-10-09T09:00:14.359872963Z",
+          "kind": "passed",
+          "count": 47
+        },
+        {
+          "timestamp": "2026-10-09T09:04:09.303838103Z",
+          "kind": "passed",
+          "count": 47
+        }
+      ]
+    }
+  }
+}

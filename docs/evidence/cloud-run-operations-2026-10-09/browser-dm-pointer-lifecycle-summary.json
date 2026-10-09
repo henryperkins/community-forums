@@ -1,0 +1,81 @@
+{
+  "scope": "private matched-pointer cancellation and keyboard/short-screen lifecycle checks, not hosted acceptance",
+  "source_application_fix_commit": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "application_php": "8.2.34",
+  "runner_cpu_limit": 0.5,
+  "chromium_touch": {
+    "whole_private_case_passed": true,
+    "elapsed_test_seconds": 7.7,
+    "held_native_mouse_geometry_stable": true,
+    "cancel_matching_observed_pointer_id": true,
+    "cancel_event_synthetic": true,
+    "outside_native_pointerup_avoids_activation": true,
+    "deferred_scroll_flushed": true,
+    "native_shift_tab_then_tab_focus_revealed_send": true,
+    "fresh_640x400_initial_send_in_view": true,
+    "rich_focus_expanded_dock_send_in_view": true,
+    "letters_readable_floor_px_at_least": 128
+  },
+  "webkit_mobile": {
+    "whole_private_case_passed": false,
+    "held_native_mouse_geometry_stable": true,
+    "observed_pointer_id": 1,
+    "cancel_event_synthetic": true,
+    "cancel_matching_observed_pointer_id": true,
+    "native_events": [
+      {
+        "type": "pointerdown",
+        "id": 1,
+        "dock": true,
+        "send": true,
+        "trusted": true
+      },
+      {
+        "type": "focusin",
+        "id": null,
+        "dock": true,
+        "send": true,
+        "trusted": true
+      },
+      {
+        "type": "pointercancel",
+        "id": 1,
+        "dock": false,
+        "send": false,
+        "trusted": false
+      },
+      {
+        "type": "pointerup",
+        "id": 1,
+        "dock": false,
+        "send": false,
+        "trusted": true
+      }
+    ],
+    "observed_dm_dock_scroll_into_view": [
+      {
+        "before": {
+          "scrollY": 0,
+          "bottom": 878.296875,
+          "height": 844
+        },
+        "after": {
+          "scrollY": 34,
+          "bottom": 844.296875,
+          "height": 844
+        }
+      }
+    ],
+    "deferred_scroll_after_cancel_verified": true,
+    "later_whole_form_poll_failed_overflow_px": 49.3125,
+    "later_whole_form_poll_limit": "Rich form height subsequently changed; matched cancellation and immediate deferred reveal are verified, whole private case was not passed.",
+    "keyboard_and_short_screen_section_reached": false
+  },
+  "other_diagnostic_limits": {
+    "first_private_webkit_attempt": "Harness timeout while targeting lazy editor without first focusing native textarea; private setup corrected.",
+    "delayed_login_original": "Completed all original no-JS assertions with delayed actual redirect/cookie response; context-close whole-test timeout. No login race reproduced and no shared login change.",
+    "hosted_full_036_acceptance": "Failed; isolated focused proof does not override it."
+  },
+  "production_mutated": false,
+  "shared_source_changed_after_review": false
+}
