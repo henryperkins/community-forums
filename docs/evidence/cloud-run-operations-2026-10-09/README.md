@@ -97,17 +97,40 @@ boundary. Branch scripts can access the build VM's Docker daemon.
 
 [Local runner receipt](browser-ci-local-summary.json) records PHP 8.2.34,
 Node 24.21.0, Compose 2.40.3, successful nested Docker execution and actual
-Chromium/WebKit launches. Seven command/packaging contract tests passed with
-53 assertions: exact-SHA rejection, boolean final success enforcement,
+Chromium/WebKit launches. Nine command/packaging contract tests passed with
+66 assertions on PHP 8.4.26 and in the actual PHP 8.2.34 runner image: exact-SHA rejection, boolean final success enforcement,
 redaction and symlink exclusion, required capture/unified/all-upload artifacts,
 restricted setup dry-run behavior, installed-gh paginated webhook parsing, and strict named/UUID Cloud Build
 callback validation. These local checks do not establish
 hosted suite execution. The [setup receipt](browser-ci-setup-summary.json) verifies dedicated CI IAM,
 private uniform access/public access prevention, the 14-day object lifecycle
 and the owner-branch push hook. Trigger `ba3fce53-93e6-42bb-a4eb-cd3839574a60`
-pins reviewed control `94604517843eec78fb917aad15d6d7278270b5be`. Manual build
-`d4d2a221-a50c-48de-89b5-a31379e8b6f6` started against that same exact source;
-its hosted suite result is still pending in this initial snapshot.
+pins reviewed control `661876a8abf0b23ef3fe9e017e53925dfe866721`. The initial
+manual build against `9460451` was canceled after review found incomplete
+success gates; it is not a suite pass. Hardened manual build
+`f215672e-72c9-4a27-8dc2-96d80561fc6e` and automatic owner-push replay
+`6ce5b5a1-896a-4481-b1ba-b058cd4aa95b` both use exact source/control `661876a`.
+The manual hosted suite result is pending. The automatic replay was canceled
+after source/ref/repository launch proof to avoid duplicate suite cost; it is
+not a hosted suite pass.
+
+The named webhook endpoint/query is required in this setup. The initial UUID
+route returned HTTP 200 without starting a build, despite valid payload/auth.
+A replay with the trigger name created a build. Repository equality and the
+original compound owner-branch filter then each created builds with correctly
+resolved source, ref and repository bindings. Intermediate diagnostic builds
+were canceled after launch proof to avoid duplicate suites. The intended
+combined filter was restored; no unfiltered replay or extra CI IAM privilege
+was needed. A fresh final branch push remains separate evidence from replay.
+
+Success publication now requires the outer Docker command to return zero,
+complete suite outputs and a readable archive matching the manifest and
+embedded result. The packager writes candidate success JSON atomically only
+after archive creation. Actual tar creation failure and nonzero/missing outer
+Docker receipts are regression-tested. Credential aliases such as `apiKey`
+and `Proxy-Authorization` are removed; malformed JSON is omitted with a
+bounded count, preserving the actual suite stage and preventing a pass.
+`result.json` alone is a candidate receipt, never sufficient success evidence.
 
 The fallback publishes only synthetic PNG and redacted JSON into a private
 bucket with a 14-day lifecycle. It publishes failure evidence before enforcing
@@ -117,10 +140,11 @@ Build results and private artifacts must be inspected instead.
 
 ## Source verification
 
-The root agent ran the full suite against the current operations source:
-3,220 tests, 25,507 assertions and one existing dedicated-schema guard skip on
-PHP 8.4.26, plus 35 Node asset tests and current generated-asset checks. The
-subsequent administrator-side gh compatibility fix passed its seven scoped
-contract tests with 53 assertions; it does not change the pinned runner files.
+The root agent reran the full suite against hardened source `661876a`:
+3,224 tests, 25,531 assertions and one existing dedicated-schema guard skip on
+PHP 8.4.26, plus 35 Node asset tests and current generated-asset checks.
+The CI controls additionally passed nine scoped contract tests with
+66 assertions on PHP 8.4.26 and 8.2.34; the later named-webhook administrator fix
+retained the same passing checks and does not change the pinned runner files.
 Source verification, hosted browser results and production rollout remain
 separate receipts.

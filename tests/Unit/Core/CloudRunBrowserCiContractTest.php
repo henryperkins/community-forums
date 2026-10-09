@@ -209,14 +209,14 @@ final class CloudRunBrowserCiContractTest extends TestCase
     public function test_setup_accepts_existing_named_cloud_build_hook_without_changing_private_query_values(): void
     {
         $script = 'import importlib.util,sys; s=importlib.util.spec_from_file_location("ci",sys.argv[1]);'
-            . ' m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(m.hook_target(sys.argv[2],"old-id","new-id"))';
+            . ' m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(m.hook_target(sys.argv[2],"old-id","retroboards-browser-evidence"))';
         $prefix = 'https://cloudbuild.googleapis.com/v1/projects/rising-woods-449718-v6/locations/us-east4/triggers/';
         foreach (['old-id', 'retroboards-main'] as $identifier) {
             $result = $this->command(['python3', '-c', $script,
                 self::ROOT . '/deploy/cloudrun/browser-ci/configure.py',
                 $prefix . $identifier . ':webhook?key=dummy-key&secret=dummy-secret&trigger=old-id']);
             self::assertSame(0, $result['exit'], $result['stderr']);
-            self::assertSame($prefix . 'new-id:webhook?key=dummy-key&secret=dummy-secret&trigger=new-id', trim($result['stdout']));
+            self::assertSame($prefix . 'retroboards-browser-evidence:webhook?key=dummy-key&secret=dummy-secret&trigger=retroboards-browser-evidence', trim($result['stdout']));
         }
         $invalid = $this->command(['python3', '-c', $script,
             self::ROOT . '/deploy/cloudrun/browser-ci/configure.py',

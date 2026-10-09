@@ -105,7 +105,9 @@ def configure(control_sha, apply=False):
         path.write_text(json.dumps(trigger))
         gc('builds', 'triggers', 'import', f'--source={path}', f'--region={REGION}')
         current = json.loads(gc('builds', 'triggers', 'describe', TRIGGER, f'--region={REGION}', '--format=json'))
-        target = hook_target(deploy_hooks[0]['config']['url'], deploy['id'], current['id'])
+        # Webhook receive routing needs the NAME in both path/query. UUIDs
+        # returned HTTP 200 without creating a build in the hosted diagnostic.
+        target = hook_target(deploy_hooks[0]['config']['url'], deploy['id'], TRIGGER)
         matches = [h for h in hooks if any(urlsplit(h.get('config', {}).get('url', '')).path.endswith(f'/{identifier}:webhook')
                                           for identifier in (current['id'], TRIGGER))]
         if len(matches) > 1:

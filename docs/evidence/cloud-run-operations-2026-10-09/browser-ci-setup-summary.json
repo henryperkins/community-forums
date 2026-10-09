@@ -25,7 +25,7 @@
   "trigger": "retroboards-browser-evidence",
   "trigger_id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
   "trigger_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
-  "control_sha": "94604517843eec78fb917aad15d6d7278270b5be",
+  "control_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
   "filter": "_REPO == \"henryperkins/community-forums\" && _REF.matches(\"^refs/heads/.*\") && _SHA != \"0000000000000000000000000000000000000000\"",
   "github_hook_id": 694573802,
   "github_status_publication": "unavailable",
@@ -33,6 +33,13 @@
   "assigned_bucket_roles": [
     "roles/storage.objectCreator"
   ],
-  "manual_build_id": "d4d2a221-a50c-48de-89b5-a31379e8b6f6",
-  "manual_source_sha": "94604517843eec78fb917aad15d6d7278270b5be"
+  "manual_build_id": "f215672e-72c9-4a27-8dc2-96d80561fc6e",
+  "manual_source_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "automatic_build_id": "6ce5b5a1-896a-4481-b1ba-b058cd4aa95b",
+  "automatic_created_at": "2026-10-09T07:42:37.540858Z",
+  "automatic_source_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "webhook_endpoint_and_query_use_trigger_name": true,
+  "initial_uuid_endpoint_returned_200_without_build": true,
+  "selected_ci_account_permissions_widened": false,
+  "automatic_status": "CANCELLED after launch proof to avoid duplicate suite cost"
 }

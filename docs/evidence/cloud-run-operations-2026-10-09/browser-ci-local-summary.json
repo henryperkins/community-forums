@@ -6,7 +6,14 @@
   "nested_docker_command_passed": true,
   "chromium_launch_passed": true,
   "webkit_launch_passed": true,
-  "contract_tests": 7,
-  "contract_assertions": 53,
-  "hosted_lane_result": "pending"
+  "contract_tests": 9,
+  "contract_assertions": 66,
+  "hosted_lane_result": "pending",
+  "contract_php_versions": [
+    "8.4.26",
+    "8.2.34"
+  ],
+  "outer_docker_failure_gate_verified": true,
+  "archive_failure_does_not_publish_success": true,
+  "credential_alias_redaction_verified": true
 }
