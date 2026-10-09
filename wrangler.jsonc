@@ -1,11 +1,14 @@
 {
-  // RetroBoards on Cloudflare Containers.
-  // Runbook: docs/runbooks/deployment-cloudflare.md
+  // RetroBoards front door.
+  // Runbooks: docs/runbooks/deployment-cloud-run.md (the origin),
+  //           docs/runbooks/deployment-cloudflare.md (this Worker, domains)
   //
-  // The Worker is a thin front door: it fixes up the client-IP header and hands
-  // dynamic requests to a single container running the Apache/PHP image.
-  // Secrets (APP_KEY, DB_PASSWORD, DB_SSL_CA_PEM, R2 keys) are NOT here --
-  // set them with `wrangler secret put`.
+  // The Worker is a thin front door: it enforces the canonical host, serves the
+  // compiled assets, fixes up the client-IP header and forwards dynamic requests
+  // to the Apache/PHP image on Google Cloud Run (ORIGIN_URL). The app's own
+  // configuration and secrets live there (deploy/cloudrun/). The one secret
+  // here is GCP_INVOKER_KEY, the key that lets this Worker call the service --
+  // set it with `wrangler secret put` (runbook deployment-cloud-run.md §6).
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "retroboards",
   "main": "worker/index.js",
@@ -24,6 +27,11 @@
     "not_found_handling": "none"
   },
 
+  // DORMANT since the Cloud Run move: nothing calls this container, so its
+  // instance sleeps and costs nothing. It stays declared only so `wrangler
+  // rollback` to a pre-move version still finds its Durable Object class. The
+  // DB_*/R2_* vars below feed only this container. Removal: runbook
+  // deployment-cloud-run.md §9.
   "containers": [
     {
       "class_name": "ForumContainer",
@@ -60,16 +68,16 @@
     { "pattern": "forum.candidary.online", "custom_domain": true }
   ],
 
-  "triggers": {
-    "crons": [
-      "*/5 * * * *", // worker:email, worker:webhooks
-      "0 */6 * * *", // worker:registry-refresh
-      "10 3 * * *", // worker:purge-ips, worker:attachments, worker:packages
-      "0 7 * * *" // worker:digest
-    ]
-  },
+  // No cron triggers: the bin/console workers run as Cloud Run jobs on Cloud
+  // Scheduler (deploy/cloudrun/configure.sh). Keep the empty list -- deleting
+  // the key would leave the previously deployed schedules firing.
+  "triggers": { "crons": [] },
 
   "vars": {
+    // The Cloud Run service every dynamic request is forwarded to. Only
+    // callers with an ID token for this URL get in (worker/origin.mjs).
+    "ORIGIN_URL": "https://retroboards-616731728350.us-east4.run.app",
+
     "APP_ENV": "production",
     "APP_DEBUG": "false",
     "APP_URL": "https://forum.candidary.online",
@@ -80,16 +88,20 @@
     "MAIL_FROM_NAME": "",
     "MAIL_TIMEOUT_SECONDS": "30",
 
+    // DORMANT CONTAINER ONLY from here down to RUN_MIGRATIONS: production's
+    // app settings live in deploy/cloudrun/env.yaml, and Cloud Run reaches the
+    // database through its authenticated connector.
+    //
     // Google Cloud SQL for MySQL 8.4, reached over the public internet with
     // TLS required. Instance `imladris-boards` in project
     // `rising-woods-449718-v6`, region us-east4 (replaced PlanetScale
-    // `imladris-boards`, runbook §3). TEMPORARY: DB_SSL_VERIFY is false. The
-    // server certificate names only the instance DNS name
+    // `imladris-boards`, runbook §3). DB_SSL_VERIFY is false: the server
+    // certificate names only the instance DNS name
     // (d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog), which public DNS does
     // not resolve, and Cloudflare mounts /etc/hosts read-only, so the
     // container connects by IP and cannot pass PDO's host-name check. The link
     // is encrypted (the instance refuses plaintext) but the server is not
-    // authenticated. The fix is the Cloud SQL Auth Proxy (runbook §3).
+    // authenticated.
     // DB_SSL_CA_PEM (secret) holds the Cloud SQL CA, written to DB_SSL_CA;
     // DB_SSL_CA is set here because cron commands exec() with these vars.
     // DB_PASSWORD is a secret (Secret Manager `imladris-boards-app-password`);

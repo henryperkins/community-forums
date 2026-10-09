@@ -1,51 +1,43 @@
-import { Container, getContainer } from "@cloudflare/containers";
+import { Container } from "@cloudflare/containers";
 import { routeRequest } from "./assets.mjs";
 import { canonicalRedirect } from "./canonical.mjs";
+import { fetchOrigin } from "./origin.mjs";
 
 /**
  * RetroBoards front door.
  *
  * The Worker enforces the single canonical origin (APP_URL), serves the compiled
- * public assets, establishes the trusted client IP, and drives cron workers that
- * would otherwise need a crontab in the image.
+ * public assets, establishes the trusted client IP, and forwards everything else
+ * to the PHP app on Google Cloud Run (worker/origin.mjs). Cron work runs there
+ * too, as Cloud Run jobs started by Cloud Scheduler.
  *
- * Runbook: docs/runbooks/deployment-cloudflare.md
+ * Runbooks: docs/runbooks/deployment-cloud-run.md (origin, cron),
+ *           docs/runbooks/deployment-cloudflare.md (this Worker, domains)
  */
-
-// The app is stateful (sessions, counters, an ephemeral rate-limit ledger), so
-// every request must reach the same instance. A fixed id guarantees that.
-const CONTAINER_ID = "main";
 
 const CONSOLE = "/var/www/html/bin/console";
 
-/** Cron expression -> `bin/console` commands, in run order. */
-const CRON_JOBS = {
-	"*/5 * * * *": ["worker:email", "worker:webhooks"],
-	"0 */6 * * *": ["worker:registry-refresh"],
-	"10 3 * * *": ["worker:purge-ips", "worker:attachments", "worker:packages"],
-	"0 7 * * *": ["worker:digest"],
-};
-
 async function fetchForum(request, env) {
-	// The app resolves the client IP from X-Forwarded-For, honouring it only
-	// when the immediate peer is a configured trusted proxy
-	// (src/Security/ClientIdentifier.php). Inside Containers that peer is
-	// Cloudflare infrastructure, and the container is not addressable from
-	// the internet -- it is only reachable through this Worker. That makes
-	// overwriting the header here the security boundary: whatever the client
-	// sent is discarded, and CF-Connecting-IP (which the edge sets and a
-	// client cannot forge) becomes the single hop the app sees.
-	const forwarded = new Request(request);
-	const clientIp = request.headers.get("CF-Connecting-IP");
-	if (clientIp) {
-		forwarded.headers.set("X-Forwarded-For", clientIp);
-	} else {
-		forwarded.headers.delete("X-Forwarded-For");
+	try {
+		return await fetchOrigin(request, env);
+	} catch (err) {
+		// No token, an unreachable token endpoint or a bad ORIGIN_URL: answer
+		// with a retryable gateway error instead of the platform's 1101 page.
+		console.error(`origin fetch failed: ${err}`);
+		return new Response("The forum is temporarily unavailable. Please retry in a moment.", {
+			status: 502,
+			headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "5" },
+		});
 	}
-
-	return getContainer(env.FORUM, CONTAINER_ID).fetch(forwarded);
 }
 
+/**
+ * DORMANT: the Cloudflare Containers origin that served the app until the
+ * Cloud Run move. Nothing calls it any more, so its instance sleeps and costs
+ * nothing; it stays defined so `wrangler rollback` to a pre-move version still
+ * finds its Durable Object class. Removal (class, binding, `deleted_classes`
+ * migration) is runbook deployment-cloud-run.md §9.
+ */
 export class ForumContainer extends Container {
 	defaultPort = 8080; // deploy/apache-vhost.conf listens on 8080
 
@@ -188,35 +180,5 @@ export default {
 		// One canonical origin (APP_URL): every other hostname that reaches this
 		// Worker is redirected there before anything else runs. See canonical.mjs.
 		return canonicalRedirect(request, env) ?? routeRequest(request, env, () => fetchForum(request, env));
-	},
-
-	async scheduled(controller, env, ctx) {
-		const jobs = CRON_JOBS[controller.cron] ?? [];
-		if (jobs.length === 0) {
-			console.warn(`no jobs mapped for cron "${controller.cron}"`);
-			return;
-		}
-
-		const container = getContainer(env.FORUM, CONTAINER_ID);
-
-		// Sequential on purpose: these workers share the database and the
-		// counters it maintains, and the container is sized for one app process.
-		ctx.waitUntil(
-			(async () => {
-				for (const job of jobs) {
-					try {
-						const result = await container.runConsole([job]);
-						if (result.exitCode !== 0) {
-							console.error(
-								`${job} exited ${result.exitCode}: ${result.stderr.trim()}`,
-							);
-						}
-					} catch (err) {
-						// One failing worker must not skip the rest of the tick.
-						console.error(`${job} threw: ${err}`);
-					}
-				}
-			})(),
-		);
 	},
 };
