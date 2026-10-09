@@ -2150,7 +2150,7 @@
             'tab-size', 'white-space', 'overflow-wrap', 'word-break', 'direction',
             'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
             'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width'];
-        var frame = null, lastValue = null, lastKnownSize = -1;
+        var frame = null, lastValue = null, lastKnownSize = -1, contentBox = null;
 
         function scroll() { mirror.scrollTop = ta.scrollTop; mirror.scrollLeft = ta.scrollLeft; }
         function sync() {
@@ -2162,8 +2162,14 @@
             if (rich || !ta.getClientRects().length) { return; }
             var style = window.getComputedStyle(ta);
             properties.forEach(function (property) { mirror.style.setProperty(property, style.getPropertyValue(property)); });
-            mirror.style.width = (ta.clientWidth + parseFloat(style.borderLeftWidth || 0) + parseFloat(style.borderRightWidth || 0)) + 'px';
-            mirror.style.height = (ta.clientHeight + parseFloat(style.borderTopWidth || 0) + parseFloat(style.borderBottomWidth || 0)) + 'px';
+            // clientWidth/clientHeight round to whole pixels, but zoom and fluid
+            // columns give the textarea fractional sizes, and half a pixel wraps
+            // a line differently. The observed content box is exact and already
+            // excludes any scrollbar.
+            var innerWidth = contentBox ? contentBox.width + parseFloat(style.paddingLeft || 0) + parseFloat(style.paddingRight || 0) : ta.clientWidth;
+            var innerHeight = contentBox ? contentBox.height + parseFloat(style.paddingTop || 0) + parseFloat(style.paddingBottom || 0) : ta.clientHeight;
+            mirror.style.width = (innerWidth + parseFloat(style.borderLeftWidth || 0) + parseFloat(style.borderRightWidth || 0)) + 'px';
+            mirror.style.height = (innerHeight + parseFloat(style.borderTopWidth || 0) + parseFloat(style.borderBottomWidth || 0)) + 'px';
             if (lastValue === ta.value && lastKnownSize === known.size) { scroll(); return; }
             lastValue = ta.value; lastKnownSize = known.size;
             var fragment = document.createDocumentFragment();
@@ -2209,7 +2215,10 @@
         listenWithCleanup(form, ta, 'scroll', scroll);
         listenWithCleanup(form, form, 'retroboards:composer-statechange', schedule);
         listenWithCleanup(form, window, 'resize', schedule);
-        var resize = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+        var resize = typeof ResizeObserver === 'function' ? new ResizeObserver(function (entries) {
+            contentBox = entries[entries.length - 1].contentRect;
+            schedule();
+        }) : null;
         if (resize) { resize.observe(ta); }
         var mutation = typeof MutationObserver === 'function' ? new MutationObserver(schedule) : null;
         if (mutation) { mutation.observe(ta, { attributes: true, attributeFilter: ['class', 'style'] }); }

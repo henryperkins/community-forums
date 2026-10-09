@@ -112,6 +112,7 @@ $selectedIds = array_fill_keys($selected_thread_ids ?? [], true);
                         'order' => $order,
                         'workflow_enabled' => !empty($features['topic_workflow']),
                         'selected' => isset($selectedIds[(int) $thread['id']]),
+                        'show_avatars' => $show_avatars ?? true,
                     ]) ?>
                 <?php endforeach; ?>
             </ul>

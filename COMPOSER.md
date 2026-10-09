@@ -178,8 +178,11 @@ Identical in all four contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 
 The conversation-interactions handoff adds a bounded enhancement to this picker:
 bare `@` lists active, named participants only in a readable topic/reply context;
-other contexts need a query. Results put participant matches before other handle
-or display-name word-prefix matches, then sort by handle, with a 20-item cap.
+other contexts need a query. That bare list omits the viewer and participants
+blocked in either direction, since mention notifications skip both; typed
+queries keep ordinary matches (only the DM recipient picker filters blocks).
+Results put participant matches before other handle or display-name word-prefix
+matches, then sort by handle, with a 20-item cap.
 Person rows show the existing avatar/monogram preference, display name and
 "in this topic" metadata. Accepting a mention adds a space unless the following
 character is whitespace, `. , ; : ! ? ) ]`, or a closing `* _ ~ |` formatting
@@ -191,8 +194,9 @@ or caret changes.
 
 The source editor may highlight handles returned by its own suggestion endpoint
 using an `aria-hidden` mirror behind the textarea. It excludes email addresses,
-inline code and fenced code, follows input size and scroll, and never changes
-submitted text. Accepted rich mentions and posted mention links use the same
+inline code and fenced code, follows the textarea's exact content box (fractional
+under zoom or fluid widths) and scroll, and never changes submitted text.
+Accepted rich mentions and posted mention links use the same
 semantic evergreen wash; posted links keep their underline. Suggestion/chip
 enhancement belongs to `rich_composer`; the `mentions` flag still controls new
 server-rendered links and notifications, not previously stored HTML.

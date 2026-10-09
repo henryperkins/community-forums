@@ -1094,3 +1094,13 @@ uncertain toggles write into it (cleared first, so a repeat is still announced),
 while the visible tray message carries the reload link without a second live
 region. Reactor names follow `User::isActive()`, so a member whose timed
 suspension has elapsed is named again.
+
+The bare-`@` participant list omits the viewer and either-way blocks, matching
+mention-notification eligibility; typed queries keep ordinary matches, as the
+Messages refinement contract requires. Inbox rows and previews honor Show
+avatars, including the preview's bylines, replies and composer person rows
+(tag-page rows still ignore it). The source mirror takes
+its size from the textarea's observed content box rather than the rounded
+`clientWidth`/`clientHeight`: at fractional widths (90%/110% zoom, fluid columns)
+half a pixel re-wrapped a line and every later highlight drifted. Glyph-level
+comparisons now match in Chromium and WebKit at both zoom levels.

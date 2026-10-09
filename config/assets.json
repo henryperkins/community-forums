@@ -1,11 +1,11 @@
 {
-  "version": "d1b35836d43d350e",
+  "version": "ea8a4803210ea5e6",
   "urls": {
     "app.css": "/assets/dist/app-style-CoHttSB7.css",
     "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
     "app.js": "/assets/dist/app-a59ad2ede48c7ffe.js",
-    "composer.js": "/assets/dist/composer-0f2ab256279db0e7.js",
+    "composer.js": "/assets/dist/composer-30a9c90c0501d2de.js",
     "passkeys.js": "/assets/dist/passkeys-27f8b05555555872.js",
     "tour.js": "/assets/dist/tour-2cb01893b54a8644.js",
     "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-D9tMbjJ1.js",
@@ -36,7 +36,7 @@
       "immutable": false
     },
     "/assets/composer.js": {
-      "sha256": "61370fc00c9e8946b21addc5c21c5f8c9d9a7bddac0e024c6fed12bf3773ea29",
+      "sha256": "233310dbc3662315dd412ea4d6f0eca647b2506503efb7a365e48bc421d71082",
       "immutable": false
     },
     "/assets/conversation-entry.js": {
@@ -71,8 +71,8 @@
       "sha256": "827c24a866fdb63090486ba647e2a499a7cd031b6d680ba54d444e33dfe2401e",
       "immutable": true
     },
-    "/assets/dist/composer-0f2ab256279db0e7.js": {
-      "sha256": "0f2ab256279db0e71701cc4d20fbc5c09a898b1b28de78dd505abf32d020229b",
+    "/assets/dist/composer-30a9c90c0501d2de.js": {
+      "sha256": "30a9c90c0501d2de2bb304b01ab4ab2831593b7dd16d002577184a7823e386a1",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {
@@ -286,11 +286,11 @@
   },
   "releases": [
     {
-      "version": "d1b35836d43d350e",
+      "version": "ea8a4803210ea5e6",
       "files": [
         "/assets/dist/app-a59ad2ede48c7ffe.js",
         "/assets/dist/app-style-CoHttSB7.css",
-        "/assets/dist/composer-0f2ab256279db0e7.js",
+        "/assets/dist/composer-30a9c90c0501d2de.js",
         "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",

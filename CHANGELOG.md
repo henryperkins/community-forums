@@ -18,6 +18,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   share block-aware Source completion/highlighting and bound email scanning.
   Keep accent-insensitive name suggestions, assigned private-board moderators,
   and the design layer's 28px person-row avatars.
+- Omit yourself and people blocked either way from the bare `@` participant list,
+  honor Show avatars in Inbox rows, previews and their mention rows, and keep source
+  highlights on their handles at fractional widths such as 90% and 110% zoom.
 - Bound stalled reaction requests at 15 seconds so every chip copy unlocks and
   offers Reload, announce reaction failures through a status region that exists
   before them, and name reactors again once a timed suspension has elapsed.

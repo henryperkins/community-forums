@@ -16,6 +16,7 @@ use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\Cap;
 use App\Security\WriteGate;
+use App\Service\PreferenceService;
 use App\Service\ThreadReadService;
 
 final class InboxPreviewController extends Controller
@@ -57,6 +58,9 @@ final class InboxPreviewController extends Controller
             'posts' => $posts,
             'total_posts' => $totalPosts,
             'can_reply' => $canReply,
+            // A fragment never reaches the shell globals, so the reading
+            // preference that governs every other monogram travels explicitly.
+            'show_avatars' => (bool) $this->container->get(PreferenceService::class)->reading($user->id())['show_avatars'],
         ]);
         $lastPostId = (int) ($thread['last_post_id'] ?? 0);
         if ($lastPostId > 0) {

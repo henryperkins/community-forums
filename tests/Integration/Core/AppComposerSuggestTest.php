@@ -160,6 +160,34 @@ final class AppComposerSuggestTest extends TestCase
         }
     }
 
+    public function test_bare_mention_omits_the_viewer_and_either_way_blocked_participants(): void
+    {
+        $this->enableSuggestions();
+        $viewer = $this->makeUser(['username' => 'peerviewer']);
+        $blocker = $this->makeUser(['username' => 'peerblocker']);
+        $blocked = $this->makeUser(['username' => 'peerblocked']);
+        $friend = $this->makeUser(['username' => 'peerfriend']);
+        $blocks = new \App\Repository\BlockRepository($this->db);
+        $blocks->block((int) $blocker['id'], (int) $viewer['id']);
+        $blocks->block((int) $viewer['id'], (int) $blocked['id']);
+        $thread = $this->makeThread($this->makeBoard($this->makeCategory('Peers')), $friend);
+        foreach ([$viewer, $blocker, $blocked] as $participant) {
+            $this->posting()->reply($this->userEntity($participant), $thread['thread_id'], ['body' => 'A reply']);
+        }
+        $this->actingAs($viewer);
+        // The bare list offers people a mention can notify; notifications skip
+        // the author and either-way blocks, so the list must omit them too.
+        $bare = $this->get('/composer/suggest', ['trigger' => '@', 'q' => '', 'context' => 'reply', 'target_id' => $thread['thread_id']]);
+        $this->assertStatus(200, $bare);
+        self::assertSame(['@peerfriend'], array_column(json_decode($bare->body(), true)['items'], 'token'));
+        // Typed queries keep ordinary matches; only the DM recipient picker
+        // filters blocks (AppMessagesRefinementTest).
+        $typed = $this->get('/composer/suggest', ['trigger' => '@', 'q' => 'peer', 'context' => 'reply', 'target_id' => $thread['thread_id']]);
+        $tokens = array_column(json_decode($typed->body(), true)['items'], 'token');
+        self::assertContains('@peerblocker', $tokens);
+        self::assertContains('@peerblocked', $tokens);
+    }
+
     public function test_participants_are_prioritized_before_the_global_candidate_cap(): void
     {
         $this->enableSuggestions();

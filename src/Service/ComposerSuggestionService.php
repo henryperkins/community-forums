@@ -82,8 +82,11 @@ final class ComposerSuggestionService
             $candidates = $this->users->suggestDmRecipients($query, $viewer->id(), $viewer->isAdmin());
         } else {
             // Fetch participant matches separately so a matching participant
-            // beyond the alphabetical global cap still reaches the picker.
-            $candidates = $this->users->suggestByPrefix($query, 20, array_keys($participantRanks), $privateBoardId);
+            // beyond the alphabetical global cap still reaches the picker. The
+            // bare-@ list offers only people a mention can notify, so it omits
+            // the viewer and either-way blocks; typed queries keep ordinary
+            // matches (only the DM recipient picker filters blocks).
+            $candidates = $this->users->suggestByPrefix($query, 20, array_keys($participantRanks), $privateBoardId, $query === '' ? $viewer->id() : null);
             if ($query !== '') {
                 $candidates = array_merge($candidates, $this->users->suggestByPrefix($query, 20, null, $privateBoardId));
             }

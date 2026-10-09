@@ -96,9 +96,10 @@ final class UserRepository
      *
      * @param list<int>|null $ids null searches all active users; [] searches none
      * @param int|null $privateBoardId Require the candidate's current read access before limiting.
+     * @param int|null $mentionedBy Exclude this author and either-way blocks, as mention notifications do.
      * @return list<array{id:int,username:string,display_name:?string,avatar_path:?string,role:string,status:string}>
      */
-    public function suggestByPrefix(string $query, int $limit, ?array $ids = null, ?int $privateBoardId = null): array
+    public function suggestByPrefix(string $query, int $limit, ?array $ids = null, ?int $privateBoardId = null, ?int $mentionedBy = null): array
     {
         if ($ids === [] || ($query === '' && $ids === null)) {
             return [];
@@ -128,6 +129,12 @@ final class UserRepository
                 OR EXISTS (SELECT 1 FROM board_moderators moderator
                     WHERE moderator.user_id = users.id AND moderator.board_id = ?))";
             array_push($params, $privateBoardId, $privateBoardId);
+        }
+        if ($mentionedBy !== null) {
+            $where .= ' AND id <> ? AND NOT EXISTS (SELECT 1 FROM blocks block
+                WHERE (block.user_id = ? AND block.blocked_user_id = users.id)
+                   OR (block.user_id = users.id AND block.blocked_user_id = ?))';
+            array_push($params, $mentionedBy, $mentionedBy, $mentionedBy);
         }
         return $this->db->fetchAll(
             "SELECT id, username, display_name, avatar_path, role, status

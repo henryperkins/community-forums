@@ -106,8 +106,12 @@ test('source mirror marks only known prose handles and follows textarea geometry
   await expect.poll(async () => source.evaluate((ta: HTMLTextAreaElement) => {
     const mirror = ta.parentElement!.querySelector<HTMLElement>('.composer-input-mirror')!;
     const a = getComputedStyle(ta), b = getComputedStyle(mirror);
-    return { width: parseFloat(b.width) - (ta.clientWidth + parseFloat(a.borderLeftWidth) + parseFloat(a.borderRightWidth)), height: parseFloat(b.height) - (ta.clientHeight + parseFloat(a.borderTopWidth) + parseFloat(a.borderBottomWidth)), font: b.fontSize === a.fontSize && b.lineHeight === a.lineHeight, padding: b.padding === a.padding };
-  })).toEqual({ width: 0, height: 0, font: true, padding: true });
+    // The exact fractional box, less any scrollbar: the rounded clientWidth and
+    // clientHeight differ from it whenever the layout is fractional.
+    const scrollbar = ta.offsetWidth - ta.clientWidth - parseFloat(a.borderLeftWidth) - parseFloat(a.borderRightWidth);
+    const box = ta.getBoundingClientRect(), shadow = mirror.getBoundingClientRect();
+    return { width: Math.abs(shadow.width - (box.width - scrollbar)) < 0.02, height: Math.abs(shadow.height - box.height) < 0.02, font: b.fontSize === a.fontSize && b.lineHeight === a.lineHeight, padding: b.padding === a.padding };
+  })).toEqual({ width: true, height: true, font: true, padding: true });
   await source.evaluate((ta: HTMLTextAreaElement) => { ta.scrollTop = 80; ta.scrollLeft = 10; ta.dispatchEvent(new Event('scroll')); });
   const scroll = await source.evaluate((ta: HTMLTextAreaElement) => ({ top: ta.scrollTop, left: ta.scrollLeft }));
   await expect(mirror).toHaveJSProperty('scrollTop', scroll.top);
@@ -330,3 +334,139 @@ if($s['row']) $db->run('INSERT INTO user_preferences(user_id,prefs,updated_at) V
     }
   });
 }
+
+// Fraction of each image's ink with matching ink within ±1 device pixel in the
+// other. Identical wrapping and glyph placement scores 1 both ways.
+async function inkAlignment(page: Page, a: Buffer, b: Buffer) {
+  return page.evaluate(async ([a64, b64]) => {
+    const load = (src: string) => new Promise<HTMLImageElement>(resolve => { const img = new Image(); img.onload = () => resolve(img); img.src = src; });
+    const pixels = (img: HTMLImageElement) => {
+      const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
+      const context = canvas.getContext('2d')!; context.drawImage(img, 0, 0);
+      return context.getImageData(0, 0, img.width, img.height);
+    };
+    const [first, second] = (await Promise.all([load(`data:image/png;base64,${a64}`), load(`data:image/png;base64,${b64}`)])).map(pixels);
+    const width = Math.min(first.width, second.width), height = Math.min(first.height, second.height);
+    const ink = (d: ImageData, x: number, y: number) => { const i = (y * d.width + x) * 4; return d.data[i] + d.data[i + 1] + d.data[i + 2] < 300; };
+    const near = (d: ImageData, x: number, y: number) => {
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx, ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < width && ny < height && ink(d, nx, ny)) return true;
+      }
+      return false;
+    };
+    let inkA = 0, inkB = 0, matchA = 0, matchB = 0;
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      if (ink(first, x, y)) { inkA++; if (near(second, x, y)) matchA++; }
+      if (ink(second, x, y)) { inkB++; if (near(first, x, y)) matchB++; }
+    }
+    return Math.min(matchA / inkA, matchB / inkB);
+  }, [a.toString('base64'), b.toString('base64')]);
+}
+
+test('source highlights stay on their handles at 90% and 110% zoom and fractional widths', async ({ browser }, info) => {
+  test.skip(info.project.name !== 'desktop', 'browser zoom is a desktop setting');
+  // Zoom divides fluid columns into fractional CSS widths. A mirror sized from
+  // the rounded clientWidth wraps a line differently and every later highlight
+  // drifts; the dense draft below makes any half-pixel difference visible.
+  const draft = Array.from({ length: 900 }, (_, i) => i % 37 === 0 ? '@alice' : ['i', 'il', 'a', 'wm', 'x.'][i % 5]).join(' ');
+  for (const zoom of [0.9, 1.1]) {
+    const context = await browser.newContext({ deviceScaleFactor: zoom, viewport: { width: Math.round(1000 / zoom), height: Math.round(900 / zoom) } });
+    const page = await context.newPage();
+    const { form, input: source, menu } = await reply(page, false);
+    await source.fill('@');
+    await expect(menu).toBeVisible();
+    await source.press('Escape');
+    const wrap = form.locator('.composer-input-wrap');
+    const mirror = form.locator('.composer-input-mirror');
+    for (const width of [555.55, 557.83, 560.3]) {
+      await wrap.evaluate((el, px) => (el as HTMLElement).style.setProperty('width', `${px}px`), width);
+      await source.fill(`${draft} ${width}`);
+      await expect(mirror).toContainText(String(width));
+      await expect.poll(() => source.evaluate((ta: HTMLTextAreaElement) => {
+        const shadow = ta.parentElement!.querySelector<HTMLElement>('.composer-input-mirror')!;
+        const style = getComputedStyle(ta);
+        const scrollbar = ta.offsetWidth - ta.clientWidth - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+        return Math.abs(shadow.getBoundingClientRect().width - (ta.getBoundingClientRect().width - scrollbar)) < 0.02;
+      }), `zoom ${zoom}, width ${width}: mirror keeps the fractional content width`).toBe(true);
+      await source.evaluate((ta: HTMLTextAreaElement) => { ta.scrollTop = 0; ta.dispatchEvent(new Event('scroll')); ta.blur(); });
+      // Compare glyphs only: mirror ink alone, then textarea ink alone. Pin the
+      // wrap above the sticky chrome (keeping its fractional left edge) so both
+      // shots read the same pixels; screenshots in some engines scroll the page.
+      const rect = () => wrap.evaluate(el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+      await wrap.evaluate(el => {
+        const left = el.getBoundingClientRect().x;
+        const style = (el as HTMLElement).style;
+        style.setProperty('position', 'fixed'); style.setProperty('top', '96px'); style.setProperty('left', `${left}px`);
+        style.setProperty('z-index', '2147483647'); style.setProperty('background', '#fff');
+      });
+      const clip = await rect();
+      await mirror.evaluate(el => el.querySelectorAll('mark').forEach(mark => {
+        (mark as HTMLElement).style.setProperty('color', 'inherit', 'important');
+        (mark as HTMLElement).style.setProperty('background', 'none', 'important');
+        (mark as HTMLElement).style.setProperty('box-shadow', 'none', 'important');
+      }));
+      await source.evaluate((ta: HTMLTextAreaElement) => {
+        ta.style.setProperty('color', 'transparent', 'important');
+        ta.style.setProperty('caret-color', 'transparent', 'important');
+        ta.parentElement!.querySelector<HTMLElement>('.composer-input-mirror')!.style.setProperty('color', '#000', 'important');
+      });
+      const mirrored = await page.screenshot({ clip });
+      await source.evaluate((ta: HTMLTextAreaElement) => {
+        ta.style.setProperty('color', '#000', 'important');
+        ta.parentElement!.querySelector<HTMLElement>('.composer-input-mirror')!.style.setProperty('color', 'transparent', 'important');
+      });
+      const typed = await page.screenshot({ clip });
+      expect(await rect()).toEqual(clip);
+      await source.evaluate((ta: HTMLTextAreaElement) => {
+        ta.style.removeProperty('color'); ta.style.removeProperty('caret-color');
+        ta.parentElement!.querySelector<HTMLElement>('.composer-input-mirror')!.style.removeProperty('color');
+      });
+      await wrap.evaluate(el => ['position', 'top', 'left', 'z-index', 'background'].forEach(name => (el as HTMLElement).style.removeProperty(name)));
+      const scratch = await context.newPage();
+      const score = await inkAlignment(scratch, mirrored, typed);
+      // Aligned frames score 1.0 (0.981 at worst: textarea and mirror glyphs
+      // anti-alias differently at a fractional pixel ratio); one re-wrapped
+      // line before the fix scored 0.79.
+      expect(score, `zoom ${zoom}, width ${width}`).toBeGreaterThan(0.95);
+      await scratch.close();
+    }
+    await context.close();
+  }
+});
+
+test('Inbox rows and previews honor Show avatars in bylines, replies and mention person rows', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the reading-pane preview is a desktop layout');
+  const saved = JSON.parse(php(`$bob=(int)$db->fetchValue("SELECT id FROM users WHERE email='bob@retro.test'");
+$thread=(int)$db->fetchValue("SELECT id FROM threads WHERE title='Share your favourite keyboard shortcuts' ORDER BY id DESC LIMIT 1");
+$stars=new \\App\\Repository\\ThreadUserRepository($db);
+echo json_encode(['bob'=>$bob,'thread'=>$thread,'starred'=>$stars->isStarred($bob,$thread),'prefs'=>$db->fetch('SELECT * FROM user_preferences WHERE user_id=?',[$bob])]);
+$stars->setStar($bob,$thread,true);
+(new \\App\\Repository\\UserPreferenceRepository($db))->merge($bob,['show_avatars'=>false]);`));
+  try {
+    await reply(page, false);
+    await page.goto('/inbox?scope=starred&order=active');
+    await expect(page.locator('.inbox-thread-list .thread-row')).not.toHaveCount(0);
+    await expect(page.locator('.inbox-thread-list .thread-row .monogram')).toHaveCount(0);
+    await page.locator(`[data-inbox-preview-url="/inbox/preview/${saved.thread}"]`).click();
+    const preview = page.locator(`[data-inbox-preview="${saved.thread}"]`);
+    await expect(preview.locator('.inbox-preview-posts > li').first()).toBeVisible();
+    await expect(preview.locator('.inbox-preview-attribution .inbox-preview-author')).toBeVisible();
+    await expect(preview.locator('.monogram')).toHaveCount(0);
+    await expect(preview.locator('.composer-box')).toHaveAttribute('data-composer-avatars', '0');
+    const source = preview.locator('textarea.composer-input');
+    await source.focus();
+    await source.fill('@');
+    const person = preview.locator('.composer-reference-menu .is-person').first();
+    await expect(person).toBeVisible();
+    await expect(person).toHaveClass(/\bis-avatarless\b/);
+    await expect(preview.locator('.composer-reference-menu .monogram')).toHaveCount(0);
+    await capture(page, info, 'conversation-inbox-preview-avatarless');
+  } finally {
+    const encoded = Buffer.from(JSON.stringify(saved)).toString('base64');
+    php(`$s=json_decode(base64_decode('${encoded}'),true);
+(new \\App\\Repository\\ThreadUserRepository($db))->setStar($s['bob'],$s['thread'],(bool)$s['starred']);
+$db->transaction(function() use($db,$s){$db->run('DELETE FROM user_preferences WHERE user_id=?',[$s['bob']]);
+if($s['prefs']) $db->run('INSERT INTO user_preferences(user_id,prefs,updated_at) VALUES(?,?,?)',[$s['bob'],$s['prefs']['prefs'],$s['prefs']['updated_at']]);});`);
+  }
+});
