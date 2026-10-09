@@ -47,11 +47,16 @@ fi
 
 mkdir -p "$DATA_DIR/media" "$DATA_DIR/packages" "$DATA_DIR/ratelimit"
 
-# chown across a FUSE mount is pointless (ownership is fixed by the uid/gid
-# mount options) and slow, so only touch permissions on a real filesystem.
-if [ -z "${R2_BUCKET:-}" ]; then
-    chown -R www-data:www-data "$DATA_DIR"
-fi
+# chown across a FUSE mount -- the R2 mount above, or a bucket the platform
+# mounts itself, like Cloud Run's Cloud Storage volume -- is pointless
+# (ownership is fixed by the uid/gid mount options), slow, and refused by
+# gcsfuse, which under `set -e` would abort the boot. Only touch permissions on
+# a real filesystem; a plain Docker volume still gets them.
+data_fstype=$(awk -v dir="$DATA_DIR" '$2 == dir { fstype = $3 } END { print fstype }' /proc/mounts)
+case "$data_fstype" in
+    fuse*) ;;
+    *) chown -R www-data:www-data "$DATA_DIR" ;;
+esac
 
 # --- 2. database TLS trust anchor -------------------------------------------
 # Managed MySQL providers hand out a CA bundle. Carrying it as an environment

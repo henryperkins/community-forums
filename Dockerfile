@@ -69,7 +69,8 @@ FROM phpbase
 # Containers have an ephemeral filesystem: uploads and installed packages need
 # this mount to survive a restart. The single-instance rate-limit ledger stays
 # on local disk and deliberately resets on restart. Unused (and inert) when
-# R2_BUCKET is unset, e.g. a VPS deploy with a real volume.
+# R2_BUCKET is unset, e.g. a VPS deploy with a real volume, or Cloud Run, which
+# mounts a Cloud Storage bucket at /data itself.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends s3fs fuse3 \
     && echo 'user_allow_other' >> /etc/fuse.conf \
@@ -94,8 +95,9 @@ COPY --chown=www-data:www-data --from=assets /build/config/assets.json ./config/
 
 COPY deploy/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
 COPY deploy/entrypoint.sh /usr/local/bin/retroboards-entrypoint
+COPY deploy/console-batch.sh /usr/local/bin/retroboards-console-batch
 
-RUN chmod +x /usr/local/bin/retroboards-entrypoint \
+RUN chmod +x /usr/local/bin/retroboards-entrypoint /usr/local/bin/retroboards-console-batch \
     && mkdir -p storage/cache storage/ratelimit storage/media \
     && chown -R www-data:www-data storage
 
