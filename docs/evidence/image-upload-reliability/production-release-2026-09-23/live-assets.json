@@ -1,0 +1,112 @@
+{
+  "checked_at_utc": "2026-09-23T10:31:17+00:00",
+  "commit": "a26f1fd0a09a4abf9d646ec1252e95951ef85d02",
+  "origin": "https://forum.candidary.online",
+  "assets": [
+    {
+      "path": "/assets/app.css",
+      "status": 200,
+      "expected_sha256": "a8c64513887bbd0192e52233f29dc25ac96f8f3015b9c59990604ae8f0c0f0cd",
+      "actual_sha256": "a8c64513887bbd0192e52233f29dc25ac96f8f3015b9c59990604ae8f0c0f0cd",
+      "matches": true
+    },
+    {
+      "path": "/assets/app.js",
+      "status": 200,
+      "expected_sha256": "81c88bf6db492f7454c5635b65f9549c7576031986b2f455d2b802d27a68c7c2",
+      "actual_sha256": "81c88bf6db492f7454c5635b65f9549c7576031986b2f455d2b802d27a68c7c2",
+      "matches": true
+    },
+    {
+      "path": "/assets/composer.js",
+      "status": 200,
+      "expected_sha256": "16f6461ce88a71c73b390075c5f902c7983d3998bedb0cd7dbdbf2299ad930ae",
+      "actual_sha256": "16f6461ce88a71c73b390075c5f902c7983d3998bedb0cd7dbdbf2299ad930ae",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/app-1890d488300e8451.js",
+      "status": 200,
+      "expected_sha256": "1890d488300e8451d4ec9b44feb3dc670105f1b78fc5e9f13142f6f4dfc2da29",
+      "actual_sha256": "1890d488300e8451d4ec9b44feb3dc670105f1b78fc5e9f13142f6f4dfc2da29",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/app-style-DURDR401.css",
+      "status": 200,
+      "expected_sha256": "8870a182f1216d67fd1f1b034c96ea5bfd17336be4c037a519f017564f349798",
+      "actual_sha256": "8870a182f1216d67fd1f1b034c96ea5bfd17336be4c037a519f017564f349798",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/composer-afe872655b72f60d.js",
+      "status": 200,
+      "expected_sha256": "afe872655b72f60dcedc1e6e077b8f2bb410aeeea4409178d9ddb412ab1a9f32",
+      "actual_sha256": "afe872655b72f60dcedc1e6e077b8f2bb410aeeea4409178d9ddb412ab1a9f32",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/imladris-style-BCCSHjuG.css",
+      "status": 200,
+      "expected_sha256": "37fef07d72002756ef75c4c2dc2aa2493201317f9cf78b693505a6914e1bf02e",
+      "actual_sha256": "37fef07d72002756ef75c4c2dc2aa2493201317f9cf78b693505a6914e1bf02e",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/milkdown-adapter-B36_3vOz.js",
+      "status": 200,
+      "expected_sha256": "156e7142326caf8b6fcb4cd4d903fa219ef445c7a3821f224ec33a2938bf478e",
+      "actual_sha256": "156e7142326caf8b6fcb4cd4d903fa219ef445c7a3821f224ec33a2938bf478e",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/passkeys-45dd692ca9028436.js",
+      "status": 200,
+      "expected_sha256": "45dd692ca902843661a7b57bdcfe8436c6ae95cd12f0843cf3ccc431071ab5c3",
+      "actual_sha256": "45dd692ca902843661a7b57bdcfe8436c6ae95cd12f0843cf3ccc431071ab5c3",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/tour-7cdbe315501e3843.js",
+      "status": 200,
+      "expected_sha256": "7cdbe315501e3843c09d8d32cb00903184ec03b4ba4b1074344fd8f5fc48be24",
+      "actual_sha256": "7cdbe315501e3843c09d8d32cb00903184ec03b4ba4b1074344fd8f5fc48be24",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
+      "status": 200,
+      "expected_sha256": "606c893af7fee8d37f1a2694cf7368e8e219a8c4cc0760c0246cbed5b45e377d",
+      "actual_sha256": "606c893af7fee8d37f1a2694cf7368e8e219a8c4cc0760c0246cbed5b45e377d",
+      "matches": true
+    },
+    {
+      "path": "/assets/dist/wysiwyg-composer-DJaHQYS-.css",
+      "status": 200,
+      "expected_sha256": "b3eb1ac0d75f87c64a319344d15d2e3b2ceee1b9dbf68247af912bb74779a3b2",
+      "actual_sha256": "b3eb1ac0d75f87c64a319344d15d2e3b2ceee1b9dbf68247af912bb74779a3b2",
+      "matches": true
+    },
+    {
+      "path": "/assets/imladris.css",
+      "status": 200,
+      "expected_sha256": "9349f13093050fd00c6b04469805d7b39be475b9933ce5ac046aaf1658500867",
+      "actual_sha256": "9349f13093050fd00c6b04469805d7b39be475b9933ce5ac046aaf1658500867",
+      "matches": true
+    },
+    {
+      "path": "/assets/passkeys.js",
+      "status": 200,
+      "expected_sha256": "28a5821a60f9fa7c8244f0ceda86da4981487bc37db1f63ccd7d3380c238872e",
+      "actual_sha256": "28a5821a60f9fa7c8244f0ceda86da4981487bc37db1f63ccd7d3380c238872e",
+      "matches": true
+    },
+    {
+      "path": "/assets/tour.js",
+      "status": 200,
+      "expected_sha256": "753218e464f4b4cd42ce198bb5fcd150fe3c48dd257b67b6f8672413d3bd992a",
+      "actual_sha256": "753218e464f4b4cd42ce198bb5fcd150fe3c48dd257b67b6f8672413d3bd992a",
+      "matches": true
+    }
+  ]
+}

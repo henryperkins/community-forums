@@ -1,0 +1,135 @@
+{
+  "checked_at_utc": "2026-09-23 10:47:26 UTC",
+  "commit": "a26f1fd0a09a4abf9d646ec1252e95951ef85d02",
+  "cloudflare": {
+    "build": {
+      "success": true,
+      "status": "stopped",
+      "outcome": "success",
+      "commit": "a26f1fd0a09a4abf9d646ec1252e95951ef85d02"
+    },
+    "deployment": {
+      "success": true,
+      "deployments": [
+        {
+          "id": "e8f46993-a92b-4fb7-b628-4201b34c0d70",
+          "versions": [
+            {
+              "version_id": "6c63ddf3-f11d-4e1b-954e-fb25311b7d43",
+              "percentage": 100
+            }
+          ],
+          "created_on": "2026-09-23T10:25:53.433092Z"
+        }
+      ]
+    },
+    "container": {
+      "success": true,
+      "version": 18,
+      "image": "registry.cloudflare.com/a77e479f6736120eadd99973dbeb705e/retroboards-forumcontainer@sha256:d3a97aeb67dc28cbd2768dd7e6f75f747474ec13465e164846e32e7da22d49d7"
+    }
+  },
+  "r2": {
+    "success": true,
+    "status": 200,
+    "errors": [],
+    "objects": [
+      {
+        "key": "media/2026/09/81ed51e3d413813fa2effde1eb0713e7.png",
+        "size": 6523,
+        "etag": "7b8174abea95c93b5873024d2b8d5f03",
+        "last_modified": "2026-09-23T10:39:23.688Z"
+      }
+    ]
+  },
+  "database": {
+    "sessions": {
+      "test_sessions": "3",
+      "revoked_sessions": "3"
+    },
+    "attachments": [
+      {
+        "id": "3",
+        "status": "finalized",
+        "post_id": "8",
+        "storage_key": "2026/09/f80d3d01b96239dde1ccea28d90ed727.png",
+        "sha256": "8f4b98723a91bd4a7c1e824d0c2424685abad81dd9a430e3358d525ce2ac56d8",
+        "size_bytes": 6523,
+        "is_deleted": 1,
+        "canonical_reference": "1",
+        "no_pending_marker": "1"
+      },
+      {
+        "id": "4",
+        "status": "finalized",
+        "post_id": "9",
+        "storage_key": "2026/09/9a88ba4704ce79167ed51e18dc25df72.png",
+        "sha256": "8f4b98723a91bd4a7c1e824d0c2424685abad81dd9a430e3358d525ce2ac56d8",
+        "size_bytes": 6523,
+        "is_deleted": 1,
+        "canonical_reference": "1",
+        "no_pending_marker": "1"
+      },
+      {
+        "id": "5",
+        "status": "finalized",
+        "post_id": "10",
+        "storage_key": "2026/09/81ed51e3d413813fa2effde1eb0713e7.png",
+        "sha256": "8f4b98723a91bd4a7c1e824d0c2424685abad81dd9a430e3358d525ce2ac56d8",
+        "size_bytes": 6523,
+        "is_deleted": 1,
+        "canonical_reference": "1",
+        "no_pending_marker": "1"
+      }
+    ],
+    "drafts": {
+      "remaining_context_drafts": "0"
+    }
+  },
+  "http": {
+    "health": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "database": "ok"
+      }
+    },
+    "login_status": 200,
+    "deleted_test_media": [
+      {
+        "media_id": 3,
+        "status": 404
+      },
+      {
+        "media_id": 4,
+        "status": 404
+      },
+      {
+        "media_id": 5,
+        "status": 404
+      }
+    ]
+  },
+  "git": {
+    "main": "a26f1fd0a09a4abf9d646ec1252e95951ef85d02",
+    "origin_main": "a26f1fd0a09a4abf9d646ec1252e95951ef85d02",
+    "live_remote_main": "a26f1fd0a09a4abf9d646ec1252e95951ef85d02",
+    "divergence": [
+      0,
+      0
+    ]
+  },
+  "ci": {
+    "run_id": 35848679286,
+    "status": "blocked before startup",
+    "reason": "The job was not started because your account is locked due to a billing issue."
+  },
+  "limits": [
+    "No actual iPhone Safari photo-library/interruption/recovery test.",
+    "No production container restart after test upload; R2 object presence and current readback are verified.",
+    "No direct production PHP INI probe; real multipart success and error boundaries were tested.",
+    "Historical accepted-image disappearance was not reproduced; no historical-content rewrite."
+  ],
+  "credential_cleanup": "All generated test sessions revoked; raw test-session.json removed.",
+  "storage_cleanup": "Test posts soft-deleted through the application. Their stored media remains subject to the normal attachment cleaner; guest media requests now return 404."
+}

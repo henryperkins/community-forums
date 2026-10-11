@@ -4,6 +4,14 @@ Date: 2026-09-23. Source base: `12db9821`; implementation branch: `fix/image-upl
 
 This evidence uses synthetic accounts, generated images, and disposable databases. No production content or configuration was changed. Actual iPhone Safari, production deployment/assets/PHP settings, and R2 persistence remain external checks under Task 8 of the [plan](../../superpowers/plans/2026-09-23-image-upload-reliability.md).
 
+**Later release record:** the implementation was committed and released as
+`a26f1fd0a09a4abf9d646ec1252e95951ef85d02` on 2026-09-23. The dated
+[production release report and receipts](production-release-2026-09-23/README.md)
+preserve the subsequent deployment, asset, multipart, publication and cleanup
+checks. The results and pending boundaries below remain the original local
+verification snapshot. The release report describes the since-retired
+Cloudflare container/R2 origin, not the current Cloud Run deployment.
+
 | Final local gate | Result |
 |---|---|
 | Full PHPUnit | 3,024 tests / 22,928 assertions; exit 0; 6 baseline deprecations and 2 skips |
