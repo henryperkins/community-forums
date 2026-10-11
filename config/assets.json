@@ -1,5 +1,5 @@
 {
-  "version": "864adbfcadd0834b",
+  "version": "aa3e487a59d3d205",
   "urls": {
     "app.css": "/assets/dist/app-style-kNCnSn5Q.css",
     "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
@@ -8,7 +8,7 @@
     "composer.js": "/assets/dist/composer-5aeaedfd8f662ec5.js",
     "passkeys.js": "/assets/dist/passkeys-16e7134417f0d6af.js",
     "tour.js": "/assets/dist/tour-1801eafe66889a28.js",
-    "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-CLPFVNwL.js",
+    "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-Br17XC-G.js",
     "wysiwyg-composer.css": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
     "fonts/imladris/cormorant-garamond-latin-400-italic.woff2": "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
     "fonts/imladris/cormorant-garamond-latin-400-normal.woff2": "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
@@ -135,16 +135,16 @@
       "sha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
       "immutable": true
     },
-    "/assets/dist/milkdown-adapter-BMZ3UGYe.js": {
-      "sha256": "43ec603e8c2d1da614be26f3281dab0eea0626ca60f8d2a0aafc3a30e7945735",
-      "immutable": true
-    },
     "/assets/dist/milkdown-adapter-Bqr6mUeY.js": {
       "sha256": "93de5377d869c2d8a977ed20155258189651214b188a76d1eafc85052322cd97",
       "immutable": true
     },
     "/assets/dist/milkdown-adapter-t86d4ntf.js": {
       "sha256": "43b0ff5491e5cc0608a1ea5a3cbf9fad42974bb3239649bcda0b537d05d2df27",
+      "immutable": true
+    },
+    "/assets/dist/milkdown-adapter-zC8kMFUx.js": {
+      "sha256": "d5a851673f814abd0f9765a676dcd2b7df428a8b3a709fa319c6c6fef05a8160",
       "immutable": true
     },
     "/assets/dist/passkeys-16e7134417f0d6af.js": {
@@ -163,12 +163,12 @@
       "sha256": "2cb01893b54a8644c23d0d7845eb90643b5446def42de649503e1595a781313e",
       "immutable": true
     },
-    "/assets/dist/wysiwyg-composer-BRAFF38E.css": {
-      "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+    "/assets/dist/wysiwyg-composer-Br17XC-G.js": {
+      "sha256": "9fc890c5c085d6f743428c39621ae162e8cb58cac505a4d8da6851f08fc0efbc",
       "immutable": true
     },
-    "/assets/dist/wysiwyg-composer-CLPFVNwL.js": {
-      "sha256": "09ae2e9dc8632033217afeacdca85a5392ea00f583181aeabba377b27741732b",
+    "/assets/dist/wysiwyg-composer-BRAFF38E.css": {
+      "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
       "immutable": true
     },
     "/assets/dist/wysiwyg-composer-D9tMbjJ1.js": {
@@ -274,7 +274,7 @@
   },
   "releases": [
     {
-      "version": "864adbfcadd0834b",
+      "version": "aa3e487a59d3d205",
       "files": [
         "/assets/dist/app-64d622826ba32cb9.js",
         "/assets/dist/app-style-kNCnSn5Q.css",
@@ -296,11 +296,11 @@
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
         "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-BMZ3UGYe.js",
+        "/assets/dist/milkdown-adapter-zC8kMFUx.js",
         "/assets/dist/passkeys-16e7134417f0d6af.js",
         "/assets/dist/tour-1801eafe66889a28.js",
         "/assets/dist/wysiwyg-composer-BRAFF38E.css",
-        "/assets/dist/wysiwyg-composer-CLPFVNwL.js"
+        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
       ]
     },
     {

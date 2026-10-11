@@ -2,13 +2,16 @@ import { defaultValueCtx, Editor, editorViewCtx, remarkStringifyOptionsCtx, root
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
 import {
+  bulletListSchema,
   commonmark,
   imageSchema,
+  listItemSchema,
+  orderedListSchema,
   toggleEmphasisCommand,
   toggleInlineCodeCommand,
   toggleStrongCommand,
 } from '@milkdown/preset-commonmark';
-import { gfm, toggleStrikethroughCommand } from '@milkdown/preset-gfm';
+import { extendListItemSchemaForTask, gfm, toggleStrikethroughCommand } from '@milkdown/preset-gfm';
 import { toggleMark } from '@milkdown/prose/commands';
 import { closeHistory } from '@milkdown/prose/history';
 import { Slice, type Node as ProseMirrorNode } from '@milkdown/prose/model';
@@ -91,6 +94,13 @@ const pendingImageSchema = imageSchema.extendSchema(previous => ctx => {
   const base = previous(ctx);
   return {
     ...base,
+    parseMarkdown: {
+      ...base.parseMarkdown,
+      runner(state, node, type) {
+        // Remark represents absent image text as null; the schema requires strings.
+        state.addNode(type, { src: node.url, alt: node.alt ?? '', title: node.title ?? '' });
+      },
+    },
     toDOM(node) {
       if (/^rbup-[a-z0-9]+-[a-z0-9]+$/.test(String(node.attrs.src || ''))) {
         return ['span', { class: 'composer-pending-image' }, 'Image attachment pending…'];
@@ -99,7 +109,98 @@ const pendingImageSchema = imageSchema.extendSchema(previous => ctx => {
     },
   };
 });
-const uploadCommonmark = commonmark.filter(plugin => plugin !== imageSchema[0] && plugin !== imageSchema[1]);
+// ProseMirror validates attributes at creation as well as at clipboard/JSON input.
+// Milkdown 7.21's Markdown and task-DOM parsers supply spread as a string despite
+// declaring it boolean. Normalize the parsers, retaining the schema validators.
+const typedListItemSchema = extendListItemSchemaForTask.extendSchema(previous => ctx => {
+  const base = previous(ctx);
+  return {
+    ...base,
+    parseDOM: base.parseDOM?.map(rule => ({
+      ...rule,
+      getAttrs(dom) {
+        const attrs = rule.getAttrs?.(dom);
+        if (!attrs) return attrs ?? null;
+        return { ...attrs, spread: typeof attrs.spread === 'string' ? attrs.spread === 'true' : attrs.spread };
+      },
+    })),
+    parseMarkdown: {
+      ...base.parseMarkdown,
+      runner(state, node, type) {
+        state.openNode(type, {
+          label: node.label != null ? `${node.label}.` : '•',
+          listType: node.label != null ? 'ordered' : 'bullet',
+          spread: node.spread ?? true,
+          checked: node.checked ?? null,
+        });
+        state.next(node.children);
+        state.closeNode();
+      },
+    },
+    toMarkdown: {
+      ...base.toMarkdown,
+      runner(state, node) {
+        if (node.attrs.checked == null) {
+          base.toMarkdown.runner(state, node);
+          return;
+        }
+        state.openNode('listItem', undefined, {
+          label: node.attrs.label,
+          listType: node.attrs.listType,
+          spread: node.attrs.spread,
+          checked: node.attrs.checked,
+        });
+        state.next(node.content);
+        state.closeNode();
+      },
+    },
+  };
+});
+const typedBulletListSchema = bulletListSchema.extendSchema(previous => ctx => {
+  const base = previous(ctx);
+  return {
+    ...base,
+    parseMarkdown: {
+      ...base.parseMarkdown,
+      runner(state, node, type) {
+        state.openNode(type, { spread: node.spread ?? false }).next(node.children).closeNode();
+      },
+    },
+  };
+});
+const typedOrderedListSchema = orderedListSchema.extendSchema(previous => ctx => {
+  const base = previous(ctx);
+  return {
+    ...base,
+    parseDOM: base.parseDOM?.map(rule => ({
+      ...rule,
+      getAttrs(dom) {
+        const attrs = rule.getAttrs?.(dom);
+        if (!attrs) return attrs ?? null;
+        return { ...attrs, spread: typeof attrs.spread === 'string' ? attrs.spread === 'true' : attrs.spread };
+      },
+    })),
+    parseMarkdown: {
+      ...base.parseMarkdown,
+      runner(state, node, type) {
+        state.openNode(type, { spread: node.spread ?? true, order: node.start ?? 1 }).next(node.children).closeNode();
+      },
+    },
+    toMarkdown: {
+      ...base.toMarkdown,
+      runner(state, node) {
+        state.openNode('list', undefined, {
+          ordered: true, start: node.attrs.order ?? 1, spread: node.attrs.spread,
+        }).next(node.content).closeNode();
+      },
+    },
+  };
+});
+const uploadCommonmark = commonmark.filter(plugin => ![
+  imageSchema[0], imageSchema[1], listItemSchema[0], listItemSchema[1],
+  bulletListSchema[0], bulletListSchema[1], orderedListSchema[0], orderedListSchema[1],
+].includes(plugin));
+const typedGfm = gfm.filter(plugin => plugin !== extendListItemSchemaForTask[0] && plugin !== extendListItemSchemaForTask[1]);
 
 function isCodeText(node: ProseMirrorNode, parent: ProseMirrorNode | null): boolean {
   if (parent?.type.spec.code) {
@@ -762,7 +863,10 @@ class MilkdownComposerAdapter {
       })
       .use(uploadCommonmark)
       .use(pendingImageSchema)
-      .use(gfm)
+      .use(typedBulletListSchema)
+      .use(typedOrderedListSchema)
+      .use(typedGfm)
+      .use(typedListItemSchema)
       .use(history)
       .use(richComposerPlugin(this))
       .use(listener);
@@ -1076,7 +1180,7 @@ class MilkdownComposerAdapter {
       if (node.attrs.title !== image.alt) {
         return false;
       }
-      transaction = transaction.setNodeMarkup(pos, undefined, { ...node.attrs, title: null });
+      transaction = transaction.setNodeMarkup(pos, undefined, { ...node.attrs, title: '' });
       found = true;
       return false;
     });
