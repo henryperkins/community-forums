@@ -802,6 +802,38 @@ async function pasteText(page: Page, target: Locator, text: string): Promise<voi
   await page.keyboard.press(process.platform === 'darwin' ? 'Meta+V' : 'Control+V');
 }
 
+test('pasted HTML slice contexts reject invalid list and image attributes', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+
+  for (const [type, attrs] of [
+    ['list_item', { label: ['img', { src: '/invalid-clipboard-image' }], listType: 'bullet', spread: false }],
+    ['ordered_list', { order: 'invalid', spread: false }],
+    ['image', { src: ['img', { src: '/invalid-clipboard-image' }], alt: '', title: '' }],
+  ] as const) {
+    await editor.fill('');
+    await editor.evaluate((element, context) => {
+      const paragraph = document.createElement('p');
+      paragraph.setAttribute('data-pm-slice', `1 1 ${JSON.stringify(context)}`);
+      paragraph.textContent = 'Safe clipboard text';
+      const clipboard = new DataTransfer();
+      clipboard.setData('text/html', paragraph.outerHTML);
+      clipboard.setData('text/plain', 'Safe clipboard text');
+      element.dispatchEvent(new ClipboardEvent('paste', {
+        clipboardData: clipboard, bubbles: true, cancelable: true,
+      }));
+    }, [type, attrs]);
+    await expect(editor).toContainText('Safe clipboard text');
+    await expect(editor.locator('ul, ol, li, img')).toHaveCount(0);
+  }
+  expect(errors).toEqual([]);
+});
+
 test('pasted markdown source becomes rich structure, not literal text', async ({ page }) => {
   setWysiwygComposer(true);
   await login(page, 'bob@retro.test');
