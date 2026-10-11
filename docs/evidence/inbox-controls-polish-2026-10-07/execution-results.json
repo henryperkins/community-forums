@@ -1,0 +1,160 @@
+{
+  "qualification": {
+    "uniqueChecks": 92,
+    "qualifiedUniqueChecks": 92,
+    "executions": 105,
+    "passedExecutions": 96,
+    "failedExecutions": 9,
+    "status": "qualified_with_bounded_reconciliation",
+    "finalBuildFullMatrixRerun": false
+  },
+  "environment": {
+    "database": "retroboards_e2e_inbox_polish_20261007",
+    "port": 8482,
+    "workers": 1,
+    "rateLimitPath": "storage/ratelimit-e2e-inbox-polish",
+    "packagesStoragePath": "storage/packages-e2e-inbox-polish",
+    "platform": "Linux",
+    "browsers": [
+      "Chromium",
+      "WebKit"
+    ],
+    "physicalDevices": false,
+    "playwrightVersion": "1.61.1"
+  },
+  "confirmation": {
+    "assetsVersion": "dea42daf175bcd4b",
+    "runs": [
+      {
+        "lane": "chromium-controls",
+        "uniqueChecks": 44,
+        "passed": 43,
+        "failed": 1,
+        "exitCode": 1,
+        "rawLog": "/tmp/inbox-polish-confirmation-chromium.log",
+        "command": "E2E_LAYOUT_BROWSER=chromium RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07 npx playwright test inbox-controls-polish.spec.ts inbox-header.spec.ts shared-subheader-context.spec.ts --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/chromium-controls"
+      },
+      {
+        "lane": "chromium-workflow",
+        "uniqueChecks": 2,
+        "passed": 0,
+        "failed": 2,
+        "exitCode": 1,
+        "rawLog": "/tmp/inbox-polish-workflow-chromium.log",
+        "command": "E2E_LAYOUT_BROWSER=chromium RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07/gate-a-chromium npx playwright test gate-a.spec.ts --grep 'phase 4 topic workflow' --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/chromium-workflow"
+      },
+      {
+        "lane": "webkit-controls",
+        "uniqueChecks": 44,
+        "passed": 40,
+        "failed": 4,
+        "exitCode": 1,
+        "rawLog": "/tmp/inbox-polish-confirmation-webkit.log",
+        "command": "E2E_LAYOUT_BROWSER=webkit RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07 npx playwright test inbox-controls-polish.spec.ts inbox-header.spec.ts shared-subheader-context.spec.ts --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/webkit-controls"
+      },
+      {
+        "lane": "webkit-workflow",
+        "uniqueChecks": 2,
+        "passed": 2,
+        "failed": 0,
+        "exitCode": 0,
+        "rawLog": "/tmp/inbox-polish-workflow-webkit.log",
+        "command": "E2E_LAYOUT_BROWSER=webkit RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07/gate-a-webkit npx playwright test gate-a.spec.ts --grep 'phase 4 topic workflow' --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/webkit-workflow"
+      }
+    ]
+  },
+  "reconciliation": [
+    {
+      "lane": "chromium-native-mobile",
+      "executions": 1,
+      "passed": 1,
+      "failed": 0,
+      "exitCode": 0,
+      "rawLog": "/tmp/inbox-polish-reconciliation-chromium.log",
+      "correction": "Scroll the actual list owner by the bounded fractional overflow; retain full containment and painted intersection assertions.",
+      "command": "E2E_LAYOUT_BROWSER=chromium RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07 npx playwright test inbox-controls-polish.spec.ts --project=mobile --grep 'row hiding.*without JavaScript' --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/chromium-reconciled"
+    },
+    {
+      "lane": "chromium-workflow",
+      "executions": 2,
+      "passed": 2,
+      "failed": 0,
+      "exitCode": 0,
+      "rawLog": "/tmp/inbox-polish-reconciliation-workflow-chromium.log",
+      "correction": "Use native Open to Needs answer transitions when layout fixture preset status lacks a history event.",
+      "command": "E2E_LAYOUT_BROWSER=chromium RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07/gate-a-chromium npx playwright test gate-a.spec.ts --grep 'phase 4 topic workflow' --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/chromium-workflow-reconciled"
+    },
+    {
+      "lane": "webkit-native-and-shortcut",
+      "executions": 4,
+      "passed": 2,
+      "failed": 2,
+      "exitCode": 1,
+      "rawLog": "/tmp/inbox-polish-reconciliation-webkit.log",
+      "correction": "Remove animation-frame wait from no-JavaScript native helper. Await shortcut navigation; persistent failures exposed pending preview/native navigation race.",
+      "command": "E2E_LAYOUT_BROWSER=webkit RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07 npx playwright test inbox-controls-polish.spec.ts --grep 'row hiding.*without JavaScript|snooze shortcut' --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/webkit-reconciled"
+    }
+  ],
+  "earlierEvidence": {
+    "staleAssetSetup": {
+      "path": "/tmp/inbox-controls-polish-stale-assets-20261008/SETUP-FAILURE.md",
+      "qualified": false,
+      "reason": "Stopped because built assets did not include current compact control and Help implementation."
+    },
+    "firstInspection": {
+      "path": "/tmp/inbox-polish-first-current-assets-20261008/FIRST-INSPECTION.md",
+      "assetsVersion": "90924db7488667c0",
+      "passed": 38,
+      "failed": 2,
+      "qualifiedAsFinal": false,
+      "reason": "First rendered batch informed the single correction batch; native bottom-panel defect was repaired."
+    }
+  },
+  "affectedCorrectionConfirmation": {
+    "assetsVersion": "f2dfa7a4c4d019ca",
+    "corrections": [
+      "Strengthen final Inbox row selector to restore straight dividers.",
+      "Invalidate pending preview on capture-phase native submit and pagehide."
+    ],
+    "runs": [
+      {
+        "lane": "chromium-title-border",
+        "executions": 2,
+        "passed": 2,
+        "failed": 0,
+        "exitCode": 0,
+        "rawLog": "/tmp/inbox-polish-affected-confirmation-chromium.log",
+        "command": "E2E_LAYOUT_BROWSER=chromium RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07 npx playwright test inbox-controls-polish.spec.ts --grep 'long unbroken topic' --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/chromium-affected-confirmation"
+      },
+      {
+        "lane": "webkit-title-border-and-shortcut",
+        "executions": 4,
+        "passed": 4,
+        "failed": 0,
+        "exitCode": 0,
+        "rawLog": "/tmp/inbox-polish-affected-confirmation-webkit.log",
+        "command": "E2E_LAYOUT_BROWSER=webkit RB_EVIDENCE_DIR=docs/evidence/inbox-controls-polish-2026-10-07 npx playwright test inbox-controls-polish.spec.ts --grep 'long unbroken topic|snooze shortcut' --output=../../docs/evidence/inbox-controls-polish-2026-10-07/.artifacts/webkit-affected-confirmation"
+      }
+    ]
+  },
+  "finalAssetIdentity": {
+    "version": "f2dfa7a4c4d019ca",
+    "served": [
+      {
+        "entry": "app.css",
+        "url": "/assets/dist/app-style-B8T0LKSf.css",
+        "sha256": "18fee5c120e3289dea3d2e732159bf71b20e8a3dfb250843a59bdfa6674c275e"
+      },
+      {
+        "entry": "app.js",
+        "url": "/assets/dist/app-0d803f892404e3bd.js",
+        "sha256": "0d803f892404e3bd332e32c808d8f5bd193b02be43d14ed4a59fc24ef2f8bd55"
+      }
+    ]
+  },
+  "cleanup": {
+    "port8482ListeningAfterFinalRun": false,
+    "mainServerTouched": false,
+    "cloudflareTunnelTouched": false
+  }
+}

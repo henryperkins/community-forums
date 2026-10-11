@@ -28,7 +28,7 @@ final class DmMessageRepository
         $limit = max(1, $limit);
         $offset = max(0, $offset);
         return $this->db->fetchAll(
-            'SELECT m.*, u.username AS author_username, u.display_name AS author_display_name
+            'SELECT m.*, u.username AS author_username, u.display_name AS author_display_name, u.avatar_path AS author_avatar_path
              FROM dm_messages m JOIN users u ON u.id = m.user_id
              WHERE m.conversation_id = ?
              ORDER BY m.id ASC LIMIT ' . $limit . ' OFFSET ' . $offset,
@@ -42,7 +42,7 @@ final class DmMessageRepository
         $limit = max(1, $limit);
         $offset = max(0, $offset);
         return $this->db->fetchAll(
-            'SELECT m.*, u.username AS author_username, u.display_name AS author_display_name
+            'SELECT m.*, u.username AS author_username, u.display_name AS author_display_name, u.avatar_path AS author_avatar_path
              FROM conversation_participants cp
              JOIN dm_messages m ON m.conversation_id = cp.conversation_id
                 AND m.id > cp.joined_after_message_id
@@ -93,7 +93,7 @@ final class DmMessageRepository
     {
         $limit = max(1, min(51, $limit));
         return $this->db->fetchAll(
-            'SELECT m.*, u.username AS author_username, u.display_name AS author_display_name
+            'SELECT m.*, u.username AS author_username, u.display_name AS author_display_name, u.avatar_path AS author_avatar_path
              FROM conversation_participants cp
              JOIN dm_messages m ON m.conversation_id = cp.conversation_id
                 AND m.id > cp.joined_after_message_id AND m.id > ?

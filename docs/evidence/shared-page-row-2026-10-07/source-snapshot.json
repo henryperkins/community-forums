@@ -1,0 +1,62 @@
+{
+  "base_revision": "2338ac561892450319a28fd4b4df52b1a4866dd3",
+  "asset_version": "049200d35635595d",
+  "source_sha256": {
+    "public/assets/app.css": "e5a63e69e5cdfbf2e815d62d5c2f4cdffdd6233192dcea93d9783372e923009a",
+    "public/assets/app.js": "c2143dc6dfc3bf7236af11864d3ed35f5a480c11ff2f4284e4cf8ad9431daf92",
+    "templates/account/appearance.php": "3e06ad02c8c5b4d2a53e413f31ec6142342d18afad4cc55c5ef0884f61cb42b7",
+    "templates/account/blocks.php": "68d515842e2631c86ca0d64b8b56251fa09d010698b58ee58594762506a72d85",
+    "templates/account/boards.php": "661123b96a8a24a05f88e24fb0a549445449dcf53088f916fa3d19f12a37c2da",
+    "templates/account/composing.php": "a6cd1bea9914a1a55f0f6d4731be0e962b0bc52cc851f0d671560e3a96a5f73d",
+    "templates/account/connections.php": "428a1b2bdd782b2772e6811d0ed3a74f09fcc3d381ee200537272985a2fef7d0",
+    "templates/account/drafts.php": "58d93bc14217e78ce9bb0d41315f18cc272cf2074ab52e919b68b40d962c2c60",
+    "templates/account/lifecycle.php": "728b22835cb89d9c3db5e9ce8f5f6c7f98b0a75cb024f67336df442ae445c1b1",
+    "templates/account/notifications.php": "65c39e9b5452152868a983fb1997d46551dc4423c12cfeb228c82cc7362889d5",
+    "templates/account/preferences.php": "19063870a8cb7c7319d38c3047d0cd62509e99d2465ceb9bfee2d552dc7dd36a",
+    "templates/account/privacy.php": "66b0f4d30e359f55cc0aee8301db85fe6eaedf6ee01beaeed52df276c3a9de35",
+    "templates/account/security.php": "681900d027ae7af35941f238282d22683f1ded5e0b01c2adf6aa6ebd7c9ea1fe",
+    "templates/account/sessions.php": "0b599f136870267cae95c1b601abe562b0bdb3bf81e23befb82574e769a5042a",
+    "templates/account/settings.php": "efa856a684b59a328b0bfc9538b9b788f2af235b5b7f01b9601aef630d5b36a2",
+    "templates/appeals/index.php": "c7c941ba08aac91d20462fed096dc63dcc1b9c1c76a6d5ce85f4810d772bdf4c",
+    "templates/compose.php": "f479b515e709015c59be225fb238c632b2404cf0df9b223f602db3e31af30d7d",
+    "templates/feed.php": "379203a537f2f115fb196397a91153692a0be80c486a5bc226943e2942f8a544",
+    "templates/inbox.php": "a21a29cbd032c32df02be91e1341736bff3f75f6cc7af22b0681f77ef543282f",
+    "templates/leaderboard.php": "c0a3393b1f68209fe390ccffa32dce6a727f2b9ee6f464114d56a8ef918d7f62",
+    "templates/partials/dm_list.php": "2d04fea793376d5449ccb8b87226358fb897c58573318c4957f5bab54dc61636",
+    "templates/partials/notification_list.php": "5e0b104a9913f1e8c47def213f518d8b937ea6840110fa7def45a56b284f49e4",
+    "templates/partials/page_heading.php": "fe9a6e58fef5b3dbdfd5f999da4758705c75e7728e254777fa5b3880c1c0c97d",
+    "templates/privacy.php": "f082aedfe33955e718192c6b8740c323b8e6c9f9131ee694f81ac85c25adf91c",
+    "templates/profile/connections.php": "932a0168208ccc6b22018d6c30133cc2d7721e0a93c80261d966fcb0aecc37dd",
+    "templates/search.php": "85c969bfe3cd6d92ef8964fdfccf6df391f580cbfb57d098adc73077850b6a78",
+    "templates/tags/index.php": "8a316d75c088dee2e8cf3c4511da6be8060ae2f1f8f03f11b97d417cf485a293",
+    "templates/tags/show.php": "ca0700e853e5acb6169da4e66ecb9f16b402131a66f8081d3740f7bf95abfedf",
+    "templates/unsubscribe.php": "2d2a8c3a1dba0b6a38ab3906dc78ee3525da9e01742df9011450d7bebc4a0ad6",
+    "templates/users_online.php": "7cb342dc965507e287e881425fd2c6558bdbcfaf37c3f7a50e4d71316f981b1a",
+    "tests/Integration/Core/AppAccountConsoleTest.php": "c10cbf4e217dd13274bcc95ed01aa032cdd055227f21b9b1ae6674e8409c71fa",
+    "tests/Integration/Core/AppSharedSubheaderTest.php": "d4b2ee59fbc5158d68f79af5996d1b9f1b7fff04cbae827a59dbccf82a6e684d",
+    "tests/browser/community-inbox-theme.spec.ts": "c6664696d23ef55d3d564e974f61364140320a8a09e85f342a0268f293cb9bf1",
+    "tests/browser/forum-inbox-remediation.spec.ts": "6e37a77ad4e7d06e81d4b340d335dd4271c4c140e214e5914319988f8bd975d4",
+    "tests/browser/header-phone-rows.spec.ts": "9004d25f4d0f09e8291a5e0d331cf7eb11ec3fd19fa580592ea3700b1ade4320",
+    "tests/browser/imladris-forum-surfaces.spec.ts": "6a845c44a0558a2ba08cdf537a635d17c3be3f1a95ece14576c2f86ad08fad99",
+    "tests/browser/inbox-header.spec.ts": "9b7a53d40d132c81ba712728b626d9bc3f2271c3bb507ad1a2205fc03a375d1c",
+    "tests/browser/messages-audit-regressions.spec.ts": "c3d2f99b04234d9b9f26900c6299e76d82e2145384055eb73646376555fe46d5",
+    "tests/browser/notifications-unified.spec.ts": "4b0dce4540ee5a38fb58007cad80fff74d9d5e62cd40d76890ac7576073920d1",
+    "tests/browser/shared-subheader-context.spec.ts": "eec1a73dcf7750dd51068fd88b8968b86459e3a5fb87bd80a72d73564b2f095f",
+    "tests/browser/shared-subheader-long-contexts.spec.ts": "f2d115a4bca05626a83d8abd54190e4cfa3d918da33f431f429925f2b5cb3642",
+    "tests/browser/unified-chrome.spec.ts": "7fc5bbb0cf374405fe28fb13f98fbba837ee7a60efc6eb8e060b8481af234182"
+  },
+  "current_assets": {
+    "app.css": {
+      "url": "/assets/dist/app-style-CcZ7cXWF.css",
+      "sha256": "3e934bde0b2f264c078f94eaab3a24f9d4b9c04b3e5c9dfba9b444694bcdda0c"
+    },
+    "app.js": {
+      "url": "/assets/dist/app-ae3b0de6dc889815.js",
+      "sha256": "ae3b0de6dc889815cdb38404736d924f500850cf61c54b8e05276d4df2662f27"
+    },
+    "imladris.css": {
+      "url": "/assets/dist/imladris-style-DeGci5u_.css",
+      "sha256": "669048ba1a45bf8ec73ff4e476d48f65eaad84a8d389424518558003200ed2a8"
+    }
+  }
+}

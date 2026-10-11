@@ -1,4 +1,4 @@
-import { defaultValueCtx, Editor, editorViewCtx, rootCtx } from '@milkdown/core';
+import { defaultValueCtx, Editor, editorViewCtx, remarkStringifyOptionsCtx, rootCtx } from '@milkdown/core';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
 import {
@@ -12,7 +12,7 @@ import { gfm, toggleStrikethroughCommand } from '@milkdown/preset-gfm';
 import { toggleMark } from '@milkdown/prose/commands';
 import { closeHistory } from '@milkdown/prose/history';
 import { Slice, type Node as ProseMirrorNode } from '@milkdown/prose/model';
-import { Plugin, PluginKey } from '@milkdown/prose/state';
+import { Plugin, PluginKey, TextSelection } from '@milkdown/prose/state';
 import { Decoration, DecorationSet, type EditorView } from '@milkdown/prose/view';
 import { $prose, callCommand, getMarkdown, insert, markdownToSlice, replaceAll } from '@milkdown/utils';
 
@@ -29,6 +29,8 @@ type FallbackAdapter = {
   setDisabled(disabled: boolean): void;
   enterShouldSubmit(): boolean;
   isSourceMode(): boolean;
+  referenceState(): ReferenceState | null;
+  replaceReferenceSelection(state: ReferenceState, item: ComposerSuggestionItem): void;
 };
 
 type ReferenceState = {
@@ -163,7 +165,7 @@ function buildChipDecorations(doc: ProseMirrorNode): DecorationSet {
       const to = from + match[2].length + 1;
       mentionCount += 1;
       decorations.push(Decoration.inline(from, to, {
-        class: mentionCount > MAX_NOTIFYING_MENTIONS ? 'composer-chip is-muted' : 'composer-chip',
+        class: mentionCount > MAX_NOTIFYING_MENTIONS ? 'composer-chip composer-mention-chip is-muted' : 'composer-chip composer-mention-chip',
       }));
     }
 
@@ -592,7 +594,7 @@ class MilkdownComposerAdapter {
 
   referenceState(): ReferenceState | null {
     if (!this.richMode || this.failed || this.destroyed) {
-      return this.textareaReferenceState();
+      return this.fallback.referenceState();
     }
     const view = this.currentView();
     if (!view) {
@@ -605,12 +607,15 @@ class MilkdownComposerAdapter {
     const pos = selection.from;
     const from = Math.max(0, pos - 90);
     const before = view.state.doc.textBetween(from, pos, '\n', '\n');
-    const match = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{1,80})$/);
+    const match = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{0,80})$/);
     if (!match) {
       return null;
     }
     const trigger = match[2] as '@' | '#' | ':';
     const query = match[3];
+    if (query === '' && trigger !== '@') {
+      return null;
+    }
     const line = before.slice(before.lastIndexOf('\n') + 1);
     if (trigger === '#' && /^\s*#{1,3}\s?$/.test(line)) {
       return null;
@@ -629,14 +634,39 @@ class MilkdownComposerAdapter {
   }
 
   replaceReferenceSelection(state: ReferenceState, item: ComposerSuggestionItem): void {
-    const markdown = item.markdown || item.token || item.label || '';
+    let markdown = item.markdown || item.token || item.label || '';
     if (markdown === '') {
       return;
     }
     if (!this.richMode || this.failed || this.destroyed) {
-      this.textarea.selectionStart = state.start;
-      this.textarea.selectionEnd = state.end;
-      this.fallback.replaceSelection(markdown);
+      this.fallback.replaceReferenceSelection(state, item);
+      return;
+    }
+    if (state.trigger === '@') {
+      const view = this.currentView();
+      if (!view) {
+        return;
+      }
+      const end = view.state.doc.resolve(state.end);
+      let next = end.parent.textBetween(end.parentOffset, Math.min(end.parentOffset + 1, end.parent.content.size), '', '\n');
+      if (end.parentOffset === end.parent.content.size) {
+        // ProseMirror's closing block token has no text. A following paragraph
+        // is already a separator, not an empty character needing a handoff space.
+        for (let depth = end.depth - 1; depth >= 0; depth--) {
+          if (end.indexAfter(depth) < end.node(depth).childCount) { next = '\n'; break; }
+        }
+      }
+      if (!/^[\s.,;:!?)\]*_~|]/.test(next)) {
+        markdown += ' ';
+      }
+      // Insert editor text directly; the configured text serializer preserves
+      // intraword handle underscores and the single-space typing handoff.
+      const tr = view.state.tr.insertText(markdown, state.start, state.end);
+      tr.setSelection(TextSelection.create(tr.doc, state.start + markdown.length));
+      view.dispatch(closeHistory(tr.scrollIntoView()));
+      this.dirty = true;
+      this.syncRichMarkdown();
+      this.focus();
       return;
     }
     this.replaceEditorRangeWithMarkdown({ from: state.start, to: state.end }, markdown, true);
@@ -707,6 +737,25 @@ class MilkdownComposerAdapter {
       .config((ctx) => {
         ctx.set(rootCtx, this.host);
         ctx.set(defaultValueCtx, initialMarkdown);
+        ctx.update(remarkStringifyOptionsCtx, (options) => ({
+          ...options,
+          handlers: {
+            ...options.handlers,
+            text(node, parent, state, info) {
+              let value = options.handlers?.text?.(node, parent, state, info) ?? state.safe(node.value, info);
+              // Intraword underscores cannot open/close CommonMark emphasis.
+              // Keep them canonical inside mentions; retain necessary escapes
+              // at handle edges and for literal backslashes outside handles.
+              value = value.replace(/(^|[^\w@\\])@((?:[A-Za-z0-9_]|\\_){1,64})(?=$|[^\w\\])/g,
+                (_match, prefix, handle: string) => prefix + '@' + handle.replace(/\\_/g, (underscore, index) =>
+                  /[A-Za-z0-9_]$/.test(handle.slice(0, index)) && /^(?:[A-Za-z0-9_]|\\_)/.test(handle.slice(index + 2)) ? '_' : underscore));
+              // One final space is a typing separator, not a hard break. Milkdown
+              // otherwise encodes it only when this text also contains *_\\.
+              if (node.value.endsWith(' ') && !node.value.endsWith('  ')) { value = value.replace(/&#x20;$/, ' '); }
+              return value;
+            },
+          },
+        }));
         ctx.get(listenerCtx).markdownUpdated((_ctx, markdown) => {
           this.handleRichMarkdown(markdown);
         });
@@ -805,37 +854,6 @@ class MilkdownComposerAdapter {
     } catch {
       return null;
     }
-  }
-
-  private textareaReferenceState(): ReferenceState | null {
-    if (this.textarea.selectionStart !== this.textarea.selectionEnd) {
-      return null;
-    }
-    const pos = this.textarea.selectionStart || 0;
-    const before = this.textarea.value.slice(0, pos);
-    const match = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{1,80})$/);
-    if (!match) {
-      return null;
-    }
-    const trigger = match[2] as '@' | '#' | ':';
-    const query = match[3];
-    const line = before.slice(before.lastIndexOf('\n') + 1);
-    if (trigger === '#' && /^\s*#{1,3}\s?$/.test(line)) {
-      return null;
-    }
-    if (((before.match(/^```/gm) || []).length % 2) === 1) {
-      return null;
-    }
-    const lineBefore = before.slice(before.lastIndexOf('\n') + 1).replace(/\\./g, '');
-    if (!/^\s*```/.test(lineBefore) && ((lineBefore.match(/`/g) || []).length % 2) === 1) {
-      return null;
-    }
-    return {
-      trigger,
-      query,
-      start: pos - trigger.length - query.length,
-      end: pos,
-    };
   }
 
   private textareaSlashState(): SlashState | null {

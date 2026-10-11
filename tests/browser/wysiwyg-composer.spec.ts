@@ -166,7 +166,7 @@ test('textarea composer inserts @ mention from keyboard picker', async ({ page }
   await expect(page.locator('.composer-reference-menu[role="listbox"]')).toBeVisible();
   await expect(body).toHaveAttribute('aria-expanded', 'true');
   await page.keyboard.press('Enter');
-  await expect(body).toHaveValue('@alice');
+  await expect(body).toHaveValue('@alice ');
 });
 
 test('textarea # picker inserts board reference and does not steal headings', async ({ page }) => {

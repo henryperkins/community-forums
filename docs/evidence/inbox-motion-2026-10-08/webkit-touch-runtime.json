@@ -1,0 +1,30 @@
+{
+  "engine": "webkit",
+  "device": {
+    "width": 393,
+    "height": 844,
+    "deviceScaleFactor": 2,
+    "isMobile": true,
+    "hasTouch": true
+  },
+  "checks": 11,
+  "failures": [],
+  "errors": [],
+  "reduced": [
+    {
+      "mode": "os",
+      "opacity": "1",
+      "animation": "none",
+      "caret": "matrix(-1, 0, 0, -1, 0, 0)",
+      "transform": "none"
+    },
+    {
+      "mode": "app",
+      "opacity": "1",
+      "animation": "none",
+      "caret": "matrix(-1, 0, 0, -1, 0, 0)",
+      "transform": "none"
+    }
+  ],
+  "video": null
+}

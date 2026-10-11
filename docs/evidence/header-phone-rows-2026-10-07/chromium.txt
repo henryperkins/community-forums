@@ -1,0 +1,109 @@
+Browser evidence, 2026-10-07 (Playwright 1.61; projects desktop 1280x800 and mobile 390x844 with
+isMobile and touch). Every group ran on a freshly prepared private database (prepare.sh), served by
+php -S on localhost.
+
+1. New spec: tests/browser/header-phone-rows.spec.ts
+
+   Final working tree (retroboards_e2e_ad2, port 8042):
+     Chromium: 12 passed, 4 skipped (captures in desktop/ and mobile/)
+     WebKit (E2E_LAYOUT_BROWSER=webkit, fresh prepare.sh): 12 passed, 4 skipped (captures in webkit/)
+     The skips are project-specific: the phone rows, the drawer and the no-JS rail run on mobile;
+     the touch-screen floor runs on desktop.
+
+   The same spec against an unmodified `git archive HEAD` export (553004b1, port 8043): 11 failed, 1 passed
+       reading and focus order (both)    the routes stay beside the lockup in the DOM at 390px
+       the name (both)                   hidden at 861px (desktop) and 600px (mobile)
+       the divider (both)                present on the plain 404 page; visible at 800px
+       touch above 860px                 lockup 32px tall (the bar's controls are 30-35px)
+       phone rows                        the first row's controls do not share one 44px row
+       guest bar                         108px: Boards alone takes a second row
+       the drawer                        no close control in the open drawer
+       without JavaScript                the phone rail is position: sticky
+     The one that passes guards that the desktop bar keeps a guest's route.
+
+   Measured (Chromium, mobile emulation, member alice with the widest counts, "99+"):
+       390px  opener 44x44, lockup 88x44 (mark only), search 44x44, New topic 44x44,
+              bell 70x44, seat 44x44; 8px between targets.
+              Routes 62/97/118 x 44px at 13.12px, 8px apart. Bar 108px.
+       360px  the same, lockup 58px wide.
+       320px  gaps 4px, lockup 38px wide, no sideways scroll.
+       The widest first row needs 316px.
+       Before: 40px targets (the opener 44px) with 2-7px gaps; routes 11.84px, 1px apart.
+
+       Focus order at 390px
+         Before: opener, lockup, Boards, Inbox, Messages, search, New topic, bell, seat.
+         After:  opener, lockup, search, New topic, bell, seat, Boards, Inbox, Messages.
+         Same in both engines.
+
+       Guest at 390px: one 62px row (was 108px).
+         Opener 44, lockup 123 (name "RetroBoa..."), search 44.
+         Sign up 55x44 (was 43x19), Log in 61x44 (was 69x33).
+         The drawer and scrim start at 62px.
+
+       The name (lockup-widths.txt, identical in both engines):
+         mobile  320, 360, 375 and 390 mark only; 414 and 430 shortened; 600 and 860 whole
+         desktop 861, 900, 1180 and 1280 whole; 1081 shortened
+         Shortened always means at least 3em of name (about five letters) before the ellipsis.
+       At 1180px the name is whole (was clipped to 87 of 102px); the search is 249px with "99+"
+       counts and 285px without (it held 300px before).
+
+       Drawer close: 44x44 at the drawer's top corner, focused on opening.
+         Enter or a tap closes the drawer and returns focus to the opener.
+         Shift+Tab wraps inside the drawer.
+
+       Without JavaScript: the rail is static and 176px tall, and scrolls with the page.
+         The middle of the screen is <main>.
+         The notifications Unread filter taps through.
+         Before: sticky at top 108px, 677px tall on /notifications. Scrolled, it covered 108-785px
+         of the 844px screen, and the tap at y=300 landed on the rail.
+
+       Touch at 1024px (pointer: coarse): every control 44px tall (was 30-35px); bar 62px.
+         New topic's label is centred.
+
+2. Regression run of the existing specs (rsync copy of the working tree; committed evidence untouched)
+
+   First run (copy taken before the focus fix below):
+     header-hardening           6 passed, 4 skipped
+     header-unread-marks       10 passed, 2 skipped (phone bell floor updated to 44px)
+     unified-chrome            25 passed, 5 skipped
+     chrome-consistency        11 passed, 6 skipped, 1 failed: a real regression, see below
+     member-surfaces           12 passed, 2 skipped
+     inbox-header               6 passed
+     startup-geometry           7 passed, 7 skipped
+     field-error-a11y           6 passed
+     board-index-remediation   16 passed
+     community-inbox-theme     19 passed, 13 skipped, 2 failed (pre-existing)
+     forum-inbox-remediation   24 passed
+     a11y                      26 passed, 2 failed (pre-existing)
+     avatar-display             2 passed
+     asset-release-layout      12 passed
+     auth-hardening            14 passed, 2 failed (pre-existing)
+     auth-polish               19 passed, 3 skipped
+     notifications-unified     20 passed
+       DB retroboards_unified_e2e_ad, RB_EVIDENCE_DIR in scratch.
+       Its :139 no-JS tests now pass on mobile; they failed before this pass on the stuck rail.
+
+   The regression: chrome-consistency.spec.ts:45 [mobile].
+     The open drawer now focuses its close control. Widening past 860px hid that control, and
+     focus fell to the body.
+     The resize handler in app.js now moves focus to the rail's first link when the focused
+     control has no box.
+
+   Final run on the fixed tree (fresh copy, retroboards_e2e_adc):
+     startup-geometry           7 passed, 7 skipped
+     unified-chrome            25 passed, 5 skipped
+     header-hardening           6 passed, 4 skipped
+     header-unread-marks       10 passed, 2 skipped
+     member-surfaces           12 passed, 2 skipped
+     inbox-header               6 passed
+     chrome-consistency        12 passed, 6 skipped
+
+   Pre-existing failures, each reproduced identically on the HEAD export:
+     community-inbox-theme.spec.ts:301 [desktop]   the composer's anonymous disclosure intercepts Discard
+     community-inbox-theme.spec.ts:415 [mobile]    asserts a header of at most 64px (ADR 0042 made it 108px)
+     a11y.spec.ts:574 [desktop] and [mobile]       the custom emoji reaction button is never rendered
+     auth-hardening.spec.ts:203 [desktop] and [mobile]
+                                                   the passkey sign-in button is not rendered on /login in
+                                                   this environment (re-run on the HEAD export: same 2 failures)
+   a11y.spec.ts:198 (the admin themes card) passed in this run. It is order- or state-dependent,
+   as recorded in the unread-marks evidence.

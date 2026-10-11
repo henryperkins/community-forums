@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
-const memberSurfaceEvidence = path.join(repoRoot, 'docs', 'evidence', 'member-surfaces-production');
+const memberSurfaceEvidence = path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/member-surfaces-production');
 const memberSurfaceReferences = path.join(
   repoRoot,
   'docs',
@@ -18,7 +18,7 @@ const memberSurfaceReferences = path.join(
 
 const visualSurfaces = [
   { name: '01-board-index', route: '/?sort=unanswered&peek=3', width: 924, heading: 'Every board in the valley' },
-  { name: '02-forum-inbox', route: '/inbox?scope=for_you&order=active', width: 924, heading: 'Forum inbox' },
+  { name: '02-forum-inbox', route: '/inbox?scope=for_you&order=active', width: 924, heading: 'Inbox' },
   { name: '03-search', route: '/search?q=keyboard&scope=all&order=relevance', width: 924, heading: 'Search the council' },
   { name: '04-compose', route: '/compose?board=general', width: 909, heading: 'Open a topic' },
 ] as const;
@@ -155,7 +155,7 @@ test('member shell shortcuts persist panels and suppress while typing', async ({
     await page.reload();
     await expect(body).toHaveClass(/is-reading-closed/);
   } else {
-    await expect(page.locator('.forum-bar')).toHaveCSS('height', '62px');
+    await expect(page.locator('.forum-bar')).toHaveCSS('height', '108px');
     await expectNoOverflow(page);
   }
 });

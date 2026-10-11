@@ -3,14 +3,14 @@ branch: main
 
 ## Last sync
 
-date: 2026-09-12
-commit: 966a5b1c
+date: 2026-10-06
+commit: 34f13b00
 
 ### Updated in this project
 
-- **Presence handoff synced per hunk** (`_archive/design_handoff_presence/README.md`): `templates/users-online/` is the roll in the shared shell; `templates/user-profile/` taken whole (the `role="img"` dot with its away state, and the 2026-08-03 cover this mirror had never received); new `components/presence/` (PresenceList, PresenceRow, legend card), `components/forum/ForumNav`, `BoardRail`, `chrome.card.html`; `tokens/colors.css` carries `--presence-away` / `--presence-offline` in both registers; `tokens/typography.css` the `--measure-*` family. Seven upstream hunks held back and the bundle's deletion of the production-transfer section refused — `LOCAL_RECONCILIATION.md`, 2026-09-12.
-- **The member chrome is adopted verbatim** (ADR 0032): `partials/topbar.php` and `partials/sidebar.php` render ForumNav and BoardRail in the design's own vocabulary and the runtime layer styles them; the production-transfer section here and in `app.css` loses its "Shared shell" and presence-widget copies. `/users-online` ported verbatim from the template, all three optional deltas taken.
-- **The `[hidden]` guard lands without `!important`**: `ImladrisAssetBuilder` refuses the flag in a runtime source, and inside the layer the attribute selector already outranks the block rule.
+- **Shared-chrome handoff synced per hunk** (`_archive/design_handoff_shared_chrome/README.md`): `ForumNav`, `BoardRail`, `PresenceList` and `AdminNav` taken whole; `account-settings`, `admin-overview`, `compose` and `forum-inbox` taken whole; `board-page` and `leaderboard` added; `tokens/colors.css` taken whole (production's ADR 0039 `--field-rule` and `--stage-*`). Six of 24 `components.css` hunks taken (two in a local form); the bell and operator-cluster CSS and the non-chrome streams held; the deletion of the production-transfer section refused — `LOCAL_RECONCILIATION.md`, 2026-10-06.
+- **Measured in production, not assumed:** the regenerated bundle changes one property anywhere in the application — the current Boards pill and current rail board take the link cursor (ADR 0032 #1). Evidence in `docs/evidence/shared-chrome-handoff-2026-10-06/`.
+- **Production's route contract stands** where the handoff (which read a checkout older than `34f13b00`) differs: Boards is current on authorized topics and on `/tags*`, and the console's exit link reads "Back to the forum" (ADMIN.md §9.2, ADR 0024).
 
 ## Screen map
 
@@ -26,8 +26,10 @@ commit: 966a5b1c
 | `templates/account-settings/AccountSettings.dc.html` | `templates/account/*.php`, `templates/partials/settings_nav.php`, `src/Support/PreferenceSchema.php` |
 | `templates/user-profile/UserProfile.dc.html` | `templates/profile/{show,gated,connections}.php`, `docs/evidence/imladris-profile-production/README.md` |
 | `templates/users-online/UsersOnline.dc.html` | `templates/users_online.php` (ported verbatim, 2026-09-12), `templates/partials/{sidebar,presence_person,topbar}.php`, `templates/profile/show.php`, `src/Controller/PresenceController.php`, `src/Service/PresenceService.php`, `templates/account/privacy.php` (`show_presence`) |
+| `templates/leaderboard/Leaderboard.dc.html` | `templates/leaderboard.php`, `templates/partials/{topbar,sidebar}.php` — production renders the standard rail with the roster; the screen's routes-block rail is an open decision (`LOCAL_RECONCILIATION.md`, 2026-10-06) |
 | `components/forum/ForumNav.jsx`, `components/forum/BoardRail.jsx` | `templates/partials/{topbar,sidebar}.php` — rendered in the design's vocabulary and styled by the runtime layer (ADR 0032); `public/assets/app.css` "Member chrome" block carries only what the layer cannot express |
 | `components/presence/PresenceList.jsx` | `templates/partials/{sidebar,presence_person}.php`, `public/assets/app.js` (the poller builds the same row and diffs `data-presence-sig`) |
+| `components/admin/AdminNav.jsx` | `templates/admin/{_console,_area_links}.php` — the identity row, operator cluster and area tier (ADR 0024); the cluster's CSS is application-owned in `public/assets/app.css`, and production's ≤860px tier is a native disclosure |
 | `templates/admin-overview/AdminOverview.dc.html` | `templates/admin/{dashboard,audit}.php` |
 | `templates/admin-content/AdminContent.dc.html` | `templates/admin/{structure,tags,tag_merge_confirm}.php` |
 | `templates/admin-people/AdminPeople.dc.html` | `templates/admin/{roles,role_edit,role_simulator}.php` |
@@ -47,16 +49,23 @@ commit: 966a5b1c
 
 ## Open drift
 
-- **Held from the 2026-09-12 presence handoff** (reasons in `LOCAL_RECONCILIATION.md`): the twilight `--surface-staff` / `--on-staff` re-tune and the deletion of the twilight `--artifact-link` remap; `.badge-staff`'s `color-mix` border; the `.field-hint` selector widening; the AdminNav operator-cluster rewrite (fourth sync); the tier chips back on numbered ramps; the thread-row FIDELITY-AUDIT §1/§2 rules (`.is-ruled`, the `[data-density="compact"]` binding, `.thread-star` on `--star`, `.thread-board .hash`); the removal of `.hash` from shared bits; the `.link-preview-action` restructure. Each is either a local correction upstream regressed or a production-visible change owed its own evidence run.
+- **Held from the 2026-10-06 shared-chrome handoff** (reasons in `LOCAL_RECONCILIATION.md`): ForumNav's bell CSS (production's bell is a 40px ADR 0032 adaptation); the AdminNav operator-cluster CSS (sixth sync — `app.css` owns `.admin-bar-right`/`-user`/`-username` and the property-level console gate would fail); the star stream (`.star-toggle`); tier chips (now semantic upstream, on different pairs); status chips (`.chip-decision_made` is a twilight fix worth its own slice; `.chip-archived` on `--ink-400` does not flip); the composer send; the forms stream (frame comments, the 28% halo, the `.choice-card` restructure); `.badge-staff`'s `color-mix` border; the `.field-hint` widening; the removal of `.hash`; the `.link-preview-action` restructure; the thread-row FIDELITY-AUDIT block; and the `[hidden]` guard's `!important`.
+- **Upstream's 2026-10-06 pass is only partly mirrored.** It touched all 23 screens; six shipped. `board-index`, `search`, `thread-view`, `user-profile`, `users-online`, `living-brief` and nine `admin-*` screens keep their earlier chrome here (hand-rolled roster links among it); `admin-moderation`, AdminNav's eleventh area, has no screen in this mirror; `board-page`/`leaderboard` arrived without loaders; `admin.card.html`, `chrome.card.html` and `presence.card.html` predate the new props.
+- **Raise upstream (2026-10-06):** the thread view should light Boards for an authorized topic (ADR 0032 follow-up); tag routes are `/tags` and `/tags/{slug}`; the Messages pill carries an unread-conversations count; production's bell is 40px with its own badge anchor; the console cluster's class names (`topbar-link bell`, `bell-count`, `linkbtn`, `admin-bar-action-label`); the 900px `.admin-tier` padding sits before the base rule and never applies; "Back to the council" is console fiction (production: "Back to the forum").
+- **Open decisions (2026-10-06), not implemented:** Leaderboard's rail (owner decision; production renders the standard rail). Guest pills, the living brief's shell and the `<main>` landmark are design-side. The console's active area is settled by ADMIN.md §9.2 (not a link).
 - **Resolved 2026-09-12.** The shell no longer drifts by transcription: production renders `ForumNav`, `BoardRail` and `PresenceList` in the design's vocabulary and the runtime layer styles them (ADR 0032). The deliberate deviations are listed in that ADR's decision 3 (the `--maxw` centring, the phone drawer, the persisted rail state, the account menu, the operator's logo, Sign up, the compose glyph on a phone).
 - `templates/users-online/.thumbnail` still previews the pre-handoff directory design; the handoff shipped no replacement.
-- **Raised upstream 2026-09-12.** `tokens/typography.css`'s base `a:hover { text-decoration: underline }` outranks nothing in `.forum-bar-surface`, `.board-rail-item` or `a.presence-person` (none sets `text-decoration` on hover), so ForumNav's pills and BoardRail's rows underline in gold on hover in the system's own specimens. Production suppresses it (ADR 0032, decision 3).
+- **Resolved 2026-10-06.** The base `a:hover` underline on ForumNav's pills, BoardRail's rows and the roster's foot link (raised upstream 2026-09-12): upstream's `components.css` now suppresses it on those controls, and that rule is taken. Production suppressed it already (ADR 0032, decision 3).
 - `ui_kits/retroboards/` renders the profile cover as an older **survey** treatment — a display-font regard at 2.4rem labelled "Commends earned", `--surface-inverse` as the cover ground (which does flip to parchment on twilight), and stat labels at `.72rem`/`.06em`. It diverges from `templates/user-profile/` on purpose as a one-page survey; only the `--gold-800` tier fix was applied. `templates/user-profile/UserProfile.dc.html` is the owning artifact for `/u/{username}`.
 - `templates/profile/gated.php` did not change in this range, but `app.css` still ships `.profile-gated-actions`. The 2026-08-03 review removed Send a message / Request access from this system's gated state as flows that do not exist; that call stands unless the partial proves otherwise on the next read.
 - **Resolved 2026-08-03.** The earlier note claimed board rows "deliberately stay structurally unlike inbox rows (no board label, snippet, star, or inclusion cue)". Reading `partials/thread_row.php` disproved half of it: upstream has **one** partial with a `presentation` axis (`default` | `board`) and a `show_board` flag, and it renders the star, the unread dot, `assigned to @`, and `snoozed until` in **both** presentations. Only the board label is genuinely board-suppressed. `templates/board-page` was missing the star, the unread dot and the moderator cues; they are now in, at board weight. The snippet is ours either way — upstream has none on either surface — and is kept on `/inbox` as a documented triage aid. Decision recorded in `guidelines/thread-row.card.html`.
 - `templates/leaderboard.php`, `templates/home.php`, and `templates/partials/{badges,icon}.php` moved in an earlier range but their design deltas were not reviewed; `ui_kits/retroboards/` and `templates/board-index/` may carry drift.
 
 ## Sync history
+
+### 2026-10-06 — commit 34f13b00
+
+Shared-chrome handoff (`design_handoff_shared_chrome`) synced per hunk: the four chrome components and six screens taken, `board-page` and `leaderboard` added, `tokens/colors.css` taken whole, six `components.css` hunks taken and the rest held or refused. The regenerated layer is measured to change only the current pill's and rail row's cursor in production. Design digest `ac4252ec` → `bb91cb07`.
 
 ### 2026-09-12 — commit 966a5b1c
 

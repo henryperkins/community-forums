@@ -1,0 +1,141 @@
+{
+  "captured_at": "2026-10-09T07:17:23.656397+00:00",
+  "project": "rising-woods-449718-v6",
+  "public_checker_simulation": {
+    "google_documented_user_agent_status": 200,
+    "google_headers_database": "ok",
+    "default_python_urllib_status": 403,
+    "chrome_user_agent_status": 200
+  },
+  "real_uptime_checkers": [
+    {
+      "location": "usa-virginia",
+      "observed_points": 76,
+      "failed_points": 0,
+      "latest_passed": true
+    },
+    {
+      "location": "usa-oregon",
+      "observed_points": 77,
+      "failed_points": 0,
+      "latest_passed": true
+    },
+    {
+      "location": "usa-iowa",
+      "observed_points": 75,
+      "failed_points": 0,
+      "latest_passed": true
+    },
+    {
+      "location": "eur-belgium",
+      "observed_points": 77,
+      "failed_points": 0,
+      "latest_passed": true
+    },
+    {
+      "location": "apac-singapore",
+      "observed_points": 76,
+      "failed_points": 0,
+      "latest_passed": true
+    }
+  ],
+  "collector_executions": [
+    {
+      "name": "retroboards-monitor-qkkvk",
+      "created_at": "2026-10-09T07:15:00.279309Z",
+      "completed_at": "2026-10-09T07:15:38.481377Z",
+      "created_by_scheduler": true,
+      "succeeded": true
+    },
+    {
+      "name": "retroboards-monitor-qvkl9",
+      "created_at": "2026-10-09T07:08:04.325972Z",
+      "completed_at": "2026-10-09T07:08:32.713375Z",
+      "created_by_scheduler": false,
+      "succeeded": true
+    }
+  ],
+  "aggregate_snapshots": [
+    {
+      "at": "2026-10-09T07:15:34.252764Z",
+      "values": {
+        "jobs": {
+          "retroboards-cron-0700": {
+            "scheduled_success_age_seconds": 902,
+            "missed": false
+          },
+          "retroboards-cron-6h": {
+            "scheduled_success_age_seconds": 4501,
+            "missed": false
+          },
+          "retroboards-cron-0310": {
+            "scheduled_success_age_seconds": null,
+            "missed": false
+          },
+          "retroboards-cron-5m": {
+            "missed": false,
+            "scheduled_success_age_seconds": 300
+          }
+        },
+        "automated_backup_stale": false,
+        "automated_backup_age_seconds": 18982,
+        "oldest_due_seconds": 0,
+        "missed_schedule_count": 0,
+        "failed_recent_count": 1,
+        "event": "retroboards_monitor",
+        "status": "ok",
+        "due_count": 0
+      }
+    },
+    {
+      "at": "2026-10-09T07:08:27.239223Z",
+      "values": {
+        "automated_backup_stale": false,
+        "oldest_due_seconds": 0,
+        "event": "retroboards_monitor",
+        "automated_backup_age_seconds": 18556,
+        "due_count": 0,
+        "jobs": {
+          "retroboards-cron-0700": {
+            "missed": false,
+            "scheduled_success_age_seconds": 476
+          },
+          "retroboards-cron-5m": {
+            "scheduled_success_age_seconds": 176,
+            "missed": false
+          },
+          "retroboards-cron-0310": {
+            "missed": false,
+            "scheduled_success_age_seconds": null
+          },
+          "retroboards-cron-6h": {
+            "scheduled_success_age_seconds": 4075,
+            "missed": false
+          }
+        },
+        "missed_schedule_count": 0,
+        "failed_recent_count": 1,
+        "status": "ok"
+      }
+    }
+  ],
+  "heartbeat_positive_points": [
+    {
+      "at": "2026-10-09T07:16:23.656397Z",
+      "count": 1
+    },
+    {
+      "at": "2026-10-09T07:09:23.656397Z",
+      "count": 1
+    }
+  ],
+  "heartbeat_45m_aligned_sum": [
+    {
+      "at": "2026-10-09T07:17:23.656397Z",
+      "count": 2
+    }
+  ],
+  "expected_diagnostic": "The recent terminal failure count of 1 was caused by an intentionally failed native SMTP diagnostic before permanent REST configuration. It is retained and covered by the real email-failure alert; no outbox failures are masked. Daily 0310 has no scheduler-created success yet because that day's tick preceded job creation; the manual batch rehearsal does not satisfy scheduled-success checks.",
+  "privacy": "Only aggregate telemetry, machine resource names and public check locations. No recipients, member fields, message contents, raw HTTP data, or credentials.",
+  "validation_limits": "Production availability/errors/backup were not deliberately broken. Policy filters and thresholds are API-valid; actual positive heartbeat and healthy runtime were observed. Alert delivery rehearsal is tracked separately."
+}

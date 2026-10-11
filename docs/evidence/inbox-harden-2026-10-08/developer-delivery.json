@@ -1,0 +1,66 @@
+{
+  "checked_at": "2026-10-08T01:26:58.970321+00:00",
+  "revision": "573f905d71f3c146072cffd5fecb2d2ffaca995b",
+  "working_tree": "uncommitted changes",
+  "asset_build": "e26e139ee9899a8f",
+  "checks": [
+    {
+      "base": "http://127.0.0.1:8000",
+      "/healthz": {
+        "status": 200,
+        "final_path": "/healthz",
+        "health": {
+          "status": "ok",
+          "database": "ok"
+        }
+      },
+      "/inbox": {
+        "status": 200,
+        "final_path": "/login",
+        "current_assets_in_shell": true,
+        "authentication": "anonymous request follows login redirect; authenticated Inbox is covered on the private fixture"
+      },
+      "/assets/dist/app-style-DRpY5gJ7.css": {
+        "status": 200,
+        "final_path": "/assets/dist/app-style-DRpY5gJ7.css",
+        "sha256": "b4cc42697751c97248b49185d8a7d249249f1c18c1f3604b8b1de28d0efaa320",
+        "matches_delivery": true
+      },
+      "/assets/dist/app-3bc29160425933ec.js": {
+        "status": 200,
+        "final_path": "/assets/dist/app-3bc29160425933ec.js",
+        "sha256": "3bc29160425933ecf16bfc4ca8c791e0af8ad153dc96875bad9858026a078e88",
+        "matches_delivery": true
+      }
+    },
+    {
+      "base": "https://obituaries-lucky-accordance-king.trycloudflare.com",
+      "/healthz": {
+        "status": 200,
+        "final_path": "/healthz",
+        "health": {
+          "status": "ok",
+          "database": "ok"
+        }
+      },
+      "/inbox": {
+        "status": 200,
+        "final_path": "/login",
+        "current_assets_in_shell": true,
+        "authentication": "anonymous request follows login redirect; authenticated Inbox is covered on the private fixture"
+      },
+      "/assets/dist/app-style-DRpY5gJ7.css": {
+        "status": 200,
+        "final_path": "/assets/dist/app-style-DRpY5gJ7.css",
+        "sha256": "b4cc42697751c97248b49185d8a7d249249f1c18c1f3604b8b1de28d0efaa320",
+        "matches_delivery": true
+      },
+      "/assets/dist/app-3bc29160425933ec.js": {
+        "status": 200,
+        "final_path": "/assets/dist/app-3bc29160425933ec.js",
+        "sha256": "3bc29160425933ecf16bfc4ca8c791e0af8ad153dc96875bad9858026a078e88",
+        "matches_delivery": true
+      }
+    }
+  ]
+}

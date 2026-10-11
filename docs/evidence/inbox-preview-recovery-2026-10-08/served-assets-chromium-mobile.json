@@ -1,0 +1,15 @@
+{
+  "version": "5de73df06f287ae9",
+  "served": [
+    {
+      "entry": "app.css",
+      "url": "/assets/dist/app-style-DEqCyv6L.css",
+      "sha256": "f6772dc65f0fcda571d4aa6f11acd1ea4f9f3039b87b2574dca857f48583b29d"
+    },
+    {
+      "entry": "app.js",
+      "url": "/assets/dist/app-854791801de6c0fa.js",
+      "sha256": "854791801de6c0fa300bfb1d10eca0ece27e812338675ce14271aaf55242b13d"
+    }
+  ]
+}

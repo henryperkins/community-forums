@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadUserRepository;
+use App\Service\PreferenceService;
 use App\Support\InboxView;
 
 /** The personal Community Inbox, with independent scope and order axes. */
@@ -76,6 +77,7 @@ final class InboxController extends Controller
             'page' => $page,
             'pages' => $pages,
             'unread_count' => $unreadCount,
+            'show_avatars' => (bool) $this->container->get(PreferenceService::class)->reading($user->id())['show_avatars'],
         ]);
     }
 

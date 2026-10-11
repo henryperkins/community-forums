@@ -1,0 +1,5 @@
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [mobile] › composer-expansion.spec.ts:446:5 › new topic renders as one composer surface with the title as its header field (3.2s)
+
+  1 passed (4.0s)

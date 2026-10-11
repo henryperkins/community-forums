@@ -1,0 +1,14 @@
+{
+  "unique_admin_real_address": true,
+  "recipient_matches_connected_profile": false,
+  "native_email_ops_used": true,
+  "php": "8.2.34",
+  "delivery_id": 3,
+  "delivery_status": "sent",
+  "message_submitted": true,
+  "test_subject": "RetroBoards email delivery test",
+  "production_configuration_used": true,
+  "transport": "cloudflare_rest",
+  "transport_identifier_present": true,
+  "provider_message_id_present": false
+}

@@ -16,7 +16,7 @@ test('the real Workers Assets binding serves GET, conditional 304, HEAD and safe
   let runtime;
   try {
     const retained = [...new Set(manifest.releases.slice(1).flatMap(release => release.files))];
-    for (const url of new Set([manifest.urls['app.css'], '/assets/app.js', ...retained])) {
+    for (const url of new Set([manifest.urls['app.css'], manifest.urls['conversation-entry.js'], '/assets/app.js', ...retained])) {
       const target = path.join(directory, url.slice(1));
       await mkdir(path.dirname(target), { recursive: true });
       await copyFile(path.join(root, 'public', url), target);
@@ -57,6 +57,11 @@ test('the real Workers Assets binding serves GET, conditional 304, HEAD and safe
     assert.equal(conditional.headers.get('ETag'), etag);
     assert.equal(conditional.headers.get('Cache-Control'), 'public, max-age=31536000, immutable');
     assert.equal(await conditional.text(), '');
+    const conversationEntry = await runtime.dispatchFetch(`https://forum.example${manifest.urls['conversation-entry.js']}`);
+    assert.equal(conversationEntry.status, 200, 'The blocking head script must be served by Workers Assets');
+    assert.equal(conversationEntry.headers.get('Cache-Control'), 'public, max-age=31536000, immutable');
+    assert.equal(createHash('sha256').update(Buffer.from(await conversationEntry.arrayBuffer())).digest('hex'),
+      manifest.files[manifest.urls['conversation-entry.js']].sha256);
     for (const url of retained) {
       const retainedResponse = await runtime.dispatchFetch(`https://forum.example${url}`);
       assert.equal(retainedResponse.status, 200, `Previous release dependency: ${url}`);

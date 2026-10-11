@@ -80,6 +80,16 @@ final class Database
 
     private function dsn(): string
     {
+        $socket = (string) ($this->config['socket'] ?? '');
+        if ($socket !== '') {
+            return sprintf(
+                'mysql:unix_socket=%s;dbname=%s;charset=%s',
+                $socket,
+                $this->config['database'],
+                $this->config['charset'] ?? 'utf8mb4',
+            );
+        }
+
         return sprintf(
             'mysql:host=%s;port=%d;dbname=%s;charset=%s',
             $this->config['host'],

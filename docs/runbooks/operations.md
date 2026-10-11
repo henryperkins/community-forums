@@ -78,6 +78,8 @@ done — so an upgrade never silently starts new outbound traffic.
 
 The current worker, digest, sender/domain, retry, replay, and suppression
 procedures live in [Unified notifications and account settings](unified-notifications.md).
+Production transport configuration, token rotation and the verified REST test
+send are in [Cloud Run deployment §7](deployment-cloud-run.md#7-email).
 To pause delivery without discarding queued work, stop both `worker:email` and
 `worker:digest` cron commands. A feature-flag rollback changes content
 eligibility; it is not a substitute for pausing the workers.

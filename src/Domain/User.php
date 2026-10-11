@@ -44,6 +44,13 @@ final class User
         return (string) $this->row['email'];
     }
 
+    /** The uploaded avatar's local media path, or null when the monogram stands in (USER §5.2). */
+    public function avatarPath(): ?string
+    {
+        $path = $this->row['avatar_path'] ?? null;
+        return is_string($path) && trim($path) !== '' ? trim($path) : null;
+    }
+
     public function role(): string
     {
         return (string) ($this->row['role'] ?? 'user');

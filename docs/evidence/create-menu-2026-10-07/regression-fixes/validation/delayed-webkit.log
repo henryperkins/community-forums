@@ -1,0 +1,12 @@
+
+Running 2 tests using 1 worker
+
+(node:843360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › messages-refinement.spec.ts:209:5 › Messages recipient commits discard delayed suggestions (1.9s)
+(node:843464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  2 [mobile] › messages-refinement.spec.ts:209:5 › Messages recipient commits discard delayed suggestions
+
+  1 skipped
+  1 passed (3.8s)

@@ -1,0 +1,11 @@
+Full PHPUnit suite, 2026-10-06, working tree on 553004b1 with the header hardening and unread-marks passes
+(4 round-robin shards, private DBs retroboards_test_hdr_s0..s3)
+
+shard 0: OK (888 tests, 5741 assertions)
+shard 1: Tests: 733, Assertions: 5523, Skipped: 1.
+shard 2: OK (765 tests, 4382 assertions)
+shard 3: OK (741 tests, 8105 assertions)
+
+Total: 3,127 tests, 23,751 assertions, 0 failures, 0 errors, 1 skip
+(AppThreadIntelligenceMigrationTest's 0077 rehearsal, which needs its dedicated clean database).
+This pass changes CSS only; the suite still parses app.css in its fidelity and asset tests.

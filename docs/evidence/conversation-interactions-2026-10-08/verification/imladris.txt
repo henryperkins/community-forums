@@ -1,0 +1,11 @@
+Imladris runtime assets are current.
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.26
+Configuration: /home/ubuntu/community-forums/phpunit.xml
+
+........................                                          24 / 24 (100%)
+
+Time: 00:00.182, Memory: 8.00 MB
+
+OK (24 tests, 305 assertions)

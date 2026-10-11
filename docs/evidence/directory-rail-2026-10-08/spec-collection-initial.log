@@ -1,0 +1,15 @@
+
+Error: RB_EVIDENCE_DIR is required for isolated notification captures.
+
+   at notifications-unified.spec.ts:8
+
+   6 |
+   7 | const root = path.resolve(__dirname, '../..');
+>  8 | if (!process.env.RB_EVIDENCE_DIR) throw new Error('RB_EVIDENCE_DIR is required for isolated notification captures.');
+     |                                         ^
+   9 | const evidence = path.resolve(root, process.env.RB_EVIDENCE_DIR);
+  10 | function fixture(command = 'reset'): { user_id: number; unread: number; old_id: number } {
+  11 |   return JSON.parse(execFileSync('php', ['tests/browser/notifications-unified-fixture.php', command], {
+    at Object.<anonymous> (/home/ubuntu/community-forums/tests/browser/notifications-unified.spec.ts:8:41)
+Listing tests:
+Total: 0 tests in 0 files

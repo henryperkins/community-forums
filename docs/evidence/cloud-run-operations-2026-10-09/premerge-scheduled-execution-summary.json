@@ -1,0 +1,146 @@
+{
+  "captured_at": "2026-10-09T11:42:56.820542+00:00",
+  "release_sha": "c10faca411d014e018a34c49270647f27dfb9b13",
+  "release_completed_at": "2026-10-09T05:43:59.189828Z",
+  "passed": true,
+  "scope": "Read-only scheduled execution, provider image/identity and aggregate collector verification; no jobs or mail invoked",
+  "expected_resolved_digest": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app@sha256:a3a6455d3a0586db07481eb94a1f5bda49924a67b0e8a32a80a3f2b010c81c0a",
+  "jobs": [
+    {
+      "job": "retroboards-cron-5m",
+      "scheduler": {
+        "checks": {
+          "enabled": true,
+          "expected_schedule": true,
+          "utc": true,
+          "target_job_matches": true,
+          "method_post": true,
+          "oauth_scheduler_identity_matches": true,
+          "last_attempt_target_success": true
+        },
+        "last_attempt_time": "2026-10-09T11:40:03.937077Z",
+        "next_schedule_time": "2026-10-09T11:45:03.384881Z"
+      },
+      "fresh_scheduler_execution_count_in_latest20": 20,
+      "passed": true,
+      "state": "complete",
+      "execution": "retroboards-cron-5m-dqxbp",
+      "creation_time": "2026-10-09T11:40:04.008890Z",
+      "completion_time": "2026-10-09T11:40:30.925813Z",
+      "checks": {
+        "creation_after_release": true,
+        "creator_is_scheduler": true,
+        "expected_resolved_image": true,
+        "runtime_identity_matches": true,
+        "command_and_args_match_job_template": true,
+        "terminal_success": true,
+        "completion_after_creation": true
+      },
+      "scheduler_last_attempt_temporally_matches_execution": true,
+      "attempt_to_creation_seconds": 0.071813,
+      "pairing_limit": "Scheduler principal and bounded timestamps are correlated; no direct Scheduler-to-execution provider ID exists in this receipt",
+      "fresh_terminal_unsuccessful_count_in_latest20": 0
+    },
+    {
+      "job": "retroboards-monitor",
+      "scheduler": {
+        "checks": {
+          "enabled": true,
+          "expected_schedule": true,
+          "utc": true,
+          "target_job_matches": true,
+          "method_post": true,
+          "oauth_scheduler_identity_matches": true,
+          "last_attempt_target_success": true
+        },
+        "last_attempt_time": "2026-10-09T11:30:03.831153Z",
+        "next_schedule_time": "2026-10-09T11:45:02.981766Z"
+      },
+      "fresh_scheduler_execution_count_in_latest20": 18,
+      "passed": true,
+      "state": "complete",
+      "execution": "retroboards-monitor-6rrgq",
+      "creation_time": "2026-10-09T11:30:05.095805Z",
+      "completion_time": "2026-10-09T11:30:33.062953Z",
+      "checks": {
+        "creation_after_release": true,
+        "creator_is_scheduler": true,
+        "expected_resolved_image": true,
+        "runtime_identity_matches": true,
+        "command_and_args_match_job_template": true,
+        "terminal_success": true,
+        "completion_after_creation": true
+      },
+      "scheduler_last_attempt_temporally_matches_execution": true,
+      "attempt_to_creation_seconds": 1.264652,
+      "pairing_limit": "Scheduler principal and bounded timestamps are correlated; no direct Scheduler-to-execution provider ID exists in this receipt",
+      "fresh_terminal_unsuccessful_count_in_latest20": 0,
+      "collector_aggregate": {
+        "observed": true,
+        "status_ok": true,
+        "failed_recent_count_window_seconds": 1200,
+        "due_count": 0,
+        "oldest_due_seconds": 0,
+        "failed_recent_count": 0,
+        "missed_schedule_count": 0,
+        "automated_backup_age_seconds": 12022,
+        "automated_backup_stale": false,
+        "jobs": {
+          "retroboards-cron-5m": {
+            "scheduled_success_age_seconds": 295,
+            "missed": false
+          },
+          "retroboards-cron-6h": {
+            "scheduled_success_age_seconds": 19796,
+            "missed": false
+          },
+          "retroboards-cron-0310": {
+            "scheduled_success_age_seconds": null,
+            "missed": false
+          },
+          "retroboards-cron-0700": {
+            "scheduled_success_age_seconds": 16197,
+            "missed": false
+          }
+        },
+        "due_outbox_stalled": false,
+        "aggregate_healthy": true
+      }
+    },
+    {
+      "job": "retroboards-cron-6h",
+      "scheduler": {
+        "checks": {
+          "enabled": true,
+          "expected_schedule": true,
+          "utc": true,
+          "target_job_matches": true,
+          "method_post": true,
+          "oauth_scheduler_identity_matches": true,
+          "last_attempt_target_success": true
+        },
+        "last_attempt_time": "2026-10-09T06:00:00.876853Z",
+        "next_schedule_time": "2026-10-09T12:00:00Z"
+      },
+      "fresh_scheduler_execution_count_in_latest20": 1,
+      "passed": true,
+      "state": "complete",
+      "execution": "retroboards-cron-6h-84g8m",
+      "creation_time": "2026-10-09T06:00:00.941768Z",
+      "completion_time": "2026-10-09T06:00:31.506552Z",
+      "checks": {
+        "creation_after_release": true,
+        "creator_is_scheduler": true,
+        "expected_resolved_image": true,
+        "runtime_identity_matches": true,
+        "command_and_args_match_job_template": true,
+        "terminal_success": true,
+        "completion_after_creation": true
+      },
+      "scheduler_last_attempt_temporally_matches_execution": true,
+      "attempt_to_creation_seconds": 0.064915,
+      "pairing_limit": "Scheduler principal and bounded timestamps are correlated; no direct Scheduler-to-execution provider ID exists in this receipt",
+      "fresh_terminal_unsuccessful_count_in_latest20": 0
+    }
+  ]
+}

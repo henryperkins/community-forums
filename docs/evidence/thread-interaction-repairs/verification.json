@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-07",
+  "assetVersion": "8b3ec2d2398f8f1e",
+  "runtimeFiles": {
+    "app.css": {
+      "url": "/assets/dist/app-style-CfRfJrUW.css",
+      "sha256": "d9d56379ca5e935be81f59e9e201553c6a05257d27870a1b9bb2b303bccc92cb"
+    },
+    "app.js": {
+      "url": "/assets/dist/app-5d592d83c0577727.js",
+      "sha256": "5d592d83c0577727421c5b0e6b1532c11e7bf1d65f2f279a311c5a52dce831fb"
+    },
+    "composer.js": {
+      "url": "/assets/dist/composer-1e0c11d7b953e8d7.js",
+      "sha256": "1e0c11d7b953e8d7093338409794e01c69bad6305379ab0cd2b33b47c11eef52"
+    }
+  },
+  "verification": {
+    "phpunit": {
+      "tests": 3134,
+      "assertions": 23831,
+      "skipped": 1
+    },
+    "imladris": {
+      "tests": 24,
+      "assertions": 305
+    },
+    "worker": {
+      "tests": 24
+    },
+    "chromiumAffectedSuites": {
+      "passed": 67,
+      "skipped": 43
+    },
+    "messagesModalFocus": {
+      "passed": 1
+    },
+    "webkitPreviouslyFailingCases": {
+      "passed": 5
+    }
+  }
+}

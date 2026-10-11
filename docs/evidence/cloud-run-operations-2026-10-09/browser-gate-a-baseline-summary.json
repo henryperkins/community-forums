@@ -1,0 +1,91 @@
+{
+  "captured_at_utc": "2026-10-09T08:04:56Z",
+  "baseline_sha": "c10faca411d014e018a34c49270647f27dfb9b13",
+  "candidate_base_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "runtime": {
+    "php": "8.2.34",
+    "database": "MariaDB 11.4",
+    "browser": "real Chromium via Playwright 1.61.1",
+    "source": "isolated git archive copies",
+    "production_access": false
+  },
+  "baseline_failures": [
+    {
+      "case": "mobile public pages",
+      "confirmed_in_current_and_baseline": true,
+      "reason": "first board link selects the hidden mobile board rail"
+    },
+    {
+      "case": "mobile private board member access",
+      "confirmed_in_current_and_baseline": true,
+      "reason": "first board name selects the hidden mobile board rail"
+    },
+    {
+      "case": "mobile admin API-token navigation",
+      "confirmed_in_current_and_baseline": true,
+      "reason": "desktop admin area navigation is hidden; native mobile disclosure is available"
+    },
+    {
+      "case": "mobile no-JS navigation",
+      "confirmed_in_current_and_baseline": true,
+      "reason": "single-element hidden assertion resolves both native fallback and enhancement controls"
+    },
+    {
+      "case": "custom emoji reaction desktop and mobile",
+      "confirmed_in_current_and_baseline": true,
+      "reason": "reaction buttons expose humanized accessible labels; raw shortcode remains the stored form value"
+    },
+    {
+      "case": "fresh-seed no-JS login helper",
+      "confirmed_in_current_and_baseline": true,
+      "reason": "shared login helper tries to dismiss a JavaScript tour in a scripting-disabled context; earlier admin cases masked it"
+    }
+  ],
+  "corrected_run": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 1,
+    "skip_reason": "existing desktop exclusion for mobile-only no-JS case",
+    "elapsed_seconds": 28.2,
+    "coverage": [
+      "desktop and mobile public pages with screenshots",
+      "private board member read status and visible board heading",
+      "both no-JS navigation controls hidden and rail visible",
+      "native admin area disclosure and destination pages",
+      "custom emoji Markdown/code plus exact stored reaction token and active visible aria-pressed state",
+      "API token reveal/replay/revoke and serious/critical axe assertions",
+      "real webhook worker delivery",
+      "array-mailer operator test-send and suppression release"
+    ]
+  },
+  "limits": [
+    "isolated targeted browser validation, not the complete hosted lane",
+    "production application source unchanged",
+    "hosted capture, independent notifications-settings and upload suites still require a successful complete run"
+  ],
+  "log_sha256": {
+    "current-result.log": "b83987c202981118a790eefabd33a6a6a2922f39738890d760f0d8ee0c6bbc6f",
+    "baseline-result.log": "3d35b20bcfaaf5190bcb80502bf218be70f12844f34258b513a2be2a36efdbc6",
+    "current-admin-result.log": "0f26a2f462f107e3c2383db5a3deae09170e25fdd3e637bf4badac3975f0ba4a",
+    "baseline-admin-result.log": "5d3d6386cd40c29b5d4870193fe820a15b3fb814b106fa0c197fca9dff9b048a",
+    "emoji-baseline-result.log": "0d2dc7dcd1880eeb400dd6dc047b3b13f923a2e6f30a8f46223882870c0d41eb",
+    "corrected-result.log": "66ca41b9293f82411c3b597f19aa4b658d0a02851eb8b40fa8a59e79e2ccf91e",
+    "nojs-counts-result.log": "899bfcb51140720e8515f532b7498b6d6c75d10ef7b6b741e200ce74d0ce3250",
+    "nojs-tour-baseline-result.log": "1bc63b49b3424ed3a12e4d02573836c3a2d300be98477fd5516a00557af73187",
+    "nojs-final-result.log": "18943ebcdfc91438f6525ae4f821b0b4de2c509a40938986b30d706d0b2631ba"
+  },
+  "corrected_test_files": [
+    "tests/browser/gate-a.spec.ts",
+    "tests/browser/api-tokens.spec.ts",
+    "tests/browser/admin-navigation-helpers.ts"
+  ],
+  "fresh_nojs_check": {
+    "passed": 1,
+    "failed": 0,
+    "fresh_seed": true,
+    "control_presence_asserted": true,
+    "native_authentication_roles_and_simulator_preserved": true,
+    "javascript_tour_dismissal_disabled_only_for_nojs": true,
+    "tour_popover_absence_asserted": true
+  }
+}

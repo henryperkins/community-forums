@@ -1,10 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Appeals'); ?>
 <div class="settings-screen">
-    <header class="settings-head">
-        <span class="eyebrow">Moderation</span>
-        <h1>Appeals</h1>
-    </header>
+    <?= $this->partial('partials/page_heading', ['heading' => 'Appeals']) ?>
     <div class="settings">
         <?= $this->partial('partials/settings_nav') ?>
         <div class="settings-pane">

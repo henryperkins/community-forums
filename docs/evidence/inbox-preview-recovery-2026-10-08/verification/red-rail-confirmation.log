@@ -1,0 +1,38 @@
+
+Running 1 test using 1 worker
+
+(node:1524371) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✘  1 [desktop] › inbox-preview-recovery.spec.ts:224:9 › rail preference submission preserves a pending preview without AbortController (5.8s)
+
+
+  1) [desktop] › inbox-preview-recovery.spec.ts:224:9 › rail preference submission preserves a pending preview without AbortController
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('[data-inbox-reading]')
+    Expected: "true"
+    Received: ""
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 5000ms
+      - waiting for locator('[data-inbox-reading]')
+        14 × locator resolved to <section tabindex="-1" class="inbox-reading" data-inbox-reading="" id="inbox-reading-pane" aria-label="Reading pane">…</section>
+           - unexpected value "null"
+
+
+      239 |       expect((await preference).status()).toBe(303);
+      240 |       expect(new URL(page.url()).pathname).toBe('/inbox');
+    > 241 |       await expect(page.locator('[data-inbox-reading]')).toHaveAttribute('aria-busy', 'true');
+          |                                                          ^
+      242 |       await expect(page.locator('[data-inbox-status]')).toContainText('Loading topic');
+      243 |       const response = page.waitForResponse(response => new URL(response.url()).pathname === endpoint);
+      244 |       await held!.fulfill({ status: 200, contentType: 'text/html', body: `<article data-inbox-preview="${id}"><h2>Loaded after pane preference</h2></article>` });
+        at /home/ubuntu/community-forums/tests/browser/inbox-preview-recovery.spec.ts:241:58
+
+    Error Context: ../../../../../tmp/retroboards-preview-red-rail-20261008/.artifacts/inbox-preview-recovery-rai-7564d-iew-without-AbortController-desktop/error-context.md
+
+  1 failed
+    [desktop] › inbox-preview-recovery.spec.ts:224:9 › rail preference submission preserves a pending preview without AbortController

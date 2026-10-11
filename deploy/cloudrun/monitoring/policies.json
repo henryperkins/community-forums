@@ -1,0 +1,298 @@
+[
+  {
+    "key": "availability",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: public health unavailable",
+    "conditions": [
+      {
+        "displayName": "Two checker locations fail continuously for 3 minutes",
+        "conditionThreshold": {
+          "filter": "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.labels.check_id=\"{UPTIME_ID}\"",
+          "comparison": "COMPARISON_GT",
+          "thresholdValue": 1,
+          "duration": "180s",
+          "aggregations": [
+            {
+              "alignmentPeriod": "60s",
+              "perSeriesAligner": "ALIGN_NEXT_OLDER",
+              "crossSeriesReducer": "REDUCE_COUNT_FALSE",
+              "groupByFields": [
+                "metric.label.check_id"
+              ]
+            }
+          ],
+          "trigger": {
+            "count": 1
+          }
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Public HTTPS /healthz must return HTTP 200 and JSON status ok. At least two checker locations must fail continuously for three minutes. Check Worker, IAM origin forwarding, Cloud Run and Cloud SQL; no login is needed.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "http-errors",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: sustained Cloud Run 5xx",
+    "conditions": [
+      {
+        "displayName": "At least five 5xx in five minutes, sustained five minutes",
+        "conditionThreshold": {
+          "filter": "metric.type=\"run.googleapis.com/request_count\" AND resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"retroboards\" AND resource.labels.location=\"us-east4\" AND metric.labels.response_code_class=\"5xx\"",
+          "comparison": "COMPARISON_GT",
+          "thresholdValue": 4,
+          "duration": "300s",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_SUM",
+              "crossSeriesReducer": "REDUCE_SUM"
+            }
+          ],
+          "trigger": {
+            "count": 1
+          },
+          "evaluationMissingData": "EVALUATION_MISSING_DATA_INACTIVE"
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Five or more application 5xx responses in a rolling five-minute window, sustained for five minutes. Public uptime covers requests rejected before the container. Inspect error counts and service logs without copying member data.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "job-failed",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: Cloud Run job execution failed",
+    "conditions": [
+      {
+        "displayName": "Any failed cron or monitoring job execution",
+        "conditionThreshold": {
+          "filter": "metric.type=\"run.googleapis.com/job/completed_execution_count\" AND resource.type=\"cloud_run_job\" AND resource.labels.job_name=monitoring.regex.full_match(\"retroboards-(cron-(5m|6h|0310|0700)|monitor)\") AND metric.labels.result=\"failed\"",
+          "comparison": "COMPARISON_GT",
+          "thresholdValue": 0,
+          "duration": "0s",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "trigger": {
+            "count": 1
+          }
+        }
+      }
+    ],
+    "documentation": {
+      "content": "A cron or monitoring execution failed. Inspect the named job. Manual overrides also count as failed executions; they never satisfy scheduled-success heartbeat checks.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "collector-absent",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: monitor heartbeat missing",
+    "conditions": [
+      {
+        "displayName": "No successful aggregate collector for 45 minutes",
+        "conditionThreshold": {
+          "filter": "metric.type=\"logging.googleapis.com/user/retroboards_monitor_heartbeat\" AND resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"retroboards-monitor\"",
+          "comparison": "COMPARISON_LT",
+          "thresholdValue": 1,
+          "duration": "60s",
+          "evaluationMissingData": "EVALUATION_MISSING_DATA_ACTIVE",
+          "aggregations": [
+            {
+              "alignmentPeriod": "2700s",
+              "perSeriesAligner": "ALIGN_SUM",
+              "crossSeriesReducer": "REDUCE_SUM"
+            }
+          ],
+          "trigger": {
+            "count": 1
+          }
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Fewer than one successful read-only collector snapshot in forty-five minutes, sustained for one minute; missing data also alerts. The collector runs every fifteen minutes. A zero-valued log counter does not satisfy this heartbeat. Check monitoring scheduler, collector identity and database connector.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "collector-error",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "notificationRateLimit": {
+        "period": "3600s"
+      },
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: monitor collector error",
+    "conditions": [
+      {
+        "displayName": "monitor collector error",
+        "conditionMatchedLog": {
+          "filter": "resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"retroboards-monitor\" AND jsonPayload.event=\"retroboards_monitor\" AND jsonPayload.status=\"error\""
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Collector could not read aggregate database or Google job/backup metadata. Only its bounded stage is logged; no exception text or credentials are emitted.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "scheduled-missed",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "notificationRateLimit": {
+        "period": "3600s"
+      },
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: scheduled cron completion overdue",
+    "conditions": [
+      {
+        "displayName": "scheduled cron completion overdue",
+        "conditionMatchedLog": {
+          "filter": "resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"retroboards-monitor\" AND jsonPayload.event=\"retroboards_monitor\" AND jsonPayload.status=\"ok\" AND jsonPayload.missed_schedule_count>0"
+        }
+      }
+    ],
+    "documentation": {
+      "content": "A required scheduler-created successful execution is missing after thirty minutes of grace. Manual executions do not satisfy this check. Daily ticks before job creation are exempt; their next UTC scheduled tick is checked.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "outbox-stalled",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "notificationRateLimit": {
+        "period": "3600s"
+      },
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: email outbox stalled",
+    "conditions": [
+      {
+        "displayName": "email outbox stalled",
+        "conditionMatchedLog": {
+          "filter": "resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"retroboards-monitor\" AND jsonPayload.event=\"retroboards_monitor\" AND jsonPayload.status=\"ok\" AND jsonPayload.due_count>0 AND jsonPayload.oldest_due_seconds>=1800"
+        }
+      }
+    ],
+    "documentation": {
+      "content": "A queued email has remained due for thirty minutes. Age is measured from its current next_attempt_at (or creation when never attempted), so normal scheduled retry backoff does not trigger this alert. Probe reads counts and ages only.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "smtp-failed",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "notificationRateLimit": {
+        "period": "3600s"
+      },
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: email transport or outbox failures",
+    "conditions": [
+      {
+        "displayName": "email transport or outbox failures",
+        "conditionMatchedLog": {
+          "filter": "(resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"retroboards-cron-5m\" AND textPayload=~\"Email outbox: .*retrying=[1-9][0-9]*|Email outbox: .*failed=[1-9][0-9]*|Email outbox: .*blocked_reason=(sender_unconfigured|domain_unverified)\") OR (resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"retroboards-monitor\" AND jsonPayload.event=\"retroboards_monitor\" AND jsonPayload.status=\"ok\" AND jsonPayload.failed_recent_count>0)"
+        }
+      }
+    ],
+    "documentation": {
+      "content": "An email attempt needs retry, ended in terminal failure, or sending is blocked. Notifications are limited to one per hour. Probe terminal failure count covers the last twenty minutes; no addresses, subjects or error text are included.",
+      "mimeType": "text/markdown"
+    }
+  },
+  {
+    "key": "backup-failed",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "app": "retroboards",
+      "managed_by": "retroboards-monitoring"
+    },
+    "alertStrategy": {
+      "notificationRateLimit": {
+        "period": "3600s"
+      },
+      "autoClose": "604800s"
+    },
+    "displayName": "RetroBoards: automated database backup failed or stale",
+    "conditions": [
+      {
+        "displayName": "automated database backup failed or stale",
+        "conditionMatchedLog": {
+          "filter": "(resource.type=\"cloudsql_database\" AND resource.labels.database_id=\"rising-woods-449718-v6:imladris-boards\" AND protoPayload.methodName=\"cloudsql.instances.automatedBackup\" AND protoPayload.metadata.windowStatus=(\"STATUS_FAILED\" OR \"STATUS_SKIPPED\")) OR (resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"retroboards-monitor\" AND jsonPayload.event=\"retroboards_monitor\" AND jsonPayload.status=\"ok\" AND jsonPayload.automated_backup_stale=true)"
+        }
+      }
+    ],
+    "documentation": {
+      "content": "An automated backup window ended failed/skipped, or the most recent successful AUTOMATED backup is older than thirty-six hours or absent. On-demand backups do not mask a broken automatic schedule. Retriable STATUS_ATTEMPT_FAILED events are excluded.",
+      "mimeType": "text/markdown"
+    }
+  }
+]

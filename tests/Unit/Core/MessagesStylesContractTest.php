@@ -83,7 +83,12 @@ final class MessagesStylesContractTest extends TestCase
         $css = self::css();
         $flat = (string) preg_replace('/\s+/', ' ', $css);
         preg_match_all('/\[data-theme="dark"\]\s*([^{},]*\.dm-[^{},]*)\{([^}]*)\}/', $css, $matches, PREG_SET_ORDER);
-        self::assertNotEmpty($matches, 'expected at least one explicit-twilight Messages rule');
+        // ADR 0043 retires the sole explicit rule (the list-title +). A
+        // wholly semantic room needs no explicit overrides; any future one
+        // must still include its system-dark twin.
+        if ($matches === []) {
+            self::assertDoesNotMatchRegularExpression('/\[data-theme="dark"\]\s*[^{]*\.dm-/', $css);
+        }
 
         foreach ($matches as [, $selector, $body]) {
             $twin = '[data-theme="system"] ' . trim((string) preg_replace('/\s+/', ' ', $selector))
@@ -145,7 +150,7 @@ final class MessagesStylesContractTest extends TestCase
         self::assertMatchesRegularExpression('/\.dm-back, \.dm-iconbtn \{ width: 44px; height: 44px; \}/', $touch['block']);
         self::assertMatchesRegularExpression('/\.dm-earlier, \.dm-latest \{ min-height: 44px; \}/', $touch['block']);
         self::assertStringContainsString('inset: min(0px, calc((100% - 44px) / 2));', $touch['block']);
-        foreach (['.dm-new-btn::after', '.dm-listpane-filters .pill::after', '.dm-dotbtn::after'] as $hit) {
+        foreach (['.dm-listpane-filters .pill::after', '.dm-dotbtn::after'] as $hit) {
             self::assertStringContainsString($hit, $touch['block']);
         }
         self::assertMatchesRegularExpression('/\.dm-linkbtn \{[^}]*min-height: 44px/', $touch['block']);

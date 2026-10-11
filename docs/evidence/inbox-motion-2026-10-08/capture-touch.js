@@ -1,0 +1,52 @@
+async page => {
+  const engine = page.context().browser().browserType().name();
+  const storageState = await page.context().storageState();
+  const context = await page.context().browser().newContext({viewport:{width:393,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,storageState,recordVideo:engine==='chromium' ? {dir:'/home/ubuntu/community-forums/output/playwright/inbox-motion-20261008/videos',size:{width:393,height:844}} : undefined});
+  const phone = await context.newPage();
+  const failures = [];
+  const errors = [];
+  phone.on('pageerror',error=>errors.push(error.message));
+  const out='/home/ubuntu/community-forums/docs/evidence/inbox-motion-2026-10-08';
+  const check=(condition,label)=>{if(!condition)failures.push(label);};
+  await phone.goto('http://127.0.0.1:8483/inbox');
+  await phone.evaluate(()=>{document.documentElement.setAttribute('data-theme','light');document.documentElement.setAttribute('data-reduced-motion','0');});
+  await phone.locator('.inbox-compact-menu > summary').tap();
+  await phone.waitForTimeout(280);
+  await phone.screenshot({path:`${out}/${engine}-393-touch-view.png`});
+  check(await phone.locator('.inbox-compact-menu').evaluate(node=>node.open),'touch view opens');
+  await phone.locator('.inbox-actions > summary').tap();
+  check(!await phone.locator('.inbox-compact-menu').evaluate(node=>node.open),'touch menus exclusive');
+  await phone.getByRole('button',{name:'Help',exact:true}).tap();
+  check(await phone.locator('.inbox-help-dialog').isVisible(),'touch Help immediately opens');
+  await phone.waitForTimeout(280);
+  await phone.getByRole('button',{name:'Close Inbox help',exact:true}).tap();
+  check(!await phone.locator('.inbox-help-dialog').isVisible(),'touch Help closes');
+  await phone.locator('[data-inbox-select]').first().tap();
+  check(await phone.locator('.inbox-sweep').isVisible(),'touch selection reveals toolbar');
+  await phone.waitForTimeout(280);
+  await phone.locator('.inbox-bulk-menu > summary').tap();
+  await phone.waitForTimeout(280);
+  check(await phone.locator('.inbox-bulk-menu').evaluate(node=>node.open),'touch bulk actions opens');
+  await phone.locator('.inbox-bulk-menu > summary').tap();
+  await phone.getByRole('button',{name:'Clear selection',exact:true}).tap();
+  check(!await phone.locator('.inbox-sweep').isVisible(),'touch zero selection hides toolbar');
+  await phone.locator('[data-inbox-row-menu]').first().locator(':scope > summary').tap();
+  await phone.waitForTimeout(280);
+  check(await phone.getByRole('switch',{name:'Show in Inbox'}).first().isVisible(),'touch switch immediate');
+  await phone.screenshot({path:`${out}/${engine}-393-touch-row.png`});
+  await phone.locator('[data-inbox-row-menu]').first().locator(':scope > summary').tap();
+  const reduced=[];
+  for(const mode of ['os','app']) {
+    await phone.emulateMedia({reducedMotion:mode==='os' ? 'reduce' : 'no-preference'});
+    await phone.evaluate(mode=>document.documentElement.setAttribute('data-reduced-motion',mode==='app' ? '1' : '0'),mode);
+    await phone.locator('.inbox-compact-menu > summary').tap();
+    const state=await phone.locator('.inbox-compact-menu > .inbox-menu-panel').evaluate(node=>({opacity:getComputedStyle(node).opacity,animation:getComputedStyle(node).animationName,caret:getComputedStyle(node.parentElement.querySelector('summary > .icon')).transform,transform:getComputedStyle(node).transform}));
+    check(state.opacity==='1' && state.animation==='none' && state.caret==='matrix(-1, 0, 0, -1, 0, 0)' && state.transform==='none','touch '+mode+' reduced immediate');
+    reduced.push({mode,...state});
+    await phone.locator('.inbox-compact-menu > summary').tap();
+  }
+  check(errors.length===0,'touch no page errors');
+  const video=phone.video();
+  await context.close();
+  return {engine,device:{width:393,height:844,deviceScaleFactor:2,isMobile:true,hasTouch:true},checks:11,failures,errors,reduced,video:video ? await video.path() : null};
+}

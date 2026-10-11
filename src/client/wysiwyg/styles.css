@@ -46,3 +46,22 @@
   color: var(--text-muted);
   border-style: dashed;
 }
+
+.composer-chip.composer-mention-chip {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--brand) 14%, transparent);
+  color: inherit;
+  line-height: inherit;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 14%, transparent), 0 0 0 3px color-mix(in srgb, var(--brand) 45%, transparent);
+}
+
+.composer-chip.composer-mention-chip.is-muted {
+  color: var(--text-muted);
+  background: transparent;
+  box-shadow: none;
+  outline: 1px dashed var(--text-muted);
+  outline-offset: 2px;
+}

@@ -1,0 +1,9 @@
+{
+  "base_commit": "553004b1400a97313a93dc13015e4a64a5c6798b",
+  "includes": "the header hardening (docs/evidence/header-hardening-2026-10-06) and unread marks (docs/evidence/header-unread-marks-2026-10-06) slices, and this adapt pass",
+  "candidate_asset_version": "6ec85581654bdc73",
+  "css": "/assets/dist/app-style-CwMpqZQ1.css",
+  "js": "/assets/dist/app-8e86b0fb2360b6d1.js",
+  "application_surface_sha256": "38ad65d86267b286267b12f6175b6613d2ce9e159bdc601abd0cf3583ee8e10d",
+  "status": "Validated local working tree; uncommitted and undeployed"
+}

@@ -1,0 +1,287 @@
+{
+  "engine": "webkit",
+  "build": "e26e139ee9899a8f",
+  "assets": [
+    {
+      "url": "/assets/dist/app-style-DRpY5gJ7.css",
+      "status": 200,
+      "sha256": "b4cc42697751c97248b49185d8a7d249249f1c18c1f3604b8b1de28d0efaa320"
+    },
+    {
+      "url": "/assets/dist/app-3bc29160425933ec.js",
+      "status": 200,
+      "sha256": "3bc29160425933ecf16bfc4ca8c791e0af8ad153dc96875bad9858026a078e88"
+    }
+  ],
+  "checks": 77,
+  "failures": [],
+  "cases": [
+    {
+      "name": "sole-unread-caught-up",
+      "url": "/inbox?scope=unread&order=active",
+      "busy": null,
+      "rows": 0,
+      "empty": "You're all caught up \u2014 nothing unread.\n    Back to For You",
+      "focus": "DIV",
+      "focusEmpty": true,
+      "status": "",
+      "documentWidth": 393,
+      "scrollWidth": 393
+    },
+    {
+      "name": "preview-500",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "Couldn't load this topic. Try again, or open the full topic.",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-400",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "Couldn't load this topic. Try again, or open the full topic.",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-429",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "Too many requests. Wait a moment, then try again.",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-network",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "Couldn't load this topic. Try again, or open the full topic.",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-offline",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "You're offline. Reconnect and try again.",
+      "documentWidth": 393,
+      "scrollWidth": 393
+    },
+    {
+      "name": "preview-malformed",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "Couldn't load this topic. Try again, or open the full topic.",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "preview-wrong-topic",
+      "url": "/inbox?scope=starred&order=active",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "Couldn't load this topic. Try again, or open the full topic.",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "retry-and-native-topic-link",
+      "expected": "/t/4-ti-fallback-reference-desktop",
+      "actual": "/t/4-ti-fallback-reference-desktop"
+    },
+    {
+      "name": "preserved-existing-reply-draft",
+      "value": "Unsaved reply \u0645\u062d\u0641\u0648\u0638 \ud83e\udeb4",
+      "url": "/inbox?scope=starred&order=active&t=3",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "A",
+      "focusEmpty": false,
+      "status": "Couldn't load this topic. Try again, or open the full topic.",
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "real-timeout-without-abort-controller-and-stale-completion",
+      "elapsed": 15446,
+      "noAbortController": true,
+      "timed": {
+        "url": "/inbox?scope=starred&order=active",
+        "busy": null,
+        "rows": 4,
+        "empty": null,
+        "focus": "A",
+        "focusEmpty": false,
+        "status": "This topic is taking longer than expected. Try again, or open the full topic.",
+        "documentWidth": 1440,
+        "scrollWidth": 1440
+      }
+    },
+    {
+      "name": "latest-request-wins",
+      "ids": [
+        "4",
+        "3"
+      ],
+      "current": "3"
+    },
+    {
+      "name": "bulk-422-retains-selection-and-canonical-history",
+      "status": "Topic loaded.",
+      "selected": [
+        "3",
+        "4"
+      ],
+      "retained": [
+        "3",
+        "4"
+      ],
+      "url": "/inbox?scope=starred&order=commended&t=4",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "H2",
+      "focusEmpty": false,
+      "documentWidth": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "explicit-repeated-bulk-star",
+      "rounds": [
+        {
+          "id": "4",
+          "status": 303,
+          "pressed": "true"
+        },
+        {
+          "id": "4",
+          "status": 303,
+          "pressed": "true"
+        }
+      ]
+    },
+    {
+      "name": "native-no-js-validation-recovery",
+      "status": "",
+      "url": "/inbox/bulk",
+      "busy": null,
+      "rows": 4,
+      "empty": null,
+      "focus": "BODY",
+      "focusEmpty": false,
+      "documentWidth": 393,
+      "scrollWidth": 393
+    },
+    {
+      "name": "short-creation-and-unicode",
+      "panel": {
+        "rect": {
+          "x": 8,
+          "y": 64,
+          "width": 304,
+          "height": 108,
+          "top": 64,
+          "right": 312,
+          "bottom": 172,
+          "left": 8
+        },
+        "maxHeight": "108px",
+        "overflow": "auto",
+        "scroll": 184,
+        "client": 106
+      },
+      "unicode": {
+        "title": {
+          "x": 90,
+          "y": 345.71875,
+          "width": 208,
+          "height": 198.28125,
+          "top": 345.71875,
+          "right": 298,
+          "bottom": 544,
+          "left": 90
+        },
+        "row": {
+          "x": 16,
+          "y": 337.71875,
+          "width": 288,
+          "height": 311.40625,
+          "top": 337.71875,
+          "right": 304,
+          "bottom": 649.125,
+          "left": 16
+        },
+        "text": "\u0645\u0631\u062d\u0628\u0627 \u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1\u754c\u4f60\u597d\ud83e\udeb4\u05d0\u05d1 end"
+      },
+      "state": {
+        "url": "/inbox?scope=starred&order=active",
+        "busy": null,
+        "rows": 4,
+        "empty": null,
+        "focus": "BODY",
+        "focusEmpty": false,
+        "status": "",
+        "documentWidth": 320,
+        "scrollWidth": 320
+      }
+    },
+    {
+      "name": "forced-colors-visible-switch-and-immediate-menu",
+      "forced": true,
+      "panel": {
+        "animation": "none",
+        "opacity": "1"
+      },
+      "track": {
+        "background": "rgb(46, 74, 58)"
+      },
+      "thumb": {
+        "background": "rgb(0, 0, 0)",
+        "border": "rgb(0, 0, 0)",
+        "borderWidth": "1px"
+      },
+      "checked": "true"
+    },
+    {
+      "name": "native-submit-cancels-inflight-preview",
+      "id": "4",
+      "status": 303
+    }
+  ],
+  "errors": [],
+  "limits": [
+    "Linux Chromium/WebKit; no physical iPhone/Safari",
+    "Forced-colors palette meaningful in Chromium only; WebKit emulates query",
+    "200% root text scaling not physical browser zoom",
+    "Whole shell RTL unsupported; mixed-script content verified in existing English shell"
+  ]
+}

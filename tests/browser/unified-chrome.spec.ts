@@ -20,6 +20,7 @@ import path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '../..');
 const OUT = path.resolve(ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-unified-chrome');
+test.use({ browserName: process.env.E2E_LAYOUT_BROWSER === 'webkit' ? 'webkit' : 'chromium' });
 
 if (process.env.RB_BASE_URL) {
   test.use({ baseURL: process.env.RB_BASE_URL });
@@ -120,7 +121,10 @@ function shot(name: string, project: string) {
   return path.join(dir, name);
 }
 
+const chromeSessions = new Map<string, Awaited<ReturnType<ReturnType<Page['context']>['cookies']>>>();
+
 async function signIn(page: Page, email = 'elrond@retro.test') {
+  if (chromeSessions.has(email)) { await page.context().addCookies(chromeSessions.get(email)!); return; }
   await page.goto('/login');
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', 'password123');
@@ -131,6 +135,7 @@ async function signIn(page: Page, email = 'elrond@retro.test') {
     await skip.first().click();
     await expect(skip.first()).toBeHidden();
   }
+  chromeSessions.set(email, await page.context().cookies());
 }
 
 const colour = (page: Page, selector: string, prop = 'backgroundColor') =>
@@ -149,7 +154,7 @@ test('the bar and the rail are the design system\'s, at its geometry, in both re
 
   const bar = page.locator('header.forum-bar');
   await expect(bar).toBeVisible();
-  await expect(bar).toHaveCSS('height', '62px');
+  await expect(bar).toHaveCSS('height', testInfo.project.name === 'mobile' ? '108px' : '62px');
   await expect(page.locator('.forum-bar-surfaces[aria-label="Primary"]')).toBeVisible();
   await expect(page.locator('.forum-bar-surface.is-active[aria-current="page"]')).toHaveText('Boards');
   await expect(page.locator('.forum-bar-search')).toHaveAttribute('href', '/search');
@@ -238,7 +243,7 @@ test('long stored account names fit the bar and keep the account menu reachable'
           await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme);
           expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
           await withinViewport(account);
-          await expect(account).toHaveAccessibleName(`Open account menu for ${name}`);
+          await expect(account).toHaveAccessibleName(`Account menu for ${name}`);
           await expect(account.locator('.monogram')).toHaveCSS('width', '30px');
 
           // Native summary activation and real Tab order prove that shrinking
@@ -385,7 +390,9 @@ $fixture = $db->transaction(function () use ($db) {
             'thread_id' => $threadId, 'user_id' => $userId, 'is_op' => true,
             'body' => 'A topic to read.', 'body_html' => '<p>A topic to read.</p>',
         ]);
-        $threads->updateLastPost($threadId, $postId, $userId, gmdate('Y-m-d H:i:s'));
+        // The unread cursor compares this timestamp with the stored post's.
+        // A fresh wall-clock value can cross a second and invent an unread post.
+        $threads->updateLastPost($threadId, $postId, $userId, $posts->find($postId)['created_at']);
         $state->markUnread($userId, $threadId);
     }
     $db->run('UPDATE boards SET thread_count = 102, post_count = 102 WHERE id = ?', [$boardId]);
@@ -397,19 +404,24 @@ echo json_encode($fixture, JSON_THROW_ON_ERROR);
   try {
     await signIn(page, `${fixture.username}@retro.test`);
     await page.goto('/inbox?scope=unread&order=newest');
-    const count = page.locator('.forum-bar-count');
+    const count = page.locator('.forum-bar-count[data-inbox-unread-count]');
+    // The count's words live on the Inbox link, as the bell's do; the digits are hidden.
+    const inboxLink = page.locator('[data-primary-route="inbox"]');
     const railCount = page.locator(`[data-board-slug="${fixture.username}"] [data-board-unread-count]`);
     await expect(count).toHaveText('99+');
-    await expect(count).toHaveAttribute('aria-label', '102 unread topics');
+    await expect(count).toHaveAttribute('aria-hidden', 'true');
+    await expect(inboxLink).toHaveAccessibleName('Inbox, 102 unread topics');
     await expect(railCount).toHaveText('99+');
 
     for (const remaining of [101, 100, 99]) {
       await page.locator('[data-inbox-row] .thread-title').first().click();
       await expect(page.locator('[data-inbox-preview]')).toBeVisible();
       await expect(count).toHaveAttribute('data-inbox-unread-count', String(remaining));
-      await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
+      // Both responsive copies remain in the DOM and must stay synchronized.
+      await expect(page.locator('[data-inbox-current-count]')).toHaveText([String(remaining), String(remaining)]);
+      await expect(page.locator('[data-subheader] [data-inbox-count-label]')).toHaveText(['topics', 'topics']);
       await expect(count).toHaveText(remaining > 99 ? '99+' : '99');
-      await expect(count).toHaveAttribute('aria-label', `${remaining} unread topics`);
+      await expect(inboxLink).toHaveAccessibleName(`Inbox, ${remaining} unread topics`);
       await expect(railCount).toHaveAttribute('data-board-unread-count', String(remaining));
       await expect(railCount).toHaveText(remaining > 99 ? '99+' : '99');
       await expect(railCount).toHaveAttribute('aria-label', `${remaining} unread topics`);
@@ -432,17 +444,22 @@ foreach (array_slice($threads, 2) as $thread) {
 `);
     await page.goto('/inbox?scope=unread&order=newest');
     await expect(count).toHaveText('2');
+    await expect(page.locator('[data-subheader] [data-inbox-current-count]')).toHaveText(['2', '2']);
+    await expect(page.locator('[data-subheader] [data-inbox-count-label]')).toHaveText(['topics', 'topics']);
     for (const remaining of [1, 0]) {
       await page.locator('[data-inbox-row] .thread-title').first().click();
       await expect(page.locator('[data-inbox-preview]')).toBeVisible();
-      await expect(page.locator('[data-inbox-current-count]')).toHaveText(String(remaining));
+      await expect(page.locator('[data-inbox-current-count]')).toHaveText([String(remaining), String(remaining)]);
+      const countLabel = remaining === 1 ? 'topic' : 'topics';
+      await expect(page.locator('[data-subheader] [data-inbox-count-label]')).toHaveText([countLabel, countLabel]);
       if (remaining === 1) {
         await expect(count).toHaveText('1');
-        await expect(count).toHaveAttribute('aria-label', '1 unread topic');
+        await expect(inboxLink).toHaveAccessibleName('Inbox, 1 unread topic');
         await expect(railCount).toHaveText('1');
         await expect(railCount).toHaveAttribute('aria-label', '1 unread topic');
       } else {
         await expect(count).toHaveCount(0);
+        await expect(inboxLink).toHaveAccessibleName('Inbox');
         await expect(railCount).toHaveCount(0);
       }
       if (testInfo.project.name === 'mobile') await page.locator('[data-inbox-back]').click();
@@ -552,18 +569,17 @@ test('a guest gets the design\'s Log in pill and production\'s Sign up beside it
   await page.screenshot({ path: shot('05-guest.png', testInfo.project.name), clip: { x: 0, y: 0, width: testInfo.project.name === 'desktop' ? 1280 : 390, height: 420 } });
 });
 
-test('New topic survives the phone breakpoint as its glyph', async ({ page }, testInfo) => {
+test('shared creation survives the phone breakpoint as a 44px glyph', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile', 'phone chrome contract');
   await signIn(page);
   await page.goto('/inbox');
-  // The design hides compose below 720px; only a board page has a floating
-  // compose, so the control stays as a 40px glyph everywhere else.
-  const compose = page.locator('.forum-bar-compose .btn');
+  // ADR 0043 keeps creation in the shared row as a 44px phone target.
+  const compose = page.locator('[data-create-trigger]');
   await expect(compose).toBeVisible();
   const box = (await compose.boundingBox())!;
-  expect(box.width).toBeGreaterThanOrEqual(40);
-  await expect(compose.locator('span')).toBeHidden();
-  await expect(compose.locator('.icon')).toBeVisible();
+  expect(box.width).toBeGreaterThanOrEqual(44);
+  await expect(compose.locator('.create-label')).toBeHidden();
+  await expect(compose.locator('.icon').first()).toBeVisible();
 });
 
 
@@ -587,7 +603,8 @@ test.describe('with JavaScript disabled', () => {
     await expect(page).toHaveURL(/\/c\/general$/);
     await expect(page.locator('body')).toHaveClass(/is-rail-closed/);
     await expect(page.locator('nav.board-rail')).toBeHidden();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    // A toggle button: aria-pressed alone carries the state (header hardening).
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
     await page.reload();
     await expect(page.locator('nav.board-rail')).toBeHidden();
 
@@ -602,7 +619,7 @@ test.describe('with JavaScript disabled', () => {
     await toggle.click();
     expect((await reopened).status()).toBe(303);
     await expect(page.locator('nav.board-rail')).toBeVisible();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
     await page.reload();
     await expect(page.locator('body')).toHaveClass(/is-rail-open/);
     await expect(page.locator('nav.board-rail')).toBeVisible();
@@ -625,11 +642,8 @@ test.describe('with JavaScript disabled', () => {
     await expect(page).toHaveURL(/\/inbox$/);
     await expect(page.locator('.forum-bar-surfaces a[aria-current="page"]')).toContainText('Inbox');
 
-    // A narrow bar may move Messages into the native account disclosure; one
-    // visible shared entry point must survive either responsive arrangement.
-    await page.locator('.identity-menu > summary').click();
-    await expect(page.locator('.identity-menu')).toHaveAttribute('open', '');
-    const messages = page.locator('.forum-bar a[href="/messages"]:visible, .board-rail a[href="/messages"]:visible').first();
+    // Primary routes stay visible on the phone's second row.
+    const messages = page.locator('.forum-bar-surfaces a[href="/messages"]');
     await expect(messages).toBeVisible();
     await messages.click();
     await expect(page).toHaveURL(/\/messages$/);
@@ -652,7 +666,7 @@ test('persistent bell keeps complete primary routes and mobile controls reachabl
   await signIn(page);
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto('/');
-  for (const selector of ['[data-bell]', '.forum-bar-search', '.forum-bar-compose a', '[data-nav-toggle]', '.identity-menu > summary']) {
+  for (const selector of ['[data-bell]', '.forum-bar-search', '[data-create-trigger]', '[data-nav-toggle]', '.identity-menu > summary']) {
     const control = page.locator(selector);
     await expect(control).toBeVisible();
     const box = (await control.boundingBox())!;
@@ -691,7 +705,8 @@ test('persistent bell keeps complete primary routes and mobile controls reachabl
   await page.screenshot({ path: shot('11-bell-320-focus.png', info.project.name) });
   await page.locator('.forum-bar-search').click();
   await expect(page).toHaveURL(/\/search$/);
-  await page.locator('.forum-bar-compose a').click();
+  await page.locator('[data-create-trigger]').click();
+  await page.locator('[data-subheader] a[href="/compose"]').click();
   await expect(page).toHaveURL(/\/compose$/);
   await page.locator('[data-nav-toggle]').click();
   await expect(page.locator('.board-rail')).toBeVisible();
@@ -735,7 +750,7 @@ test.describe('narrow primary navigation without JavaScript', () => {
       await expect(page).toHaveURL(new RegExp(`${destination === '/' ? '/$' : destination + '$'}`));
     }
     await expect(page.locator('[data-bell] .icon')).toBeVisible();
-    await expect(page.locator('.forum-bar-compose .icon')).toBeVisible();
+    await expect(page.locator('[data-create-trigger] > .icon:first-child')).toBeVisible();
     await page.screenshot({ path: shot('12-primary-routes-320-nojs.png', info.project.name) });
   });
 });

@@ -436,6 +436,7 @@ async function expectNoOverflow(page: Page, label: string): Promise<void> {
 }
 
 test('slice 16 panes are axe-clean in light twilight and system-dark registers', async ({ page }, info: TestInfo) => {
+  test.setTimeout(90_000); // Eight panes, three registers, 24 axe scans and 24 captures.
   test.skip(info.project.name !== 'desktop', 'axe and register parity are captured once on desktop');
   const original = readFeatureMap();
   try {

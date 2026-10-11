@@ -1,0 +1,22 @@
+Full suite, four parallel shards on private test databases (retroboards_test_chromesync_s0..s3), RB_TEST_FRESH=1, 51 s wall.
+
+shard 0:
+Time: 00:25.968, Memory: 26.00 MB
+OK (888 tests, 5741 assertions)
+
+shard 1:
+Time: 00:49.612, Memory: 24.00 MB
+OK, but some tests were skipped!
+Tests: 731, Assertions: 5500, Skipped: 1.
+
+shard 2:
+Time: 00:12.489, Memory: 28.00 MB
+OK (765 tests, 4382 assertions)
+
+shard 3:
+Time: 00:41.972, Memory: 24.00 MB
+OK (741 tests, 8105 assertions)
+
+Total: 3125 tests, 23728 assertions, 0 failures, 0 errors, 1 skipped.
+The skip is AppThreadIntelligenceMigrationTest::test_0077_down_and_up_rehearsal_on_fixture_free_schema,
+which runs only on its dedicated throwaway database (unchanged by this work).

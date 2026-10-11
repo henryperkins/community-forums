@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Leaderboard" description="/leaderboard — the council's ledger of regard: window tabs (week, month, all time), a top-three identity tier and compact ranks below it, and the standing note that recognition unlocks nothing. Ranking is cosmetic; nothing here grants powers." -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+html{scrollbar-gutter:stable}body{margin:0;background:var(--surface-page)}
+@keyframes lbRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div data-screen-label="Leaderboard" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+<!-- Topbar — ForumNav. /leaderboard is not a Boards route (topbar.php's $isBoards), so no pill claims it; and it keeps the rail toggle every signed-in route renders. -->
+<x-import component-from-global-scope="ImladrisDesignSystem_c3e027.ForumNav" surface="leaderboard" inbox-count="6" notification-count="3" rail-open="{{ railOpen }}" onToggleRail="{{ toggleRail }}" viewer="{{ viewer }}" hint-size="100%,62px"></x-import>
+<div style="flex: 1; min-height: 0; display: flex; align-items: stretch;">
+<!-- Rail: BoardRail with the routes block, the one rail that owns one. -->
+<x-import component-from-global-scope="ImladrisDesignSystem_c3e027.BoardRail" routes="{{ railRoutes }}" categories="{{ categories }}" open="{{ railOpen }}" hint-size="272px,100%"></x-import>
+<div style="flex: 1 1 0; min-width: 0; overflow-y: auto; padding: 26px 40px 90px; box-sizing: border-box;">
+<div style="max-width: 760px; margin: 0 auto; animation: lbRise 200ms ease-out;">
+<header>
+<p style="margin: 0; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">The council</p>
+<h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">Top contributors</h1>
+<p style="margin: 10px 0 0; max-width: 62ch; font-size: .98rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Members ranked by appreciation received. Recognition only — it unlocks nothing.</p>
+</header>
+<!-- Window tabs — leaderboard.php's nav.inbox-tabs, so the Tabs pill register, as links. Behind the ledger flag. -->
+<sc-if value="{{ showWindows }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top: 20px; padding-bottom: 13px; border-bottom: 1px solid var(--border-hair);">
+<x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Tabs" items="{{ windowItems }}" value="{{ win }}" onChange="{{ pickWindow }}" variant="pill" mode="links" aria-label="Leaderboard windows" hint-size="250px,32px"></x-import>
+</div>
+</sc-if>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="margin: 46px 0; padding: 40px 30px; border: 1px dashed var(--border-soft); border-radius: var(--radius-lg); text-align: center;">
+<p style="margin: 0; font-size: .98rem; color: var(--text-muted);">No ranked contributors yet.</p>
+</div>
+</sc-if>
+<!-- The ledger. The top three are row modifiers on one list, not a separate block, and both tiers share one grid — 44px rank, 44px avatar — so ranks, avatars and names stand in columns down the whole list. The name's link is stretched over its row. -->
+<sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+<ol ref="{{ listRef }}" role="list" style="margin: 18px 0 0; padding: 0; list-style: none;">
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+<sc-if value="{{ r.isTop }}" hint-placeholder-val="{{ false }}">
+<li data-member="{{ r.username }}" style="position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 8px; border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); transition: box-shadow 240ms ease, border-color 240ms ease, transform 240ms ease;" style-hover="box-shadow: var(--shadow-md); border-color: var(--green-200); transform: translateY(-1px);">
+<span aria-hidden="true" style="flex: 0 0 44px; text-align: center; font-family: var(--font-display); font-size: 1.6rem; font-weight: 500; line-height: 1; color: var(--gold-ink);">{{ r.roman }}</span>
+<span style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">{{ r.rankLabel }}</span>
+<x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ r.name }}" username="{{ r.username }}" size="lg" gilt="{{ true }}" hint-size="44px,44px"></x-import>
+<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+<span style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+<a href="../user-profile/UserProfile.dc.html" style="font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--brand);" style-after="content: ''; position: absolute; inset: 0; border-radius: inherit;">{{ r.name }}</a>
+<sc-if value="{{ r.isYou }}" hint-placeholder-val="{{ false }}"><span style="flex: none; padding: 2px 7px; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">You</span></sc-if>
+</span>
+<span style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.handleLine }}</span>
+</span>
+<span style="margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; line-height: 1; color: var(--text-strong); font-variant-numeric: tabular-nums;"><span style="display: inline-flex; color: var(--star);"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.CommendStar" size="{{ 15 }}" hint-size="15px,15px"></x-import></span>{{ r.rep }}<span style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;"> regard</span></span>
+</li>
+</sc-if>
+<sc-if value="{{ r.isRest }}" hint-placeholder-val="{{ true }}">
+<li data-member="{{ r.username }}" style="position: relative; display: flex; align-items: center; gap: 14px; padding: 11px 17px; border-top: 1px solid var(--border-hair); transition: background 140ms ease;" style-hover="background: var(--surface-sunken);">
+<span style="flex: 0 0 44px; text-align: center; font-family: var(--font-mono); font-size: .84rem; color: var(--text-faint); font-variant-numeric: tabular-nums;"><span style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Rank </span>{{ r.rank }}</span>
+<span style="flex: 0 0 44px; display: flex; justify-content: center;"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ r.name }}" username="{{ r.username }}" size="sm" hint-size="28px,28px"></x-import></span>
+<a href="../user-profile/UserProfile.dc.html" style="min-width: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; color: var(--text-strong); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" style-hover="color: var(--brand);" style-after="content: ''; position: absolute; inset: 0;">{{ r.name }}</a>
+<sc-if value="{{ r.isYou }}" hint-placeholder-val="{{ false }}"><span style="flex: none; padding: 2px 7px; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">You</span></sc-if>
+<span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: .88rem; color: var(--text-muted); font-variant-numeric: tabular-nums;"><span style="display: inline-flex; color: var(--star);"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.CommendStar" size="{{ 11 }}" hint-size="11px,11px"></x-import></span>{{ r.rep }}<span style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;"> regard</span></span>
+</li>
+</sc-if>
+</sc-for>
+</ol>
+</sc-if>
+<!-- Load-bearing product policy, verbatim. The gold rule stays straight: only the far corners are rounded. -->
+<p style="max-width: 64ch; margin: 24px 0 0; padding: 14px 18px; background: var(--brand-subtle); border-left: 3px solid var(--rule-gold); border-radius: 0 var(--radius-md) var(--radius-md) 0; font-style: italic; font-size: .95rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Esteem recognises contribution — it grants no powers, badges, or privileges, and never appears on your inbox. A member may keep themselves off this ledger at any time.</p>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;ledgerWindow&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;week&quot;,&quot;month&quot;,&quot;all&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;'week' | 'month' | 'all'&quot;,&quot;section&quot;:&quot;Ledger&quot;},&quot;ledgerOn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Ledger&quot;},&quot;emptyLedger&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Ledger&quot;},&quot;glideRanks&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Proposals&quot;},&quot;markViewer&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Proposals&quot;}}">
+/* /leaderboard — the ledger of regard.
+
+   Held against templates/leaderboard.php: ONE ordered list where the top three
+   are row modifiers, `?window=` tabs behind the ledger flag, and copy verbatim
+   from source. Ranking is cosmetic and grants nothing — the note at the foot is
+   load-bearing product policy, not decoration. */
+
+/* The same eight boards, in the same order, as board-index / board-page /
+   forum-inbox / search / thread-view. The rail is chrome: a member who arrives
+   here must not find a board list that disagrees with the one they left. */
+// The rail's unread pills are chrome: the same eight numbers every other rail shows.
+const RAIL_UNREAD = { 'the-archive': 1, interpretability: 1, evaluations: 2, 'audit-trails': 2 };
+
+const CATEGORIES = [
+  { name: 'The Commons', boards: [
+    { name: 'announcements', visibility: 'public' },
+    { name: 'introductions', visibility: 'public' },
+    { name: 'the-archive', visibility: 'public' },
+    { name: 'the-valley', visibility: 'public' },
+  ] },
+  { name: 'Vilya · Expose', boards: [
+    { name: 'interpretability', visibility: 'public' },
+    { name: 'evaluations', visibility: 'public' },
+    { name: 'audit-trails', visibility: 'restricted' },
+    { name: 'capability-disclosure', visibility: 'private' },
+  ] },
+];
+
+const MEMBERS = {
+  elrond: { name: 'Elrond', title: 'Master of the House' },
+  galadriel: { name: 'Galadriel', title: 'Lady of the Wood' },
+  erestor: { name: 'Erestor', title: 'Loremaster of Imladris' },
+  glorfindel: { name: 'Glorfindel', title: 'Captain of the Guard' },
+  arwen: { name: 'Arwen', title: 'Evenstar' },
+  lindir: { name: 'Lindir', title: 'Keeper of Songs' },
+  elladan: { name: 'Elladan', title: 'Rider of the Ford' },
+  cirdan: { name: 'Círdan', title: 'Shipwright' },
+};
+
+/* Shorter windows rank on regard earned inside them, so the order genuinely
+   moves — a ledger whose top three never change is a static graphic. */
+const LEDGER = {
+  all: [
+    ['elrond', 8740], ['galadriel', 5120], ['erestor', 3985],
+    ['glorfindel', 2140], ['arwen', 1760], ['lindir', 940],
+    ['elladan', 612], ['cirdan', 388],
+  ],
+  month: [
+    ['galadriel', 1240], ['elrond', 1105], ['arwen', 680],
+    ['erestor', 540], ['lindir', 310], ['glorfindel', 195],
+    ['cirdan', 122], ['elladan', 88],
+  ],
+  week: [
+    ['arwen', 312], ['erestor', 264], ['galadriel', 198],
+    ['lindir', 121], ['elrond', 96], ['glorfindel', 44],
+    ['elladan', 31], ['cirdan', 12],
+  ],
+};
+
+const WINDOWS = [
+  { key: 'week', label: 'Week' },
+  { key: 'month', label: 'Month' },
+  { key: 'all', label: 'All time' },
+];
+
+const ROMAN = { 1: 'I', 2: 'II', 3: 'III' };
+const VIEWER = 'erestor';
+const EASE = 'cubic-bezier(.22,.61,.36,1)'; // --ease-calm
+const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+class Component extends DCLogic {
+  listRef = React.createRef();
+  state = { win: null, railOpen: true };
+
+  get win() {
+    return this.state.win || this.props.ledgerWindow || 'all';
+  }
+
+  componentDidMount() {
+    this._keys = (e) => {
+      if (!(e.metaKey || e.ctrlKey) || String(e.key).toLowerCase() !== 'b') return;
+      e.preventDefault();
+      this.setState((s) => ({ railOpen: !s.railOpen }));
+    };
+    window.addEventListener('keydown', this._keys);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._keys); }
+
+  componentDidUpdate(prev) {
+    const p = this.props || {}, q = prev || {};
+    // A window picked in the page must not outrank the tweak changed after it.
+    if (q.ledgerWindow !== p.ledgerWindow && this.state.win !== null) this.setState({ win: null });
+    if (this._before) { const before = this._before; this._before = null; this.glide(before); }
+  }
+
+  /* Proposal: ranks glide to their new places when the window changes (FLIP).
+     Where each member stood is read before the switch; after it, each row
+     starts from there and settles over --dur-slow. Rows are matched by member,
+     not by position, so a member who climbs is seen to climb. */
+  capture() {
+    const ol = this.listRef.current;
+    if (!ol) return;
+    const at = {};
+    ol.querySelectorAll('li[data-member]').forEach((el) => { at[el.getAttribute('data-member')] = el.getBoundingClientRect().top; });
+    this._before = at;
+  }
+  glide(before) {
+    const ol = this.listRef.current;
+    if (!ol || reducedMotion()) return;
+    ol.querySelectorAll('li[data-member]').forEach((el) => {
+      const was = before[el.getAttribute('data-member')];
+      if (was === undefined || !el.animate) return;
+      const dy = was - el.getBoundingClientRect().top;
+      if (Math.abs(dy) < 1) return;
+      el.style.zIndex = dy > 0 ? '2' : '1';
+      const a = el.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 420, easing: EASE });
+      const done = () => { el.style.zIndex = ''; };
+      a.onfinish = done;
+      a.oncancel = done;
+    });
+  }
+
+  renderVals() {
+    const p = this.props || {};
+    const win = this.win;
+    const source = p.emptyLedger === true ? [] : (LEDGER[win] || LEDGER.all);
+    const markViewer = p.markViewer === true;
+
+    const rows = source.map(([username, rep], i) => {
+      const m = MEMBERS[username] || { name: username, title: '' };
+      const rank = i + 1;
+      const isTop = rank <= 3;
+      return {
+        username, rank,
+        name: m.name,
+        roman: ROMAN[rank] || String(rank),
+        rankLabel: 'Rank ' + rank,
+        handleLine: m.title ? '@' + username + ' · ' + m.title : '@' + username,
+        rep: rep.toLocaleString('en-US'),
+        isTop, isRest: !isTop,
+        isYou: markViewer && username === VIEWER,
+      };
+    });
+
+    return {
+      railOpen: this.state.railOpen,
+      toggleRail: () => this.setState((s) => ({ railOpen: !s.railOpen })),
+      categories: CATEGORIES.map((c) => ({
+        key: c.name,
+        name: c.name,
+        boards: c.boards.map((b) => ({
+          key: b.name, name: b.name,
+          unread: RAIL_UNREAD[b.name] || 0,
+          unreadLabel: (RAIL_UNREAD[b.name] || 0) + ' unread in ' + b.name,
+          tag: b.visibility !== 'public' ? b.visibility : undefined,
+        })),
+      })),
+
+      viewer: { name: 'Erestor', username: 'erestor', presence: 'online' },
+      // This rail genuinely owns a route list; the boards follow it.
+      railRoutes: [
+        { key: 'index', icon: 'home', label: 'Forum index', sub: 'Browse boards', href: '../board-index/BoardIndex.dc.html' },
+        { key: 'inbox', icon: 'inbox', label: 'Forum inbox', sub: 'Your personal queue', href: '../forum-inbox/ForumInbox.dc.html' },
+        { key: 'messages', icon: 'messages', label: 'Messages', sub: 'Private conversations' },
+        { key: 'drafts', icon: 'drafts', label: 'Drafts' },
+        { key: 'following', icon: 'following', label: 'Following' },
+        { key: 'top', icon: 'commend', label: 'Top contributors', active: true },
+      ],
+
+      windowItems: WINDOWS.map((w) => ({ label: w.label, value: w.key })),
+      win,
+      pickWindow: (val, e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (val === win) return;
+        if (p.glideRanks === true) this.capture();
+        this.setState({ win: val });
+      },
+      showWindows: p.ledgerOn !== false,
+
+      listRef: this.listRef,
+      rows,
+      hasRows: rows.length > 0,
+      isEmpty: rows.length === 0,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

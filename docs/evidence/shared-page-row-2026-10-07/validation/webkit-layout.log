@@ -1,0 +1,47 @@
+
+Running 36 tests using 1 worker
+
+(node:930685) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › inbox-header.spec.ts:34:5 › topics appear early and every primary destination fits without horizontal scrolling (3.5s)
+  ✓   2 [desktop] › inbox-header.spec.ts:63:5 › scope and sort preserve each other and menus support keyboard dismissal and help (2.7s)
+  ✓   3 [desktop] › inbox-header.spec.ts:94:5 › scope, sort and page actions work without JavaScript (2.2s)
+  ✓   4 [desktop] › shared-subheader-context.spec.ts:108:7 › Inbox context, Show/count, Sort, actions and creation share one row enhanced (8.2s)
+  ✓   5 [desktop] › shared-subheader-context.spec.ts:143:7 › representative page contexts sit beside shared creation enhanced (5.6s)
+  ✓   6 [desktop] › shared-subheader-context.spec.ts:166:7 › Search scope and order remain native URL choices in the shared row enhanced (1.1s)
+  ✓   7 [desktop] › shared-subheader-context.spec.ts:192:7 › Feed and Leaderboard choices remain native destinations beside creation enhanced (1.4s)
+  ✓   8 [desktop] › shared-subheader-context.spec.ts:108:7 › Inbox context, Show/count, Sort, actions and creation share one row native (7.1s)
+  ✓   9 [desktop] › shared-subheader-context.spec.ts:143:7 › representative page contexts sit beside shared creation native (5.9s)
+  ✓  10 [desktop] › shared-subheader-context.spec.ts:166:7 › Search scope and order remain native URL choices in the shared row native (1.4s)
+  ✓  11 [desktop] › shared-subheader-context.spec.ts:192:7 › Feed and Leaderboard choices remain native destinations beside creation native (1.9s)
+  ✓  12 [desktop] › shared-subheader-context.spec.ts:219:5 › the Messages search disclosure preserves native search and unread filters (1.9s)
+  ✓  13 [desktop] › shared-subheader-context.spec.ts:246:5 › the consolidated Inbox choices preserve URLs, shared dismissal and accessible menus (3.4s)
+  ✓  14 [desktop] › shared-subheader-long-contexts.spec.ts:129:7 › 80-character tag names keep Follow and Unfollow reachable enhanced (6.6s)
+  ✓  15 [desktop] › shared-subheader-long-contexts.spec.ts:168:7 › 80-character saved-feed names retain a native Manage destination enhanced (4.8s)
+  ✓  16 [desktop] › shared-subheader-long-contexts.spec.ts:129:7 › 80-character tag names keep Follow and Unfollow reachable native (6.2s)
+  ✓  17 [desktop] › shared-subheader-long-contexts.spec.ts:168:7 › 80-character saved-feed names retain a native Manage destination native (4.4s)
+
+  ✓  18 [desktop] › shared-subheader-long-contexts.spec.ts:197:5 › a guest retains the original tag heading and no empty shared row (755ms)
+(node:937833) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  19 [mobile] › inbox-header.spec.ts:34:5 › topics appear early and every primary destination fits without horizontal scrolling (5.9s)
+  ✓  20 [mobile] › inbox-header.spec.ts:63:5 › scope and sort preserve each other and menus support keyboard dismissal and help (4.9s)
+  ✓  21 [mobile] › inbox-header.spec.ts:94:5 › scope, sort and page actions work without JavaScript (3.6s)
+  ✓  22 [mobile] › shared-subheader-context.spec.ts:108:7 › Inbox context, Show/count, Sort, actions and creation share one row enhanced (12.5s)
+  ✓  23 [mobile] › shared-subheader-context.spec.ts:143:7 › representative page contexts sit beside shared creation enhanced (5.7s)
+  ✓  24 [mobile] › shared-subheader-context.spec.ts:166:7 › Search scope and order remain native URL choices in the shared row enhanced (1.1s)
+  ✓  25 [mobile] › shared-subheader-context.spec.ts:192:7 › Feed and Leaderboard choices remain native destinations beside creation enhanced (1.3s)
+  ✓  26 [mobile] › shared-subheader-context.spec.ts:108:7 › Inbox context, Show/count, Sort, actions and creation share one row native (7.0s)
+  ✓  27 [mobile] › shared-subheader-context.spec.ts:143:7 › representative page contexts sit beside shared creation native (4.9s)
+  ✓  28 [mobile] › shared-subheader-context.spec.ts:166:7 › Search scope and order remain native URL choices in the shared row native (1.1s)
+  ✓  29 [mobile] › shared-subheader-context.spec.ts:192:7 › Feed and Leaderboard choices remain native destinations beside creation native (1.2s)
+  ✓  30 [mobile] › shared-subheader-context.spec.ts:219:5 › the Messages search disclosure preserves native search and unread filters (942ms)
+  ✓  31 [mobile] › shared-subheader-context.spec.ts:246:5 › the consolidated Inbox choices preserve URLs, shared dismissal and accessible menus (2.0s)
+  ✓  32 [mobile] › shared-subheader-long-contexts.spec.ts:129:7 › 80-character tag names keep Follow and Unfollow reachable enhanced (3.9s)
+  ✓  33 [mobile] › shared-subheader-long-contexts.spec.ts:168:7 › 80-character saved-feed names retain a native Manage destination enhanced (2.9s)
+  ✓  34 [mobile] › shared-subheader-long-contexts.spec.ts:129:7 › 80-character tag names keep Follow and Unfollow reachable native (3.2s)
+  ✓  35 [mobile] › shared-subheader-long-contexts.spec.ts:168:7 › 80-character saved-feed names retain a native Manage destination native (2.6s)
+
+  ✓  36 [mobile] › shared-subheader-long-contexts.spec.ts:197:5 › a guest retains the original tag heading and no empty shared row (540ms)
+
+  36 passed (2.3m)

@@ -1,0 +1,50 @@
+For contrast: the previous layer vs the bundle's whole components.css and colors.css, keeping only
+the refused tail, the .hash/.field-hint holds and the local [hidden] guard. Chromium, same matrix.
+findings: 5512
+
+Largest value changes (element, property, old -> new, count):
+  300  button.star-toggle                                               flex-shrink            1 -> 0
+  180  path                                                             stroke-width           1.8px -> 2px
+  180  path                                                             text-wrap-mode         wrap -> nowrap
+  123  a.forum-bar-surface.is-active                                    cursor                 default -> pointer
+   90  button.btn.composer-send                                         text-wrap-mode         wrap -> nowrap
+   90  span.composer-send-mark                                          text-wrap-mode         wrap -> nowrap
+   90  svg                                                              stroke-width           1.8px -> 2px
+   90  svg                                                              text-wrap-mode         wrap -> nowrap
+   87  a.admin-bar-brand                                                max-width              100% -> none
+   87  form.admin-bar-search                                            flex-basis             auto -> 190px
+   87  span.admin-bar-username                                          font-size              12.48px -> 13.76px
+   87  span.admin-bar-username                                          line-height            19.968px -> 22.016px
+   82  [hover] a.forum-bar-surface.is-active                            cursor                 default -> pointer
+   82  [focus] a.forum-bar-surface.is-active                            cursor                 default -> pointer
+   70  [hover] a.forum-bar-bell.bell                                    background-color       rgba(0, 0, 0, 0) -> rgb(236, 228, 210)
+   69  svg                                                              height                 16px -> 15px
+   69  svg                                                              width                  16px -> 15px
+   54  a.board-rail-item.is-active                                      cursor                 default -> pointer
+   54  span.board-rail-name                                             cursor                 default -> pointer
+   48  div.admin-bar-id                                                 min-height             58px -> 52px
+   48  div.admin-bar-id                                                 padding-bottom         10px -> 7px
+   48  div.admin-bar-id                                                 padding-top            10px -> 7px
+   48  nav.admin-tier                                                   padding-left           16px -> 26px
+   48  nav.admin-tier                                                   padding-right          16px -> 26px
+   39  form.admin-bar-search                                            display                block -> flex
+   39  form.admin-bar-search                                            min-width              auto -> 0px
+   39  input.input.input-small                                          display                inline-block -> block
+   39  input.input.input-small                                          min-height             0px -> auto
+   39  span.admin-bar-username                                          height                 19.9688px -> 22.0156px
+   39  span.admin-bar-username                                          min-width              auto -> 0px
+   30  form.admin-bar-search                                            width                  220px -> 190px
+   30  input.input.input-small                                          width                  220px -> 190px
+   30  input.input.input-small::placeholder                             width                  180px -> 150px
+   30  div.admin-bar                                                    height                 160px -> 154px
+   30  div.admin-bar-id                                                 height                 106px -> 100px
+   27  span.composer-send-mark                                          height                 16px -> 15px
+   27  span.composer-send-mark                                          width                  16px -> 15px
+   27  div.admin-bar-right                                              margin-left            325.078px -> 348.078px
+   27  div.admin-bar-right                                              width                  593.344px -> 570.344px
+   27  a.admin-bar-user                                                 width                  105.5px -> 112.5px
+   27  span.admin-bar-username                                          width                  62.5px -> 69.5px
+   26  [focus] input.input.input-small                                  display                inline-block -> block
+   26  [focus] input.input.input-small                                  min-height             0px -> auto
+   20  [hover] a.board-rail-item.is-active                              cursor                 default -> pointer
+   20  [focus] a.board-rail-item.is-active                              cursor                 default -> pointer

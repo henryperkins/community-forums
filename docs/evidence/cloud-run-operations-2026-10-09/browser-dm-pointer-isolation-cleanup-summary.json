@@ -1,0 +1,44 @@
+{
+  "scope": "exact owned synthetic upload diagnosis resources only",
+  "removed_containers": [
+    {
+      "kind": "private app",
+      "name": "retroboards-browser-ci-upload-current-20261009"
+    },
+    {
+      "kind": "private app",
+      "name": "retroboards-browser-ci-upload-baseline-20261009"
+    },
+    {
+      "kind": "private database",
+      "name": "retroboards-browser-ci-upload-reload-20261009"
+    }
+  ],
+  "removed_network": "retroboards-ci-upload-reload-20261009",
+  "owned_database_volumes_remaining": 0,
+  "removed_operator_overlay_image_tags": [
+    {
+      "tag": "retroboards:upload-reload-current-20261009",
+      "removed": true
+    },
+    {
+      "tag": "retroboards:upload-reload-baseline-20261009",
+      "removed": true
+    },
+    {
+      "tag": "retroboards:upload-reload-current-php8234-20261009",
+      "removed": true
+    },
+    {
+      "tag": "retroboards:upload-reload-baseline-php8234-20261009",
+      "removed": true
+    },
+    {
+      "tag": "retroboards:upload-reload-current-fixed-php8234-20261009",
+      "removed": true
+    }
+  ],
+  "shared_browser_runner_and_production_base_image_preserved": true,
+  "private_sanitized_receipts_retained": true,
+  "production_mutated": false
+}

@@ -1,8 +1,18 @@
-# RetroBoards — Cloudflare Containers deployment runbook
+# RetroBoards — Cloudflare Worker deployment and retired container history
 
-Operating procedure for the Cloudflare deployment defined by `wrangler.jsonc`,
-`worker/index.js`, `Dockerfile`, and `deploy/`, with `wrangler` authenticated
-against the account that owns the zone.
+Operating procedure for the Cloudflare Worker defined by `wrangler.jsonc` and
+`worker/index.js`, with `wrangler` authenticated against the account that owns
+the zone. The PHP image and jobs deploy separately on Google Cloud Run.
+
+> **Since 2026-10-09 the app runs on Google Cloud Run** (ADR 0047,
+> [`deployment-cloud-run.md`](deployment-cloud-run.md)). The owner approved
+> retiring the unused Cloudflare container and pre-move R2 bucket that day.
+> This runbook owns the Worker, static assets, canonical-host policy and domains
+> (§7, §8, §16). Container examples in §1–§6, §9–§11 and the older deployment
+> records are **retired history**, not deploy or recovery instructions. The
+> current Worker has no `ForumContainer` binding, and the class deletion means
+> a pre-retirement Worker is not a supported rollback target (§12). Hosted
+> cleanup evidence is tracked in the Cloud Run runbook §9.
 
 > **Merging to `main` IS the deploy.** Production is built and released by a
 > git-connected **Workers Builds** pipeline watching `main`. There is no manual
@@ -11,9 +21,9 @@ against the account that owns the zone.
 > still comments "Deployment successful" on the PR and the dashboard URL still
 > contains `/production/`, so treat neither as evidence that a branch went live.
 >
-> **Corrected 2026-08-27. This box previously said the opposite**, and following
-> it now would cause the outage it warned about. It directed every `wrangler`
-> command at the worktree `.worktrees/cloudflare-production-20260804` (branch
+> **Historical build-path correction, 2026-08-27.** This box previously said
+> the opposite; its obsolete instruction would have shipped stale code. It
+> directed every `wrangler` command at the worktree `.worktrees/cloudflare-production-20260804` (branch
 > `deploy/cloudflare-production-20260804`). That branch is **~47 commits behind
 > `main`** and is no longer the deploy path, so deploying from it would ship a
 > stale Worker *and* rebuild the container image from stale source — the same
@@ -33,32 +43,25 @@ against the account that owns the zone.
 > "the main checkout's copies are older and uncommitted" hazard is also gone.
 >
 > `wrangler` is still the right tool for reading and for recovery —
-> `wrangler tail`, `containers list`, `deployments list`, `rollback` (§12). Run
-> those from the main checkout, whose config now matches what is deployed.
+> `wrangler tail`, `deployments list`, and supported Worker `rollback` (§12).
+> Run those from the main checkout with the current configuration. Container
+> commands are only for the retirement cleanup, not the production origin.
 >
-> **Before merging**, since production rebuilds the image from source on every
-> merge: confirm that
-> `git diff --name-only origin/main...HEAD -- database/migrations/` is empty. A
-> migration makes the entrypoint's `RUN_MIGRATIONS=true` live, and a failure there
-> aborts the boot rather than serving. **Three dots, run from the PR branch** —
-> two named refs (`<base> origin/main`) compare `main` with itself and report a
-> migration on your branch as absent, which is the one answer this check must
-> never get wrong. Confirm too that `wrangler.jsonc`,
-> `worker/`, `Dockerfile` and `deploy/` are untouched — `ForumContainer.
-> pingEndpoint` must stay a static file (see §6). Propagation is not instant:
-> container provisioning is asynchronous, so the edge keeps serving the previous
-> assets for minutes after the merge commit lands, and a single Cloudflare `1101`
-> during the swap is normal.
-
-> **Cloudflare cannot host the whole stack.** Workers runs JavaScript, Python and
-> WebAssembly — not PHP — so the application runs as a *container* fronted by a
-> Worker. Cloudflare has no managed MySQL: D1 is SQLite, and Hyperdrive is a
-> Workers binding that PDO cannot use. The schema carries **213 `FOREIGN KEY`
-> constraints** and **2 InnoDB `FULLTEXT` indexes**, so it needs a real MySQL 8 or
-> MariaDB from another provider. **The database is the one piece that is not on
-> Cloudflare, and there is no way around that.**
+> **Before merging**, inspect migrations with
+> `git diff --name-only origin/main...HEAD -- database/migrations/` (three dots,
+> from the PR branch). Cloud Run runs them on boot; a failed startup leaves the
+> previous revision serving. A half-applied DDL statement remains applied.
+> Workers Builds and Cloud Build deploy independently, so verify the active
+> Worker, Cloud Run revision and asset hashes after each release (Cloud Run
+> runbook §3). The Worker no longer builds or provisions a PHP container.
 
 ## 1. What the deployment looks like
+
+> **Historical (before 2026-10-09).** Today the Worker forwards dynamic
+> requests to Cloud Run (`worker/origin.mjs`), and `/data`, migrations, cron and
+> the database link work as in
+> [`deployment-cloud-run.md`](deployment-cloud-run.md) §1–§4. The list below is
+> the retired container origin the Worker no longer calls.
 
 - **Worker** (`worker/index.js`) on a Custom Domain, so all paths route to it.
   It rewrites the client-IP header and forwards every request to the container.
@@ -82,6 +85,9 @@ against the account that owns the zone.
   internet **with TLS** (`DB_SSL=true`).
 
 ## 2. Outbound MySQL — settled, it works
+
+> **Retired container history.** Production uses the authenticated Cloud SQL
+> connector; do not reproduce the public-IP connection described below.
 
 Cloudflare never affirmatively documents arbitrary TCP egress from containers
 (`enableInternet` is described purely in terms of HTTP), so this was the open
@@ -109,13 +115,102 @@ dozens of queries, so pages render in ~3s. See §14.
 
 ## 3. Provision the database
 
+> **Historical provisioning record.** The commands and container settings below
+> document earlier deployments. Current connector access, closed authorized
+> networks and database operations are in the Cloud Run runbook §8.
+
 Any managed MySQL 8 / MariaDB with a public TLS endpoint. Two requirements the
 schema imposes:
 
 - **Foreign keys.** 198 constraints once migrated.
 - **InnoDB `FULLTEXT`.** `ft_threads_title` and `ft_posts_body` back search.
 
-### PlanetScale (current deployment)
+### Google Cloud SQL (container cutover history, 2026-10-09)
+
+Cloud SQL for MySQL, instance **`imladris-boards`** in project
+**`rising-woods-449718-v6`** (connection name
+`rising-woods-449718-v6:us-east4:imladris-boards`), created with:
+
+```sh
+gcloud sql instances create imladris-boards --project=rising-woods-449718-v6 \
+  --database-version=MYSQL_8_4 --edition=ENTERPRISE --tier=db-g1-small \
+  --region=us-east4 --availability-type=ZONAL \
+  --storage-type=SSD --storage-size=10GB --storage-auto-increase \
+  --backup-start-time=07:00 --enable-bin-log --retained-backups-count=7 \
+  --retained-transaction-log-days=7 \
+  --maintenance-window-day=SUN --maintenance-window-hour=8 \
+  --deletion-protection --assign-ip --authorized-networks=0.0.0.0/0 \
+  --ssl-mode=ENCRYPTED_ONLY --server-ca-mode=GOOGLE_MANAGED_CAS_CA \
+  --root-password=…    # from Secret Manager, see below
+gcloud sql databases create retroboards --instance imladris-boards --charset=utf8mb4
+```
+
+- **Server:** `8.4.11-google`, zone `us-east4-c`, public IP `34.145.179.39`,
+  `system_time_zone` UTC, default MySQL 8.4 `sql_mode` (same as PlanetScale),
+  `innodb_ft_min_token_size` 3. us-east4 sits next to the container's ENAM
+  placement (§14).
+- **Database / user:** `retroboards` (utf8mb4). `retroboards_app`@`%` was created
+  over SQL, not `gcloud sql users create` (which grants `cloudsqlsuperuser`):
+  `ALL PRIVILEGES ON retroboards.*` and nothing global. DDL is needed because
+  migrations run on boot. It was `REQUIRE SSL` until the Cloud Run move, which
+  made it `REQUIRE NONE`: the connector's traffic is encrypted but is not a
+  MySQL TLS session. The instance's `ENCRYPTED_ONLY` still refuses plaintext
+  direct connections (Cloud Run runbook §8).
+- **Passwords** live only in Secret Manager in the same project:
+  `imladris-boards-root-password` and `imladris-boards-app-password`. Read one
+  with `gcloud secrets versions access latest --secret=<name> --project
+  rising-woods-449718-v6`.
+- **Network (closed 2026-10-09):** the public IP was open to `0.0.0.0/0`, the
+  same exposure PlanetScale had, until the Cloud Run move removed it. Today
+  only Cloud SQL connectors and the Auth Proxy, both IAM-authenticated, get
+  in. The tier also dropped to `db-f1-micro` that day (Cloud Run runbook §11).
+  The rest of this bullet is the container-era reasoning.
+  Cloudflare Containers have no stable egress range to allowlist. TLS is
+  mandatory (`ENCRYPTED_ONLY`), so a plaintext connection is refused. Hardening
+  option: run the Cloud SQL Auth Proxy in the container with a service-account
+  key, then drop the authorized network entirely.
+- **TLS: encrypted, but the server is NOT authenticated (temporary).** Two
+  facts collide:
+  1. The server certificate chains to the instance's **Cloud SQL CA**, not a
+     public root. That CA goes in the `DB_SSL_CA_PEM` secret (`gcloud sql ssl
+     server-ca-certs list --instance imladris-boards --format="value(cert)"`),
+     and `DB_SSL_CA=/run/db-ca.pem` is a var because cron `exec()`s get the
+     Worker's vars, not the entrypoint's environment.
+  2. The certificate's only SAN is the instance DNS name
+     `d4594f79d8e5.1odq1xrisz2lz.us-east4.sql.goog` (`recordManager: CUSTOMER`:
+     Google does not publish it). Connecting by IP with `DB_SSL_VERIFY=true`
+     fails with `[2002] Cannot connect to MySQL using SSL`. PDO ties the chain
+     check to the host-name check, so there is no chain-only mode.
+
+  Pinning the name in `/etc/hosts` works under Docker but **not on Cloudflare**:
+  the first deploy (PR #82, 2026-10-09 02:27 UTC) died in the entrypoint with
+  `cannot create /etc/hosts: Read-only file system`. The container therefore ran
+  with `DB_HOST=34.145.179.39` and `DB_SSL_VERIFY=false`. The instance refuses
+  plaintext, but a man-in-the-middle on the path could present its own
+  certificate and read the password. **Resolved by the Cloud Run move:**
+  production now uses Cloud Run's built-in connector, which authenticates the
+  instance over mTLS with IAM. The by-IP link is retired, and the
+  `0.0.0.0/0` authorized network was removed after the cutover. Recovery uses
+  Cloud Run revisions and keeps authorized networks closed (Cloud Run
+  runbook §10).
+- **No Vitess:** the schema-propagation race below does not exist here, and
+  `SchemaRaceRetry` is inert (it keys off `SELECT VERSION()`).
+
+Verified 2026-10-09 from a workstation and from the production image (`docker
+build`, booted with this `wrangler.jsonc`'s `DB_*` vars plus `DB_SSL_CA_PEM`):
+all **83** migrations applied as `retroboards_app` on the first pass, giving 116
+tables, 198 FK constraints and both FULLTEXT indexes. Orphan inserts are
+rejected with 1452 and a `MATCH … AGAINST` query runs. `/healthz` returned `200
+{"status":"ok","database":"ok"}` and `/` → `302 /setup`, both with the
+`/etc/hosts` pin (since removed) and by IP with `DB_SSL_VERIFY=false`.
+
+### PlanetScale (previous deployment, asleep since 2026-09-30)
+
+The `perkinism` org has no payment method (`has_card: false`,
+`valid_billing_info: false`). Its first billing period ended 2026-10-01 and the
+database has been `sleeping` (branch `ready: false`) since 2026-09-30. That is
+when the container's boot-time `migrate` began failing, which is the cause of
+the 1101 outage. The history below is kept for the Vitess caveats.
 
 Verified working on `gcp.connect.psdb.cloud:3306`, server `8.4.9-Vitess`, with
 all 78 migrations applied (116 tables, 198 FK constraints, 2 FULLTEXT indexes).
@@ -175,6 +270,9 @@ a region close to where the container will run.
 
 ## 4. Create the R2 bucket
 
+> **Retired container procedure.** These examples no longer configure or deploy
+> production. Use the Cloud Run runbook for the image, storage and secrets.
+
 ```sh
 npx wrangler r2 bucket create retroboards-data
 ```
@@ -187,6 +285,9 @@ Keep this bucket **private**. Attachments are authorization-gated in PHP
 bypass `BoardPolicy` entirely and serve private-board attachments to anyone.
 
 ## 5. Configure vars and secrets
+
+> **Retired container procedure.** These examples no longer configure or deploy
+> production. Use the Cloud Run runbook for the image, storage and secrets.
 
 Edit the `vars` block in `wrangler.jsonc`: `APP_URL`, the `DB_*` host/port/name/
 user, `R2_BUCKET`, `R2_ACCOUNT_ID`, and the `routes` pattern. Changing `APP_URL`
@@ -213,6 +314,9 @@ perform. The email token needs **Email Sending: Edit** on the account that owns
 the already-onboarded `candidary.online` sending domain.
 
 ## 6. Deploy
+
+> **Retired container procedure.** These examples no longer configure or deploy
+> production. Use the Cloud Run runbook for the image, storage and secrets.
 
 **The normal path is to merge to `main`.** Workers Builds runs `npm ci`, then its
 configured build command, then the deploy — no local step.
@@ -385,6 +489,15 @@ Local evidence proves a Docker-volume restart, not R2 durability or an actual iP
 
 ## 7. Fix the client IP (do not skip)
 
+The Worker replaces client `X-Forwarded-For` with `CF-Connecting-IP` before
+forwarding to the IAM-protected Cloud Run service. Current proxy ranges and
+header behavior are in [`deployment-cloud-run.md`](deployment-cloud-run.md)
+§2 and `deploy/cloudrun/env.yaml`.
+
+> **Historical container peer measurement.** The private `10.0.0.0/8` trust
+> below belonged to the retired Cloudflare container. Do not use it to configure
+> Cloud Run.
+
 `RateLimitService` keys per-IP, and `App\Security\ClientIdentifier` only honours
 `X-Forwarded-For` when the immediate peer is listed in `TRUSTED_PROXIES`. With
 `TRUSTED_PROXIES` empty, **every request is attributed to one Cloudflare address
@@ -422,7 +535,7 @@ Zone settings, all of which matter to this app specifically:
 - **Static assets** are built by `npm run build`, described by
   `config/assets.json`, and staged under `.build/static` for Workers Static
   Assets. The Worker serves allowlisted `/assets/*` without invoking the PHP
-  container. Content-hashed CSS, JS and fonts receive
+  origin. Content-hashed CSS, JS and fonts receive
   `public, max-age=31536000, immutable`; mutable source URLs revalidate.
   Conditional requests retain `304` behavior. The PHP layout and preload
   headers use the same manifest as the Worker. `/brand.css` and `/theme/*.css`
@@ -463,7 +576,13 @@ Zone settings, all of which matter to this app specifically:
 
 ## 9. Cron workers
 
-`worker/index.js` maps cron expressions to `bin/console` commands:
+> **Moved 2026-10-09.** The Worker's cron triggers are emptied
+> (`"crons": []`, which is what removes deployed ones; a missing key would not).
+> The same schedules run as Cloud Run jobs on Cloud Scheduler:
+> [`deployment-cloud-run.md`](deployment-cloud-run.md) §4. What follows
+> describes the retired container's `runConsole()` path.
+
+`worker/index.js` mapped cron expressions to `bin/console` commands:
 
 | Cron | Commands |
 | --- | --- |
@@ -492,6 +611,9 @@ content to process. Check **Cron Events** after the first `*/5` tick.
 
 ## 10. Known caveats
 
+> **Retired container caveats.** Current origin operation and email setup are in
+> the Cloud Run runbook §7–§8.
+
 - **Cold starts.** `sleepAfter` is `1h` and the cron ticks keep the instance
   warm, but after a genuine idle period the first request pays image start,
   Apache boot, and migrations.
@@ -513,6 +635,9 @@ content to process. Check **Cron Events** after the first `*/5` tick.
 
 ## 11. Cost
 
+> Current costs are in [`deployment-cloud-run.md`](deployment-cloud-run.md)
+> §11. The table below is the retired container-era estimate.
+
 Rough monthly figures from published rates, always-on:
 
 | Component | Cost |
@@ -520,25 +645,41 @@ Rough monthly figures from published rates, always-on:
 | Workers Paid plan | $5 |
 | Container, `basic` (1/4 vCPU, 1 GiB) | ≈ $8 |
 | Container, `standard-1` (1/2 vCPU, 4 GiB) | ≈ $28 |
-| Managed MySQL (external) | ≈ $15 |
+| Managed MySQL — Cloud SQL `db-g1-small`, 10 GB SSD, backups + binlog, us-east4 | ≈ $30 (list price, approximate) |
 | R2 | free under 10 GB |
 | Container egress | $0.025/GB after 1 TB (NA/EU) |
 
 ## 12. Rolling back
 
-`wrangler deployments list` / `wrangler rollback` revert the Worker. **A rollback
-does not undo migrations** — they are additive and forward-only, and
-`migrate:rollback` is greenfield-only. Do not delete container images that older
-Worker versions still reference (`wrangler containers images delete` breaks those
-versions).
+Roll the PHP app back through Cloud Run revisions and pin all cron jobs to the
+same image ([`deployment-cloud-run.md`](deployment-cloud-run.md) §3, §10).
+Keep the current schema, Secret Manager keys and Google storage.
+
+`wrangler deployments list` / `wrangler rollback` recover the Worker only.
+Choose a known-good version that includes the retirement migration and has no
+`ForumContainer` binding. The `v2` Durable Object deletion is irreversible;
+older versions that need the deleted class, old secrets or R2 data are not
+supported rollback targets. Restore earlier code in a new commit with the
+current Cloud Run forwarding/configuration if necessary.
+
+A rollback does not undo migrations: they are additive and forward-only, and
+`migrate:rollback` is greenfield-only. Returning to a container origin would
+require a new hosting deployment, not a Worker rollback.
 
 ## 13. Backups
 
-R2 holds uploads; the database is the provider's responsibility. `tests/backup/
-rehearse.sh` rehearses restore against a throwaway database. Point off-site dumps
-at a second R2 bucket over the S3 API — egress is free.
+Current uploads and package storage live in Google Cloud Storage, and Cloud
+SQL owns database backups (Cloud Run runbook §1, §8, §11). The R2 bucket
+`retroboards-data` held only pre-move uploads and is covered by the approved
+retirement (§9 there); it must not be used as a backup of current uploads.
+`tests/backup/rehearse.sh` rehearses restore against a throwaway database.
 
 ## 14. Measured latency — the open performance problem
+
+> **Historical measurements and optimization record.** The production origin
+> and database have since moved to us-east4; current measurements are in the
+> Cloud Run runbook §11. Host, region, R2 and Worker-env references below
+> describe the container deployment at the recorded dates.
 
 **Repository optimization work, 2026-09-20:** the September account cutover
 in §15 supersedes the August placement below. The checked-in database host is
@@ -738,6 +879,36 @@ delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
 
+### Cloud Run origin — EXECUTED 2026-10-09
+
+The app moved off this container onto Cloud Run (ADR 0047). The Worker forwards
+to it with an ID token. The owner approved retiring the old container and R2
+uploads the same day; source retirement removes the class and binding, while
+hosted cleanup evidence is tracked in
+[`deployment-cloud-run.md`](deployment-cloud-run.md) §9. Cloud Run uses the
+authenticated connector. The cutover records below are historical.
+
+### Cloud SQL cutover — EXECUTED 2026-10-09
+
+> **Historical container cutover.** First-run setup and the Cloud Run move
+> subsequently superseded this temporary public-IP origin configuration.
+
+Instance, database, user and schema are described in §3. Secrets set with
+`wrangler secret put`: `DB_PASSWORD` (from Secret Manager
+`imladris-boards-app-password`) and `DB_SSL_CA_PEM` (the Cloud SQL CA).
+
+1. **PR #82** (`f4d9b5c5`) pointed `DB_HOST` at the instance DNS name and pinned
+   it in `/etc/hosts`. Workers Builds succeeded, but every boot died with
+   `cannot create /etc/hosts: Read-only file system`. The pin has been removed.
+2. **Follow-up**: `DB_HOST=34.145.179.39`, `DB_SSL_VERIFY=false` (forwarded by
+   the Worker). This is encrypted but unauthenticated; see §3 for the Auth
+   Proxy fix.
+
+The database is empty, so `/` → `/setup` until first-run setup is done again.
+PlanetScale's rows can only come back by waking that database (payment
+method), then `pscale database dump` and a restore into a dropped-and-recreated
+`retroboards`.
+
 ### PlanetScale account cutover — EXECUTED 2026-09-12, verified 07:40 UTC
 
 The database target moved to the PlanetScale account authenticated in the
@@ -850,40 +1021,45 @@ As of 2026-08-06 the deployment serves traffic:
   custom domains, routes, or Cron Triggers. Only
   `retroboards-forumcontainer` remains provisioned.
 
+The former email verification carryover was completed on 2026-10-09 using
+the native REST transport in Cloud Run; one operator test reached the intended
+inbox with SPF/DKIM/DMARC passing. SMTP rejected the sender envelope. Current
+setup and bounded evidence are in [Cloud Run §7](deployment-cloud-run.md#7-email).
+
 Not yet done, tracked here so it is not lost:
 
 - Upgrade the Cloudflare zone before adding a method-aware `POST /login` WAF
   rate rule; the Free plan cannot express it.
-- Perform a recipient-level SMTP test send from `/admin/email`; configuration
-  and cron execution are proven, but mailbox delivery has not yet been observed.
 - Web Analytics is injected by the zone but blocked by the app's strict CSP
   (`script-src 'self'`, no nonce) — disable it in the dashboard or add
   `static.cloudflareinsights.com` to `script-src`; it currently only produces a
   console error.
 
-## 16. Public hostname `boards.hperkins.blog` — plan and state (2026-09-21)
+## 16. Public hostname `boards.hperkins.blog` — routing and migration plan
 
-Goal: serve production at `https://boards.hperkins.blog`, with
-`forum.candidary.online` redirecting there. Nothing below has been applied yet;
-this section records the facts, the mechanism, and the order of operations.
+Production remains canonical at `https://forum.candidary.online`.
+`boards.hperkins.blog` is an attached alias that redirects there. A future
+canonical-origin move would reverse that direction; the procedure below does
+not authorize that move.
 
-### What is true today
+### Routing verified 2026-10-07; migration inventory from 2026-09-21
 
 - Production is the Worker `retroboards` on the **Custom Domain**
   `forum.candidary.online` (zone `candidary.online`, account "Henry Flare",
   `a77e479f6736120eadd99973dbeb705e`). `APP_URL=https://forum.candidary.online`.
-  `workers.dev` and previews are disabled for the Worker, so exactly one
-  hostname reaches it.
+  The alias `boards.hperkins.blog/healthz` returns `301` to the canonical
+  host with `Cache-Control: no-store`.
 - `hperkins.blog` is **not a Cloudflare zone**. It is registered with
   WordPress.com (Automattic), uses `ns1/ns2/ns3.wordpress.com`, has **DNSSEC
   enabled**, and its apex/`www` host the WordPress.com (Atomic) blog. Its zone
-  at WordPress.com holds 14 records that must survive whatever is done:
+  at WordPress.com held 14 records in the 2026-09-21 inventory that must
+  survive any DNS migration (refresh the inventory first):
   apex `A` ×2 (WordPress.com, protected), `www CNAME hperkins.blog`,
   `MX 10 mx1.titan.email` / `MX 20 mx2.titan.email`, apex `TXT` SPF
   (`_spf.wpcloud.com` + `spf.titan.email`), apex `TXT` OpenAI verification,
   `_dmarc TXT`, `titan1._domainkey TXT` (DKIM), `wpcloud1/2._domainkey CNAME`
   (DKIM), `mailpoet1/2._domainkey CNAME` (DKIM), `_mailpoet TXT`.
-  `boards.hperkins.blog` does not exist (NXDOMAIN).
+  `boards.hperkins.blog` now CNAMEs to `saas-fallback.candidary.online`.
 - A Workers Custom Domain requires an **active zone the account owns**
   ([docs](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)),
   so `{ "pattern": "boards.hperkins.blog", "custom_domain": true }` cannot be
@@ -920,6 +1096,53 @@ canonical origin, `Cache-Control: no-store`. Consequences:
 Pinned by `tests/worker/canonical.test.mjs` and
 `tests/Unit/Core/CloudflareDeploymentContractTest.php`.
 
+### Keep the SaaS zone route separate from Wrangler
+
+The existing zone route is `boards.hperkins.blog/*` → `retroboards`, in zone
+`candidary.online` (`973da452ca2467c3b0d6e489839300d2`). Its route ID was
+`cdd04d8a5b6147099b5daf73940c7f27` when read on 2026-10-07. Inspect it through
+the zone's **Workers Routes** page or
+`GET /zones/973da452ca2467c3b0d6e489839300d2/workers/routes`.
+
+Keep `wrangler.jsonc`'s `routes` list limited to Custom Domains. Wrangler
+4.118.0 sends ordinary routes through an account-level bulk
+`PUT /accounts/{account_id}/workers/scripts/retroboards/routes`. The deployment
+on 2026-10-07 rejected the alias with `10022 Route pattern must include zone
+name: candidary.online`. Switching `zone_name` to `zone_id` does not change
+that endpoint. With no ordinary routes in the config, Wrangler skips that PUT
+and leaves the independently provisioned zone route in place. Adding even an
+in-zone route would resume the bulk replacement and could remove the alias.
+`tests/worker/deployment-routes.test.mjs` checks the parsed Wrangler inputs.
+
+The 2026-10-07 failure happened after the Worker upload and container
+application update, without rolling either back. A failed Workers Build can
+still have uploaded a Worker: check the active Worker version, `/healthz` and
+the independently deployed Cloud Run revision. A successful alias redirect
+alone does not prove the origin is healthy.
+
+The same investigation on 2026-10-07 found a separate startup outage:
+the container mounted R2 successfully, then boot-time migrations failed with
+`SQLSTATE[HY000] [1105] not_found: branch is missing or sleeping: w9fqlkhs3jd8`.
+PlanetScale's API confirmed that `perkinism/imladris-boards/main` still existed
+but had `state: sleeping` and `ready: false`. The canonical `/healthz` returned
+HTTP `500` / Cloudflare `1101`. PlanetScale's dashboard attributed the sleep
+to an overdue Cloudflare invoice. For this Cloudflare-billed subscription,
+pay the overdue balance in the **Henry Flare** account's Billing page, then
+go to **Hyperdrive (Postgres & MySQL Database)** and reactivate the existing
+PlanetScale subscription. Cloudflare can take up to 24 hours to recognize
+payment ([billing guidance](https://developers.cloudflare.com/billing/manage/pay-invoices-overdue-balances/)).
+Once the branch is ready, verify `/healthz` again; correcting the route config
+alone cannot restore the app. Keep the entrypoint's migration failure gate
+intact.
+
+On 2026-10-07, the zone-route read and live alias redirect succeeded, but the
+Custom Hostnames and fallback-origin API reads returned `1404` (no SaaS quota)
+and `1456` (SaaS access not granted). Those reads do not establish why the
+entitlement changed. Before provisioning or changing SaaS resources, verify
+the zone's SSL/TLS → Custom Hostnames entitlement in the dashboard. Preserve
+the working hostname route while investigating; do not substitute `*/*`, which
+would intercept the Candidary apex's Custom Domain.
+
 ### Mechanism B — Cloudflare for SaaS custom hostname (recommended)
 
 Keeps `hperkins.blog` DNS at WordPress.com untouched except for one new record.
@@ -938,9 +1161,13 @@ zone **route** sends only that hostname to the Worker
    **proxied** (originless), then set it as the fallback origin
    (`PUT /zones/973da452ca2467c3b0d6e489839300d2/custom_hostnames/fallback_origin`
    `{"origin":"saas-fallback.candidary.online"}`) and wait for `active`.
-3. **Route, then deploy**: add to `routes` in `wrangler.jsonc`
-   `{ "pattern": "boards.hperkins.blog/*", "zone_name": "candidary.online" }`
-   and merge. **Never `*/*`**: the apex `candidary.online` is the Custom Domain
+3. **Route separately from deployment**: after SaaS is enabled, use the zone's
+   Workers Routes page to attach `boards.hperkins.blog/*` to `retroboards`, or
+   `POST /zones/973da452ca2467c3b0d6e489839300d2/workers/routes` with
+   `{"pattern":"boards.hperkins.blog/*","script":"retroboards"}` if it is
+   missing. Reuse the existing route when it already matches; do not recreate
+   it during each release or add it to `wrangler.jsonc`. **Never `*/*`**: the
+   apex `candidary.online` is the Custom Domain
    of the `candidary` Worker, and a zone-wide route runs *ahead* of Custom
    Domains, so `*/*` would hand that site to `retroboards`, whose canonical
    redirect would then send it to the forum. The hostname-only route is the
@@ -963,8 +1190,11 @@ zone **route** sends only that hostname to the Worker
    curl -sS https://forum.candidary.online/healthz          # still 200, unchanged
    ```
 
-Rollback of B at any point: delete the route from `wrangler.jsonc` (deploy),
-delete the custom hostname, delete the CNAME. The blog never noticed.
+Rollback of B: after deciding to remove the alias, delete its exact zone route
+through Workers Routes or `DELETE /zones/{zone_id}/workers/routes/{route_id}`
+(look up the current ID first), then delete the custom hostname and its CNAME.
+Removing a route from `wrangler.jsonc` no longer manages this separate resource.
+Leave the blog's other DNS records intact.
 
 ### Mechanism A — move the `hperkins.blog` zone to Cloudflare, then a Custom Domain
 
@@ -997,7 +1227,8 @@ deleted until well after cut-over.
 
 ### Then: make `boards.hperkins.blog` canonical
 
-Do this only after B.6 (or A.4) shows the `301`.
+Do this only after B.6 (or A.4) shows the `301`, the canonical `/healthz` is
+healthy, and the account/provider/passkey inventory above has been refreshed.
 
 1. In `wrangler.jsonc` set `APP_URL` to `https://boards.hperkins.blog`.
    Consider setting `WEBAUTHN_RP_ID=hperkins.blog` in the same change (it must

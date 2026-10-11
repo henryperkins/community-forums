@@ -1,0 +1,15 @@
+{
+  "version": "f2dfa7a4c4d019ca",
+  "served": [
+    {
+      "entry": "app.css",
+      "url": "/assets/dist/app-style-B8T0LKSf.css",
+      "sha256": "18fee5c120e3289dea3d2e732159bf71b20e8a3dfb250843a59bdfa6674c275e"
+    },
+    {
+      "entry": "app.js",
+      "url": "/assets/dist/app-0d803f892404e3bd.js",
+      "sha256": "0d803f892404e3bd332e32c808d8f5bd193b02be43d14ed4a59fc24ef2f8bd55"
+    }
+  ]
+}

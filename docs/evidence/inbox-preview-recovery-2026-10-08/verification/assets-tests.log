@@ -1,0 +1,36 @@
+
+> test:assets
+> node --test tests/worker/*.test.mjs
+
+✔ confirmed releases keep recent pages and lazy imports working, then retire the oldest release (2734.622483ms)
+✔ repeated local builds and source reverts preserve the deployed baseline (2747.410209ms)
+✔ recording a release requires the exact previously built version and never happens during checks (2014.349348ms)
+✔ a write failure preserves published assets and permits a normal retry (1295.439745ms)
+✔ a static-install failure preserves published assets and permits a normal retry (1266.13341ms)
+✔ a manifest-install failure preserves published assets and permits a normal retry (1273.236969ms)
+✔ a overlay-static-install failure preserves published assets and permits a normal retry (1283.115872ms)
+✔ overlayfs directory backups permit publication without losing deployed files (856.88364ms)
+✔ the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses (395.95883ms)
+✔ fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable (22.67243ms)
+✔ only the genuine current version makes source asset URLs immutable (0.79417ms)
+✔ conditional requests retain 304 and validators, and HEAD retains its empty body (0.619492ms)
+✔ range responses and their status survive without exposing Set-Cookie (0.403785ms)
+✔ missing/private assets and unsupported methods never fall through to PHP or an SPA (0.454434ms)
+✔ branding, package themes and application routes retain dynamic response semantics (0.570563ms)
+✔ published manifest names only verified asset bytes and font preload matches emitted CSS (48.940655ms)
+✔ requests on the canonical origin pass through untouched (20.614276ms)
+✔ any other hostname is redirected to the same path and query on the canonical origin (0.994157ms)
+✔ plain http on the canonical host is upgraded to the canonical scheme (0.320036ms)
+✔ unsafe methods keep their method and body through a 308 (1.609059ms)
+✔ a stray request port is dropped and a non-default canonical port is carried over (0.385515ms)
+✔ loopback hosts (wrangler dev) and an unusable APP_URL fail open (0.354716ms)
+✔ certificate-validation paths on a non-canonical host go to the origin instead of redirecting (0.983368ms)
+✔ production deploy leaves the independently provisioned SaaS zone route untouched (6.778393ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13531.397827

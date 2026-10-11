@@ -1,0 +1,408 @@
+{
+  "event": "independent_hosted_acceptance_audit",
+  "captured_at": "2026-10-09T12:13:35.755359+00:00",
+  "success": true,
+  "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "parent": {
+    "id": "48afc71c-cb4f-468c-9294-58f510c89bd1",
+    "projectId": "rising-woods-449718-v6",
+    "status": "SUCCESS",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+    "createTime": "2026-10-09T11:16:56.586096Z",
+    "startTime": "2026-10-09T11:16:57.101066325Z",
+    "finishTime": "2026-10-09T12:12:22.652193Z",
+    "safe_substitutions": {
+      "_SHA": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence",
+      "_VERIFY_BUCKET": "rising-woods-449718-v6-retroboards-browser-verification",
+      "_REF": "refs/heads/chore/cloud-run-operations",
+      "_REPO": "henryperkins/community-forums"
+    },
+    "substitution_keys": [
+      "TRIGGER_BUILD_CONFIG_PATH",
+      "TRIGGER_NAME",
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_REF",
+      "_REPO",
+      "_SHA",
+      "_VERIFY_BUCKET"
+    ],
+    "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "exact_sha_match": true,
+    "steps": [
+      {
+        "id": "trusted-parent-controls",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "isolated-child-and-parent-verification",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ]
+  },
+  "child": {
+    "id": "4b4d18e8-0c22-4457-b386-a3244ff6a563",
+    "projectId": "rising-woods-449718-v6",
+    "status": "SUCCESS",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": null,
+    "createTime": "2026-10-09T11:18:10.798163095Z",
+    "startTime": "2026-10-09T11:18:11.382021180Z",
+    "finishTime": "2026-10-09T12:12:11.718041Z",
+    "safe_substitutions": {
+      "_SHA": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence"
+    },
+    "substitution_keys": [
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_SHA"
+    ],
+    "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "exact_sha_match": true,
+    "steps": [
+      {
+        "id": "source",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "browser-suites",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": true
+      },
+      {
+        "id": "publish-evidence",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "enforce-result",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ]
+  },
+  "parent_receipt": {
+    "artifact_receipts": [
+      {
+        "bytes": 67556,
+        "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/result.json",
+        "sha256": "b4c80eb4342bacd66a29e79055207eebd686c620aae836ae529bb32130522511"
+      },
+      {
+        "bytes": 23,
+        "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/runner-exit.json",
+        "sha256": "34de0b5dab231de578c472d79a7c305e6920933ad646c18c3243db107c13b068"
+      },
+      {
+        "bytes": 112487605,
+        "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/evidence.tar.gz",
+        "sha256": "f92e2efa65094c375a35af192144229d41f44951f9a2579ad7ddb4985ad4ff10"
+      }
+    ],
+    "child_build_id": "4b4d18e8-0c22-4457-b386-a3244ff6a563",
+    "child_provider_status": "SUCCESS",
+    "child_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "enforcement_passed": true,
+    "event": "browser_ci_parent_verification",
+    "metadata_verified": true,
+    "parent_build_id": "48afc71c-cb4f-468c-9294-58f510c89bd1",
+    "parent_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "passed": true,
+    "provider_steps_verified": true,
+    "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+    "stage": "complete",
+    "trust_limit": "Child test receipts are branch-reported; parent enforcement is isolated"
+  },
+  "parent_receipt_object": {
+    "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/48afc71c-cb4f-468c-9294-58f510c89bd1/verification.json",
+    "bytes": 1452,
+    "sha256": "0f60f7e8ae1b93847442092d07bfe8867a4f99cc0aa1c58baf4a84b49292bb2e",
+    "provider_size_md5_match": true,
+    "generation": "1791547941590713",
+    "shared_cached_bytes": true
+  },
+  "artifacts": [
+    {
+      "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/result.json",
+      "bytes": 67556,
+      "sha256": "b4c80eb4342bacd66a29e79055207eebd686c620aae836ae529bb32130522511",
+      "provider_size_md5_match": true,
+      "generation": "1791547924649630",
+      "shared_cached_bytes": true
+    },
+    {
+      "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/runner-exit.json",
+      "bytes": 23,
+      "sha256": "34de0b5dab231de578c472d79a7c305e6920933ad646c18c3243db107c13b068",
+      "provider_size_md5_match": true,
+      "generation": "1791547924748090",
+      "shared_cached_bytes": true
+    },
+    {
+      "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/evidence.tar.gz",
+      "bytes": 112487605,
+      "sha256": "f92e2efa65094c375a35af192144229d41f44951f9a2579ad7ddb4985ad4ff10",
+      "provider_size_md5_match": true,
+      "generation": "1791547925826968",
+      "shared_cached_bytes": true
+    }
+  ],
+  "all_provider_steps_verified": true,
+  "artifact_hashes_and_sizes_match_parent_and_provider": true,
+  "archive": {
+    "artifact_count": 809,
+    "member_count": 810,
+    "compressed_bytes": 112487605,
+    "inflated_bytes_including_headers": 125265920,
+    "member_payload_bytes": 123807538,
+    "max_member_bytes": 982137,
+    "root_counts": {
+      "browser": 290,
+      "unified-notifications-and-settings": 505,
+      "image-upload-reliability": 14
+    },
+    "png_count": 760,
+    "json_count": 49,
+    "within_all_bounds": true
+  },
+  "unified": {
+    "completed": true,
+    "recorded_commands": 40,
+    "all_commands_exit_zero": true,
+    "suite_project_inventory_verified": true,
+    "project_totals": {
+      "passed": 248,
+      "failed": 0,
+      "skipped": 18,
+      "flaky": 0
+    },
+    "project_reports": [
+      {
+        "path": "unified-notifications-and-settings/account-console/desktop/playwright-results.json",
+        "passed": 11,
+        "failed": 0,
+        "skipped": 4,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/account-console/mobile/playwright-results.json",
+        "passed": 7,
+        "failed": 0,
+        "skipped": 8,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/account-settings-repairs/desktop/playwright-results.json",
+        "passed": 33,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/account-settings-repairs/mobile/playwright-results.json",
+        "passed": 33,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/board-index-remediation/desktop/playwright-results.json",
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/board-index-remediation/mobile/playwright-results.json",
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/chamfer-removal/desktop/playwright-results.json",
+        "passed": 30,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/chamfer-removal/mobile/playwright-results.json",
+        "passed": 30,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/gate-a-account-notifications/desktop/playwright-results.json",
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/gate-a-account-notifications/mobile/playwright-results.json",
+        "passed": 4,
+        "failed": 0,
+        "skipped": 1,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/notifications-unified/desktop/playwright-results.json",
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/notifications-unified/mobile/playwright-results.json",
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/profile-media-accessibility/desktop/playwright-results.json",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/profile-media-accessibility/mobile/playwright-results.json",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/profile-surface/desktop/playwright-results.json",
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/profile-surface/mobile/playwright-results.json",
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/totp/desktop/playwright-results.json",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/totp/mobile/playwright-results.json",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/unified-chrome/desktop/playwright-results.json",
+        "passed": 11,
+        "failed": 0,
+        "skipped": 4,
+        "flaky": 0
+      },
+      {
+        "path": "unified-notifications-and-settings/unified-chrome/mobile/playwright-results.json",
+        "passed": 14,
+        "failed": 0,
+        "skipped": 1,
+        "flaky": 0
+      }
+    ],
+    "report_server_environments_omitted": true,
+    "account_console_budget_case": [
+      {
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          "passed"
+        ]
+      },
+      {
+        "project": "mobile",
+        "status": "skipped",
+        "results": [
+          "skipped"
+        ]
+      }
+    ]
+  },
+  "provider_log_reported_group_counts": {
+    "capture": {
+      "passed": 334,
+      "failed": 0,
+      "skipped": 74
+    },
+    "unified-notifications-settings": {
+      "passed": 248,
+      "failed": 0,
+      "skipped": 18
+    },
+    "production-docker-uploads": {
+      "passed": 144,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "held_native_pointer_cases": [
+    {
+      "result": "passed",
+      "project": "desktop"
+    },
+    {
+      "result": "passed",
+      "project": "mobile"
+    },
+    {
+      "result": "passed",
+      "project": "webkit-mobile"
+    }
+  ],
+  "trusted_pinned_enforcer_exit_code": 0,
+  "limits": [
+    "Provider status, isolated parent acceptance and matching artifact bytes are verified; arbitrary branch-authored test semantics remain reported rather than attested.",
+    "Existing project-specific skips remain included in reported suite counts.",
+    "GitHub Actions billing and check publication remain separate from this verified Google Cloud lane."
+  ],
+  "upload_application_runtime_report": {
+    "php": "8.2.34",
+    "file_bytes": 8388608,
+    "post_bytes": 10485760,
+    "application_bytes": 5242880
+  },
+  "parent_verification_receipt_bytes": 1452,
+  "parent_verification_receipt_sha256": "0f60f7e8ae1b93847442092d07bfe8867a4f99cc0aa1c58baf4a84b49292bb2e"
+}

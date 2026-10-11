@@ -101,6 +101,8 @@ export function PresenceList({
   layout = 'list',
   avatars = true,
   emptyLabel = 'No one is showing as online.',
+  allHref,
+  allLabel = 'See everyone online',
   footer,
   className = '',
   ...rest
@@ -153,7 +155,15 @@ export function PresenceList({
         </ul>
       )}
       {more > 0 && !loading ? <p className="presence-more">+{more} more</p> : null}
-      {footer ? <div className="presence-foot">{footer}</div> : null}
+      {/* The widget's one route to the roll, in the widget itself as
+          sidebar.php has it. Never hidden: on an empty roster it is the only
+          way left to go and look. */}
+      {allHref || footer ? (
+        <div className="presence-foot">
+          {allHref ? <a className="presence-all" href={allHref}>{allLabel}</a> : null}
+          {footer}
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -21,13 +21,16 @@ final class MentionParser
     {
         $stripped = self::stripCode($markdown);
 
-        if (preg_match_all('/(?<![\w@])@([A-Za-z0-9_]{3,32})\b/', $stripped, $m) === false) {
+        // Rich-editor Markdown may necessarily escape a handle's underscores.
+        // Read the entire handle before decoding so @alice\_w never notifies alice.
+        if (preg_match_all('/(?<![\w@])@((?:[A-Za-z0-9_]|\\\\_){3,32})(?![A-Za-z0-9_]|\\\\_)/', $stripped, $m) === false) {
             return [];
         }
 
         $seen = [];
         $out = [];
         foreach ($m[1] as $handle) {
+            $handle = str_replace('\\_', '_', $handle);
             $key = strtolower($handle);
             if (isset($seen[$key])) {
                 continue;

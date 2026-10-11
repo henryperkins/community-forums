@@ -1,0 +1,58 @@
+
+Running 24 tests using 1 worker
+
+(node:1538752) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [desktop] › inbox-preview-recovery.spec.ts:118:5 › failed preview retries keep a removed Unread topic and its exact reply draft resumable (1.8s)
+
+  ✓   2 [desktop] › inbox-preview-recovery.spec.ts:145:5 › an initial preview failure offers retry and full topic without a previous-topic command (929ms)
+
+  ✓   3 [desktop] › inbox-preview-recovery.spec.ts:160:5 › return after failed history restoration aligns the URL with the retained topic without adding an entry (1.2s)
+
+  ✓   4 [desktop] › inbox-preview-recovery.spec.ts:200:5 › timeout without AbortController keeps the old draft and ignores a late preview (1.0s)
+
+  ✓   5 [desktop] › inbox-preview-recovery.spec.ts:224:9 › rail preference submission preserves a pending preview with AbortController (914ms)
+
+  ✓   6 [desktop] › inbox-preview-recovery.spec.ts:224:9 › reading preference submission preserves a pending preview with AbortController (899ms)
+
+  ✓   7 [desktop] › inbox-preview-recovery.spec.ts:224:9 › rail preference submission preserves a pending preview without AbortController (844ms)
+
+  ✓   8 [desktop] › inbox-preview-recovery.spec.ts:224:9 › reading preference submission preserves a pending preview without AbortController (944ms)
+
+  ✓   9 [desktop] › inbox-preview-recovery.spec.ts:254:5 › pane preferences retain failed-preview recovery and its return command (1.2s)
+
+  ✓  10 [desktop] › inbox-preview-recovery.spec.ts:271:5 › a prevented form submission leaves the requested preview in progress (771ms)
+
+  ✓  11 [desktop] › inbox-preview-recovery.spec.ts:299:7 › native row submission owns navigation when an old preview answers with an access error (983ms)
+
+  ✓  12 [desktop] › inbox-preview-recovery.spec.ts:299:7 › native bulk submission owns navigation when an old preview answers with an access error (921ms)
+(node:1539804) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  13 [mobile] › inbox-preview-recovery.spec.ts:118:5 › failed preview retries keep a removed Unread topic and its exact reply draft resumable (1.4s)
+
+  ✓  14 [mobile] › inbox-preview-recovery.spec.ts:145:5 › an initial preview failure offers retry and full topic without a previous-topic command (887ms)
+
+  ✓  15 [mobile] › inbox-preview-recovery.spec.ts:160:5 › return after failed history restoration aligns the URL with the retained topic without adding an entry (1.2s)
+
+  ✓  16 [mobile] › inbox-preview-recovery.spec.ts:200:5 › timeout without AbortController keeps the old draft and ignores a late preview (1.1s)
+
+  -  17 [mobile] › inbox-preview-recovery.spec.ts:224:9 › rail preference submission preserves a pending preview with AbortController
+
+  -  18 [mobile] › inbox-preview-recovery.spec.ts:224:9 › reading preference submission preserves a pending preview with AbortController
+
+  -  19 [mobile] › inbox-preview-recovery.spec.ts:224:9 › rail preference submission preserves a pending preview without AbortController
+
+  -  20 [mobile] › inbox-preview-recovery.spec.ts:224:9 › reading preference submission preserves a pending preview without AbortController
+
+  -  21 [mobile] › inbox-preview-recovery.spec.ts:254:5 › pane preferences retain failed-preview recovery and its return command
+
+  -  22 [mobile] › inbox-preview-recovery.spec.ts:271:5 › a prevented form submission leaves the requested preview in progress
+
+  ✓  23 [mobile] › inbox-preview-recovery.spec.ts:299:7 › native row submission owns navigation when an old preview answers with an access error (985ms)
+
+  ✓  24 [mobile] › inbox-preview-recovery.spec.ts:299:7 › native bulk submission owns navigation when an old preview answers with an access error (1.0s)
+
+  6 skipped
+  18 passed (22.7s)

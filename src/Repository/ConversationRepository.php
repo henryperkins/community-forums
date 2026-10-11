@@ -208,7 +208,7 @@ final class ConversationRepository
     public function participants(int $conversationId): array
     {
         return $this->db->fetchAll(
-            'SELECT cp.*, u.username, u.display_name, u.status, u.show_presence,
+            'SELECT cp.*, u.username, u.display_name, u.avatar_path, u.status, u.show_presence,
                     u.profile_visibility, u.last_seen_at
              FROM conversation_participants cp
              JOIN users u ON u.id = cp.user_id
@@ -257,6 +257,7 @@ final class ConversationRepository
     {
         $sql = 'SELECT c.id AS conversation_id, c.kind, c.title, c.last_message_at,
                     ou.id AS other_id, ou.username AS other_username, ou.display_name AS other_display_name,
+                    ou.avatar_path AS other_avatar_path,
                     (SELECT COUNT(*) FROM conversation_participants cp WHERE cp.conversation_id = c.id AND cp.left_at IS NULL) AS participant_count,
                     (SELECT GROUP_CONCAT(COALESCE(NULLIF(gu.display_name, \'\'), gu.username) ORDER BY gu.username SEPARATOR \', \')
                      FROM conversation_participants gp JOIN users gu ON gu.id = gp.user_id

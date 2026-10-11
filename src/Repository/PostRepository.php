@@ -110,7 +110,8 @@ final class PostRepository
         $deletedClause = $includeDeleted ? '' : ' AND p.is_deleted = 0';
         return $this->db->fetchAll(
             'SELECT p.*, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role,
-                    u.signature AS author_signature, u.reputation AS author_reputation, u.title AS author_title
+                    u.signature AS author_signature, u.reputation AS author_reputation, u.title AS author_title,
+                    u.avatar_path AS author_avatar_path
              FROM posts p
              JOIN users u ON u.id = p.user_id
              WHERE p.thread_id = :thread_id' . $deletedClause . ' AND p.is_pending = 0
@@ -143,11 +144,11 @@ final class PostRepository
         $limit = max(1, $limit);
         return $this->db->fetchAll(
             'SELECT u.id AS user_id, u.username AS author_username, u.display_name AS author_display_name,
-                    u.role AS author_role, MIN(p.created_at) AS first_at
+                    u.role AS author_role, u.avatar_path AS author_avatar_path, MIN(p.created_at) AS first_at
              FROM posts p
              JOIN users u ON u.id = p.user_id
              WHERE p.thread_id = ? AND p.is_deleted = 0 AND p.is_pending = 0 AND p.is_anonymous = 0
-             GROUP BY u.id, u.username, u.display_name, u.role
+             GROUP BY u.id, u.username, u.display_name, u.role, u.avatar_path
              ORDER BY first_at ASC, u.id ASC
              LIMIT ' . $limit,
             [$threadId],

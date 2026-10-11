@@ -10,6 +10,8 @@ import path from 'node:path';
  */
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
+test.use({ browserName: process.env.E2E_LAYOUT_BROWSER === 'webkit' ? 'webkit' : 'chromium' });
+const screenshotsInProgress = new WeakSet<Page>();
 const TIERS = [
   'Overview',
   'Moderation',
@@ -34,12 +36,14 @@ async function shot(page: Page, info: TestInfo, name: string, neutralizeStickyCh
     })
     : null;
   try {
+    screenshotsInProgress.add(page);
     await page.screenshot({
       path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
       fullPage: true,
       animations: 'disabled',
     });
   } finally {
+    screenshotsInProgress.delete(page);
     if (previousPosition !== null) {
       await adminBar.evaluate((element, prior) => {
         if (prior) (element as HTMLElement).style.position = prior;
@@ -94,6 +98,12 @@ async function expectAxeClean(page: Page, info: TestInfo): Promise<void> {
 function observeBrowserProblems(page: Page): string[] {
   const problems: string[] = [];
   page.on('console', (message) => {
+    // WebKit rejects Playwright's temporary screenshot stylesheet under our
+    // strict CSP. A standalone capture reproduces it even with caret:'initial'.
+    // Exclude that exact driver message only during capture; application CSP
+    // violations outside capture and all other browser errors remain failures.
+    if (screenshotsInProgress.has(page)
+      && message.text() === "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.") return;
     if (message.type() === 'error') problems.push(`console: ${message.text()}`);
   });
   page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
@@ -101,6 +111,17 @@ function observeBrowserProblems(page: Page): string[] {
 }
 
 async function expectAdminTier(page: Page): Promise<void> {
+  const menu = page.locator('.admin-area-menu');
+  if (await menu.isVisible()) {
+    if (!await menu.evaluate((element) => (element as HTMLDetailsElement).open)) {
+      await menu.locator('summary').click();
+    }
+    const mobileAreas = page.locator('[data-admin-mobile-areas]');
+    await expect(mobileAreas).toBeVisible();
+    await expect(mobileAreas.locator('.admin-area-item')).toHaveCount(11);
+    await expect(mobileAreas.locator('.admin-area-item')).toHaveText(TIERS);
+    return;
+  }
   const tier = page.locator('[data-admin-tier]');
   await expect(tier).toBeVisible();
   await expect(tier.locator('.admin-tier-item')).toHaveCount(11);
@@ -374,25 +395,26 @@ test('the 900px console header preserves a long site name without horizontal ove
   expect(browserProblems).toEqual([]);
 });
 
-test('mobile admin tier scrolls horizontally while page and tables keep their own overflow cues', async ({ page }, info) => {
+test('mobile admin areas use a native disclosure while page and tables keep their own overflow cues', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile tier evidence uses the 390x844 project');
   const browserProblems = observeBrowserProblems(page);
 
   await login(page);
   await page.goto('/admin');
   await expectAdminTier(page);
-  const tier = page.locator('[data-admin-tier]');
+  const tier = page.locator('[data-admin-mobile-areas]');
   const tierMetrics = await tier.evaluate((element) => ({
-    overflowX: getComputedStyle(element).overflowX,
+    overflowY: getComputedStyle(element).overflowY,
     clientWidth: element.clientWidth,
     scrollWidth: element.scrollWidth,
   }));
-  expect(['auto', 'scroll']).toContain(tierMetrics.overflowX);
-  expect(tierMetrics.scrollWidth).toBeGreaterThan(tierMetrics.clientWidth);
-  const tierItemHeights = await tier.locator('.admin-tier-item').evaluateAll((items) => items.map(
+  expect(['auto', 'scroll']).toContain(tierMetrics.overflowY);
+  expect(tierMetrics.scrollWidth).toBeLessThanOrEqual(tierMetrics.clientWidth + 1);
+  const tierItemHeights = await tier.locator('.admin-area-item').evaluateAll((items) => items.map(
     (item) => item.getBoundingClientRect().height,
   ));
   expect(tierItemHeights.every((height) => height >= 44)).toBe(true);
+  await page.locator('[data-admin-current-area]').click();
 
   const queueGridMetrics = await page.locator('.admin-overview-dashboard .admin-dashboard-grid').evaluate((grid) => {
     const firstCard = grid.querySelector('.queue-card');
@@ -549,8 +571,10 @@ test('audit log is contained, focusable, theme-complete, and axe-clean on both v
   expect(auditStyles.filterGap).toBe('10px');
   expect(auditStyles.filterAlignItems).toBe('start');
   expect(auditStyles.apply).toMatchObject({ padding: '8px 17px', fontSize: '12.8px', letterSpacing: '0.512px', boxShadow: 'none', borderTopWidth: '0px' });
-  // Chromium quantizes the declared 1.5px border to a 1px computed width.
-  expect(auditStyles.reset).toMatchObject({ padding: '8px 17px', fontSize: '12.8px', letterSpacing: '0.512px', boxShadow: 'none', borderTopWidth: '1px', color: auditStyles.textMuted });
+  // The declared 1.5px border computes to 1px or 1.5px across these engine/scale
+  // combinations. Preserve its visible border without assuming quantization.
+  expect(auditStyles.reset).toMatchObject({ padding: '8px 17px', fontSize: '12.8px', letterSpacing: '0.512px', boxShadow: 'none', color: auditStyles.textMuted });
+  expect(['1px', '1.5px']).toContain(auditStyles.reset.borderTopWidth);
   expect(auditStyles.targetInput).toEqual({ fontFamily: auditStyles.monoFamily, fontSize: '14.08px' });
   expect(auditStyles.dateInput).toEqual({ fontFamily: auditStyles.monoFamily, fontSize: '13.76px' });
   expect(auditStyles.pagerMarginTop).toBe('18px');
@@ -601,10 +625,13 @@ test('no-JS mobile tier and tabs remain usable and reach domain settings', async
     await expect(page.locator('html')).not.toHaveClass(/has-js/);
     await expectAdminTier(page);
     await expect(page.locator('.admin-tabs')).toBeVisible();
-    await page.locator('[data-admin-tier]').getByRole('link', { name: 'Settings', exact: true }).click();
+    await page.locator('[data-admin-mobile-areas]').getByRole('link', { name: 'Settings', exact: true }).click();
     await page.waitForURL(/\/admin\/settings$/);
     await expect(page.getByRole('heading', { name: 'General & intelligence' })).toBeVisible();
-    await expect(page.locator('span.admin-tier-item.is-active[aria-current="page"]')).toHaveText('Settings');
+    await expect(page.locator('[data-admin-current-area]')).toContainText('Settings');
+    await page.locator('[data-admin-current-area]').click();
+    await expect(page.locator('span.admin-area-item.is-active[aria-current="page"]')).toHaveText('Settings');
+    await page.locator('[data-admin-current-area]').click();
     await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('General & registration');
     await page.mouse.move(0, 0);
     await page.screenshot({

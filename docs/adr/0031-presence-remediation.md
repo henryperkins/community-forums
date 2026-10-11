@@ -338,3 +338,18 @@ Playwright's click waits for its target to hold still across frames — a check
 that never settles under JavaScript-disabled emulation while an ancestor is
 animating. The no-JS journey in `users-online-remediation.spec.ts` therefore
 waits for the animation to finish before its first click.
+
+## Follow-up — 2026-09-28
+
+The roster payload carries one more field. Each member now includes
+`avatar_path`, the uploaded avatar's `/media/{id}` path or null. Without it a
+row that `app.js` rebuilt after a poll lost the member's picture: every surface
+now draws an uploaded avatar in place of the monogram, and the rail had to
+match. The path is public, parentless media, and it rides the same roster that
+§1 and §2 already filter, so a guest never receives it for a members-only
+profile. Decision 6's single anatomy now covers the preference too. The rail
+container states `data-presence-avatars`, and a rebuilt row honours "Show
+avatars" with the bare dot `presence_person.php` draws. Before this, the poller
+drew a monogram even with avatars off. Deferral 8 stands for monogram rows. A
+row with an uploaded avatar now keeps its picture through a rebuild. Evidence:
+`docs/evidence/avatar-display-2026-09-28/`.

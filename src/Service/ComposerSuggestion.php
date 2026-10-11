@@ -16,13 +16,17 @@ final class ComposerSuggestion
         public readonly string $meta = '',
         public readonly string $group = '',
         public readonly int $rank = 0,
+        public readonly string $initials = '',
+        public readonly string $mono = '',
+        public readonly ?string $avatar = null,
+        public readonly bool $participant = false,
     ) {
     }
 
-    /** @return array{type:string,id:int,label:string,token:string,url:string,markdown:string,meta:string,group:string} */
+    /** @return array{type:string,id:int,label:string,token:string,url:string,markdown:string,meta:string,group:string,initials?:string,mono?:string,avatar?:?string,participant?:bool} */
     public function toArray(): array
     {
-        return [
+        $item = [
             'type' => $this->type,
             'id' => $this->id,
             'label' => $this->label,
@@ -32,5 +36,14 @@ final class ComposerSuggestion
             'meta' => $this->meta,
             'group' => $this->group,
         ];
+        if ($this->type === 'user') {
+            $item += [
+                'initials' => $this->initials,
+                'mono' => $this->mono,
+                'avatar' => $this->avatar,
+                'participant' => $this->participant,
+            ];
+        }
+        return $item;
     }
 }

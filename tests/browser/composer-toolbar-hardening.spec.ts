@@ -181,6 +181,8 @@ test('collapsed formatting row explains itself and stays recoverable', async ({ 
   await login(page, 'bob@retro.test');
   const form = await openNewTopicComposer(page);
 
+  // Let the modal finish entering before sampling pointer coordinates.
+  await form.evaluate(async (node) => Promise.all(node.getAnimations().map((animation) => animation.finished)));
   const toggle = form.getByRole('button', { name: 'Formatting', exact: true });
   const bar = form.locator('.composer-toolbar');
 

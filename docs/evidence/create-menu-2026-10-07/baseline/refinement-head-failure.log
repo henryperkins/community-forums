@@ -1,0 +1,218 @@
+
+Running 1 test using 1 worker
+
+(node:709044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › messages-refinement.spec.ts:167:5 › reference states: group counsel, first visit and list (8.4s)
+
+
+  1) [desktop] › messages-refinement.spec.ts:167:5 › reference states: group counsel, first visit and list
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.dm-listpane')
+    Timeout: 5000ms
+    - Expected substring  -  1
+    + Received string     + 90
+
+    - New accounts
+    +
+    +
+    +
+    +
+    +
+    + Private counsel
+    +                 Messages
+    +
+    +
+    +
+    +
+    +
+    +
+    +                         Private counselNew message
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +     To
+    +
+    +
+    +     Enter usernames separated by commas to start a group.
+    +
+    +
+    +
+    +
+    +
+    +         Group title (optional)
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +         ＋StrikeInline codeQuoteHeadingNumbered listCode blockSpoiler
+    +
+    +
+    +
+    +
+    +
+    +                 ＋Aa😊
+    +
+    +                             NI
+    +                         as Nimrodel
+    +
+    +
+    +
+    +                 Preview
+    +                 Cancel
+    +                     Send
+    +
+    +
+    +
+    +
+    +
+    +     Emoji×Search emoji
+    +
+    +         Up to 5 MiB per image
+    +         Draft saved · Discard
+    +                 0 / 5000
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+    +             All
+    +             Unread
+    +
+    +
+    +
+    +
+    +             No conversations yet
+    +             Your conversations with other members will appear here.
+    +
+    + You can reply to messages you receive. To start a conversation, make your first post or try again later.
+    + Write your first postNew message
+    +
+    +
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('.dm-listpane')
+        14 × locator resolved to <section class="dm-listpane" aria-label="Conversations">…</section>
+           - unexpected value "
+
+
+
+
+    Private counsel
+                    Messages
+
+
+
+
+
+
+                            Private counselNew message
+
+
+
+
+
+
+
+
+        To
+
+
+        Enter usernames separated by commas to start a group.
+
+
+
+
+
+            Group title (optional)
+
+
+
+
+
+
+
+            ＋StrikeInline codeQuoteHeadingNumbered listCode blockSpoiler
+
+
+
+
+
+                    ＋Aa😊
+
+                                NI
+                            as Nimrodel
+
+
+
+                    Preview
+                    Cancel
+                        Send
+
+
+
+
+
+        Emoji×Search emoji
+
+            Up to 5 MiB per image
+            Draft saved · Discard
+                    0 / 5000
+
+
+
+
+
+
+
+
+
+
+
+
+                All
+                Unread
+
+
+
+
+                No conversations yet
+                Your conversations with other members will appear here.
+
+    You can reply to messages you receive. To start a conversation, make your first post or try again later.
+    Write your first postNew message
+
+        "
+
+
+      195 |   await login(page, 'nimrodel');
+      196 |   await page.goto('/messages');
+    > 197 |   await expect(page.locator('.dm-listpane')).toContainText('New accounts');
+          |                                              ^
+      198 |   for (const [width, height, theme, name] of [
+      199 |     [1440, 1000, 'light', 'first-run-desktop-day'], [390, 844, 'dark', 'first-run-phone-twilight'],
+      200 |   ] as const) {
+        at /tmp/community-forums-create-menu-baseline/tests/browser/messages-refinement.spec.ts:197:46
+
+    Error Context: ../../docs/evidence/create-menu-baseline-proof/refinement/.artifacts/messages-refinement-refere-4af5b-ounsel-first-visit-and-list-desktop/error-context.md
+
+  1 failed
+    [desktop] › messages-refinement.spec.ts:167:5 › reference states: group counsel, first visit and list

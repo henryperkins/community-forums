@@ -1,0 +1,30 @@
+{
+  "captured_at_utc": "2026-10-09T12:31:36.536Z",
+  "scope": "Read-only active Worker deployment and version-linked Workers Builds metadata; credentials, authors, environment variables and build logs excluded",
+  "expected_commit_hash": "3e56aff5449478b189196323fb8c277decd22b4f",
+  "verified": true,
+  "build_api_status": 200,
+  "deployment": {
+    "id": "20eb89c6-dca0-4c31-ad44-adf72d716a72",
+    "created_on": "2026-10-09T12:31:10.359031Z",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "versions": [
+      {
+        "version_id": "117a5fe5-df58-40d7-a328-3ac429122b65",
+        "percentage": 100
+      }
+    ]
+  },
+  "version_linked_builds": [
+    {
+      "version_id": "117a5fe5-df58-40d7-a328-3ac429122b65",
+      "build_uuid": "17bab600-8f73-4556-bc81-b530ff04216b",
+      "status": "stopped",
+      "build_outcome": "success",
+      "stopped_on": "2026-10-09T12:31:14.529Z",
+      "branch": "main",
+      "commit_hash": "3e56aff5449478b189196323fb8c277decd22b4f"
+    }
+  ]
+}

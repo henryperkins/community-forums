@@ -53,7 +53,7 @@ function ToggleIcon({ icon, on }) {
  *
  * The counterpart to AdminNav on the community side. One row, one register,
  * identical on every app route: house lockup · surface pills · search ·
- * rail toggle · New topic · the viewer.
+ * rail toggle · New topic · the bell · the viewer.
  *
  * Why this exists: the four member templates each hand-rolled this bar and
  * drifted apart on every axis at once — 62px against 58px, the mark in
@@ -71,7 +71,14 @@ function ToggleIcon({ icon, on }) {
  * to the Search template. `viewer.presence` ('online' | 'away') puts the
  * viewer's own leaf on the seat; leave it off and no leaf is drawn — a member
  * who switched presence off must not see one beside their own name, which is
- * the control's own promise (ADR 0031).
+ * the control's own promise (ADR 0031). `notificationCount` puts the count on
+ * the bell, which sits beside the seat for every signed-in member — production
+ * carries it on every route (ADR 0032, 2026-09-20), and AdminNav already gave
+ * the operator the same glyph in the same place.
+ *
+ * The active pill KEEPS its href (ADR 0032 #1): a surface spans a family of
+ * routes, so the pill is still the way back to the surface's root, and a link
+ * that drops out of the tab order when it is current is the wrong kind of quiet.
  *
  * ⌘K and ⌘B are bound here rather than per-template, which is the point of
  * putting them in shared chrome — a shortcut that works on two screens out of
@@ -95,11 +102,20 @@ export function ForumNav({
   showCompose = true,
   viewer = null,
   signInHref = '#',
+  notificationCount = 0,
+  notificationsHref = '../board-index/BoardIndex.dc.html',
+  onNotifications,
+  showNotifications = true,
   children = null,
   className = '',
   ...rest
 }) {
-  const count = Number(inboxCount) || 0;
+  // The inbox count is the viewer's own number. A guest has no inbox, so it is
+  // never drawn without a seat, whatever a template passes.
+  const count = viewer ? (Number(inboxCount) || 0) : 0;
+  const bell = Number(notificationCount) || 0;
+  // Production caps a count at 99+; a four-digit pill would reflow the bar.
+  const cap = (n) => (n > 99 ? '99+' : n);
 
   React.useEffect(() => {
     function onKey(e) {
@@ -136,14 +152,14 @@ export function ForumNav({
           const routable = !!(s.dir && s.file);
           const cls = ['forum-bar-surface', active ? 'is-active' : '', routable ? '' : 'is-inert'].filter(Boolean).join(' ');
           const pill = s.key === 'inbox' && count > 0
-            ? <span className="forum-bar-count">{count}</span>
+            ? <span className="forum-bar-count" aria-label={`${count} unread topic${count === 1 ? '' : 's'}`}>{cap(count)}</span>
             : null;
           if (!routable) {
             return <span key={s.key} className={cls} aria-disabled="true">{s.label}{pill}</span>;
           }
           return (
             <a key={s.key} className={cls} aria-current={active ? 'page' : undefined}
-              href={active ? undefined : `../${s.dir}/${s.file}`}>
+              href={`../${s.dir}/${s.file}`}>
               {s.label}{pill}
             </a>
           );
@@ -196,10 +212,20 @@ export function ForumNav({
         ) : null}
 
         {viewer ? (
-          <a className="forum-bar-user" href={viewer.href || '../user-profile/UserProfile.dc.html'} aria-label={viewer.name}>
-            <Avatar name={viewer.name} username={viewer.username} size={30} presence={viewer.presence === 'online' || viewer.presence === 'away' ? viewer.presence : undefined} />
-            <span className="forum-bar-username">{viewer.name}</span>
-          </a>
+          <React.Fragment>
+            {showNotifications ? (
+              <a className="forum-bar-bell" href={onNotifications ? '#' : notificationsHref}
+                onClick={onNotifications ? (e) => { e.preventDefault(); onNotifications(); } : undefined}
+                aria-label={bell > 0 ? `Notifications, ${bell} unread` : 'Notifications'} title="Notifications">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" /></svg>
+                {bell > 0 ? <span className="forum-bar-bell-count" aria-hidden="true">{cap(bell)}</span> : null}
+              </a>
+            ) : null}
+            <a className="forum-bar-user" href={viewer.href || '../user-profile/UserProfile.dc.html'} aria-label={viewer.name}>
+              <Avatar name={viewer.name} username={viewer.username} size={30} presence={viewer.presence === 'online' || viewer.presence === 'away' ? viewer.presence : undefined} />
+              <span className="forum-bar-username">{viewer.name}</span>
+            </a>
+          </React.Fragment>
         ) : (
           <a className="forum-bar-signin" href={signInHref}>Log in</a>
         )}

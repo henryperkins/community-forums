@@ -1,0 +1,228 @@
+{
+  "event": "redundant_browser_C_cancellation",
+  "captured_at": "2026-10-09T12:20:38.099843+00:00",
+  "source_sha": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "accepted_browser_source": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "accepted_B_and_C_runtime_parity_verified": true,
+  "production_trigger_outside_scope": "1fa",
+  "parent_before": {
+    "id": "1378d74b-05fa-4f15-8b9f-a1b3cce4f0b5",
+    "projectId": "rising-woods-449718-v6",
+    "status": "WORKING",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+    "createTime": "2026-10-09T12:17:24.870053Z",
+    "startTime": "2026-10-09T12:17:25.424152824Z",
+    "finishTime": null,
+    "safe_substitutions": {
+      "_SHA": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence",
+      "_VERIFY_BUCKET": "rising-woods-449718-v6-retroboards-browser-verification",
+      "_REF": "refs/heads/chore/cloud-run-operations",
+      "_REPO": "henryperkins/community-forums"
+    },
+    "substitution_keys": [
+      "TRIGGER_BUILD_CONFIG_PATH",
+      "TRIGGER_NAME",
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_REF",
+      "_REPO",
+      "_SHA",
+      "_VERIFY_BUCKET"
+    ],
+    "source_sha": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "steps": [
+      {
+        "id": "trusted-parent-controls",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "isolated-child-and-parent-verification",
+        "status": "WORKING",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ],
+    "exact_sha_match_to_original_B_watch_reference": false,
+    "source_control_matches_cancellation_target": true
+  },
+  "child_before": {
+    "id": "d3672e91-6ebc-429b-8549-dd74a012babd",
+    "projectId": "rising-woods-449718-v6",
+    "status": "WORKING",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": null,
+    "createTime": "2026-10-09T12:18:44.904941008Z",
+    "startTime": "2026-10-09T12:18:45.474009986Z",
+    "finishTime": null,
+    "safe_substitutions": {
+      "_SHA": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence"
+    },
+    "substitution_keys": [
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_SHA"
+    ],
+    "source_sha": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "steps": [
+      {
+        "id": "source",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "browser-suites",
+        "status": "WORKING",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": true
+      },
+      {
+        "id": "publish-evidence",
+        "status": "QUEUED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "enforce-result",
+        "status": "QUEUED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ],
+    "exact_sha_match_to_original_B_watch_reference": false,
+    "source_control_matches_cancellation_target": true
+  },
+  "actions": [
+    {
+      "id": "1378d74b-05fa-4f15-8b9f-a1b3cce4f0b5",
+      "request_exit_code": 0,
+      "private_output_omitted": true
+    },
+    {
+      "id": "d3672e91-6ebc-429b-8549-dd74a012babd",
+      "request_exit_code": 0,
+      "private_output_omitted": true
+    }
+  ],
+  "parent_after": {
+    "id": "1378d74b-05fa-4f15-8b9f-a1b3cce4f0b5",
+    "projectId": "rising-woods-449718-v6",
+    "status": "CANCELLED",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+    "createTime": "2026-10-09T12:17:24.870053Z",
+    "startTime": "2026-10-09T12:17:25.424152824Z",
+    "finishTime": "2026-10-09T12:20:36.549977Z",
+    "safe_substitutions": {
+      "_SHA": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence",
+      "_VERIFY_BUCKET": "rising-woods-449718-v6-retroboards-browser-verification",
+      "_REF": "refs/heads/chore/cloud-run-operations",
+      "_REPO": "henryperkins/community-forums"
+    },
+    "substitution_keys": [
+      "TRIGGER_BUILD_CONFIG_PATH",
+      "TRIGGER_NAME",
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_REF",
+      "_REPO",
+      "_SHA",
+      "_VERIFY_BUCKET"
+    ],
+    "source_sha": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "steps": [
+      {
+        "id": "trusted-parent-controls",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "isolated-child-and-parent-verification",
+        "status": "CANCELLED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ],
+    "exact_sha_match_to_original_B_watch_reference": false,
+    "source_control_matches_cancellation_target": true
+  },
+  "child_after": {
+    "id": "d3672e91-6ebc-429b-8549-dd74a012babd",
+    "projectId": "rising-woods-449718-v6",
+    "status": "CANCELLED",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "buildTriggerId": null,
+    "createTime": "2026-10-09T12:18:44.904941008Z",
+    "startTime": "2026-10-09T12:18:45.474009986Z",
+    "finishTime": "2026-10-09T12:20:37.330604Z",
+    "safe_substitutions": {
+      "_SHA": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+      "_CONTROL_SHA": "03690ff92e26b5c3413c2d4d799b402599179676",
+      "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence"
+    },
+    "substitution_keys": [
+      "_BUCKET",
+      "_CONTROL_SHA",
+      "_SHA"
+    ],
+    "source_sha": "8fe3ba1cedbd8d77af496d4becc2a20e204c0f38",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "steps": [
+      {
+        "id": "source",
+        "status": "SUCCESS",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "browser-suites",
+        "status": "CANCELLED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": true
+      },
+      {
+        "id": "publish-evidence",
+        "status": "QUEUED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      },
+      {
+        "id": "enforce-result",
+        "status": "QUEUED",
+        "exit_code": null,
+        "exit_code_present": false,
+        "allow_failure": false
+      }
+    ],
+    "exact_sha_match_to_original_B_watch_reference": false,
+    "source_control_matches_cancellation_target": true
+  },
+  "both_cancelled": true,
+  "scope": "Only exact C browser parent and its source/control/identity-bound child; production builds untouched.",
+  "watch_comparison_limit": "The original watch flag compared source C with accepted source B; the explicit cancellation-target comparison checks C and control036 instead."
+}

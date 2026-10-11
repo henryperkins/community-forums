@@ -1,0 +1,32 @@
+{
+  "events": [
+    {
+      "type": "focusin",
+      "tag": "SUMMARY",
+      "text": "\n            Show:\n            For You\n           ",
+      "active": "<summary aria-label=\"Show: For You, 29 topics\">\n            <span class=\"inbox-control-label\">Show:</span>\n            <span class=\"inbox-selected-scope\">For You</span>\n            <span class=\"inbox-scope-count\"><span d"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "tag": "SUMMARY",
+      "text": "\n            Show:\n            For You\n           ",
+      "active": "<summary aria-label=\"Show: For You, 29 topics\">\n            <span class=\"inbox-control-label\">Show:</span>\n            <span class=\"inbox-selected-scope\">For You</span>\n            <span class=\"inbox-scope-count\"><span d"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "tag": "SUMMARY",
+      "text": "\n            Show:\n            For You\n           ",
+      "active": "<summary aria-label=\"Show: For You, 29 topics\">\n            <span class=\"inbox-control-label\">Show:</span>\n            <span class=\"inbox-selected-scope\">For You</span>\n            <span class=\"inbox-scope-count\"><span d"
+    },
+    {
+      "type": "focusin",
+      "tag": "A",
+      "text": "\n                    For You\n                    \n",
+      "active": "<a href=\"/inbox?scope=for_you&amp;order=active\" class=\"is-active\" aria-current=\"page\">\n                    <span>For You</span>\n                    <span class=\"inbox-choice-state\">\n                        <svg class=\"ic"
+    }
+  ],
+  "active": "<a href=\"/inbox?scope=for_you&amp;order=active\" class=\"is-active\" aria-current=\"page\">\n                    <span>For You</span>\n                    <span class=\"inbox-choice-state\">\n                        <svg class=\"icon icon-check\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"></path></svg>\n                        <span data-inbox-scope-count=\"for_you\">29</span>\n                    </span>\n                </a>",
+  "open": true
+}

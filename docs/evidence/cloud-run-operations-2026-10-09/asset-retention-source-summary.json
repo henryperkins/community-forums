@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-10-09T11:14:05.672230+00:00",
+  "passed": true,
+  "previous_source_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "verified_live_manifest_version": "85b4bc099e7bdac1",
+  "verified_live_asset_count": 64,
+  "live_asset_verification_at": "2026-10-09T11:07:30.981875+00:00",
+  "live_login_references_old_app_url": true,
+  "old_app_url": "/assets/dist/app-ead709125428cd4d.js",
+  "candidate_manifest_version": "d8529d5d0f5e0219",
+  "candidate_app_url": "/assets/dist/app-5839ddd55290c1d1.js",
+  "candidate_asset_count": 64,
+  "candidate_deployed_release_pins": [
+    "85b4bc099e7bdac1",
+    "ffc423564f256d2f",
+    "a160f1a21c51fcb2"
+  ],
+  "previous_current_release_files_retained_with_identical_bytes": true,
+  "previous_current_release_file_count": 25,
+  "retention_method": "Existing record-release CLI on isolated unchanged source after live hash verification, then build corrected source with that recorded baseline",
+  "no_generator_policy_change": true,
+  "scope": "Source retention verification, not a completed production deployment of the candidate",
+  "candidate_source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "candidate_manifest_match_commit": true
+}

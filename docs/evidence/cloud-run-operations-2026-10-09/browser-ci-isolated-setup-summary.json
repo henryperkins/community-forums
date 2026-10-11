@@ -1,0 +1,110 @@
+{
+  "event": "browser_ci_isolated_parent_setup_inventory",
+  "captured_at": "2026-10-09T08:52:59.403962+00:00",
+  "project": "rising-woods-449718-v6",
+  "region": "us-east4",
+  "service_account_project_roles": {
+    "retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com": [
+      "roles/logging.logWriter"
+    ],
+    "retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com": [
+      "projects/rising-woods-449718-v6/roles/retroboardsBrowserVerifier",
+      "roles/logging.logWriter"
+    ]
+  },
+  "verifier_custom_role_permissions": [
+    "cloudbuild.builds.create",
+    "cloudbuild.builds.get"
+  ],
+  "child_account_verifier_bindings": [
+    {
+      "role": "roles/iam.serviceAccountUser",
+      "parent_bound": true
+    }
+  ],
+  "verifier_account_direct_binding_count": 0,
+  "buckets": [
+    {
+      "name": "rising-woods-449718-v6-retroboards-browser-evidence",
+      "location": "US-EAST4",
+      "uniform_bucket_level_access": true,
+      "public_access_prevention": "enforced",
+      "soft_delete_policy": {
+        "retentionDurationSeconds": "0"
+      },
+      "lifecycle_config": {
+        "rule": [
+          {
+            "action": {
+              "type": "Delete"
+            },
+            "condition": {
+              "age": 14
+            }
+          }
+        ]
+      },
+      "ci_bindings": [
+        {
+          "role": "roles/storage.objectCreator",
+          "accounts": [
+            "retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com"
+          ]
+        },
+        {
+          "role": "roles/storage.objectViewer",
+          "accounts": [
+            "retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rising-woods-449718-v6-retroboards-browser-verification",
+      "location": "US-EAST4",
+      "uniform_bucket_level_access": true,
+      "public_access_prevention": "enforced",
+      "soft_delete_policy": {
+        "retentionDurationSeconds": "0"
+      },
+      "lifecycle_config": {
+        "rule": [
+          {
+            "action": {
+              "type": "Delete"
+            },
+            "condition": {
+              "age": 14
+            }
+          }
+        ]
+      },
+      "ci_bindings": [
+        {
+          "role": "roles/storage.objectCreator",
+          "accounts": [
+            "retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com"
+          ]
+        }
+      ]
+    }
+  ],
+  "trigger": {
+    "name": "retroboards-browser-evidence",
+    "id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+    "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+    "service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "recipe_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "filter": "_REPO == \"henryperkins/community-forums\" && _REF.matches(\"^refs/heads/.*\") && _SHA != \"0000000000000000000000000000000000000000\"",
+    "source_binding": "$(body.after)",
+    "ref_binding": "$(body.ref)",
+    "repository_binding": "$(body.repository.full_name)",
+    "parent_step_ids": [
+      "trusted-parent-controls",
+      "isolated-child-and-parent-verification"
+    ],
+    "artifact_bucket": "rising-woods-449718-v6-retroboards-browser-evidence",
+    "verification_bucket": "rising-woods-449718-v6-retroboards-browser-verification"
+  },
+  "private_callback_values_omitted": true
+}

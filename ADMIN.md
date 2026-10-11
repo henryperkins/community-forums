@@ -578,7 +578,7 @@ A persistent two-row **console bar**, then the page, then the page's own section
 
 1. **Identity row** — the community mark and name, an exit link back to the forum, the operator's
    search / notifications / identity / sign-out cluster, and a persistent **Admin mode** indicator.
-2. **Area tier** — one horizontal row of the eleven areas below. The active area is marked
+2. **Area tier** — one horizontal row of the eleven areas below on desktop; at 860px and below, a native disclosure names the current area and opens the same destinations. The active area is marked
    `aria-current="page"` and is not a link. An area whose every entry is behind a disabled flag
    renders disabled — never removed, never a live link to a dark route.
 3. **Page heading**, then the **area's own section tabs** (underline register, 2–4 per area), then
@@ -625,7 +625,7 @@ with JavaScript disabled.
 - **Search-first lists** with filters and **bulk actions** — admins work at scale.
 - **Progressive disclosure** — basic settings up front, advanced behind a toggle.
 - **Least privilege in the UI** — hide what a role can't do rather than show-and-deny.
-- **Responsive** — urgent actions (handle a report, ban) work on mobile; the console collapses to one column, the area tier scrolls horizontally with a visible thin scrollbar (the honest signal that areas are off-edge), and the section tabs wrap. Touch targets stay ≥44px below 860px. No drawer, no focus trap, no JavaScript: the console nav works identically with scripting disabled. *(Amended 2026-08-03, ADR 0024; previously "the section nav in a drawer".)*
+- **Responsive** — urgent actions (handle a report, ban) work on mobile; the console collapses to one column. Above 860px, the area tier scrolls horizontally with a visible thin scrollbar. At 860px and below, a native disclosure keeps the current area visible and opens a bounded list with the same ordered, role- and flag-gated destinations; the active area remains a non-link. Section tabs wrap, and touch targets stay ≥44px. The console navigation works identically with scripting disabled. *(Amended 2026-10-06 after the chrome consistency review; follows ADR 0024's server-rendered console navigation contract.)*
 
 ### 9.5 First-run setup wizard
 

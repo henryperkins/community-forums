@@ -23,6 +23,11 @@ return [
     'db' => [
         'host' => Env::get('DB_HOST', '127.0.0.1'),
         'port' => (int) Env::get('DB_PORT', '3306'),
+        // A Unix socket path replaces host/port when set. Cloud Run's Cloud SQL
+        // connector exposes the instance at /cloudsql/<connection name> and
+        // encrypts and authenticates the link itself (runbook
+        // docs/runbooks/deployment-cloud-run.md).
+        'socket' => Env::get('DB_SOCKET', ''),
         'database' => Env::get('DB_DATABASE', 'retroboards'),
         'username' => Env::get('DB_USERNAME', 'retro'),
         'password' => Env::get('DB_PASSWORD', 'retropw'),
@@ -68,11 +73,10 @@ return [
         // 'sendmail' uses PHP mail() and needs a local MTA; 'array' captures
         // messages in memory for tests. Two Cloudflare transports exist, and
         // they are NOT interchangeable — each reads its own credentials:
-        //   'cloudflare_smtp' submits over authenticated SMTPS and is what the
-        //     deployed Worker pins (wrangler.jsonc MAIL_DRIVER); it reads
+        //   'cloudflare_smtp' submits over authenticated SMTPS; it reads
         //     `cloudflare_api_token` / `timeout_seconds`.
-        //   'cloudflare' uses the Cloudflare Email Sending REST API (no MTA and
-        //     no Workers bindings required); it reads the `cloudflare` sub-array.
+        //   'cloudflare' uses the Cloudflare Email Sending REST API, as the
+        //     Cloud Run deployment does; it reads the `cloudflare` sub-array.
         // Empty `from` ⇒ not configured ⇒ email fails closed (in-app
         // notifications still deliver).
         'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
@@ -85,7 +89,8 @@ return [
         'cloudflare' => [
             // The sending domain must be onboarded first
             // (`wrangler email sending enable <domain>`), and the API token needs
-            // the email sending permission. Both are secrets, never `vars`.
+            // the email sending permission. Only the token is secret; the
+            // account identifier belongs in ordinary deployment configuration.
             'account_id' => Env::get('MAIL_CLOUDFLARE_ACCOUNT_ID', ''),
             'api_token' => Env::get('MAIL_CLOUDFLARE_API_TOKEN', ''),
             'timeout' => (int) Env::get('MAIL_TIMEOUT_SECONDS', '10'),

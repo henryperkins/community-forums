@@ -8,8 +8,7 @@ if ($old !== []) { $pause_all_email = ($old['pause_all_email'] ?? '') === '1'; }
 ?>
 <div class="settings-screen">
     <header class="settings-head">
-        <span class="eyebrow">Account</span>
-        <h1>Account settings</h1>
+        <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
         <p>Everything this community knows about you, and everything it does on your behalf.</p>
     </header>
     <div class="settings">
@@ -61,7 +60,7 @@ if ($old !== []) { $pause_all_email = ($old['pause_all_email'] ?? '') === '1'; }
             <button class="btn" type="submit">Save subscription</button>
         </form>
     <?php endif; ?>
-    <section class="scribe-panel is-list">
+    <section class="scribe-panel is-list account-subscription-list">
         <h2 class="scribe-panel-head">Your subscriptions</h2>
         <?php if (empty($subscriptions)): ?>
             <p class="account-note">No subscriptions. Watch a thread and it will appear here.</p>
@@ -77,7 +76,7 @@ if ($old !== []) { $pause_all_email = ($old['pause_all_email'] ?? '') === '1'; }
                     $action = '/settings/notifications/subscriptions/' . (int) $s['id'];
                     $draft = (int) ($subscription_error_id ?? 0) === (int) $s['id'] ? ($subscription_old ?? []) : [];
                     ?>
-                    <li class="account-ruled-row">
+                    <li class="account-ruled-row account-subscription-row">
                         <span class="account-row-main">
                             <?php if (!empty($s['available'])): ?><a class="account-row-name" href="<?= $link ?>"><?= $e($label) ?></a>
                             <?php else: ?><span class="account-row-name">Unavailable subscription</span><?php endif; ?>

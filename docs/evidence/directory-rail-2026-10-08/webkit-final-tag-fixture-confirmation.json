@@ -1,0 +1,28 @@
+{
+  "engine": "webkit",
+  "checks": [
+    {
+      "name": "/tags/rail-review canonical tag current",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "statusHeading": "Rail review",
+        "links": [
+          {
+            "key": "boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "current": null
+          }
+        ]
+      }
+    }
+  ],
+  "provenance": "Fixture repair only: initial empty query returned false rather than null, preventing tag insertion."
+}

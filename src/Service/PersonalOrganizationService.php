@@ -265,6 +265,7 @@ final class PersonalOrganizationService
                         'id' => $boardId,
                         'name' => (string) $row['board_name'],
                         'slug' => (string) $row['board_slug'],
+                        'visibility' => (string) $row['board_visibility'],
                     ];
                 }
             }

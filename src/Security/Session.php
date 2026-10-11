@@ -85,6 +85,23 @@ final class Session
         return $this->user;
     }
 
+    /**
+     * Re-read the signed-in account after a write that the same response renders.
+     * The row was loaded when the request started, so a page that re-renders in
+     * place instead of redirecting (the avatar actions keep an unsaved profile
+     * draft) would otherwise draw the shell's identity from the old row.
+     */
+    public function refreshUser(): void
+    {
+        if ($this->user === null) {
+            return;
+        }
+        $fresh = $this->users->findEntity($this->user->id());
+        if ($fresh !== null) {
+            $this->user = $fresh;
+        }
+    }
+
     public function check(): bool
     {
         return $this->user !== null;

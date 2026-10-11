@@ -192,6 +192,7 @@ final class ThreadController extends Controller
         $reactionRepo = $this->container->get(ReactionRepository::class);
         $reactionCounts = $engagement ? $reactionRepo->countsForPosts($postIds) : [];
         $myReactions = [];
+        $reactionReactors = [];
         $isStarred = false;
         $referenceCards = [];
         $linkPreviewCards = [];
@@ -230,6 +231,10 @@ final class ThreadController extends Controller
             $tuRepo = $this->container->get(ThreadUserRepository::class);
             if ($engagement) {
                 $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
+                // Names appear only in a writer's tips; others skip the read.
+                $reactionReactors = $this->container->get(WriteGate::class)->canWrite($user)
+                    ? $reactionRepo->reactorsForPosts($user->id(), array_keys($reactionCounts))
+                    : [];
                 $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
             }
             if (($engagement || $automatedContext) && $request->method() === 'GET' && $posts !== []) {
@@ -334,6 +339,7 @@ final class ThreadController extends Controller
         $canStaffAssign = false;
         $canChangeStatuses = [];
         $mySnooze = null;
+        $mySnoozeIndefinitely = false;
         if ($workflowOn) {
             $workflow = $this->container->get(ThreadWorkflowService::class);
             $statusHistory = $this->container->get(ThreadRepository::class)->statusHistory((int) $thread['id'], 5);
@@ -360,6 +366,7 @@ final class ThreadController extends Controller
                 }
                 $myState = $this->container->get(ThreadUserRepository::class)->find($user->id(), (int) $thread['id']);
                 $mySnooze = $myState['snoozed_until'] ?? null;
+                $mySnoozeIndefinitely = !empty($myState['snoozed_indefinitely']);
             }
         }
 
@@ -491,6 +498,7 @@ final class ThreadController extends Controller
             'show_reactions' => $reading['show_reactions'],
             'reaction_counts' => $reactionCounts,
             'my_reactions' => $myReactions,
+            'reaction_reactors' => $reactionReactors,
             'allowed_emoji' => $allowedEmoji,
             'reference_cards' => $referenceCards,
             'link_preview_cards' => $linkPreviewCards,
@@ -510,6 +518,7 @@ final class ThreadController extends Controller
             'can_staff_assign' => $canStaffAssign,
             'can_change_statuses' => $canChangeStatuses,
             'my_snooze' => $mySnooze,
+            'my_snooze_indefinitely' => $mySnoozeIndefinitely,
             'tags_on' => $tagsOn,
             'thread_tags' => $threadTags,
             'all_tags' => $allTags,

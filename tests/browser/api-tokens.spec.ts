@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import path from 'node:path';
+import { openAdminArea } from './admin-navigation-helpers';
 
 /**
  * SP0 browser evidence for the landed admin API-token surface (SLICE-API-TOKENS).
@@ -85,7 +86,7 @@ test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke
 
   // Flag-gated discovery link off the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
-  await page.locator('[data-admin-tier]').getByRole('link', { name: 'Integrations', exact: true }).click();
+  await openAdminArea(page, 'Integrations');
   await page.waitForURL(/\/admin\/api-tokens$/);
   await expect(page.getByRole('heading', { name: 'Tokens, webhooks & sign-in' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('API tokens');

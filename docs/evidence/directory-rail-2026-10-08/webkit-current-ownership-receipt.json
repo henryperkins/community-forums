@@ -1,0 +1,416 @@
+{
+  "engine": "webkit",
+  "version": "26.6",
+  "build": "a8b813712a571dff",
+  "assets": [
+    {
+      "url": "/assets/dist/app-style-DcXze5GH.css",
+      "status": 200,
+      "sha256": "afec5a84f50297f8b8d296996b3f4a9480a8f9e0ecd1b3bcaee21b3055c8a115"
+    },
+    {
+      "url": "/assets/dist/app-ade982dee46260d0.js",
+      "status": 200,
+      "sha256": "ade982dee46260d0006e71a6f6275c4f3016374c61eef8801a7392e82e9ead91"
+    }
+  ],
+  "checks": [
+    {
+      "name": "current ownership build loaded asset receipt",
+      "pass": true,
+      "detail": [
+        {
+          "url": "/assets/dist/app-style-DcXze5GH.css",
+          "status": 200,
+          "sha256": "afec5a84f50297f8b8d296996b3f4a9480a8f9e0ecd1b3bcaee21b3055c8a115"
+        },
+        {
+          "url": "/assets/dist/app-ade982dee46260d0.js",
+          "status": 200,
+          "sha256": "ade982dee46260d0006e71a6f6275c4f3016374c61eef8801a7392e82e9ead91"
+        }
+      ]
+    },
+    {
+      "name": "current 320px/36px heading/nav/header containment",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 320,
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "heading": {
+          "x": 27,
+          "y": 196.625,
+          "width": 213,
+          "height": 296.953125,
+          "top": 196.625,
+          "right": 240,
+          "bottom": 493.578125,
+          "left": 27
+        },
+        "creation": {
+          "x": 249,
+          "y": 329.09375,
+          "width": 44,
+          "height": 44,
+          "top": 329.09375,
+          "right": 293,
+          "bottom": 373.09375,
+          "left": 249
+        },
+        "identityFragments": [
+          {
+            "x": 79.56900024414062,
+            "y": 269.7109375,
+            "width": 18.07689666748047,
+            "height": 41,
+            "top": 269.7109375,
+            "right": 97.6458969116211,
+            "bottom": 310.7109375,
+            "left": 79.56900024414062
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 329.1015625,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 329.1015625,
+            "right": 225.8459014892578,
+            "bottom": 370.1015625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 388.4921875,
+            "width": 198.8459014892578,
+            "height": 41,
+            "top": 388.4921875,
+            "right": 225.8459014892578,
+            "bottom": 429.4921875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 447.8828125,
+            "width": 198.8459930419922,
+            "height": 41,
+            "top": 447.8828125,
+            "right": 225.8459930419922,
+            "bottom": 488.8828125,
+            "left": 27
+          }
+        ],
+        "routes": [
+          {
+            "x": 60.53125,
+            "y": 70.1875,
+            "width": 104.96875,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 165.5,
+            "bottom": 117.40625,
+            "left": 60.53125
+          },
+          {
+            "x": 169.5,
+            "y": 70.1875,
+            "width": 89.953125,
+            "height": 47.21875,
+            "top": 70.1875,
+            "right": 259.453125,
+            "bottom": 117.40625,
+            "left": 169.5
+          },
+          {
+            "x": 88.6875,
+            "y": 121.40625,
+            "width": 142.625,
+            "height": 47.21875,
+            "top": 121.40625,
+            "right": 231.3125,
+            "bottom": 168.625,
+            "left": 88.6875
+          }
+        ],
+        "connectionTabs": [
+          {
+            "x": 18,
+            "y": 982.828125,
+            "width": 177.234375,
+            "height": 61.671875,
+            "top": 982.828125,
+            "right": 195.234375,
+            "bottom": 1044.5,
+            "left": 18
+          },
+          {
+            "x": 18,
+            "y": 1066.5,
+            "width": 180.5625,
+            "height": 61.671875,
+            "top": 1066.5,
+            "right": 198.5625,
+            "bottom": 1128.171875,
+            "left": 18
+          }
+        ],
+        "measuredBar": 179
+      }
+    },
+    {
+      "name": "current drawer/header alignment and focus",
+      "pass": true,
+      "detail": {
+        "bar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 178.625,
+          "top": 0,
+          "right": 320,
+          "bottom": 178.625,
+          "left": 0
+        },
+        "rail": {
+          "x": -0.6459694504737854,
+          "y": 179,
+          "width": 275.1875,
+          "height": 389,
+          "top": 179,
+          "right": 274.5415305495262,
+          "bottom": 568,
+          "left": -0.6459694504737854
+        },
+        "focused": "Close board rail",
+        "inert": true
+      }
+    }
+  ],
+  "metrics": {
+    "client": 320,
+    "scroll": 320,
+    "bar": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 178.625,
+      "top": 0,
+      "right": 320,
+      "bottom": 178.625,
+      "left": 0
+    },
+    "heading": {
+      "x": 27,
+      "y": 196.625,
+      "width": 213,
+      "height": 296.953125,
+      "top": 196.625,
+      "right": 240,
+      "bottom": 493.578125,
+      "left": 27
+    },
+    "creation": {
+      "x": 249,
+      "y": 329.09375,
+      "width": 44,
+      "height": 44,
+      "top": 329.09375,
+      "right": 293,
+      "bottom": 373.09375,
+      "left": 249
+    },
+    "identityFragments": [
+      {
+        "x": 79.56900024414062,
+        "y": 269.7109375,
+        "width": 18.07689666748047,
+        "height": 41,
+        "top": 269.7109375,
+        "right": 97.6458969116211,
+        "bottom": 310.7109375,
+        "left": 79.56900024414062
+      },
+      {
+        "x": 27,
+        "y": 329.1015625,
+        "width": 198.8459014892578,
+        "height": 41,
+        "top": 329.1015625,
+        "right": 225.8459014892578,
+        "bottom": 370.1015625,
+        "left": 27
+      },
+      {
+        "x": 27,
+        "y": 388.4921875,
+        "width": 198.8459014892578,
+        "height": 41,
+        "top": 388.4921875,
+        "right": 225.8459014892578,
+        "bottom": 429.4921875,
+        "left": 27
+      },
+      {
+        "x": 27,
+        "y": 447.8828125,
+        "width": 198.8459930419922,
+        "height": 41,
+        "top": 447.8828125,
+        "right": 225.8459930419922,
+        "bottom": 488.8828125,
+        "left": 27
+      },
+      {
+        "x": 27,
+        "y": 329.1015625,
+        "width": 198.8459014892578,
+        "height": 41,
+        "top": 329.1015625,
+        "right": 225.8459014892578,
+        "bottom": 370.1015625,
+        "left": 27
+      },
+      {
+        "x": 27,
+        "y": 388.4921875,
+        "width": 198.8459014892578,
+        "height": 41,
+        "top": 388.4921875,
+        "right": 225.8459014892578,
+        "bottom": 429.4921875,
+        "left": 27
+      },
+      {
+        "x": 27,
+        "y": 447.8828125,
+        "width": 198.8459930419922,
+        "height": 41,
+        "top": 447.8828125,
+        "right": 225.8459930419922,
+        "bottom": 488.8828125,
+        "left": 27
+      }
+    ],
+    "routes": [
+      {
+        "x": 60.53125,
+        "y": 70.1875,
+        "width": 104.96875,
+        "height": 47.21875,
+        "top": 70.1875,
+        "right": 165.5,
+        "bottom": 117.40625,
+        "left": 60.53125
+      },
+      {
+        "x": 169.5,
+        "y": 70.1875,
+        "width": 89.953125,
+        "height": 47.21875,
+        "top": 70.1875,
+        "right": 259.453125,
+        "bottom": 117.40625,
+        "left": 169.5
+      },
+      {
+        "x": 88.6875,
+        "y": 121.40625,
+        "width": 142.625,
+        "height": 47.21875,
+        "top": 121.40625,
+        "right": 231.3125,
+        "bottom": 168.625,
+        "left": 88.6875
+      }
+    ],
+    "connectionTabs": [
+      {
+        "x": 18,
+        "y": 982.828125,
+        "width": 177.234375,
+        "height": 61.671875,
+        "top": 982.828125,
+        "right": 195.234375,
+        "bottom": 1044.5,
+        "left": 18
+      },
+      {
+        "x": 18,
+        "y": 1066.5,
+        "width": 180.5625,
+        "height": 61.671875,
+        "top": 1066.5,
+        "right": 198.5625,
+        "bottom": 1128.171875,
+        "left": 18
+      }
+    ],
+    "measuredBar": 179
+  },
+  "drawer": {
+    "bar": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 178.625,
+      "top": 0,
+      "right": 320,
+      "bottom": 178.625,
+      "left": 0
+    },
+    "rail": {
+      "x": -0.6459694504737854,
+      "y": 179,
+      "width": 275.1875,
+      "height": 389,
+      "top": 179,
+      "right": 274.5415305495262,
+      "bottom": 568,
+      "left": -0.6459694504737854
+    },
+    "focused": "Close board rail",
+    "inert": true
+  },
+  "limits": [
+    "Receipt and one previously failing extreme only; computed behavior ownership correction did not trigger full matrix repetition"
+  ]
+}

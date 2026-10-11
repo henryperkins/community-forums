@@ -40,4 +40,10 @@ final class MentionParserTest extends TestCase
     {
         self::assertSame([], MentionParser::parse('@ab is too short'));
     }
+
+    public function testMarkdownEscapedUnderscoresResolveTheWholeHandle(): void
+    {
+        self::assertSame(['alice_w', 'alice__w', 'alice_'], MentionParser::parse('@alice\\_w @alice\\_\\_w @alice\\_ @Alice_w'));
+        self::assertSame([], MentionParser::parse('`@alice\\_w` mail@alice\\_w.test @' . str_repeat('a', 33)));
+    }
 }

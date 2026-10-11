@@ -1,0 +1,51 @@
+Browser evidence, 2026-10-06, Chromium (Playwright 1.61, projects desktop 1280x800 and mobile 390x844 touch).
+Every spec group ran on a freshly prepared private database (prepare.sh), served by php -S on localhost.
+
+1. New spec: tests/browser/header-hardening.spec.ts
+
+   Working tree (retroboards_e2e_hh, port 8024, evidence written to this folder):
+     6 passed, 4 skipped (each test runs on the project it measures)
+       [mobile]  page controls stay under the bar and its account menu
+       [desktop] a long community name shortens instead of pushing the account menu off-screen
+       [mobile]  a wide operator logo scales down on the first row
+       [desktop] New topic opens the composer on the board being read
+       [desktop] the pane toggles name the pane and appear only where it can show
+       [mobile]  the pane toggles name the pane and appear only where it can show
+
+   The same spec against an unmodified `git archive HEAD` export (553004b1, port 8025): 6 failed
+       [desktop] long name   - "/ at 901px: no sideways scroll": expected <= 0, received 369
+       [desktop] New topic   - href expected "/compose?board=general", received "/compose"
+       [desktop] pane toggles - [data-panel-form="reading"] expected hidden at 1024px, received visible
+       [mobile]  stacking    - '/: "Log out" takes its own taps': expected true, received false
+       [mobile]  wide logo   - "390px: the drawer opener is whole": expected >= 0, received -16.5
+       [mobile]  pane toggles - ⌘B behind the phone drawer saved a preference (POST /settings/member-surfaces)
+
+2. Regression run of the existing specs that touch the header, rail, inbox panes and directory bar
+   (rsync copy of the working tree, retroboards_e2e_hhr, port 8026; committed evidence untouched):
+
+     unified-chrome            25 passed, 5 skipped   (after one assertion update, below)
+     chrome-consistency        12 passed, 6 skipped
+     startup-geometry           7 passed, 7 skipped
+     member-surfaces           12 passed, 2 skipped
+     inbox-header               6 passed
+     board-index-remediation   16 passed
+     community-inbox-theme     19 passed, 13 skipped, 2 failed (pre-existing, below)
+     forum-inbox-remediation   24 passed
+     a11y                      26 passed, 2 failed (pre-existing, below)
+     asset-release-layout      12 passed
+     avatar-display             2 passed
+
+   unified-chrome.spec.ts:575 ("with JavaScript disabled › the desktop rail POST persists") asserted
+   aria-expanded on the rail toggle, which this change removes on purpose; its two assertions now
+   read aria-pressed. Re-run: 25 passed, 5 skipped.
+
+   Pre-existing failures, reproduced identically on the HEAD export (retroboards_e2e_hhb, port 8027):
+     community-inbox-theme.spec.ts:301 [desktop] Inbox fragments receive one complete composer enhancement
+       (the composer's anonymous-posting disclosure intercepts the Discard click; 30 s timeout)
+     community-inbox-theme.spec.ts:415 [mobile]  mobile top bar stays one row and Search remains reachable
+       (asserts a header of at most 64px; ADR 0042 made the phone header 108px on 2026-09-28)
+     a11y.spec.ts:574 [desktop] and [mobile]     phase 4 custom emoji surfaces have no serious axe violations
+       (the custom emoji reaction button is never rendered in the post toolbar)
+
+WebKit (E2E_LAYOUT_BROWSER=webkit, fresh prepare.sh): header-hardening.spec.ts 6 passed, 4 skipped;
+captures in webkit/. The regression specs in section 2 ran in Chromium only.

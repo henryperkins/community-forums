@@ -1,14 +1,15 @@
 {
-  "version": "82a41e8eb74b03dc",
+  "version": "d8529d5d0f5e0219",
   "urls": {
-    "app.css": "/assets/dist/app-style-DpcQqnu-.css",
-    "imladris.css": "/assets/dist/imladris-style-CU9grDIH.css",
-    "app.js": "/assets/dist/app-18e75fb4c256674b.js",
-    "composer.js": "/assets/dist/composer-afe872655b72f60d.js",
+    "app.css": "/assets/dist/app-style-kNCnSn5Q.css",
+    "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
+    "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+    "app.js": "/assets/dist/app-5839ddd55290c1d1.js",
+    "composer.js": "/assets/dist/composer-d0210ad65bc6975b.js",
     "passkeys.js": "/assets/dist/passkeys-27f8b05555555872.js",
-    "tour.js": "/assets/dist/tour-7cdbe315501e3843.js",
-    "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
-    "wysiwyg-composer.css": "/assets/dist/wysiwyg-composer-DJaHQYS-.css",
+    "tour.js": "/assets/dist/tour-2cb01893b54a8644.js",
+    "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-D9tMbjJ1.js",
+    "wysiwyg-composer.css": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
     "fonts/imladris/cormorant-garamond-latin-400-italic.woff2": "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
     "fonts/imladris/cormorant-garamond-latin-400-normal.woff2": "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
     "fonts/imladris/cormorant-garamond-latin-500-italic.woff2": "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
@@ -27,35 +28,51 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "40d58df48b41c55789c3a65813f37e5030b8d4964a272430d6f3a064f3486ee6",
+      "sha256": "7b1d84a32bde553b4c7a2cf2da5bab3005ed61a91d94c65d2506ec6ee9b7af4b",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "77e5cd5005580a842da7f6f968374f02d50ed7f96abdf09b2fcdef4dbaad37a6",
+      "sha256": "4597ddd08a81b0ac7c3a46f20ae1cbaa31965039bfb4d9fdad6b48e1be8be7b1",
       "immutable": false
     },
     "/assets/composer.js": {
-      "sha256": "16f6461ce88a71c73b390075c5f902c7983d3998bedb0cd7dbdbf2299ad930ae",
+      "sha256": "d3264c4ef376a7a16b3874f05140cf657876244e89862bee01825bed6ca133eb",
       "immutable": false
     },
-    "/assets/dist/app-18e75fb4c256674b.js": {
-      "sha256": "18e75fb4c256674b0c9c6627048fcd3cd753cdff2406e1b90f01e002a61401a5",
+    "/assets/conversation-entry.js": {
+      "sha256": "b39c8c96a2625f6a5e5dd9d6507062a08967a1fa59bdd206e7f729eb00f81407",
+      "immutable": false
+    },
+    "/assets/dist/app-10a2b0c761ece66f.js": {
+      "sha256": "10a2b0c761ece66f3a77c6ea25523b107dca8c0c39a9f060f20fc4efbb8b27b3",
       "immutable": true
     },
-    "/assets/dist/app-style-C45PPeLE.css": {
-      "sha256": "f9af5a4aaaf4a66bb4a5a5c85c48ced872f623c3a5193ec89460a6190d5bd98e",
+    "/assets/dist/app-5839ddd55290c1d1.js": {
+      "sha256": "5839ddd55290c1d1eec04b4ea0fc4e93d6cd6af5b19cf235c2efc8177fdbe6a3",
       "immutable": true
     },
-    "/assets/dist/app-style-CF_djGmG.css": {
-      "sha256": "8de66a374c8049be96ebc5630ca0b68ff306daed3480f57adcd872e1d79f11ee",
+    "/assets/dist/app-ead709125428cd4d.js": {
+      "sha256": "ead709125428cd4d51cdafd616ec76171f47bd0b7e756c6ddd550417316bc1d1",
       "immutable": true
     },
-    "/assets/dist/app-style-DpcQqnu-.css": {
-      "sha256": "827c24a866fdb63090486ba647e2a499a7cd031b6d680ba54d444e33dfe2401e",
+    "/assets/dist/app-style-Bf8aCOiP.css": {
+      "sha256": "36711c36d6ecac30dcb4c8f685160cd5b827935e7e3f694fbbe85aa169f614a6",
+      "immutable": true
+    },
+    "/assets/dist/app-style-kNCnSn5Q.css": {
+      "sha256": "8d54b816c2d4ed50eed984eda4f3bdb7531139d773abfebf7dc839fe66976915",
       "immutable": true
     },
     "/assets/dist/composer-afe872655b72f60d.js": {
       "sha256": "afe872655b72f60dcedc1e6e077b8f2bb410aeeea4409178d9ddb412ab1a9f32",
+      "immutable": true
+    },
+    "/assets/dist/composer-d0210ad65bc6975b.js": {
+      "sha256": "d0210ad65bc6975b446a7e1935d5682352594e121a2dfde114a87944b3f1350d",
+      "immutable": true
+    },
+    "/assets/dist/conversation-entry-74964ff3b56c482d.js": {
+      "sha256": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
       "immutable": true
     },
     "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2": {
@@ -102,8 +119,12 @@
       "sha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
       "immutable": true
     },
-    "/assets/dist/imladris-style-CU9grDIH.css": {
-      "sha256": "1ceb0860ffe215a425778cad9ae9fcbf60779ca1d59f7087143e984568c1bc76",
+    "/assets/dist/imladris-style-B-rtqI97.css": {
+      "sha256": "dd4c0bb6c0aabb0e5f28967f37747f3dd563f5c9c31c13376ccf09ad51bb7fab",
+      "immutable": true
+    },
+    "/assets/dist/imladris-style-bT2GVmLw.css": {
+      "sha256": "da673a340f594e229dc5f45363b3b7c48851fa4938a6775c0087b32e0de840e4",
       "immutable": true
     },
     "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2": {
@@ -126,8 +147,16 @@
       "sha256": "156e7142326caf8b6fcb4cd4d903fa219ef445c7a3821f224ec33a2938bf478e",
       "immutable": true
     },
+    "/assets/dist/milkdown-adapter-Bqr6mUeY.js": {
+      "sha256": "93de5377d869c2d8a977ed20155258189651214b188a76d1eafc85052322cd97",
+      "immutable": true
+    },
     "/assets/dist/passkeys-27f8b05555555872.js": {
       "sha256": "27f8b05555555872d8b09cede7eabe69831af5f03f7e44689df2371934632b34",
+      "immutable": true
+    },
+    "/assets/dist/tour-2cb01893b54a8644.js": {
+      "sha256": "2cb01893b54a8644c23d0d7845eb90643b5446def42de649503e1595a781313e",
       "immutable": true
     },
     "/assets/dist/tour-7cdbe315501e3843.js": {
@@ -136,6 +165,14 @@
     },
     "/assets/dist/wysiwyg-composer-BhOmBk3Y.js": {
       "sha256": "606c893af7fee8d37f1a2694cf7368e8e219a8c4cc0760c0246cbed5b45e377d",
+      "immutable": true
+    },
+    "/assets/dist/wysiwyg-composer-BRAFF38E.css": {
+      "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+      "immutable": true
+    },
+    "/assets/dist/wysiwyg-composer-D9tMbjJ1.js": {
+      "sha256": "d7474a7575bee03fbc8e3753e38b3463ea1e20eb6f723a8ac4b1c074d4cb4480",
       "immutable": true
     },
     "/assets/dist/wysiwyg-composer-DJaHQYS-.css": {
@@ -223,7 +260,7 @@
       "immutable": false
     },
     "/assets/imladris.css": {
-      "sha256": "f6c786461047f26018ef104cf5a466c3b6f92d28a574e8809809e432ea5a0410",
+      "sha256": "2ac7935e7da0abfac09bfe0ffc6bfddf594f75c2870c3d419c935e2198218eff",
       "immutable": false
     },
     "/assets/passkeys.js": {
@@ -231,17 +268,18 @@
       "immutable": false
     },
     "/assets/tour.js": {
-      "sha256": "753218e464f4b4cd42ce198bb5fcd150fe3c48dd257b67b6f8672413d3bd992a",
+      "sha256": "69db171d5fea794b7bbe192d5df3127e2f22f738dc12df4a8c97fee580d97168",
       "immutable": false
     }
   },
   "releases": [
     {
-      "version": "82a41e8eb74b03dc",
+      "version": "d8529d5d0f5e0219",
       "files": [
-        "/assets/dist/app-18e75fb4c256674b.js",
-        "/assets/dist/app-style-DpcQqnu-.css",
-        "/assets/dist/composer-afe872655b72f60d.js",
+        "/assets/dist/app-5839ddd55290c1d1.js",
+        "/assets/dist/app-style-kNCnSn5Q.css",
+        "/assets/dist/composer-d0210ad65bc6975b.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
         "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
@@ -253,24 +291,25 @@
         "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
         "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
         "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-CU9grDIH.css",
+        "/assets/dist/imladris-style-bT2GVmLw.css",
         "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
         "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-B36_3vOz.js",
+        "/assets/dist/milkdown-adapter-Bqr6mUeY.js",
         "/assets/dist/passkeys-27f8b05555555872.js",
-        "/assets/dist/tour-7cdbe315501e3843.js",
-        "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
-        "/assets/dist/wysiwyg-composer-DJaHQYS-.css"
+        "/assets/dist/tour-2cb01893b54a8644.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-D9tMbjJ1.js"
       ]
     },
     {
-      "version": "dd4fdf0fe62cc55a",
+      "version": "85b4bc099e7bdac1",
       "files": [
-        "/assets/dist/app-18e75fb4c256674b.js",
-        "/assets/dist/app-style-C45PPeLE.css",
-        "/assets/dist/composer-afe872655b72f60d.js",
+        "/assets/dist/app-ead709125428cd4d.js",
+        "/assets/dist/app-style-kNCnSn5Q.css",
+        "/assets/dist/composer-d0210ad65bc6975b.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
         "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
@@ -282,23 +321,23 @@
         "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
         "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
         "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-CU9grDIH.css",
+        "/assets/dist/imladris-style-bT2GVmLw.css",
         "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
         "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-B36_3vOz.js",
+        "/assets/dist/milkdown-adapter-Bqr6mUeY.js",
         "/assets/dist/passkeys-27f8b05555555872.js",
-        "/assets/dist/tour-7cdbe315501e3843.js",
-        "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
-        "/assets/dist/wysiwyg-composer-DJaHQYS-.css"
+        "/assets/dist/tour-2cb01893b54a8644.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-D9tMbjJ1.js"
       ]
     },
     {
-      "version": "125b5d8c76e46574",
+      "version": "ffc423564f256d2f",
       "files": [
-        "/assets/dist/app-18e75fb4c256674b.js",
-        "/assets/dist/app-style-CF_djGmG.css",
+        "/assets/dist/app-10a2b0c761ece66f.js",
+        "/assets/dist/app-style-Bf8aCOiP.css",
         "/assets/dist/composer-afe872655b72f60d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
@@ -311,7 +350,7 @@
         "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
         "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
         "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-CU9grDIH.css",
+        "/assets/dist/imladris-style-B-rtqI97.css",
         "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
@@ -326,11 +365,12 @@
   ],
   "deployedReleases": [
     {
-      "version": "82a41e8eb74b03dc",
+      "version": "d8529d5d0f5e0219",
       "files": [
-        "/assets/dist/app-18e75fb4c256674b.js",
-        "/assets/dist/app-style-DpcQqnu-.css",
-        "/assets/dist/composer-afe872655b72f60d.js",
+        "/assets/dist/app-5839ddd55290c1d1.js",
+        "/assets/dist/app-style-kNCnSn5Q.css",
+        "/assets/dist/composer-d0210ad65bc6975b.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
         "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
@@ -342,24 +382,25 @@
         "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
         "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
         "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-CU9grDIH.css",
+        "/assets/dist/imladris-style-bT2GVmLw.css",
         "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
         "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-B36_3vOz.js",
+        "/assets/dist/milkdown-adapter-Bqr6mUeY.js",
         "/assets/dist/passkeys-27f8b05555555872.js",
-        "/assets/dist/tour-7cdbe315501e3843.js",
-        "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
-        "/assets/dist/wysiwyg-composer-DJaHQYS-.css"
+        "/assets/dist/tour-2cb01893b54a8644.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-D9tMbjJ1.js"
       ]
     },
     {
-      "version": "dd4fdf0fe62cc55a",
+      "version": "85b4bc099e7bdac1",
       "files": [
-        "/assets/dist/app-18e75fb4c256674b.js",
-        "/assets/dist/app-style-C45PPeLE.css",
-        "/assets/dist/composer-afe872655b72f60d.js",
+        "/assets/dist/app-ead709125428cd4d.js",
+        "/assets/dist/app-style-kNCnSn5Q.css",
+        "/assets/dist/composer-d0210ad65bc6975b.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
         "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
@@ -371,23 +412,23 @@
         "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
         "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
         "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-CU9grDIH.css",
+        "/assets/dist/imladris-style-bT2GVmLw.css",
         "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
         "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-B36_3vOz.js",
+        "/assets/dist/milkdown-adapter-Bqr6mUeY.js",
         "/assets/dist/passkeys-27f8b05555555872.js",
-        "/assets/dist/tour-7cdbe315501e3843.js",
-        "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
-        "/assets/dist/wysiwyg-composer-DJaHQYS-.css"
+        "/assets/dist/tour-2cb01893b54a8644.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-D9tMbjJ1.js"
       ]
     },
     {
-      "version": "125b5d8c76e46574",
+      "version": "ffc423564f256d2f",
       "files": [
-        "/assets/dist/app-18e75fb4c256674b.js",
-        "/assets/dist/app-style-CF_djGmG.css",
+        "/assets/dist/app-10a2b0c761ece66f.js",
+        "/assets/dist/app-style-Bf8aCOiP.css",
         "/assets/dist/composer-afe872655b72f60d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
@@ -400,7 +441,7 @@
         "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
         "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
         "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-CU9grDIH.css",
+        "/assets/dist/imladris-style-B-rtqI97.css",
         "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",

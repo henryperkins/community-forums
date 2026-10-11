@@ -56,6 +56,13 @@ and admin profile-media moderation actions.
   content-sniffs, dimension-checks, re-encodes with GD, stores under the
   attachment storage root, and finalizes the asset as public parentless media
   with purpose `avatar`.
+- **Display follows the monogram.** `templates/partials/monogram.php` draws
+  `users.avatar_path` instead of the initials wherever a caller passes it. Every
+  member-identity surface does: posts, topic rows, the shell seat, composer
+  identities, the presence rail and its poll payload, Messages, people lists,
+  and the admin member pages. `mask_author()` clears it for anonymous posts, and
+  "Show avatars" hides it wherever it hid monograms. A group conversation keeps
+  its gilt group monogram.
 - **Removal reverts to monogram.** Member removal and admin removal both set
   `users.avatar_source='monogram'`, clear `users.avatar_path`, record
   `avatar_removed_at/by`, and mark a local `/media/{id}` attachment row deleted
@@ -85,14 +92,20 @@ and admin profile-media moderation actions.
 
 - **PHPUnit:** `tests/Integration/Core/AppProfileMediaTest.php` covers
   default-on availability, operator rollback, member upload/remove, admin avatar
-  clear, signature clear, attachment deletion, and validation re-rendering;
+  clear, signature clear, attachment deletion, validation re-rendering, and the
+  shell redrawing its own avatar in the upload/remove response;
+  `tests/Integration/Core/AppAvatarDisplayTest.php` covers the avatar on every
+  member-identity surface, the anonymous-post mask, and "Show avatars";
   `tests/Integration/Core/AppFeatureFlagTest.php` covers default-on plus rollback
   isolation; `tests/Integration/Core/AppModerationAppealsTest.php` covers
   `clear_avatar` appeal eligibility.
 - **Browser:** `docs/evidence/browser/{desktop,mobile}/46-profile-media-avatar.png`
   captures a member profile with an uploaded avatar; `47-profile-media-moderation.png`
   captures the admin profile-media moderation controls. Both are driven by
-  `tests/browser/gate-a.spec.ts`.
+  `tests/browser/gate-a.spec.ts`. `tests/browser/avatar-display.spec.ts`
+  (`npm run evidence:avatars`) uploads through the settings form and follows the
+  picture across the topic, board, inbox, rail, poll and Messages, captured in
+  `docs/evidence/avatar-display-2026-09-28/`.
 - **Accessibility:** `tests/browser/a11y.spec.ts` scans `.profile-media-panel`
   and `.profile-media-card` on desktop and mobile with no serious/critical axe
   violations.

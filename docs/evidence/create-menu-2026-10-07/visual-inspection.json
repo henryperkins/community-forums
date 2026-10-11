@@ -1,0 +1,70 @@
+{
+  "recordedAt": "2026-10-07T13:34:24.728983+00:00",
+  "inspectedCaptures": [
+    {
+      "file": "chromium/desktop/menu-1440-dark-large-js.png",
+      "observation": "Desktop open menu fits, with topic/message items and creation label visible."
+    },
+    {
+      "file": "webkit/mobile/menu-320-dark-large-js.png",
+      "observation": "Phone open menu and plus glyph visible; panel fits viewport."
+    },
+    {
+      "file": "webkit/mobile/conversation-320-light-large-js.png",
+      "observation": "Phone conversation keeps Send and room controls visible."
+    },
+    {
+      "file": "webkit/mobile/dialog-error-dark-large-js.png",
+      "observation": "Dialog error, recipient and typed draft remain visible."
+    },
+    {
+      "file": "chromium/mobile/dialog-error-dark-large-no-js.png",
+      "observation": "Native error panel keeps the recipient error and typed draft."
+    }
+  ],
+  "visualConcerns": "Only the documented native conversation readable-floor limits remain in the inspected examples.",
+  "supplementalWebKitVerification": {
+    "browser": "webkit",
+    "engineVersion": "26.5",
+    "file": "supplemental/webkit-menu-320-dark-large-js.png",
+    "capturedAt": "2026-10-07T13:28:07.042120+00:00",
+    "route": "/c/general",
+    "viewport": {
+      "width": 320,
+      "height": 844
+    },
+    "deviceScaleFactor": 2,
+    "imagePixels": {
+      "width": 640,
+      "height": 1688
+    },
+    "theme": "dark",
+    "fontSize": "large",
+    "javaScriptEnabled": true,
+    "menuOpen": true,
+    "fullPage": false,
+    "sourceHashesMatchSnapshot": true,
+    "context": "Fresh authenticated mobile context after both full runs",
+    "originalRunCaptureRetained": true,
+    "svg": {
+      "inlinePath": "M12 5v14M5 12h14",
+      "externalUseCount": 0,
+      "widthPx": 16,
+      "heightPx": 16,
+      "visibility": "visible",
+      "opacity": "1",
+      "fill": "none",
+      "color": "rgb(250, 246, 236)",
+      "stroke": "rgb(250, 246, 236)",
+      "triggerBackground": "rgb(40, 52, 64)"
+    },
+    "freshCaptureVariants": [
+      "immediate",
+      "after300ms",
+      "animationsAllowed"
+    ],
+    "freshCapturesIdenticalSha256": true,
+    "sha256": "c68f646436563f7545590db14c24ee202e9e998bb191011cbb7bc6d613e580d7",
+    "outcome": "An initial image-display concern about the plus did not recur when re-viewing the original PNG or in three fresh captures. No live or captured disappearance was confirmed."
+  }
+}

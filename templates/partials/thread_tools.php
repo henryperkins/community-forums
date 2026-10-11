@@ -9,17 +9,7 @@ $hasTools = in_array(true, $topic_tool_sections, true);
 $moveBoards = is_array($move_boards ?? null) ? $move_boards : [];
 $moveError = (string) ($move_error ?? '');
 $moveSelected = (int) ($move_selected ?? 0);
-// Which snooze window is standing. The column stores the instant, not the choice
-// that produced it (ThreadWorkflowController::parseSnooze writes now + 4h / 24h /
-// 7d), so the pill is read back by bucketing what is left — the same three
-// windows, inverted. A snooze already past shows none of them lit.
-$snoozeChoice = '';
-if (!empty($my_snooze)) {
-    $remaining = (strtotime((string) $my_snooze . ' UTC') ?: 0) - time();
-    if ($remaining > 0) {
-        $snoozeChoice = $remaining <= 6 * 3600 ? 'later_today' : ($remaining <= 30 * 3600 ? 'tomorrow' : 'week');
-    }
-}
+$hiddenFromInbox = \App\Support\InboxSnooze::hidden($my_snooze ?? null, !empty($my_snooze_indefinitely));
 ?>
 <?php if ($hasTools): ?>
 <div class="topic-tools-scrim" data-topic-tools-scrim hidden></div>
@@ -67,19 +57,14 @@ if (!empty($my_snooze)) {
                     </div>
                 <?php endif; ?>
                 <?php if (($workflow_on ?? false) && !empty($can_write)): ?>
-                    <?php // The active pill clears the snooze when pressed again, which is
-                          // the only way back the design gives it — a "Clear snooze" option
-                          // in a list of three futures is a fourth choice that is not one. ?>
-                    <div class="snooze-row" role="group" aria-label="Quiet until">
-                        <span class="snooze-label">Quiet until</span>
-                        <?php foreach (['later_today' => 'Later today', 'tomorrow' => 'Tomorrow', 'week' => 'Next week'] as $value => $label): ?>
-                            <?php $snoozeOn = $snoozeChoice === $value; ?>
-                            <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/snooze">
-                                <?= $this->csrfField() ?>
-                                <input type="hidden" name="until" value="<?= $snoozeOn ? '' : $e($value) ?>">
-                                <button type="submit" class="snooze-choice<?= $snoozeOn ? ' is-on' : '' ?>" aria-pressed="<?= $snoozeOn ? 'true' : 'false' ?>"><?= $e($label) ?></button>
-                            </form>
-                        <?php endforeach; ?>
+                    <div class="snooze-row" role="group" aria-label="Inbox visibility">
+                        <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/snooze">
+                            <?= $this->csrfField() ?>
+                            <input type="hidden" name="until" value="tomorrow">
+                            <button type="submit" class="snooze-choice">Til tomorrow</button>
+                        </form>
+                        <?= $this->partial('partials/inbox_visibility', ['thread_id' => (int) $thread['id'], 'hidden' => $hiddenFromInbox, 'return_to' => '/t/' . (int) $thread['id'] . '-' . $thread['slug']]) ?>
+                        <?php if ($hiddenFromInbox): ?><p class="inbox-menu-note"><?= !empty($my_snooze_indefinitely) ? 'Until you turn it back on' : 'Til ' . $e(human_date($my_snooze)) ?></p><?php endif; ?>
                     </div>
                 <?php endif; ?>
                 <p class="topic-tools-note">Watching and snooze are yours alone.</p>

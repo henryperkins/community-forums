@@ -1,0 +1,22 @@
+{
+  "engine": "webkit",
+  "build": "e26e139ee9899a8f",
+  "checks": 5,
+  "failures": [],
+  "before": {
+    "rows": 1,
+    "total": "21",
+    "url": "/inbox?scope=unread&order=active&page=2"
+  },
+  "drained": {
+    "message": "You've read every topic on this page.Load remaining topics",
+    "focusEmpty": true,
+    "total": "20",
+    "live": ""
+  },
+  "recovered": {
+    "rows": 20,
+    "url": "/inbox?scope=unread&order=active&page=2",
+    "total": "20"
+  }
+}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-06 — Shared-chrome handoff synced
+
+- `components/forum/ForumNav`, `components/forum/BoardRail`, `components/presence/PresenceList` and `components/admin/AdminNav` taken whole: the bell beside the seat, counted 99+ labels, active pills and rail rows that keep their href, the roster's own "See everyone online" link (`allHref`), and the eleven-area console bar with its operator cluster, `role` and a username-seeded seat.
+- `templates/account-settings` (now in the shared shell), `admin-overview`, `compose` and `forum-inbox` taken whole; `templates/board-page` and `templates/leaderboard` added (the leaderboard's routes-block rail is an open decision; production renders the standard rail).
+- `tokens/colors.css` taken whole: production's `--field-rule` and `--stage-*` tokens (ADR 0039) are upstream's now.
+- `components.css`: `.btn:hover` deepens `--accent`, `.input-engraved` takes `--field-rule`, the active pill and rail row drop `cursor: default`, and chrome controls never underline on hover. The bell and operator-cluster CSS and the non-chrome streams are held, and the deletion of the production-transfer section is refused: `LOCAL_RECONCILIATION.md`, 2026-10-06.
+- Handoff archived as `_archive/design_handoff_shared_chrome/README.md`.
+
 ## 2026-09-12 — Presence handoff synced; the member chrome adopted verbatim
 
 - Long account names now shrink and ellipsize inside ForumNav while the avatar and account menu remain visible; the PHP disclosure retains the full name in its accessible label. Browser coverage exercises the reported 1100px overflow, the 64-character limit, keyboard access, and phone focus-ring clearance.

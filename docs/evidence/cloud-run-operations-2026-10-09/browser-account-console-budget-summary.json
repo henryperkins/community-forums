@@ -1,0 +1,147 @@
+{
+  "event": "browser_account_console_case_budget_baseline",
+  "captured_at": "2026-10-09T09:11:38.215263+00:00",
+  "current_source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+  "baseline_source_sha": "c10faca411d014e018a34c49270647f27dfb9b13",
+  "corrected_source_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "case": "account-console.spec.ts:438 slice 16 panes are axe-clean in light twilight and system-dark registers",
+  "original_spec_identical_on_current_and_baseline": true,
+  "original_spec_sha256": "93e156ff6d6e10a8f1b8b881e94d9e4e299d1727803cbb6b24bc4fb3991d68b6",
+  "runtime": {
+    "php": "8.2.34",
+    "browser_runner_image": "sha256:d4b13461c2608d7fcdee919508fe69ea0fd229880d7d5d6fb60ac88a94ab636a",
+    "database": "MariaDB11.4 dedicated disposable databases",
+    "mail": "synthetic array transport"
+  },
+  "hosted_diagnostic_failure": {
+    "build_id": "7fd092fc-9dec-4507-b93f-d53fe639ab61",
+    "test_timeout_ms": 30000,
+    "failure": "Whole-test timeout inside AxeBuilder page.evaluate; no axe violation assertion was reported"
+  },
+  "original_two_cpu_isolates": [
+    {
+      "source": "current",
+      "exit_code": 0,
+      "elapsed_seconds": 30.875,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": false,
+      "axe_violation_assertion": false,
+      "pass_summary": [
+        "1 passed (22.0s)"
+      ],
+      "failure_summary": []
+    },
+    {
+      "source": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 30.885,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": false,
+      "axe_violation_assertion": false,
+      "pass_summary": [
+        "1 passed (22.0s)"
+      ],
+      "failure_summary": []
+    }
+  ],
+  "original_one_cpu_isolates": [
+    {
+      "source": "current",
+      "cpu_limit": "1",
+      "exit_code": 0,
+      "elapsed_seconds": 35.448,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": false,
+      "axe_violation_assertion": false,
+      "pass_summary": [
+        "1 passed (26.6s)"
+      ],
+      "failure_summary": []
+    },
+    {
+      "source": "baseline",
+      "cpu_limit": "1",
+      "exit_code": 0,
+      "elapsed_seconds": 35.436,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": false,
+      "axe_violation_assertion": false,
+      "pass_summary": [
+        "1 passed (26.5s)"
+      ],
+      "failure_summary": []
+    }
+  ],
+  "original_half_cpu_stress": [
+    {
+      "source": "current",
+      "cpu_limit": "0.5",
+      "exit_code": 1,
+      "elapsed_seconds": 46.54,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": true,
+      "axe_violation_assertion": false,
+      "pass_summary": [],
+      "failure_summary": [
+        "1 failed"
+      ]
+    },
+    {
+      "source": "baseline",
+      "cpu_limit": "0.5",
+      "exit_code": 1,
+      "elapsed_seconds": 46.793,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": true,
+      "axe_violation_assertion": false,
+      "pass_summary": [],
+      "failure_summary": [
+        "1 failed"
+      ]
+    }
+  ],
+  "correction": "Only this case receives a 90000ms whole-test budget; every heading assertion, axe rule, theme register and capture is retained.",
+  "corrected_half_cpu_stress": [
+    {
+      "source": "current",
+      "cpu_limit": "0.5",
+      "exit_code": 0,
+      "elapsed_seconds": 66.114,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": false,
+      "axe_violation_assertion": false,
+      "pass_summary": [
+        "1 passed (51.8s)"
+      ],
+      "failure_summary": []
+    },
+    {
+      "source": "baseline",
+      "cpu_limit": "0.5",
+      "exit_code": 0,
+      "elapsed_seconds": 65.676,
+      "playwright_case_started": true,
+      "whole_test_timeout_30s": false,
+      "axe_violation_assertion": false,
+      "pass_summary": [
+        "1 passed (51.4s)"
+      ],
+      "failure_summary": []
+    }
+  ],
+  "completed_png_captures": {
+    "current": 24,
+    "baseline": 24
+  },
+  "required_axe_scans_per_run": 24,
+  "cleanup": {
+    "dedicated_database_container_absent": true,
+    "owned_container_and_anonymous_volumes_removed": true,
+    "primary_database_untouched": true
+  },
+  "limits": [
+    "Original current and baseline passed fresh isolation at2CPU and1CPU; the baseline timeout was reproduced only under an explicit0.5CPU constraint.",
+    "The stress comparison demonstrates runner-budget sensitivity; it is not a baseline Cloud Build execution.",
+    "Targeted local proof remains separate from the complete hosted parent/child lane."
+  ]
+}

@@ -1,0 +1,17 @@
+Full PHPUnit suite, 2026-10-07, working tree on 553004b1 with the header hardening, unread-marks and phone-rows passes
+(4 round-robin shards, private DBs retroboards_test_hdr_s0..s3)
+
+shard 0: OK (888 tests, 5741 assertions)
+shard 1: Tests: 734, Assertions: 5530, Skipped: 1.
+shard 2: OK (765 tests, 4382 assertions)
+shard 3: OK (741 tests, 8105 assertions)
+
+Total: 3,128 tests, 23,758 assertions, 0 failures, 0 errors, 1 skip
+(AppThreadIntelligenceMigrationTest's 0077 rehearsal, which needs its dedicated clean database).
+
+New in this pass (tests/Integration/Core/AppMemberShellTest.php):
+  test_drawer_close_control_is_a_named_cross_at_the_top_of_the_rail
+      the rail's first stop is <a class="nav-close" data-nav-close href="#main" aria-label="Close board rail">
+      holding the icon set's cross, once
+  test_plain_error_header_omits_controls_for_panes_that_do_not_exist (extended)
+      no divider on the 404, 403 and private-board error headers; on / it follows the rail toggle's form

@@ -90,16 +90,59 @@ final class UserRepository
         return $out;
     }
 
-    /** @return array<int,array{id:int,username:string,display_name:?string,role:string,status:string}> */
-    public function suggestByPrefix(string $query, int $limit): array
+    /**
+     * Match a handle prefix or any display-name word prefix. Optional ids let
+     * the caller fetch participants before applying the global candidate cap.
+     *
+     * @param list<int>|null $ids null searches all active users; [] searches none
+     * @param int|null $privateBoardId Require the candidate's current read access before limiting.
+     * @param int|null $mentionedBy Exclude this author and either-way blocks, as mention notifications do.
+     * @return list<array{id:int,username:string,display_name:?string,avatar_path:?string,role:string,status:string}>
+     */
+    public function suggestByPrefix(string $query, int $limit, ?array $ids = null, ?int $privateBoardId = null, ?int $mentionedBy = null): array
     {
+        if ($ids === [] || ($query === '' && $ids === null)) {
+            return [];
+        }
+        $where = "status = 'active'";
+        $params = [];
+        if ($query !== '') {
+            $prefix = addcslashes($query, '\\%_') . '%';
+            // REGEXP performs only word-boundary normalization. LIKE owns the
+            // actual match so the column's accent-insensitive collation applies
+            // on both MariaDB and MySQL. Preserve literal query punctuation (e.g.
+            // Ann-M) while turning other separators into a searchable space.
+            $punctuation = preg_replace('/[\p{L}\p{N}_]/u', '', $query) ?? '';
+            $separators = '[^[:alnum:]_' . preg_quote($punctuation) . ']+';
+            $where .= " AND (username LIKE ? OR display_name LIKE ? OR REGEXP_REPLACE(display_name, ?, ' ') LIKE ?)";
+            array_push($params, $prefix, $prefix, $separators, '% ' . $prefix);
+        }
+        if ($ids !== null) {
+            $ids = array_values(array_unique(array_map('intval', $ids)));
+            $where .= ' AND id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')';
+            array_push($params, ...$ids);
+        }
+        if ($privateBoardId !== null) {
+            $where .= " AND (role = 'admin' OR EXISTS (
+                SELECT 1 FROM board_members membership
+                WHERE membership.user_id = users.id AND membership.board_id = ?)
+                OR EXISTS (SELECT 1 FROM board_moderators moderator
+                    WHERE moderator.user_id = users.id AND moderator.board_id = ?))";
+            array_push($params, $privateBoardId, $privateBoardId);
+        }
+        if ($mentionedBy !== null) {
+            $where .= ' AND id <> ? AND NOT EXISTS (SELECT 1 FROM blocks block
+                WHERE (block.user_id = ? AND block.blocked_user_id = users.id)
+                   OR (block.user_id = users.id AND block.blocked_user_id = ?))';
+            array_push($params, $mentionedBy, $mentionedBy, $mentionedBy);
+        }
         return $this->db->fetchAll(
-            "SELECT id, username, display_name, role, status
+            "SELECT id, username, display_name, avatar_path, role, status
              FROM users
-             WHERE status = 'active' AND (username LIKE ? OR display_name LIKE ?)
+             WHERE " . $where . "
              ORDER BY username ASC
              LIMIT " . max(1, min(25, $limit)),
-            [$query . '%', $query . '%'],
+            $params,
         );
     }
 
@@ -108,7 +151,7 @@ final class UserRepository
     {
         $prefix = addcslashes($query, '\\%_') . '%';
         return $this->db->fetchAll(
-            "SELECT u.id, u.username, u.display_name, u.role, u.status
+            "SELECT u.id, u.username, u.display_name, u.avatar_path, u.role, u.status
              FROM users u
              WHERE u.status = 'active' AND u.id <> ?
                AND (u.suspended_until IS NULL OR u.suspended_until <= UTC_TIMESTAMP())
@@ -496,7 +539,7 @@ final class UserRepository
      * $limit is clamped and concatenated, never bound — EMULATE_PREPARES is off.
      * Ask for one more row than you intend to show to detect capping.
      *
-     * @return list<array{id:int,username:string,display_name:?string,role:string,status:string,show_presence:int,profile_visibility:string,last_seen_at:string}>
+     * @return list<array{id:int,username:string,display_name:?string,avatar_path:?string,role:string,status:string,show_presence:int,profile_visibility:string,last_seen_at:string}>
      */
     public function presenceRoster(string $since, int $limit, bool $guestViewer, ?string $search = null): array
     {
@@ -508,7 +551,7 @@ final class UserRepository
         $limit = max(1, min(5001, $limit));
 
         $rows = $this->db->fetchAll(
-            'SELECT id, username, display_name, role, status, show_presence, profile_visibility, last_seen_at
+            'SELECT id, username, display_name, avatar_path, role, status, show_presence, profile_visibility, last_seen_at
              FROM users
              WHERE ' . $where . '
              ORDER BY last_seen_at DESC, id ASC
@@ -520,6 +563,7 @@ final class UserRepository
             'id' => (int) $r['id'],
             'username' => (string) $r['username'],
             'display_name' => $r['display_name'] !== null ? (string) $r['display_name'] : null,
+            'avatar_path' => $r['avatar_path'] !== null && $r['avatar_path'] !== '' ? (string) $r['avatar_path'] : null,
             'role' => (string) $r['role'],
             'status' => (string) $r['status'],
             'show_presence' => (int) $r['show_presence'],
@@ -586,7 +630,7 @@ final class UserRepository
     {
         $limit = max(1, $limit);
         return $this->db->fetchAll(
-            "SELECT u.id, u.username, u.display_name, u.title, u.reputation, u.post_count
+            "SELECT u.id, u.username, u.display_name, u.avatar_path, u.title, u.reputation, u.post_count
              FROM users u
              LEFT JOIN user_preferences pf ON pf.user_id = u.id
              WHERE u.status <> 'banned' AND u.reputation > 0
@@ -629,7 +673,7 @@ final class UserRepository
         $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
         $offset = max(0, (int) ($filters['offset'] ?? 0));
 
-        $sql = 'SELECT id, username, display_name, email, role, status, reputation, post_count, created_at, last_seen_at,
+        $sql = 'SELECT id, username, display_name, avatar_path, email, role, status, reputation, post_count, created_at, last_seen_at,
                 (SELECT COUNT(*) FROM board_moderators bm WHERE bm.user_id = users.id) AS moderated_boards
                 FROM users';
         if ($where !== []) {

@@ -1,0 +1,83 @@
+Browser evidence, 2026-10-07 (Playwright 1.61; projects desktop 1280x800 and mobile 390x844 with
+isMobile and touch). Every group ran on a freshly prepared private database (prepare.sh), served by
+php -S on localhost.
+
+1. New spec: tests/browser/header-polish.spec.ts
+
+   Final working tree (retroboards_e2e_po2, port 8052):
+     Chromium: 15 passed, 5 skipped (captures in desktop/ and mobile/)
+     WebKit (E2E_LAYOUT_BROWSER=webkit, fresh prepare.sh): 15 passed, 5 skipped (captures in webkit/)
+     The skips are project-specific: the shortcut hints and the guest hover run on desktop, the
+     phone lockup on mobile.
+
+   The same spec against an unmodified `git archive HEAD` export (553004b1, port 8053): all 15 fail
+       focus (both)            Boards 2px on focus (7px at rest); search 2px (999px); no halo on the lockup
+       hints (3 tests)         no hint element; "Search the council — Command K"; titles carry ⌘ without JS
+       counts (both)           "Messages 1 unread conversation" from a role-less span's aria-label
+       bell (both)             aria-current null on /notifications
+       menu (both)             "Open account menu for Elrond Peredhel"; no groups; Settings shares Profile's glyph
+       guest                   Log in's background unchanged on hover; Sign up 19px tall
+       tour (both)             "Click the name any time to come back here."
+       phone lockup            no wrapper, so no spare room outside the link to hit
+
+   Measured (Chromium, member alice on /inbox):
+       Focused corner and halo at rest -> focused
+         before: pills 7px -> 2px, search 999px -> 2px, toggles 4px -> 2px, New topic 7px -> 2px,
+                 account 0px -> 2px; no halo on the lockup, drawer opener or New topic
+         after:  every control keeps its corner, and every control wears the 0 0 0 3px halo
+       Shortcut hint (desktop)
+         before: "⌘K" at 10.24px on every platform
+         after:  "Ctrl K" at 11.2px on Linux; "⌘K" when the page reports a Mac.
+                 aria-keyshortcuts "Control+K" or "Meta+K".
+                 Titles "Board rail (Ctrl+B)" or "Board rail (⌘B)".
+                 Without JavaScript: no hint, no aria-keyshortcuts, title "Board rail".
+       Count names (computed accessible names)
+         "Messages, 1 unread conversation", "Messages, 3 unread conversations", "Messages" at 0;
+         "Inbox, 1 unread topic"; "Notifications, 12 unread" (unchanged)
+       Bell on /notifications: aria-current="page".
+         Background rgb(237, 243, 237), the current pill's wash.
+         A 2px solid rule; no route marked current.
+       Account menu: hairlines (1px solid) open "Settings" and "Log out".
+         Settings has icon-settings; Profile has icon-user.
+         The account button is "Account menu for …".
+       Guest: Log in background rgb(46, 74, 58) at rest, about rgb(38, 61, 48) on hover.
+         Sign up 43x32 (was 43x19).
+       Phone lockup at 390px with "99+" counts: the name is hidden and the link is 44px.
+         A point 12px to its right is inside the wrapper, not the link.
+         At 600px the name returns and the link ends with it.
+
+2. Header specs on the final tree (after the lockup wrapper), both engines:
+     header-phone-rows + header-polish + header-hardening + header-unread-marks
+       Chromium 41 passed, 13 skipped
+       WebKit   41 passed, 13 skipped
+     (Run before the spec's phone-lockup test and Apple-hint test were added; both were then run
+     separately in both engines and pass.)
+
+3. Regression run of the existing specs (rsync copy of the working tree; committed evidence untouched)
+     unified-chrome            25 passed, 5 skipped (accessible-name assertions moved to the Inbox link)
+     chrome-consistency        12 passed, 6 skipped
+     member-surfaces           12 passed, 2 skipped
+     inbox-header               6 passed
+     startup-geometry           7 passed, 7 skipped
+     field-error-a11y           6 passed
+     thread-view-study         23 passed, 13 skipped, 4 failed (pre-existing)
+     content-console            5 passed, 1 skipped, 4 failed (pre-existing)
+     chamfer-removal           60 passed
+     admin-remediation         19 passed, 17 skipped
+     profile-surface           28 passed
+     board-index-remediation   16 passed
+     community-inbox-theme     19 passed, 13 skipped, 2 failed (pre-existing)
+     forum-inbox-remediation   24 passed
+     a11y                      26 passed, 2 failed (pre-existing)
+     auth-hardening            14 passed, 2 failed (pre-existing)
+     auth-polish               19 passed, 3 skipped
+     avatar-display             2 passed
+     asset-release-layout      12 passed
+     notifications-unified     20 passed (DB retroboards_unified_e2e_po, RB_EVIDENCE_DIR in scratch)
+
+   Pre-existing failures, each reproduced identically on the HEAD export:
+     thread-view-study.spec.ts :200, :430, :923, :1046 [desktop]
+     content-console.spec.ts :247 [desktop and mobile], :338 [desktop], :98 [mobile]
+     community-inbox-theme.spec.ts :301 [desktop], :415 [mobile]
+     a11y.spec.ts :574 [desktop and mobile]
+     auth-hardening.spec.ts :203 [desktop and mobile]

@@ -1,0 +1,16 @@
+Running 12 tests using 1 worker
+
+  ✓   1 [desktop] › create-menu-regressions.spec.ts:65:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary (6.4s)
+  ✓   2 [desktop] › create-menu-regressions.spec.ts:103:5 › leaving recipient suggestions restores Escape and cancels delayed reopening (2.3s)
+  ✓   3 [desktop] › create-menu-regressions.spec.ts:170:5 › uncancellable recipient results cannot reopen suggestions after blur (1.6s)
+  ✓   4 [desktop] › create-menu-regressions.spec.ts:202:5 › recipient suggestions remain selectable by pointer (3.6s)
+  ✓   5 [desktop] › create-menu-regressions.spec.ts:234:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members (7.1s)
+  ✓   6 [desktop] › create-menu-regressions.spec.ts:284:7 › native creation › creation on narrow reading panes stays a real destination with retained validation drafts (1.4s)
+  ✓   7 [mobile] › create-menu-regressions.spec.ts:65:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary (8.6s)
+  ✓   8 [mobile] › create-menu-regressions.spec.ts:103:5 › leaving recipient suggestions restores Escape and cancels delayed reopening (2.4s)
+  ✓   9 [mobile] › create-menu-regressions.spec.ts:170:5 › uncancellable recipient results cannot reopen suggestions after blur (1.6s)
+  ✓  10 [mobile] › create-menu-regressions.spec.ts:202:5 › recipient suggestions remain selectable by pointer (3.9s)
+  ✓  11 [mobile] › create-menu-regressions.spec.ts:234:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members (7.0s)
+  ✓  12 [mobile] › create-menu-regressions.spec.ts:284:7 › native creation › creation on narrow reading panes stays a real destination with retained validation drafts (1.5s)
+
+  12 passed (49.6s)

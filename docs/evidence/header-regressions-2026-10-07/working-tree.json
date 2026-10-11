@@ -1,0 +1,43 @@
+{
+  "date_utc": "2026-10-07",
+  "base_commit": "553004b1400a97313a93dc13015e4a64a5c6798b",
+  "state": "uncommitted working tree; local verification only",
+  "asset_candidate": "a084b1b37e0c6efe",
+  "app_css_url": "/assets/dist/app-style-COc4R5l-.css",
+  "application_surface_sha256": "1cdf7b6fa4c2006a6c0ec12dfe450ad0afc6ae9434e7a94320eb70327663d16c",
+  "source_sha256": {
+    "src/Controller/PostController.php": "c31560ab3b2cae35d80af847d58fc8dc36fb0639fa4b0f0be654b87f098bf4a4",
+    "public/assets/app.css": "a4ef569b6811215f1ee2c405ca70b231a3440497c5297bad433a74989187359b",
+    "public/assets/app.js": "2342e98b9dc225122c56e730c2ae7290ab34b3d147e18a5b592de9c1254c3de0",
+    "public/assets/tour.js": "69db171d5fea794b7bbe192d5df3127e2f22f738dc12df4a8c97fee580d97168",
+    "templates/layout.php": "75abb287afc1172826ec1c7cedf413eba2e86c304c8b320c05a5de2d7269d44d",
+    "templates/partials/topbar.php": "eb7c08c5c81775fe54e9127cdf9f999e32770f384b43aa88028fa0e1a6170be5",
+    "templates/partials/sidebar.php": "112ae2828c1971425c82be4ea9782bab6896cfd04792d6201215514d2dc53d8c",
+    "templates/partials/icon.php": "87bbbcaa29ea6c57bf59ef39c358ad8abb11482ca35f32ca6a3e0c782170d6cf",
+    "tests/Integration/Core/AppComposeMemberSurfaceTest.php": "93b98dedc1f2d149a655bf4040bb96b84fcb56a50d7ff61dbbbba341dbde3ae9",
+    "tests/Integration/Core/AppMemberShellTest.php": "e1c8d1adfbaf040e8f2c4f379d1ec4d08ab44d2321d66ceffe3d8557e5cf8b5c",
+    "tests/Integration/Core/AppModeratorScopeTest.php": "7d5bff041b50571b9764bc08b4eecd6e5c713f92062bd3423630d433aa70f61f",
+    "tests/browser/package.json": "891b89e08a215d0fe880ef3efda67971331d8721dbf9c3cc21f91c6614fef8fd",
+    "tests/browser/unified-chrome.spec.ts": "ca3d553245fa9d35f0cbe9e96ecef653ba1eb91fca11f1343b383a958cab7708",
+    "tests/browser/header-regressions.spec.ts": "18ee347d8203acc08f58b5339c405bb8f004a1fb7bcebf748612488c3e43ebc8",
+    "tests/browser/compose-destination.spec.ts": "d0a55e1e04833c2fb0df62f074a4c63c03ee9e724307943f1d0f42520ad68e79",
+    "tests/browser/compose-destination-fixture.php": "382445a4363dcaeed19d29962ecc28489c45e91885c10df5eb07165b7a28bb62",
+    "tests/browser/header-phone-rows.spec.ts": "fb070a0713d1ee5ca492d806f24259b41df535b0c77f115ae38fc7f773f47bd1",
+    "tests/browser/header-hardening.spec.ts": "f47fbd054d223f122aa695541ef92e1c9d24e8a8a54a601bfffbc771a7e5cc60",
+    "tests/browser/header-polish.spec.ts": "8d96f2ac3e7143706f088902040e2c6180c26e3b6a33ea7a9787ad9fb404c9b9",
+    "tests/browser/header-unread-marks.spec.ts": "2614d84dea58c4f039a56a6a7a7f82de17df62522d1d028f8ee6dc710e745e9f",
+    "config/assets.json": "c21a23f2de8650cf810d9c05715bc40bdcec4edc8fe9ae043ad78f3152e15cb6",
+    "config/imladris-runtime-baseline.json": "e6d62072b22d473736121cafe678f15155029fdccc6aff898b3f1fa286367637",
+    "resources/imladris/manifest.json": "1b36abca370493d0f8a4681b9fdaec531e25a89109dbc7864df9e142915edc57"
+  },
+  "results": {
+    "phpunit_tests": 3134,
+    "phpunit_assertions": 23833,
+    "phpunit_skipped": 1,
+    "chromium_passed": 75,
+    "chromium_skipped": 21,
+    "webkit_passed": 75,
+    "webkit_skipped": 21,
+    "asset_tests_passed": 23
+  }
+}

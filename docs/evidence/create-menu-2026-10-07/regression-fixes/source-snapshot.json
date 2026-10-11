@@ -1,0 +1,32 @@
+{
+  "capturedAt": "2026-10-07T16:26:15.830078+00:00",
+  "head": "f8d4350ff417f3a8d68d7870fdc57947104a5643",
+  "uncommittedWorkingTree": true,
+  "applicationSurfaceSha256": "6c77e8a9dbf92d598c6e77746ed0615e652c67aba4c440d53786edb09cc72609",
+  "assetVersion": "b6c67c47cabb2e16",
+  "sourceSha256": {
+    "templates/layout.php": "66440084f643fdd3c3c7e11f9d18484f20076c2d64cf02ed4bfee76a8fc339cf",
+    "templates/partials/subheader.php": "055531908ea02a3d7b42cfcc8538723b72a7dfe6a589d0d1670479aa7998d90b",
+    "templates/partials/dm_list.php": "87b9933fbbbb0b1001142561fb4f1dcbaad7568ee5c46755ee7147678f09191f",
+    "templates/partials/dm_compose_panel.php": "c5507dbc4922a87742ef36d5f5e8e13516307ea70c2a16fd6fd3ec254bac20d7",
+    "templates/dm/index.php": "f9fb80c48225f472094174541395b2535aac2a09b67ea468a65a39ec3622fb16",
+    "templates/dm/show.php": "ed43da4749c26ca4472e1032c0fbedf088a658c0126f59aa681b0a414b265053",
+    "templates/dm/new.php": "e764208868e9d4155f7393ab13bb9c9d08389532aba6d4d3659763ca52bf736b",
+    "public/assets/app.css": "c07d6bf99adb94ba3f2de39e69e2bc3de80847df26bcd8bcae65f8eccb9d3af6",
+    "public/assets/app.js": "fe522d1d7bd919da0aac1d2781bb98e34dd498a920cb4aa0ce25b82652686f47",
+    "public/assets/imladris.css": "d8acefca061a0c8914ffb204cfcfa52b435575ebc5d5df5de85fcf1c1fec22e8",
+    "config/assets.json": "8bf05eaf26077faf59bee323d2ad2ce2464d0b2c4f2ff9903b2d598f320fcde3",
+    "config/imladris-runtime-baseline.json": "25a1140ec8b74fe1e50d47ae1a6be05da1f9512f9d26c284f88a3940106d9d0e",
+    "resources/imladris/manifest.json": "33b8f7d97041c9b93371172025ca475193f72e0880182162183c45d16703c26d",
+    "tests/Integration/Core/AppCreateMenuTest.php": "ac66f5375b68c888169fd4abb2be1abe1e723b266e6851b756e660c3382532c2",
+    "tests/Unit/Core/MessagesStylesContractTest.php": "cb4e23ead272dbd37979f882f7e7cdb1e15ee3c331e92c0fac5bec47fc5ec924",
+    "tests/browser/create-menu-regressions.spec.ts": "f61d2836410f4533e66cd27ba212c41706fff41455895901b64404d5af7aac60",
+    "tests/browser/create-menu-subheader.spec.ts": "792c4abea5c88d9b460c4a6aaaa0e3efef59b73c4421c8ad65ece4c04d9fd36f",
+    "tests/browser/create-menu-helpers.ts": "be5789a2ec160f3aca1dc7b0ba943b17fb8a8f6f8e1423dfe9100b32ca302a8e",
+    "tests/browser/package.json": "5000107a00be63d7a7f77dac99ec94917a1d2dbdf21baed2af965978492b7041",
+    "public/assets/dist/app-c99da55a79b26aa2.js": "c99da55a79b26aa200d542af2d065f2bca03803f9febb50e73704a940ce6bee6",
+    "public/assets/dist/app-style-BpZnYE67.css": "41af9228c2ab79b4c3ae8a8443f1fbaaef96093f2525cc71c443ede2fb2a54d2"
+  },
+  "verifiedAt": "2026-10-07T16:32:24.333684+00:00",
+  "harnessNote": "evidence scripts prepare the focused suite separately; explicit verification commands and served application source unchanged."
+}

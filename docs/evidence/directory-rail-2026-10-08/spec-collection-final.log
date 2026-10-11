@@ -1,0 +1,78 @@
+Listing tests:
+  [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 320px
+  [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 390px
+  [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 860px
+  [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 861px
+  [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 1024px
+  [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 1280px
+  [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 1440px
+  [desktop] › create-menu-subheader.spec.ts:223:5 › keyboard creation, shared menu dismissal and Messages focus/draft recovery
+  [desktop] › create-menu-subheader.spec.ts:272:5 › classic scrollbar and Large text fit 320px
+  [desktop] › create-menu-subheader.spec.ts:276:13 › native with JS › guest and dms-off routes retain the conditional row
+  [desktop] › create-menu-subheader.spec.ts:312:13 › native with JS › representative page and open menu captures
+  [desktop] › create-menu-subheader.spec.ts:276:13 › native without JS › guest and dms-off routes retain the conditional row
+  [desktop] › create-menu-subheader.spec.ts:312:13 › native without JS › representative page and open menu captures
+  [desktop] › create-menu-subheader.spec.ts:343:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors
+  [desktop] › notifications-unified.spec.ts:60:5 › both entry points render the same authorized rows, UTC time and reachable old unread history
+  [desktop] › notifications-unified.spec.ts:92:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes
+  [desktop] › notifications-unified.spec.ts:134:5 › inaccessible and empty states remain consistent at both entry points
+  [desktop] › notifications-unified.spec.ts:156:9 › progressive enhancement › standalone owned forms and bulk actions work without JavaScript
+  [desktop] › notifications-unified.spec.ts:156:9 › progressive enhancement › pane owned forms and bulk actions work without JavaScript
+  [desktop] › notifications-unified.spec.ts:182:5 › polling synchronizes every badge without replacing focused notification rows
+  [desktop] › notifications-unified.spec.ts:215:5 › guests and disabled notifications make no bell request and 404 stops polling
+  [desktop] › notifications-unified.spec.ts:236:5 › replayed Notifications tour step highlights the visible primary bell with account menu closed
+  [desktop] › notifications-unified.spec.ts:257:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name
+  [desktop] › notifications-unified.spec.ts:302:5 › polling pauses while hidden and backs off after throttling
+  [desktop] › profile-surface.spec.ts:278:5 › profile review: phone activity titles remain fully readable
+  [desktop] › profile-surface.spec.ts:307:5 › profile review: touch tablets wrap activity titles while a mouse keeps one line
+  [desktop] › profile-surface.spec.ts:363:5 › profile review: search controls align and activity timestamps retain exact instants
+  [desktop] › profile-surface.spec.ts:387:5 › profile review: follower actions name their target and fit below phone identities
+  [desktop] › profile-surface.spec.ts:408:5 › profile review: badge explanations work by keyboard without JavaScript
+  [desktop] › profile-surface.spec.ts:451:5 › recent activity filters navigate and independent disclosures work by keyboard
+  [desktop] › profile-surface.spec.ts:494:5 › profile controls use system sizing, focus, current states and stable disabled fills
+  [desktop] › profile-surface.spec.ts:552:5 › profile states match the approved anatomy in light and dark themes
+  [desktop] › profile-surface.spec.ts:617:5 › tabs, search, sorting, paging, menu, copy link, and keyboard focus work
+  [desktop] › profile-surface.spec.ts:716:5 › profile navigation and GET forms remain complete without JavaScript
+  [desktop] › profile-surface.spec.ts:766:5 › Commends meets contrast in both themes and every empty state keeps the shared frame
+  [desktop] › profile-surface.spec.ts:824:5 › phone stat numbers share a baseline and a 32-character handle wraps inside the cover
+  [desktop] › profile-surface.spec.ts:899:5 › Connections pages past twenty and leaves members-only followers out for guests
+  [desktop] › profile-surface.spec.ts:948:5 › the ··· menu opens on screen, folds its Block step, and holds on a short action row
+  [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 320px
+  [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 390px
+  [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 860px
+  [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 861px
+  [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 1024px
+  [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 1280px
+  [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 1440px
+  [mobile] › create-menu-subheader.spec.ts:223:5 › keyboard creation, shared menu dismissal and Messages focus/draft recovery
+  [mobile] › create-menu-subheader.spec.ts:272:5 › classic scrollbar and Large text fit 320px
+  [mobile] › create-menu-subheader.spec.ts:276:13 › native with JS › guest and dms-off routes retain the conditional row
+  [mobile] › create-menu-subheader.spec.ts:312:13 › native with JS › representative page and open menu captures
+  [mobile] › create-menu-subheader.spec.ts:276:13 › native without JS › guest and dms-off routes retain the conditional row
+  [mobile] › create-menu-subheader.spec.ts:312:13 › native without JS › representative page and open menu captures
+  [mobile] › create-menu-subheader.spec.ts:343:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors
+  [mobile] › notifications-unified.spec.ts:60:5 › both entry points render the same authorized rows, UTC time and reachable old unread history
+  [mobile] › notifications-unified.spec.ts:92:5 › long content wraps across desktop, phone, stress and 200 percent layouts in both themes
+  [mobile] › notifications-unified.spec.ts:134:5 › inaccessible and empty states remain consistent at both entry points
+  [mobile] › notifications-unified.spec.ts:156:9 › progressive enhancement › standalone owned forms and bulk actions work without JavaScript
+  [mobile] › notifications-unified.spec.ts:156:9 › progressive enhancement › pane owned forms and bulk actions work without JavaScript
+  [mobile] › notifications-unified.spec.ts:182:5 › polling synchronizes every badge without replacing focused notification rows
+  [mobile] › notifications-unified.spec.ts:215:5 › guests and disabled notifications make no bell request and 404 stops polling
+  [mobile] › notifications-unified.spec.ts:236:5 › replayed Notifications tour step highlights the visible primary bell with account menu closed
+  [mobile] › notifications-unified.spec.ts:257:7 › persistent bell without JavaScript › member and admin bell renders zero and 105 counts with a long account name
+  [mobile] › notifications-unified.spec.ts:302:5 › polling pauses while hidden and backs off after throttling
+  [mobile] › profile-surface.spec.ts:278:5 › profile review: phone activity titles remain fully readable
+  [mobile] › profile-surface.spec.ts:307:5 › profile review: touch tablets wrap activity titles while a mouse keeps one line
+  [mobile] › profile-surface.spec.ts:363:5 › profile review: search controls align and activity timestamps retain exact instants
+  [mobile] › profile-surface.spec.ts:387:5 › profile review: follower actions name their target and fit below phone identities
+  [mobile] › profile-surface.spec.ts:408:5 › profile review: badge explanations work by keyboard without JavaScript
+  [mobile] › profile-surface.spec.ts:451:5 › recent activity filters navigate and independent disclosures work by keyboard
+  [mobile] › profile-surface.spec.ts:494:5 › profile controls use system sizing, focus, current states and stable disabled fills
+  [mobile] › profile-surface.spec.ts:552:5 › profile states match the approved anatomy in light and dark themes
+  [mobile] › profile-surface.spec.ts:617:5 › tabs, search, sorting, paging, menu, copy link, and keyboard focus work
+  [mobile] › profile-surface.spec.ts:716:5 › profile navigation and GET forms remain complete without JavaScript
+  [mobile] › profile-surface.spec.ts:766:5 › Commends meets contrast in both themes and every empty state keeps the shared frame
+  [mobile] › profile-surface.spec.ts:824:5 › phone stat numbers share a baseline and a 32-character handle wraps inside the cover
+  [mobile] › profile-surface.spec.ts:899:5 › Connections pages past twenty and leaves members-only followers out for guests
+  [mobile] › profile-surface.spec.ts:948:5 › the ··· menu opens on screen, folds its Block step, and holds on a short action row
+Total: 76 tests in 3 files

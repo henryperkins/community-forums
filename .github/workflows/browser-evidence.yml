@@ -3,6 +3,8 @@ name: Browser evidence
 # Regenerates the Gate A desktop + mobile screenshots by driving the real
 # server-rendered app in Chromium, and uploads them as a build artifact.
 # Runs on demand and when the app or the harness changes.
+# While GitHub billing blocks job startup, the restricted Cloud Build browser
+# lane is authoritative; see docs/runbooks/deployment-cloud-run.md §5a.
 on:
   workflow_dispatch:
   push:

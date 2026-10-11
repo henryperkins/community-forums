@@ -1,0 +1,8 @@
+320:mark
+360:short
+375:short
+390:short
+414:whole
+430:whole
+600:whole
+860:whole

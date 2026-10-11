@@ -28,8 +28,8 @@ async function fixture(t) {
   await put('public/assets/imladris.css', '@font-face{font-family:fixture;src:url(./fonts/fixture.woff2)}');
   await put('public/assets/fonts/fixture.woff2', 'font fixture');
   await put('public/assets/elven-star.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
-  for (const name of ['app', 'composer', 'passkeys', 'tour']) {
-    await put(`public/assets/${name}.js`, `window.${name}Loaded = true;`);
+  for (const name of ['conversation-entry', 'app', 'composer', 'passkeys', 'tour']) {
+    await put(`public/assets/${name}.js`, `window[${JSON.stringify(name + 'Loaded')}] = true;`);
   }
   await put('src/client/wysiwyg/index.ts', 'import "./editor.css"; export const load = () => import("./milkdown-adapter");');
   await put('src/client/wysiwyg/editor.css', '.editor{display:block}');

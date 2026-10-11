@@ -1,0 +1,17 @@
+
+Running 4 tests using 1 worker
+
+(node:1536390) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › inbox-preview-recovery.spec.ts:299:7 › native row submission owns navigation when an old preview answers with an access error (1.1s)
+
+  ✓  2 [desktop] › inbox-preview-recovery.spec.ts:299:7 › native bulk submission owns navigation when an old preview answers with an access error (1.2s)
+(node:1536769) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  3 [mobile] › inbox-preview-recovery.spec.ts:299:7 › native row submission owns navigation when an old preview answers with an access error (1.1s)
+
+  ✓  4 [mobile] › inbox-preview-recovery.spec.ts:299:7 › native bulk submission owns navigation when an old preview answers with an access error (1.0s)
+
+  4 passed (6.9s)

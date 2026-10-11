@@ -147,7 +147,7 @@ async function expectBoardIdentityContent(page: Page, theme: Theme, project: 'de
 
 async function expectInboxContent(page: Page, project: 'desktop' | 'mobile'): Promise<void> {
   const inbox = page.locator('[data-inbox]');
-  const scopeMenu = inbox.locator('.inbox-scope-menu');
+  const scopeMenu = page.locator('[data-subheader] .inbox-scope-menu');
   const activeFilter = scopeMenu.locator('.inbox-scope-menu-panel a.is-active');
   const topic = inbox.locator('[data-inbox-list] .thread-title').first();
   await expect(inbox).toBeVisible();
@@ -285,7 +285,7 @@ test('forum index, board, and canonical thread satisfy production visual and acc
   await visit(page, '/inbox');
   await expectInboxContent(page, project);
   await expectNoHorizontalOverflow(page);
-  await expectNoSeriousA11yViolations(page, '[data-inbox]');
+  await expectNoSeriousA11yViolations(page, '[data-inbox], [data-subheader]');
   await captureSurface(page, project, 'inbox', 'light', () => expectInboxContent(page, project));
   await captureSurface(page, project, 'inbox', 'dark', () => expectInboxContent(page, project));
 

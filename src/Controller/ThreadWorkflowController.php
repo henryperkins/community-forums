@@ -15,7 +15,9 @@ use App\Repository\ThreadUserRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
+use App\Service\ThreadReadService;
 use App\Service\ThreadWorkflowService;
+use App\Support\InboxSnooze;
 
 final class ThreadWorkflowController extends Controller
 {
@@ -51,16 +53,31 @@ final class ThreadWorkflowController extends Controller
         // snooze writes the per-user row directly, so it must gate here too.
         $this->container->get(WriteGate::class)->assertCanWrite($user);
         $threadId = (int) ($params['id'] ?? 0);
-        $thread = $this->readableThread($threadId);
+        $thread = $this->container->get(ThreadReadService::class)->loadForUser($user, $threadId);
+        $return = $this->localReturn($request, '/t/' . $threadId . '-' . (string) $thread['slug']);
 
-        $until = $this->parseSnooze((string) $request->post('until', ''));
-        $this->container->get(ThreadUserRepository::class)->setSnooze($user->id(), $threadId, $until);
+        try {
+            $intent = $request->post('until');
+            if (!is_string($intent)) {
+                throw new ValidationException(['until' => 'Choose an available Inbox action.']);
+            }
+            $state = InboxSnooze::state($intent);
+            $this->container->get(ThreadUserRepository::class)->setSnooze(
+                $user->id(),
+                $threadId,
+                $state['until'],
+                $state['indefinite'],
+            );
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash($return, $e->first());
+        }
 
-        $message = $until === null ? 'Snooze cleared.' : 'Topic snoozed.';
-        return $this->redirectWithFlash(
-            $this->localReturn($request, '/t/' . $threadId . '-' . (string) $thread['slug']),
-            $message,
-        );
+        $message = match ($intent) {
+            'manual' => 'Topic hidden from Inbox until you restore it.',
+            'tomorrow' => 'Topic snoozed til tomorrow.',
+            default => 'Topic restored to Inbox.',
+        };
+        return $this->redirectWithFlash($return, $message);
     }
 
     /** @param array<string,string> $params */
@@ -113,17 +130,6 @@ final class ThreadWorkflowController extends Controller
     {
         $thread = $this->readableThread($threadId);
         return '/t/' . $threadId . '-' . (string) $thread['slug'];
-    }
-
-    private function parseSnooze(string $value): ?string
-    {
-        return match ($value) {
-            'later_today' => gmdate('Y-m-d H:i:s', time() + 4 * 3600),
-            'tomorrow' => gmdate('Y-m-d H:i:s', time() + 24 * 3600),
-            'monday' => gmdate('Y-m-d H:i:s', (int) strtotime('next monday 09:00 UTC')),
-            'week' => gmdate('Y-m-d H:i:s', time() + 7 * 24 * 3600),
-            default => null,
-        };
     }
 
     private function resolveAssignee(Request $request): int

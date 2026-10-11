@@ -1,0 +1,53 @@
+
+Running 2 tests using 1 worker
+
+(node:1530056) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✘  1 [desktop] › inbox-preview-recovery.spec.ts:299:7 › native row submission owns navigation when an old preview answers with an access error (35.0s)
+(node:1530380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✘  2 [desktop] › inbox-preview-recovery.spec.ts:299:7 › native bulk submission owns navigation when an old preview answers with an access error (20.9s)
+
+
+  1) [desktop] › inbox-preview-recovery.spec.ts:299:7 › native row submission owns navigation when an old preview answers with an access error
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.evaluate: Test timeout of 30000ms exceeded.
+
+      70 |   // Let the application consume the response and paint before asserting that
+      71 |   // a cancelled or stale response did not replace the current preview.
+    > 72 |   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+         |              ^
+      73 | }
+      74 |
+      75 | async function openDraft(page: Page, info: TestInfo) {
+        at afterResponse (/home/ubuntu/community-forums/tests/browser/inbox-preview-recovery.spec.ts:72:14)
+        at /home/ubuntu/community-forums/tests/browser/inbox-preview-recovery.spec.ts:329:11
+
+    Error Context: ../../../../../tmp/retroboards-preview-native-harness-20261008/.artifacts/inbox-preview-recovery-nat-281c1-nswers-with-an-access-error-desktop/error-context.md
+
+  2) [desktop] › inbox-preview-recovery.spec.ts:299:7 › native bulk submission owns navigation when an old preview answers with an access error
+
+    Test was interrupted.
+
+    Error: page.evaluate: Test ended.
+
+      70 |   // Let the application consume the response and paint before asserting that
+      71 |   // a cancelled or stale response did not replace the current preview.
+    > 72 |   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+         |              ^
+      73 | }
+      74 |
+      75 | async function openDraft(page: Page, info: TestInfo) {
+        at afterResponse (/home/ubuntu/community-forums/tests/browser/inbox-preview-recovery.spec.ts:72:14)
+        at /home/ubuntu/community-forums/tests/browser/inbox-preview-recovery.spec.ts:329:11
+
+    Error Context: ../../../../../tmp/retroboards-preview-native-harness-20261008/.artifacts/inbox-preview-recovery-nat-7123e-nswers-with-an-access-error-desktop/error-context.md
+
+  1 failed
+    [desktop] › inbox-preview-recovery.spec.ts:299:7 › native row submission owns navigation when an old preview answers with an access error
+  1 interrupted
+    [desktop] › inbox-preview-recovery.spec.ts:299:7 › native bulk submission owns navigation when an old preview answers with an access error

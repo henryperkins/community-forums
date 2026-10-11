@@ -1,0 +1,70 @@
+{
+  "date_utc": "2026-10-08",
+  "base_commit": "573f905d71f3c146072cffd5fecb2d2ffaca995b",
+  "build": "5de73df06f287ae9",
+  "application_surface_sha256": "ab43c93ca49825fdba30769ce63acca13231702ac3750b1f38fce3e4d82e80db",
+  "assets": [
+    {
+      "entry": "app.css",
+      "url": "/assets/dist/app-style-DEqCyv6L.css",
+      "sha256": "f6772dc65f0fcda571d4aa6f11acd1ea4f9f3039b87b2574dca857f48583b29d"
+    },
+    {
+      "entry": "app.js",
+      "url": "/assets/dist/app-854791801de6c0fa.js",
+      "sha256": "854791801de6c0fa300bfb1d10eca0ece27e812338675ce14271aaf55242b13d"
+    }
+  ],
+  "final_checks": {
+    "phpunit_full": {
+      "passed": 3174,
+      "skipped": 1,
+      "total": 3175,
+      "assertions": 25179,
+      "log": "verification/phpunit-full.log"
+    },
+    "phpunit_native_prepares": {
+      "total": 64,
+      "assertions": 1524,
+      "failed": 0,
+      "log": "verification/phpunit-native-focused.log"
+    },
+    "asset_worker_tests": {
+      "passed": 24,
+      "failed": 0,
+      "log": "verification/assets-tests.log"
+    },
+    "browser": {
+      "recovery_chromium": {
+        "passed": 18,
+        "skipped": 6,
+        "log": "verification/recovery-chromium.log"
+      },
+      "recovery_webkit": {
+        "passed": 18,
+        "skipped": 6,
+        "log": "verification/recovery-webkit.log"
+      },
+      "controls_chromium": {
+        "passed": 44,
+        "skipped": 0,
+        "log": "verification/regression-chromium.log"
+      },
+      "controls_webkit": {
+        "passed": 44,
+        "skipped": 0,
+        "log": "verification/regression-webkit.log"
+      }
+    },
+    "assets_check": true,
+    "imladris_check": true
+  },
+  "limits": {
+    "browser_scope": "Recovery spec plus Inbox controls, Inbox header and shared subheader specs, not full browser suite",
+    "phpunit_skip": "Migration0077 fixture-free down/up rehearsal uses its dedicated database",
+    "existing_messages_baseline": "Four create-menu/no-JS review failures reproduced with HEAD CSS; final repair did not modify Messages geometry",
+    "production_deployment_verified": false,
+    "physical_device_verified": false
+  },
+  "provenance": "Red regression proofs and interrupted/corrected native-submit harness attempts remain separate from final passing runs."
+}

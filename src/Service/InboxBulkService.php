@@ -9,13 +9,12 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\ThreadUserRepository;
 use App\Security\WriteGate;
-use DateTimeImmutable;
-use DateTimeZone;
+use App\Support\InboxSnooze;
 
 /** Transaction-safe owner of the Inbox sweep verbs. */
 final class InboxBulkService
 {
-    public const ACTIONS = ['read', 'unread', 'star', 'snooze'];
+    public const ACTIONS = ['read', 'unread', 'star', 'snooze', 'hide', 'restore'];
 
     public function __construct(
         private Database $db,
@@ -38,10 +37,14 @@ final class InboxBulkService
         if (!in_array($action, self::ACTIONS, true)) {
             throw new ValidationException(['action' => 'Choose a valid Inbox action.']);
         }
-        if ($action === 'snooze' && (!$workflowEnabled || $until !== 'monday')) {
+        $changesSnooze = in_array($action, ['snooze', 'hide', 'restore'], true);
+        if ($changesSnooze && !$workflowEnabled) {
+            throw new ValidationException(['action' => 'Inbox hiding is not available.']);
+        }
+        if ($action === 'snooze' && $until !== 'tomorrow') {
             throw new ValidationException(['until' => 'Choose an available snooze time.']);
         }
-        if ($action === 'star' || $action === 'snooze') {
+        if ($action === 'star' || $changesSnooze) {
             $this->writeGate->assertCanWrite($user);
         }
 
@@ -53,15 +56,19 @@ final class InboxBulkService
             $threads[$threadId] = $this->threadRead->loadForUser($user, $threadId);
         }
 
-        $snoozedUntil = $action === 'snooze' ? $this->nextMonday() : null;
-        $this->db->transaction(function () use ($user, $threads, $action, $snoozedUntil): void {
+        $snooze = $changesSnooze ? InboxSnooze::state(match ($action) {
+            'snooze' => $until,
+            'hide' => 'manual',
+            default => '',
+        }) : null;
+        $this->db->transaction(function () use ($user, $threads, $action, $snooze): void {
             foreach ($threads as $threadId => $thread) {
                 if ($action === 'unread') {
                     $this->threadUsers->markUnread($user->id(), $threadId);
                 } elseif ($action === 'star') {
                     $this->threadUsers->setStar($user->id(), $threadId, true);
-                } elseif ($action === 'snooze') {
-                    $this->threadUsers->setSnooze($user->id(), $threadId, $snoozedUntil);
+                } elseif ($snooze !== null) {
+                    $this->threadUsers->setSnooze($user->id(), $threadId, $snooze['until'], $snooze['indefinite']);
                 } else {
                     $this->markRead($user->id(), $threadId, $thread);
                 }
@@ -78,12 +85,5 @@ final class InboxBulkService
         if ($lastPostId > 0) {
             $this->threadUsers->markRead($userId, $threadId, $lastPostId);
         }
-    }
-
-    private function nextMonday(): string
-    {
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $days = 8 - (int) $now->format('N');
-        return $now->modify('+' . $days . ' days')->setTime(9, 0)->format('Y-m-d H:i:s');
     }
 }

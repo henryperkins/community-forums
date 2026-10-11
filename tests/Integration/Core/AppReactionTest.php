@@ -189,4 +189,256 @@ final class AppReactionTest extends TestCase
         self::assertStringContainsString('class="reaction-name">Illuminating</span>', $html);
         self::assertStringContainsString('name="emoji" value="👍"', $html);
     }
+
+    public function testReactionNamesAreNewestCappedAndFilteredWithoutChangingCounts(): void
+    {
+        $s = $this->scenario();
+        $viewer = $this->makeUser();
+        $repo = new ReactionRepository($this->db);
+        $names = [];
+        for ($i = 0; $i < 8; $i++) {
+            $fan = $this->makeUser(['username' => 'reactor' . $i]);
+            $names[] = $fan['username'];
+            $repo->toggle($s['op_id'], (int) $fan['id'], '👍');
+        }
+        $blocked = $this->makeUser(['username' => 'blockedreactor']);
+        $blocks = new \App\Repository\BlockRepository($this->db);
+        $blocks->block((int) $blocked['id'], (int) $viewer['id']);
+        $repo->toggle($s['op_id'], (int) $blocked['id'], '👍');
+        $otherBlocked = $this->makeUser(['username' => 'otherblockedreactor']);
+        $blocks->block((int) $viewer['id'], (int) $otherBlocked['id']);
+        $repo->toggle($s['op_id'], (int) $otherBlocked['id'], '👍');
+        $inactive = $this->makeUser(['username' => 'inactivereactor', 'status' => 'banned']);
+        $repo->toggle($s['op_id'], (int) $inactive['id'], '👍');
+        $repo->toggle($s['op_id'], (int) $viewer['id'], '👍');
+
+        $this->actingAs($viewer);
+        $response = $this->post('/posts/' . $s['op_id'] . '/react', ['emoji' => '👍', 'format' => 'json']);
+        $this->assertStatus(200, $response);
+        $data = json_decode($response->body(), true);
+        self::assertArrayHasKey('reactors', $data);
+        self::assertSame(array_slice(array_reverse($names), 0, 6), $data['reactors']);
+        self::assertSame(11, $data['counts']['👍'], 'hidden names remain in aggregate counts');
+
+        $html = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug'])->body();
+        self::assertStringContainsString('@reactor7, @reactor6, @reactor5, @reactor4, @reactor3, @reactor2 and 5 others', $html);
+        self::assertStringNotContainsString('blockedreactor', $html);
+        self::assertStringNotContainsString('inactivereactor', $html);
+    }
+
+    public function testPrivateBoardReactionNamesExcludeFormerMembers(): void
+    {
+        $members = new \App\Repository\BoardMemberRepository($this->db);
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory(), ['visibility' => 'private']);
+        $members->add((int) $board['id'], (int) $author['id'], null);
+        $thread = $this->makeThread($board, $author);
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ?', [$thread['thread_id']]);
+        $former = $this->makeUser(['username' => 'formerreactor']);
+        $admin = $this->makeAdmin(['username' => 'adminreactor']);
+        $repo = new ReactionRepository($this->db);
+        $repo->toggle($postId, (int) $former['id'], '👍');
+        $repo->toggle($postId, (int) $admin['id'], '👍');
+        $this->actingAs($author);
+        $response = $this->post('/posts/' . $postId . '/react', ['emoji' => '👍', 'format' => 'json']);
+        $this->assertStatus(200, $response);
+        $data = json_decode($response->body(), true);
+        self::assertArrayHasKey('reactors', $data);
+        self::assertSame(['adminreactor'], $data['reactors']);
+        self::assertSame(3, $data['counts']['👍']);
+        $html = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug'])->body();
+        self::assertStringContainsString('You, @adminreactor and 1 other', $html);
+        self::assertStringNotContainsString('formerreactor', $html);
+    }
+
+    public function testReactionNamesFollowTheEffectiveSuspensionState(): void
+    {
+        $s = $this->scenario();
+        $repo = new ReactionRepository($this->db);
+        // Mirrors User::isActive(): an elapsed timed suspension names its member
+        // again, while current and indefinite suspensions only count.
+        $restored = $this->makeUser(['username' => 'restoredreactor', 'status' => 'suspended',
+            'suspended_until' => gmdate('Y-m-d H:i:s', time() - 3600)]);
+        $current = $this->makeUser(['username' => 'currentreactor', 'status' => 'suspended',
+            'suspended_until' => gmdate('Y-m-d H:i:s', time() + 3600)]);
+        $indefinite = $this->makeUser(['username' => 'indefinitereactor', 'status' => 'suspended']);
+        foreach ([$indefinite, $current, $restored] as $fan) {
+            $repo->toggle($s['op_id'], (int) $fan['id'], '👍');
+        }
+
+        $this->actingAs($s['author']);
+        $response = $this->post('/posts/' . $s['op_id'] . '/react', ['emoji' => '👍', 'format' => 'json']);
+        $this->assertStatus(200, $response);
+        $data = json_decode($response->body(), true);
+        self::assertSame(['restoredreactor'], $data['reactors']);
+        self::assertSame(4, $data['counts']['👍']);
+        $html = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug'])->body();
+        self::assertStringContainsString('You, @restoredreactor and 2 others', $html);
+        self::assertStringNotContainsString('currentreactor', $html);
+        self::assertStringNotContainsString('indefinitereactor', $html);
+    }
+
+    public function testNativeTogglesSkipTheJsonSummaryReads(): void
+    {
+        $s = $this->scenario();
+        $this->actingAs($s['author']);
+        $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug']); // settle the session first
+        $path = '/posts/' . $s['op_id'] . '/react';
+        $queries = function (array $fields) use ($path): int {
+            $before = $this->db->metrics()['queries'];
+            $response = $this->post($path, $fields);
+            self::assertContains($response->status(), [200, 303]);
+            return $this->db->metrics()['queries'] - $before;
+        };
+        // A self-reaction has no reputation, notification or badge side effects,
+        // so each pair below performs the same toggle. JSON pays two reads for
+        // its counts and reactor names; the native path pays two for the post's
+        // page in its redirect, and must not also pay for the unused summary.
+        $nativeAdd = $queries(['emoji' => '👍']);
+        $nativeRemove = $queries(['emoji' => '👍']);
+        $jsonAdd = $queries(['emoji' => '👍', 'format' => 'json']);
+        $jsonRemove = $queries(['emoji' => '👍', 'format' => 'json']);
+        self::assertSame($jsonAdd, $nativeAdd);
+        self::assertSame($jsonRemove, $nativeRemove);
+        self::assertSame(0, $this->reactionRows($s['op_id']));
+    }
+
+    public function testReactorNamesAreReadOnlyForViewersWhoSeeThem(): void
+    {
+        $board = $this->makeBoard($this->makeCategory());
+        $author = $this->makeUser();
+        $reactor = $this->makeUser(['username' => 'unseenreactor']);
+        // One reaction adds exactly the batched names read for a member who can
+        // see the tip; a viewer who cannot write is shown no names, so skips it.
+        // Each viewer is measured on its own topic with nothing in between.
+        foreach ([[$this->makeUser(), 1, true], [$this->makeUser(['status' => 'suspended']), 0, false]] as [$viewer, $extra, $named]) {
+            $thread = $this->makeThread($board, $author);
+            $path = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+            $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+            $this->actingAs($viewer);
+            $this->get($path); // settle the session first
+            $before = $this->db->metrics()['queries'];
+            $this->get($path);
+            $quiet = $this->db->metrics()['queries'] - $before;
+            (new ReactionRepository($this->db))->toggle($postId, (int) $reactor['id'], '👍');
+            $before = $this->db->metrics()['queries'];
+            $html = $this->get($path)->body();
+            self::assertSame($quiet + $extra, $this->db->metrics()['queries'] - $before);
+            self::assertSame($named, str_contains($html, '@unseenreactor'));
+        }
+    }
+
+    public function testThreadRendersOneEmptyReactionAnnouncerOnlyWithEngagement(): void
+    {
+        $s = $this->scenario();
+        $this->actingAs($s['author']);
+        $path = '/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug'];
+        // Enhanced failures write into this region; it must already exist and
+        // be empty, because a region inserted with its message may stay silent.
+        $html = $this->get($path)->body();
+        self::assertSame(1, substr_count($html, 'data-reaction-announcer'));
+        self::assertStringContainsString('<p class="sr-only" role="status" data-reaction-announcer></p>', $html);
+
+        (new \App\Repository\SettingRepository($this->db))->set('features', ['engagement' => false]);
+        self::assertStringNotContainsString('data-reaction-announcer', $this->get($path)->body());
+    }
+
+    public function testReactionMarkupHasAccessibleMemberTipAndNoGuestNames(): void
+    {
+        $s = $this->scenario();
+        $fan = $this->makeUser(['username' => 'namedreactor']);
+        $this->db->run("UPDATE users SET profile_visibility = 'members' WHERE id = ?", [$fan['id']]);
+        (new ReactionRepository($this->db))->toggle($s['op_id'], (int) $fan['id'], '👍');
+        $guestHtml = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug'])->body();
+        self::assertStringNotContainsString('namedreactor', $guestHtml);
+        self::assertStringNotContainsString('reaction-tip', $guestHtml);
+        self::assertStringContainsString('<span class="reaction-n"><span class="reaction-n-val">1</span></span>', $guestHtml);
+        $this->actingAs($s['author']);
+        $html = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug'])->body();
+        self::assertStringContainsString('data-label="Commend"', $html);
+        self::assertStringContainsString('aria-describedby="reaction-tip-' . $s['op_id'] . '-0"', $html);
+        self::assertStringContainsString('class="reaction-tip" aria-hidden="true"', $html);
+        self::assertStringContainsString('<span class="reaction-tip-label">Commend</span><span>@namedreactor</span>', $html);
+        self::assertStringNotContainsString('title="Commend"', $html);
+        self::assertStringContainsString('aria-pressed="false" data-label="Commend"', $html);
+    }
+
+    public function testReactionNamesAreBatchedAcrossPostsAndEmoji(): void
+    {
+        $s = $this->scenario();
+        $fan = $this->makeUser(['username' => 'batchreactor']);
+        $replyId = $this->posting()->reply($this->userEntity($s['author']), $s['thread']['thread_id'], ['body' => 'Reply']);
+        $repo = new ReactionRepository($this->db);
+        $repo->toggle($s['op_id'], (int) $fan['id'], '👍');
+        $repo->toggle($s['op_id'], (int) $fan['id'], '🔥');
+        $repo->toggle($replyId, (int) $fan['id'], '👍');
+        $queryCount = $this->db->metrics()['queries'];
+        self::assertEquals([
+            $s['op_id'] => ['👍' => ['batchreactor'], '🔥' => ['batchreactor']],
+            $replyId => ['👍' => ['batchreactor']],
+        ], $repo->reactorsForPosts((int) $s['author']['id'], [$s['op_id'], $replyId]));
+        self::assertSame(1, $this->db->metrics()['queries'] - $queryCount);
+    }
+
+    public function testAnonymousSelfReactionNeverNamesTheAuthorInHtmlOrJson(): void
+    {
+        $author = $this->makeUser(['username' => 'maskedreactor']);
+        $board = $this->makeBoard($this->makeCategory(), ['allow_anonymous' => 1]);
+        $thread = $this->posting()->createThread($this->userEntity($author), [
+            'board_id' => $board['id'], 'title' => 'Anonymous topic', 'body' => 'Anonymous opening.', 'is_anonymous' => true,
+        ]);
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ?', [$thread['thread_id']]);
+        $repo = new ReactionRepository($this->db);
+        $repo->toggle($postId, (int) $author['id'], '👍');
+        $fan = $this->makeUser(['username' => 'publicreactor']);
+        $repo->toggle($postId, (int) $fan['id'], '👍');
+        $viewer = $this->makeUser();
+        $this->actingAs($viewer);
+
+        $response = $this->post('/posts/' . $postId . '/react', ['emoji' => '👍', 'format' => 'json']);
+        $this->assertStatus(200, $response);
+        $data = json_decode($response->body(), true);
+        self::assertSame(['publicreactor'], $data['reactors']);
+        self::assertSame(3, $data['counts']['👍'], 'masked self-reactions still contribute to aggregate counts');
+        $html = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug'])->body();
+        self::assertStringNotContainsString('maskedreactor', $html);
+        self::assertStringContainsString('You, @publicreactor and 1 other', $html);
+
+        $this->actingAs($author);
+        $html = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug'])->body();
+        self::assertStringContainsString('<span>You, @' . $viewer['username'] . ' and @publicreactor</span>', $html, 'the author sees only the viewer-relative You label');
+        $response = $this->post('/posts/' . $postId . '/react', ['emoji' => '👍', 'format' => 'json']);
+        self::assertNotContains('maskedreactor', json_decode($response->body(), true)['reactors']);
+    }
+
+    public function testReactionCannotRevealNamesOnDeletedOrHeldTargets(): void
+    {
+        $s = $this->scenario();
+        $fan = $this->makeUser(['username' => 'protectedreactor']);
+        (new ReactionRepository($this->db))->toggle($s['op_id'], (int) $fan['id'], '👍');
+        $this->actingAs($this->makeUser());
+        foreach (['deleted_thread', 'held_thread', 'held_post'] as $state) {
+            $this->db->run('UPDATE threads SET is_deleted = ?, is_pending = ? WHERE id = ?', [
+                $state === 'deleted_thread' ? 1 : 0, $state === 'held_thread' ? 1 : 0, $s['thread']['thread_id'],
+            ]);
+            $this->db->run('UPDATE posts SET is_pending = ? WHERE id = ?', [$state === 'held_post' ? 1 : 0, $s['op_id']]);
+            $response = $this->post('/posts/' . $s['op_id'] . '/react', ['emoji' => '👍', 'format' => 'json']);
+            $this->assertStatus(404, $response);
+            self::assertStringNotContainsString('protectedreactor', $response->body());
+        }
+    }
+
+    public function testOnlyUnknownReactorsKeepTheNativeTitle(): void
+    {
+        $s = $this->scenario();
+        $fan = $this->makeUser(['username' => 'hiddenreactor', 'status' => 'suspended']);
+        (new ReactionRepository($this->db))->toggle($s['op_id'], (int) $fan['id'], '👍');
+        $this->actingAs($s['author']);
+        $response = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug']);
+        $this->assertStatus(200, $response);
+        self::assertStringContainsString('title="Commend"', $response->body());
+        self::assertStringNotContainsString('class="reaction-tip"', $response->body());
+        self::assertStringNotContainsString('hiddenreactor', $response->body());
+        self::assertStringContainsString('<span class="reaction-n-val">1</span>', $response->body());
+    }
 }

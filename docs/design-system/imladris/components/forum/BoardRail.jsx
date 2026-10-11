@@ -10,6 +10,9 @@ const ROUTE_ICONS = {
   messages: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
   drafts: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z|M14 2v6h6',
   following: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2|M22 21v-2a4 4 0 0 0-3-3.87|M16 3.13a4 4 0 0 1 0 7.75',
+  // The commend star in outline — production's glyph for Top contributors
+  // (topbar.php's account menu). Esteem, not a prize: prefer it to `trophy`.
+  commend: 'M12 2.5 14 10l7.5 2-7.5 2-2 7.5-2-7.5-7.5-2 7.5-2z',
   trophy: 'M8 21h8|M12 17v4|M7 4h10v4a5 5 0 0 1-10 0z|M5 4H3v2a3 3 0 0 0 3 3|M19 4h2v2a3 3 0 0 1-3 3',
 };
 
@@ -42,7 +45,9 @@ function RouteIcon({ name }) {
  *
  * `activeBoard` is matched against each board's `key`. Boards carry their own
  * `href` (default: the Board page template), so the rail navigates for real;
- * pass `onNavigate` to intercept and route in-page instead.
+ * pass `onNavigate` to intercept and route in-page instead. The active row
+ * keeps its href (ADR 0032 #1): it is also the way back to the board's first
+ * page, and it stays in the tab order.
  *
  * The footer slot is rail furniture, not surface content: every member surface
  * that has a rail hangs the same roster + "See everyone" there, because a block
@@ -78,7 +83,7 @@ export function BoardRail({
           {routes.map((r, i) => (
             <a key={r.key || i}
               className={['board-rail-route', r.active ? 'is-active' : ''].filter(Boolean).join(' ')}
-              href={r.active ? undefined : (r.href || '#')}
+              href={r.href || '#'}
               aria-current={r.active ? 'page' : undefined}>
               <RouteIcon name={r.icon} />
               <span className="board-rail-route-text">
@@ -114,7 +119,7 @@ export function BoardRail({
             }
             return (
               <a key={b.key || b.name || bi} className={cls}
-                href={active ? undefined : hrefFor(b)}
+                href={hrefFor(b)}
                 aria-current={active ? 'page' : undefined}
                 onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate(b.key, b); } : undefined}>
                 <span className="board-rail-name">{b.name}</span>

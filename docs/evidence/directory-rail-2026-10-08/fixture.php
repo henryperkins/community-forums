@@ -1,0 +1,9 @@
+<?php
+declare(strict_types=1);
+$root='/home/ubuntu/community-forums';require $root.'/vendor/autoload.php';App\Core\Env::load($root.'/.env');$c=App\Core\Config::fromFile($root.'/config/config.php');if($c->get('db.database')!=='retroboards_e2e_directory_rail_20261008'){throw new RuntimeException('Private directory DB only');}$d=new App\Core\Database($c->get('db'));$users=new App\Repository\UserRepository($d);$u=$users->findByEmail('alice@retro.test');$users->setOnboarded((int)$u['id'],true);
+$folderRepo=new App\Repository\BoardFolderRepository($d);$folders=$folderRepo->forUser((int)$u['id']);if($folders===[]){$id=$folderRepo->create((int)$u['id'],'Reading list');foreach($d->fetchAll("SELECT id FROM boards WHERE slug IN ('general','announcements')") as $b){$folderRepo->addBoard($id,(int)$b['id']);}}
+$feedRepo=new App\Repository\SavedFeedRepository($d);if($feedRepo->forUser((int)$u['id'])===[]){$feedRepo->create((int)$u['id'],'My reading queue',json_encode(['board_ids'=>[]]),false);}
+if(!$d->fetchValue("SELECT id FROM tags WHERE slug='rail-review'")){(new App\Repository\TagRepository($d))->create('rail-review','Rail review',null,(int)$u['id']);}
+$mode=$argv[1]??'default';$settings=new App\Repository\SettingRepository($d);$flags=$settings->get('features',[]);$flags=array_merge($flags,['tags'=>!in_array($mode,['gates-off','tags-off'],true),'community'=>!in_array($mode,['gates-off','community-off'],true),'notifications'=>$mode!=='notifications-off']);$settings->set('features',$flags);
+if($mode==='extreme'){$d->run('UPDATE users SET username=:name WHERE id=:id',['name'=>str_repeat('long',8),'id'=>(int)$u['id']]);$d->run("UPDATE boards SET name=:name WHERE slug='general'",['name'=>str_repeat('General🪴',8)]);}else{$d->run('UPDATE users SET username=:name WHERE id=:id',['name'=>'alice','id'=>(int)$u['id']]);$d->run("UPDATE boards SET name='General' WHERE slug='general'");}
+echo json_encode(['database'=>$c->get('db.database'),'mode'=>$mode]);

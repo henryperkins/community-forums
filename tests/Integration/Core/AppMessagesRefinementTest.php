@@ -105,6 +105,22 @@ final class AppMessagesRefinementTest extends TestCase
         }
     }
 
+    public function testOnlyConversationPagesLoadTheBlockingEntryScript(): void
+    {
+        [$alice, , $id] = $this->pair();
+        $this->actingAs($alice);
+        // The row-switch signal is read before first paint only on a
+        // conversation; every other page skips the parser-blocking request.
+        $conversation = $this->get('/messages/' . $id);
+        $this->assertStatus(200, $conversation);
+        self::assertSame(1, preg_match_all('#<script src="[^"]*conversation-entry[^"]*"></script>#', $conversation->body()));
+        foreach (['/messages', '/messages/new', '/inbox', '/'] as $path) {
+            $response = $this->get($path);
+            $this->assertStatus(200, $response);
+            self::assertStringNotContainsString('conversation-entry', $response->body(), $path);
+        }
+    }
+
     public function testDmPickerFiltersBlocksOptOutSuspensionAndSelfButOrdinaryMentionsRemain(): void
     {
         [$alice, $bob] = $this->pair();
@@ -201,7 +217,7 @@ final class AppMessagesRefinementTest extends TestCase
             $response = $this->post('/messages', ['to' => $to, 'body' => 'Keep this draft', 'origin' => 'dialog']);
             self::assertSame(422, $response->status());
             self::assertStringContainsString('Keep this draft', $response->body());
-            self::assertMatchesRegularExpression('/<details[^>]+class="dm-compose-details"[^>]*open/', $response->body());
+            self::assertMatchesRegularExpression('/<div[^>]+class="dm-compose-panel"[^>]*data-dm-compose(?![^>]*hidden)/', $response->body());
         }
         $this->db->run("UPDATE users SET allow_dms = 'none' WHERE id = ?", [$bob['id']]);
         $response = $this->post('/messages', ['to' => 'bob', 'body' => 'Keep the standalone draft']);

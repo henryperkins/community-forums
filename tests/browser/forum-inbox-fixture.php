@@ -178,6 +178,9 @@ foreach ($topics as [$title, $author, $board, $status, $pinned, $locked, $replie
         );
     }
     $opId = (int) $opId;
+    // Re-seeding moves the thread's activity clock. Move the actual post too:
+    // unread compares (last_post_at, last_post_id) with the read post's tuple.
+    $db->run('UPDATE posts SET created_at = ? WHERE id = ?', [$at($replies > 0 ? $createdAgo : $lastAgo), $opId]);
 
     // One real reply, so the reading pane and the row's reply count have a body
     // to render; the counter itself stays the design's number.
@@ -192,6 +195,7 @@ foreach ($topics as [$title, $author, $board, $status, $pinned, $locked, $replie
             );
         }
         $lastId = (int) $replyId;
+        $db->run('UPDATE posts SET created_at = ? WHERE id = ?', [$at($lastAgo), $lastId]);
         if ($status === 'solved') {
             $db->run('UPDATE threads SET accepted_answer_post_id = ? WHERE id = ?', [$lastId, $threadId]);
         }
@@ -277,8 +281,8 @@ if ($anonOp === false || $anonOp === null) {
         [$anonThread, $userIds['lindir'], $anonBody, '<p>' . $anonBody . '</p>', $at(9)],
     );
 }
-$db->run('UPDATE posts SET is_anonymous = 1 WHERE id = ?', [(int) $anonOp]);
-$db->run('UPDATE threads SET last_post_id = ?, last_post_user_id = ? WHERE id = ?', [(int) $anonOp, $userIds['lindir'], $anonThread]);
+$db->run('UPDATE posts SET is_anonymous = 1, created_at = ? WHERE id = ?', [$at(7), (int) $anonOp]);
+$db->run('UPDATE threads SET last_post_id = ?, last_post_user_id = ?, last_post_at = ? WHERE id = ?', [(int) $anonOp, $userIds['lindir'], $at(7), $anonThread]);
 $db->run('DELETE FROM thread_user WHERE user_id = ? AND thread_id = ?', [$me, $anonThread]);
 $db->run('INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, NULL, 1)', [$me, $anonThread]);
 

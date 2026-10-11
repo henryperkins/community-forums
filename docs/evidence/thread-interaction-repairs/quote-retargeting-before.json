@@ -1,0 +1,24 @@
+{
+  "engine": "chromium",
+  "events": [
+    {
+      "type": "pointerdown",
+      "quote": true,
+      "expanded": false,
+      "y": 584
+    },
+    {
+      "type": "pointerup",
+      "quote": false,
+      "expanded": false,
+      "y": 584
+    },
+    {
+      "type": "click",
+      "quote": false,
+      "expanded": false,
+      "y": 584
+    }
+  ],
+  "insertionCalls": 0
+}

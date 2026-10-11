@@ -44,7 +44,7 @@ $this->section('title', $verb . ' members');
                 $monogramName = $display !== '' ? $display : (string) $subject['username'];
                 ?>
                 <li class="member-bulk-subject">
-                    <span class="member-bulk-subject-monogram"><?= $this->partial('partials/monogram', ['name' => $monogramName, 'username' => $subject['username']]) ?></span>
+                    <span class="member-bulk-subject-monogram"><?= $this->partial('partials/monogram', ['name' => $monogramName, 'username' => $subject['username'], 'avatar_path' => $subject['avatar_path'] ?? null]) ?></span>
                     <a class="member-bulk-subject-link" href="/admin/users/<?= (int) $subject['id'] ?>">@<?= $e($subject['username']) ?></a>
                     <span class="role-pill role-<?= $e($subject['role']) ?> member-bulk-role"><?= $e($subject['role']) ?></span>
                     <span class="member-bulk-state"><?= $e($subject['status']) ?></span>

@@ -2,6 +2,238 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Hosting on Google Cloud
+
+- Move production's database from PlanetScale, asleep since 2026-09-30, to
+  Cloud SQL for MySQL 8.4 in us-east4 (2026-10-09). This ended the 1101 outage.
+  Existing rows were not carried over.
+- Serve the app from Cloud Run behind the existing Cloudflare Worker (ADR 0047,
+  `docs/runbooks/deployment-cloud-run.md`). The Worker forwards with an ID
+  token, so only it can reach the service.
+  - The database link goes through Cloud Run's Cloud SQL connector, which is
+    authenticated, unlike the container's unverified TLS.
+  - Uploads live on a Cloud Storage volume.
+  - The cron workers run as Cloud Run jobs on the same UTC schedules.
+  - A failed boot migration now leaves the previous revision serving.
+- Add an email-only Cloudflare Email Sending token to Google Secret Manager
+  with runtime read access, restoring the mail configuration path for Cloud
+  Run. The runbook documents safe token rotation through new secret versions
+  and separate provider acceptance/recipient verification.
+- Use the existing Cloudflare REST mailer in production after the SMTP relay
+  accepted authentication but rejected the sender envelope. A native operator
+  test using permanent configuration was accepted and received in the intended
+  inbox with SPF, DKIM and DMARC passing.
+- Make the SMTP transport compatible with production's PHP 8.2 runtime while
+  retaining TLS verification and provider message IDs. Capture server replies
+  without collecting verbose transport traces.
+- Retire the unused Cloudflare container origin: remove its Worker class,
+  binding, dependency and app configuration, and append the Durable Object
+  deletion migration. Recovery now uses Cloud Run revisions; pre-retirement
+  Worker versions are no longer supported rollback targets. The retired
+  hosted container, six unused Worker secrets and pre-move R2 bucket were
+  deleted after the successful deploy; current Google storage was retained.
+  Production routes, all 64 published asset hashes, guest browser rendering
+  and a scheduled 5-minute tick are verified in the Cloud Run runbook §9 and
+  linked evidence.
+- Add operational Monitoring alerts with a 15-minute aggregate collector,
+  including missed scheduled ticks, due outbox age and backup health. The actual
+  mail-failure policy fired and its notification reached the owner inbox.
+- Rehearse an isolated Cloud SQL backup restore, current storage copy and APP_KEY
+  recovery, then remove all scratch resources. Retain the successful backup;
+  current upload content was empty, so nonempty byte coverage used a synthetic
+  scratch fixture.
+- Add a restricted Cloud Build browser evidence fallback while GitHub Actions
+  cannot start jobs because of an account billing lock. It runs the existing
+  capture, unified settings and production-Docker upload suites, with private
+  expiring synthetic artifacts and no production credentials. Hosted receipts
+  are tracked separately from local source checks.
+- Fix an existing Messages submission bug found by hosted browser investigation:
+  focusing Send could scroll the composer between pointer press and release,
+  losing the native click. Defer that reveal until pointers release, preserving
+  keyboard and initial positioning. Isolated baseline/fix regressions pass in
+  all three browser projects; the complete hosted B lane passed 726 cases
+  with zero failures and 92 existing exclusions.
+- Pin the hash-verified active asset release before building its replacement,
+  retaining its published bundles under the existing three-deploy policy.
+  Live baseline delivery and generated-source checks passed, and the merge's
+  automatic deployment delivered all 64 assets with matching hashes. Record
+  that verified release on main and retire three expired immutable files
+  under the existing retention policy.
+- Close the database's public authorized network (`0.0.0.0/0`) and move it
+  to `db-f1-micro`. Page latency did not change.
+- `DB_SOCKET` connects over a Unix socket in place of host and port. The
+  entrypoint no longer `chown`s FUSE mounts, which a platform-mounted bucket
+  refuses.
+
+## [Unreleased] - Consistent headers and navigation
+
+- Add calm reaction count motion, member reactor-name tips with privacy filters,
+  and immediate touch-picker updates. Keep chip focus, synchronize picker state,
+  prevent overlapping toggles and offer reload after an uncertain response.
+- Complete mention person rows, bare-`@` topic participant suggestions, accepted
+  mention spacing and evergreen highlights in source/rich editors and posts.
+  The source mirror follows draft wrapping and scroll without altering text.
+- Harden conversation interactions after review: anonymous self-reactions never
+  disclose their author, refusals retain the server reason, and uncertain-toggle
+  recovery uses a real topic GET. Hidden tips cannot widen the page; keyboard
+  focus stays in place or returns to the visible menu without scrolling. Preserve
+  mention handles, line-final whitespace and closing formatting delimiters;
+  share block-aware Source completion/highlighting and bound email scanning.
+  Keep accent-insensitive name suggestions, assigned private-board moderators,
+  and the design layer's 28px person-row avatars.
+- Load the Messages entry script only on conversations, skip reaction reads a
+  response never shows (native-post summaries, names for viewers who cannot see
+  them, a duplicate membership lookup), and keep the source mention mirror empty
+  when it has nothing to highlight, restoring pre-handoff typing cost.
+- Omit yourself and people blocked either way from the bare `@` participant list,
+  honor Show avatars in Inbox rows, previews and their mention rows, and keep source
+  highlights on their handles at fractional widths such as 90% and 110% zoom.
+- Bound stalled reaction requests at 15 seconds so every chip copy unlocks and
+  offers Reload, announce reaction failures through a status region that exists
+  before them, and name reactors again once a timed suspension has elapsed.
+- Fade conversation identity and gently reveal letters after a Messages row
+  switch. Keep newest-letter positioning and native navigation; reloads, history
+  restoration and both reduced-motion settings do not replay the transition.
+- Move Boards, Tags and Connections from the directory's horizontal strip into
+  an Explore group at the top of the shared rail and phone drawer. Remove that
+  group's Notifications entry while retaining the bell and embedded deep links.
+  Tags and Connections headings share creation for signed-in members; guest
+  headings, feature gates, board privacy and composer selection remain intact.
+  Extreme phone text enlargement wraps primary routes and Connections list
+  choices, with drawer offsets following the header height (ADR 0046).
+- Recover from failed or stalled Inbox previews with announced loading, a
+  15-second deadline, retry and a canonical topic link, preserving the queue and
+  existing reply text. Return directly to the retained editor after a failure,
+  including topics removed from Unread, and keep pane toggles from cancelling
+  previews or recovery controls. Align restored previews with failed history
+  navigation without adding entries. Restore useful empty Unread states and rejected bulk
+  selections. Validate action intent, apply canonical held-topic privacy to
+  read/star actions, and make repeated star forms idempotent. Bound creation
+  menus on short screens and keep switch markers visible in forced colors
+  (ADR 0045).
+- Add calm motion to shared control menus, Inbox view carets and the selection
+  action bar. Reveals preserve menu placement and immediate keyboard access;
+  both account and operating-system reduced-motion settings keep state feedback
+  instant. Native forms and disclosure dismissal retain their existing timing.
+  Keep delayed Help dismissal from pulling focus away from a newly opened menu.
+- Give Inbox controls readable captions, consistent 44px targets, quiet menu
+  borders and straight topic dividers. At narrow available widths, one view/sort
+  disclosure keeps both current values beside creation. Put phone row actions
+  below topic text, selection commands in Actions, and enhanced Help in a bounded
+  nonmodal dialog while preserving native forms and disclosures (ADR 0044).
+- Replace the four snooze durations with Til tomorrow and a Show in Inbox switch.
+  Timed hiding retains 24 hours; turning the switch off hides until restoration.
+  Snoozed recovers both states, bulk actions name their intent, and the shortcut
+  and topic tools match. Migration 0083 adds explicit manual hiding; invalid
+  choices preserve prior state and workflow rollback ignores hiding (ADR 0044).
+- Move creation into one shared row beneath the member header: New topic and
+  New message share a quiet create menu, with a named 44px plus on phones.
+  Keep board-aware topic links, native navigation, Messages dialog draft
+  recovery and docked room geometry (ADR 0043). Keep the dialog outside hidden
+  reading-room panes, cancel recipient suggestions when focus leaves the field,
+  and wrap long board breadcrumbs within the shared row.
+- Put the Inbox heading, unread information, Show/topic count, Sort and actions
+  on the same row as creation. Fill other simple member-page rows with their
+  headings and applicable controls; keep content, profile and conversation
+  identity in place. Compact captions retain 44px targets and named choices,
+  with native menus and live counts preserved (ADR 0043, owner correction).
+- Use document scrolling on topics with a bottom-sticky reply dock and
+  theme-aware scrollbar ink. Keep native fragments and keyboard focus visible
+  between the header and dock (ADR 0030, document-scrolling follow-up).
+- Exclude nested controls inside closed disclosures from modal focus cycles.
+  Keep pressed post actions in place until their click settles when leaving an
+  empty expanded reply dock.
+- Keep both header rows inside narrow desktop viewports with classic scrollbar
+  gutters, and keep Large-text route labels and capped unread counts inside
+  320px phone viewports. Spacing and inner padding yield before the 44px targets.
+- Resolve numeric board slugs before legacy IDs in composer links. Explicit
+  board IDs and validation-error replays keep their intended posting destination.
+- Keep focus inside the open mobile board drawer, restore it on dismissal, and
+  release covered content on resize. Desktop board rails stay below the header.
+- Omit pane controls on error pages that have no panes. Tags and authorized
+  topics mark Boards current; personal folder shortcuts share standard board
+  active state, unread counts and visibility labels without widening access.
+- Keep the current admin area visible in a native narrow-screen disclosure,
+  with the same role and feature gates and no JavaScript requirement.
+- Preserve admin controls and the brand mark when long community names shorten
+  in the header, including at the 900px transition.
+- Restore saved Messages details only after styles can identify a desktop
+  column. WebKit overlays stay closed on arrival; explicit details links and
+  resize behavior retain the desktop preference.
+- Give subscription titles their full row before the delivery controls in
+  narrow settings panels, and wrap long names. Align navigation documentation
+  with the rendered chrome (ADR 0032, 2026-10-06 follow-up).
+- Show the link cursor on the current Boards pill and the current rail board,
+  which stay links to their surface. The design mirror takes the shared-chrome
+  handoff; production keeps its route contract where that handoff differs
+  (ADR 0032, shared-chrome handoff).
+- Keep the member header above page content. On phones the directory bar and
+  post toolbars no longer paint over the header or its account menu, so Log out
+  receives its own taps (ADR 0032, header hardening).
+- Shorten long community names with an ellipsis and scale wide operator logos
+  inside the header, instead of pushing the account menu off-screen or starting
+  a third phone row.
+- Open the composer on the board being read from the header's New topic. Show
+  the reading-pane toggle only from 1280px, where the pane is a column. Give
+  both pane toggles fixed names, with their state in `aria-pressed`; ⌘B and ⌘J
+  act only while their toggle is shown.
+- Make the Inbox count the header's leading unread mark: the thread row's gold
+  dot beside its numerals. Messages, the bell and the account menu share one
+  quiet count chip with tabular figures. The bell's count sits beside the bell
+  instead of covering it.
+- Mark the current header surface with a rule that survives forced colours.
+  Draw each pane toggle's band filled while its pane is shown and outlined
+  while it is hidden.
+- Give every phone header control a 44px target with 8px between targets, and
+  the route labels the desktop's 13px. Tab and screen readers now move through
+  the phone header row by row (ADR 0032 and ADR 0042, phone rows).
+- Keep a guest's phone header to one row, since a lone Boards row only repeated
+  the logo's link. Show the community's name at narrow widths instead of hiding
+  it, and keep it whole at 1180px. Draw the header divider only beside a pane
+  toggle.
+- Add a close control inside the mobile board drawer. Without JavaScript, the
+  phone board rail now scrolls away with the page instead of covering it.
+  Touch screens above 860px get the same 44px header targets.
+- Keep each control's own corner shape when it has keyboard focus, everywhere
+  (pills and buttons used to square off). Every header control now shows the
+  gold focus halo (ADR 0032, header polish).
+- Show keyboard shortcut hints only when JavaScript can act on them, with the
+  platform's own modifier: ⌘ on Apple devices, Ctrl elsewhere. Screen readers
+  hear header counts as part of each link's name, for example "Inbox, 4 unread
+  topics", with the correct singular.
+- Mark the notification bell as the current page on Notifications. Group the
+  account menu with dividers, and give Settings its own icon. Add a hover
+  state to Log in. Correct the onboarding tour's first two steps for phones.
+
+## [Unreleased] - A simpler forum inbox
+
+- Put topics directly after a compact Inbox heading and labelled Show and Sort
+  disclosures. Topic counts name their unit; introductory copy, appearance
+  preferences, and the permanent keyboard legend leave the reading path.
+- Keep page actions and Help in the inbox action menu. “Mark this page read”
+  names its existing page-limited behavior. Filters, sorting, and page actions
+  remain usable without JavaScript; density remains in Appearance settings.
+- Give Boards, Inbox, and Messages a full second navigation row at the mobile
+  drawer breakpoint, preserving complete labels and the shared shell offsets
+  (ADR 0042).
+
+## [Unreleased] - Uploaded avatars everywhere a member is drawn
+
+- An uploaded avatar now replaces the member's monogram on every surface that
+  draws the member, not only the profile header. That covers posts and the
+  topic's council stack, topic rows (board, tag, and inbox), the inbox preview,
+  the top bar and admin bar, composer identities, and the presence rail. It
+  also covers Messages (list, letter head, letters, and details rail), the
+  leaderboard, follower lists, blocks, and the admin member pages (USER §5.2).
+- An anonymous post never shows its author's avatar: `mask_author()` clears the
+  avatar with the rest of the identity (ADMIN §1.3). "Show avatars" hides
+  uploaded avatars wherever it already hid monograms.
+- The presence poll payload carries each member's `avatar_path`. A rail row
+  rebuilt by `app.js` keeps its picture, and it now honours "Show avatars" with
+  a bare dot, as the server-rendered row always did.
+- Uploading or removing an avatar redraws the top bar in the same response
+  instead of on the next page.
+
 ## [Unreleased] - Preserve layout across deployments
 
 - Preserve fingerprinted CSS, scripts, editor chunks, and fonts from three

@@ -1,0 +1,8 @@
+{
+  "base_commit": "ff3c47e4cc249fd01ec5190a0a05d1854926ec0d",
+  "candidate_asset_version": "4b1f2dfec996fc5d",
+  "css": "/assets/dist/app-style-BQQx77HF.css",
+  "js": "/assets/dist/app-5594cef9d85238a9.js",
+  "application_surface_sha256": "283e30b8041fbd178faeb479fcc6dbec616e8aaccd51bd9c449bd8fb627f3924",
+  "status": "Validated local working tree; uncommitted and undeployed"
+}

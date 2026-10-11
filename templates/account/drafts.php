@@ -10,8 +10,7 @@ $count = count($serverDrafts);
 
 <div class="settings-screen">
     <header class="settings-head">
-        <span class="eyebrow">Account</span>
-        <h1>Account settings</h1>
+        <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
         <p>Everything this community knows about you, and everything it does on your behalf.</p>
     </header>
     <div class="settings">

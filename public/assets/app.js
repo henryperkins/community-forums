@@ -7,6 +7,27 @@
     // off-canvas nav drawer) without ever trapping no-JS users behind them.
     document.documentElement.classList.add('has-js');
 
+    // Enlarged phone text can add a primary-route line. Measure the content
+    // height for the drawer and pane offsets; CSS owns an independent minimum
+    // so a later reduction in text size can shrink the bar again.
+    var memberBar = document.querySelector('.forum-bar');
+    if (memberBar) {
+        var compactMemberBar = window.matchMedia('(max-width: 860px)');
+        var syncMemberBarHeight = function () {
+            if (!compactMemberBar.matches) {
+                document.documentElement.style.removeProperty('--topbar-h');
+                return;
+            }
+            var height = Math.ceil(memberBar.getBoundingClientRect().height) + 'px';
+            if (document.documentElement.style.getPropertyValue('--topbar-h') !== height) {
+                document.documentElement.style.setProperty('--topbar-h', height);
+            }
+        };
+        syncMemberBarHeight();
+        window.addEventListener('resize', syncMemberBarHeight);
+        if (window.ResizeObserver) { new ResizeObserver(syncMemberBarHeight).observe(memberBar); }
+    }
+
     // Auto-grow composer textareas as you type.
     function autosize(el) {
         el.style.height = 'auto';
@@ -20,36 +41,237 @@
         }
     });
 
-    // Reactions: toggle an EXISTING reaction chip over fetch and update it in
-    // place. The "add a reaction" menu uses a normal POST (full reload) so a
-    // brand-new chip is server-rendered with a valid CSRF token. Either way the
-    // no-JavaScript path is unchanged.
+    // Existing chips and the touch picker share one toggle path. The desktop
+    // add disclosure remains a native POST; cloned touch chips retain the
+    // server's emoji face, action and CSRF field.
+    var reactionTipSequence = 0;
+    function reactionForms(post, emoji) {
+        return Array.prototype.filter.call(post.querySelectorAll('.reaction-form'), function (form) {
+            var input = form.querySelector('input[name=emoji]');
+            return input && input.value === emoji;
+        });
+    }
+    function reactionNames(reactors, mine, count) {
+        var names = (Array.isArray(reactors) ? reactors : []).map(function (name) { return '@' + name; });
+        if (mine) { names.unshift('You'); }
+        names = names.slice(0, Math.max(0, Math.min(6, count)));
+        if (!names.length) { return ''; }
+        var others = Math.max(0, count - names.length);
+        if (others) { return names.join(', ') + ' and ' + others + (others === 1 ? ' other' : ' others'); }
+        var last = names.pop();
+        return names.length ? names.join(', ') + ' and ' + last : last;
+    }
+    function positionReactionTip(btn) {
+        var tip = btn.querySelector('.reaction-tip');
+        if (!tip) { return; }
+        // Hidden tips have no box (and cannot widen the document). Measure only
+        // while positioning, before the hovered/focused tip is painted.
+        tip.classList.add('is-measuring');
+        var box = btn.getBoundingClientRect();
+        var width = tip.getBoundingClientRect().width;
+        var left = box.left + box.width / 2 - width / 2;
+        var rightEdge = document.documentElement.clientWidth - 16;
+        var shift = Math.max(16 - left, Math.min(0, rightEdge - left - width));
+        tip.style.setProperty('--reaction-tip-shift', shift + 'px');
+        tip.classList.remove('is-measuring');
+    }
+    ['pointerover', 'focusin'].forEach(function (eventName) {
+        document.addEventListener(eventName, function (e) {
+            var btn = e.target.closest && e.target.closest('button.reaction[data-label]');
+            if (btn) { positionReactionTip(btn); }
+        });
+    });
+    window.addEventListener('resize', function () {
+        document.querySelectorAll('button.reaction:is(:hover, :focus-visible)[data-label]').forEach(positionReactionTip);
+    });
+    function updateReactionTip(btn, reactors, on, count, postId) {
+        var label = btn.getAttribute('data-label') || '';
+        var copy = reactionNames(reactors, on, count);
+        var tip = btn.querySelector('.reaction-tip');
+        if (!copy) {
+            if (tip) { tip.remove(); }
+            btn.removeAttribute('aria-describedby');
+            btn.title = on ? 'Remove your ' + label : label;
+            return;
+        }
+        if (!tip) {
+            tip = document.createElement('span');
+            tip.className = 'reaction-tip';
+            do { tip.id = 'reaction-tip-' + postId + '-added-' + reactionTipSequence++; }
+            while (document.getElementById(tip.id));
+            tip.setAttribute('aria-hidden', 'true');
+            var heading = document.createElement('span');
+            heading.className = 'reaction-tip-label';
+            heading.textContent = label;
+            tip.appendChild(heading);
+            tip.appendChild(document.createElement('span'));
+            btn.appendChild(tip);
+        }
+        tip.lastElementChild.textContent = copy;
+        btn.setAttribute('aria-describedby', tip.id);
+        btn.removeAttribute('title');
+        positionReactionTip(btn);
+    }
+    // A stalled response must not leave every copy of the chip locked; use the
+    // Inbox preview's bound. The toggle may still commit, so offer Reload.
+    var REACTION_TIMEOUT_MS = 15000;
+    var reactionAnnounceTimer = null;
+    function announceReaction(message) {
+        var announcer = document.querySelector('[data-reaction-announcer]');
+        if (!announcer) { return; }
+        // The region exists before any failure. Clear it first so an identical
+        // second failure is still a change a screen reader announces.
+        window.clearTimeout(reactionAnnounceTimer);
+        announcer.textContent = '';
+        if (message) {
+            reactionAnnounceTimer = window.setTimeout(function () { announcer.textContent = message; }, 50);
+        }
+    }
+    function reactionFailure(tray, error) {
+        var status = document.createElement('span');
+        status.className = 'muted reaction-status';
+        if (error) { status.textContent = error; }
+        else {
+            status.appendChild(document.createTextNode('Could not confirm the reaction. '));
+            var reload = document.createElement('a');
+            // A failed reply/edit may be rendered at a POST-only URL. Use the
+            // thread's GET destination, without a fragment that would only scroll.
+            reload.href = tray.getAttribute('data-reaction-return');
+            reload.textContent = 'Reload to check its state.';
+            status.appendChild(reload);
+        }
+        tray.appendChild(status);
+        announceReaction(status.textContent);
+    }
+    function reactionResponse(response) {
+        // A definite refusal has not toggled anything. Keep its server reason,
+        // including kernel-rendered HTML for authorization/CSRF/not-found errors.
+        if (!response.ok && response.status >= 400 && response.status < 500) {
+            if ((response.headers.get('Content-Type') || '').includes('application/json')) {
+                return response.json();
+            }
+            return response.text().then(function (html) {
+                var page = new DOMParser().parseFromString(html, 'text/html');
+                var message = page.querySelector('.error-card > p, body > p');
+                return { ok: false, error: message && message.textContent.trim()
+                    || 'The reaction was refused (HTTP ' + response.status + ').' };
+            });
+        }
+        if (!response.ok) { throw new Error('Reaction response uncertain'); }
+        return response.json();
+    }
     document.addEventListener('submit', function (e) {
         var form = e.target;
         if (!form.classList || !form.classList.contains('reaction-form')) { return; }
-        if (form.closest('.reaction-add')) { return; }          // adding a new emoji → normal submit
         if (!window.fetch || !window.FormData) { return; }
-
-        var btn = form.querySelector('button');
+        var post = form.closest('article.post');
+        var tray = post && post.querySelector('.reactions');
+        var input = form.querySelector('input[name=emoji]');
+        if (!post || !tray || !input) { return; }
+        var related = reactionForms(post, input.value);
+        var pending = related.some(function (candidate) { return candidate.hasAttribute('data-reaction-pending'); });
+        if (pending) { e.preventDefault(); return; }
+        if (form.closest('.reaction-add')) { return; }
         e.preventDefault();
+        var status = tray.querySelector('.reaction-status');
+        if (status) { status.remove(); }
+        announceReaction('');
+        var initiatingButton = form.querySelector('button');
+        var restoreReactionFocus = document.activeElement === initiatingButton;
+        function reactionFocusMoved(event) {
+            if (event.target !== initiatingButton) { restoreReactionFocus = false; }
+        }
+        function canRestoreReactionFocus() {
+            return restoreReactionFocus && document.hasFocus()
+                && (document.activeElement === document.body || document.activeElement === initiatingButton);
+        }
+        document.addEventListener('focusin', reactionFocusMoved);
+        // Keep the focused chip in the focus order while blocking duplicate
+        // submits in every picker copy. Native disabled drops focus to body.
+        related.forEach(function (candidate) {
+            candidate.setAttribute('data-reaction-pending', '');
+            candidate.querySelector('button').setAttribute('aria-disabled', 'true');
+        });
         var body = new FormData(form);
         body.append('format', 'json');
-        fetch(form.action, {
+        var request = window.AbortController ? new window.AbortController() : null;
+        var deadline = null;
+        // Racing the deadline also releases the lock where fetch cannot abort.
+        var stalled = new Promise(function (resolve, reject) {
+            deadline = window.setTimeout(function () {
+                if (request) { request.abort(); }
+                reject(new Error('Reaction response timed out'));
+            }, REACTION_TIMEOUT_MS);
+        });
+        var options = {
             method: 'POST',
             body: body,
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin'
-        }).then(function (r) { return r.json(); }).then(function (data) {
-            if (!data || !data.ok) { form.submit(); return; }
-            var emoji = (form.querySelector('input[name=emoji]') || {}).value;
-            var n = (data.counts && data.counts[emoji]) || 0;
-            if (n === 0) { form.remove(); return; }
+        };
+        if (request) { options.signal = request.signal; }
+        Promise.race([fetch(form.action, options).then(reactionResponse), stalled]).then(function (data) {
+            if (!data || !data.ok) { reactionFailure(tray, data && data.error); return; }
+            var emoji = input.value;
+            var n = Number((data.counts && data.counts[emoji]) || 0);
             var on = data.state === 'added';
-            btn.classList.toggle('reaction-on', on);
-            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-            var ncell = btn.querySelector('.reaction-n');
-            if (ncell) { ncell.textContent = n; }
-        }).catch(function () { form.submit(); });
+            var chipForm = related.filter(function (candidate) { return candidate.parentNode === tray; })[0];
+            var existing = !!chipForm;
+            if (n === 0) {
+                if (chipForm) {
+                    var focused = canRestoreReactionFocus() && chipForm.querySelector('button') === initiatingButton;
+                    chipForm.remove();
+                    if (focused) {
+                        var add = post.querySelector('.reaction-add');
+                        var menu = post.querySelector(add && window.getComputedStyle(add).display !== 'none'
+                            ? '.reaction-add > summary' : '.post-menu > summary');
+                        if (menu) { menu.focus({ preventScroll: true }); }
+                    }
+                }
+            } else {
+                if (!chipForm) {
+                    chipForm = form.cloneNode(true);
+                    chipForm.removeAttribute('data-reaction-pending');
+                    var countCell = document.createElement('span');
+                    countCell.className = 'reaction-n';
+                    var countValue = document.createElement('span');
+                    countValue.className = 'reaction-n-val';
+                    countCell.appendChild(countValue);
+                    chipForm.querySelector('button').appendChild(countCell);
+                    tray.appendChild(chipForm);
+                }
+                var btn = chipForm.querySelector('button');
+                btn.removeAttribute('aria-disabled');
+                btn.classList.toggle('reaction-on', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                var val = btn.querySelector('.reaction-n-val');
+                var old = Number(val.textContent);
+                val.classList.remove('is-up', 'is-down', 'is-bump');
+                val.textContent = n;
+                if (existing && n !== old) {
+                    void val.offsetWidth;
+                    val.classList.add(n > old ? 'is-up' : 'is-down');
+                }
+                updateReactionTip(btn, data.reactors, on, n, tray.getAttribute('data-post'));
+            }
+            reactionForms(post, emoji).forEach(function (candidate) {
+                var btn = candidate.querySelector('button');
+                btn.classList.toggle('reaction-on', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }).catch(function () {
+            // A lost response may follow a committed toggle. Reposting here
+            // could undo it, so let the reader reload to confirm the state.
+            reactionFailure(tray);
+        }).then(function () {
+            window.clearTimeout(deadline);
+            related.forEach(function (candidate) {
+                candidate.removeAttribute('data-reaction-pending');
+                candidate.querySelector('button').removeAttribute('aria-disabled');
+            });
+            document.removeEventListener('focusin', reactionFocusMoved);
+            if (initiatingButton.isConnected && canRestoreReactionFocus()) { initiatingButton.focus({ preventScroll: true }); }
+        });
     });
 
     /**
@@ -132,12 +354,25 @@
         run();
     }
 
+    // A count's words live on its link (data-count-name), as the bell's do: the
+    // link reads "Messages, 3 unread conversations" and the digits stay
+    // aria-hidden. With nothing to count the link is named by its label alone.
+    function nameCountedLink(node, noun, count) {
+        var link = node.closest ? node.closest('[data-count-name]') : null;
+        if (!link) { return; }
+        if (count > 0) {
+            link.setAttribute('aria-label', link.getAttribute('data-count-name') + ', ' + count + ' unread ' + noun + (count === 1 ? '' : 's'));
+        } else {
+            link.removeAttribute('aria-label');
+        }
+    }
+
     function updateDmCount(value) {
         var count = Math.max(0, Number(value) || 0);
         document.querySelectorAll('[data-dm-unread-count]').forEach(function (node) {
             node.textContent = count > 99 ? '99+' : String(count);
-            node.setAttribute('aria-label', count + ' unread conversation' + (count === 1 ? '' : 's'));
             node.hidden = count === 0;
+            nameCountedLink(node, 'conversation', count);
         });
     }
 
@@ -195,34 +430,53 @@
             a.setAttribute('data-presence-state', state);
             if (u.is_self) { a.setAttribute('data-presence-self', '1'); }
 
-            var wrap = document.createElement('span');
-            wrap.className = 'avatar-wrap';
-            var mono = document.createElement('span');
-            // monogram_class()/monogram_initials() are server-side; the poll
-            // cannot reproduce the palette hash, so a refreshed row uses the
-            // neutral variant rather than guessing at a different colour.
-            mono.className = 'monogram';
-            mono.setAttribute('aria-hidden', 'true');
-            // Mirror Str::initials(): up to two initials, splitting on the same
-            // separators, one CODE POINT each (Array.from, so an astral first
-            // character is not sliced into half a surrogate pair). The palette
-            // class is a server-side md5 hash and genuinely cannot be reproduced
-            // here, so a row rebuilt by the poll is the neutral variant — that
-            // half is a recorded deferral; the initials had no such excuse.
-            mono.textContent = (function (raw) {
-                var parts = raw.trim().split(/[\s_\-.]+/);
-                var letters = [];
-                for (var p = 0; p < parts.length && letters.length < 2; p++) {
-                    var first = Array.from(parts[p])[0];
-                    if (first) { letters.push(first); }
-                }
-                return letters.length ? letters.join('').toUpperCase() : '?';
-            })(name);
             var dot = document.createElement('span');
-            dot.className = 'presence-dot' + (state === 'away' ? ' is-away' : '');
             dot.setAttribute('aria-hidden', 'true');
-            wrap.appendChild(mono);
-            wrap.appendChild(dot);
+            // Mirror presence_person.php: with the reader's "Show avatars" off
+            // the dot stands alone, exactly as the server drew the row.
+            var lead = dot;
+            if (presence.getAttribute('data-presence-avatars') === '0') {
+                dot.className = 'presence-dot presence-dot-bare' + (state === 'away' ? ' is-away' : '');
+            } else {
+                dot.className = 'presence-dot' + (state === 'away' ? ' is-away' : '');
+                var mono;
+                if (typeof u.avatar_path === 'string' && u.avatar_path !== '') {
+                    // An uploaded avatar, drawn as partials/monogram.php draws it.
+                    mono = document.createElement('img');
+                    mono.className = 'monogram avatar-img';
+                    mono.src = u.avatar_path;
+                    mono.alt = '';
+                    mono.loading = 'lazy';
+                    mono.decoding = 'async';
+                } else {
+                    mono = document.createElement('span');
+                    // monogram_class()/monogram_initials() are server-side; the poll
+                    // cannot reproduce the palette hash, so a refreshed row uses the
+                    // neutral variant rather than guessing at a different colour.
+                    mono.className = 'monogram';
+                    // Mirror Str::initials(): up to two initials, splitting on the same
+                    // separators, one CODE POINT each (Array.from, so an astral first
+                    // character is not sliced into half a surrogate pair). The palette
+                    // class is a server-side md5 hash and genuinely cannot be reproduced
+                    // here, so a row rebuilt by the poll is the neutral variant — that
+                    // half is a recorded deferral; the initials had no such excuse.
+                    mono.textContent = (function (raw) {
+                        var parts = raw.trim().split(/[\s_\-.]+/);
+                        var letters = [];
+                        for (var p = 0; p < parts.length && letters.length < 2; p++) {
+                            var first = Array.from(parts[p])[0];
+                            if (first) { letters.push(first); }
+                        }
+                        return letters.length ? letters.join('').toUpperCase() : '?';
+                    })(name);
+                }
+                mono.setAttribute('aria-hidden', 'true');
+                var wrap = document.createElement('span');
+                wrap.className = 'avatar-wrap';
+                wrap.appendChild(mono);
+                wrap.appendChild(dot);
+                lead = wrap;
+            }
 
             var id = document.createElement('span');
             id.className = 'presence-person-id';
@@ -247,7 +501,7 @@
             id.appendChild(nameEl);
             id.appendChild(sub);
 
-            a.appendChild(wrap);
+            a.appendChild(lead);
             a.appendChild(id);
             li.appendChild(a);
             return li;
@@ -477,6 +731,16 @@
 
     function visible(element) {
         return !!element && element.getClientRects().length > 0;
+    }
+
+    function exposedByDetails(element) {
+        var closed = element.closest('details:not([open])');
+        // A nested summary is hidden when any outer disclosure is closed.
+        while (closed) {
+            if (element !== closed.querySelector(':scope > summary')) { return false; }
+            closed = closed.parentElement ? closed.parentElement.closest('details:not([open])') : null;
+        }
+        return true;
     }
 
     function accordTopicTools(tools, section) {
@@ -752,10 +1016,8 @@
         if (!dialog) { return; }
         var candidates = dialog.querySelectorAll('a[href], button:not([disabled]), summary, input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
         var focusable = Array.prototype.filter.call(candidates, function (item) {
-            var closedDetails = item.closest('details:not([open])');
-            var closedSummary = closedDetails ? closedDetails.querySelector(':scope > summary') : null;
             return visible(item) && !item.closest('[hidden]')
-                && (!closedDetails || item === closedSummary)
+                && exposedByDetails(item)
                 && item.getAttribute('tabindex') !== '-1'
                 && !item.matches(':disabled') && item.getAttribute('aria-disabled') !== 'true';
         });
@@ -787,23 +1049,17 @@
 
     enhanceThreadViews(document);
 
-    // FT-01. The thread's inner scroll port now only exists once the line above has
-    // run, and this script is deferred. The browser resolved any #p{id} fragment
-    // against the document scroller before that, so the post it scrolled to is no
-    // longer in view once .thread-scroll becomes the scroller at scrollTop 0.
-    // Re-resolve the fragment inside the new scroll port, once, on load only —
-    // Controller::threadRedirect() sends reply, edit, accepted-answer, moderation,
-    // memory and notification click-through to /t/{id}-{slug}#p{postId}.
-    (function () {
-        var hash = window.location.hash;
-        if (!/^#p\d+$/.test(hash)) { return; }
-        var target = document.getElementById(hash.slice(1));
-        if (!target) { return; }
-        var port = target.closest('[data-thread-enhanced="1"] > .thread-scroll');
-        if (!port) { return; }
-        // scrollIntoView would also scroll the window; set the port directly.
-        port.scrollTop = target.offsetTop - port.offsetTop;
-    })();
+    // Native focus scrolling must leave room for the sticky reply dock, including
+    // expanded drafts and the software keyboard. Scroll padding changes no layout.
+    var threadDock = document.querySelector('body[data-route="thread"] .thread-dock');
+    if (threadDock) {
+        var syncThreadDockHeight = function () {
+            document.documentElement.style.setProperty('--thread-dock-height', Math.ceil(threadDock.getBoundingClientRect().height) + 'px');
+        };
+        syncThreadDockHeight();
+        window.addEventListener('resize', syncThreadDockHeight);
+        if (window.ResizeObserver) { new ResizeObserver(syncThreadDockHeight).observe(threadDock, { box: 'border-box' }); }
+    }
 
     // Member-surface panels. The POST forms remain canonical; JavaScript applies
     // the state immediately and saves the same fields in the background. The
@@ -832,13 +1088,18 @@
         var button = form.querySelector('button[type="submit"]');
         if (field) { field.value = open ? '0' : '1'; }
         if (button) {
-            // The design's toggle: `.is-on` fills the glyph's band while the pane is shown.
+            // The design's toggle: `.is-on` fills the glyph's band while the pane
+            // is shown. Its name is fixed; aria-pressed alone carries the state.
             button.classList.toggle('is-on', open);
-            button.setAttribute('aria-expanded', open ? 'true' : 'false');
             button.setAttribute('aria-pressed', open ? 'true' : 'false');
-            button.setAttribute('aria-label', (open ? 'Hide the ' : 'Show the ') + (kind === 'reading' ? 'reading pane' : 'board rail'));
-            button.setAttribute('title', (open ? 'Hide the ' : 'Show the ') + (kind === 'reading' ? 'reading pane (⌘J)' : 'board rail (⌘B)'));
         }
+    };
+    // A shortcut acts only while its toggle is drawn: behind the phone drawer
+    // (rail) or below the inbox's 1280px column (reading pane) the persisted
+    // state has nothing to show, and flipping it unseen would surprise later.
+    var panelAvailable = function (kind) {
+        var form = panelForms[kind];
+        return !!form && form.getClientRects().length > 0;
     };
     var persistPanelState = function (kind, open) {
         var form = panelForms[kind];
@@ -872,15 +1133,32 @@
             persistPanelState(kind, desired);
         });
     });
+    // The shortcuts' hints. The server claims none, because nothing answers
+    // ⌘K without this script; here each control named by data-shortcut gets
+    // aria-keyshortcuts and a hint in the platform's own modifier: ⌘ on Apple
+    // devices, Ctrl elsewhere. The handler below takes either everywhere.
+    var applePlatform = /Mac|iPhone|iPad|iPod/i.test((navigator.userAgentData && navigator.userAgentData.platform)
+        || navigator.platform || navigator.userAgent || '');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-shortcut]'), function (control) {
+        var key = String(control.getAttribute('data-shortcut') || '').toUpperCase();
+        if (!key) { return; }
+        control.setAttribute('aria-keyshortcuts', (applePlatform ? 'Meta+' : 'Control+') + key);
+        var hint = control.querySelector('[data-shortcut-hint]');
+        if (hint) {
+            hint.textContent = applePlatform ? '\u2318' + key : 'Ctrl ' + key;
+            hint.hidden = false;
+        }
+        if (control.title) { control.title += ' (' + (applePlatform ? '\u2318' : 'Ctrl+') + key + ')'; }
+    });
     document.addEventListener('keydown', function (event) {
         if (!(event.ctrlKey || event.metaKey) || event.altKey || editableTarget(event.target)) { return; }
         var key = String(event.key || '').toLowerCase();
-        if (key === 'b' && panelForms.rail) {
+        if (key === 'b' && panelAvailable('rail')) {
             event.preventDefault();
             var railOpen = !panelIsOpen('rail');
             renderPanelState('rail', railOpen);
             persistPanelState('rail', railOpen);
-        } else if (key === 'j' && panelForms.reading) {
+        } else if (key === 'j' && panelAvailable('reading')) {
             event.preventDefault();
             var readingOpen = !panelIsOpen('reading');
             renderPanelState('reading', readingOpen);
@@ -939,6 +1217,139 @@
         });
     }
 
+    var subheader = document.querySelector('[data-subheader]');
+    if (subheader && window.ResizeObserver) {
+        var measureSubheader = function () {
+            subheader.parentElement.style.setProperty('--subheader-h', subheader.getBoundingClientRect().height + 'px');
+        };
+        measureSubheader();
+        new ResizeObserver(measureSubheader).observe(subheader);
+    }
+
+    // Shared native disclosures: the inbox and subheader use one dismissal
+    // and viewport-positioning path. Their links remain the no-JS baseline.
+    var inboxMenuSelector = '[data-inbox-menu], [data-inbox-row-menu], [data-create-menu]';
+    var openInboxMenuSelector = '[data-inbox-menu][open], [data-inbox-row-menu][open], [data-create-menu][open]';
+    var clearInboxMenuPosition = function (menu) {
+        var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel, .create-menu-panel');
+        menu.removeAttribute('data-inbox-menu-positioned');
+        if (!panel) { return; }
+        panel.style.removeProperty('left');
+        panel.style.removeProperty('top');
+        panel.style.removeProperty('max-width');
+    };
+    var positionInboxMenu = function (menu) {
+        if (!menu) { return; }
+        var trigger = menu.querySelector(':scope > summary');
+        var panel = menu.querySelector('.inbox-menu-panel, .thread-row-menu-panel, .create-menu-panel');
+        if (!menu || !menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
+        var margin = 8;
+        var gap = 8;
+        panel.style.maxWidth = Math.max(0, document.documentElement.clientWidth - margin * 2) + 'px';
+        var triggerRect = trigger.getBoundingClientRect();
+        var panelRect = panel.getBoundingClientRect();
+        var alignEnd = menu.matches('[data-inbox-row-menu], [data-inbox-menu-align="end"]');
+        var left = alignEnd ? triggerRect.right - panelRect.width : triggerRect.left;
+        var top = triggerRect.bottom + gap;
+        left = Math.max(margin, Math.min(left, document.documentElement.clientWidth - panelRect.width - margin));
+        if (top + panelRect.height > window.innerHeight - margin) {
+            top = triggerRect.top - panelRect.height - gap;
+        }
+        top = Math.max(margin, Math.min(top, window.innerHeight - panelRect.height - margin));
+        panel.style.left = Math.round(left) + 'px';
+        panel.style.top = Math.round(top) + 'px';
+        menu.setAttribute('data-inbox-menu-positioned', '1');
+    };
+    var closeInboxMenus = function (restoreFocus) {
+        Array.prototype.forEach.call(document.querySelectorAll(openInboxMenuSelector), function (menu) {
+            menu.removeAttribute('open');
+            clearInboxMenuPosition(menu);
+            if (restoreFocus) {
+                var summary = menu.querySelector(':scope > summary');
+                if (summary) { summary.focus(); }
+            }
+        });
+    };
+
+    document.addEventListener('toggle', function (event) {
+        var menu = event.target;
+        if (!menu.matches) { return; }
+        if (menu.matches('.inbox-help')) {
+            positionInboxMenu(menu.closest('[data-inbox-menu]'));
+            return;
+        }
+        if (!menu.matches(inboxMenuSelector)) { return; }
+        if (!menu.open) { clearInboxMenuPosition(menu); return; }
+        Array.prototype.forEach.call(document.querySelectorAll(openInboxMenuSelector), function (other) {
+            if (other !== menu) {
+                other.removeAttribute('open');
+                clearInboxMenuPosition(other);
+            }
+        });
+        positionInboxMenu(menu);
+    }, true);
+    window.addEventListener('resize', function () {
+        var openMenu = document.querySelector(openInboxMenuSelector);
+        if (openMenu) { positionInboxMenu(openMenu); }
+    });
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest || !event.target.closest(inboxMenuSelector)) { closeInboxMenus(false); }
+    });
+    document.addEventListener('keydown', function (event) {
+        // Native toggle is asynchronous. A quick Enter then Tab must see the
+        // revealed panel before the browser chooses its next focus target.
+        if (event.key === 'Tab' && event.target.closest) {
+            var focusedMenu = event.target.closest(openInboxMenuSelector);
+            if (focusedMenu && !focusedMenu.hasAttribute('data-inbox-menu-positioned')) {
+                positionInboxMenu(focusedMenu);
+            }
+        }
+        if (event.key !== 'Escape' || !document.querySelector(openInboxMenuSelector)) { return; }
+        event.preventDefault();
+        closeInboxMenus(true);
+    });
+    document.addEventListener('scroll', function (event) {
+        if (event.target.closest && event.target.closest(inboxMenuSelector)) { return; }
+        closeInboxMenus(false);
+    }, { capture: true, passive: true });
+
+    // Help is a separate, nonmodal reading panel. Unsupported browsers and
+    // no-JS requests retain the complete native disclosure in page actions.
+    var helpFallback = document.querySelector('.inbox-help');
+    var helpOpen = document.querySelector('[data-inbox-help-open]');
+    if (helpFallback && helpOpen && window.HTMLDialogElement && typeof HTMLDialogElement.prototype.show === 'function') {
+        var helpContent = helpFallback.querySelector('[data-inbox-help-content]');
+        var helpDialog = document.createElement('dialog');
+        helpDialog.className = 'inbox-help-dialog';
+        helpDialog.setAttribute('data-inbox-help-dialog', '');
+        helpDialog.setAttribute('aria-labelledby', 'inbox-help-heading');
+        helpDialog.setAttribute('role', 'dialog');
+        helpDialog.appendChild(helpContent);
+        document.body.appendChild(helpDialog);
+        helpFallback.hidden = true;
+        helpOpen.hidden = false;
+        var helpClose = helpDialog.querySelector('[data-inbox-help-close]');
+        var helpReturn = helpOpen.closest('.inbox-actions').querySelector(':scope > summary');
+        helpClose.hidden = false;
+        helpOpen.addEventListener('click', function () {
+            closeInboxMenus(false);
+            if (!helpDialog.open) { helpDialog.show(); }
+            helpClose.focus();
+        });
+        helpClose.addEventListener('click', function () { helpDialog.close(); });
+        helpDialog.addEventListener('close', function () {
+            // The close event is queued: preserve focus if the user has already
+            // moved to another control before it arrives.
+            var focused = document.activeElement;
+            if (!focused || focused === document.body || focused === document.documentElement || focused === helpOpen || helpDialog.contains(focused)) {
+                helpReturn.focus();
+            }
+        });
+        helpDialog.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') { event.preventDefault(); helpDialog.close(); }
+        });
+    }
+
     // Community Inbox — the bounded preview endpoint decorates canonical topic
     // links. Selection, cursor movement and actions all resolve back to native
     // forms/links, so the queue remains fully usable without this block.
@@ -954,72 +1365,45 @@
         var cursorRow = null;
         var inboxRequest = null;
         var inboxRequestGeneration = 0;
+        var inboxRequestTimer = null;
+        var failedPreview = null;
+        var inboxFeedback = inbox.querySelector('[data-inbox-feedback]');
+        var inboxStatus = inbox.querySelector('[data-inbox-status]');
+        var inboxRecovery = inbox.querySelector('[data-inbox-recovery]');
+        var inboxRetry = inbox.querySelector('[data-inbox-retry]');
+        var inboxFullTopic = inbox.querySelector('[data-inbox-full-topic]');
+        var inboxReturnPreview = inbox.querySelector('[data-inbox-return-preview]');
         var idOf = function (href) { var match = href && href.match(/\/t\/(\d+)/); return match ? match[1] : null; };
+        var setInboxFeedback = function (message, recover, announceOnly) {
+            if (inboxFeedback) { inboxFeedback.classList.toggle('is-active', !!message && !announceOnly); }
+            if (inboxStatus) {
+                inboxStatus.classList.toggle('sr-only', !!announceOnly);
+                inboxStatus.textContent = message || '';
+            }
+            if (inboxRecovery) { inboxRecovery.hidden = !recover; }
+            if (inboxReturnPreview) { inboxReturnPreview.hidden = !recover || !readingContent || !readingContent.querySelector('[data-inbox-preview]'); }
+        };
         var cancelInboxRequest = function () {
             inboxRequestGeneration++;
+            window.clearTimeout(inboxRequestTimer);
+            inboxRequestTimer = null;
             if (inboxRequest && typeof inboxRequest.abort === 'function') { inboxRequest.abort(); }
             inboxRequest = null;
+            failedPreview = null;
+            if (reading) { reading.removeAttribute('aria-busy'); }
+            setInboxFeedback('');
             return inboxRequestGeneration;
         };
         var clearInboxRequest = function (generation, request) {
-            if (generation === inboxRequestGeneration && inboxRequest === request) { inboxRequest = null; }
+            if (generation === inboxRequestGeneration && inboxRequest === request) {
+                window.clearTimeout(inboxRequestTimer);
+                inboxRequestTimer = null;
+                inboxRequest = null;
+            }
         };
         var allRows = function () { return inboxList.querySelectorAll('[data-inbox-row]'); };
         var linkIn = function (row) { return row ? row.querySelector('[data-inbox-preview-url]') : null; };
         var rowForId = function (id) { return /^\d+$/.test(String(id || '')) ? inboxList.querySelector('[data-thread-id="' + id + '"]') : null; };
-        var clearInboxMenuPosition = function (menu) {
-            var panel = menu.querySelector('.inbox-scope-menu-panel, .thread-row-menu-panel');
-            menu.removeAttribute('data-inbox-menu-positioned');
-            if (!panel) { return; }
-            panel.style.removeProperty('left');
-            panel.style.removeProperty('top');
-        };
-        var positionInboxMenu = function (menu) {
-            var trigger = menu.querySelector(':scope > summary');
-            var panel = menu.querySelector('.inbox-scope-menu-panel, .thread-row-menu-panel');
-            if (!menu.open || !trigger || !panel) { clearInboxMenuPosition(menu); return; }
-            var margin = 8;
-            var gap = menu.matches('[data-inbox-scope-menu]') ? 7 : 4;
-            var triggerRect = trigger.getBoundingClientRect();
-            var panelRect = panel.getBoundingClientRect();
-            var left = menu.matches('[data-inbox-row-menu]') ? triggerRect.right - panelRect.width : triggerRect.left;
-            var top = triggerRect.bottom + gap;
-            left = Math.max(margin, Math.min(left, window.innerWidth - panelRect.width - margin));
-            if (top + panelRect.height > window.innerHeight - margin) {
-                top = triggerRect.top - panelRect.height - gap;
-            }
-            top = Math.max(margin, Math.min(top, window.innerHeight - panelRect.height - margin));
-            panel.style.left = Math.round(left) + 'px';
-            panel.style.top = Math.round(top) + 'px';
-            menu.setAttribute('data-inbox-menu-positioned', '1');
-        };
-        var closeInboxMenus = function (restoreFocus) {
-            Array.prototype.forEach.call(inbox.querySelectorAll('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]'), function (menu) {
-                menu.removeAttribute('open');
-                clearInboxMenuPosition(menu);
-                if (restoreFocus) {
-                    var summary = menu.querySelector(':scope > summary');
-                    if (summary) { summary.focus(); }
-                }
-            });
-        };
-
-        inbox.addEventListener('toggle', function (event) {
-            var menu = event.target;
-            if (!menu.matches || !menu.matches('[data-inbox-scope-menu], [data-inbox-row-menu]')) { return; }
-            if (!menu.open) { clearInboxMenuPosition(menu); return; }
-            Array.prototype.forEach.call(inbox.querySelectorAll('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]'), function (other) {
-                if (other !== menu) {
-                    other.removeAttribute('open');
-                    clearInboxMenuPosition(other);
-                }
-            });
-            positionInboxMenu(menu);
-        }, true);
-        window.addEventListener('resize', function () {
-            var openMenu = inbox.querySelector('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]');
-            if (openMenu) { positionInboxMenu(openMenu); }
-        });
         var markActive = function (link) {
             Array.prototype.forEach.call(allRows(), function (row) {
                 row.classList.toggle('is-active', !!link && linkIn(row) === link);
@@ -1052,13 +1436,26 @@
             markActive(null);
             setMobileReading(false);
             if (restoreFocus && selectedLink && document.documentElement.contains(selectedLink)) { selectedLink.focus(); }
-            else if (restoreFocus) { inboxList.focus(); }
+            else if (restoreFocus) { (inboxList.querySelector('[data-inbox-empty-state]') || inboxList).focus(); }
         };
         var canonicalFallback = function (href) { window.location.href = href; };
+        var showPreviewFailure = function (attempt, message) {
+            failedPreview = attempt;
+            reading.removeAttribute('aria-busy');
+            // Leave the previous preview and any reply draft untouched. On a
+            // phone, reveal the queue where the recovery commands live.
+            setMobileReading(false);
+            if (inboxFullTopic) { inboxFullTopic.setAttribute('href', attempt.canonical); }
+            setInboxFeedback(message, true);
+            // A retry briefly hides its own control while loading. Restore it
+            // only if focus has not since moved to another usable control.
+            if (attempt.restoreRetryFocus && inboxRetry && (document.activeElement === document.body || document.activeElement === document.documentElement)) { inboxRetry.focus(); }
+        };
         var decrementUnreadBadge = function (badge, attribute, capped) {
             var count = parseInt(badge.getAttribute(attribute) || '', 10);
             if (isNaN(count) || count < 1) { return; }
             count--;
+            nameCountedLink(badge, 'topic', count);
             if (count === 0) { badge.remove(); return; }
             var label = count + ' unread topic' + (count === 1 ? '' : 's');
             badge.setAttribute(attribute, String(count));
@@ -1072,9 +1469,17 @@
             var queueUnread = row.getAttribute('data-inbox-unread') === '1';
             row.setAttribute('data-inbox-unread', '0');
             row.classList.remove('thread-unread');
+            var readForm = row.querySelector('[data-inbox-action="read"]');
+            if (readForm) {
+                readForm.querySelector('input[name="state"]').value = 'unread';
+                readForm.querySelector('button[type="submit"]').textContent = 'Mark unread';
+            }
             var dot = row.querySelector('.unread-dot');
             if (dot) { dot.remove(); }
             if (queueUnread) {
+                Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-scope-count="unread"]'), function (count) {
+                    count.textContent = String(Math.max(0, (parseInt(count.textContent || '', 10) || 0) - 1));
+                });
                 Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-unread-count]'), function (badge) {
                     decrementUnreadBadge(badge, 'data-inbox-unread-count', badge.classList.contains('forum-bar-count'));
                 });
@@ -1087,28 +1492,68 @@
                 });
             }
             if (queueUnread && inbox.getAttribute('data-inbox-scope') === 'unread') {
-                var scopeCount = inbox.querySelector('[data-inbox-current-count]');
+                var scopeCount = document.querySelector('[data-subheader] [data-inbox-current-count]');
                 var remaining = scopeCount ? parseInt(scopeCount.textContent || '', 10) : NaN;
-                if (!isNaN(remaining)) { scopeCount.textContent = String(Math.max(0, remaining - 1)); }
+                if (!isNaN(remaining)) {
+                    remaining = Math.max(0, remaining - 1);
+                    Array.prototype.forEach.call(document.querySelectorAll('[data-subheader] [data-inbox-current-count]'), function (count) { count.textContent = String(remaining); });
+                    Array.prototype.forEach.call(document.querySelectorAll('[data-subheader] [data-inbox-count-label]'), function (label) { label.textContent = remaining === 1 ? 'topic' : 'topics'; });
+                    Array.prototype.forEach.call(document.querySelectorAll('.inbox-view-bar summary[aria-label^="Show:"]'), function (summary) {
+                        summary.setAttribute('aria-label', summary.getAttribute('aria-label').replace(/, \d+ topics?/, ', ' + remaining + (remaining === 1 ? ' topic' : ' topics')));
+                    });
+                }
+                var readPageForm = document.querySelector('[data-subheader] .inbox-mark-all');
+                if (readPageForm) {
+                    Array.prototype.forEach.call(readPageForm.querySelectorAll('input[name="thread_ids[]"]'), function (field) {
+                        if (field.value === row.getAttribute('data-thread-id')) { field.remove(); }
+                    });
+                    if (!readPageForm.querySelector('input[name="thread_ids[]"]')) { readPageForm.remove(); }
+                }
                 row.remove();
+                if (selectionAnchor && !selectionAnchor.isConnected) { selectionAnchor = null; }
+                selections = selections.filter(function (box) { return box.isConnected; });
+                syncSelection();
+                var shownCount = inbox.querySelector('.inbox-shown-count');
+                if (shownCount) { shownCount.textContent = 'Showing ' + allRows().length + ' of ' + remaining + ' topics'; }
                 if (cursorRow === row) { cursorRow = null; }
+                if (!allRows().length) {
+                    if (threadList) { threadList.hidden = true; }
+                    if (selectAll) { selectAll.closest('label').hidden = true; }
+                    if (sweep) { sweep.hidden = true; }
+                    if (shownCount) { shownCount.hidden = true; }
+                    var emptyTemplate = inbox.querySelector(remaining === 0 ? '[data-inbox-empty-template]' : '[data-inbox-page-read-template]');
+                    if (emptyTemplate) { inboxList.appendChild(emptyTemplate.content.cloneNode(true)); }
+                }
             }
         };
         var loadThread = function (link, push, focus, historyTarget) {
             var canonical = link ? link.getAttribute('href') : historyTarget && historyTarget.href;
             var endpoint = link ? link.getAttribute('data-inbox-preview-url') : historyTarget && historyTarget.endpoint;
             if (!canonical || !endpoint) { canonicalFallback(canonical || '/inbox'); return; }
+            var restoreRetryFocus = document.activeElement === inboxRetry;
             var generation = cancelInboxRequest();
             var request = window.AbortController ? new window.AbortController() : null;
             inboxRequest = request;
+            var attempt = { link: link, push: push, focus: focus, historyTarget: historyTarget, canonical: canonical, restoreRetryFocus: restoreRetryFocus };
             reading.setAttribute('aria-busy', 'true');
+            setInboxFeedback('Loading topic…');
+            inboxRequestTimer = window.setTimeout(function () {
+                if (generation !== inboxRequestGeneration) { return; }
+                cancelInboxRequest();
+                showPreviewFailure(attempt, 'This topic is taking longer than expected. Try again, or open the full topic.');
+            }, 15000);
             var options = { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' };
             if (request) { options.signal = request.signal; }
             fetch(endpoint, options).then(function (response) {
                 if (generation !== inboxRequestGeneration) { return null; }
-                if (response.redirected || !response.ok) {
-                    clearInboxRequest(generation, request);
+                if (response.redirected || response.status === 401 || response.status === 403 || response.status === 404) {
+                    cancelInboxRequest();
                     canonicalFallback(canonical);
+                    return null;
+                }
+                if (!response.ok) {
+                    clearInboxRequest(generation, request);
+                    showPreviewFailure(attempt, response.status === 429 ? 'Too many requests. Wait a moment, then try again.' : "Couldn't load this topic. Try again, or open the full topic.");
                     return null;
                 }
                 return response.text();
@@ -1116,9 +1561,10 @@
                 if (generation !== inboxRequestGeneration || html === null) { return; }
                 var probe = document.createElement('template');
                 probe.innerHTML = html;
-                if (!probe.content.querySelector('[data-inbox-preview]')) {
+                var preview = probe.content.querySelector('[data-inbox-preview]');
+                if (!preview || preview.getAttribute('data-inbox-preview') !== idOf(canonical)) {
                     clearInboxRequest(generation, request);
-                    canonicalFallback(canonical);
+                    showPreviewFailure(attempt, "Couldn't load this topic. Try again, or open the full topic.");
                     return;
                 }
                 if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
@@ -1138,7 +1584,8 @@
                     var id = idOf(canonical);
                     var url = new URL(window.location.href);
                     if (id) { url.searchParams.set('t', id); }
-                    history.pushState({ rbInboxTopic: true, href: canonical, endpoint: endpoint }, '', url.toString());
+                    try { history.pushState({ rbInboxTopic: true, href: canonical, endpoint: endpoint }, '', url.toString()); }
+                    catch (error) { /* The preview remains usable when history is unavailable. */ }
                 }
                 if (focus) {
                     var heading = readingContent.querySelector('h2, h1');
@@ -1146,28 +1593,71 @@
                     else { reading.focus(); }
                 }
                 clearInboxRequest(generation, request);
+                var emptyState = inboxList.querySelector('[data-inbox-empty-state] .inbox-empty-title');
+                setInboxFeedback(emptyState ? emptyState.textContent : 'Topic loaded.', false, true);
             }).catch(function (error) {
                 if (generation !== inboxRequestGeneration || (error && error.name === 'AbortError')) { return; }
                 clearInboxRequest(generation, request);
-                canonicalFallback(canonical);
+                showPreviewFailure(attempt, navigator.onLine === false ? "You're offline. Reconnect and try again." : "Couldn't load this topic. Try again, or open the full topic.");
             });
         };
 
         if (reading && readingContent && inboxList) {
+            // Enhanced forms decide whether to navigate in their submit handlers.
+            // Only native submissions own the next page and invalidate previews
+            // before an access error can trigger a competing canonical fallback.
+            document.addEventListener('submit', function (event) {
+                if (!event.defaultPrevented) { cancelInboxRequest(); }
+            });
+            window.addEventListener('pagehide', cancelInboxRequest);
+            if (inboxRetry) {
+                inboxRetry.addEventListener('click', function () {
+                    var attempt = failedPreview;
+                    if (attempt) { loadThread(attempt.link, attempt.push, attempt.focus, attempt.historyTarget); }
+                });
+            }
+            if (inboxReturnPreview) {
+                inboxReturnPreview.addEventListener('click', function () {
+                    var preview = readingContent.querySelector('[data-inbox-preview]');
+                    if (!preview) { return; }
+                    cancelInboxRequest();
+                    var id = preview.getAttribute('data-inbox-preview');
+                    var row = rowForId(id);
+                    var link = linkIn(row);
+                    selectedLink = link;
+                    setCursor(row, false);
+                    markActive(link);
+                    // Retain the same composer and DOM, even if reading removed
+                    // its originating Unread row from the queue.
+                    setMobileReading(true);
+                    var url = new URL(window.location.href);
+                    if (url.searchParams.get('t') !== id) {
+                        var canonical = preview.querySelector('.inbox-preview-open');
+                        url.searchParams.set('t', id);
+                        try {
+                            history.replaceState({ rbInboxTopic: true, href: canonical ? canonical.getAttribute('href') : '/t/' + id, endpoint: '/inbox/preview/' + id }, '', url.toString());
+                        } catch (error) { /* The retained draft remains usable without history. */ }
+                    }
+                    var heading = preview.querySelector('h2, h1');
+                    if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus(); }
+                    else { reading.focus(); }
+                    setInboxFeedback('Previous topic restored.', false, true);
+                });
+            }
             var initialUrl = new URL(window.location.href);
+            // Validation re-renders at the POST route. Preview history still
+            // belongs to the server's canonical Inbox view and page.
+            if (initialUrl.pathname !== '/inbox' && inbox.getAttribute('data-inbox-url')) {
+                initialUrl = new URL(inbox.getAttribute('data-inbox-url'), window.location.href);
+            }
             try { history.replaceState(initialUrl.searchParams.has('t') ? { rbInboxDirect: true } : { rbInboxList: true }, '', initialUrl.toString()); }
             catch (error) { /* History can be unavailable in privacy modes. */ }
 
             document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && inbox.querySelector('[data-inbox-scope-menu][open], [data-inbox-row-menu][open]')) {
-                    event.preventDefault();
-                    closeInboxMenus(true);
-                    return;
-                }
                 if (event.ctrlKey || event.metaKey || event.altKey || editableTarget(event.target)) { return; }
                 // Nothing fires from inside an open menu or dialog — the account
                 // menu included — where e or s would mark or star a topic out of sight.
-                if (event.target.closest && event.target.closest('details[open], [role="dialog"]')) { return; }
+                if (event.target.closest && event.target.closest('details[open], [role="dialog"], dialog[open]')) { return; }
                 var rows = Array.prototype.slice.call(allRows());
                 if (!rows.length) { return; }
                 var index = cursorRow ? rows.indexOf(cursorRow) : -1;
@@ -1195,12 +1685,11 @@
                     var starForm = activeRow.querySelector('[data-inbox-action="star"]');
                     if (starForm) { event.preventDefault(); starForm.requestSubmit(); }
                 } else if (event.key === '#') {
-                    var snoozeForm = activeRow.querySelector('[data-inbox-action="snooze"][data-inbox-snooze="monday"]');
+                    var snoozeForm = activeRow.querySelector('[data-inbox-action="snooze"][data-inbox-snooze="tomorrow"]');
                     if (snoozeForm) { event.preventDefault(); snoozeForm.requestSubmit(); }
                 }
             });
 
-            document.addEventListener('scroll', function () { closeInboxMenus(false); }, { capture: true, passive: true });
             inboxList.addEventListener('click', function (event) {
                 var link = event.target.closest ? event.target.closest('[data-inbox-preview-url]') : null;
                 if (!link || !inboxList.contains(link)) { return; }
@@ -1214,7 +1703,8 @@
             var selectAll = inbox.querySelector('[data-inbox-select-all]');
             var sweep = inbox.querySelector('[data-inbox-sweep]');
             var selectionLabel = inbox.querySelector('[data-inbox-selection-label]');
-            var selectionAnchor = -1;
+            var clearSelection = inbox.querySelector('[data-inbox-clear-selection]');
+            var selectionAnchor = null;
             var syncSelection = function () {
                 var count = selections.filter(function (box) { return box.checked; }).length;
                 if (sweep) { sweep.classList.toggle('is-active', count > 0); }
@@ -1224,14 +1714,16 @@
                     selectAll.indeterminate = count > 0 && count < selections.length;
                 }
             };
-            selections.forEach(function (box, index) {
+            selections.forEach(function (box) {
                 box.addEventListener('click', function (event) {
-                    if (event.shiftKey && selectionAnchor >= 0) {
-                        var start = Math.min(index, selectionAnchor);
-                        var end = Math.max(index, selectionAnchor);
+                    var index = selections.indexOf(box);
+                    var anchorIndex = selections.indexOf(selectionAnchor);
+                    if (event.shiftKey && index >= 0 && anchorIndex >= 0) {
+                        var start = Math.min(index, anchorIndex);
+                        var end = Math.max(index, anchorIndex);
                         for (var offset = start; offset <= end; offset++) { selections[offset].checked = box.checked; }
                     }
-                    selectionAnchor = index;
+                    selectionAnchor = box;
                     syncSelection();
                 });
                 box.addEventListener('change', syncSelection);
@@ -1240,6 +1732,15 @@
                 selectAll.addEventListener('change', function () {
                     selections.forEach(function (box) { box.checked = selectAll.checked; });
                     syncSelection();
+                });
+            }
+            if (clearSelection) {
+                clearSelection.hidden = false;
+                clearSelection.addEventListener('click', function () {
+                    selections.forEach(function (box) { box.checked = false; });
+                    closeInboxMenus(false);
+                    syncSelection();
+                    if (selectAll) { selectAll.focus(); }
                 });
             }
             syncSelection();
@@ -1363,19 +1864,40 @@
     // Mobile navigation drawer (Phase 4): the sidebar rail slides in over a scrim
     // on small screens. Without JS the rail simply stacks above the content (the
     // server-rendered nav stays reachable). With scripting enabled CSS already
-    // supplies the drawer and fragment links; add state, Escape and focus return.
+    // supplies the drawer and fragment links. Enhancement owns focus while the
+    // main page is covered, and gives it back before the drawer becomes hidden.
     var navToggle = document.querySelector('[data-nav-toggle]');
     var navScrim = document.querySelector('[data-nav-scrim]');
-    if (navToggle) {
-        var sidebar = document.querySelector('[data-sidebar]');
-        var nativeNavOpen = sidebar && window.location.hash === '#' + sidebar.id;
+    var sidebar = document.querySelector('[data-sidebar]');
+    if (navToggle && sidebar) {
+        var navViewport = window.matchMedia('(max-width: 860px)');
+        var navMain = document.getElementById('main');
+        var navMainWasInert = false;
+        var navLastFocused = document.activeElement;
+        document.addEventListener('focusin', function (e) {
+            if (e.target !== document.body) { navLastFocused = e.target; }
+        });
+        var nativeNavOpen = window.location.hash === '#' + sidebar.id;
         var navFallbackFocused = document.activeElement && document.activeElement.matches('[data-nav-fallback], [data-nav-close]');
-        var setNav = function (open) {
+        var setNav = function (open, restoreFocus) {
+            open = !!open && navViewport.matches;
+            var wasOpen = document.body.classList.contains('nav-open');
+            if (navMain && open && !wasOpen) {
+                navMainWasInert = navMain.inert;
+                navMain.inert = true;
+            } else if (navMain && !open && wasOpen) {
+                navMain.inert = navMainWasInert;
+            }
             document.body.classList.toggle('nav-open', open);
             navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             navToggle.setAttribute('aria-label', open ? 'Close board rail' : 'Open board rail');
             if (navScrim) { navScrim.hidden = !open; }
-            if (!open && sidebar && sidebar.contains(document.activeElement)) {
+            if (open && !wasOpen) {
+                var stops = overlayTabStops(sidebar);
+                // Keep a usable native drawer control focused when a delayed
+                // bundle adopts the fragment fallback that is already open.
+                if (stops.indexOf(document.activeElement) === -1) { (stops[0] || sidebar).focus(); }
+            } else if (!open && wasOpen && restoreFocus !== false) {
                 navToggle.focus();
             }
         };
@@ -1384,24 +1906,74 @@
         });
         if (navScrim) { navScrim.addEventListener('click', function () { setNav(false); }); }
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && document.body.classList.contains('nav-open')) { setNav(false); }
+            if (!document.body.classList.contains('nav-open')) { return; }
+            if (e.key === 'Escape') { e.preventDefault(); setNav(false); }
+            if (e.key === 'Tab') { wrapOverlayTab(e, sidebar, true); }
         });
         // Closing the drawer after following a rail link keeps the next page clean.
         if (sidebar) {
             sidebar.addEventListener('click', function (e) {
-                if (e.target.closest && e.target.closest('[data-nav-close]')) { e.preventDefault(); }
-                if (e.target.closest && e.target.closest('a')) { setNav(false); }
+                var close = e.target.closest && e.target.closest('[data-nav-close]');
+                if (close) { e.preventDefault(); }
+                if (e.target.closest && e.target.closest('a')) { setNav(false, !!close); }
             });
         }
-        setNav(!!nativeNavOpen);
         document.body.setAttribute('data-nav-ready', '1');
         navToggle.hidden = false;
+        setNav(!!nativeNavOpen);
         if (nativeNavOpen) { clearDrawerFragment(sidebar.id); }
-        if (navFallbackFocused) { navToggle.focus(); }
+        if (navFallbackFocused && !document.body.classList.contains('nav-open')) { navToggle.focus(); }
+        navViewport.addEventListener('change', function () {
+            // Some engines blur a CSS-hidden control before firing this change.
+            var focused = document.activeElement === document.body ? navLastFocused : document.activeElement;
+            var focusedInRail = sidebar.contains(focused);
+            var focusedOnOpener = focused === navToggle;
+            setNav(false, false);
+            if (navViewport.matches && focusedInRail) {
+                navToggle.focus();
+            } else if (!navViewport.matches && (focusedOnOpener
+                || (focusedInRail && getComputedStyle(sidebar).display === 'none')
+                // The drawer's close control has no desktop counterpart.
+                || (focusedInRail && focused.getClientRects().length === 0))) {
+                var stops = overlayTabStops(sidebar);
+                if (getComputedStyle(sidebar).display !== 'none') {
+                    (stops[0] || sidebar).focus();
+                } else if (navMain) {
+                    navMain.setAttribute('tabindex', '-1');
+                    navMain.focus();
+                }
+            }
+        });
+    }
+
+    // The phone bar gives the primary routes their own row under the lockup and
+    // the account controls (ADR 0042), and CSS draws that row last. The reading
+    // and focus order follow it here, so Tab and a screen reader's swipe move
+    // row by row instead of dropping from the lockup to the routes and climbing
+    // back to search. Above the drawer breakpoint the routes return beside the
+    // lockup, where the desktop bar draws them. Without JavaScript the order
+    // stays the desktop one, which is still complete.
+    var forumBar = document.querySelector('.forum-bar');
+    var barRoutes = forumBar && forumBar.querySelector(':scope > .forum-bar-surfaces');
+    var barLockup = forumBar && forumBar.querySelector(':scope > .forum-bar-lockup');
+    if (barRoutes && barLockup) {
+        var phoneBar = window.matchMedia('(max-width: 860px)');
+        var placeRoutes = function () {
+            var focused = barRoutes.contains(document.activeElement) ? document.activeElement : null;
+            if (phoneBar.matches && forumBar.lastElementChild !== barRoutes) {
+                forumBar.appendChild(barRoutes);
+            } else if (!phoneBar.matches && barLockup.nextElementSibling !== barRoutes) {
+                barLockup.after(barRoutes);
+            }
+            if (focused && document.activeElement !== focused) { focused.focus(); }
+        };
+        placeRoutes();
+        phoneBar.addEventListener('change', placeRoutes);
     }
 
     // The admin console has no navigation JavaScript. Its area tier scrolls
-    // horizontally and its section tabs wrap, so the console nav behaves
+    // horizontally on desktop; a native disclosure names the current area on
+    // narrow screens. Section tabs wrap, so the console nav behaves
     // identically with scripting disabled (ADMIN.md §9.4, amended by ADR 0024).
     // The former grouped-rail drawer, its scrim and its focus trap were removed
     // with the rail itself rather than left as dead chrome.
@@ -1576,6 +2148,48 @@
     }
     localiseDmTimes(document);
 
+    // Only following a different Messages row offers the calm entry transition.
+    // Its target and short lifetime prevent an abandoned click from animating a
+    // later visit, and the blocking head script consumes it before first paint.
+    var dmSwitchKey = 'rb:dm-switch';
+    // Only a conversation page loads the head script that reads the signal, so
+    // any other page load consumes an abandoned one before it can replay later.
+    if (!/^\/messages\/[0-9]+$/.test(location.pathname)) {
+        try { sessionStorage.removeItem(dmSwitchKey); } catch (error) {}
+    }
+    function finishDmSwitch() {
+        document.documentElement.removeAttribute('data-dm-switch');
+    }
+    document.addEventListener('click', function (event) {
+        var row = event.target.closest && event.target.closest('a.dm-row.dm-link');
+        if (!row || event.defaultPrevented || event.button !== 0
+            || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+            || row.hasAttribute('download') || (row.target && row.target !== '_self')
+            || document.documentElement.hasAttribute('data-reduced-motion')
+            || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+        var target = new URL(row.href, location.href);
+        if (target.origin !== location.origin || !/^\/messages\/[0-9]+$/.test(target.pathname)
+            || target.pathname === location.pathname) { return; }
+        try { sessionStorage.setItem(dmSwitchKey, JSON.stringify({ path: target.pathname, at: Date.now() })); } catch (error) {}
+    });
+    if (document.documentElement.hasAttribute('data-dm-switch')) {
+        var switchedMessages = document.querySelector('.dm-shell[data-dm-conversation] [data-dm-messages]');
+        if (switchedMessages) {
+            var dmSwitchTimer = setTimeout(finishDmSwitch, 1000);
+            switchedMessages.addEventListener('animationend', function (event) {
+                if (event.target === switchedMessages && event.animationName === 'dm-switch-rise') {
+                    clearTimeout(dmSwitchTimer);
+                    finishDmSwitch();
+                }
+            });
+        } else { finishDmSwitch(); }
+    }
+    window.addEventListener('pageshow', function (event) {
+        if (!event.persisted) { return; }
+        finishDmSwitch();
+        try { sessionStorage.removeItem(dmSwitchKey); } catch (error) {}
+    });
+
     var dmShell = document.querySelector('.dm-shell');
     var dmStream = document.querySelector('[data-dm-messages]');
     var dmScroller = document.querySelector('[data-dm-scroll]');
@@ -1684,12 +2298,49 @@
         // form already in view does not move).
         var dmDock = dmShell.querySelector('.dm-composer');
         if (dmDock) {
-            dmDock.addEventListener('focusin', function () {
-                window.requestAnimationFrame(function () {
+            var dmDockPointers = new Set();
+            var dmDockRevealPending = false;
+            var dmDockRevealFrame = null;
+            var revealDmDock = function () {
+                dmDockRevealPending = true;
+                if (dmDockRevealFrame !== null) { return; }
+                dmDockRevealFrame = window.requestAnimationFrame(function () {
+                    dmDockRevealFrame = null;
+                    if (!dmDock.isConnected || dmDock._rbComposerDestroyed) {
+                        dmDockRevealPending = false;
+                        return;
+                    }
+                    // Focusing Send can reveal the dock before pointerup. Moving
+                    // it then changes the release target and loses the click.
+                    if (dmDockPointers.size) { return; }
+                    dmDockRevealPending = false;
                     var box = dmDock.getBoundingClientRect();
                     if (box.bottom > window.innerHeight || box.top < 0) { dmDock.scrollIntoView({ block: 'nearest' }); }
                 });
-            });
+            };
+            dmDock.addEventListener('pointerdown', function (event) {
+                dmDockPointers.add(event.pointerId);
+            }, true);
+            var releaseDmDockPointer = function (event) {
+                if (!dmDockPointers.delete(event.pointerId)) { return; }
+                // Native click dispatch finishes before this task. A cancelled
+                // pointer also releases deferred keyboard/focus visibility.
+                window.setTimeout(function () {
+                    if (!dmDockPointers.size && dmDockRevealPending) { revealDmDock(); }
+                }, 0);
+            };
+            document.addEventListener('pointerup', releaseDmDockPointer, true);
+            document.addEventListener('pointercancel', releaseDmDockPointer, true);
+            dmDock.addEventListener('focusin', revealDmDock);
+            // The shared row can make the readable-floor room grow even with
+            // the dock folded. Keep Send in view on that initial latest-letter
+            // visit, using the same document-scroll path as focus expansion.
+            // A fragment, parked reader or previous page scroll keeps its place.
+            var revealInitialDmDock = function () {
+                if (dmShell.dataset.dmLatest === '1' && !location.hash && window.scrollY === 0 && followingDmEnd()) { revealDmDock(); }
+            };
+            if (document.fonts) { document.fonts.ready.then(revealInitialDmDock); }
+            else { revealInitialDmDock(); }
         }
         if (dmShell.dataset.dmLatest === '1') {
             shortPoll('/messages/' + dmShell.dataset.dmConversation + '/poll', 20000, function (data) {
@@ -1783,6 +2434,12 @@
         function close() {
             list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant');
         }
+        function dismiss() {
+            sequence++;
+            clearTimeout(timer); timer = null;
+            if (request) { request.abort(); request = null; }
+            close();
+        }
         function renderChips() {
             chips.replaceChildren();
             selected.forEach(function (person, index) {
@@ -1806,7 +2463,7 @@
         function choose(index) {
             var item = matches[index]; if (!item) { return; }
             add(item.token, item.meta || item.label.replace(/^@/, ''));
-            input.value = ''; sequence++; close(); renderChips(); sync(); input.focus();
+            input.value = ''; dismiss(); renderChips(); sync(); input.focus();
         }
         function highlight(index) {
             active = index;
@@ -1816,11 +2473,11 @@
             if (list.children[active]) { input.setAttribute('aria-activedescendant', list.children[active].id); }
         }
         input.addEventListener('input', function () {
-            sync(); sequence++; var version = sequence;
-            clearTimeout(timer); if (request) { request.abort(); }
-            var query = input.value.trim().replace(/^@/, ''); close();
+            sync(); dismiss(); var version = sequence;
+            var query = input.value.trim().replace(/^@/, '');
             if (!query || (!allowGroups && selected.length)) { return; }
             timer = setTimeout(function () {
+                timer = null;
                 request = new AbortController();
                 fetch('/composer/suggest?' + new URLSearchParams({ trigger: '@', q: query, context: 'dm-recipient' }), { credentials: 'same-origin', signal: request.signal })
                     .then(function (r) { if (!r.ok) { throw new Error('suggestions unavailable'); } return r.json(); })
@@ -1837,6 +2494,9 @@
                             identity.append(name, handle);
                             if (picker.dataset.dmAvatars !== '0') { row.appendChild(mono); }
                             row.appendChild(identity);
+                            // Keep To focused through mousedown, including a
+                            // tap's compatibility events. Cancelling pointerdown
+                            // suppresses WebKit's click before it can commit.
                             row.addEventListener('mousedown', function (e) { e.preventDefault(); });
                             row.addEventListener('click', function () { choose(index); });
                             list.appendChild(row);
@@ -1850,28 +2510,27 @@
             }, 200);
         });
         input.addEventListener('focus', function () { field.classList.add('is-focus'); });
-        input.addEventListener('blur', function () { field.classList.remove('is-focus'); });
+        input.addEventListener('blur', function () { field.classList.remove('is-focus'); dismiss(); });
         input.addEventListener('keydown', function (e) {
             if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !list.hidden) {
                 e.preventDefault(); highlight((active + (e.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length);
             } else if (e.key === 'Escape') {
                 // An open list owns Escape; with it closed, Escape reaches the compose dialog.
                 if (!list.hidden) { e.stopPropagation(); }
-                sequence++; close();
+                dismiss();
             }
             else if (e.key === 'Enter' || e.key === ',') {
                 e.preventDefault();
                 if (!list.hidden && active >= 0) { choose(active); }
                 else {
                     // A delayed prefix match must not reopen a committed field.
-                    sequence++; clearTimeout(timer);
-                    if (request) { request.abort(); }
+                    dismiss();
                     input.value.split(/[\s,]+/).forEach(function (name) { add(name); });
-                    input.value = ''; renderChips(); sync(); close();
+                    input.value = ''; renderChips(); sync();
                 }
             } else if (e.key === 'Backspace' && input.value === '' && selected.length) { selected.pop(); renderChips(); sync(); }
         });
-        document.addEventListener('click', function (e) { if (!picker.contains(e.target)) { sequence++; close(); } });
+        document.addEventListener('click', function (e) { if (!picker.contains(e.target)) { dismiss(); } });
         form.addEventListener('submit', sync, true);
     });
 
@@ -1879,13 +2538,16 @@
     // (the rail drawer, the compose dialog). With pullIn, focus that has left
     // the container, or fallen to <body> after the composer's Escape blur, is
     // brought back to its first or last control.
-    function dmWrapTab(e, container, pullIn) {
-        if (e.defaultPrevented) { return; }
-        var nodes = Array.from(container.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]')).filter(function (n) {
-            var closed = n.closest('details:not([open])');
+    function overlayTabStops(container) {
+        return Array.from(container.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]')).filter(function (n) {
             return n.tabIndex >= 0 && !n.matches(':disabled') && !n.closest('[inert]') && n.getClientRects().length > 0
-                && (!closed || n === closed.querySelector(':scope > summary'));
+                && getComputedStyle(n).visibility !== 'hidden'
+                && exposedByDetails(n);
         });
+    }
+    function wrapOverlayTab(e, container, pullIn) {
+        if (e.defaultPrevented) { return; }
+        var nodes = overlayTabStops(container);
         if (!nodes.length) { return; }
         var first = nodes[0], last = nodes[nodes.length - 1], active = document.activeElement;
         if (!container.contains(active)) {
@@ -1914,6 +2576,7 @@
             return overlay;
         };
         var railOverlay = railIsOverlay();
+        var railChoiceMade = false;
         var setRail = function (open, persist, restoreFocus) {
             dmShell.classList.toggle('rail-open', open);
             if (!open && location.hash === '#dm-rail') { location.replace(location.pathname + location.search); }
@@ -1923,6 +2586,7 @@
             // passing look, so opening or closing one never changes what the
             // next page restores as a column.
             if (persist) {
+                railChoiceMade = true;
                 railOverlay = railIsOverlay();
                 if (!railOverlay) { try { localStorage.setItem(RAIL_KEY, open ? '0' : '1'); } catch (e) {} }
             }
@@ -1934,8 +2598,23 @@
         var stored = null;
         try { stored = localStorage.getItem(RAIL_KEY); } catch (e) {}
         // #dm-rail is an explicit request at any width; a remembered choice
-        // only reopens a column, so an overlay always starts closed.
-        setRail(location.hash === '#dm-rail' || (stored === '0' && !railOverlay), false, false);
+        // only reopens a column, so an overlay always starts closed. WebKit can
+        // run this deferred script before the stylesheets are ready: keep the
+        // default closed until their position rules can classify the rail.
+        setRail(location.hash === '#dm-rail', false, false);
+        var restoreRailChoice = function () {
+            railOverlay = railIsOverlay();
+            // A choice made while resources loaded takes precedence over the
+            // saved one, including an explicitly opened overlay.
+            if (!railChoiceMade) {
+                setRail(location.hash === '#dm-rail' || (stored === '0' && !railOverlay), false, false);
+            }
+        };
+        var railStylesPending = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(function (link) {
+            return !link.disabled && !link.sheet;
+        });
+        if (document.readyState === 'complete' || !railStylesPending) { restoreRailChoice(); }
+        else { window.addEventListener('load', restoreRailChoice, { once: true }); }
         // A column that turns into an overlay (resize, rotation, the board rail
         // opening beside it) would cover the conversation, and on a phone the
         // back control, so it closes; the saved column choice stays as it was.
@@ -1981,9 +2660,9 @@
         });
         window.addEventListener('hashchange', function () { setRail(location.hash === '#dm-rail', false, false); });
         document.addEventListener('keydown', function (e) {
-            if (!railIsOpen() || document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
+            if (!railIsOpen() || document.querySelector('.dm-compose-panel:not([hidden]), details.dm-menu[open], details.dm-report[open]')) { return; }
             if (e.key === 'Escape') { setRail(false, true, true); }
-            if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { dmWrapTab(e, dmRail, false); }
+            if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { wrapOverlayTab(e, dmRail, false); }
         });
     }
 
@@ -2024,7 +2703,7 @@
         document.addEventListener('keydown', function (e) {
             if (e.key !== 'Escape') { return; }
             // The compose dialog sits above the menus — let its handler take this one.
-            if (document.querySelector('details.dm-compose-details[open]')) { return; }
+            if (document.querySelector('.dm-compose-panel:not([hidden])')) { return; }
             dmMenus = document.querySelectorAll('details.dm-menu, details.dm-report');
             for (var ei = 0; ei < dmMenus.length; ei++) {
                 if (dmMenus[ei].open) {
@@ -2046,49 +2725,46 @@
         for (var ni = 0; ni < nested.length; ni++) { nested[ni].open = false; }
     }, true);
 
-    // Messages compose dialog (Phase 3): the list pane's round "+" is a native
-    // <details>; CSS under .has-js lifts the open dialog into a centred modal.
-    // Mirrors the new-topic composer-details enhancement: Esc, backdrop click
-    // (the open details' ::before hit-tests to the details itself), the Close/
-    // Cancel buttons, and focusing the To field on open. Without JS the same
-    // markup opens as a panel under the list header and the form posts normally.
-    var dmCompose = document.querySelector('details.dm-compose-details');
+    // The shared New message link decorates its canonical destination only
+    // while this page has a compose panel. Server validation can also reveal
+    // the panel, preserving origin=dialog drafts without JavaScript.
+    var dmCompose = document.querySelector('[data-dm-compose]');
     if (dmCompose) {
-        // Only the enhanced presentation is a dialog; the no-JS disclosure
-        // panel keeps plain details semantics, so the role is stamped here.
         var dmDialogEl = dmCompose.querySelector('.dm-dialog');
+        var dmComposeTrigger = document.querySelector('[data-create-trigger]');
         if (dmDialogEl) { dmDialogEl.setAttribute('role', 'dialog'); }
-        // aria-modal holds only while the dialog is open, which is exactly
-        // when the keydown handler below keeps Tab inside it.
         var markComposeModal = function () {
             if (!dmDialogEl) { return; }
-            if (dmCompose.open) { dmDialogEl.setAttribute('aria-modal', 'true'); }
+            if (!dmCompose.hidden) { dmDialogEl.setAttribute('aria-modal', 'true'); }
             else { dmDialogEl.removeAttribute('aria-modal'); }
         };
         markComposeModal();
-        var dmComposeSummary = dmCompose.querySelector('summary');
-        var closeCompose = function () {
-            if (!dmCompose.open) { return; }
-            dmCompose.open = false;
+        var closeCompose = function (event) {
+            if (event) { event.preventDefault(); }
+            if (dmCompose.hidden) { return; }
+            dmCompose.hidden = true;
             markComposeModal();
-            if (dmComposeSummary) { dmComposeSummary.focus(); }
+            if (dmComposeTrigger) { dmComposeTrigger.focus(); }
         };
-        dmCompose.addEventListener('toggle', function () {
+        document.addEventListener('click', function (event) {
+            var link = event.target.closest ? event.target.closest('[data-new-message]') : null;
+            if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) { return; }
+            event.preventDefault();
+            closeInboxMenus(false);
+            dmCompose.hidden = false;
             markComposeModal();
-            if (dmCompose.open) {
-                var toField = dmCompose.querySelector('.dm-to-input') || dmCompose.querySelector('input[name="to"]');
-                if (toField) { toField.focus(); }
-            }
+            var toField = dmCompose.querySelector('.dm-to-input') || dmCompose.querySelector('input[name="to"]');
+            if (toField) { toField.focus(); }
         });
-        dmCompose.addEventListener('click', function (e) {
-            if (e.target === dmCompose) { closeCompose(); }
+        dmCompose.addEventListener('click', function (event) {
+            if (event.target === dmCompose) { closeCompose(); }
         });
-        document.addEventListener('keydown', function (e) {
-            if (!dmCompose.open) { return; }
-            if (e.key === 'Tab' && dmDialogEl) { dmWrapTab(e, dmDialogEl, true); return; }
-            if (e.key !== 'Escape') { return; }
-            // Escape peels overlays outermost-first, as on the new-topic modal:
-            // an open composer popover owns this keypress, not the dialog.
+        document.addEventListener('keydown', function (event) {
+            if (dmCompose.hidden) { return; }
+            if (event.key === 'Tab' && dmDialogEl) { wrapOverlayTab(event, dmDialogEl, true); return; }
+            if (event.key !== 'Escape') { return; }
+            // The focused recipient picker consumes its own first Escape.
+            // Composer popovers retain their nested dismissal path.
             if (dmDialogEl && dmDialogEl.querySelector('.composer-slash-menu:not([hidden]), .composer-reference-menu:not([hidden]), [role="dialog"]:not([hidden])')) { return; }
             closeCompose();
         });

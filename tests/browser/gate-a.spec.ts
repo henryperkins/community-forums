@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { openAdminArea } from './admin-navigation-helpers';
 
 /**
  * Gate A browser evidence: drive the real, server-rendered app in Chromium at
@@ -25,6 +26,7 @@ const EVIDENCE_DIR = path.resolve(
   process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
 );
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
+test.use({ browserName: process.env.E2E_LAYOUT_BROWSER === 'webkit' ? 'webkit' : 'chromium' });
 const execFileAsync = promisify(execFile);
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
@@ -123,13 +125,13 @@ async function openLifecyclePackageDetail(page: Page, info: TestInfo): Promise<v
   await page.waitForURL(/\/admin\/packages\/\d+$/);
 }
 
-async function login(page: Page, email: string): Promise<void> {
+async function login(page: Page, email: string, options: { dismissTour?: boolean } = {}): Promise<void> {
   await page.goto('/login');
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', 'password123');
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => !u.pathname.endsWith('/login')); // PRG redirect off the login page
-  await dismissTour(page);
+  if (options.dismissTour !== false) await dismissTour(page);
 }
 
 async function clickThemePreview(page: Page, uid: string): Promise<void> {
@@ -244,7 +246,7 @@ async function expectOneTimeSecret(page: Page, context: string): Promise<void> {
 
 test('public pages render and capture', async ({ page }, info) => {
   await visit(page, '/');
-  await expect(page.locator('a[href^="/c/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href^="/c/"]').first()).toBeVisible();
   await shot(page, info, '01-home');
 
   await visit(page, '/c/general');
@@ -347,7 +349,7 @@ test('private board access for a member', async ({ page }, info) => {
   await login(page, 'bob@retro.test');
   // Membership grants read access — visit() asserts 200 (a non-member would 404).
   await visit(page, '/c/staff-room');
-  await expect(page.getByText('Staff Room').first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Staff Room/ })).toBeVisible();
   await shot(page, info, '14-private-board-member');
 });
 
@@ -389,30 +391,35 @@ test('phase 4 topic workflow: status, snooze, and assignment via the server-rend
 
   // Status: staff moves the topic to "Needs answer".
   let standing = await openTopicTools(page, 'standing');
+  // Other layout fixtures may already set Needs answer without a history
+  // event. Exercise a real transition so the history journey remains valid.
+  if (await standing.details.locator('select[name="status"]').inputValue() === 'needs_answer') {
+    await standing.details.locator('select[name="status"]').selectOption('open');
+    await standing.details.locator('input[name="reason"]').fill('Reset workflow fixture');
+    await standing.details.getByRole('button', { name: 'Update status' }).click();
+    standing = await openTopicTools(page, 'standing');
+  }
   await standing.details.locator('select[name="status"]').selectOption('needs_answer');
   await standing.details.locator('input[name="reason"]').fill('Needs a reply');
   await standing.details.getByRole('button', { name: 'Update status' }).click();
   await expect(page.locator('[data-thread-status="needs_answer"]')).toBeVisible();
 
-  // Snooze: a personal reminder (no cross-user effect). ADR 0030 #27: one press
-  // per window, not a select plus a Save; the standing window comes back lit.
+  // Inbox visibility is personal. The same switch restores both tomorrow's
+  // timed hide and a persistent manual hide, without affecting another member.
   let watch = await openTopicTools(page, 'watch');
   // The desktop and mobile projects intentionally share one prepared database.
-  // If the earlier project left a window standing, pressing that lit pill again
-  // clears it by design. Normalize through the same UI so this journey proves
-  // both halves of the toggle and does not depend on project order.
-  const standingSnooze = watch.details.locator('.snooze-choice[aria-pressed="true"]');
-  if (await standingSnooze.count()) {
-    await expect(page.locator('.thread-byline')).toContainText('Quiet until');
-    await standingSnooze.click();
-    await expect(page.locator('.thread-byline')).not.toContainText('Quiet until');
+  // Normalize through the native visibility control if an earlier project left
+  // the topic hidden, so this journey does not depend on project order.
+  const visibility = watch.details.getByRole('switch', { name: 'Show in Inbox', exact: true });
+  if (await visibility.getAttribute('aria-checked') === 'false') {
+    await visibility.click();
     watch = await openTopicTools(page, 'watch');
   }
-  await watch.details.getByRole('button', { name: 'Tomorrow' }).click();
-  await expect(page.locator('.thread-byline')).toContainText('Quiet until');
+  await expect(watch.details.getByRole('switch', { name: 'Show in Inbox', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await watch.details.getByRole('button', { name: 'Til tomorrow', exact: true }).click();
   const watchAgain = await openTopicTools(page, 'watch');
-  await expect(watchAgain.details.getByRole('button', { name: 'Tomorrow' }))
-    .toHaveAttribute('aria-pressed', 'true');
+  await expect(watchAgain.details.getByRole('switch', { name: 'Show in Inbox', exact: true }))
+    .toHaveAttribute('aria-checked', 'false');
   await page.getByRole('button', { name: 'Close Topic tools' }).click();
 
   // Assignment: staff assigns the topic to @bob (board is opted into assignment).
@@ -654,10 +661,14 @@ test('mobile no-JS keeps navigation reachable and role decoration optional', asy
   const page = await context.newPage();
   try {
     await visit(page, '/');
-    await expect(page.locator('.nav-toggle')).toBeHidden();
+    await expect(page.locator('[data-nav-fallback]')).toHaveCount(1);
+    await expect(page.locator('[data-nav-toggle]')).toHaveCount(1);
+    await expect(page.locator('[data-nav-fallback]')).toBeHidden();
+    await expect(page.locator('[data-nav-toggle]')).toBeHidden();
     await expect(page.locator('#sidebar-nav')).toBeVisible();
 
-    await login(page, 'admin@retro.test');
+    await login(page, 'admin@retro.test', { dismissTour: false });
+    await expect(page.locator('.tour-popover')).toHaveCount(0);
     await visit(page, '/admin/roles');
     await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
     await expect(page.locator('[data-role-capability-count]')).toHaveCount(0);
@@ -853,6 +864,7 @@ test('phase 4 custom emoji: admin catalogue, Markdown render, and reaction', asy
   const suffix = info.project.name.replace(/[^a-z0-9_-]/gi, '').toLowerCase();
   const shortcode = `party_${suffix}`;
   const token = `:${shortcode}:`;
+  const reactionLabel = `Party ${suffix}`;
   const imagePath = `/emoji/${shortcode}.png`;
 
   await page.route(`**${imagePath}`, async (route) => {
@@ -899,8 +911,10 @@ test('phase 4 custom emoji: admin catalogue, Markdown render, and reaction', asy
   } else {
     await toolbar.locator('[data-post-menu] > summary').click();
   }
-  await toolbar.getByRole('button', { name: token }).click();
-  await expect(page.locator('.reaction-on').filter({ hasText: token })).toBeVisible();
+  await toolbar.getByRole('button', { name: reactionLabel, exact: true }).click();
+  const customReaction = emojiPost.locator(`.reactions form:has(input[name="emoji"][value="${token}"]) button.reaction-on`);
+  await expect(customReaction).toBeVisible();
+  await expect(customReaction).toHaveAttribute('aria-pressed', 'true');
   const postBody = page.locator('.post-body').first();
   const reactions = page.locator('.reactions').first();
   await postBody.scrollIntoViewIfNeeded();
@@ -1124,7 +1138,7 @@ test('admin API tokens: mint shows the secret once, then revoke', async ({ page 
 
   // The flag-gated discovery link appears on the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
-  await page.locator('[data-admin-tier]').getByRole('link', { name: 'Integrations', exact: true }).click();
+  await openAdminArea(page, 'Integrations');
   await page.waitForURL(/\/admin\/api-tokens$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Tokens, webhooks & sign-in' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('API tokens');
@@ -1201,7 +1215,7 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
   try {
     await login(page, 'admin@retro.test');
     await visit(page, '/admin');
-    await page.locator('[data-admin-tier]').getByRole('link', { name: 'Integrations', exact: true }).click();
+    await openAdminArea(page, 'Integrations');
     await page.waitForURL(/\/admin\/api-tokens$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Tokens, webhooks & sign-in' })).toBeVisible();
     await page.locator('.admin-tabs').getByRole('link', { name: 'Webhooks', exact: true }).click();
@@ -1517,7 +1531,7 @@ test('admin email delivery: dashboard, suppress/release, and a test-send', async
 
   // Notifications lands on the email tab (email flag defaults on).
   await visit(page, '/admin');
-  await page.locator('[data-admin-tier]').getByRole('link', { name: 'Notifications', exact: true }).click();
+  await openAdminArea(page, 'Notifications');
   await page.waitForURL(/\/admin\/email$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Email');

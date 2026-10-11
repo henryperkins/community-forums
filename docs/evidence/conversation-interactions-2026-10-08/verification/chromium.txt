@@ -1,0 +1,4 @@
+  ✓  52 [mobile] › conversation-reactions.spec.ts:263:5 › without JavaScript a reaction remains a native POST and refreshed pressed state (738ms)
+
+  1 skipped
+  51 passed (53.6s)

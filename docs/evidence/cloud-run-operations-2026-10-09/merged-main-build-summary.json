@@ -1,0 +1,71 @@
+{
+  "verified_at": "2026-10-09T12:32:52.166933+00:00",
+  "release_sha": "3e56aff5449478b189196323fb8c277decd22b4f",
+  "trigger_id": "1fa53b11-780b-495c-be33-fb666b70277e",
+  "region": "us-east4",
+  "expected_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-deploy@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "scan_limit": 25,
+  "reviewed_recipe_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "passed": true,
+  "listed_build_count": 5,
+  "build_id": "5b18d446-5d42-4039-9b1b-5854c01b02ad",
+  "status": "SUCCESS",
+  "create_time": "2026-10-09T12:30:13.449722Z",
+  "finish_time": "2026-10-09T12:32:30.744657Z",
+  "checks": {
+    "provider_build_id_valid": true,
+    "trigger_matches": true,
+    "exact_sha_matches": true,
+    "main_ref_matches": true,
+    "service_account_matches": true,
+    "target_substitutions_match": true,
+    "source_binding_matches": true,
+    "image_service_binding_matches": true,
+    "cron_and_monitor_update_binding_matches": true,
+    "ordered_step_ids_match": true,
+    "step_images_match": true,
+    "every_step_success": true,
+    "provider_success": true,
+    "terminal_times_valid": true
+  },
+  "steps": [
+    {
+      "id": "source",
+      "status": "SUCCESS",
+      "exit_code": null,
+      "exit_code_valid": true,
+      "passed": true
+    },
+    {
+      "id": "build",
+      "status": "SUCCESS",
+      "exit_code": null,
+      "exit_code_valid": true,
+      "passed": true
+    },
+    {
+      "id": "push",
+      "status": "SUCCESS",
+      "exit_code": null,
+      "exit_code_valid": true,
+      "passed": true
+    },
+    {
+      "id": "deploy-service",
+      "status": "SUCCESS",
+      "exit_code": null,
+      "exit_code_valid": true,
+      "passed": true
+    },
+    {
+      "id": "update-jobs",
+      "status": "SUCCESS",
+      "exit_code": null,
+      "exit_code_valid": true,
+      "passed": true
+    }
+  ],
+  "monitor_update_loop_present": true,
+  "matching_builds_in_window": 1,
+  "state": "verified"
+}

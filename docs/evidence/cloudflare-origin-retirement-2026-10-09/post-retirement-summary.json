@@ -1,0 +1,761 @@
+{
+  "capturedAt": "2026-10-09T05:33:07.549Z",
+  "browser": "Chromium",
+  "results": [
+    {
+      "route": "https://forum.candidary.online/",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "status": 200,
+      "redirectChain": [
+        {
+          "url": "https://forum.candidary.online/",
+          "status": 200,
+          "location": null
+        }
+      ],
+      "dom": {
+        "url": "https://forum.candidary.online/",
+        "readyState": "complete",
+        "viewportWidth": 1280,
+        "documentWidth": 1270,
+        "bodyWidth": 1270,
+        "horizontalOverflow": false,
+        "loginForm": {
+          "present": false,
+          "method": null,
+          "action": null,
+          "identifierPresent": false,
+          "passwordPresent": false,
+          "csrfPresent": false,
+          "submitPresent": false,
+          "nextValue": null
+        },
+        "loadedFonts": 6,
+        "scriptCount": 4,
+        "stylesheetCount": 3
+      },
+      "consoleErrors": 1,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "resourceType": "script",
+          "error": "csp"
+        }
+      ],
+      "httpFailures": [],
+      "resources": [
+        {
+          "url": "https://forum.candidary.online/assets/dist/imladris-style-bT2GVmLw.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-style-kNCnSn5Q.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-ead709125428cd4d.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/wysiwyg-composer-BRAFF38E.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/composer-d0210ad65bc6975b.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/passkeys-27f8b05555555872.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+          "status": 200,
+          "resourceType": "font"
+        }
+      ]
+    },
+    {
+      "route": "https://forum.candidary.online/login",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "status": 200,
+      "redirectChain": [
+        {
+          "url": "https://forum.candidary.online/login",
+          "status": 200,
+          "location": null
+        }
+      ],
+      "dom": {
+        "url": "https://forum.candidary.online/login",
+        "readyState": "complete",
+        "viewportWidth": 1280,
+        "documentWidth": 1270,
+        "bodyWidth": 1270,
+        "horizontalOverflow": false,
+        "loginForm": {
+          "present": true,
+          "method": "post",
+          "action": "/login",
+          "identifierPresent": true,
+          "passwordPresent": true,
+          "csrfPresent": true,
+          "submitPresent": true,
+          "nextValue": "/inbox"
+        },
+        "loadedFonts": 3,
+        "scriptCount": 4,
+        "stylesheetCount": 3
+      },
+      "consoleErrors": 1,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "resourceType": "script",
+          "error": "csp"
+        }
+      ],
+      "httpFailures": [],
+      "resources": [
+        {
+          "url": "https://forum.candidary.online/assets/dist/imladris-style-bT2GVmLw.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-style-kNCnSn5Q.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-ead709125428cd4d.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/wysiwyg-composer-BRAFF38E.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/composer-d0210ad65bc6975b.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/passkeys-27f8b05555555872.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+          "status": 200,
+          "resourceType": "font"
+        }
+      ]
+    },
+    {
+      "route": "https://boards.hperkins.blog/login?next=%2Fmessages",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "status": 200,
+      "redirectChain": [
+        {
+          "url": "https://boards.hperkins.blog/login?next=%2Fmessages",
+          "status": 301,
+          "location": "https://forum.candidary.online/login?next=%2Fmessages"
+        },
+        {
+          "url": "https://forum.candidary.online/login?next=%2Fmessages",
+          "status": 200,
+          "location": null
+        }
+      ],
+      "dom": {
+        "url": "https://forum.candidary.online/login?next=%2Fmessages",
+        "readyState": "complete",
+        "viewportWidth": 1280,
+        "documentWidth": 1270,
+        "bodyWidth": 1270,
+        "horizontalOverflow": false,
+        "loginForm": {
+          "present": true,
+          "method": "post",
+          "action": "/login",
+          "identifierPresent": true,
+          "passwordPresent": true,
+          "csrfPresent": true,
+          "submitPresent": true,
+          "nextValue": "/messages"
+        },
+        "loadedFonts": 3,
+        "scriptCount": 4,
+        "stylesheetCount": 3
+      },
+      "consoleErrors": 1,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "resourceType": "script",
+          "error": "csp"
+        }
+      ],
+      "httpFailures": [],
+      "resources": [
+        {
+          "url": "https://forum.candidary.online/assets/dist/imladris-style-bT2GVmLw.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-style-kNCnSn5Q.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-ead709125428cd4d.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/wysiwyg-composer-BRAFF38E.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/composer-d0210ad65bc6975b.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/passkeys-27f8b05555555872.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+          "status": 200,
+          "resourceType": "font"
+        }
+      ]
+    },
+    {
+      "route": "https://forum.candidary.online/",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "status": 200,
+      "redirectChain": [
+        {
+          "url": "https://forum.candidary.online/",
+          "status": 200,
+          "location": null
+        }
+      ],
+      "dom": {
+        "url": "https://forum.candidary.online/",
+        "readyState": "complete",
+        "viewportWidth": 375,
+        "documentWidth": 365,
+        "bodyWidth": 365,
+        "horizontalOverflow": false,
+        "loginForm": {
+          "present": false,
+          "method": null,
+          "action": null,
+          "identifierPresent": false,
+          "passwordPresent": false,
+          "csrfPresent": false,
+          "submitPresent": false,
+          "nextValue": null
+        },
+        "loadedFonts": 6,
+        "scriptCount": 4,
+        "stylesheetCount": 3
+      },
+      "consoleErrors": 1,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "resourceType": "script",
+          "error": "csp"
+        }
+      ],
+      "httpFailures": [],
+      "resources": [
+        {
+          "url": "https://forum.candidary.online/assets/dist/imladris-style-bT2GVmLw.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-style-kNCnSn5Q.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-ead709125428cd4d.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/wysiwyg-composer-BRAFF38E.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/composer-d0210ad65bc6975b.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/passkeys-27f8b05555555872.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+          "status": 200,
+          "resourceType": "font"
+        }
+      ]
+    },
+    {
+      "route": "https://forum.candidary.online/login",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "status": 200,
+      "redirectChain": [
+        {
+          "url": "https://forum.candidary.online/login",
+          "status": 200,
+          "location": null
+        }
+      ],
+      "dom": {
+        "url": "https://forum.candidary.online/login",
+        "readyState": "complete",
+        "viewportWidth": 375,
+        "documentWidth": 365,
+        "bodyWidth": 365,
+        "horizontalOverflow": false,
+        "loginForm": {
+          "present": true,
+          "method": "post",
+          "action": "/login",
+          "identifierPresent": true,
+          "passwordPresent": true,
+          "csrfPresent": true,
+          "submitPresent": true,
+          "nextValue": "/inbox"
+        },
+        "loadedFonts": 3,
+        "scriptCount": 4,
+        "stylesheetCount": 3
+      },
+      "consoleErrors": 1,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "resourceType": "script",
+          "error": "csp"
+        }
+      ],
+      "httpFailures": [],
+      "resources": [
+        {
+          "url": "https://forum.candidary.online/assets/dist/imladris-style-bT2GVmLw.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-style-kNCnSn5Q.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-ead709125428cd4d.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/wysiwyg-composer-BRAFF38E.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/composer-d0210ad65bc6975b.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/passkeys-27f8b05555555872.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+          "status": 200,
+          "resourceType": "font"
+        }
+      ]
+    },
+    {
+      "route": "https://boards.hperkins.blog/login?next=%2Fmessages",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "status": 200,
+      "redirectChain": [
+        {
+          "url": "https://boards.hperkins.blog/login?next=%2Fmessages",
+          "status": 301,
+          "location": "https://forum.candidary.online/login?next=%2Fmessages"
+        },
+        {
+          "url": "https://forum.candidary.online/login?next=%2Fmessages",
+          "status": 200,
+          "location": null
+        }
+      ],
+      "dom": {
+        "url": "https://forum.candidary.online/login?next=%2Fmessages",
+        "readyState": "complete",
+        "viewportWidth": 375,
+        "documentWidth": 365,
+        "bodyWidth": 365,
+        "horizontalOverflow": false,
+        "loginForm": {
+          "present": true,
+          "method": "post",
+          "action": "/login",
+          "identifierPresent": true,
+          "passwordPresent": true,
+          "csrfPresent": true,
+          "submitPresent": true,
+          "nextValue": "/messages"
+        },
+        "loadedFonts": 3,
+        "scriptCount": 4,
+        "stylesheetCount": 3
+      },
+      "consoleErrors": 1,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "resourceType": "script",
+          "error": "csp"
+        }
+      ],
+      "httpFailures": [],
+      "resources": [
+        {
+          "url": "https://forum.candidary.online/assets/dist/imladris-style-bT2GVmLw.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-style-kNCnSn5Q.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/app-ead709125428cd4d.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/wysiwyg-composer-BRAFF38E.css",
+          "status": 200,
+          "resourceType": "stylesheet"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/composer-d0210ad65bc6975b.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/passkeys-27f8b05555555872.js",
+          "status": 200,
+          "resourceType": "script"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+          "status": 200,
+          "resourceType": "font"
+        },
+        {
+          "url": "https://forum.candidary.online/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+          "status": 200,
+          "resourceType": "font"
+        }
+      ]
+    }
+  ],
+  "baselineCapturedAt": "2026-10-09T05:17:42.452Z",
+  "comparisons": [
+    {
+      "route": "https://forum.candidary.online/",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "changed": {},
+      "resourceSetUnchanged": true
+    },
+    {
+      "route": "https://forum.candidary.online/login",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "changed": {},
+      "resourceSetUnchanged": true
+    },
+    {
+      "route": "https://boards.hperkins.blog/login?next=%2Fmessages",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "changed": {},
+      "resourceSetUnchanged": true
+    },
+    {
+      "route": "https://forum.candidary.online/",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "changed": {},
+      "resourceSetUnchanged": true
+    },
+    {
+      "route": "https://forum.candidary.online/login",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "changed": {},
+      "resourceSetUnchanged": true
+    },
+    {
+      "route": "https://boards.hperkins.blog/login?next=%2Fmessages",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "changed": {},
+      "resourceSetUnchanged": true
+    }
+  ],
+  "visualComparison": [
+    {
+      "page": "home",
+      "viewportWidth": 1280,
+      "sanitizedScreenshotBytesUnchanged": true
+    },
+    {
+      "page": "login",
+      "viewportWidth": 1280,
+      "sanitizedScreenshotBytesUnchanged": true
+    },
+    {
+      "page": "redirect",
+      "viewportWidth": 1280,
+      "sanitizedScreenshotBytesUnchanged": true
+    },
+    {
+      "page": "home",
+      "viewportWidth": 375,
+      "sanitizedScreenshotBytesUnchanged": true
+    },
+    {
+      "page": "login",
+      "viewportWidth": 375,
+      "sanitizedScreenshotBytesUnchanged": true
+    },
+    {
+      "page": "redirect",
+      "viewportWidth": 375,
+      "sanitizedScreenshotBytesUnchanged": true
+    }
+  ],
+  "scope": "Read-only guest navigation; no login POST, account creation, uploads or external messages.",
+  "knownBaselineIssue": "Cloudflare Web Analytics beacon blocked by the existing strict CSP; one console error and one request failure per navigation, unchanged after retirement."
+}

@@ -1,0 +1,21 @@
+
+Running 12 tests using 1 worker
+
+(node:836374) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › create-menu-regressions.spec.ts:65:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary (7.6s)
+  ✓   2 [desktop] › create-menu-regressions.spec.ts:103:5 › leaving recipient suggestions restores Escape and cancels delayed reopening (2.5s)
+  ✓   3 [desktop] › create-menu-regressions.spec.ts:170:5 › uncancellable recipient results cannot reopen suggestions after blur (1.3s)
+  ✓   4 [desktop] › create-menu-regressions.spec.ts:202:5 › recipient suggestions remain selectable by pointer (4.0s)
+  ✓   5 [desktop] › create-menu-regressions.spec.ts:234:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members (7.7s)
+  ✓   6 [desktop] › create-menu-regressions.spec.ts:284:7 › native creation › creation on narrow reading panes stays a real destination with retained validation drafts (896ms)
+(node:839562) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   7 [mobile] › create-menu-regressions.spec.ts:65:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary (6.9s)
+  ✓   8 [mobile] › create-menu-regressions.spec.ts:103:5 › leaving recipient suggestions restores Escape and cancels delayed reopening (1.8s)
+  ✓   9 [mobile] › create-menu-regressions.spec.ts:170:5 › uncancellable recipient results cannot reopen suggestions after blur (1.1s)
+  ✓  10 [mobile] › create-menu-regressions.spec.ts:202:5 › recipient suggestions remain selectable by pointer (3.3s)
+  ✓  11 [mobile] › create-menu-regressions.spec.ts:234:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members (6.6s)
+  ✓  12 [mobile] › create-menu-regressions.spec.ts:284:7 › native creation › creation on narrow reading panes stays a real destination with retained validation drafts (833ms)
+
+  12 passed (46.6s)

@@ -1,0 +1,9 @@
+{
+  "received_at_utc": "2026-10-09T07:16:46.000Z",
+  "is_monitoring_sender": true,
+  "matches_forum_alert": true,
+  "matches_email_failure_alert": true,
+  "in_inbox": true,
+  "recipient_redacted": true,
+  "origin": "expected terminal failure from native SMTP delivery diagnostic"
+}

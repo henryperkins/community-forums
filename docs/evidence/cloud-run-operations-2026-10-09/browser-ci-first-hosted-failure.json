@@ -1,0 +1,143 @@
+{
+  "id": "f215672e-72c9-4a27-8dc2-96d80561fc6e",
+  "status": "FAILURE",
+  "createTime": "2026-10-09T07:33:55.206305545Z",
+  "startTime": "2026-10-09T07:33:55.713676441Z",
+  "finishTime": "2026-10-09T07:57:44.325222Z",
+  "source_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "control_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "manual_run": true,
+  "steps": [
+    {
+      "id": "source",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "browser-suites",
+      "status": "FAILURE",
+      "exitCode": 1
+    },
+    {
+      "id": "publish-evidence",
+      "status": "FAILURE",
+      "exitCode": 1
+    },
+    {
+      "id": "enforce-result",
+      "status": "QUEUED"
+    }
+  ],
+  "capture": {
+    "thread_view_passed": 34,
+    "broad_capture_passed": 162,
+    "broad_capture_failed": 14,
+    "broad_capture_skipped": 38,
+    "broad_capture_did_not_run": 14
+  },
+  "failures": [
+    {
+      "file": "gate-a.spec.ts",
+      "line": 858,
+      "projects": [
+        "desktop",
+        "mobile"
+      ],
+      "reason": "custom shortcode used instead of existing humanized reaction accessible name"
+    },
+    {
+      "file": "thread-intelligence.spec.ts",
+      "line": 384,
+      "projects": [
+        "desktop",
+        "mobile"
+      ],
+      "reason": "element screenshot framing reported clipped living brief"
+    },
+    {
+      "file": "unified-chrome.spec.ts",
+      "line": 363,
+      "projects": [
+        "desktop",
+        "mobile"
+      ],
+      "reason": "single-element count assertion resolves two responsive copies"
+    },
+    {
+      "file": "api-tokens.spec.ts",
+      "line": 82,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "desktop admin navigation locator does not open mobile native disclosure"
+    },
+    {
+      "file": "composer-toolbar-hardening.spec.ts",
+      "line": 179,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "touch-project hover action intercepted by attachment control"
+    },
+    {
+      "file": "gate-a.spec.ts",
+      "line": 246,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "hidden board rail selected before visible main content"
+    },
+    {
+      "file": "gate-a.spec.ts",
+      "line": 347,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "hidden board name selected before visible heading"
+    },
+    {
+      "file": "gate-a.spec.ts",
+      "line": 650,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "single hidden assertion resolves fallback and enhancement controls"
+    },
+    {
+      "file": "gate-a.spec.ts",
+      "line": 1128,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "desktop admin area locator on mobile"
+    },
+    {
+      "file": "gate-a.spec.ts",
+      "line": 1174,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "desktop admin area locator on mobile"
+    },
+    {
+      "file": "gate-a.spec.ts",
+      "line": 1521,
+      "projects": [
+        "mobile"
+      ],
+      "reason": "desktop admin area locator on mobile"
+    }
+  ],
+  "publication": {
+    "passed": false,
+    "http_status": 403,
+    "reason": "gcloud storage cp requested storage.objects.get, which restricted CI objectCreator does not grant",
+    "iam_widened": false
+  },
+  "independent_notifications_settings_executed": false,
+  "production_docker_uploads_executed": false,
+  "claim": "Failed hosted capture and publication; no complete hosted pass",
+  "limits": [
+    "Failure reasons identify observed assertions; baseline attribution is in separate reproduction receipts",
+    "Raw authenticated metadata, errors and logs are omitted"
+  ]
+}

@@ -54,7 +54,7 @@ final class AppInboxRemediationTest extends TestCase
             '.inbox-preview-attribution', '.inbox-preview-author', '.inbox-preview-tier',
             '.inbox-preview-lede', '.inbox-preview-count', '.inbox-preview-open',
             // The row and the bar.
-            '.thread-row-inbox .thread-meta-commends', '.inbox-view-bar', '.inbox-density', '.inbox-key-hint',
+            '.thread-row-inbox .thread-meta-commends', '.inbox-view-bar', '.inbox-menu', '.inbox-keyboard-help',
             '.inbox-select-all', '.inbox-thread-list', '.inbox-empty', '.inbox-empty-title',
         ] as $selector) {
             self::assertStringContainsString($selector, $css, $selector . ' has no rule in app.css');
@@ -104,24 +104,18 @@ final class AppInboxRemediationTest extends TestCase
         self::assertStringContainsString('--artifact-link: var(--river-200)', $tokens);
     }
 
-    /**
-     * The statement names the register the reader actually has — the same
-     * sentence the board index states from the same CSS class. It read "Rows
-     * follow your appearance preference", so two surfaces sharing one class
-     * were saying different things.
-     */
-    public function test_the_density_statement_names_the_register_in_force(): void
+    /** Density still applies to rows and is managed by the appearance surface. */
+    public function test_density_remains_a_saved_appearance_preference(): void
     {
         $reader = $this->makeUser(['username' => 'density_reader']);
         $this->actingAs($reader);
-
-        self::assertStringContainsString('Comfortable rows', $this->get('/inbox')->body());
+        self::assertStringContainsString('data-density="comfortable"', $this->get('/inbox')->body());
 
         (new UserPreferenceRepository($this->db))->merge((int) $reader['id'], ['density' => 'compact']);
-        $compact = $this->get('/inbox')->body();
-        self::assertStringContainsString('Compact rows', $compact);
-        self::assertStringContainsString('href="/settings/appearance"', $compact);
-        self::assertStringNotContainsString('Rows follow your appearance preference', $compact);
+        self::assertStringContainsString('data-density="compact"', $this->get('/inbox')->body());
+        $settings = $this->get('/settings/appearance');
+        $this->assertStatus(200, $settings);
+        self::assertMatchesRegularExpression('/name="density"[^>]*value="compact"[^>]*checked/', $settings->body());
     }
 
     /**

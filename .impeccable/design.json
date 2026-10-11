@@ -1,116 +1,295 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-13T00:00:00Z",
+  "generatedAt": "2026-10-06T17:03:08Z",
   "title": "Design System: RetroBoards — Imladris",
   "extensions": {
+    "navigationChrome": {
+      "memberRail": "Category boards, personal folders and saved feeds, with public presence in the footer. Folder and category board rows share active, unread and visibility state; direct messages and Inbox filters stay on their own surfaces.",
+      "memberDrawer": "At 860px and below, the enhanced drawer owns keyboard focus while the main page is covered and restores visible focus on dismissal or resize. Native fragment links and no-JavaScript navigation remain available.",
+      "operatorAreas": "Horizontal area links above 860px; a native disclosure headed by the current area at 860px and below. Both presentations use the same ordered, role- and flag-gated destinations."
+    },
     "colorMeta": {
       "green-700": {
         "role": "primary",
         "displayName": "Evergreen",
-        "canonical": "#2E4A3A",
-        "tonalRamp": ["#1C2E24", "#24402F", "#2E4A3A", "#3A5C49", "#4E7459", "#6E9479", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+        "tonalRamp": [
+          "#1C2E24",
+          "#24402F",
+          "#2E4A3A",
+          "#3A5C49",
+          "#4E7459",
+          "#6E9479",
+          "#BCD0BF",
+          "#DCE8DD",
+          "#EDF3ED"
+        ]
       },
       "gold-500": {
         "role": "secondary",
         "displayName": "Mallorn Gold",
-        "canonical": "#C29A44",
-        "tonalRamp": ["#6B5120", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
-      },
-      "gold-ink": {
-        "role": "secondary",
-        "displayName": "Gold Ink",
-        "canonical": "#7E5F22",
-        "tonalRamp": ["#6B5120", "#7E5F22", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+        "tonalRamp": [
+          "#6B5120",
+          "#9A7530",
+          "#B08A3A",
+          "#C29A44",
+          "#D2B062",
+          "#EAD9A8",
+          "#F4EBCF"
+        ]
       },
       "river-500": {
         "role": "tertiary",
         "displayName": "Bruinen Blue",
-        "canonical": "#3F6E89",
-        "tonalRamp": ["#1E3040", "#2C4D63", "#3F6E89", "#5E8CA6", "#BAD2DF", "#DCE9F0"]
+        "tonalRamp": [
+          "#1E3040",
+          "#2C4D63",
+          "#3F6E89",
+          "#5E8CA6",
+          "#BAD2DF",
+          "#DCE9F0"
+        ]
       },
-      "parchment-100": {
+      "parchment-50": {
         "role": "neutral",
         "displayName": "Parchment",
-        "canonical": "#F5EFE1",
-        "tonalRamp": ["#DED2B8", "#ECE4D2", "#F5EFE1", "#FAF6EC"]
+        "tonalRamp": [
+          "#DED2B8",
+          "#ECE4D2",
+          "#F5EFE1",
+          "#FAF6EC"
+        ]
       },
       "ink-900": {
         "role": "neutral",
-        "displayName": "Ink",
-        "canonical": "#1B231D",
-        "tonalRamp": ["#1B231D", "#313B33", "#515C52", "#5C685D", "#94A095"]
+        "displayName": "Warm Ink",
+        "tonalRamp": [
+          "#1B231D",
+          "#313B33",
+          "#515C52",
+          "#5C685D",
+          "#94A095"
+        ]
       },
       "mist-100": {
         "role": "neutral",
         "displayName": "Mist",
-        "canonical": "#EEF1ED",
-        "tonalRamp": ["#DCE3DD", "#EEF1ED"]
+        "tonalRamp": [
+          "#DCE3DD",
+          "#EEF1ED"
+        ]
       },
       "twilight-900": {
         "role": "neutral",
         "displayName": "Twilight",
-        "canonical": "#161D24",
-        "tonalRamp": ["#161D24", "#1E2730", "#283440"]
+        "tonalRamp": [
+          "#161D24",
+          "#1E2730",
+          "#283440"
+        ]
       },
       "leaf": {
         "role": "primary",
         "displayName": "Leaf",
-        "canonical": "#4E7459",
-        "tonalRamp": ["#1C2E24", "#24402F", "#3A5C49", "#4E7459", "#6E9479", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
-      },
-      "amber": {
-        "role": "secondary",
-        "displayName": "Amber",
-        "canonical": "#B7842F",
-        "tonalRamp": ["#6B5120", "#9A7530", "#B7842F", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
-      },
-      "rust": {
-        "role": "tertiary",
-        "displayName": "Rust",
-        "canonical": "#9C4A33",
-        "tonalRamp": ["#4A2318", "#6D3324", "#9C4A33", "#B96A53", "#D18F7B", "#E4B9AC", "#F2DCD5"]
+        "tonalRamp": [
+          "#1C2E24",
+          "#24402F",
+          "#2E4A3A",
+          "#3A5C49",
+          "#4E7459",
+          "#6E9479",
+          "#BCD0BF",
+          "#DCE8DD",
+          "#EDF3ED"
+        ]
       },
       "slate": {
         "role": "tertiary",
         "displayName": "Slate",
-        "canonical": "#3F6E89",
-        "tonalRamp": ["#1E3040", "#2C4D63", "#3F6E89", "#5E8CA6", "#BAD2DF", "#DCE9F0"]
+        "tonalRamp": [
+          "#1E3040",
+          "#2C4D63",
+          "#3F6E89",
+          "#5E8CA6",
+          "#BAD2DF",
+          "#DCE9F0"
+        ]
+      },
+      "amber": {
+        "role": "secondary",
+        "displayName": "Amber",
+        "tonalRamp": [
+          "oklch(15% 0.11691 76.30)",
+          "oklch(25% 0.11691 76.30)",
+          "oklch(37% 0.11691 76.30)",
+          "oklch(49% 0.11691 76.30)",
+          "oklch(61% 0.11691 76.30)",
+          "oklch(73% 0.11691 76.30)",
+          "oklch(85% 0.11691 76.30)",
+          "oklch(95% 0.11691 76.30)"
+        ]
+      },
+      "rust": {
+        "role": "tertiary",
+        "displayName": "Rust",
+        "tonalRamp": [
+          "oklch(15% 0.11543 36.57)",
+          "oklch(25% 0.11543 36.57)",
+          "oklch(37% 0.11543 36.57)",
+          "oklch(49% 0.11543 36.57)",
+          "oklch(61% 0.11543 36.57)",
+          "oklch(73% 0.11543 36.57)",
+          "oklch(85% 0.11543 36.57)",
+          "oklch(95% 0.11543 36.57)"
+        ]
       }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display — Cormorant Garamond", "purpose": "Page titles, thread and post titles, profile names, the wordmark. Medium weight, never bold." },
-      "headline": { "displayName": "Headline — Cormorant Garamond", "purpose": "Section headings (h2) and the inbox heading." },
-      "title": { "displayName": "Title — Cormorant Garamond", "purpose": "Sub-headings (h3) and board names." },
-      "body": { "displayName": "Body — EB Garamond", "purpose": "Post prose and all reading copy at 17px/1.62, measure ≈ 64ch." },
-      "label": { "displayName": "Label — Marcellus", "purpose": "Lapidary roman caps for eyebrows, chips, meta lines. Button labels use the same family at 0.9rem and are NOT uppercased." },
-      "mono": { "displayName": "Mono — JetBrains Mono", "purpose": "Anything countable: timestamps, reply counts, regard, routes, breadcrumbs. Always tabular numerals." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles (h1); medium-weight display serif."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings (h2). The inbox has its own 1.85rem heading token."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Subheadings (h3) and board names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Post prose at 1.62 leading. Reading measures are documented separately."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Tracked Marcellus eyebrows; case and leading depend on the component."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Small timestamps and counts; numeric columns use tabular numerals."
+      },
+      "body-ui": {
+        "displayName": "Body Ui",
+        "purpose": "Shell text and ordinary fields at 1.6 leading."
+      },
+      "button-label": {
+        "displayName": "Button Label",
+        "purpose": "Sentence-case action labels at 0.9rem and 0.03em tracking."
+      },
+      "chip-label": {
+        "displayName": "Chip Label",
+        "purpose": "The existing 0.62rem chip default. This legacy value is below the new small-label scale floor."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Supporting body copy from --text-sm."
+      },
+      "fine": {
+        "displayName": "Fine",
+        "purpose": "Helper prose from --text-fine."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Structural metadata from --text-meta."
+      },
+      "chip": {
+        "displayName": "Chip",
+        "purpose": "The 0.7rem --text-chip floor for new small labels; older overrides remain."
+      },
+      "tab-label": {
+        "displayName": "Tab Label",
+        "purpose": "Ruled section navigation at the regular Marcellus weight."
+      },
+      "avatar-label": {
+        "displayName": "Avatar Label",
+        "purpose": "The default monogram fallback; frame size varies by context."
+      }
     },
     "shadows": [
-      { "name": "shadow-xs", "value": "0 1px 2px rgba(27,35,29,.06)", "purpose": "The resting state of every card, thread row, post and button. Barely there." },
-      { "name": "shadow-sm", "value": "0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)", "purpose": "Selected row, accepted answer, switch knob." },
-      { "name": "shadow-md", "value": "0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)", "purpose": "Hover lift on an interactive row." },
-      { "name": "shadow-lg", "value": "0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)", "purpose": "Popovers and menus." },
-      { "name": "shadow-xl", "value": "0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08)", "purpose": "Modal dialogs only." },
-      { "name": "shadow-inset", "value": "inset 0 1px 2px rgba(27,35,29,.07)", "purpose": "Fields and tracks — something pressed into the page." },
-      { "name": "gilt", "value": "inset 0 0 0 1px rgba(194,154,68,.38)", "purpose": "A thin gold inner ring marking a precious avatar: OP, accepted answer, profile, leaderboard top three." },
-      { "name": "focus-ring", "value": "0 0 0 3px rgba(194,154,68,.7)", "purpose": "The gold focus halo, layered over a 2px evergreen outline." }
+      {
+        "name": "shadow-xs",
+        "value": "0 1px 2px rgba(27,35,29,.06)",
+        "purpose": "Shallow foundation elevation, retained by ordinary cards, buttons and posts; ruled application topic rows use no shadow."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)",
+        "purpose": "Selected row, accepted answer, switch knob."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)",
+        "purpose": "Available foundation hover elevation; the application topic list overrides it with a tonal wash."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)",
+        "purpose": "Popovers and menus."
+      },
+      {
+        "name": "shadow-xl",
+        "value": "0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08)",
+        "purpose": "Modal dialogs only."
+      },
+      {
+        "name": "shadow-inset",
+        "value": "inset 0 1px 2px rgba(27,35,29,.07)",
+        "purpose": "Fields and tracks — something pressed into the page."
+      },
+      {
+        "name": "gilt",
+        "value": "inset 0 0 0 1px rgba(194,154,68,.38)",
+        "purpose": "A thin gold inner ring marking a precious avatar: OP, accepted answer, profile, leaderboard top three."
+      },
+      {
+        "name": "focus-ring",
+        "value": "var(--shadow-inset), 0 0 0 3px var(--focus-ring)",
+        "purpose": "The ordinary input focus halo over its inset, paired with a 2px semantic action-colour outline. The gold halo flips in twilight."
+      }
     ],
     "motion": [
-      { "name": "ease-calm", "value": "cubic-bezier(.22,.61,.36,1)", "purpose": "The only easing in the system. Nothing bounces in Rivendell." },
-      { "name": "dur-fast", "value": "140ms", "purpose": "Hover and press feedback on rows, buttons and tabs." },
-      { "name": "dur-base", "value": "240ms", "purpose": "State transitions with travel — switches, drawers, disclosure." },
-      { "name": "dur-slow", "value": "420ms", "purpose": "Reserved for the largest transitions. All three collapse to 0.001ms under prefers-reduced-motion." }
+      {
+        "name": "ease-calm",
+        "value": "cubic-bezier(.22,.61,.36,1)",
+        "purpose": "The shared calm easing for state transitions. Nothing bounces in Rivendell."
+      },
+      {
+        "name": "dur-fast",
+        "value": "140ms",
+        "purpose": "Hover and press feedback on rows, buttons and tabs."
+      },
+      {
+        "name": "dur-base",
+        "value": "240ms",
+        "purpose": "State transitions with travel — switches, drawers, disclosure."
+      },
+      {
+        "name": "dur-slow",
+        "value": "420ms",
+        "purpose": "Reserved for the largest transitions. All three collapse to 0.001ms under prefers-reduced-motion."
+      }
     ],
     "breakpoints": [
-      { "name": "shell", "value": "860px" },
-      { "name": "admin-chrome", "value": "900px" },
-      { "name": "pane-density", "value": "760px" }
-    ],
-    "layoutRails": [
-      { "name": "topbar-h", "value": "62px" },
-      { "name": "sidebar-w", "value": "272px" },
-      { "name": "list-w", "value": "410px" },
-      { "name": "maxw", "value": "1280px" }
+      {
+        "name": "shell",
+        "value": "860px"
+      },
+      {
+        "name": "chrome",
+        "value": "900px"
+      },
+      {
+        "name": "pane-density",
+        "value": "760px"
+      },
+      {
+        "name": "messages-details-column-board-rail-closed",
+        "value": "1400px"
+      },
+      {
+        "name": "messages-details-column-board-rail-open-unconfirmed",
+        "value": "1700px"
+      }
     ]
   },
   "components": [
@@ -118,70 +297,86 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The evergreen action button. Marcellus label, sentence case, never uppercased.",
-      "html": "<button class=\"ds-btn-primary\">Add your counsel</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: var(--brand, #2E4A3A); color: var(--accent-contrast, #FAF6EC); border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .9rem; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background 140ms cubic-bezier(.22,.61,.36,1), box-shadow 140ms cubic-bezier(.22,.61,.36,1), transform 140ms cubic-bezier(.22,.61,.36,1); } .ds-btn-primary:hover { background: var(--brand-hover, #24402F); } .ds-btn-primary:active { transform: translateY(0.5px) scale(.995); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)), 0 0 0 3px rgba(194,154,68,.7); }"
+      "description": "The application action: evergreen by day, gold in twilight, with a hover that deepens its own fill.",
+      "html": "<button type=\"button\" class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary { display: inline-block; background: var(--accent, #2E4A3A); color: var(--accent-contrast, #FAF6EC); border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-primary:not(:disabled):hover { background: color-mix(in srgb, var(--accent, #2E4A3A) 82%, #000); } .ds-btn-primary:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition-duration: .001ms !important; } }"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "The parchment-outline sibling. Same box as primary so rows never shift.",
-      "html": "<button class=\"ds-btn-secondary\">Preview</button>",
-      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: var(--surface-raised, #FAF6EC); color: var(--text, #1B231D); border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .9rem; letter-spacing: .03em; cursor: pointer; transition: background 140ms cubic-bezier(.22,.61,.36,1), border-color 140ms cubic-bezier(.22,.61,.36,1); } .ds-btn-secondary:hover { background: var(--surface-sunken, #ECE4D2); border-color: var(--border-strong, #94A095); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; }"
+      "description": "The quiet outlined companion, following raised and sunken semantic surfaces.",
+      "html": "<button type=\"button\" class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-block; background: var(--surface-raised, #FAF6EC); color: var(--text, #1B231D); border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: none; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-secondary:not(:disabled):hover { background: var(--surface-sunken, #ECE4D2); border-color: var(--border-strong, #94A095); } .ds-btn-secondary:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-secondary { transition-duration: .001ms !important; } }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "A quiet action occupying the same box as its outlined siblings.",
+      "html": "<button type=\"button\" class=\"ds-btn-ghost\">View details</button>",
+      "css": ".ds-btn-ghost { display: inline-block; background: transparent; color: var(--text-body, #313B33); border: 1.5px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: none; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-ghost:not(:disabled):hover { background: var(--surface-sunken, #ECE4D2); } .ds-btn-ghost:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-ghost:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-ghost { transition-duration: .001ms !important; } }"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "The existing gold action variant, reserved for a single established moment of emphasis.",
+      "html": "<button type=\"button\" class=\"ds-btn-accent\">Post topic</button>",
+      "css": ".ds-btn-accent { display: inline-block; background: var(--gold-500, #C29A44); color: var(--ink-900, #1B231D); border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-accent:not(:disabled):hover { background: var(--gold-600, #B08A3A); } .ds-btn-accent:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-accent:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-accent:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-accent { transition-duration: .001ms !important; } }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "The existing .btn.danger treatment: a fixed rust fill and white ink, including twilight.",
+      "html": "<button type=\"button\" class=\"ds-btn-danger\">Delete topic</button>",
+      "css": ".ds-btn-danger { display: inline-block; background: var(--rust, #9C4A33); color: #FFFFFF; border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-danger:not(:disabled):hover { background: color-mix(in srgb, var(--rust, #9C4A33) 82%, #000); } .ds-btn-danger:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-danger:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-danger:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-danger { transition-duration: .001ms !important; } }"
     },
     {
       "name": "Status Chip",
       "kind": "chip",
       "refersTo": "chip-status",
-      "description": "The status token. Always a wash plus a matching 1px border, and always a word beside the colour.",
-      "html": "<span class=\"ds-chip ds-chip-solved\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><path d=\"M22 4 12 14.01l-3-3\"/></svg>Solved</span><span class=\"ds-chip ds-chip-needs\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3\"/><path d=\"M12 17h.01\"/></svg>Needs answer</span>",
-      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; line-height: 1; padding: 3px 9px; border-radius: 999px; border: 1px solid; vertical-align: middle; } .ds-chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-chip-solved { color: var(--on-done, #24402F); background: var(--surface-done, #EDF3ED); border-color: var(--green-200, #BCD0BF); } .ds-chip-needs { color: var(--on-review, #7E5F22); background: var(--surface-review, #F4EBCF); border-color: var(--gold-200, #EAD9A8); margin-left: 6px; }"
+      "description": "The solved status: a word plus its semantic wash and ink; the legacy default remains 0.62rem.",
+      "html": "<span class=\"ds-chip\">Solved</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .62rem; font-weight: 400; line-height: 1; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--radius-pill, 999px); color: var(--on-done, #24402F); background: var(--surface-done, #EDF3ED); border: 1px solid var(--green-200, #BCD0BF); vertical-align: middle; }"
     },
     {
       "name": "Text Input",
       "kind": "input",
       "refersTo": "input",
-      "description": "Serif field on raised parchment, with the gold focus halo over an evergreen outline.",
-      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Topic title</span><input class=\"ds-input\" type=\"text\" placeholder=\"What would you set before the council?\"></label>",
-      "css": ".ds-field { display: block; } .ds-field-label { display: block; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); letter-spacing: .02em; font-size: .82rem; color: var(--text-muted, #515C52); margin-bottom: 5px; } .ds-input { width: 100%; padding: 9px 11px; font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: 1.0625rem; color: var(--text, #1B231D); background: var(--surface-raised, #FAF6EC); border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)); } .ds-input::placeholder { color: var(--text-faint, #5C685D); } .ds-input:focus { border-color: var(--gold-400, #D2B062); outline: 2px solid var(--accent, #2E4A3A); outline-offset: 1px; box-shadow: inset 0 1px 2px rgba(27,35,29,.07), inset 0 0 0 1px var(--gold-200, #EAD9A8), 0 0 0 3px rgba(194,154,68,.7); }"
+      "description": "The ordinary field frame, preserving the application border-box sizing and inset under keyboard focus. Engraved fields are a separate override.",
+      "html": "<input class=\"ds-input\" type=\"text\" aria-label=\"Topic title\" placeholder=\"Topic title\">",
+      "css": ".ds-input { box-sizing: border-box; width: 100%; padding: 9px 11px; border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: var(--text-size-body, 1.0625rem); line-height: 1.6; color: var(--text, #1B231D); background: var(--surface-raised, #FAF6EC); box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)); } .ds-input::placeholder { color: var(--text-faint, #5C685D); } .ds-input:focus { border-color: var(--gold-400, #D2B062); outline: 2px solid var(--accent, #2E4A3A); outline-offset: 1px; box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)), 0 0 0 3px var(--focus-ring, rgba(194,154,68,.7)); }"
     },
     {
-      "name": "Filter Tabs",
+      "name": "Ruled Section Navigation",
       "kind": "nav",
-      "refersTo": "tab-active",
-      "description": "Marcellus pills for inbox filters. The active tab fills evergreen; the rest stay transparent until hover.",
-      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-tab-active\">All</button><button class=\"ds-tab\">Unread</button><button class=\"ds-tab\">Starred</button><button class=\"ds-tab\">Mine</button></nav>",
-      "css": ".ds-tabs { display: inline-flex; gap: 6px; } .ds-tab { flex: none; white-space: nowrap; border-radius: 999px; padding: 6px 13px; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted, #515C52); border: 1px solid transparent; background: transparent; cursor: pointer; } .ds-tab:hover { background: var(--surface-sunken, #ECE4D2); } .ds-tab:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-tab-active { background: var(--brand, #2E4A3A); color: var(--parchment-50, #FAF6EC); font-weight: 500; border-color: var(--brand, #2E4A3A); }"
+      "refersTo": "tab-ruled-active",
+      "description": "Generic application ruled tabs: regular Marcellus, a gold active underline and inherited action-colour link ink; scoped pages can override that compatibility treatment.",
+      "html": "<nav class=\"ds-tabs\" aria-label=\"Community sections\"><a class=\"ds-tab ds-tab-active\" href=\"#boards\" aria-current=\"page\">Boards</a><a class=\"ds-tab\" href=\"#tags\">Tags</a><a class=\"ds-tab\" href=\"#notifications\">Notifications</a><a class=\"ds-tab\" href=\"#connections\">Connections</a></nav>",
+      "css": ".ds-tabs { display: flex; flex-wrap: wrap; gap: 4px; box-shadow: inset 0 -1px 0 var(--border-hair, #DED2B8); } .ds-tab { font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .8rem; font-weight: 400; letter-spacing: .03em; color: var(--accent, #2E4A3A); padding: 8px 14px; text-decoration: none; } .ds-tab:hover { color: var(--accent, #2E4A3A); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--gold-500, #C29A44); } .ds-tab-active { color: var(--accent, #2E4A3A); box-shadow: inset 0 -2px 0 var(--accent-2, #C29A44); } .ds-tab:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; }"
     },
     {
-      "name": "Monogram Avatar",
+      "name": "Application Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The generic application card uses the compatibility surface and preference-aware 7px radius, retaining the foundation shadow.",
+      "html": "<section class=\"ds-card\"><h3 class=\"ds-card-title\">General Discussion</h3><p class=\"ds-card-copy\">Talk about anything here.</p></section>",
+      "css": ".ds-card { background: var(--surface, #FAF6EC); color: var(--text, #1B231D); border: 1px solid var(--border, #DED2B8); border-radius: var(--radius, 7px); padding: 18px; max-width: 100%; overflow-x: auto; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); } .ds-card-title { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: 1.375rem; font-weight: 500; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 .4em; } .ds-card-copy { font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: var(--text-size-body, 1.0625rem); line-height: 1.6; margin: 0; }"
+    },
+    {
+      "name": "Application Topic Row",
       "kind": "custom",
-      "refersTo": "monogram",
-      "description": "A tinted ground with legible dark ink, rotating through ten variants. The gilt ring marks a precious avatar; the leaf dot marks presence.",
-      "html": "<span class=\"ds-avatar-wrap\"><span class=\"ds-monogram ds-monogram-gilt\">EL</span><span class=\"ds-presence-dot\"></span></span><span class=\"ds-monogram ds-mono-river\">AR</span><span class=\"ds-monogram ds-mono-gold\">GL</span>",
-      "css": ".ds-avatar-wrap { position: relative; display: inline-flex; } .ds-monogram { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; font-family: var(--font-label, \"Marcellus\", Optima, \"Palatino Linotype\", Palatino, serif); font-weight: 500; font-size: .8rem; letter-spacing: .02em; color: var(--green-800, #24402F); background: var(--green-100, #DCE8DD); flex: 0 0 auto; margin-right: 8px; } .ds-monogram-gilt { box-shadow: inset 0 0 0 1px rgba(194,154,68,.38); } .ds-mono-river { color: var(--river-700, #2C4D63); background: var(--river-100, #DCE9F0); } .ds-mono-gold { color: var(--gold-700, #9A7530); background: var(--gold-100, #F4EBCF); } .ds-presence-dot { position: absolute; right: 7px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; background: var(--presence, #4E7459); box-shadow: 0 0 0 2px var(--surface-raised, #FAF6EC); }"
-    },
-    {
-      "name": "Thread Row",
-      "kind": "card",
       "refersTo": "thread-row",
-      "description": "The signature object: a parchment card with a status left-rule, a gold unread dot with a translucent halo, and a Cormorant title. Lifts 1px on hover.",
-      "html": "<article class=\"ds-thread-row ds-thread-solved\"><span class=\"ds-monogram\">EL</span><div class=\"ds-thread-main\"><div class=\"ds-thread-byline\"><a class=\"ds-thread-author\" href=\"#\">Elrond</a><span class=\"ds-chip ds-chip-solved\">Solved</span></div><a class=\"ds-thread-title\" href=\"#\">On the disposition of the Ring</a><p class=\"ds-thread-snippet\">The council has weighed every road out of Rivendell, and one remains that none of us would choose freely.</p><div class=\"ds-thread-meta\"><a class=\"ds-thread-board\" href=\"#\">#counsel</a><span>14 counsels</span><time>2h ago</time></div></div><span class=\"ds-unread-dot\"></span></article>",
-      "css": ".ds-thread-row { position: relative; display: flex; gap: 13px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--border-hair, #DED2B8); border-radius: var(--radius-lg, 12px); background: var(--surface-raised, #FAF6EC); box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); overflow: hidden; transition: box-shadow 140ms cubic-bezier(.22,.61,.36,1), border-color 140ms cubic-bezier(.22,.61,.36,1), transform 140ms cubic-bezier(.22,.61,.36,1); } .ds-thread-row::before { content: \"\"; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; } .ds-thread-solved::before { background: var(--leaf, #4E7459); } .ds-thread-row:hover { box-shadow: var(--shadow-md, 0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)); border-color: var(--green-200, #BCD0BF); transform: translateY(-1px); } .ds-thread-main { min-width: 0; flex: 1; } .ds-thread-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; } .ds-thread-author { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, serif); font-weight: 600; font-size: 1.02rem; line-height: 1.05; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-thread-title { display: block; font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, serif); font-weight: 500; font-size: 1.2rem; line-height: 1.2; color: var(--text-strong, #1B231D); letter-spacing: -.01em; text-decoration: none; } .ds-thread-title:hover { color: var(--brand, #2E4A3A); } .ds-thread-snippet { color: var(--text-muted, #515C52); margin: 5px 0 0; font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", Palatino, Georgia, serif); font-size: .98rem; line-height: 1.5; } .ds-thread-meta { font-family: var(--font-label, \"Marcellus\", Optima, Palatino, serif); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint, #5C685D); margin-top: 7px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; } .ds-thread-board { color: var(--gold-ink, #7E5F22); text-decoration: none; } .ds-unread-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2, #C29A44); flex: 0 0 auto; align-self: center; box-shadow: 0 0 0 2px rgba(194,154,68,.22); }"
-    },
-    {
-      "name": "Accepted Answer Post",
-      "kind": "card",
-      "refersTo": "post-accepted",
-      "description": "A post marked as the answer: the done wash, an evergreen left border, a gilt-ringed avatar, and a lapidary flag.",
-      "html": "<article class=\"ds-post ds-post-accepted\"><div class=\"ds-post-avatar\"><span class=\"ds-monogram ds-monogram-gilt\">GA</span></div><div class=\"ds-post-main\"><p class=\"ds-accepted-flag\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><path d=\"M22 4 12 14.01l-3-3\"/></svg>Marked as the answer</p><div class=\"ds-post-head\"><a class=\"ds-post-author\" href=\"#\">Gandalf</a><time class=\"ds-post-time\">3h ago</time></div><div class=\"ds-post-body\"><p>The road goes ever on, but not every road need be walked by the same feet.</p><blockquote>Testimony never outranks the work.</blockquote></div></div></article>",
-      "css": ".ds-post { display: flex; gap: 16px; background: var(--surface-raised, #FAF6EC); border: 1px solid var(--border-hair, #DED2B8); border-radius: var(--radius-lg, 12px); padding: 18px 20px; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); } .ds-post-accepted { border: 1px solid var(--green-200, #BCD0BF); border-left: 3px solid var(--success, #4E7459); background: var(--surface-done, #EDF3ED); box-shadow: var(--shadow-sm, 0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)); } .ds-post-avatar { flex: 0 0 auto; } .ds-post-avatar .ds-monogram { width: 56px; height: 56px; font-size: 1.25rem; margin-right: 0; } .ds-post-main { min-width: 0; flex: 1; } .ds-accepted-flag { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; font-family: var(--font-label, \"Marcellus\", Optima, Palatino, serif); text-transform: uppercase; letter-spacing: .09em; font-size: .64rem; color: var(--on-done, #24402F); } .ds-accepted-flag svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; } .ds-post-head { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; } .ds-post-author { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, serif); font-weight: 600; font-size: 1.2rem; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-post-time { font-family: var(--font-mono, \"JetBrains Mono\", ui-monospace, Menlo, Consolas, monospace); font-size: .72rem; color: var(--text-faint, #5C685D); margin-left: auto; } .ds-post-body { font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", Palatino, Georgia, serif); font-size: 1.0625rem; line-height: 1.62; color: var(--text-body, #313B33); } .ds-post-body > :first-child { margin-top: 0; } .ds-post-body > :last-child { margin-bottom: 0; } .ds-post-body blockquote { margin: 8px 0; padding: 4px 14px; border-left: 2px solid var(--rule-gold, #C29A44); color: var(--text-strong, #1B231D); font-style: italic; }"
+      "description": "The comfortable default presentation: a flat ruled row, status rule, unread marker, and tonal hover. Board and inbox have separate presentations.",
+      "html": "<article class=\"ds-row\"><span class=\"ds-row-avatar\" aria-hidden=\"true\">GA</span><div class=\"ds-row-main\"><div class=\"ds-row-byline\"><a class=\"ds-row-author\" href=\"#member\">Gandalf</a><span class=\"ds-row-chip\">Solved</span></div><a class=\"ds-row-title\" href=\"#topic\">A road worth keeping</a><p class=\"ds-row-snippet\">A conversation the council can return to.</p><div class=\"ds-row-meta\"><a class=\"ds-row-board\" href=\"#board\">General Discussion</a> <span>6 replies</span> <time datetime=\"2026-10-06T09:00:00Z\">3h ago</time></div></div><span class=\"ds-row-unread\" role=\"img\" aria-label=\"Unread\"></span></article>",
+      "css": ".ds-row { position: relative; display: flex; gap: 13px; align-items: flex-start; padding: 14px 16px; border: 0; border-radius: var(--radius-lg, 12px); background: none; box-shadow: none; overflow: hidden; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-row::before { content: \"\"; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--leaf, #4E7459); } .ds-row:hover { background: var(--surface-sunken, #ECE4D2); transform: none; } .ds-row-main { min-width: 0; flex: 1; } .ds-row-avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .92rem; font-weight: 500; background: var(--green-100, #DCE8DD); color: var(--green-800, #24402F); } .ds-row-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; } .ds-row-author { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: 1.02rem; font-weight: 600; line-height: 1.05; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-row-author:hover { color: var(--brand, #2E4A3A); } .ds-row-chip { font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .62rem; line-height: 1; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--radius-pill, 999px); border: 1px solid var(--green-200, #BCD0BF); background: var(--surface-done, #EDF3ED); color: var(--on-done, #24402F); } .ds-row-title { display: block; font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: 1.2rem; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-row-title:hover { color: var(--brand, #2E4A3A); } .ds-row-snippet { font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: .98rem; line-height: 1.5; color: var(--text-muted, #515C52); margin: 5px 0 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } .ds-row-meta { display: block; margin-top: 6px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint, #5C685D); } .ds-row-board { color: var(--gold-ink, #7E5F22); text-decoration: underline; text-underline-offset: 2px; } .ds-row-unread { flex: 0 0 auto; align-self: center; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2, #C29A44); box-shadow: 0 0 0 2px rgba(194,154,68,.22); } .ds-row a:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-row { transition-duration: .001ms !important; } }"
     }
   ],
   "narrative": {
     "northStar": "The Councillor's Hall",
-    "overview": "This is a room where people keep counsel together and the record survives the conversation. Warm stone and aged parchment, evergreen boughs at the windows, one thread of mallorn gold catching the candlelight — and, underneath the ceremony, a working table. The register is Tolkien-adjacent without cosplay: considered, literary, quietly premium, and never a toy social app. Where most forum software looks cheap, Imladris is dressed.\n\nGravity is the point. The whole product is set in serif — four families, no sans anywhere — because a conversation worth keeping for years deserves the typography of a book rather than a chat client. Colour is warm and low-chroma; nothing is neon; the single gold accent is an indicator, never a field, apart from the DM Own-Letter Gold-Wash Exception below. Motion is calm and short. Nothing bounces in Rivendell.\n\nCeremony is earned, not applied. The hall is dignified, but the table is plain: the everyday controls a member touches a hundred times a day are quiet, legible, and unornamented. Ornament belongs to colophons and footnotes — the marks of esteem, the gilt ring on an accepted answer, the eight-pointed star watermark behind a topic header — not to functional chrome.",
+    "overview": "This is a room where people keep counsel together and the record survives the conversation. Warm stone and aged parchment, evergreen boughs at the windows, one thread of mallorn gold catching the candlelight — and, underneath the ceremony, a working table. The register is Tolkien-adjacent without cosplay: considered, literary, quietly premium, and never a toy social app. Where most forum software looks cheap, Imladris is dressed.\n\nGravity is the point. The whole product is set in serif — four families, no sans anywhere — because a conversation worth keeping for years deserves the typography of a book rather than a chat client. Colour is warm and low-chroma; nothing is neon; the single gold accent is an *indicator*, never a field, apart from the DM Own-Letter Gold-Wash Exception below. Motion is calm and short. Nothing bounces in Rivendell.\n\nCeremony is earned, not applied. The hall is dignified, but the table is plain: the everyday controls a member touches a hundred times a day are quiet, legible, and unornamented. Ornament belongs to colophons and footnotes — the marks of esteem, the gilt ring on an accepted answer, the eight-pointed star watermark behind a topic header — not to functional chrome.",
     "keyCharacteristics": [
       "All-serif voice: display, lapidary caps, book prose, and tabular mono — four families, zero sans.",
       "Parchment ground, evergreen brand, one mallorn-gold accent used sparingly.",
@@ -191,40 +386,89 @@
       "Restrained radii — nothing rounder than 12px except tokens, which are pills."
     ],
     "rules": [
-      { "name": "The One Gold Rule", "body": "Mallorn gold is an indicator, never a field. It may be a dot, a rule, a ring, a star, a hairline, or a halo — it may not be the background of anything larger than a chip, apart from the DM Own-Letter Gold-Wash Exception below. Audit test: outside that exception, if a gold region on screen is bigger than a status chip, it is wrong.", "section": "colors" },
-      { "name": "The DM Own-Letter Gold-Wash Exception", "body": "In the DM register, \"mine\" letters wear the gold wash; nothing else on the surface may. This approved exception to the One Gold Rule is limited to the viewer's own message plates. Existing controls retain their established action tokens; the exception grants no other surface a gold wash.", "section": "colors" },
-      { "name": "The Word-and-Colour Rule", "body": "Status is never carried by colour alone. Every state that has a hue also has a word: Solved, Needs answer, Decision, Locked, Archived. Audit test: cover the screen's colour and the state is still readable.", "section": "colors" },
-      { "name": "The Semantic-Only Rule", "body": "Application code paints from semantic tokens, never from primitives. The twilight register is a re-pointing of semantics; anything painted from a primitive fails to flip.", "section": "colors" },
-      { "name": "The All-Serif Rule", "body": "There is no sans-serif in this product. Four families, three serif and one mono for data. A sans-serif anywhere is an intrusion from another design system.", "section": "typography" },
-      { "name": "The Lapidary Caps Rule", "body": "The only uppercase text is Marcellus, tracked at 0.08–0.16em, at label sizes. It is a typographic device, not emphasis and not shouting. Sentence case everywhere else, including buttons.", "section": "typography" },
-      { "name": "The Tabular Rule", "body": "Anything countable is set in JetBrains Mono with tabular numerals, so columns align and a changing count does not reflow its row.", "section": "typography" },
-      { "name": "The Real-URL Rule", "body": "Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view.", "section": "layout" },
-      { "name": "The Two-Breakpoint Rule", "body": "860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Together they carry 39 of the 64 width queries in app.css, which holds nineteen distinct max-widths in all (380–1699px, counted 2026-09-25; the generated imladris.css uses ten of them). The other sixteen are one- or two-use thresholds — that sprawl is debt, not vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review.", "section": "layout" },
-      { "name": "The Warm-Shadow Rule", "body": "No pure-black drop shadows anywhere. Every shadow is mixed from ink or twilight so it reads as candlelight on parchment rather than a UI kit default.", "section": "elevation" },
-      { "name": "The Lift-On-State Rule", "body": "Surfaces are flat at rest at shadow-xs. Elevation is a response — hover, selection, focus — not a decoration. A thread row lifts exactly 1px on hover.", "section": "elevation" },
-      { "name": "The Twelve-Max Rule", "body": "Nothing that holds content is rounder than 12px. Pills are for tokens only — a pill-shaped button or card misreads as a status token.", "section": "shapes" }
+      {
+        "name": "The One Gold Rule",
+        "body": "Mallorn gold is an indicator, never a field. It may be a dot, a rule, a ring, a star, a hairline, or a halo — it may not be the background of anything larger than a chip, apart from the DM Own-Letter Gold-Wash Exception below. *Audit test: outside that exception, if a gold region on screen is bigger than a status chip, it is wrong.*",
+        "section": "colors"
+      },
+      {
+        "name": "The DM Own-Letter Gold-Wash Exception",
+        "body": "In the DM register, \"mine\" letters wear the gold wash; nothing else on the surface may. This approved exception to the One Gold Rule is limited to the viewer's own message plates. Existing controls retain their established action tokens; the exception grants no other surface a gold wash.",
+        "section": "colors"
+      },
+      {
+        "name": "The Word-and-Colour Rule",
+        "body": "Status is never carried by colour alone. Every state that has a hue also has a word: \"Solved\", \"Needs answer\", \"Decision\", \"Locked\", \"Archived\". Colour-blind and monochrome readers lose nothing. *Audit test: cover the screen's colour and the state is still readable.*",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic-Only Rule",
+        "body": "Application code paints from semantic tokens (`--surface-raised`, `--brand`, `--on-done`), never from primitives (`--parchment-50`, `--green-700`). The twilight register is a re-pointing of semantics; anything painted from a primitive fails to flip. *Audit test: a new rule that names a primitive scale token is a bug unless it is inside the token layer itself.*",
+        "section": "colors"
+      },
+      {
+        "name": "The All-Serif Rule",
+        "body": "There is no sans-serif in this product. Four families, three of them serif and one a mono for data. A sans-serif anywhere is an intrusion from another design system. *Audit test: grep any new stylesheet for `sans-serif` outside a fallback stack.*",
+        "section": "typography"
+      },
+      {
+        "name": "The Lapidary Caps Rule",
+        "body": "The only uppercase text is Marcellus, tracked at 0.08–0.16em, at label sizes. It is a typographic device, not emphasis and not shouting. Sentence case everywhere else — including buttons, headings, and chips' underlying copy. *Audit test: any `text-transform: uppercase` on something that is not a Marcellus label is wrong.*",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Anything countable — reply counts, regard, timestamps, member totals — is set in JetBrains Mono with `font-variant-numeric: tabular-nums`, so columns of numbers align and a changing count does not reflow its row.",
+        "section": "typography"
+      },
+      {
+        "name": "The Real-URL Rule",
+        "body": "Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view. *Audit test: load it with JavaScript disabled; if the content is gone, the layout is wrong.*",
+        "section": "layout"
+      },
+      {
+        "name": "The Two-Breakpoint Rule",
+        "body": "860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it.",
+        "section": "layout"
+      },
+      {
+        "name": "The Warm-Shadow Rule",
+        "body": "No pure-black drop shadows anywhere. Every shadow is mixed from ink or twilight so it reads as candlelight on parchment rather than as a UI kit default. *Audit test: any `rgba(0,0,0,…)` in a shadow is wrong.*",
+        "section": "elevation"
+      },
+      {
+        "name": "The Lift-On-State Rule",
+        "body": "Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Twelve-Max Rule",
+        "body": "Nothing that holds content is rounder than 12px. 20px exists for a handful of large containers and should be justified; pills are for tokens only. *Audit test: a `border-radius` above 12px on anything that is not a token or a large container is wrong.*",
+        "section": "shapes"
+      }
     ],
     "dos": [
-      "Do paint from semantic tokens (--surface-raised, --brand, --on-done) so the twilight register flips for free.",
+      "Do paint from semantic tokens (`--surface-raised`, `--brand`, `--on-done`) so the twilight register flips for free.",
       "Do pair every status colour with a status word, in the taxonomy already established (Solved, Needs answer, Decision, Pinned, Locked, Archived).",
       "Do set button labels in Marcellus, sentence case, at 0.9rem/0.03em — tracked capitals are for chips, eyebrows, and meta lines only.",
       "Do put anything countable in JetBrains Mono with tabular numerals.",
       "Do keep prose at 17px/1.62 with a measure near 64ch, and topic titles near 28ch.",
-      "Do reach for a hairline before a shadow, and for shadow-xs before anything heavier.",
-      "Do honour prefers-reduced-motion: reduce — the stylesheet already collapses every duration to 0.001ms, and new motion must inherit that.",
-      "Do ship every state server-rendered first; JavaScript decorates through data-* hooks and the existing JSON endpoints."
+      "Do reach for a hairline before a shadow, and for `--shadow-xs` before anything heavier.",
+      "Do honour `prefers-reduced-motion: reduce` — the stylesheet already collapses every duration to 0.001ms, and new motion must inherit that.",
+      "Do ship every state server-rendered first; JavaScript decorates through `data-*` hooks and the existing JSON endpoints."
     ],
     "donts": [
       "Don't introduce a sans-serif, a fifth family, or a webfont from a CDN. The CSP is same-origin and the fonts are self-hosted under OFL.",
-      "Don't write an inline <style> block, an inline <script>, or a style=\"…\" attribute. style-src 'self' blocks all three and the page fails silently.",
+      "Don't write an inline `<style>` block, an inline `<script>`, or a `style=\"…\"` attribute. The same-origin `style-src` and `script-src` policies block those forms. This constraint applies to application templates; the sidecar's CSS strings are tooling specimens, not styles to paste inline into PHP.",
       "Don't use gold as a background for anything larger than a chip outside the DM Own-Letter Gold-Wash Exception, and don't use two accents — the palette has exactly one.",
       "Don't put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)",
+      "Don't print ★ or ☆. The commend star, drawn with `partials/icon`, is the one esteem glyph; `templates/` holds the characters at zero and a test holds them there.",
       "Don't paint directly from a primitive scale token in application CSS.",
-      "Don't round anything holding content past 12px, and don't make a button or card pill-shaped.",
+      "Don't round anything holding content past 12px, and don't make a button or card pill-shaped. *Two live exceptions are unresolved rather than sanctioned — `.star-btn`/`.topic-tools-open` and `.board-mute-toggle` are buttons wearing pills because the handoff canvases draw them that way while this document and `components.css` say 7px. The Messages room adds two more to the same open question (2026-09-23): `.dm-newpill`, the \"New messages\" button, which the committed Messages mock draws as a pill; and the room's toast flash (`.main > .flash:has(+ .dm-shell)`), a `role=\"status\"` notice rather than a button, but a pill-shaped plate holding a sentence. ADR 0034 records the conflict (the Messages pair in its 2026-09-23 addendum); it needs a ruling, not a sweep.*",
       "Don't use a pure-black shadow, or add elevation to something that is merely at rest.",
-      "Don't cut a corner. No clip-path octagons, no frame whose edge is drawn as background-gradient layers — a frame is a real border plus a radius, and a clip-path on a control silently eats its outer focus ring. Don't extend the lapidary register to new surfaces either; it is legacy and shrinking.",
+      "Don't cut a corner. No `clip-path` octagons, no frame whose edge is drawn as background-gradient layers — a frame is a real border plus a radius, and a `clip-path` on a control silently eats its outer focus ring. Don't extend the lapidary register to new surfaces either; it is legacy and shrinking.",
       "Don't invent a new breakpoint. 860px collapses the shell, 900px compacts the chrome, and 760px stacks in-pane layouts; reuse them.",
-      "Don't rename the lexicon where it has shipped. On member surfaces reputation is regard, badges are marks of esteem, like is commend, and the leaderboard is top contributors. Counsel is a register word (\"Add your counsel\", \"Private counsel\"), not the name of the reply control, which reads Reply with an \"N replies\" count (ADR 0027); the admin and moderation consoles use plain words such as Reputation and Badges (ADR 0024). PRODUCT.md records the lexicon as a binding brand commitment; how far it reaches beyond the shipped member strings is an open owner decision (ADR 0024, obligation 5)."
+      "Don't rename the lexicon where it has shipped. On member surfaces reputation is **regard**, badges are **marks of esteem**, like is **commend**, and the leaderboard is **top contributors**. *Counsel* is a register word (\"Add your counsel\", \"Private counsel\"), not the name of the reply control, which reads **Reply** with an \"N replies\" count (ADR 0027); the admin and moderation consoles use plain words such as Reputation and Badges (ADR 0024). `PRODUCT.md` records the lexicon as a binding brand commitment; how far it reaches beyond the shipped member strings is an open owner decision (ADR 0024, obligation 5)."
     ]
   }
 }

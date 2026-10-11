@@ -1,0 +1,1417 @@
+{
+  "engine": "chromium",
+  "build": "350617f1bb175373",
+  "checks": [
+    {
+      "name": "light large long identity, title and plus contained",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 310,
+        "fontSize": "18px",
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.53125,
+            "y": 123,
+            "width": 8.765625,
+            "height": 21,
+            "top": 123,
+            "right": 148.296875,
+            "bottom": 144,
+            "left": 139.53125
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 252.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 296.5,
+          "bottom": 183.53125,
+          "left": 252.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 108.0625,
+          "top": 108,
+          "right": 310,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "light large Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      }
+    },
+    {
+      "name": "light large Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "light large enlarged drawer rows and long board name contained",
+      "pass": true,
+      "detail": {
+        "scroll": 310,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 255.30201959609985
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 255.30201959609985
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 255.30201959609985
+          }
+        ],
+        "rail": {
+          "x": -0.885480523109436,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.30201947689056,
+          "bottom": 568,
+          "left": -0.885480523109436
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "light large drawer Tab wraps to Close",
+      "pass": true
+    },
+    {
+      "name": "light large-200 long identity, title and plus contained",
+      "pass": false,
+      "detail": {
+        "client": 320,
+        "scroll": 359,
+        "fontSize": "36px",
+        "heading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 80.515625,
+            "y": 198.390625,
+            "width": 18.515625,
+            "height": 41,
+            "top": 198.390625,
+            "right": 99.03125,
+            "bottom": 239.390625,
+            "left": 80.515625
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 239,
+          "y": 287.578125,
+          "width": 44,
+          "height": 44,
+          "top": 287.578125,
+          "right": 283,
+          "bottom": 331.578125,
+          "left": 239
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 393.34375,
+          "top": 108,
+          "right": 310,
+          "bottom": 501.34375,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "light large-200 Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 340,
+        "width": 304,
+        "height": 209.03125,
+        "top": 340,
+        "right": 312,
+        "bottom": 549.03125,
+        "left": 8
+      }
+    },
+    {
+      "name": "light large-200 Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "light large-200 enlarged drawer rows and long board name contained",
+      "pass": false,
+      "detail": {
+        "scroll": 359,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 255.30099201202393
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 255.30099201202393
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 255.30099201202393
+          }
+        ],
+        "rail": {
+          "x": -0.8865081667900085,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.30099183321,
+          "bottom": 568,
+          "left": -0.8865081667900085
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large-200 drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "light large-200 drawer Tab wraps to Close",
+      "pass": true
+    },
+    {
+      "name": "dark large long identity, title and plus contained",
+      "pass": true,
+      "detail": {
+        "client": 320,
+        "scroll": 310,
+        "fontSize": "18px",
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.53125,
+            "y": 123,
+            "width": 8.765625,
+            "height": 21,
+            "top": 123,
+            "right": 148.296875,
+            "bottom": 144,
+            "left": 139.53125
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 252.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 296.5,
+          "bottom": 183.53125,
+          "left": 252.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 108.0625,
+          "top": 108,
+          "right": 310,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "dark large Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      }
+    },
+    {
+      "name": "dark large Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "dark large enlarged drawer rows and long board name contained",
+      "pass": true,
+      "detail": {
+        "scroll": 310,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 255.30051708221436
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 255.30051708221436
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 255.30051708221436
+          }
+        ],
+        "rail": {
+          "x": -0.8869826793670654,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.30051732063293,
+          "bottom": 568,
+          "left": -0.8869826793670654
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "dark large drawer Tab wraps to Close",
+      "pass": true
+    },
+    {
+      "name": "dark large-200 long identity, title and plus contained",
+      "pass": false,
+      "detail": {
+        "client": 320,
+        "scroll": 359,
+        "fontSize": "36px",
+        "heading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 80.515625,
+            "y": 198.390625,
+            "width": 18.515625,
+            "height": 41,
+            "top": 198.390625,
+            "right": 99.03125,
+            "bottom": 239.390625,
+            "left": 80.515625
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 239,
+          "y": 287.578125,
+          "width": 44,
+          "height": 44,
+          "top": 287.578125,
+          "right": 283,
+          "bottom": 331.578125,
+          "left": 239
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 393.34375,
+          "top": 108,
+          "right": 310,
+          "bottom": 501.34375,
+          "left": 0
+        }
+      }
+    },
+    {
+      "name": "dark large-200 Create menu viewport containment",
+      "pass": true,
+      "detail": {
+        "x": 8,
+        "y": 340,
+        "width": 304,
+        "height": 209.03125,
+        "top": 340,
+        "right": 312,
+        "bottom": 549.03125,
+        "left": 8
+      }
+    },
+    {
+      "name": "dark large-200 Create dismissal retains trigger focus",
+      "pass": true
+    },
+    {
+      "name": "dark large-200 enlarged drawer rows and long board name contained",
+      "pass": false,
+      "detail": {
+        "scroll": 359,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 255.29703330993652
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 255.29703330993652
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 255.29703330993652
+          }
+        ],
+        "rail": {
+          "x": -0.8904665112495422,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.29703348875046,
+          "bottom": 568,
+          "left": -0.8904665112495422
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large-200 drawer reverse Tab remains inside",
+      "pass": true
+    },
+    {
+      "name": "dark large-200 drawer Tab wraps to Close",
+      "pass": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "light large",
+      "metrics": {
+        "client": 320,
+        "scroll": 310,
+        "fontSize": "18px",
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.53125,
+            "y": 123,
+            "width": 8.765625,
+            "height": 21,
+            "top": 123,
+            "right": 148.296875,
+            "bottom": 144,
+            "left": 139.53125
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 252.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 296.5,
+          "bottom": 183.53125,
+          "left": 252.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 108.0625,
+          "top": 108,
+          "right": 310,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 310,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 255.30201959609985
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 255.30201959609985
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 255.30201959609985
+          }
+        ],
+        "rail": {
+          "x": -0.885480523109436,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.30201947689056,
+          "bottom": 568,
+          "left": -0.885480523109436
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "light large-200",
+      "metrics": {
+        "client": 320,
+        "scroll": 359,
+        "fontSize": "36px",
+        "heading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 80.515625,
+            "y": 198.390625,
+            "width": 18.515625,
+            "height": 41,
+            "top": 198.390625,
+            "right": 99.03125,
+            "bottom": 239.390625,
+            "left": 80.515625
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 239,
+          "y": 287.578125,
+          "width": 44,
+          "height": 44,
+          "top": 287.578125,
+          "right": 283,
+          "bottom": 331.578125,
+          "left": 239
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 393.34375,
+          "top": 108,
+          "right": 310,
+          "bottom": 501.34375,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 340,
+        "width": 304,
+        "height": 209.03125,
+        "top": 340,
+        "right": 312,
+        "bottom": 549.03125,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 359,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 255.30099201202393
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 255.30099201202393
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 255.30099201202393
+          }
+        ],
+        "rail": {
+          "x": -0.8865081667900085,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.30099183321,
+          "bottom": 568,
+          "left": -0.8865081667900085
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large",
+      "metrics": {
+        "client": 320,
+        "scroll": 310,
+        "fontSize": "18px",
+        "heading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "leading": {
+          "x": 13.5,
+          "y": 117,
+          "width": 234.5,
+          "height": 89.0625,
+          "top": 117,
+          "right": 248,
+          "bottom": 206.0625,
+          "left": 13.5
+        },
+        "identityFragments": [
+          {
+            "x": 139.53125,
+            "y": 123,
+            "width": 8.765625,
+            "height": 21,
+            "top": 123,
+            "right": 148.296875,
+            "bottom": 144,
+            "left": 139.53125
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 152.6875,
+            "width": 227.578125,
+            "height": 21,
+            "top": 152.6875,
+            "right": 241.078125,
+            "bottom": 173.6875,
+            "left": 13.5
+          },
+          {
+            "x": 13.5,
+            "y": 182.375,
+            "width": 61.28125,
+            "height": 21,
+            "top": 182.375,
+            "right": 74.78125,
+            "bottom": 203.375,
+            "left": 13.5
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 252.5,
+          "y": 139.53125,
+          "width": 44,
+          "height": 44,
+          "top": 139.53125,
+          "right": 296.5,
+          "bottom": 183.53125,
+          "left": 252.5
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 108.0625,
+          "top": 108,
+          "right": 310,
+          "bottom": 216.0625,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 192,
+        "width": 304,
+        "height": 108,
+        "top": 192,
+        "right": 312,
+        "bottom": 300,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 310,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 44,
+            "right": 255.30051708221436
+          },
+          {
+            "key": "tags",
+            "height": 44,
+            "right": 255.30051708221436
+          },
+          {
+            "key": "connections",
+            "height": 44,
+            "right": 255.30051708221436
+          }
+        ],
+        "rail": {
+          "x": -0.8869826793670654,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.30051732063293,
+          "bottom": 568,
+          "left": -0.8869826793670654
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    },
+    {
+      "name": "dark large-200",
+      "metrics": {
+        "client": 320,
+        "scroll": 359,
+        "fontSize": "36px",
+        "heading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "leading": {
+          "x": 27,
+          "y": 126,
+          "width": 203,
+          "height": 356.34375,
+          "top": 126,
+          "right": 230,
+          "bottom": 482.34375,
+          "left": 27
+        },
+        "identityFragments": [
+          {
+            "x": 80.515625,
+            "y": 198.390625,
+            "width": 18.515625,
+            "height": 41,
+            "top": 198.390625,
+            "right": 99.03125,
+            "bottom": 239.390625,
+            "left": 80.515625
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 257.78125,
+            "width": 185.0625,
+            "height": 41,
+            "top": 257.78125,
+            "right": 212.0625,
+            "bottom": 298.78125,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 317.171875,
+            "width": 185.0625,
+            "height": 41,
+            "top": 317.171875,
+            "right": 212.0625,
+            "bottom": 358.171875,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 376.5625,
+            "width": 185.0625,
+            "height": 41,
+            "top": 376.5625,
+            "right": 212.0625,
+            "bottom": 417.5625,
+            "left": 27
+          },
+          {
+            "x": 27,
+            "y": 435.953125,
+            "width": 55.515625,
+            "height": 41,
+            "top": 435.953125,
+            "right": 82.515625,
+            "bottom": 476.953125,
+            "left": 27
+          }
+        ],
+        "identityText": "\u00b7 @longlonglonglonglonglonglonglong",
+        "identityHref": "/u/longlonglonglonglonglonglonglong",
+        "creation": {
+          "x": 239,
+          "y": 287.578125,
+          "width": 44,
+          "height": 44,
+          "top": 287.578125,
+          "right": 283,
+          "bottom": 331.578125,
+          "left": 239
+        },
+        "subheader": {
+          "x": 0,
+          "y": 108,
+          "width": 310,
+          "height": 393.34375,
+          "top": 108,
+          "right": 310,
+          "bottom": 501.34375,
+          "left": 0
+        }
+      },
+      "menu": {
+        "x": 8,
+        "y": 340,
+        "width": 304,
+        "height": 209.03125,
+        "top": 340,
+        "right": 312,
+        "bottom": 549.03125,
+        "left": 8
+      },
+      "rail": {
+        "scroll": 359,
+        "client": 320,
+        "links": [
+          {
+            "key": "boards",
+            "height": 62.375,
+            "right": 255.29703330993652
+          },
+          {
+            "key": "tags",
+            "height": 62.375,
+            "right": 255.29703330993652
+          },
+          {
+            "key": "connections",
+            "height": 62.375,
+            "right": 255.29703330993652
+          }
+        ],
+        "rail": {
+          "x": -0.8904665112495422,
+          "y": 108,
+          "width": 275.1875,
+          "height": 460,
+          "top": 108,
+          "right": 274.29703348875046,
+          "bottom": 568,
+          "left": -0.8904665112495422
+        },
+        "board": "General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4General\ud83e\udeb4",
+        "focused": "Close board rail"
+      }
+    }
+  ],
+  "limits": [
+    "32-character username, 64-character board name with emoji",
+    "App Large=18px and 200% of Large=36px set through CSSOM; no physical browser zoom",
+    "320x568 CSS pixel viewport; theme attributes changed for computed cascade probes"
+  ]
+}

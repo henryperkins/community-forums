@@ -1,0 +1,13 @@
+async page => {
+ const mode='__MODE__',base='http://127.0.0.1:8484',engine=page.context().browser().browserType().name(),checks=[],cases=[];
+ page.setDefaultTimeout(5000);page.setDefaultNavigationTimeout(6000);const check=(name,pass,detail)=>checks.push({name,pass:!!pass,detail}),expected=mode==='tags-off'?['boards','connections']:mode==='community-off'?['boards','tags']:mode==='gates-off'?['boards']:['boards','tags','connections'];
+ await page.setViewportSize({width:393,height:844});
+ for(const path of ['/?pane=boards','/?pane=tags','/?pane=connections','/inbox','/compose']){
+  await page.goto(base+path);const m=await page.evaluate(()=>({links:[...document.querySelectorAll('[data-directory-link]')].map(n=>({key:n.dataset.directoryLink,href:n.getAttribute('href'),current:n.getAttribute('aria-current')})),heading:document.querySelector('main h1')?.textContent.trim(),bell:!!document.querySelector('[data-bell]'),oldTabs:!!document.querySelector('.forum-directory__tabs')}));
+  check(path+' independent link gates',m.links.map(n=>n.key).join(',')===expected.join(',')&&!m.oldTabs,m);
+  if(path.startsWith('/?')){const asked=path.split('=')[1],resolved=expected.includes(asked)?asked:'boards';check(path+' normalized current',m.links.filter(n=>n.current==='page').map(n=>n.key).join(',')===resolved,m.links);}else check(path+' no invented current',m.links.every(n=>n.current===null),m.links);cases.push({path,metrics:m});
+ }
+ if(mode==='notifications-off'){await page.goto(base+'/?pane=notices');const m=await page.evaluate(()=>({bell:!!document.querySelector('[data-bell]'),current:document.querySelector('[data-directory-link][aria-current="page"]')?.dataset.directoryLink,heading:document.querySelector('main h1')?.textContent.trim()}));check('disabled Notices resolves Boards and removes bell',!m.bell&&m.current==='boards',m);}
+ const context=await page.context().browser().newContext({javaScriptEnabled:false,viewport:{width:393,height:844}}),guest=await context.newPage();await guest.goto(base+'/?pane=connections');const gm=await guest.evaluate(()=>({links:[...document.querySelectorAll('[data-directory-link]')].map(n=>n.dataset.directoryLink),current:document.querySelector('[data-directory-link][aria-current="page"]')?.dataset.directoryLink,h1:document.querySelectorAll('main h1').length,subheader:!!document.querySelector('[data-subheader]')}));check('noJS guest independent gates/current',gm.links.join(',')===expected.join(',')&&gm.current===(expected.includes('connections')?'connections':'boards')&&gm.h1===1&&!gm.subheader,gm);await context.close();
+ return{engine,mode,build:'350617f1bb175373',checks,cases,guest:gm};
+}

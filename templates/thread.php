@@ -8,6 +8,8 @@ $this->section('route', 'thread');
 // gate already blocks crawlers).
 $this->section('canonical', '/t/' . (int) $thread['id'] . '-' . $thread['slug']);
 $threadPageUrl = '/t/' . (int) $thread['id'] . '-' . $thread['slug'] . '?page=' . max(1, (int) $page);
+$hiddenFromInbox = ($workflow_on ?? false) && \App\Support\InboxSnooze::hidden($my_snooze ?? null, !empty($my_snooze_indefinitely));
+$inboxVisibilityLabel = !empty($my_snooze_indefinitely) ? 'Until you turn it back on' : 'Til ' . human_date($my_snooze ?? null);
 $this->section('og_type', 'article');
 $this->section('description', mb_strimwidth(preg_replace('/\s+/', ' ', (string) $thread['title']) ?? '', 0, 160, '…'));
 if (($thread['board_visibility'] ?? 'public') !== 'public') {
@@ -50,11 +52,13 @@ $watchLabel = ($notifications_on ?? false) && $current_user !== null
 // brief's own overlay or the deterministic fallback — the design has a single
 // `Related` rail and no cards inside the brief (ThreadView.dc.html:659).
 $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($related_fallback ?? []);
+$this->start('subheader_leading');
 ?>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
+<?php $this->stop(); ?>
 <article class="thread thread-conversation thread-study" data-thread-study>
     <div class="thread-scroll">
     <header class="thread-head thread-study-head">
-        <nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
         <?php /* Standing chips sit above the title, never inside it: an <h1> holding
                  three conditional chips announces itself as "Pinned Locked Solved Where
                  should ratified decisions live…" to anything that reads the page aloud.
@@ -97,14 +101,14 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
                  is the reader's own, like the reply count beside it — folds into the
                  byline exactly as the design's `bylineTail` does. */ ?>
         <div class="thread-facts-identity">
-        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?php if (($thread['created_at'] ?? '') !== ''): ?><time datetime="<?= $e(iso_datetime($thread['created_at'])) ?>" title="<?= $e(human_datetime($thread['created_at'])) ?>"><?= $e(gmdate('M j', strtotime((string) $thread['created_at'] . ' UTC') ?: 0)) ?></time> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if (!empty($my_snooze)): ?> · Quiet until <?= $e(human_datetime($my_snooze)) ?><?php endif; ?></p>
+        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?php if (($thread['created_at'] ?? '') !== ''): ?><time datetime="<?= $e(iso_datetime($thread['created_at'])) ?>" title="<?= $e(human_datetime($thread['created_at'])) ?>"><?= $e(gmdate('M j', strtotime((string) $thread['created_at'] . ' UTC') ?: 0)) ?></time> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if ($hiddenFromInbox): ?> · <?= $e($inboxVisibilityLabel) ?><?php endif; ?></p>
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
             <span class="thread-participants-rule">
             <ul class="thread-participants" aria-label="In council">
                 <?php foreach ($participants as $pp): ?>
-                    <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false); ?>
-                    <li class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed']]) ?></li>
+                    <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false, $pp['author_avatar_path'] ?? null); ?>
+                    <li class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed'], 'avatar_path' => $pa['avatar_path']]) ?></li>
                 <?php endforeach; ?>
                 <?php $shownParticipants = count($participants); if ((int) ($participant_count ?? 0) > $shownParticipants): ?>
                     <li class="participant-more">+<?= (int) $participant_count - $shownParticipants ?></li>
@@ -139,11 +143,9 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
         <?php if ($current_user === null): ?><?= $this->partial('partials/thread_status_history', compact('status_history', 'status_labels')) ?><?php endif; ?>
     </header>
     <?php
-    /* FT-01. Topic tools and the split/merge disclosure belong to the topic head, and
-       they must render INSIDE .thread-scroll. Every in-flow sibling of .thread-scroll
-       takes its height out of the fixed-height column, so rendering them after
-       .thread-dock left the unenhanced reading pane at 12px of an 854px viewport.
-       They stay SIBLINGS here: nesting the restructure markup inside [data-topic-tools]
+    /* Topic tools and the split/merge disclosure belong to the topic head, ahead
+       of the stream and sticky reply dock. They stay SIBLINGS here: nesting the
+       restructure markup inside [data-topic-tools]
        would make app.js hide the dialog's own ancestor when opening it. */
     ?>
     <?= $this->partial('partials/thread_tools', [
@@ -155,6 +157,7 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
         'notifications_on' => $notifications_on,
         'workflow_on' => $workflow_on,
         'my_snooze' => $my_snooze,
+        'my_snooze_indefinitely' => $my_snooze_indefinitely ?? false,
         'is_staff' => !empty($can_pin) || !empty($can_lock) || !empty($can_split_merge) || !empty($can_move),
         'can_write' => $can_write,
         'can_change_statuses' => $can_change_statuses,
@@ -283,6 +286,7 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
                     'engagement' => $engagement ?? false,
                     'counts' => ($reaction_counts ?? [])[(int) $p['id']] ?? [],
                     'mine' => ($my_reactions ?? [])[(int) $p['id']] ?? [],
+                    'reactors' => ($reaction_reactors ?? [])[(int) $p['id']] ?? [],
                     'allowed_emoji' => $allowed_emoji ?? [],
                     'reference_cards' => ($reference_cards ?? [])[(int) $p['id']] ?? [],
                     'link_preview_cards' => ($link_preview_cards ?? [])[(int) $p['id']] ?? [],
@@ -309,6 +313,9 @@ $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($relat
                 <?php if ((int) $p['is_op'] === 1): ?><?= $afterOpeningPost ?><?php $afterOpeningPost = ''; endif; ?>
             <?php endforeach; ?>
         </div>
+        <?php /* Enhanced reaction failures write here: a live region inserted
+                 together with its message is often never announced. */ ?>
+        <?php if ($engagement ?? false): ?><p class="sr-only" role="status" data-reaction-announcer></p><?php endif; ?>
     <?php endif; ?>
 
     <?= $this->partial('partials/pagination', [

@@ -36,26 +36,28 @@ if (!function_exists('mask_author')) {
     /**
      * Single decision point for rendering a post/thread author byline. When the
      * post is anonymous every field collapses to the constant "Anonymous"
-     * identity — no display name, username, profile link, monogram seed, or role
-     * — so nothing can fingerprint or correlate the real author across posts
-     * (ADMIN §1.3 masked-identity posting). The real user_id is never touched, so
-     * owner/mod affordances and reputation are unaffected; unmasking is a
-     * separate, audited moderator action.
+     * identity — no display name, username, profile link, monogram seed,
+     * avatar, or role — so nothing can fingerprint or correlate the real author
+     * across posts (ADMIN §1.3 masked-identity posting). The real user_id is
+     * never touched, so owner/mod affordances and reputation are unaffected;
+     * unmasking is a separate, audited moderator action.
      *
-     * @return array{label:string, profile_url:?string, mono_name:string, mono_seed:string, is_staff:bool}
+     * @return array{label:string, profile_url:?string, mono_name:string, mono_seed:string, avatar_path:?string, is_staff:bool}
      */
-    function mask_author(?string $displayName, ?string $username, ?string $role = 'user', bool $isAnon = false): array
+    function mask_author(?string $displayName, ?string $username, ?string $role = 'user', bool $isAnon = false, ?string $avatarPath = null): array
     {
         if ($isAnon) {
-            return ['label' => 'Anonymous', 'profile_url' => null, 'mono_name' => 'Anonymous', 'mono_seed' => '', 'is_staff' => false];
+            return ['label' => 'Anonymous', 'profile_url' => null, 'mono_name' => 'Anonymous', 'mono_seed' => '', 'avatar_path' => null, 'is_staff' => false];
         }
         $username = (string) $username;
         $label = ($displayName ?? '') !== '' ? (string) $displayName : $username;
+        $avatarPath = trim((string) $avatarPath);
         return [
             'label' => $label !== '' ? $label : 'Unknown',
             'profile_url' => $username !== '' ? '/u/' . $username : null,
             'mono_name' => $label,
             'mono_seed' => $username,
+            'avatar_path' => $avatarPath !== '' ? $avatarPath : null,
             'is_staff' => $role === 'admin',
         ];
     }
@@ -253,5 +255,23 @@ if (!function_exists('reaction_label')) {
     function reaction_label(string $emoji): string
     {
         return \App\Service\ReactionService::label($emoji);
+    }
+}
+
+if (!function_exists('reaction_reactor_names')) {
+    /** Capped member tip copy; aggregate-only actors are never identified. */
+    function reaction_reactor_names(array $reactors, bool $mine, int $count): string
+    {
+        $handles = array_map(static fn (string $username): string => '@' . $username, $reactors);
+        $names = array_slice($mine ? array_merge(['You'], $handles) : $handles, 0, max(0, min(6, $count)));
+        if ($names === []) {
+            return '';
+        }
+        $others = max(0, $count - count($names));
+        if ($others > 0) {
+            return implode(', ', $names) . ' and ' . $others . ($others === 1 ? ' other' : ' others');
+        }
+        $last = array_pop($names);
+        return $names === [] ? $last : implode(', ', $names) . ' and ' . $last;
     }
 }

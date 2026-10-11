@@ -1,0 +1,32 @@
+
+> build
+> node bin/build-assets.mjs
+
+vite v8.1.3 building client environment for production...
+[2Ktransforming...✓ 865 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../tmp/retroboards-assets-CdF9IP/.vite/manifest.json                                   5.13 kB │ gzip:   0.72 kB
+../../../tmp/retroboards-assets-CdF9IP/marcellus-latin-400-normal-86dSXJnk.woff2            14.55 kB
+../../../tmp/retroboards-assets-CdF9IP/jetbrains-mono-latin-400-normal-V6pRDFza.woff2       21.16 kB
+../../../tmp/retroboards-assets-CdF9IP/eb-garamond-latin-400-normal-DSJrtJSV.woff2          21.70 kB
+../../../tmp/retroboards-assets-CdF9IP/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2       21.83 kB
+../../../tmp/retroboards-assets-CdF9IP/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2       21.86 kB
+../../../tmp/retroboards-assets-CdF9IP/eb-garamond-latin-400-italic-KGnr19QW.woff2          22.17 kB
+../../../tmp/retroboards-assets-CdF9IP/cormorant-garamond-latin-700-normal-DajfzrDU.woff2   22.34 kB
+../../../tmp/retroboards-assets-CdF9IP/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2   22.87 kB
+../../../tmp/retroboards-assets-CdF9IP/eb-garamond-latin-500-normal-LNvnJ-zC.woff2          23.01 kB
+../../../tmp/retroboards-assets-CdF9IP/eb-garamond-latin-600-normal-CdfBH7_K.woff2          23.11 kB
+../../../tmp/retroboards-assets-CdF9IP/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2   23.31 kB
+../../../tmp/retroboards-assets-CdF9IP/cormorant-garamond-latin-600-normal-Co1r35X9.woff2   23.39 kB
+../../../tmp/retroboards-assets-CdF9IP/eb-garamond-latin-500-italic-DW_HNewX.woff2          23.61 kB
+../../../tmp/retroboards-assets-CdF9IP/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2   23.66 kB
+../../../tmp/retroboards-assets-CdF9IP/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2   23.92 kB
+../../../tmp/retroboards-assets-CdF9IP/wysiwyg-composer-DJaHQYS-.css                         0.65 kB │ gzip:   0.37 kB
+../../../tmp/retroboards-assets-CdF9IP/imladris-style-DeGci5u_.css                         104.46 kB │ gzip:  17.90 kB
+../../../tmp/retroboards-assets-CdF9IP/app-style-DRpY5gJ7.css                              424.52 kB │ gzip:  64.78 kB
+../../../tmp/retroboards-assets-CdF9IP/wysiwyg-composer-BhOmBk3Y.js                          1.39 kB │ gzip:   0.79 kB
+../../../tmp/retroboards-assets-CdF9IP/milkdown-adapter-B36_3vOz.js                        465.67 kB │ gzip: 139.56 kB
+
+✓ built in 290ms
+Built 33 delivery files; staged 59 public assets for Workers.

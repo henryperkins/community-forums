@@ -1,0 +1,81 @@
+{
+  "captured_at_utc": "2026-10-09T08:20:14.584080+00:00",
+  "baseline_sha": "c10faca411d014e018a34c49270647f27dfb9b13",
+  "candidate_base_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "runtime": {
+    "php": "8.2.34",
+    "database": "MariaDB11.4",
+    "browser": "actual Chromium via cached Playwright runner",
+    "source": "isolated git archive copies",
+    "production_access": false,
+    "image_id": "sha256:d4b13461c2608d7fcdee919508fe69ea0fd229880d7d5d6fb60ac88a94ab636a"
+  },
+  "original_failures": [
+    {
+      "case": "curator complete workflow desktop and mobile",
+      "current_and_baseline_reproduced": true,
+      "reason": "screenshot helper fitted height against full viewport but ignored native74px top and79px bottom scroll padding on desktop; native minimal scrolling left1121px target from74px to1195px in1130px viewport",
+      "fix": "measure actual scroll padding, fit usable budget, explicitly center, retain full-surface containment gate and one-pixel tolerance",
+      "corrected_workflows_pass": true
+    },
+    {
+      "case": "mobile formatting hover and keyboard recovery",
+      "current_and_baseline_reproduced": true,
+      "reason": "pointer action sampled modal before its real entrance animation finished; settled original hover/click/keyboard sequence passes",
+      "fix": "await modal animation completion; preserve every original assertion without forced input or skips",
+      "isolated_fixed_pass": true
+    },
+    {
+      "case": "unread counts desktop and mobile",
+      "current_and_baseline_reproduced": true,
+      "reason": "desktop and compact count/label copies remain inDOM; scalar assertions violate strict locator semantics",
+      "fix": "assert both copies stay synchronized, preserving caps and accessible names",
+      "isolated_fixed_pass": true
+    }
+  ],
+  "complete_owned_files_run": {
+    "passed": 54,
+    "failed": 1,
+    "existing_skipped": 11,
+    "elapsed": "1.7m",
+    "unrelated_failure": "untouched desktop rich/source second Ctrl+B shortcut expectation at line102; also passed hosted original f215 capture",
+    "all_original_five_cases_passed": true,
+    "thread_intelligence_other_callers_passed": true,
+    "no_js_and_axe_coverage_passed": true
+  },
+  "untouched_shortcut_retry": {
+    "current_passed": 3,
+    "baseline_passed": 3,
+    "source_edit": false,
+    "interpretation": "intermittent broader-run failure; no product-regression attribution"
+  },
+  "source_sha256": {
+    "tests/browser/thread-intelligence.spec.ts": "a498b5b18fdd9042eda48a32b82c22e4c9314e88f639caa635e58c710c516cda",
+    "tests/browser/composer-toolbar-hardening.spec.ts": "9257b0ba9489ec45d3f79dd89f6d11500243afaa8f8f07038869abd9b6462b2a",
+    "tests/browser/unified-chrome.spec.ts": "96aba88b2f0cb0009eacd37cd4ca227433f1f8d9c000768958323bbd2506710b"
+  },
+  "log_sha256": {
+    "owned-current-run.log": "17914c931742ff6757352b071f4a8e91b61656c9bb607a1af736d88581e391f0",
+    "owned-baseline-run.log": "f9f9a1829ad4319ce67426a1a91ab75d5d22ce3312ecb5e9e6d1d57f99530fd1",
+    "owned-probe-run.log": "afbbd00d8a508f168ad320b541ac01d7a349da09f32bafa8dfefe2b1974d9eb7",
+    "owned-native-probe-run.log": "3fc867a82f1aab19bae7eb02e0006a3584f845fd900c2756732745a21164db6d",
+    "owned-toolbar-events-run.log": "90dd513fc81da3b3428f45d3af1673e6077206dbc3d52e2165bfdf8afeba991c",
+    "owned-toolbar-settled-hover-run.log": "be4d9ae9e8b8d47e7f9a548d522a050e300d8d4eedd35fe2f475f8c5ccf9b99c",
+    "owned-fixed-all-run.log": "34b3dae70cb6c6663b906634f9f5d17593bacc3b68ce68ff46f403d99e0d63a8",
+    "owned-rich-current-run.log": "93eedca960ebd439413178f0aa03eb40659a88e9388b9c5d84f37c039252238f",
+    "owned-rich-baseline-run.log": "515fcd0dc86c183fce13260ece515c3daae422e4bd52f5512598300a88aa9252",
+    "owned-composer-rerun-run.log": "cc2c004317eda5727d9d1a36693d1ec77094f031e27f216f03c90a136284c7db"
+  },
+  "limits": [
+    "Local disposable database only; hosted full lane still required",
+    "Raw synthetic snapshots/screenshots/logs remain under private git archive copies and are not committed",
+    "Initial complete owned-files run retained its intermittent untouched shortcut failure; subsequent full composer-file retry passed with unchanged source"
+  ],
+  "complete_composer_file_retry": {
+    "passed": 12,
+    "failed": 0,
+    "existing_skipped": 6,
+    "elapsed_seconds": 27.9,
+    "source_changed_since_broader_run": false
+  }
+}

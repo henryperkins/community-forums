@@ -68,7 +68,7 @@ final class BlockRepository
     public function listBlocked(int $userId): array
     {
         return $this->db->fetchAll(
-            'SELECT b.blocked_user_id, b.created_at, u.username, u.display_name
+            'SELECT b.blocked_user_id, b.created_at, u.username, u.display_name, u.avatar_path
              FROM blocks b JOIN users u ON u.id = b.blocked_user_id
              WHERE b.user_id = ? ORDER BY b.created_at DESC',
             [$userId],

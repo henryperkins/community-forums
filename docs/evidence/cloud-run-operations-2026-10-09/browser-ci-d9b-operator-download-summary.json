@@ -1,0 +1,98 @@
+{
+  "event": "browser_ci_final_operator_artifact_download",
+  "captured_at": "2026-10-09T12:12:57.343118+00:00",
+  "diagnostic_only": false,
+  "source_sha": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "parent": {
+    "id": "48afc71c-cb4f-468c-9294-58f510c89bd1",
+    "status": "SUCCESS",
+    "createTime": "2026-10-09T11:16:56.586096Z",
+    "startTime": "2026-10-09T11:16:57.101066325Z",
+    "finishTime": "2026-10-09T12:12:22.652193Z",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "all_provider_steps_successful": true,
+    "steps": [
+      {
+        "id": "trusted-parent-controls",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "isolated-child-and-parent-verification",
+        "status": "SUCCESS",
+        "exit_code": null
+      }
+    ]
+  },
+  "child": {
+    "id": "4b4d18e8-0c22-4457-b386-a3244ff6a563",
+    "status": "SUCCESS",
+    "createTime": "2026-10-09T11:18:10.798163095Z",
+    "startTime": "2026-10-09T11:18:11.382021180Z",
+    "finishTime": "2026-10-09T12:12:11.718041Z",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "all_provider_steps_successful": true,
+    "steps": [
+      {
+        "id": "source",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "browser-suites",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "publish-evidence",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "enforce-result",
+        "status": "SUCCESS",
+        "exit_code": null
+      }
+    ]
+  },
+  "parent_receipt_object": {
+    "filename": "verification.json",
+    "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/48afc71c-cb4f-468c-9294-58f510c89bd1/verification.json",
+    "generation": "1791547941590713",
+    "bytes": 1452,
+    "sha256": "0f60f7e8ae1b93847442092d07bfe8867a4f99cc0aa1c58baf4a84b49292bb2e",
+    "provider_size_md5_match": true
+  },
+  "artifacts": [
+    {
+      "filename": "result.json",
+      "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/result.json",
+      "generation": "1791547924649630",
+      "bytes": 67556,
+      "sha256": "b4c80eb4342bacd66a29e79055207eebd686c620aae836ae529bb32130522511",
+      "provider_size_md5_match": true
+    },
+    {
+      "filename": "runner-exit.json",
+      "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/runner-exit.json",
+      "generation": "1791547924748090",
+      "bytes": 23,
+      "sha256": "34de0b5dab231de578c472d79a7c305e6920933ad646c18c3243db107c13b068",
+      "provider_size_md5_match": true
+    },
+    {
+      "filename": "evidence.tar.gz",
+      "name": "d9b2295e19b251577cafab8c1d5868d516ade80e/4b4d18e8-0c22-4457-b386-a3244ff6a563/evidence.tar.gz",
+      "generation": "1791547925826968",
+      "bytes": 112487605,
+      "sha256": "f92e2efa65094c375a35af192144229d41f44951f9a2579ad7ddb4985ad4ff10",
+      "provider_size_md5_match": true
+    }
+  ],
+  "all_provider_steps_successful": true,
+  "artifact_hashes_and_sizes_match_parent_and_provider": true,
+  "artifact_hashes_and_sizes_match_provider": true,
+  "parent_receipt_passed": true,
+  "parent_receipt_stage": "complete"
+}

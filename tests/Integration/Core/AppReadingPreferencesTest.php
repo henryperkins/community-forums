@@ -59,6 +59,41 @@ final class AppReadingPreferencesTest extends TestCase
         self::assertSame(1, substr_count($list, 'class="monogram'), 'Board list avatar should be hidden.');
     }
 
+    public function test_show_avatars_off_hides_inbox_preview_avatars_and_composer_person_badges(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'av-preview']);
+        $author = $this->makeUser(['username' => 'previewauthor']);
+        $replier = $this->makeUser(['username' => 'previewreplier']);
+        $reader = $this->makeUser(['username' => 'previewreader']);
+        $t = $this->makeThread($board, $author, 'Preview avatars');
+        $this->posting()->reply($this->userEntity($replier), $t['thread_id'], ['body' => 'A previewed reply']);
+        $this->actingAs($reader);
+        $url = '/inbox/preview/' . $t['thread_id'];
+
+        // The preview is a fragment (no topbar): the byline, the reply and the
+        // reply composer's own identity each draw one monogram by default.
+        $on = $this->get($url)->body();
+        self::assertSame(3, substr_count($on, 'class="monogram'));
+        self::assertStringContainsString('data-composer-avatars="1"', $on);
+
+        (new \App\Repository\ThreadUserRepository($this->db))->setStar((int) $reader['id'], (int) $t['thread_id'], true);
+        $list = $this->get('/inbox', ['scope' => 'starred', 'order' => 'active'])->body();
+        self::assertStringContainsString('Preview avatars', $list);
+        $listMonograms = substr_count($list, 'class="monogram');
+
+        $this->setReading(['show_signatures' => '1', 'show_reactions' => '1']);
+        $off = $this->get($url)->body();
+        self::assertStringContainsString('A previewed reply', $off);
+        self::assertSame(0, substr_count($off, 'class="monogram'), 'The preview honors show_avatars=false.');
+        self::assertStringContainsString('data-composer-avatars="0"', $off, 'Mention person rows follow the preference.');
+
+        // The Inbox rows preview each topic too: only the topbar's own monogram remains.
+        $listOff = $this->get('/inbox', ['scope' => 'starred', 'order' => 'active'])->body();
+        self::assertStringContainsString('Preview avatars', $listOff);
+        self::assertGreaterThan(1, $listMonograms, 'precondition: the row draws its starter by default');
+        self::assertSame(1, substr_count($listOff, 'class="monogram'), 'Inbox rows honor show_avatars=false.');
+    }
+
     public function test_show_reactions_off_hides_the_reaction_bar(): void
     {
         $cat = $this->makeCategory();

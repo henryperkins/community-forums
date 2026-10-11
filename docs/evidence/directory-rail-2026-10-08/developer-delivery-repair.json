@@ -1,0 +1,80 @@
+{
+  "checked_at": "2026-10-08T02:29:48.238636+00:00",
+  "revision": "573f905d71f3c146072cffd5fecb2d2ffaca995b",
+  "working_tree": "uncommitted changes",
+  "asset_build": "a8b813712a571dff",
+  "checks": [
+    {
+      "base": "http://127.0.0.1:8000",
+      "route": "/healthz",
+      "status": 200,
+      "final_path": "/healthz",
+      "health": {
+        "status": "ok",
+        "database": "ok"
+      }
+    },
+    {
+      "base": "http://127.0.0.1:8000",
+      "route": "/?pane=connections",
+      "status": 200,
+      "final_path": "/",
+      "current_assets_in_shell": true,
+      "guest_nav_links_present": true,
+      "horizontal_pane_strip_absent": true,
+      "private_connections": "anonymous existing sign-in state only"
+    },
+    {
+      "base": "http://127.0.0.1:8000",
+      "route": "/assets/dist/app-style-DcXze5GH.css",
+      "status": 200,
+      "final_path": "/assets/dist/app-style-DcXze5GH.css",
+      "sha256": "afec5a84f50297f8b8d296996b3f4a9480a8f9e0ecd1b3bcaee21b3055c8a115",
+      "matches_delivery": true
+    },
+    {
+      "base": "http://127.0.0.1:8000",
+      "route": "/assets/dist/app-ade982dee46260d0.js",
+      "status": 200,
+      "final_path": "/assets/dist/app-ade982dee46260d0.js",
+      "sha256": "ade982dee46260d0006e71a6f6275c4f3016374c61eef8801a7392e82e9ead91",
+      "matches_delivery": true
+    },
+    {
+      "base": "https://obituaries-lucky-accordance-king.trycloudflare.com",
+      "route": "/healthz",
+      "status": 200,
+      "final_path": "/healthz",
+      "health": {
+        "status": "ok",
+        "database": "ok"
+      }
+    },
+    {
+      "base": "https://obituaries-lucky-accordance-king.trycloudflare.com",
+      "route": "/?pane=connections",
+      "status": 200,
+      "final_path": "/",
+      "current_assets_in_shell": true,
+      "guest_nav_links_present": true,
+      "horizontal_pane_strip_absent": true,
+      "private_connections": "anonymous existing sign-in state only"
+    },
+    {
+      "base": "https://obituaries-lucky-accordance-king.trycloudflare.com",
+      "route": "/assets/dist/app-style-DcXze5GH.css",
+      "status": 200,
+      "final_path": "/assets/dist/app-style-DcXze5GH.css",
+      "sha256": "afec5a84f50297f8b8d296996b3f4a9480a8f9e0ecd1b3bcaee21b3055c8a115",
+      "matches_delivery": true
+    },
+    {
+      "base": "https://obituaries-lucky-accordance-king.trycloudflare.com",
+      "route": "/assets/dist/app-ade982dee46260d0.js",
+      "status": 200,
+      "final_path": "/assets/dist/app-ade982dee46260d0.js",
+      "sha256": "ade982dee46260d0006e71a6f6275c4f3016374c61eef8801a7392e82e9ead91",
+      "matches_delivery": true
+    }
+  ]
+}

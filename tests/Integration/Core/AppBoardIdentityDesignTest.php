@@ -255,7 +255,7 @@ final class AppBoardIdentityDesignTest extends TestCase
         // the board query learned to carry the viewer's state.
         self::assertStringContainsString('<span class="thread-star" title="Starred"', $body);
         self::assertStringContainsString('assigned to @board_viewer_mate', $body);
-        self::assertStringContainsString('snoozed until Jan 2, 2030', $body);
+        self::assertStringContainsString('Til Jan 2, 2030', $body);
     }
 
     public function test_a_guest_board_carries_no_viewer_state_joins(): void

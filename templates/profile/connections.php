@@ -10,11 +10,20 @@ $this->section('composer', '0');
 $page = (int) ($page ?? 1);
 $pageCount = (int) ($page_count ?? 1);
 $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'followers' : 'following');
+if ($current_user !== null):
+    $this->start('subheader_leading');
+?>
+    <h1 class="forum-page-title"><?= $e($heading) ?> <span class="muted">· <a href="/u/<?= $e($profile['username']) ?>">@<?= $e($profile['username']) ?></a></span></h1>
+<?php
+    $this->stop();
+endif;
 ?>
 <div class="read-main read-pad connections">
+    <?php if ($current_user === null): ?>
     <header class="board-header">
         <h1><?= $e($heading) ?> <span class="muted">· <a href="/u/<?= $e($profile['username']) ?>">@<?= $e($profile['username']) ?></a></span></h1>
     </header>
+    <?php endif; ?>
     <?php if (empty($people)): ?>
         <div class="profile-panel-empty">
             <h2><?= $mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.' ?></h2>
@@ -25,7 +34,7 @@ $listUrl = '/u/' . $profile['username'] . '/' . ($mode === 'followers' ? 'follow
             <?php foreach ($people as $person): ?>
                 <?php $pd = ($person['display_name'] ?? '') !== '' ? $person['display_name'] : $person['username']; ?>
                 <li class="person-row">
-                    <?= $this->partial('partials/monogram', ['name' => $pd, 'username' => $person['username']]) ?>
+                    <?= $this->partial('partials/monogram', ['name' => $pd, 'username' => $person['username'], 'avatar_path' => $person['avatar_path'] ?? null]) ?>
                     <a class="person-name" href="/u/<?= $e($person['username']) ?>"><?= $e($pd) ?></a>
                     <span class="handle">@<?= $e($person['username']) ?></span>
                     <span class="muted person-rep"><span class="profile-number"><?= number_format((int) ($person['reputation'] ?? 0)) ?></span> regard</span>

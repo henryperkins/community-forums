@@ -108,6 +108,114 @@ final class AppComposeMemberSurfaceTest extends TestCase
         }
     }
 
+    public function test_numeric_board_slug_takes_precedence_over_another_boards_id(): void
+    {
+        $category = $this->makeCategory('Numeric destinations');
+        $idBoard = $this->makeBoard($category, ['slug' => 'id-destination']);
+        $slugBoard = $this->makeBoard($category, ['slug' => (string) $idBoard['id']]);
+        $member = $this->makeUser(['username' => 'numericslug']);
+        $thread = $this->makeThread($slugBoard, $member);
+        $this->actingAs($member);
+
+        // The header sends the slug from both board and topic pages.
+        foreach (['/c/' . $slugBoard['slug'], '/t/' . $thread['thread_id'] . '-' . $thread['slug']] as $path) {
+            $page = $this->get($path);
+            $this->assertStatus(200, $page);
+            self::assertStringContainsString('href="/compose?board=' . $slugBoard['slug'] . '"', $page->body());
+        }
+
+        foreach ([[$idBoard['id'], $slugBoard['id']], [$slugBoard['id'], $idBoard['id']]] as $order) {
+            $this->boards()->setPositions($category, $order);
+            $page = $this->get('/compose', ['board' => (string) $slugBoard['slug']]);
+            $this->assertStatus(200, $page);
+            $this->assertSelectedComposeBoard($page->body(), $slugBoard);
+        }
+    }
+
+    public function test_board_parameter_keeps_id_selection_when_no_slug_matches(): void
+    {
+        $category = $this->makeCategory('ID destinations');
+        $this->makeBoard($category, ['slug' => 'first-id-fallback']);
+        $target = $this->makeBoard($category, ['slug' => 'legacy-id-target']);
+        $this->actingAs($this->makeUser(['username' => 'legacycomposeid']));
+
+        $page = $this->get('/compose', ['board' => (string) $target['id']]);
+        $this->assertStatus(200, $page);
+        $this->assertSelectedComposeBoard($page->body(), $target);
+    }
+
+    public function test_explicit_board_id_never_matches_another_boards_slug(): void
+    {
+        $category = $this->makeCategory('Explicit ID destinations');
+        $fallback = $this->makeBoard($category, ['slug' => 'explicit-id-fallback']);
+        $target = $this->makeBoard($category, ['slug' => 'explicit-id-target']);
+        $collision = $this->makeBoard($category, ['slug' => (string) $target['id']]);
+        $this->boards()->setPositions($category, [$fallback['id'], $collision['id'], $target['id']]);
+        $this->actingAs($this->makeUser(['username' => 'explicitcomposeid']));
+
+        $byId = $this->get('/compose', ['board_id' => (string) $target['id']]);
+        $this->assertStatus(200, $byId);
+        $this->assertSelectedComposeBoard($byId->body(), $target);
+
+        $bySlugInIdField = $this->get('/compose', ['board_id' => (string) $target['slug']]);
+        $this->assertStatus(200, $bySlugInIdField);
+        $this->assertSelectedComposeBoard($bySlugInIdField->body(), $fallback);
+    }
+
+    public function test_validation_preserves_the_submitted_board_id_despite_a_numeric_slug_collision(): void
+    {
+        $category = $this->makeCategory('Rejected ID destinations');
+        $target = $this->makeBoard($category, ['slug' => 'rejected-id-target', 'allow_anonymous' => 1]);
+        $collision = $this->makeBoard($category, ['slug' => (string) $target['id']]);
+        $this->boards()->setPositions($category, [$collision['id'], $target['id']]);
+        $this->actingAs($this->makeUser(['username' => 'rejectedcomposeid']));
+
+        $failed = $this->post('/threads', [
+            'board_id' => (int) $target['id'],
+            'board' => (string) $collision['slug'],
+            'title' => 'Hi',
+            'body' => 'This rejected draft stays in its intended board.',
+            'is_anonymous' => '1',
+        ]);
+
+        $this->assertStatus(422, $failed);
+        $this->assertSelectedComposeBoard($failed->body(), $target);
+        self::assertStringContainsString('value="Hi"', $failed->body());
+        self::assertStringContainsString('This rejected draft stays in its intended board.', $failed->body());
+        self::assertMatchesRegularExpression('/<input\b[^>]*name="is_anonymous"[^>]*\bchecked\b/', $failed->body());
+        $this->assertSeeText($failed, 'Give the topic a title before you open it.');
+    }
+
+    public function test_unpostable_numeric_slug_falls_back_instead_of_selecting_its_colliding_id(): void
+    {
+        $category = $this->makeCategory('Guarded numeric destinations');
+        $fallback = $this->makeBoard($category, ['slug' => 'guarded-fallback']);
+        $idBoard = $this->makeBoard($category, ['slug' => 'guarded-id-destination']);
+        $restricted = $this->makeBoard($category, [
+            'slug' => (string) $idBoard['id'],
+            'post_min_role' => 'admin',
+        ]);
+        $archived = $this->makeBoard($category, ['slug' => 'archived-destination']);
+        $this->boards()->setArchived((int) $archived['id'], true);
+        $private = $this->makeBoard($category, ['slug' => 'inaccessible-destination', 'visibility' => 'private']);
+        $this->actingAs($this->makeUser(['username' => 'guardedcompose']));
+
+        foreach ([$restricted, $archived, $private] as $destination) {
+            $page = $this->get('/compose', ['board' => (string) $destination['slug']]);
+            $this->assertStatus(200, $page);
+            $this->assertSelectedComposeBoard($page->body(), $fallback);
+            self::assertStringNotContainsString('data-board-slug="inaccessible-destination"', $page->body());
+            self::assertStringNotContainsString((string) $private['name'], $page->body());
+        }
+
+        $this->assertStatus(403, $this->post('/threads', [
+            'board_id' => (int) $restricted['id'],
+            'title' => 'An unauthorized topic',
+            'body' => 'The destination picker must not grant posting rights.',
+        ]));
+        $this->assertStatus(404, $this->get('/c/' . $private['slug']));
+    }
+
     public function test_anonymity_control_is_rendered_dormant_when_another_postable_board_allows_it(): void
     {
         $member = $this->makeUser(['username' => 'composeanonymousswitch']);
@@ -195,5 +303,14 @@ final class AppComposeMemberSurfaceTest extends TestCase
             'idempotency_key' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         ]);
         $this->assertRedirectContains($success, '/t/');
+    }
+
+    /** @param array<string,mixed> $board */
+    private function assertSelectedComposeBoard(string $html, array $board): void
+    {
+        self::assertSame(1, preg_match('/data-compose-selected-board="([^"]+)"/', $html, $surface));
+        self::assertSame((string) $board['slug'], $surface[1]);
+        self::assertSame(1, preg_match('/<option value="(\d+)"[^>]*\bselected\b/', $html, $option));
+        self::assertSame((string) $board['id'], $option[1]);
     }
 }

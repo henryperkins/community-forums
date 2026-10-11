@@ -32,7 +32,7 @@ foreach (($participants ?? []) as $pp) {
     <?php endif; ?>
     <div class="dm-group<?= $mine ? ' mine' : '' ?>" data-dm-author="<?= (int) $first['user_id'] ?>" data-dm-date="<?= $e($day) ?>">
         <?php if (!$mine): ?>
-            <span class="dm-mono-col"><?= $this->partial('partials/monogram', ['name' => $authorName, 'username' => $first['author_username']]) ?></span>
+            <span class="dm-mono-col"><?= $this->partial('partials/monogram', ['name' => $authorName, 'username' => $first['author_username'], 'avatar_path' => $first['author_avatar_path'] ?? null]) ?></span>
         <?php endif; ?>
         <div class="dm-msgs">
             <div class="dm-ghead">

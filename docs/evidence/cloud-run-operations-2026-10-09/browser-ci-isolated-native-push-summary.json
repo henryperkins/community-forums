@@ -1,0 +1,30 @@
+{
+  "event": "isolated_browser_ci_native_push_launch",
+  "parent_build_id": "3fc84a4c-5b21-4b28-8ba6-0acba3a65f7e",
+  "status": "WORKING",
+  "created_at": "2026-10-09T08:51:21.447460Z",
+  "trigger_id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+  "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+  "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+  "service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "ref": "refs/heads/chore/cloud-run-operations",
+  "repository": "henryperkins/community-forums",
+  "step_ids": [
+    "trusted-parent-controls",
+    "isolated-child-and-parent-verification"
+  ],
+  "github_delivery": {
+    "id": "3847294009737216000",
+    "delivered_at": "2026-10-09T08:51:21.237Z",
+    "redelivery": false,
+    "event": "push",
+    "response_status": 200,
+    "exact_source_ref_repository_match": true
+  },
+  "terminal_status": "CANCELLED",
+  "finish_time": "2026-10-09T08:56:16.571613Z",
+  "child_build_id": "93f8bb10-afcf-4331-8526-5bd909321612",
+  "child_terminal_status": "CANCELLED",
+  "child_finish_time": "2026-10-09T08:56:16.140869Z",
+  "coverage": "Automatic launch/bindings only; canceled before complete suites when review required provider-step verification."
+}

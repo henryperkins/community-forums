@@ -126,6 +126,22 @@ test.describe('desktop', () => {
       expect(value, `${name} is the reading measure`).toBeGreaterThan(MEASURE - 4);
       expect(value, `${name} is the reading measure`).toBeLessThan(MEASURE + 4);
     }
+
+    // A draft leaves the dock expanded while the reader tabs back to a post.
+    // Native focus scrolling must reserve the dock as well as the header.
+    await page.setViewportSize({ width: 1440, height: 800 });
+    await page.locator('#reply textarea[name="body"]').fill('A draft kept while reading.');
+    const link = page.locator('article[data-post]').nth(3).locator('a.post-author');
+    await link.evaluate((element) => {
+      window.scrollTo(0, window.scrollY + element.getBoundingClientRect().top - (window.innerHeight - 40));
+    });
+    await link.focus();
+    await expect.poll(() => link.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const dock = document.querySelector('.thread-dock')!.getBoundingClientRect();
+      const header = document.querySelector('.forum-bar')!.getBoundingClientRect();
+      return box.top >= header.bottom && box.bottom <= dock.top;
+    }), { message: 'the focused post link is visible between the header and reply dock' }).toBe(true);
   });
 
   /**

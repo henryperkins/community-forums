@@ -567,7 +567,7 @@ test('profile states match the approved anatomy in light and dark themes', async
     return { fontSize: style.fontSize, lineHeight: style.lineHeight };
   });
   expect(proseType).toEqual({ fontSize: '17px', lineHeight: '28.9px' });
-  const finalTabBox = await page.getByRole('link', { name: 'Connections', exact: true }).boundingBox();
+  const finalTabBox = await page.getByRole('navigation', { name: 'Profile activity' }).getByRole('link', { name: 'Connections', exact: true }).boundingBox();
   expect(finalTabBox, 'Connections tab should be rendered').not.toBeNull();
   expect(finalTabBox!.x + finalTabBox!.width, 'Connections tab should not be clipped initially')
     .toBeLessThanOrEqual(viewport(info).width);
@@ -633,12 +633,12 @@ test('tabs, search, sorting, paging, menu, copy link, and keyboard focus work', 
   const followingTotal = await statValue('Following');
   await followersStat.click();
   await expect(page).toHaveURL(/\/u\/galadriel\?tab=connections$/);
-  await expect(page.getByRole('link', { name: 'Connections', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Profile activity' }).getByRole('link', { name: 'Connections', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.locator('.profile-seg-opt.is-on')).toHaveText(`Followers · ${followerTotal}`);
   await expect(page.locator('.profile-conn-card')).toHaveCount(Number(followerTotal));
   await followingStat.click();
   await expect(page).toHaveURL(/\/u\/galadriel\?tab=connections&c=following$/);
-  await expect(page.getByRole('link', { name: 'Connections', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Profile activity' }).getByRole('link', { name: 'Connections', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.locator('.profile-seg-opt.is-on')).toHaveText(`Following · ${followingTotal}`);
   await expect(page.locator('.profile-conn-card')).toHaveCount(Number(followingTotal));
 
@@ -663,7 +663,7 @@ test('tabs, search, sorting, paging, menu, copy link, and keyboard focus work', 
   await page.getByRole('link', { name: 'Next', exact: true }).click();
   await expect(page.getByText('Page 2 of 2')).toBeVisible();
 
-  await page.getByRole('link', { name: 'Connections', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Profile activity' }).getByRole('link', { name: 'Connections', exact: true }).click();
   const connectionSearch = page.getByRole('searchbox', { name: 'Find a member' });
   await connectionSearch.fill('Erestor');
   await page.getByRole('button', { name: 'Search' }).click();
@@ -749,7 +749,7 @@ test('profile navigation and GET forms remain complete without JavaScript', asyn
   await expect(page).toHaveURL(/q=rollback/);
   await expect(page.locator('.profile-row')).not.toHaveCount(0);
 
-  await page.getByRole('link', { name: 'Connections', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Profile activity' }).getByRole('link', { name: 'Connections', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Find a member' }).fill('Erestor');
   await page.getByRole('button', { name: 'Search' }).click();
   await expect(page.getByRole('link', { name: 'Erestor', exact: true })).toBeVisible();

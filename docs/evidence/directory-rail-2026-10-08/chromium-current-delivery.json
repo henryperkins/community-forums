@@ -1,0 +1,18 @@
+{
+  "engine": "chromium",
+  "version": "155.0.8059.12",
+  "build": "a8b813712a571dff",
+  "assets": [
+    {
+      "url": "/assets/dist/app-style-DcXze5GH.css",
+      "status": 200,
+      "sha256": "afec5a84f50297f8b8d296996b3f4a9480a8f9e0ecd1b3bcaee21b3055c8a115"
+    },
+    {
+      "url": "/assets/dist/app-ade982dee46260d0.js",
+      "status": 200,
+      "sha256": "ade982dee46260d0006e71a6f6275c4f3016374c61eef8801a7392e82e9ead91"
+    }
+  ],
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.8059.12 Safari/537.36"
+}

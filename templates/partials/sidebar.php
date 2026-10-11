@@ -3,7 +3,7 @@
 /**
  * The board rail — the design system's BoardRail
  * (docs/design-system/imladris/components/forum/BoardRail.jsx), rendered
- * server-side (ADR 0032). Boards and nothing else, at one width, with the
+ * server-side (ADRs 0032, 0046). Directory navigation, boards, personal folders and saved feeds, with the
  * active board marked the same way on every surface that has one; the presence
  * widget hangs in the footer slot, so the same roster and the same "See everyone
  * online" travel with the member across every route.
@@ -36,6 +36,12 @@ if ($composeMode) {
     }
 }
 $composeSelectedId = (int) ($selected_board ?? 0);
+$railPath = (string) ($request_path ?? '');
+$directoryPane = $railPath === '/' ? ($home_pane ?? 'boards')
+    : ($railPath === '/tags' || str_starts_with($railPath, '/tags/') ? 'tags' : null);
+$directoryLinks = ['boards' => 'Boards'];
+if (!empty($features['tags'])) { $directoryLinks['tags'] = 'Tags'; }
+if (!empty($features['community'])) { $directoryLinks['connections'] = 'Connections'; }
 
 $unreadPill = static function (int $unread) use ($e): string {
     if ($unread <= 0) {
@@ -47,12 +53,22 @@ $unreadPill = static function (int $unread) use ($e): string {
 };
 ?>
 <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards" tabindex="<?= $this->block('account_settings', '') === '1' ? '0' : '-1' ?>">
-    <a class="nav-close" data-nav-close href="#main">Close board rail</a>
+    <a class="nav-close" data-nav-close href="#main" aria-label="Close board rail"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
+    <div class="board-rail-directory" data-directory-nav>
+        <span class="board-rail-cat">Explore</span>
+        <?php foreach ($directoryLinks as $key => $label): ?>
+            <a class="board-rail-item<?= $directoryPane === $key ? ' is-active' : '' ?>" data-directory-link="<?= $e($key) ?>" href="/?pane=<?= $e($key) ?>"<?= $directoryPane === $key ? ' aria-current="page"' : '' ?>><span class="board-rail-name"><?= $e($label) ?></span></a>
+        <?php endforeach; ?>
+    </div>
     <?php $organization = !$composeMode && is_callable($organization_nav ?? null) ? $organization_nav() : []; ?>
     <?php foreach (($organization['board_folders'] ?? []) as $folder): ?>
         <span class="board-rail-cat"><?= $e($folder['name']) ?></span>
         <?php foreach ($folder['boards'] as $shortcut): ?>
-            <a class="board-rail-item" href="/c/<?= $e($shortcut['slug']) ?>"><span class="board-rail-name"><?= $e($shortcut['name']) ?></span></a>
+            <?php $shortcut['unread_count'] = (int) ($board_unread_counts[(int) $shortcut['id']] ?? 0); ?>
+            <?= $this->partial('partials/board_rail_item', [
+                'board' => $shortcut, 'unread_pill' => $unreadPill,
+                'active_thread_board_id' => $active_thread_board_id ?? 0,
+            ]) ?>
         <?php endforeach; ?>
     <?php endforeach; ?>
     <?php if (!empty($organization['saved_feeds'])): ?>
@@ -89,14 +105,11 @@ $unreadPill = static function (int $unread) use ($e): string {
                         </span>
                     <?php endif; ?>
                 <?php else: ?>
-                    <?php $active = $request_path === '/c/' . $board['slug']
-                        || (int) ($active_thread_board_id ?? 0) === (int) $board['id']; ?>
                     <?php // The active board keeps its href too (the component renders it inert): the row is also the way back to the board's first page. ?>
-                    <a class="board-rail-item<?= $active ? ' is-active' : '' ?>" data-board-slug="<?= $e($board['slug']) ?>" href="/c/<?= $e($board['slug']) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
-                        <span class="board-rail-name"><?= $e($board['name']) ?></span>
-                        <?= $unreadPill($unread) ?>
-                        <?php if ($board['visibility'] !== 'public'): ?><span class="board-rail-tag"><?= $e($board['visibility']) ?></span><?php endif; ?>
-                    </a>
+                    <?= $this->partial('partials/board_rail_item', [
+                        'board' => $board, 'unread_pill' => $unreadPill,
+                        'active_thread_board_id' => $active_thread_board_id ?? 0,
+                    ]) ?>
                 <?php endif; ?>
             <?php endforeach; ?>
         <?php endforeach; ?>
@@ -109,7 +122,12 @@ $unreadPill = static function (int $unread) use ($e): string {
             // shell's only route to /users-online, so hiding it on an empty roster
             // would remove the one way to go and look. The poll updates it in place.
             ?>
-            <section class="presence-widget" data-presence data-presence-limit="<?= $presenceLimit ?>" data-presence-poll>
+            <?php
+            // The poller rebuilds a changed row in app.js, so it has to know what
+            // presence_person.php decided about the "Show avatars" preference.
+            $presenceAvatars = is_callable($rail_avatars ?? null) ? ($rail_avatars)() : true;
+            ?>
+            <section class="presence-widget" data-presence data-presence-limit="<?= $presenceLimit ?>" data-presence-avatars="<?= $presenceAvatars ? '1' : '0' ?>" data-presence-poll>
                 <h2 class="presence-title">
                     <a href="/users-online">Online</a>
                     <span class="presence-count" data-presence-count><?= $presenceCapped ? $presenceHere . '+' : $presenceHere ?></span>

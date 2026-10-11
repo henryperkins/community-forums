@@ -52,8 +52,8 @@ final class InboxView
     ];
 
     public const GROUPS = [
-        'Your queue' => ['for_you', 'unread', 'mentions', 'replies', 'watching'],
-        'Yours' => ['assigned', 'starred', 'mine', 'snoozed'],
+        'Your queue' => ['for_you', 'snoozed', 'unread', 'mentions', 'replies', 'watching'],
+        'Yours' => ['assigned', 'starred', 'mine'],
         'Topic state' => ['needs_answer', 'decisions', 'solved'],
     ];
 

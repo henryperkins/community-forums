@@ -20,7 +20,7 @@ import path from 'node:path';
  */
 
 const repoRoot = path.resolve(__dirname, '..', '..');
-const OUT = path.resolve(repoRoot, 'docs/evidence/imladris-forum-inbox-remediation');
+const OUT = path.resolve(repoRoot, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-forum-inbox-remediation');
 
 if (process.env.RB_BASE_URL) {
   test.use({ baseURL: process.env.RB_BASE_URL });
@@ -108,26 +108,26 @@ test('the unread count is a sentence, not a shout', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto('/inbox?scope=for_you&order=active');
-  const pill = page.locator('.inbox-list-head .badge');
+  const pill = page.locator('[data-subheader] [data-inbox-unread-count]');
   await expect(pill).toBeVisible();
   await expect(pill).toHaveCSS('text-transform', 'none');
   await expect(pill).toHaveText(/^\d+ unread$/);
 });
 
-/** The design rules the Viewing bar along its bottom edge only. */
-test('the viewing bar carries one rule, beneath it', async ({ page }) => {
+/** One hairline separates the consolidated context row from its topics. */
+test('the shared Inbox context carries one rule, beneath it', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto('/inbox?scope=for_you&order=active');
-  const bar = page.locator('.inbox-view-bar');
-  await expect(bar).toHaveCSS('border-top-width', '0px');
-  await expect(bar).toHaveCSS('border-bottom-width', '1px');
+  const row = page.locator('[data-subheader]');
+  await expect(row).toHaveCSS('border-top-width', '0px');
+  await expect(row).toHaveCSS('border-bottom-width', '1px');
+  await expect(row.locator('.inbox-view-bar')).toHaveCSS('border-bottom-width', '0px');
+  await expect(page.locator('[data-inbox] .inbox-view-bar')).toHaveCount(0);
 
-  // The density statement qualifies the bar it sits in and names the register
-  // the reader actually has, exactly as the board index states it.
-  const density = page.locator('.inbox-density');
-  await expect(density).toHaveText(/^(Compact|Comfortable) rows change$/);
-  await expect(density).toHaveCSS('flex-grow', '0');
+  // Both independent choices have explicit visible labels; preferences live in Settings.
+  await expect(page.locator('[data-inbox-scope-menu] > summary')).toContainText('Show:');
+  await expect(page.locator('.inbox-sort-menu > summary')).toContainText('Sort:');
 });
 
 /**

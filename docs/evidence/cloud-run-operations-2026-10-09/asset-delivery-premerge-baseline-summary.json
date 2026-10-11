@@ -1,0 +1,389 @@
+{
+  "verified_at": "2026-10-09T11:07:30.981875+00:00",
+  "manifest_version": "85b4bc099e7bdac1",
+  "asset_count": 64,
+  "assets": [
+    {
+      "path": "/assets/app.css",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/app.js",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/composer.js",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/conversation-entry.js",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/dist/app-10a2b0c761ece66f.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/app-18e75fb4c256674b.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/app-da2b715df2ea1a09.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/app-ead709125428cd4d.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/app-style-Bf8aCOiP.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/app-style-DpcQqnu-.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/app-style-kNCnSn5Q.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/composer-afe872655b72f60d.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/composer-d0210ad65bc6975b.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/imladris-style-B-rtqI97.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/imladris-style-bT2GVmLw.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/imladris-style-CU9grDIH.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/milkdown-adapter-B36_3vOz.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/milkdown-adapter-Bqr6mUeY.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/passkeys-27f8b05555555872.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/tour-2cb01893b54a8644.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/tour-7cdbe315501e3843.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/wysiwyg-composer-BhOmBk3Y.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/wysiwyg-composer-D9tMbjJ1.js",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/dist/wysiwyg-composer-DJaHQYS-.css",
+      "status": 200,
+      "sha256_match": true,
+      "immutable_cache": true
+    },
+    {
+      "path": "/assets/elven-star.svg",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/cormorant-garamond-latin-400-italic.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/cormorant-garamond-latin-400-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/cormorant-garamond-latin-500-italic.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/cormorant-garamond-latin-600-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/cormorant-garamond-latin-700-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/eb-garamond-latin-400-italic.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/eb-garamond-latin-400-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/eb-garamond-latin-500-italic.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/eb-garamond-latin-500-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/eb-garamond-latin-600-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/jetbrains-mono-latin-600-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/LICENSES/OFL-cormorant-garamond.txt",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/LICENSES/OFL-eb-garamond.txt",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/LICENSES/OFL-jetbrains-mono.txt",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/LICENSES/OFL-marcellus.txt",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/fonts/imladris/marcellus-latin-400-normal.woff2",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/imladris.css",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/passkeys.js",
+      "status": 200,
+      "sha256_match": true
+    },
+    {
+      "path": "/assets/tour.js",
+      "status": 200,
+      "sha256_match": true
+    }
+  ],
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ok",
+      "database": "ok"
+    }
+  },
+  "pages": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "csrf_field": true,
+      "email_field": true,
+      "password_field": true
+    }
+  ],
+  "unauthenticated_direct_origin": 403,
+  "alias": {
+    "status": 301,
+    "location": "https://forum.candidary.online/login?next=%2Fmessages"
+  }
+}

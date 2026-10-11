@@ -1,0 +1,243 @@
+{
+  "event": "browser_ci_036_failed_hosted_artifact_inspection",
+  "captured_at": "2026-10-09T10:30:42.837346+00:00",
+  "source_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "parent_build_id": "92503be8-e45c-44e7-966d-b9bcf4a69b28",
+  "child_build_id": "a09e3080-2884-4445-8d1c-1eb25b0ea9ea",
+  "parent_passed": false,
+  "parent_stage": "child-provider-failure",
+  "parent_child_provider_status": "FAILURE",
+  "parent_metadata_verified": true,
+  "parent_provider_steps_verified": false,
+  "parent_enforcement_passed": false,
+  "candidate_passed": false,
+  "candidate_exit_code": 1,
+  "candidate_first_failed_stage": "uploads",
+  "child_reported_docker_exit_code": 1,
+  "artifact_count": 809,
+  "manifest_paths_and_embedded_result_match": true,
+  "within_all_archive_bounds": true,
+  "archive": {
+    "member_count": 810,
+    "compressed_bytes": 112555840,
+    "inflated_bytes_including_headers": 125255680,
+    "member_payload_bytes": 123801206,
+    "max_member_bytes": 982137,
+    "root_counts": {
+      "browser": 290,
+      "unified-notifications-and-settings": 505,
+      "image-upload-reliability": 14
+    },
+    "png_count": 760,
+    "json_count": 49
+  },
+  "unified": [
+    {
+      "path": "unified-notifications-and-settings/browser-results.json",
+      "completed": true,
+      "recorded_commands": 40,
+      "nonzero_commands": 0
+    }
+  ],
+  "trusted_pinned_enforcer_exit_code": 1,
+  "download": {
+    "event": "browser_ci_final_operator_artifact_download",
+    "captured_at": "2026-10-09T10:29:44.630120+00:00",
+    "diagnostic_only": true,
+    "source_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "parent": {
+      "id": "92503be8-e45c-44e7-966d-b9bcf4a69b28",
+      "status": "FAILURE",
+      "createTime": "2026-10-09T09:10:26.946947Z",
+      "startTime": "2026-10-09T09:10:27.432572198Z",
+      "finishTime": "2026-10-09T10:28:32.555764Z",
+      "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+      "all_provider_steps_successful": false,
+      "steps": [
+        {
+          "id": "trusted-parent-controls",
+          "status": "SUCCESS",
+          "exit_code": null
+        },
+        {
+          "id": "isolated-child-and-parent-verification",
+          "status": "FAILURE",
+          "exit_code": 1
+        }
+      ]
+    },
+    "child": {
+      "id": "a09e3080-2884-4445-8d1c-1eb25b0ea9ea",
+      "status": "FAILURE",
+      "createTime": "2026-10-09T09:11:22.382351725Z",
+      "startTime": "2026-10-09T09:11:23.023742330Z",
+      "finishTime": "2026-10-09T10:28:19.750924Z",
+      "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+      "all_provider_steps_successful": false,
+      "steps": [
+        {
+          "id": "source",
+          "status": "SUCCESS",
+          "exit_code": null
+        },
+        {
+          "id": "browser-suites",
+          "status": "FAILURE",
+          "exit_code": 1
+        },
+        {
+          "id": "publish-evidence",
+          "status": "SUCCESS",
+          "exit_code": null
+        },
+        {
+          "id": "enforce-result",
+          "status": "FAILURE",
+          "exit_code": 1
+        }
+      ]
+    },
+    "parent_receipt_object": {
+      "filename": "verification.json",
+      "name": "03690ff92e26b5c3413c2d4d799b402599179676/92503be8-e45c-44e7-966d-b9bcf4a69b28/verification.json",
+      "generation": "1791541702056826",
+      "bytes": 870,
+      "sha256": "512648186e99ee55fb6a34fca9270a129f115534b38283d38682e376ef96310e",
+      "provider_size_md5_match": true
+    },
+    "artifacts": [
+      {
+        "filename": "result.json",
+        "name": "03690ff92e26b5c3413c2d4d799b402599179676/a09e3080-2884-4445-8d1c-1eb25b0ea9ea/result.json",
+        "generation": "1791541682655414",
+        "bytes": 67556,
+        "sha256": "fdd886ec125400f32e29eb0cc13e75759ff2e053ec713d48d774094867ffefea",
+        "provider_size_md5_match": true
+      },
+      {
+        "filename": "runner-exit.json",
+        "name": "03690ff92e26b5c3413c2d4d799b402599179676/a09e3080-2884-4445-8d1c-1eb25b0ea9ea/runner-exit.json",
+        "generation": "1791541682854236",
+        "bytes": 23,
+        "sha256": "c7668a314373f3e3846d2b46093459fc49a1cbdd8472af18cc701ae61a6cd46d",
+        "provider_size_md5_match": true
+      },
+      {
+        "filename": "evidence.tar.gz",
+        "name": "03690ff92e26b5c3413c2d4d799b402599179676/a09e3080-2884-4445-8d1c-1eb25b0ea9ea/evidence.tar.gz",
+        "generation": "1791541683752898",
+        "bytes": 112555840,
+        "sha256": "aa6f42d273db0e363239bd875f1ef22d18edf6715769df9802e80244aeeadd43",
+        "provider_size_md5_match": true
+      }
+    ],
+    "all_provider_steps_successful": false,
+    "artifact_hashes_and_sizes_match_parent_and_provider": null,
+    "artifact_hashes_and_sizes_match_provider": true,
+    "parent_receipt_passed": false,
+    "parent_receipt_stage": "child-provider-failure",
+    "parent_artifact_receipts_available": false,
+    "parent_artifact_comparison_limit": "Parent rejected the failed child before downloading artifacts, so its receipt contains no artifact hashes to compare."
+  },
+  "limits": [
+    "Failed hosted diagnostic; no lane acceptance or production regression attribution.",
+    "Capture and unified completed; WebKit mobile uploads failed three tests.",
+    "Artifact paths and format validated; branch-authored test semantics remain reported rather than attested.",
+    "An independent audit rechecked all four cached object sizes/MD5/SHA-256, all unified project reports, the corrected accessibility case and fixed enforcer rejection."
+  ],
+  "provider_log_reported_group_counts": {
+    "capture": {
+      "passed": 334,
+      "failed": 0,
+      "skipped": 74
+    },
+    "unified_notifications_settings": {
+      "passed": 248,
+      "failed": 0,
+      "skipped": 18
+    },
+    "production_docker_uploads": {
+      "passed": 138,
+      "failed": 3,
+      "skipped": 0,
+      "projects": {
+        "desktop": {
+          "passed": 47,
+          "failed": 0,
+          "skipped": 0
+        },
+        "mobile": {
+          "passed": 47,
+          "failed": 0,
+          "skipped": 0
+        },
+        "webkit-mobile": {
+          "passed": 44,
+          "failed": 3,
+          "skipped": 0
+        }
+      }
+    }
+  },
+  "webkit_mobile_failures": [
+    {
+      "spec": "tests/browser/composer-upload-reliability.spec.ts",
+      "assertion_line": 91,
+      "case": "source pending preview intent survives draft reload and still blocks sending",
+      "assertion": "After removing interrupted image, send remained disabled through the 5000 ms enabled assertion."
+    },
+    {
+      "spec": "tests/browser/composer-upload-reliability.spec.ts",
+      "assertion_line": 463,
+      "case": "ordinary Markdown and existing image references remain usable without JavaScript",
+      "assertion": "Whole-test 45000 ms budget exhausted while reading the reply form CSRF input."
+    },
+    {
+      "spec": "tests/browser/upload-http.spec.ts",
+      "assertion_line": 124,
+      "call_line": 153,
+      "case": "rich new-topic, edit, DM and group-DM composers publish finalized images",
+      "assertion": "Expected finalized image was absent through the 5000 ms visibility assertion during a DM publish."
+    }
+  ],
+  "attribution": "Observed failures only; reproduction and unchanged-baseline comparison are pending. No product regression or fixture cause is asserted.",
+  "independent_audit": {
+    "captured_at": "2026-10-09T10:31:53.744528+00:00",
+    "diagnostic_verified": true,
+    "accepted": false,
+    "provider_size_md5_and_local_sha256_verified": true,
+    "trusted_parent_rejected_failed_child_before_artifact_download": true,
+    "trusted_pinned_enforcer_exit_code": 1,
+    "unified": {
+      "completed": true,
+      "recorded_commands": 40,
+      "all_commands_exit_zero": true,
+      "suite_project_inventory_verified": true,
+      "project_totals": {
+        "passed": 248,
+        "failed": 0,
+        "skipped": 18,
+        "flaky": 0
+      },
+      "report_server_environments_omitted": true,
+      "account_console_budget_case": [
+        {
+          "project": "desktop",
+          "status": "expected",
+          "results": [
+            "passed"
+          ]
+        },
+        {
+          "project": "mobile",
+          "status": "skipped",
+          "results": [
+            "skipped"
+          ]
+        }
+      ]
+    }
+  }
+}

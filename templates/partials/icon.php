@@ -25,6 +25,8 @@ $iconStroke = [
     // Copied from the Imladris account-settings rail. This profile path is
     // intentionally distinct from the generic user glyph above.
     'settings-profile'=> '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    // Lucide settings-2: the account menu's Settings, distinct from Profile's person.
+    'settings'        => '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
     'user-plus'       => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
     'bell-off'        => '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/>',
     'edit-3'          => '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
@@ -37,6 +39,7 @@ $iconStroke = [
     'check'           => '<path d="M20 6 9 17l-5-5"/>',
     'arrow-up'        => '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
     'chevron-left'    => '<path d="M15 18l-6-6 6-6"/>',
+    'chevron-right'   => '<path d="m9 6 6 6-6 6"/>',
     'chevron-down'    => '<path d="M6 9l6 6 6-6"/>',
     'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
     'star'            => '<path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/>',

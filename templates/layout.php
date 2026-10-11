@@ -31,6 +31,12 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php /* Only a Messages conversation reads the row-switch signal before first
+             paint (the script's own path rule); other pages skip this parser-blocking
+             request, and app.js clears an abandoned signal there. */ ?>
+    <?php if (preg_match('#^/messages/[0-9]+$#', (string) ($request_path ?? '')) === 1): ?>
+    <script src="<?= $e($assetUrl('conversation-entry.js')) ?>"></script>
+    <?php endif; ?>
     <title><?= $e($this->block('title', $brand['name'])) ?></title>
     <meta name="description" content="<?= $e($desc) ?>">
     <?php if ($robots !== ''): ?><meta name="robots" content="<?= $e($robots) ?>"><?php endif; ?>
@@ -55,7 +61,26 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
 <body<?= $this->block('account_settings', '') === '1' ? ' data-account-settings="1"' : '' ?> class="variant-<?= $e($variant) ?> <?= !empty($memberSurfaces['rail_open']) ? 'is-rail-open' : 'is-rail-closed' ?> <?= !empty($memberSurfaces['inbox_reading_open']) ? 'is-reading-open' : 'is-reading-closed' ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>" data-rail-open="<?= !empty($memberSurfaces['rail_open']) ? '1' : '0' ?>" data-inbox-reading-open="<?= !empty($memberSurfaces['inbox_reading_open']) ? '1' : '0' ?>"<?php if ($wysiwygComposerOn): ?> data-wysiwyg-composer="1" data-wysiwyg-src="<?= $e($assetUrl('wysiwyg-composer.js')) ?>"<?php endif; ?><?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>
 <?php if ($showChrome): ?>
-<?= $this->partial('partials/topbar') ?>
+<?php
+// New topic opens the composer on the board being read: a board page's board,
+// or an authorized topic's. Compose re-checks posting rights and falls back to
+// the first board the member may post in.
+$chromePath = (string) ($request_path ?? '');
+$homePane = $chromePath === '/' && is_string($pane ?? null) ? $pane : null;
+$composeBoard = '';
+if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
+    $composeBoard = (string) ($thread['board_slug'] ?? '');
+} elseif ($variant === 'app' && str_starts_with($chromePath, '/c/') && is_array($board ?? null)) {
+    $composeBoard = (string) ($board['slug'] ?? '');
+}
+?>
+<?= $this->partial('partials/topbar', [
+    'has_board_rail' => $variant === 'app',
+    'has_reading_pane' => $variant === 'app' && $this->block('route', '') === 'inbox',
+    'home_pane' => $homePane,
+    'active_thread_board_id' => str_starts_with($chromePath, '/t/')
+        ? (int) ($thread['board_id'] ?? 0) : 0,
+]) ?>
 <?php endif; ?>
 <?php if (is_array($site_announcement ?? null) && !empty($site_announcement['active'])): ?>
 <?= $this->partial('partials/announcement_banner') ?>
@@ -66,10 +91,12 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
         <?= $this->partial('partials/sidebar', [
             'compose_boards' => $compose_boards ?? null,
             'selected_board' => $selected_board ?? null,
+            'home_pane' => $homePane ?? null,
             'active_thread_board_id' => str_starts_with((string) ($request_path ?? ''), '/t/')
                 ? (int) ($thread['board_id'] ?? 0) : 0,
         ]) ?>
         <main class="main" id="main">
+            <?= $this->partial('partials/subheader', ['compose_board' => $composeBoard]) ?>
             <?= $this->partial('partials/flash') ?>
             <?= $content ?>
         </main>
@@ -89,6 +116,7 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
     </main>
 <?php else: ?>
     <main class="container" id="main">
+        <?= $this->partial('partials/subheader', ['compose_board' => $composeBoard]) ?>
         <?= $this->partial('partials/flash') ?>
         <?= $content ?>
     </main>

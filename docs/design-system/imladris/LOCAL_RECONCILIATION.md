@@ -755,3 +755,365 @@ deduplication. Full tabs keep 20-item pages. Relative timestamps retain exact UT
 in `datetime` and `title`. No client-only filter or upstream component runtime is
 introduced. The source-only preview limitation still applies; evidence comes
 from the PHP application (see `docs/evidence/profile-system-2026-09-27/`).
+
+## 2026-09-28 — Inbox header and mobile route visibility
+
+ADR 0042 replaces the inbox's persistent introduction, order pills, density
+statement, and keyboard legend with a compact title, Show and Sort disclosures,
+and an action/help disclosure. This is an approved application adaptation of
+`ForumInbox.dc.html`; the imported preview stays historical reference material.
+The existing 108px two-row topbar now applies at the 860px drawer breakpoint so
+Boards, Inbox, and Messages are fully visible. The bounded member-surface block
+in `components.css` carries the approved control styling into the generated
+design layer and its application compatibility bridge together. The topbar
+adaptation remains application-owned; Search compacts at 1080px to preserve
+room for counts and controls. PHP and progressive enhancement retain behavior.
+
+## 2026-10-06 — Chrome consistency
+
+ADR 0032's follow-up and ADMIN §9.2/§9.4 close the member/operator chrome audit:
+the desktop rail clears the sticky header on document-scrolling pages; phone
+drawers own keyboard focus while the main page is covered; plain errors omit
+controls for absent panes; Boards covers real tag routes and authorized topics;
+and folder shortcuts share board state with category rows. The narrow operator
+tier is a native disclosure headed by its current area, preserving the same
+ordered, role- and flag-gated destinations without JavaScript. Narrow
+subscription panels stack the title, delivery controls and off action based on
+available pane width; long titles wrap, and long operator-header brands yield
+space to controls. Messages waits for styles before restoring a saved column,
+so WebKit does not reopen an overlay over a smaller conversation. These
+application-owned geometry, interaction and content-resilience rules live in
+`public/assets/app.css`, `public/assets/app.js` and the PHP shell, retaining the
+imported Imladris vocabulary and semantic tokens. The
+bounded member-surface compatibility bridge and imported preview sources are
+unchanged. Evidence lives in `docs/evidence/chrome-consistency-2026-10-06/`.
+
+## 2026-10-06 — shared-chrome handoff synced per hunk; production keeps its route contract
+
+Imported from `CommunityForumsDesignSystem.zip` (`design_handoff_shared_chrome/`),
+SHA-256 `b81803534204ef25f520eb397bc19cf40a262c9b11cc00fbeb659b22d47f2d0c`:
+upstream's consistency review of the member bar, the board rail and its roster,
+and the operator bar across its 23 screens. The README is preserved byte for byte
+as `_archive/design_handoff_shared_chrome/README.md`. It asks for four component
+changes, two production checks, and no work on five open decisions. Design
+digest `ac4252ec…` → `bb91cb07…`.
+
+The handoff read a checkout older than `34f13b00`. It quotes `topbar.php`'s
+earlier Boards rule (`/`, `/c/*`, `/tag/*`) and a seat with Notifications only
+inside the account menu. The standalone bell has rendered since `88d51dfe`
+(2026-09-20). Where its route contract and production disagree, the accepted
+ADR wins (the authority order in `production-contract.json`) and the difference
+is raised upstream below rather than ported.
+
+### Taken
+
+- **Components, whole** (`.txt` suffix dropped). `ForumNav`: the bell beside the
+  seat, no Inbox count without a viewer, 99+ caps with counted accessible names,
+  and the active pill keeps its href. `BoardRail`: active rows keep their href,
+  `tag` is documented as the visibility chip on every rail but Compose's picker,
+  and a `commend` route glyph. `PresenceList`: `allHref`/`allLabel` render the
+  widget's own `.presence-foot > a.presence-all`. `AdminNav`: eleven areas with
+  Moderation at index 1, the operator cluster, `role`, a `viewer` seeded by
+  username, `notificationsHref` and a counted bell. `Monogram.jsx` was already
+  byte-identical. This also closes the JSX half of the AdminNav rewrite held
+  since 2026-08-09: these files are reference source that does not execute here
+  (`PREVIEW_STATUS.md`), and production already renders the cluster they
+  describe (ADR 0024 decision 3). Its CSS half stays held (below).
+- **Screens:** `account-settings`, `admin-overview`, `compose` and `forum-inbox`
+  whole. `forum-inbox` stops printing ★/☆, which retires one of the five sources
+  listed on 2026-09-23. Two screens are new. `board-page` was listed in
+  `github.md`'s screen map but this mirror never had it. `leaderboard`'s rail is
+  open decision 1 below. Their `ds-base.js`/`support.js` loaders were not shipped
+  and are not reconstructed: the mirror's copies exist in four variants, and the
+  screens are source-only either way.
+- **`tokens/colors.css`, whole.** `--field-rule` (`gold-700` by day, `gold-600`
+  in twilight) and the four `--stage-*` auth tokens are production's ADR 0039
+  values, now upstream's. The twilight comments take back our `--artifact-link`
+  remap and the on-ramp staff ink.
+- **`components.css` — six of 24 hunks, two in a local form:**
+  - `.btn:hover` deepens `--accent` (ADR 0039 #5). The 2026-09-24 entry's refusal
+    condition is met: upstream brings production's exact rule.
+  - `.input-engraved` takes `var(--field-rule)` (ADR 0039 #2). Local form: the
+    border line only. Upstream's restated frame comments and its 22 → 28%
+    invalid halo stay with the held forms stream.
+  - `.forum-bar-surface.is-active` and `.board-rail-item.is-active` drop
+    `cursor: default` (ADR 0032 #1: both keep their href).
+  - `.forum-bar a:hover, .board-rail-item:hover, .board-rail-route:hover,
+    .presence-all:hover { text-decoration: none }` (ADR 0032 #3), with
+    upstream's comment on the 1080px step.
+  - From the bell hunk, only the seat's comment, which credits our 2026-09-12
+    correction. The bell rules are held (below), and a comment at their place
+    says so.
+
+### Measured rather than assumed
+
+Each candidate layer was compared with the previous one in Chromium against a
+seeded copy of the application. The comparison covered guest, member, private
+board member, board moderator and admin views; 44 routes across the member
+surfaces, settings, Messages, the console and a 404; 121 route and width cases
+at 1280/1000/880/820/390px; parchment, twilight and system-dark. For each page,
+the layer stylesheet was swapped in place four times (A, B, A, B), with fonts
+held in a permanent sheet. Every computed property of every element and
+pseudo-element, and the hover and focus states of the chrome's controls, was
+read. Only differences that held in both passes count.
+
+- **The bundle as shipped** (the previous and new fingerprinted bundles) differs
+  in exactly one way: `cursor` on the current Boards pill and the current rail
+  board, `default` → `pointer`, inherited by their count, name and visibility
+  spans. Nothing else moved. The ADR 0039 tokens and rules, the hover-underline
+  rule and every comment are inert in production, because `app.css` already
+  declares the same values. The WebKit run of the same comparison is recorded in
+  the evidence package.
+- **The whole upstream file, for contrast** (everything except the refused tail,
+  the `.hash`/`.field-hint` holds and the `!important`), moves 5,512 property
+  values. These include: the console search basis (220 → 190px) and display; the
+  console username (12.48 → 13.76px); the ≤900px identity row (58 → 52px tall,
+  10 → 7px padding); the bell's hover wash; `.star-toggle`'s `flex-shrink`; and
+  the composer send's glyph.
+
+Evidence: `docs/evidence/shared-chrome-handoff-2026-10-06/`.
+
+### Held back
+
+- **ForumNav's bell CSS** (`.forum-bar-bell`, `-hover`, `-bell-count`).
+  Production draws its bell from `app.css`'s ADR 0032 adaptation: a 40px target,
+  `.bell-count[data-notification-count]` anchored at the corner, and `--brand`
+  hover ink from the older `.bell:hover`. Upstream modelled the bell without
+  seeing production's. The layer's hover wash would land on production's bell as
+  a hybrid (wash plus brand ink), and `.forum-bar-bell-count` matches nothing.
+  Whether production adopts the design's 30px/wash/`--text-body` bell is an
+  owner call.
+- **The AdminNav operator-cluster CSS**, for the sixth sync. Upstream now carries
+  its own media blocks, so the 2026-08-09 objection is closed, but four others
+  stand:
+  1. `ImladrisRuntimeAssetTest::test_app_css_never_overrides_a_design_owned_console_class`
+     would fail on `.admin-bar-right`, `.admin-bar-user` and
+     `.admin-bar-username`, which `app.css` owns (ADR 0024 decision 3).
+     Adopting the layered rules is an `app.css` pruning slice.
+  2. Production's class names differ: `a.topbar-link.bell`, `.bell-count`,
+     `button.linkbtn` and `.admin-bar-action-label`, against `.admin-bar-bell`,
+     `-bell-count`, `-signout` and `-signout-label`.
+  3. The measured values differ (above).
+  4. Production's ≤860px tier is a native disclosure (`34f13b00`), which
+     upstream's 860px step does not model. Upstream's own 900px
+     `.admin-tier { padding: 0 16px 8px }` also sits before the base
+     `.admin-tier` rule and so never applies. Raise both.
+- **Unchanged holds:** the `.badge-staff` border with the `.presence-staff`
+  comment; `.field-hint` and `.link-preview-action` (both pinned by
+  `ImladrisRuntimeAssetTest`); `.hash`, which five production templates still
+  emit (its upstream removal belongs with the thread-row stream's boards without
+  a `#`); the thread-row FIDELITY-AUDIT block; the bundle's `!important` on the
+  `[hidden]` guard (the local form stays); and the tail deletion of the
+  production-transfer section, refused.
+- **New upstream streams, owed their own review, each production-visible or a
+  forms change:**
+  - The star stream: the `.star-btn` header and a shared `.star-toggle` block
+    that duplicates the bridge's.
+  - Tier chips: now on semantic pairs, which settles the objection held three
+    times, but upstream chose `review`/`done`/`info` with `color-mix` borders
+    where this mirror uses `staff`/`brand-subtle`/`info`.
+  - Status chips: `.chip-decision_made` on `--on-brand-subtle` is a twilight
+    contrast fix worth taking; `.chip-archived` on `--ink-400` is a numbered
+    primitive, and the twilight block does not remap the ramp.
+  - The composer send with its word and mark.
+  - The forms stream: the engraved-frame and lapidary comments, the halo, and
+    the `.choice-card` restructure, which brings back `background:` shorthand
+    and the checked inset ring.
+
+### The two production deltas, verified
+
+1. **The bell beside the seat** is present on every member route with
+   notifications on: `a.forum-bar-bell[href=/notifications][data-bell]` before
+   the seat, with the count in its accessible name. It has rendered since
+   `88d51dfe`. Nothing is added.
+2. **The exit label stays "Back to the forum".** ADMIN.md §9.2 specifies "an
+   exit link back to the forum". ADR 0024's Stage-1 binding decisions (§3.2)
+   translate "Back to the council" exactly so, and `PRODUCT.md`'s lexicon note
+   keeps the consoles in plain words. Whether the council lexicon reaches the
+   consoles is the open owner decision in ADR 0024 (obligation 5), not this
+   handoff's call.
+
+### Where production stands apart from the handoff's contract (raise upstream)
+
+- `/t/{id}` lights **Boards** for an authorized canonical topic, and the topic's
+  board is current in the rail (ADR 0032 follow-up, 2026-10-06). The handoff's
+  thread view lights no pill.
+- Tag routes are `/tags` and `/tags/{slug}`, not `/tag/{slug}`.
+- The Messages pill carries an unread-conversations count (hidden at 0). The
+  design draws none.
+- The bell's geometry and the console's class names, as itemized under "Held
+  back".
+- The design-side gaps the handoff already owns: no 99+ cap in `BoardRail`, the
+  roster title is not a link, and `AdminNav` does not model flag-off areas.
+- Upstream disagrees with itself on route rows. `BoardRail.jsx` now keeps an
+  active route row's href, while `.board-rail-route.is-active` still sets
+  `cursor: default`. Production renders no route rows, so it is left as
+  upstream wrote it.
+
+### The five open decisions — none implemented
+
+1. **Leaderboard's rail.** This is an owner decision. Production renders the
+   standard rail with the roster on `/leaderboard`. The mirrored screen draws a
+   routes block in its place.
+2. **Guest pills.** The design follows production, which hides Inbox and
+   Messages from a guest.
+3. **Living brief** and 4. **the `<main>` landmark.** Both are design-side.
+   Production renders the brief inside the topic page, and gives every app route
+   `<main id="main">`.
+5. **The active console area** is settled by ADMIN.md §9.2: "The active area is
+   marked `aria-current="page"` and is not a link." ADR 0032 #1 governs the
+   member chrome only.
+
+### Not in this bundle
+
+Upstream's pass touched all 23 screens; six shipped. The other screens keep
+their earlier chrome here: `board-index`, `search`, `thread-view`, `user-profile`,
+`users-online`, `living-brief` and nine `admin-*` screens. Among them are the
+hand-rolled "See everyone" links that `allHref` replaces. `admin-moderation`, the
+eleventh area `AdminNav` now lists, has no screen here yet. `admin.card.html`,
+`chrome.card.html` and `presence.card.html` predate the new props.
+
+### Baselines and order of operations
+
+The edits went in this order:
+
+1. Mirror edit.
+2. `composer build:imladris`, green on a byte-clean application surface.
+3. `npm run build`, which adds `public/assets/dist/imladris-style-DeGci5u_.css`
+   and keeps every deployed release's files.
+4. Application digest `283e30b8…` → `44c88956…`. That bundle is the surface's
+   only change; `templates/` and the application CSS and JavaScript are
+   untouched.
+5. `composer build:imladris` again, for the manifest's `surface_sha256`.
+6. `check:imladris` and `check:assets` green.
+
+The digest is refreshed in this change because the work lands on `main`, as in
+`34f13b00`. A branch would leave it to the merger (ADR 0024 obligation 4).
+`reconciled_through_commit` stays `6d81da59…`.
+
+## 2026-10-07 — production moves creation beneath ForumNav (ADR 0043)
+
+The owner moved New topic out of the production member header and combined
+topic/message creation in a shared content row. The mirrored
+`components/forum/ForumNav.jsx` still defaults `showCompose` to true and draws
+`.forum-bar-compose` in the bar. That component and the generated layer retain
+their existing compose markup/rules; production's `partials/topbar.php` no
+longer emits the class, and its application-only compose rules are removed.
+
+`partials/subheader.php` renders the new row inside the app/plain main landmark,
+ahead of flash messages. Board/topic breadcrumbs and Boards directory tabs
+move to its leading side once; signed-in members get a quiet trailing create
+control. It offers New topic and New message, showing "+ New" and a chevron
+above 860px and only a named 44px plus at smaller widths. With `dms` off it is a
+direct board-aware topic link. Guests get leading content only.
+
+The row uses the existing Imladris semantic tokens and focus treatment. The
+board slab, sticky echo, phone FAB and inline composer retain their existing
+actions. Header heights, `--topbar-h` and sticky scroll offsets remain intact.
+Messages and Inbox reserve the row's separate measured height (61px fallback)
+above their rooms, preserving docked controls and existing short-screen
+conversation growth. The create disclosure shares the existing Inbox menu
+enhancement, and New message decorates its native link with the Messages
+dialog only where that panel already exists.
+
+This is a documented production adaptation for a future ForumNav handoff. No
+mirror component or generated component rule is changed by this decision.
+See [ADR 0043](../../adr/0043-create-menu-subheader.md) for the superseded clauses
+and [the evidence record](../../evidence/create-menu-2026-10-07/README.md) for
+verification and its limits.
+
+## 2026-10-08 — conversation interactions, selective adoption
+
+`CommunityForumsDesignSystem.zip` (SHA-256
+`49fd7cedf13f1d59f9ee855aaa10859667668d286451eaeca65ffe7b5bc34200`)
+supplies the conversation-interactions handoff. The complete `components.css`
+would remove existing local contracts, so only reaction ticks/tips and mention
+person/mirror primitives are taken into the authoring mirror. React components
+and the DM preview remain source references; PHP and progressive JavaScript
+implement the behavior through existing routes.
+
+- Reaction counts use the calm 240ms rise/fall on the viewer's surviving chip.
+  The proposed bump/spring alternative is held back under DESIGN's no-bounce
+  rule. Member chips have the handoff's half-pixel hover lift and quiet press;
+  guest spans stay static. Reactor tips show up to six names including "You",
+  with aggregate residual counts, excluding inactive, blocked and former private
+  board members. The current topic read gate applies before identity retrieval.
+  Touch additions immediately create a visible chip; pending duplicates are
+  blocked and uncertain responses offer a GET reload without replaying a toggle.
+- Bare `@` offers named topic participants in readable topic/reply contexts.
+  Person rows follow avatar preferences and use existing monogram colors.
+  Mention insertion preserves canonical Markdown and adds appropriate spacing.
+  Source highlighting uses a hidden, metric-matched mirror for known handles,
+  excluding email and code. Rich mentions retain the muted over-cap cue; posted
+  links retain underlines. Evergreen washes use semantic `--brand`, including
+  twilight, and do not add padding or change source glyph widths.
+- Messages identity fades over 140ms; letters rise 8px over 240ms after 40ms.
+  A tiny external head script consumes a target-specific navigation signal
+  before first paint. Only ordinary row switches offer it; reload/history,
+  other navigation and reduced-motion paths do not replay it. The list, details,
+  actions and composer stay still. The existing newest-letter scroll contract
+  remains; the handoff's separate top-of-conversation proposal is held back.
+
+Both account and OS reduced motion suppress decorative transforms/animations.
+Native links, forms and the textarea remain the no-JS contract. Existing
+`engagement`, `mentions`, `dms`, `rich_composer` and `wysiwyg_composer` flag roles
+stay intact; this work introduces no subsystem flag. The generated compatibility
+bridge is preserved, with application-only rules outside it.
+
+The runtime digest is refreshed on `main` after contract review and the hashed
+asset build; the inspected-mirror commit remains unchanged. Recent deployed
+assets remain governed by ADR 0041. Validation and browser artifacts are recorded
+in [the evidence record](../../evidence/conversation-interactions-2026-10-08/README.md).
+
+### Conversation-interactions review fixes
+
+The reviewed tooltip geometry now uses `display: none` at rest, a temporary
+hidden measurement class, and viewport-clamped placement when shown. This closes
+the document-width regression without changing its tokenized face or motion
+preferences. The application bridge hands `.is-person > .monogram` width,
+height and font size back with `revert-layer`, so the layer's 28px/.66rem row
+contract wins over legacy `.monogram` rules. These are targeted corrections to
+the same adopted primitives; generated resources and hashed delivery assets
+are rebuilt from the authoring mirror.
+
+Reaction names also suppress anonymous authors' self-reactions. Pending buttons
+use `aria-disabled` with the submit lock to preserve focus, removed chips focus
+the visible menu with `preventScroll`, and error recovery uses a canonical topic
+GET while definite refusals retain their server reason. Source completion and
+mention paint share a cached block-aware scanner; rich serialization preserves
+intraword handle underscores and one final handoff space. Regression evidence
+is indexed in the conversation evidence record's review-fixes section.
+
+### Conversation-interactions follow-ups — 2026-10-09
+
+Enhanced reaction requests are bounded at 15 seconds, the Inbox preview's bound.
+A stalled toggle aborts, unlocks every copy of the chip and offers the same GET
+reload as a lost response, because the server may still have committed it. The
+thread renders one empty `role="status"` region before any failure; refusals and
+uncertain toggles write into it (cleared first, so a repeat is still announced),
+while the visible tray message carries the reload link without a second live
+region. Reactor names follow `User::isActive()`, so a member whose timed
+suspension has elapsed is named again.
+
+The bare-`@` participant list omits the viewer and either-way blocks, matching
+mention-notification eligibility; typed queries keep ordinary matches, as the
+Messages refinement contract requires. Inbox rows and previews honor Show
+avatars, including the preview's bylines, replies and composer person rows
+(tag-page rows still ignore it). The source mirror takes
+its size from the textarea's observed content box rather than the rounded
+`clientWidth`/`clientHeight`: at fractional widths (90%/110% zoom, fluid columns)
+half a pixel re-wrapped a line and every later highlight drifted. Glyph-level
+comparisons now match in Chromium and WebKit at both zoom levels.
+
+The Messages entry script now loads only at `/messages/{id}`, its own path rule.
+Cold-load measurements found no first-paint cost from it elsewhere (the preloaded
+stylesheets finish later), but it was a parser-blocking request on every page;
+`app.js` consumes an abandoned signal on other pages so none can replay later.
+Native reaction posts no longer read the JSON summary (counts and names), the
+membership re-check reuses the read gate's memoized lookup, and viewers who
+cannot see reactor names skip that read. The source mirror stays empty while it
+has nothing to highlight and skips unchanged style writes: copying each
+keystroke into it re-ran page-wide style matching, and typing cost returns to
+its pre-handoff level. Because the exact width follows a resize one frame late,
+`max-width: 100%` keeps a stale mirror inside its wrap so it never widens the
+page (the Messages phone check caught a 624px mirror at 390px).

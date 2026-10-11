@@ -339,7 +339,7 @@ $profileExcerpt = static function (string $html): string {
                     <?php foreach ($conn_list as $person): ?>
                         <?php $personDisplay = ($person['display_name'] ?? '') !== '' ? $person['display_name'] : $person['username']; ?>
                         <li class="profile-conn-card">
-                            <?= $this->partial('partials/monogram', ['name' => $personDisplay, 'username' => $person['username']]) ?>
+                            <?= $this->partial('partials/monogram', ['name' => $personDisplay, 'username' => $person['username'], 'avatar_path' => $person['avatar_path'] ?? null]) ?>
                             <span class="profile-conn-id">
                                 <a href="/u/<?= $e($person['username']) ?>"><?= $e($personDisplay) ?></a>
                                 <span class="profile-conn-meta">@<?= $e($person['username']) ?> · <span class="profile-number"><?= number_format((int) ($person['reputation'] ?? 0)) ?></span> regard</span>

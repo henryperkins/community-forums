@@ -1,0 +1,45 @@
+{
+  "events": [
+    {
+      "type": "keydown",
+      "key": "Escape",
+      "tag": "BUTTON",
+      "text": "\n",
+      "active": "<button type=\"button\" data-inbox-help-close=\"\" aria-label=\"Close Inbox help\"><svg class=\"icon icon-x\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\""
+    },
+    {
+      "type": "focusin",
+      "tag": "SUMMARY",
+      "text": "\n            Show:\n            For You\n           ",
+      "active": "<summary aria-label=\"Show: For You, 29 topics\">\n            <span class=\"inbox-control-label\">Show:</span>\n            <span class=\"inbox-selected-scope\">For You</span>\n            <span class=\"inbox-scope-count\"><span d"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "tag": "SUMMARY",
+      "text": "\n            Show:\n            For You\n           ",
+      "active": "<summary aria-label=\"Show: For You, 29 topics\">\n            <span class=\"inbox-control-label\">Show:</span>\n            <span class=\"inbox-selected-scope\">For You</span>\n            <span class=\"inbox-scope-count\"><span d"
+    },
+    {
+      "type": "focusin",
+      "tag": "SUMMARY",
+      "text": "\n",
+      "active": "<summary aria-label=\"Inbox actions\"><svg class=\"icon icon-more-horizontal\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"currentColor\" stroke=\"none\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"12\" r=\"1.7\"></circle><circle c"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "tag": "SUMMARY",
+      "text": "\n",
+      "active": "<summary aria-label=\"Inbox actions\"><svg class=\"icon icon-more-horizontal\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"currentColor\" stroke=\"none\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"12\" r=\"1.7\"></circle><circle c"
+    },
+    {
+      "type": "focusin",
+      "tag": "SUMMARY",
+      "text": "\n                    \nNew\n                ",
+      "active": "<summary class=\"create-trigger\" data-create-trigger=\"\" aria-label=\"New topic or message\">\n                    <svg class=\"icon icon-plus\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" strok"
+    }
+  ],
+  "active": "<summary class=\"create-trigger\" data-create-trigger=\"\" aria-label=\"New topic or message\">\n                    <svg class=\"icon icon-plus\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"></path></svg>\n<span class=\"create-label\">New</span><svg class=\"icon icon-chevron-down\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 9l6 6 6-6\"></path></svg>\n                </summary>",
+  "open": true
+}

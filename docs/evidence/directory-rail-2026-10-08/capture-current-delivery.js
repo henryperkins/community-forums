@@ -1,0 +1,7 @@
+async page => {
+ const base='http://127.0.0.1:8484',out='/home/ubuntu/community-forums/docs/evidence/directory-rail-2026-10-08',engine=page.context().browser().browserType().name();
+ await page.goto(base+'/?pane=connections');await page.setViewportSize({width:393,height:844});await page.evaluate(()=>document.fonts.ready);
+ const assets=await page.evaluate(async()=>Promise.all([...document.querySelectorAll('link[rel="stylesheet"],script[src]')].map(n=>n.href||n.src).filter(u=>/app-style-|app-[0-9a-f]+\.js/.test(u)).map(async u=>{const r=await fetch(u),b=await r.arrayBuffer();return{url:new URL(u).pathname,status:r.status,sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',b))].map(v=>v.toString(16).padStart(2,'0')).join('')};})));
+ await page.screenshot({path:out+'/'+engine+'-current-393-member-connections.png'});await page.getByRole('button',{name:'Open board rail',exact:true}).click();await page.waitForFunction(()=>Math.abs(document.querySelector('[data-sidebar]').getBoundingClientRect().x)<1);await page.screenshot({path:out+'/'+engine+'-current-393-member-connections-drawer.png'});await page.keyboard.press('Escape');await page.setViewportSize({width:1440,height:900});await page.screenshot({path:out+'/'+engine+'-current-1440-member-connections.png'});
+ return{engine,version:page.context().browser().version(),build:'a8b813712a571dff',assets,userAgent:await page.evaluate(()=>navigator.userAgent)};
+}

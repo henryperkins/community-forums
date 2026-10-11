@@ -1,0 +1,11 @@
+{
+  "scan": "changed templates, new page_heading helper, app.css and app.js",
+  "exit_status": 2,
+  "findings": {
+    "warning": 33,
+    "advisory": 195
+  },
+  "findings_on_added_lines": 0,
+  "new_helper_findings": 0,
+  "interpretation": "The scan is not globally clean. Existing warnings and advisories occur outside added lines. Rendered row evidence and source review found no new row issue."
+}

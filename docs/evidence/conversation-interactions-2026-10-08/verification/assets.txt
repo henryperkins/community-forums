@@ -1,0 +1,10 @@
+✔ certificate-validation paths on a non-canonical host go to the origin instead of redirecting (1.048847ms)
+✔ production deploy leaves the independently provisioned SaaS zone route untouched (6.974062ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14504.892633

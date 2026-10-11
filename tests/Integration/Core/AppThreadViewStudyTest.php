@@ -391,11 +391,11 @@ final class AppThreadViewStudyTest extends TestCase
     }
 
     /**
-     * FT-01. Without JavaScript the thread is one document, so server order IS the
+     * FT-01. The thread scrolls as one document, so server order IS the
      * reading order: topic head, then its tools, then the posts, then the composer.
-     * Topic tools and the split/merge disclosure must render INSIDE .thread-scroll —
-     * as siblings of the post stream rather than of the fixed-height column — because
-     * every in-flow sibling of .thread-scroll steals height from the reading pane.
+     * Topic tools and the split/merge disclosure render inside .thread-scroll,
+     * beneath the head and ahead of the stream and sticky dock. The wrapper now
+     * flows naturally; it no longer takes height from a fixed-height reading pane.
      *
      * Anchored on 'thread-study-head', not '</header>': the first '</header>' in the
      * document belongs to the topbar, which makes an order assertion vacuous.
@@ -436,8 +436,8 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertLessThan($stream, $restructure, 'Split/merge must precede the post stream');
         self::assertLessThan($dock, $stream, 'The composer dock must come last');
 
-        // The dock is the only in-flow sibling left after .thread-scroll, so both
-        // panels have to sit above the stream rather than after the dock.
+        // Tools and split/merge belong beneath the topic head, above the stream;
+        // the sticky reply dock follows the reading content in document order.
         self::assertGreaterThan($tools, $dock, 'Topic tools must no longer follow the dock');
         self::assertGreaterThan($restructure, $dock, 'Split/merge must no longer follow the dock');
 

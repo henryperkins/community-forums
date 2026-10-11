@@ -28,14 +28,15 @@ $unreadCount = (int) ($unread_count ?? 0);
 $canMarkRead = !empty($can_mark_read);
 // Every gutter form posts back to the exact page the reader is on.
 $returnTo = '/c/' . $board['slug'] . ($page > 1 ? '?page=' . (int) $page : '');
+$this->start('subheader_leading');
 ?>
-<div class="read-main read-pad board-view">
     <nav class="breadcrumb board-identity-breadcrumb" aria-label="Breadcrumb">
         <a href="/">Forum index</a>
         <span class="breadcrumb-sep" aria-hidden="true">/</span>
         <span aria-current="page"><span class="hash">#</span><?= $e($board['name']) ?></span>
     </nav>
-
+<?php $this->stop(); ?>
+<div class="read-main read-pad board-view">
     <header class="board-identity" data-board-identity>
         <div class="board-identity-copy">
             <p class="eyebrow"><?= $e($categoryName) ?></p>

@@ -1,0 +1,53 @@
+
+Running 12 tests using 1 worker
+
+(node:824380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › create-menu-regressions.spec.ts:65:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary (10.7s)
+  ✓   2 [desktop] › create-menu-regressions.spec.ts:101:5 › leaving recipient suggestions restores Escape and cancels delayed reopening (3.1s)
+  ✓   3 [desktop] › create-menu-regressions.spec.ts:165:5 › uncancellable recipient results cannot reopen suggestions after blur (2.3s)
+  ✓   4 [desktop] › create-menu-regressions.spec.ts:197:5 › recipient suggestions remain selectable by pointer (5.4s)
+  ✓   5 [desktop] › create-menu-regressions.spec.ts:224:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members (10.5s)
+  ✓   6 [desktop] › create-menu-regressions.spec.ts:274:7 › native creation › creation on narrow reading panes stays a real destination with retained validation drafts (1.9s)
+(node:825706) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   7 [mobile] › create-menu-regressions.spec.ts:65:5 › shared creation opens a visible modal from every Messages pane through the 900px boundary (12.9s)
+  ✓   8 [mobile] › create-menu-regressions.spec.ts:101:5 › leaving recipient suggestions restores Escape and cancels delayed reopening (3.1s)
+  ✓   9 [mobile] › create-menu-regressions.spec.ts:165:5 › uncancellable recipient results cannot reopen suggestions after blur (2.1s)
+  ✘  10 [mobile] › create-menu-regressions.spec.ts:197:5 › recipient suggestions remain selectable by pointer (7.1s)
+(node:826458) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  11 [mobile] › create-menu-regressions.spec.ts:224:5 › long topic and board breadcrumbs wrap inside the shared row for guests and members (8.9s)
+  ✓  12 [mobile] › create-menu-regressions.spec.ts:274:7 › native creation › creation on narrow reading panes stays a real destination with retained validation drafts (1.8s)
+
+
+  1) [mobile] › create-menu-regressions.spec.ts:197:5 › recipient suggestions remain selectable by pointer
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator:  locator('.dm-dialog input[name=to]')
+    Expected: "create_fix_other"
+    Received: "create_fix_o"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveValue" with timeout 5000ms
+      - waiting for locator('.dm-dialog input[name=to]')
+        14 × locator resolved to <input name="to" type="hidden" maxlength="255" value="create_fix_o" class="input input-engraved" id="dm-to-dm-new-dialog-value" placeholder="username, username"/>
+           - unexpected value "create_fix_o"
+
+
+      209 |     if (info.project.name === 'mobile') await option.tap();
+      210 |     else await option.click();
+    > 211 |     await expect(page.locator('.dm-dialog input[name=to]')).toHaveValue('create_fix_other');
+          |                                                             ^
+      212 |     await expect(page.locator('.dm-dialog .dm-suggest')).toBeHidden();
+      213 |     await expect(page.locator('.dm-dialog .dm-to-input')).toBeFocused();
+      214 |     const chip = page.locator('.dm-dialog .dm-chip');
+        at /home/ubuntu/community-forums/tests/browser/create-menu-regressions.spec.ts:211:61
+
+    Error Context: ../../../../../tmp/community-create-fix-target-webkit-final/.artifacts/create-menu-regressions-re-431fe-emain-selectable-by-pointer-mobile/error-context.md
+
+  1 failed
+    [mobile] › create-menu-regressions.spec.ts:197:5 › recipient suggestions remain selectable by pointer
+  11 passed (1.2m)

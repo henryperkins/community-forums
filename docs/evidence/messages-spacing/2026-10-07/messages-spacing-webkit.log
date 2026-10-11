@@ -1,0 +1,92 @@
+
+Running 16 tests using 1 worker
+
+(node:598421) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [desktop] › messages-audit-regressions.spec.ts:317:5 › P1-1 compose dialog is modal: aria-modal, Tab and Shift+Tab stay inside, Escape peels list then dialog (6.2s)
+
+  ✘   2 [desktop] › messages-audit-regressions.spec.ts:374:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view (20.3s)
+(node:599599) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   3 [desktop] › messages-audit-regressions.spec.ts:462:5 › P1-3 prose links are underlined in letters and posts; image links are not; pagers are controls (4.4s)
+
+  ✓   4 [desktop] › messages-audit-regressions.spec.ts:526:5 › P1-4 OS-dark on the default system theme: the "+" icon clears 3:1, same as explicit twilight (2.5s)
+
+  ✓   5 [desktop] › messages-audit-regressions.spec.ts:546:5 › P1-5 the ··· menu is a plain disclosure: no role="menu", no axe violations while open (2.3s)
+
+  ✓   6 [desktop] › messages-audit-regressions.spec.ts:561:5 › P1-6 filter pills: the selected pill differs from the unselected one by 3:1 in day and carries aria-current (2.3s)
+
+  ✓   7 [desktop] › messages-audit-regressions.spec.ts:591:5 › P2-1 the saved details choice reopens only a column; overlays start closed with the back control reachable (5.2s)
+
+  ✓   8 [desktop] › messages-audit-regressions.spec.ts:659:5 › P2-2 Search and the To chip field wear the shared focus outline on keyboard focus (2.1s)
+
+  ✓   9 [desktop] › messages-audit-regressions.spec.ts:696:5 › P2-3 a group composer addresses the group; a direct one keeps the counterpart (1.3s)
+
+  ✓  10 [desktop] › messages-audit-regressions.spec.ts:713:5 › P2-4 touch: every Messages control takes a 44x44 tap (1.6s)
+
+  ✓  11 [desktop] › messages-audit-regressions.spec.ts:755:5 › P2-5 twilight: the own-letter edge is register-aware, not the pale day gold (4.4s)
+
+  ✓  12 [desktop] › messages-audit-regressions.spec.ts:785:5 › P2-6 a no-JS reply lands on its letter; a scripted reply stays unanchored at the end (4.6s)
+
+  ✓  13 [desktop] › messages-audit-regressions.spec.ts:831:5 › P3-2 list previews read as words, not Markdown, and the instant filter still matches the raw letter (885ms)
+
+  ✓  14 [desktop] › messages-audit-regressions.spec.ts:850:5 › P3-5 one h1 per page, owner tools name the member, unread leads the row name, the details toggle is a button (2.5s)
+
+  ✓  15 [desktop] › messages-audit-regressions.spec.ts:902:5 › P3-6 clocks, titles and the details presence read cleanly (en-US, America/Chicago) (1.2s)
+
+  ✓  16 [desktop] › messages-audit-regressions.spec.ts:929:5 › axe: OS-dark system theme and 640x400 zoom over the list and a conversation with the rail and ··· menu open (19.8s)
+
+
+  1) [desktop] › messages-audit-regressions.spec.ts:374:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view
+
+    Error: 422 stays open after a tap outside
+
+    expect(locator).toHaveClass(expected) failed
+
+    Locator: locator('.dm-composer')
+    Expected pattern: /is-expanded/
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - 422 stays open after a tap outside with timeout 5000ms
+      - waiting for locator('.dm-composer')
+
+
+      448 |           await page.locator('.dm-thread-head').tap({ position: { x: 200, y: 8 } });
+      449 |           await settle(page, 300);
+    > 450 |           await expect.soft(page.locator('.dm-composer'), '422 stays open after a tap outside').toHaveClass(/is-expanded/);
+          |                                                                                                 ^
+      451 |           await expect.soft(page.locator('.dm-composer .field-error')).toBeVisible();
+      452 |         }
+      453 |         expect.soft(errors).toEqual([]);
+        at /home/ubuntu/community-forums/tests/browser/messages-audit-regressions.spec.ts:450:97
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.dm-composer .field-error')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "soft toBeVisible" with timeout 5000ms
+      - waiting for locator('.dm-composer .field-error')
+
+
+      449 |           await settle(page, 300);
+      450 |           await expect.soft(page.locator('.dm-composer'), '422 stays open after a tap outside').toHaveClass(/is-expanded/);
+    > 451 |           await expect.soft(page.locator('.dm-composer .field-error')).toBeVisible();
+          |                                                                        ^
+      452 |         }
+      453 |         expect.soft(errors).toEqual([]);
+      454 |         await context.close();
+        at /home/ubuntu/community-forums/tests/browser/messages-audit-regressions.spec.ts:451:72
+
+    Error Context: ../../output/playwright/messages-spacing-20261007/webkit/.artifacts/messages-audit-regressions-6139d-and-opens-with-Send-in-view-desktop/error-context.md
+
+  1 failed
+    [desktop] › messages-audit-regressions.spec.ts:374:5 › P1-2 short screens: the letters keep a readable floor, the phone dock rests as one row and opens with Send in view
+  15 passed (1.4m)

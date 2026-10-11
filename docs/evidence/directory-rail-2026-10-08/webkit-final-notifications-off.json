@@ -1,0 +1,402 @@
+{
+  "engine": "webkit",
+  "mode": "notifications-off",
+  "build": "350617f1bb175373",
+  "checks": [
+    {
+      "name": "/?pane=boards independent link gates",
+      "pass": true,
+      "detail": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Every board in the valley",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "name": "/?pane=boards normalized current",
+      "pass": true,
+      "detail": [
+        {
+          "key": "boards",
+          "href": "/?pane=boards",
+          "current": "page"
+        },
+        {
+          "key": "tags",
+          "href": "/?pane=tags",
+          "current": null
+        },
+        {
+          "key": "connections",
+          "href": "/?pane=connections",
+          "current": null
+        }
+      ]
+    },
+    {
+      "name": "/?pane=tags independent link gates",
+      "pass": true,
+      "detail": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Tags",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "name": "/?pane=tags normalized current",
+      "pass": true,
+      "detail": [
+        {
+          "key": "boards",
+          "href": "/?pane=boards",
+          "current": null
+        },
+        {
+          "key": "tags",
+          "href": "/?pane=tags",
+          "current": "page"
+        },
+        {
+          "key": "connections",
+          "href": "/?pane=connections",
+          "current": null
+        }
+      ]
+    },
+    {
+      "name": "/?pane=connections independent link gates",
+      "pass": true,
+      "detail": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": "page"
+          }
+        ],
+        "heading": "Connections \u00b7 @alice",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "name": "/?pane=connections normalized current",
+      "pass": true,
+      "detail": [
+        {
+          "key": "boards",
+          "href": "/?pane=boards",
+          "current": null
+        },
+        {
+          "key": "tags",
+          "href": "/?pane=tags",
+          "current": null
+        },
+        {
+          "key": "connections",
+          "href": "/?pane=connections",
+          "current": "page"
+        }
+      ]
+    },
+    {
+      "name": "/inbox independent link gates",
+      "pass": true,
+      "detail": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Inbox",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "name": "/inbox no invented current",
+      "pass": true,
+      "detail": [
+        {
+          "key": "boards",
+          "href": "/?pane=boards",
+          "current": null
+        },
+        {
+          "key": "tags",
+          "href": "/?pane=tags",
+          "current": null
+        },
+        {
+          "key": "connections",
+          "href": "/?pane=connections",
+          "current": null
+        }
+      ]
+    },
+    {
+      "name": "/compose independent link gates",
+      "pass": true,
+      "detail": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Open a topic",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "name": "/compose no invented current",
+      "pass": true,
+      "detail": [
+        {
+          "key": "boards",
+          "href": "/?pane=boards",
+          "current": null
+        },
+        {
+          "key": "tags",
+          "href": "/?pane=tags",
+          "current": null
+        },
+        {
+          "key": "connections",
+          "href": "/?pane=connections",
+          "current": null
+        }
+      ]
+    },
+    {
+      "name": "disabled Notices resolves Boards and removes bell",
+      "pass": true,
+      "detail": {
+        "bell": false,
+        "current": "boards",
+        "heading": "Every board in the valley"
+      }
+    },
+    {
+      "name": "noJS guest independent gates/current",
+      "pass": true,
+      "detail": {
+        "links": [
+          "boards",
+          "tags",
+          "connections"
+        ],
+        "current": "connections",
+        "h1": 1,
+        "subheader": false
+      }
+    }
+  ],
+  "cases": [
+    {
+      "path": "/?pane=boards",
+      "metrics": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": "page"
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Every board in the valley",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "path": "/?pane=tags",
+      "metrics": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": "page"
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Tags",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "path": "/?pane=connections",
+      "metrics": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": "page"
+          }
+        ],
+        "heading": "Connections \u00b7 @alice",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "path": "/inbox",
+      "metrics": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Inbox",
+        "bell": false,
+        "oldTabs": false
+      }
+    },
+    {
+      "path": "/compose",
+      "metrics": {
+        "links": [
+          {
+            "key": "boards",
+            "href": "/?pane=boards",
+            "current": null
+          },
+          {
+            "key": "tags",
+            "href": "/?pane=tags",
+            "current": null
+          },
+          {
+            "key": "connections",
+            "href": "/?pane=connections",
+            "current": null
+          }
+        ],
+        "heading": "Open a topic",
+        "bell": false,
+        "oldTabs": false
+      }
+    }
+  ],
+  "guest": {
+    "links": [
+      "boards",
+      "tags",
+      "connections"
+    ],
+    "current": "connections",
+    "h1": 1,
+    "subheader": false
+  }
+}

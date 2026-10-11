@@ -1,0 +1,20 @@
+{
+  "scope": "Native owner-repository branch push launch; duplicate suite run deliberately canceled",
+  "build_id": "1ebef3c0-ba89-42f7-9699-344f31e6f5a6",
+  "build_trigger_id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+  "created_at": "2026-10-09T07:46:42.882271Z",
+  "source_sha": "2c6503667a731cadbafb393753675dbf4ce7b7b7",
+  "control_sha": "661876a8abf0b23ef3fe9e017e53925dfe866721",
+  "repository": "henryperkins/community-forums",
+  "ref": "refs/heads/chore/cloud-run-operations",
+  "build_status": "CANCELLED",
+  "source_step_status": "SUCCESS",
+  "github_hook_id": 694573802,
+  "github_delivery_id": "3847285680556228608",
+  "github_delivered_at": "2026-10-09T07:46:42.693Z",
+  "github_status_code": 200,
+  "github_event": "push",
+  "github_redelivery": false,
+  "github_after_matches_build": true,
+  "claim": "Launch/binding proof; no hosted suite pass from this canceled run"
+}

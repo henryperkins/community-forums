@@ -1,0 +1,12 @@
+✔ unsafe methods keep their method and body through a 308 (1.616249ms)
+✔ a stray request port is dropped and a non-default canonical port is carried over (0.407755ms)
+✔ loopback hosts (wrangler dev) and an unusable APP_URL fail open (0.333246ms)
+✔ certificate-validation paths on a non-canonical host go to the origin instead of redirecting (1.101935ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14048.360486

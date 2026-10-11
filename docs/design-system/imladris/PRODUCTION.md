@@ -39,10 +39,18 @@ Imladris references never remove, downgrade, or enable a product feature.
 | Can an imported preview be executed here? | [`PREVIEW_STATUS.md`](PREVIEW_STATUS.md). |
 | What was retired or superseded in the mirror? | [`RETIRED.md`](RETIRED.md) and [`CHANGELOG.md`](CHANGELOG.md). |
 
-The design mirror last synced its upstream screen map on 2026-09-12. Local
-application reconciliations and production-transfer updates are recorded
-chronologically in `LOCAL_RECONCILIATION.md`; do not infer runtime parity from
-an old inspected-commit table.
+The design mirror last synced its upstream screen map on 2026-10-06, from the
+shared-chrome handoff, which shipped six of the screens upstream's consistency
+pass touched. Local application reconciliations and production-transfer updates
+are recorded chronologically in `LOCAL_RECONCILIATION.md`; do not infer runtime
+parity from an old inspected-commit table.
+
+The 2026-10-08 conversation-interactions handoff is a selective production
+adaptation: calm reaction ticks and name tips, mention identity/highlight
+treatments, and navigation-only Messages entry motion. It adds no React runtime
+or new feature flag. The existing topic/DM routes, aggregate reaction counts,
+Markdown submit source and newest-letter scroll remain authoritative. See the
+dated reconciliation entry for the retained local contracts and evidence.
 
 ## Retired duplicate contracts
 

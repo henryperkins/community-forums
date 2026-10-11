@@ -1,0 +1,109 @@
+{
+  "scope": "isolated native DM press/release regression, not hosted browser acceptance",
+  "source_current_before_fix": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "source_baseline": "c10faca411d014e018a34c49270647f27dfb9b13",
+  "application_php": "8.2.34",
+  "application_runtime": "actual production image runtime overlaid with source-specific app and committed delivery assets in isolated local containers",
+  "production_base_image_digest": "sha256:a3a6455d3a0586db07481eb94a1f5bda49924a67b0e8a32a80a3f2b010c81c0a",
+  "runner_cpu_limit": 0.5,
+  "dummy_only_databases": true,
+  "production_mutated": false,
+  "native_test_actions": [
+    "mouse.move",
+    "mouse.down",
+    "two requestAnimationFrame callbacks",
+    "mouse.up"
+  ],
+  "assertions_on_fixed": [
+    "Send position stays within1px while held",
+    "native replyPOST303",
+    "uploaded image visible in saved reply",
+    "attachment finalized and body retains image URL"
+  ],
+  "cases": [
+    {
+      "source": "fixed",
+      "project": "webkit-mobile",
+      "passed": true,
+      "elapsed_seconds": 21.627
+    },
+    {
+      "source": "fixed",
+      "project": "mobile",
+      "passed": true,
+      "elapsed_seconds": 8.727
+    },
+    {
+      "source": "fixed",
+      "project": "desktop",
+      "passed": true,
+      "elapsed_seconds": 8.607
+    },
+    {
+      "source": "baseline",
+      "project": "webkit-mobile",
+      "passed": false,
+      "elapsed_seconds": 19.576,
+      "expected_failure": "Send moved while native pointer held",
+      "send_displacement_css_px": 34.0
+    },
+    {
+      "source": "baseline",
+      "project": "mobile",
+      "passed": false,
+      "elapsed_seconds": 8.712,
+      "expected_failure": "Send moved while native pointer held",
+      "send_displacement_css_px": 33.80560302734375
+    },
+    {
+      "source": "baseline",
+      "project": "desktop",
+      "passed": false,
+      "elapsed_seconds": 8.631,
+      "expected_failure": "Send moved while native pointer held",
+      "send_displacement_css_px": 17.41009521484375
+    }
+  ],
+  "cause": {
+    "app_function": "revealDmDock",
+    "trigger": "focusin on Send while pointer held",
+    "measured_scroll_into_view_block": "nearest",
+    "window_scroll_y_before": 0,
+    "window_scroll_y_after": 34,
+    "send_displacement_css_px": 34,
+    "release_target": "composer instead of Send",
+    "send_enabled": true,
+    "form_valid": true,
+    "textarea_required": false,
+    "upload_blocks_submit": false,
+    "submit_event_observed": false,
+    "conversation_post_observed": false
+  },
+  "fix": {
+    "held_dock_pointer_ids_guard_queued_animation_frame": true,
+    "up_or_cancel_flushes_after_native_activation_task": true,
+    "new_pointer_ids_rechecked": true,
+    "detached_or_destroyed_dock_guard": true,
+    "css_changed": false,
+    "forced_submit_or_retry": false
+  },
+  "source_sha256": {
+    "public/assets/app.js": "4597ddd08a81b0ac7c3a46f20ae1cbaa31965039bfb4d9fdad6b48e1be8be7b1",
+    "tests/browser/upload-http.spec.ts": "8aa0d57611cde092428288c4f03b04421976aa2a4542fe3cd2b598ceafc26f51"
+  },
+  "local_checks": {
+    "npm_build_passed": true,
+    "npm_check_assets_passed_before_live_release_retention_correction": true,
+    "node_asset_worker_tests_passed": 35
+  },
+  "limitations": [
+    "Full036 hosted browser lane remains failed; this receipt does not override it.",
+    "Pending-preview removal and no-JS hosted failures remain unconfirmed causes.",
+    "Other isolated full-project intermittent failures are recorded separately.",
+    "WebKit matched-ID cancellation flush is measured; the later private whole-form poll failed after form growth and is not reported as a full-case pass."
+  ],
+  "lifecycle_receipt": "browser-dm-pointer-lifecycle-summary.json",
+  "asset_retention": "Release owner retained the verified currently live bundle and owns final asset checks.",
+  "source_fix_commit": "d9b2295e19b251577cafab8c1d5868d516ade80e",
+  "source_sha256_match_fix_commit": true
+}

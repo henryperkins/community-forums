@@ -98,11 +98,8 @@ final class HomeController extends Controller
             );
         }
 
-        // The Notices tab's dot exists so a member reading ANOTHER pane learns
-        // something is waiting (BoardIndex.dc.html:620). Computing the count
-        // only while on the Notices pane put it in the one place it can say
-        // nothing new, so the count is resolved for every pane and only the
-        // list itself is loaded on demand.
+        // The legacy embedded Notifications route stays addressable. The shared
+        // bell owns normal navigation; the list is loaded only on demand.
         $notifications = [];
         $notificationPage = [];
         $notificationQuery = NotificationReadService::query(['filter' => $request->query('filter'), 'before' => $request->query('before')]);

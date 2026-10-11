@@ -1,0 +1,469 @@
+{
+  "scope": "Operator-authored synthetic parent/child receipt fixtures; no application or browser test-pass claim",
+  "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+  "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+  "control_snapshot_sha256": {
+    "launcher.py": "10fa9d8e49a5a3028018e125045e8b4defbdb1305fc9f66906246fc12ea3ca18",
+    "enforce.py": "382594bffd31570fbc8787b6f144d90af0158894fa94ee90921fd8cab5eeba5e",
+    "upload.py": "8b3ef1ab40ea03b41c31603436fb5d4f24b1fc7f636b45c978d42bdd81de9245"
+  },
+  "cases": [
+    {
+      "scenario": "pass",
+      "parent_provider": {
+        "id": "6dc774ac-cfc8-4e1e-9e35-002c665ca8b2",
+        "status": "SUCCESS",
+        "service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+        "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "source_control_provenance": "provider-step-env",
+        "created_at": "2026-10-09T08:53:38.861146058Z",
+        "finished_at": "2026-10-09T08:57:18.811481Z",
+        "steps": [
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          }
+        ]
+      },
+      "child_provider": {
+        "id": "bf3b4f01-84fe-475a-a622-922531655859",
+        "status": "SUCCESS",
+        "service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+        "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "source_control_provenance": "provider-substitutions",
+        "created_at": "2026-10-09T08:54:18.076392749Z",
+        "finished_at": "2026-10-09T08:57:05.231206Z",
+        "steps": [
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          }
+        ]
+      },
+      "safe_parent_marker": {
+        "event": "browser_ci_boundary_parent",
+        "scenario": "pass",
+        "instance_id": null,
+        "parent_enforcer_sha256_before": "382594bffd31570fbc8787b6f144d90af0158894fa94ee90921fd8cab5eeba5e",
+        "parent_enforcer_sha256_after": "382594bffd31570fbc8787b6f144d90af0158894fa94ee90921fd8cab5eeba5e",
+        "parent_enforcer_unchanged": true,
+        "receipt": {
+          "event": "browser_ci_parent_verification",
+          "passed": true,
+          "parent_build_id": "6dc774ac-cfc8-4e1e-9e35-002c665ca8b2",
+          "child_build_id": "bf3b4f01-84fe-475a-a622-922531655859",
+          "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+          "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+          "parent_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+          "child_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+          "child_provider_status": "SUCCESS",
+          "metadata_verified": true,
+          "enforcement_passed": true,
+          "stage": "complete",
+          "trust_limit": "Child test receipts are branch-reported; parent enforcement is isolated",
+          "receipt_published": true,
+          "artifact_receipts": [
+            {
+              "name": "27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/result.json",
+              "bytes": 579,
+              "sha256": "a4aa2178c5370f914f0f1a5202c54de27c03be938aac536b213b7a36d02f2179"
+            },
+            {
+              "name": "27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/runner-exit.json",
+              "bytes": 22,
+              "sha256": "7e6559646fa8ab349975ec0c0e975db74359b0d516547e29a14151a58b70788c"
+            },
+            {
+              "name": "27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/evidence.tar.gz",
+              "bytes": 641,
+              "sha256": "9c9f02353562599aa3dde540835ef18ef245a23b4ba546ebac2dfd692745c241"
+            }
+          ]
+        }
+      },
+      "safe_child_marker": {
+        "event": "browser_ci_boundary_child",
+        "scenario": "pass",
+        "child_build_id": "bf3b4f01-84fe-475a-a622-922531655859",
+        "instance_id": null,
+        "verification_bucket_create_status": 403,
+        "builds_create_status": 403,
+        "child_enforcer_modified": false,
+        "fake_result_passed": true
+      },
+      "verification_object": {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-verification/27864474591724bfdf2ba65578ebf647dfab7bfa/6dc774ac-cfc8-4e1e-9e35-002c665ca8b2/verification.json",
+        "bytes": 1411,
+        "sha256": "3dc9cea845d2626b866e25a8560c8521e8b4a5e5c9a3a590c7960248578b9356"
+      },
+      "artifact_objects": [
+        {
+          "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/result.json",
+          "bytes": 579,
+          "sha256": "a4aa2178c5370f914f0f1a5202c54de27c03be938aac536b213b7a36d02f2179",
+          "recorded_bytes": 579,
+          "recorded_sha256": "a4aa2178c5370f914f0f1a5202c54de27c03be938aac536b213b7a36d02f2179",
+          "matches_recorded": true
+        },
+        {
+          "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/runner-exit.json",
+          "bytes": 22,
+          "sha256": "7e6559646fa8ab349975ec0c0e975db74359b0d516547e29a14151a58b70788c",
+          "recorded_bytes": 22,
+          "recorded_sha256": "7e6559646fa8ab349975ec0c0e975db74359b0d516547e29a14151a58b70788c",
+          "matches_recorded": true
+        },
+        {
+          "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/evidence.tar.gz",
+          "bytes": 641,
+          "sha256": "9c9f02353562599aa3dde540835ef18ef245a23b4ba546ebac2dfd692745c241",
+          "recorded_bytes": 641,
+          "recorded_sha256": "9c9f02353562599aa3dde540835ef18ef245a23b4ba546ebac2dfd692745c241",
+          "matches_recorded": true
+        }
+      ],
+      "checks": {
+        "expected_parent_provider_status": true,
+        "actual_parent_identity": true,
+        "actual_parent_source_control_match": true,
+        "actual_child_identity": true,
+        "actual_child_provider_success": true,
+        "actual_child_source_control_match": true,
+        "receipt_parent_child_source_control_match": true,
+        "parent_enforcer_unchanged_and_matches_snapshot": true,
+        "child_enforcer_mutation_matches_scenario": true,
+        "child_verification_bucket_write_denied_403": true,
+        "child_build_create_denied_403": true,
+        "child_all_provider_steps_successful": true,
+        "artifact_bytes_match_all_recorded_hashes_and_sizes": true,
+        "verification_object_matches_parent_log": true,
+        "receipt_acceptance_matches_scenario": true
+      },
+      "all_checks_passed": true,
+      "distinct_numeric_instance_ids_observed": false
+    },
+    {
+      "scenario": "tamper",
+      "parent_provider": {
+        "id": "2b9fe554-9bed-4f46-acf6-d1800f2ff288",
+        "status": "FAILURE",
+        "service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+        "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "source_control_provenance": "provider-step-env",
+        "created_at": "2026-10-09T08:53:48.720583202Z",
+        "finished_at": "2026-10-09T08:57:31.719491Z",
+        "steps": [
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "FAILURE",
+            "exit_code": 1,
+            "allow_failure": false
+          }
+        ]
+      },
+      "child_provider": {
+        "id": "8f37fc35-56b9-4069-9348-cd81c5885447",
+        "status": "SUCCESS",
+        "service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+        "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+        "source_control_provenance": "provider-substitutions",
+        "created_at": "2026-10-09T08:54:28.876233323Z",
+        "finished_at": "2026-10-09T08:57:06.351902Z",
+        "steps": [
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          },
+          {
+            "id": null,
+            "status": "SUCCESS",
+            "exit_code": null,
+            "allow_failure": false
+          }
+        ]
+      },
+      "safe_parent_marker": {
+        "event": "browser_ci_boundary_parent",
+        "scenario": "tamper",
+        "instance_id": null,
+        "parent_enforcer_sha256_before": "382594bffd31570fbc8787b6f144d90af0158894fa94ee90921fd8cab5eeba5e",
+        "parent_enforcer_sha256_after": "382594bffd31570fbc8787b6f144d90af0158894fa94ee90921fd8cab5eeba5e",
+        "parent_enforcer_unchanged": true,
+        "receipt": {
+          "event": "browser_ci_parent_verification",
+          "passed": false,
+          "parent_build_id": "2b9fe554-9bed-4f46-acf6-d1800f2ff288",
+          "child_build_id": "8f37fc35-56b9-4069-9348-cd81c5885447",
+          "source_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+          "control_sha": "27864474591724bfdf2ba65578ebf647dfab7bfa",
+          "parent_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+          "child_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+          "child_provider_status": "SUCCESS",
+          "metadata_verified": true,
+          "enforcement_passed": false,
+          "stage": "enforcement-failed",
+          "trust_limit": "Child test receipts are branch-reported; parent enforcement is isolated",
+          "receipt_published": true,
+          "artifact_receipts": [
+            {
+              "name": "27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/result.json",
+              "bytes": 579,
+              "sha256": "a4aa2178c5370f914f0f1a5202c54de27c03be938aac536b213b7a36d02f2179"
+            },
+            {
+              "name": "27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/runner-exit.json",
+              "bytes": 23,
+              "sha256": "34de0b5dab231de578c472d79a7c305e6920933ad646c18c3243db107c13b068"
+            },
+            {
+              "name": "27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/evidence.tar.gz",
+              "bytes": 39,
+              "sha256": "a86c745bae654e8147160fe509e8bddafb72e386be1fa43642fbdcbd645bd628"
+            }
+          ]
+        }
+      },
+      "safe_child_marker": {
+        "event": "browser_ci_boundary_child",
+        "scenario": "tamper",
+        "child_build_id": "8f37fc35-56b9-4069-9348-cd81c5885447",
+        "instance_id": null,
+        "verification_bucket_create_status": 403,
+        "builds_create_status": 403,
+        "child_enforcer_modified": true,
+        "fake_result_passed": true
+      },
+      "verification_object": {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-verification/27864474591724bfdf2ba65578ebf647dfab7bfa/2b9fe554-9bed-4f46-acf6-d1800f2ff288/verification.json",
+        "bytes": 1422,
+        "sha256": "642bd335994bd7cf47165cfb89744a3f585cb6f09b5e4f6e42100accbbea901a"
+      },
+      "artifact_objects": [
+        {
+          "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/result.json",
+          "bytes": 579,
+          "sha256": "a4aa2178c5370f914f0f1a5202c54de27c03be938aac536b213b7a36d02f2179",
+          "recorded_bytes": 579,
+          "recorded_sha256": "a4aa2178c5370f914f0f1a5202c54de27c03be938aac536b213b7a36d02f2179",
+          "matches_recorded": true
+        },
+        {
+          "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/runner-exit.json",
+          "bytes": 23,
+          "sha256": "34de0b5dab231de578c472d79a7c305e6920933ad646c18c3243db107c13b068",
+          "recorded_bytes": 23,
+          "recorded_sha256": "34de0b5dab231de578c472d79a7c305e6920933ad646c18c3243db107c13b068",
+          "matches_recorded": true
+        },
+        {
+          "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/evidence.tar.gz",
+          "bytes": 39,
+          "sha256": "a86c745bae654e8147160fe509e8bddafb72e386be1fa43642fbdcbd645bd628",
+          "recorded_bytes": 39,
+          "recorded_sha256": "a86c745bae654e8147160fe509e8bddafb72e386be1fa43642fbdcbd645bd628",
+          "matches_recorded": true
+        }
+      ],
+      "checks": {
+        "expected_parent_provider_status": true,
+        "actual_parent_identity": true,
+        "actual_parent_source_control_match": true,
+        "actual_child_identity": true,
+        "actual_child_provider_success": true,
+        "actual_child_source_control_match": true,
+        "receipt_parent_child_source_control_match": true,
+        "parent_enforcer_unchanged_and_matches_snapshot": true,
+        "child_enforcer_mutation_matches_scenario": true,
+        "child_verification_bucket_write_denied_403": true,
+        "child_build_create_denied_403": true,
+        "child_all_provider_steps_successful": true,
+        "artifact_bytes_match_all_recorded_hashes_and_sizes": true,
+        "verification_object_matches_parent_log": true,
+        "receipt_acceptance_matches_scenario": true
+      },
+      "all_checks_passed": true,
+      "distinct_numeric_instance_ids_observed": false
+    }
+  ],
+  "all_checks_passed": true,
+  "trust_limit": "Valid branch artifact forgery is outside claim; verify isolated parent enforcement and IAM boundary only",
+  "cleanup_object_count": 8,
+  "cleanup": {
+    "verified_at": "2026-10-09T09:05:39.109309+00:00",
+    "removed_object_count": 8,
+    "all_absent": true,
+    "production_objects_untouched": true,
+    "objects": [
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/result.json",
+        "removed": true,
+        "absent_after_delete": true
+      },
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/runner-exit.json",
+        "removed": true,
+        "absent_after_delete": true
+      },
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/bf3b4f01-84fe-475a-a622-922531655859/evidence.tar.gz",
+        "removed": true,
+        "absent_after_delete": true
+      },
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-verification/27864474591724bfdf2ba65578ebf647dfab7bfa/6dc774ac-cfc8-4e1e-9e35-002c665ca8b2/verification.json",
+        "removed": true,
+        "absent_after_delete": true
+      },
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/result.json",
+        "removed": true,
+        "absent_after_delete": true
+      },
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/runner-exit.json",
+        "removed": true,
+        "absent_after_delete": true
+      },
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-evidence/27864474591724bfdf2ba65578ebf647dfab7bfa/8f37fc35-56b9-4069-9348-cd81c5885447/evidence.tar.gz",
+        "removed": true,
+        "absent_after_delete": true
+      },
+      {
+        "object": "gs://rising-woods-449718-v6-retroboards-browser-verification/27864474591724bfdf2ba65578ebf647dfab7bfa/2b9fe554-9bed-4f46-acf6-d1800f2ff288/verification.json",
+        "removed": true,
+        "absent_after_delete": true
+      }
+    ]
+  }
+}

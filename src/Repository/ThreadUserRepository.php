@@ -181,14 +181,15 @@ final class ThreadUserRepository
         );
     }
 
-    /** Personal Phase 4 snooze state. NULL means visible in normal inbox filters. */
-    public function setSnooze(int $userId, int $threadId, ?string $until): void
+    /** Deadline and manual hiding are mutually exclusive; restoring clears both. */
+    public function setSnooze(int $userId, int $threadId, ?string $until, bool $indefinite = false): void
     {
         $this->db->run(
-            'INSERT INTO thread_user (user_id, thread_id, snoozed_until)
-             VALUES (:uid, :tid, :until_at)
-             ON DUPLICATE KEY UPDATE snoozed_until = VALUES(snoozed_until)',
-            ['uid' => $userId, 'tid' => $threadId, 'until_at' => $until],
+            'INSERT INTO thread_user (user_id, thread_id, snoozed_until, snoozed_indefinitely)
+             VALUES (:uid, :tid, :until_at, :indefinite)
+             ON DUPLICATE KEY UPDATE snoozed_until = VALUES(snoozed_until),
+                 snoozed_indefinitely = VALUES(snoozed_indefinitely)',
+            ['uid' => $userId, 'tid' => $threadId, 'until_at' => $indefinite ? null : $until, 'indefinite' => $indefinite ? 1 : 0],
         );
     }
 
@@ -263,7 +264,8 @@ final class ThreadUserRepository
     /**
      * One bulk unread aggregate for the shared board rail. It deliberately uses
      * the exact Inbox-unread predicate, including active snoozes and board mute,
-     * so the topbar total equals the sum of rendered rail pills.
+     * so the topbar total equals the aggregate across unique boards. Personal
+     * shortcuts can repeat a board's pill without adding to the queue total.
      *
      * @return array<int,int> board_id => unread count (zero rows omitted)
      */
@@ -347,7 +349,7 @@ final class ThreadUserRepository
         $rows = $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
                     au.username AS author_username, au.display_name AS author_display_name,
-                    au.role AS author_role,
+                    au.role AS author_role, au.avatar_path AS author_avatar_path,
                     COALESCE(op.is_anonymous, 0) AS op_is_anonymous,
                     op.body AS excerpt_body, op.body_html AS excerpt_html,
                     (SELECT COUNT(*) FROM reactions commend
@@ -355,6 +357,7 @@ final class ThreadUserRepository
                          AND commend.user_id <> op.user_id) AS commend_count,
                     COALESCE(tu.is_starred, 0) AS is_starred,
                     tu.snoozed_until AS snoozed_until,
+                    COALESCE(tu.snoozed_indefinitely, 0) AS snoozed_indefinitely,
                     ta.assigned_user_id,
                     assignee.username AS assigned_username,
                     assignee.display_name AS assigned_display_name,
@@ -393,6 +396,7 @@ final class ThreadUserRepository
             foreach ($rows as &$row) {
                 $row['status'] = $row['accepted_answer_post_id'] !== null ? 'solved' : 'open';
                 $row['snoozed_until'] = null;
+                $row['snoozed_indefinitely'] = 0;
                 $row['assigned_user_id'] = null;
                 $row['assigned_username'] = null;
                 $row['assigned_display_name'] = null;
@@ -597,7 +601,10 @@ final class ThreadUserRepository
                 if (!$workflowEnabled) {
                     return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
                 }
-                return ['AND tu.snoozed_until > UTC_TIMESTAMP()', 'tu.snoozed_until ASC, t.last_post_at DESC, t.id DESC'];
+                return [
+                    'AND (COALESCE(tu.snoozed_indefinitely, 0) = 1 OR tu.snoozed_until > UTC_TIMESTAMP())',
+                    'tu.snoozed_until ASC, t.last_post_at DESC, t.id DESC',
+                ];
             case 'drafts':
                 return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
             case 'starred':
@@ -689,10 +696,12 @@ final class ThreadUserRepository
         return $rows;
     }
 
-    /** Normal personal views honor a future snooze only while workflow is live. */
+    /** Normal personal views honor deadline and manual hiding while workflow is live. */
     private function normalInboxVisibility(bool $workflowEnabled): string
     {
-        return $workflowEnabled ? 'AND (tu.snoozed_until IS NULL OR tu.snoozed_until <= UTC_TIMESTAMP())' : '';
+        return $workflowEnabled
+            ? 'AND COALESCE(tu.snoozed_indefinitely, 0) = 0 AND (tu.snoozed_until IS NULL OR tu.snoozed_until <= UTC_TIMESTAMP())'
+            : '';
     }
 
     /** The one unread predicate shared by the Unread queue and its badge. */

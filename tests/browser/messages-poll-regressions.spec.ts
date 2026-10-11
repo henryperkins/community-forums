@@ -1,3 +1,4 @@
+import { openNewMessage } from './create-menu-helpers';
 import { test, expect, type Page } from '@playwright/test';
 
 async function login(page: Page, who: string) {
@@ -152,11 +153,11 @@ test('an unknown recipient focuses the combobox', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop');
   await login(page, 'alice');
   await page.goto('/messages');
-  await page.locator('.dm-new-btn').click();
+  await openNewMessage(page);
   await page.locator('.dm-dialog .dm-to-input').fill('unknown_member');
   await page.locator('.dm-dialog textarea[name=body]').fill('Preserve my letter after an eligibility error.');
   await page.locator('.dm-dialog .composer-send').click();
-  await expect(page.locator('.dm-compose-details')).toHaveAttribute('open', '');
+  await expect(page.locator('[data-dm-compose]')).toBeVisible();
   await expect(page.locator('.dm-dialog')).toContainText('No member found');
   await expect(page.locator('.dm-dialog textarea[name=body]')).toHaveValue('Preserve my letter after an eligibility error.');
   await expect(page.locator('.dm-dialog .dm-to-input')).toBeFocused();
@@ -168,7 +169,7 @@ test('a body error keeps focus on the textarea', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop');
   await login(page, 'alice');
   await page.goto('/messages');
-  await page.locator('.dm-new-btn').click();
+  await openNewMessage(page);
   const to = page.locator('.dm-dialog .dm-to-input');
   await to.fill('bob');
   await to.press('Enter');
@@ -187,7 +188,7 @@ test('a closed compose dialog is not focused', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop');
   await login(page, 'alice');
   await page.goto('/messages');
-  await expect(page.locator('details.dm-compose-details')).not.toHaveAttribute('open', '');
+  await expect(page.locator('[data-dm-compose]')).toBeHidden();
   await expect(page.locator('.dm-dialog .dm-to-input')).not.toBeFocused();
 });
 

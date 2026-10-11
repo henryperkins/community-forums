@@ -26,7 +26,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
 };
 ?>
 <div class="dm-shell reading">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'allow_groups' => $allowGroups ?? false, 'show_avatars' => $dmNewShowAvatars, 'heading_tag' => 'h2']) ?>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'show_avatars' => $dmNewShowAvatars, 'heading_tag' => 'h2']) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head dm-thread-head-compose">
@@ -35,7 +35,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
         </header>
         <div class="dm-compose">
             <div class="dm-compose-wrap">
-                <?php if (!empty($new_user_throttled)): ?><p class="dm-empty-note">New accounts can reply to messages they receive. To start a conversation, make your first post or come back later.</p><?php endif; ?>
+                <?php if (!empty($new_user_throttled)): ?><p class="dm-empty-note">You can reply to messages you receive. To start a conversation, make your first post or try again later.</p><?php endif; ?>
 
                 <?= $this->partial('partials/composer_shell', [
                     'action' => '/messages',
@@ -53,6 +53,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
                     'identity' => [
                         'display_name' => $current_user->displayName(),
                         'username' => $current_user->username(),
+                        'avatar_path' => $current_user->avatarPath(),
                         'show_avatar' => $show_avatars ?? true,
                     ],
                     'wrapper_slot' => $dmNewWrapper,
@@ -61,3 +62,4 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
         </div>
     </section>
 </div>
+<?= $this->partial('partials/dm_compose_panel', ['allow_groups' => $allowGroups ?? false, 'show_avatars' => $dmNewShowAvatars]) ?>
