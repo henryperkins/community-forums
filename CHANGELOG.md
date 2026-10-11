@@ -2,6 +2,19 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Dependency delivery
+
+- Refresh the npm dependency group, rebuild six JavaScript delivery files, and
+  adapt the Miniflare fixture to its native workers/config API. The PHP suite,
+  asset tests and focused Chromium/WebKit regressions pass. Verify the automatic
+  production deployment and all 67 published hashes, then pin the deployed asset
+  version and retire eight expired files under the three-release policy.
+  Results and coverage boundaries are in
+  `docs/evidence/dependency-refresh-2026-10-11/README.md`.
+- Preserve the historical 2026-09-23 image-upload production receipts in
+  `docs/evidence/image-upload-reliability/production-release-2026-09-23/`, with
+  the retired Cloudflare/R2 deployment distinguished from current Cloud Run.
+
 ## [Unreleased] - Hosting on Google Cloud
 
 - Move production's database from PlanetScale, asleep since 2026-09-30, to

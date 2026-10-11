@@ -22,6 +22,19 @@ skips; WebKit retained-layout checks passed all 12 desktop/mobile, JavaScript
 on/off cases. Exact-source verification and the hosted lane are recorded in
 [PR #81](https://github.com/henryperkins/community-forums/pull/81).
 
+### Post-deployment release record
+
+After the automatic `8fb9db9e` deployment, all 67 allowlisted assets passed live
+hash and GET/HEAD/304 cache verification, and the service plus every cron/monitor
+job matched the release image. `assets:record-release` then pinned verified
+version `3642fd850eefb9c0` with its two predecessors and retired the eight
+exclusive files from oldest release `ffc423564f256d2f`, under ADR 0041. The
+resulting 59-file delivery set changes the reviewed application digest to
+`2e4f0664ba64dee5dce3f614bdacb53283272f0214f32c14a06296534c5acb4c`.
+The current application/editor/font closure retains its verified bytes.
+Receipts and the deliberately canceled full-hosted coverage boundary are in
+[the dependency evidence](../../evidence/dependency-refresh-2026-10-11/README.md).
+
 ## 2026-09-27 — retain recent delivery assets (ADR 0041)
 
 The runtime digest includes two restored fingerprinted application stylesheets
