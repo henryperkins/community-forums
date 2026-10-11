@@ -187,16 +187,26 @@ file, run `configure.sh`, which refreshes the copy. GitHub's delivery log for
 the hook (repository Settings → Webhooks) shows each push and Cloud Build's
 reply.
 
-## 5a. Hosted browser evidence while GitHub Actions is locked
+## 5a. Local release checks and independent hosted browser evidence
 
-GitHub Actions currently cannot start jobs because the account is locked for
-billing. The latest checked main run (`37888488447`) failed with zero job
-steps; there is no CircleCI configuration. Keep
-`.github/workflows/browser-evidence.yml` available for billing recovery.
+**GitHub Actions is permanently unavailable.** The owner confirmed on
+2026-10-11 that the billing lock will not be repaired. Do not propose or wait
+for billing recovery. `.github/workflows/browser-evidence.yml` is a manual-only
+reference; automatic push triggers are removed. The earlier checked main run
+(`37888488447`) failed with zero job steps, and there is no CircleCI configuration.
+
+The normal release path is completed local `composer test`, generated-asset and
+Worker checks, focused browser evidence for the changed surface, then the exact
+automatic production deployment and live-byte verification (§3). Required
+browser evidence still applies. The independent full hosted browser matrix is
+available for explicit regression coverage and is not a mandatory merge hold
+when the change already has sufficient completed local evidence. Deliberately
+canceled runs must be documented as canceled, never as a full hosted pass.
+
 The independent Cloud Build lane uses
 `deploy/cloudrun/browser-ci/{configure.py,cloudbuild.json,launcher.py,child-cloudbuild.json,Dockerfile,run.sh,package.py,upload.py,enforce.py}`.
-It is the hosted browser evidence source while Actions cannot run; inspect its
-actual build result before calling a commit verified.
+It is the independent hosted browser evidence source; inspect its actual build
+result and parent receipt before claiming full hosted acceptance.
 
 The parent build fetches only the separately pinned reviewed control SHA.
 Its controller submits an exact source SHA to a child build on a separate VM,

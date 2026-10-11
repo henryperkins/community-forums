@@ -51,7 +51,7 @@ cd tests/browser && npm install && npx playwright install --with-deps chromium &
 tests/backup/rehearse.sh
 ```
 
-There is **no PHPUnit CI**; the only GitHub workflow (`.github/workflows/browser-evidence.yml`) runs the Playwright evidence capture. Run `composer test` locally before claiming a change is green.
+There is **no PHPUnit CI**. GitHub Actions is **permanently unavailable** by owner decision (2026-10-11); never propose or wait for billing recovery. `.github/workflows/browser-evidence.yml` is a manual-only reference. Run `composer test` locally before claiming a change is green, plus asset checks and focused browser evidence for the affected surface. The independent full Cloud Build browser lane is available for explicit regression coverage; it is not an automatic merge gate for a change already supported by completed local evidence. Verify the exact automatic production deployments after publishing `main` (Cloud Run runbook §3, §5a).
 
 ## Architecture
 

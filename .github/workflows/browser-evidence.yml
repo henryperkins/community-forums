@@ -2,29 +2,11 @@ name: Browser evidence
 
 # Regenerates the Gate A desktop + mobile screenshots by driving the real
 # server-rendered app in Chromium, and uploads them as a build artifact.
-# Runs on demand and when the app or the harness changes.
-# While GitHub billing blocks job startup, the restricted Cloud Build browser
-# lane is authoritative; see docs/runbooks/deployment-cloud-run.md §5a.
+# Manual reference only: GitHub Actions is permanently unavailable by owner
+# decision (2026-10-11). Release checks run locally; the independent full Cloud
+# Build lane is optional explicit coverage. See the Cloud Run runbook §5a.
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'Dockerfile'
-      - 'deploy/**'
-      - 'tests/uploads/**'
-      - 'tests/prodlike/php.ini'
-      - 'config/config.php'
-      - 'src/**'
-      - 'templates/**'
-      - 'public/**'
-      - 'config/assets.json'
-      - 'bin/build-assets.mjs'
-      - 'vite.config.mjs'
-      - 'package*.json'
-      - 'worker/**'
-      - 'database/migrations/**'
-      - 'tests/browser/**'
-      - '.github/workflows/browser-evidence.yml'
 
 jobs:
   capture:

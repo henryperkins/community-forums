@@ -1,5 +1,28 @@
 # RetroBoards runtime reconciliation
 
+## 2026-10-11 — security dependency delivery (PR #90)
+
+The ProseMirror view/model security updates regenerate the lazy editor entry and
+adapter. Their reviewed application digest is
+`e81fb2b7dd62a493f58061fa1f048836f30ca4d2ea8c9e73b7a59014d7e7df01`.
+This is the merger's `main` reconciliation immediately following the security
+merge, under ADR 0024; the dependency branch retained the previous baseline.
+
+ProseMirror now validates attributes when nodes are created. Milkdown 7.21's
+Markdown parsers supplied string-valued list spread flags and null image text,
+and the adapter cleared image titles to null. Local schema extensions normalize
+those values to the declared boolean/string types while retaining the upstream
+validators. Canonical task/ordered-list serialization uses the same typed flags.
+The clipboard-context regression rejects invalid list/image attributes.
+
+The original update failed eleven relevant browser cases; the repaired tree
+passes 62 Chromium cases with 16 existing viewport exclusions and 18 WebKit
+cases, including rich image insertion, source-mode tasks, paste, strict CSP and
+retained-release layout. All 35 asset tests and four archived prototype site
+tests pass, and both npm audits report zero vulnerabilities. Release receipts
+and the permanent GitHub Actions constraint are recorded with
+[PR #90](https://github.com/henryperkins/community-forums/pull/90).
+
 ## 2026-10-11 — dependency delivery rebuild (PR #81)
 
 Vite 8.3.1 regenerated six JavaScript delivery files: the application, composer,
