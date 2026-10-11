@@ -1,5 +1,27 @@
 # RetroBoards runtime reconciliation
 
+## 2026-10-11 — dependency delivery rebuild (PR #81)
+
+Vite 8.3.1 regenerated six JavaScript delivery files: the application, composer,
+passkeys and tour classic scripts, plus the lazy editor entry and adapter.
+The reviewed application digest is therefore
+`1e2f3f3e2ff7c933b96c0a55b5d22f8eb46f731d06a0c297e90105bcac661368`.
+This is the merger's `main` reconciliation immediately following the dependency
+merge, as required by ADR 0024; the slice retained `main`'s previous baseline.
+
+The current CSS, templates, authoring tokens and fonts retain their committed
+bytes. The asset build preserves all three existing deployed-release pins, the
+strict-CSP classic-script boundary, the lazy editor split, and the server-rendered
+fallback. No design-screen adoption or surface-spec change is involved.
+
+The upgraded Miniflare fixture uses its native workers/config API while retaining
+the real Workers Assets GET/304/HEAD/404, immutable-cache, retained-byte and
+dynamic-origin assertions. All 35 Worker/asset tests passed. Local Chromium
+composer/toolbar/retained-layout checks passed 75 cases with 17 declared viewport
+skips; WebKit retained-layout checks passed all 12 desktop/mobile, JavaScript
+on/off cases. Exact-source verification and the hosted lane are recorded in
+[PR #81](https://github.com/henryperkins/community-forums/pull/81).
+
 ## 2026-09-27 — retain recent delivery assets (ADR 0041)
 
 The runtime digest includes two restored fingerprinted application stylesheets
