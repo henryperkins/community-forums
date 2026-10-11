@@ -35,14 +35,21 @@ test('the real Workers Assets binding serves GET, conditional 304, HEAD and safe
       bundle: true, write: false, format: 'esm', platform: 'browser',
     });
     runtime = new Miniflare({
-      modules: true,
-      script: bundle.outputFiles[0].text,
-      compatibilityDate: '2026-08-03',
-      assets: {
-        directory, binding: 'ASSETS',
-        routerConfig: { invoke_user_worker_ahead_of_assets: true, has_user_worker: true },
-        assetConfig: { html_handling: 'none', not_found_handling: 'none' },
-      },
+      workers: [{
+        config: {
+          name: 'asset-test',
+          compatibilityDate: '2026-08-03',
+          manifest: {
+            mainModule: 'asset-test.mjs',
+            modules: { 'asset-test.mjs': { type: 'esm', contents: bundle.outputFiles[0].text } },
+          },
+          env: { ASSETS: { type: 'assets' } },
+          assets: {
+            directory, runWorkerFirst: true, hasUserWorker: true,
+            htmlHandling: 'none', notFoundHandling: 'none',
+          },
+        },
+      }],
     });
     const url = `https://forum.example${manifest.urls['app.css']}`;
     const first = await runtime.dispatchFetch(url);
