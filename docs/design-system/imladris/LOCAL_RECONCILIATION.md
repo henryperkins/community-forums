@@ -23,6 +23,14 @@ tests pass, and both npm audits report zero vulnerabilities. Release receipts
 and the permanent GitHub Actions constraint are recorded with
 [PR #90](https://github.com/henryperkins/community-forums/pull/90).
 
+The automatic `f5870e9a` deployment passed all 61 live asset hashes and
+GET/HEAD/304 cache checks, public health and exact service/cron/monitor image
+verification. Recording verified release `aa3e487a59d3d205` under ADR 0041 keeps
+it and its two predecessors, retiring only oldest release `85b4bc099e7bdac1`'s
+exclusive `app-ead709125428cd4d.js`. The resulting 60-asset set digests to
+`3c9562305a2842e139efb2d8a68c7105308efff05674c1e1f8c735764aa773bd`.
+Receipts are in [the security-update evidence](../../evidence/dependency-security-2026-10-11/README.md).
+
 ## 2026-10-11 — dependency delivery rebuild (PR #81)
 
 Vite 8.3.1 regenerated six JavaScript delivery files: the application, composer,

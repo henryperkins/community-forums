@@ -4,6 +4,18 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Dependency delivery
 
+- Patch ProseMirror paste handling, Sharp/librsvg, Source Map JS and Undici
+  dependencies. Both npm audits report zero vulnerabilities, and all ten prior
+  Dependabot alerts close after the merge. Normalize Milkdown's list/image
+  parser attributes for ProseMirror's stricter validation while retaining its
+  security checks; clipboard-context, paste, task-list and image regressions
+  pass in focused Chromium/WebKit coverage. Verify the production release and
+  record its asset version under the three-deploy policy. Evidence is in
+  `docs/evidence/dependency-security-2026-10-11/README.md`.
+- Record the owner's permanent GitHub Actions billing constraint. Remove
+  automatic workflow push triggers; local PHP/asset/focused-browser checks and
+  exact production verification are the release path, with the independent
+  full hosted browser matrix available for explicit regression coverage.
 - Refresh the npm dependency group, rebuild six JavaScript delivery files, and
   adapt the Miniflare fixture to its native workers/config API. The PHP suite,
   asset tests and focused Chromium/WebKit regressions pass. Verify the automatic
