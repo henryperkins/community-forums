@@ -1,0 +1,65 @@
+{
+  "commit": "a26f1fd0a09a4abf9d646ec1252e95951ef85d02",
+  "origin": "https://forum.candidary.online",
+  "topic_id": 1,
+  "started_at_utc": "2026-09-23T10:39:17.964Z",
+  "actual_iphone": false,
+  "thread_http": 200,
+  "local_size_recovery": {
+    "bytes": 5242881,
+    "visible_failure": true,
+    "send_blocked": true,
+    "no_network_upload": true,
+    "removal_unblocks": true
+  },
+  "upload": {
+    "status": 200,
+    "bytes": 3151914,
+    "input_sha256": "9804c31d113d1ee41892fdd321296054f78c6450cfe2fce6d203942e7c27ec50",
+    "media_id": 5,
+    "width": 1024,
+    "height": 1024,
+    "ready": true,
+    "canonical_reference": true,
+    "pending_fetches": 0
+  },
+  "runtime_rejections": [
+    {
+      "bytes": 9437184,
+      "status": 413,
+      "code": "upload_too_large",
+      "max_bytes": 5242880
+    },
+    {
+      "bytes": 11534336,
+      "status": 413,
+      "code": "upload_request_too_large",
+      "max_bytes": 5242880
+    }
+  ],
+  "post_id": 10,
+  "published_url": "https://forum.candidary.online/t/1-this-is-a-topic#p10",
+  "publication": {
+    "reload_visible": true,
+    "media_status": 200,
+    "content_type": "image/png",
+    "bytes": 6523,
+    "sha256": "8f4b98723a91bd4a7c1e824d0c2424685abad81dd9a430e3358d525ce2ac56d8"
+  },
+  "webkit_mobile": {
+    "viewport": [
+      390,
+      844
+    ],
+    "published_image_visible": true,
+    "reload_visible": true,
+    "actual_iphone": false
+  },
+  "status": "passed",
+  "cleanup": {
+    "post_delete_status": 303,
+    "post_id": 10
+  },
+  "session_logout_status": 303,
+  "finished_at_utc": "2026-09-23T10:39:44.341Z"
+}
