@@ -42,3 +42,23 @@ in the parent directory and describes its own d06a303a baseline.
 
 The dev URL uses the isolated demo database on loopback. Publication receipts
 are added after observing the automatic Worker and Cloud Run deployments.
+
+## Worker asset release and origin status
+
+The Worker deployed the d928d6f2 asset set. All 55 published files match their
+expected SHA-256 hashes. Public health returns database ok; the current stylesheet
+passes GET 200, HEAD 200 and conditional GET 304 with immutable cache headers.
+live-assets.json records this asset proof separately from backend UI proof:
+the production login still names its previous stylesheet while Cloud Run build
+9315b5e7-2888-4590-b593-2b77fecd6ad2 is queued behind existing hosted browser work.
+No current production-origin or authenticated UI pass is claimed.
+
+Record verified asset version 326ae04cd673029a under ADR 0041. The resulting
+54-file manifest pins 326ae04cd673029a, be1d396948b3adcc and 2883bddb08c95fd1;
+only the retired app-style-_B45kYl1.css leaves the delivery set. The post-retirement
+application digest is
+645bfcbfb0c49c7f9bfcb2e05f684bdeb4b8329f784b7e9183867111d2e0f7b1.
+
+The dev server now serves the main checkout through an external local router,
+which loads the isolated demo environment before the app can load the primary
+environment. The primary .env is unchanged. Boards and health both return 200.

@@ -10,6 +10,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   Peek choice, compact preference and native phone disclosure. Rebuild delivery
   assets without advancing deployment pins. Local evidence and verification
   limits are in docs/evidence/boards-layout-typeset-2026-10-12/README.md.
+- Verify all 55 Worker asset hashes and stylesheet GET/HEAD/304 behavior, then
+  record the deployed asset version under the three-release policy. Cloud Run's
+  origin deployment is queued; static asset proof is recorded separately from
+  production UI proof in the integration evidence.
 - Make the asset-retention fixtures use native Windows paths and directory
   junctions, and normalize failure-injection paths so rollback assertions actually
   exercise the publisher on Windows.

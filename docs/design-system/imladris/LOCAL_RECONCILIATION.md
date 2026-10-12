@@ -1,5 +1,14 @@
 # RetroBoards runtime reconciliation
 
+## 2026-10-12 — verified Boards Worker assets
+
+All 55 live Worker hashes match asset version 326ae04cd673029a. Recording that
+verified asset release keeps it and the two preceding deployments, retiring only
+app-style-_B45kYl1.css. The resulting 54-file delivery set has reviewed application
+digest 645bfcbfb0c49c7f9bfcb2e05f684bdeb4b8329f784b7e9183867111d2e0f7b1.
+This proves the static asset rollout. Cloud Run's d928d6f2 image deployment remains
+queued; the production login still names the previous stylesheet.
+
 ## 2026-10-12 — Boards publication integration
 
 Integrating the four accessibility commits through fbaed0e9 retains their visual
