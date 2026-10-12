@@ -92,6 +92,11 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Consistent headers and navigation
 
+- Keep the compact desktop reaction picker inside the viewport and retain visible
+  gesture names on guest/read-only aggregate chips without identifying reactors.
+  Pin the phone drawer, reply frame and reaction controls with Chromium/WebKit
+  regressions, including both themes, native submission and account-state gates.
+  Evidence is in `docs/evidence/mobile-controls-2026-10-12/review-fixes/README.md`.
 - Add calm reaction count motion, member reactor-name tips with privacy filters,
   and immediate touch-picker updates. Keep chip focus, synchronize picker state,
   prevent overlapping toggles and offer reload after an uncertain response.

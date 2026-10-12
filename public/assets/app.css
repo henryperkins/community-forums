@@ -665,17 +665,19 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .reaction-add > summary::-webkit-details-marker { display: none; }
 .reaction-pick { font-weight: 700; }
 .reaction-mark { display: inline-flex; flex: 0 0 auto; color: var(--star); }
-.reaction-mark .icon { width: 13px; height: 13px; }
+.reaction-mark .icon { width: 18px; height: 18px; }
 .reaction-name { font-family: var(--font-label); letter-spacing: .02em; }
 .reaction-on .reaction-mark { color: inherit; }
 .reaction-menu {
-    position: absolute; z-index: 20; margin-top: 4px; padding: 6px;
-    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+    position: absolute; inset-inline-end: 0; z-index: 20; margin-top: 4px; padding: 6px;
+    display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: var(--space-1);
     width: max-content; max-width: min(240px, 70vw); max-height: 280px; overflow: auto;
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
 }
-.reaction-menu .reaction { justify-content: flex-start; width: 100%; border-radius: var(--radius-sm); }
+.reaction-menu .reaction { justify-content: center; width: 100%; min-width: 44px; min-height: 44px; border-radius: var(--radius-sm); }
+/* Custom gestures keep their words until they have a distinct icon. */
+:is(.reaction-menu, .post-menu-reactions) .reaction-form:has(.reaction-name:not(.sr-only)) { grid-column: 1 / -1; }
 .reaction-form { margin: 0; }
 
 .star-btn { font-size: .9rem; }
@@ -1798,7 +1800,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     :root .app-shell { display: block; height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
     .app-shell > .board-rail {
         position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
-        display: flex; width: 322px; max-width: 86vw; max-height: none; z-index: var(--z-drawer);
+        display: flex; width: 240px; max-width: 70vw; max-height: none; z-index: var(--z-drawer);
         transform: translateX(-100%);
         /* A translated rail still participates in keyboard navigation. */
         visibility: hidden;
@@ -1933,8 +1935,8 @@ body[data-route="thread"] .thread-conversation {
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 4px;
-        padding: 3px;
-        border-radius: var(--radius-pill);
+        padding: var(--space-1);
+        border-radius: var(--radius-lg);
     }
     .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
     .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
@@ -1968,7 +1970,7 @@ body[data-route="thread"] .thread-conversation {
     .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
         width: auto;
         min-width: 0;
-        height: 36px;
+        height: 44px;
         padding: 0 14px;
         border-radius: var(--radius-md);
     }
@@ -1990,8 +1992,8 @@ body[data-route="thread"] .thread-conversation {
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 4px;
-        padding: 3px;
-        border-radius: var(--radius-pill);
+        padding: var(--space-1);
+        border-radius: var(--radius-lg);
     }
     .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
     .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
@@ -2025,7 +2027,7 @@ body[data-route="thread"] .thread-conversation {
     .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
         width: auto;
         min-width: 0;
-        height: 36px;
+        height: 44px;
         padding: 0 14px;
         border-radius: var(--radius-md);
     }
@@ -11304,8 +11306,8 @@ body.thread-restructure-open { overflow: hidden; }
 /* Fine-pointer default: the toolbar itself carries react/quote/accept, so the
    menu's touch duplicates stay out of the DOM's accessibility tree entirely. */
 .post-menu-touch { display: none; }
-.post-menu-reactions { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 2px 6px 6px; }
-.post-menu-reactions .reaction { justify-content: flex-start; width: 100%; border-radius: var(--radius-sm); }
+.post-menu-reactions { display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: var(--space-1); padding: var(--space-1); }
+.post-menu-reactions .reaction { justify-content: center; width: 100%; min-width: 44px; min-height: 44px; border-radius: var(--radius-sm); }
 [data-thread-enhanced="1"] .post-native-disclosure > summary { display: none; }
 [data-thread-enhanced="1"] .post-native-disclosure:not([open]) { display: none; }
 .post-disclosure-close { min-width: 44px; margin: 0 0 8px auto; }

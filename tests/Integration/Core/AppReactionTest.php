@@ -170,7 +170,7 @@ final class AppReactionTest extends TestCase
         self::assertSame(1, $this->reactionRows($opId), 'outsider reaction is rejected');
     }
 
-    public function testThreadNamesTheGestureInsteadOfABareEmoji(): void
+    public function testThreadNamesIconGesturesForAssistiveTechnology(): void
     {
         $s = $this->scenario();
         $fan = $this->makeUser();
@@ -181,13 +181,55 @@ final class AppReactionTest extends TestCase
         $this->assertStatus(200, $page);
         $html = $page->body();
 
-        self::assertStringContainsString('class="reaction-name">Commend</span>', $html);
+        self::assertStringContainsString('class="reaction-name sr-only">Commend</span>', $html);
         self::assertStringContainsString('icon-commend-star', $html);
         self::assertStringNotContainsString('reaction-bare', $html);
-        self::assertStringContainsString('class="reaction-name">Kindled</span>', $html);
-        self::assertStringContainsString('class="reaction-name">Seconded</span>', $html);
-        self::assertStringContainsString('class="reaction-name">Illuminating</span>', $html);
+        self::assertStringContainsString('class="reaction-name sr-only">Kindled</span>', $html);
+        self::assertStringContainsString('class="reaction-name sr-only">Seconded</span>', $html);
+        self::assertStringContainsString('class="reaction-name sr-only">Illuminating</span>', $html);
+        self::assertStringContainsString('icon-flame', $html);
+        self::assertStringContainsString('icon-check', $html);
+        self::assertStringContainsString('icon-lightbulb', $html);
         self::assertStringContainsString('name="emoji" value="👍"', $html);
+    }
+
+    public function testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities(): void
+    {
+        $s = $this->scenario();
+        $fan = $this->makeUser(['username' => 'staticprivatereactor', 'profile_visibility' => 'members']);
+        $repo = new ReactionRepository($this->db);
+        foreach (\App\Service\ReactionService::ALLOWED as $emoji) {
+            $repo->toggle($s['op_id'], (int) $fan['id'], $emoji);
+        }
+
+        $viewers = [
+            'guest' => null,
+            'suspended' => $this->makeUser(['status' => 'suspended']),
+            'banned' => $this->makeUser(['status' => 'banned']),
+        ];
+        foreach ($viewers as $state => $viewer) {
+            if ($viewer === null) {
+                $this->logoutClient();
+            } else {
+                $this->actingAs($viewer);
+            }
+            $page = $this->get('/t/' . $s['thread']['thread_id'] . '-' . $s['thread']['slug']);
+            $this->assertStatus(200, $page);
+            $html = $page->body();
+            $dom = new \DOMDocument();
+            @$dom->loadHTML($html);
+            $xpath = new \DOMXPath($dom);
+            $tray = '//article[@id="p' . $s['op_id'] . '"]//div[@class="reactions"]';
+            $labels = $xpath->query($tray . '//span[@class="reaction reaction-static"]/span[@class="reaction-name"]');
+            self::assertCount(9, $labels, $state . ' sees all built-in gesture names');
+            self::assertEqualsCanonicalizing(
+                array_values(\App\Service\ReactionService::LABELS),
+                array_map(static fn (\DOMNode $label): string => $label->textContent, iterator_to_array($labels)),
+            );
+            self::assertSame(0, $xpath->query($tray . '//button | ' . $tray . '//form')->length, $state . ' gets aggregate-only chips');
+            self::assertStringNotContainsString('reaction-tip', $html);
+            self::assertStringNotContainsString('staticprivatereactor', $html);
+        }
     }
 
     public function testReactionNamesAreNewestCappedAndFilteredWithoutChangingCounts(): void
@@ -359,7 +401,12 @@ final class AppReactionTest extends TestCase
         self::assertStringContainsString('aria-describedby="reaction-tip-' . $s['op_id'] . '-0"', $html);
         self::assertStringContainsString('class="reaction-tip" aria-hidden="true"', $html);
         self::assertStringContainsString('<span class="reaction-tip-label">Commend</span><span>@namedreactor</span>', $html);
-        self::assertStringNotContainsString('title="Commend"', $html);
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($html);
+        $xpath = new \DOMXPath($dom);
+        $chips = $xpath->query('//div[@class="reactions"]//button[@data-label="Commend"]');
+        self::assertCount(1, $chips);
+        self::assertFalse($chips->item(0)->hasAttribute('title'), 'The member tip replaces the chip title; picker icons retain their names.');
         self::assertStringContainsString('aria-pressed="false" data-label="Commend"', $html);
     }
 

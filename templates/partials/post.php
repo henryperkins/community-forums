@@ -186,7 +186,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                                 <?php if ($reactorNames !== ''): ?>aria-describedby="<?= $e($reactionTipId) ?>"<?php else: ?>title="<?= $e($on ? 'Remove your ' . $reactionLabel : $reactionLabel) ?>"<?php endif; ?>><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><span class="reaction-n-val"><?= (int) $n ?></span></span><?php if ($reactorNames !== ''): ?><span id="<?= $e($reactionTipId) ?>" class="reaction-tip" aria-hidden="true"><span class="reaction-tip-label"><?= $e($reactionLabel) ?></span><span><?= $e($reactorNames) ?></span></span><?php endif; ?></button>
                     </form>
                 <?php else: ?>
-                    <span class="reaction reaction-static"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?> <span class="reaction-n"><span class="reaction-n-val"><?= (int) $n ?></span></span></span>
+                    <span class="reaction reaction-static"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji, 'show_label' => true]) ?> <span class="reaction-n"><span class="reaction-n-val"><?= (int) $n ?></span></span></span>
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>
