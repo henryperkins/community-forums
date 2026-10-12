@@ -135,10 +135,6 @@
       "sha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
       "immutable": true
     },
-    "/assets/dist/milkdown-adapter-t86d4ntf.js": {
-      "sha256": "43b0ff5491e5cc0608a1ea5a3cbf9fad42974bb3239649bcda0b537d05d2df27",
-      "immutable": true
-    },
     "/assets/dist/milkdown-adapter-zC8kMFUx.js": {
       "sha256": "d5a851673f814abd0f9765a676dcd2b7df428a8b3a709fa319c6c6fef05a8160",
       "immutable": true
@@ -157,10 +153,6 @@
     },
     "/assets/dist/wysiwyg-composer-BRAFF38E.css": {
       "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
-      "immutable": true
-    },
-    "/assets/dist/wysiwyg-composer-DJdjQweG.js": {
-      "sha256": "22cc463f076929813b20197d399ccbcc9a2415ab14add3154b0e29825d18ddb0",
       "immutable": true
     },
     "/assets/elven-star.svg": {
@@ -346,12 +338,14 @@
         "/assets/dist/wysiwyg-composer-BRAFF38E.css",
         "/assets/dist/wysiwyg-composer-Br17XC-G.js"
       ]
-    },
+    }
+  ],
+  "deployedReleases": [
     {
-      "version": "3642fd850eefb9c0",
+      "version": "2883bddb08c95fd1",
       "files": [
-        "/assets/dist/app-64d622826ba32cb9.js",
-        "/assets/dist/app-style-kNCnSn5Q.css",
+        "/assets/dist/app-92eb1e4335f238b3.js",
+        "/assets/dist/app-style-YO-75cSC.css",
         "/assets/dist/composer-5aeaedfd8f662ec5.js",
         "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
@@ -370,15 +364,13 @@
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
         "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-t86d4ntf.js",
+        "/assets/dist/milkdown-adapter-zC8kMFUx.js",
         "/assets/dist/passkeys-16e7134417f0d6af.js",
         "/assets/dist/tour-1801eafe66889a28.js",
         "/assets/dist/wysiwyg-composer-BRAFF38E.css",
-        "/assets/dist/wysiwyg-composer-DJdjQweG.js"
+        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
       ]
-    }
-  ],
-  "deployedReleases": [
+    },
     {
       "version": "906231110793ea6f",
       "files": [
@@ -437,36 +429,6 @@
         "/assets/dist/tour-1801eafe66889a28.js",
         "/assets/dist/wysiwyg-composer-BRAFF38E.css",
         "/assets/dist/wysiwyg-composer-Br17XC-G.js"
-      ]
-    },
-    {
-      "version": "3642fd850eefb9c0",
-      "files": [
-        "/assets/dist/app-64d622826ba32cb9.js",
-        "/assets/dist/app-style-kNCnSn5Q.css",
-        "/assets/dist/composer-5aeaedfd8f662ec5.js",
-        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
-        "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
-        "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
-        "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
-        "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
-        "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
-        "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
-        "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
-        "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
-        "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
-        "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
-        "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-bT2GVmLw.css",
-        "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
-        "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
-        "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
-        "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-t86d4ntf.js",
-        "/assets/dist/passkeys-16e7134417f0d6af.js",
-        "/assets/dist/tour-1801eafe66889a28.js",
-        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
-        "/assets/dist/wysiwyg-composer-DJdjQweG.js"
       ]
     }
   ]

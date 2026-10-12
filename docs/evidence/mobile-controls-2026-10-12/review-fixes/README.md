@@ -107,3 +107,28 @@ before publication instead of the documented canonical redirect. This is kept
 as a failed baseline check; it does not change the successful canonical-origin
 asset and runtime checks above. The sanitized full baseline receipt is
 [`production-baseline.json`](production-baseline.json).
+
+## Production release
+
+The fixes were committed and pushed to `main` as
+`32fc59a0bca9b99a59654da1e45c45289f442e6e`. Both automatic deployment paths
+succeeded: Workers Builds completed for that exact commit, and production Cloud
+Build `f48d131c-3d6d-4844-b289-8266d1743a85` passed every source/build/push/deploy/job
+step. Cloud Run revision `retroboards-00020-8pk` took 100% of traffic; the service
+and all four cron jobs plus the monitor use the exact release image. The active
+Worker version was `f64bd6eb-6f5b-4d95-83af-cf9aa220d0c1`.
+
+All 57 allowlisted live assets matched the committed manifest, including the
+retained previous-production CSS. GET/HEAD/304 cache behavior, current page asset
+URLs, strict CSP headers, public database health, direct-origin denial and static
+404 handling passed. [`production-deployment.json`](production-deployment.json)
+records the sanitized read-only checks. Its overall result remains false because
+the legacy-alias redirect check still fails, as it did before this release; the
+canonical-origin asset and exact-runtime checks pass.
+
+After those byte and deployment checks, `npm run assets:record-release --
+2883bddb08c95fd1` records the released version with predecessors
+`906231110793ea6f` and `aa3e487a59d3d205`. The two exclusive older editor files from
+`3642fd850eefb9c0` are retired, leaving 55 published assets. Current source asset
+URLs and hashes stay unchanged; the application-surface digest and generated
+Imladris manifest are refreshed for the smaller retained-file tree.

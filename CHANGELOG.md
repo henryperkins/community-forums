@@ -97,6 +97,8 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   Pin the phone drawer, reply frame and reaction controls with Chromium/WebKit
   regressions, including both themes, native submission and account-state gates.
   Evidence is in `docs/evidence/mobile-controls-2026-10-12/review-fixes/README.md`.
+  Verify both automatic production deployments and live asset hashes, then
+  record the deployed asset version with its two predecessors.
 - Add calm reaction count motion, member reactor-name tips with privacy filters,
   and immediate touch-picker updates. Keep chip focus, synchronize picker state,
   prevent overlapping toggles and offer reload after an uncertain response.
