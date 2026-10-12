@@ -1,0 +1,60 @@
+[
+    {
+        "database": "retroboards_e2e_boards_layout_20261012",
+        "before": {
+            "Field": "emoji",
+            "Type": "varchar(48)",
+            "Collation": "utf8mb4_general_ci",
+            "Null": "NO",
+            "Key": "",
+            "Default": null,
+            "Extra": "",
+            "Privileges": "select,insert,update,references",
+            "Comment": ""
+        },
+        "comparison": {
+            "general_equal": 1,
+            "binary_equal": 0
+        },
+        "after": {
+            "Field": "emoji",
+            "Type": "varchar(48)",
+            "Collation": "utf8mb4_bin",
+            "Null": "NO",
+            "Key": "",
+            "Default": null,
+            "Extra": "",
+            "Privileges": "select,insert,update,references",
+            "Comment": ""
+        }
+    },
+    {
+        "database": "retroboards_board_layout_unit_20261012",
+        "before": {
+            "Field": "emoji",
+            "Type": "varchar(48)",
+            "Collation": "utf8mb4_general_ci",
+            "Null": "NO",
+            "Key": "",
+            "Default": null,
+            "Extra": "",
+            "Privileges": "select,insert,update,references",
+            "Comment": ""
+        },
+        "comparison": {
+            "general_equal": 1,
+            "binary_equal": 0
+        },
+        "after": {
+            "Field": "emoji",
+            "Type": "varchar(48)",
+            "Collation": "utf8mb4_bin",
+            "Null": "NO",
+            "Key": "",
+            "Default": null,
+            "Extra": "",
+            "Privileges": "select,insert,update,references",
+            "Comment": ""
+        }
+    }
+]

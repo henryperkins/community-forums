@@ -1,5 +1,9 @@
 # Boards: layout, typeset and distill
 
+This is the original local review on d06a303a. The later integration with the
+four accessibility commits and publication preparation is recorded in
+[integration evidence](integration/README.md).
+
 **Date:** 2026-10-12
 **Scope:** Local Boards directory refinement requested with two owner screenshots.
 **Base:** d06a303ae2723d7da303d62069f79a877a3f1f77 on main.

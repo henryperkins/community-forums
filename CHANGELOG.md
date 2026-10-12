@@ -14,6 +14,20 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   junctions, and normalize failure-injection paths so rollback assertions actually
   exercise the publisher on Windows.
 
+## [Unreleased] - Member accessibility follow-up
+
+- Lift the audited small labels to the named type scale, keeping Inbox reason
+  cues larger than adjacent status pills. Reserve separate 44px recipient
+  removal targets on touch screens, accommodate profile disclosures in their
+  rows, and enlarge upload and empty-board controls. Name the removal and report
+  fields for assistive technology. Rebuild and explicitly track the delivered
+  stylesheet, refresh the runtime baseline, and record local PHP and browser
+  evidence in `docs/evidence/accessibility-followup-2026-10-12/README.md`.
+- Verify the automatic Worker and Cloud Run deployments of `c86a8356`, public
+  health, the login stylesheet and all 56 published asset hashes. Record the
+  deployed asset version, retaining it and its two predecessors while retiring
+  two expired delivery files. Archive the production receipts with the evidence.
+
 ## [Unreleased] - Dependency delivery
 
 - Patch ProseMirror paste handling, Sharp/librsvg, Source Map JS and Undici
@@ -104,6 +118,13 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Consistent headers and navigation
 
+- Keep the compact desktop reaction picker inside the viewport and retain visible
+  gesture names on guest/read-only aggregate chips without identifying reactors.
+  Pin the phone drawer, reply frame and reaction controls with Chromium/WebKit
+  regressions, including both themes, native submission and account-state gates.
+  Evidence is in `docs/evidence/mobile-controls-2026-10-12/review-fixes/README.md`.
+  Verify both automatic production deployments and live asset hashes, then
+  record the deployed asset version with its two predecessors.
 - Add calm reaction count motion, member reactor-name tips with privacy filters,
   and immediate touch-picker updates. Keep chip focus, synchronize picker state,
   prevent overlapping toggles and offer reload after an uncertain response.

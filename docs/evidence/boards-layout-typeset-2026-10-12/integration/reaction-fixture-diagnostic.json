@@ -1,0 +1,116 @@
+{
+  "status": 255,
+  "stdout": "",
+  "stderr": "Fatal error: Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '3-3-?' for key 'uq_reaction' in C:\\Users\\htper\\.codex\\worktrees\\boards-main-integration\\community-forums\\src\\Core\\Database.php:252\nStack trace:\n#0 C:\\Users\\htper\\.codex\\worktrees\\boards-main-integration\\community-forums\\src\\Core\\Database.php(252): PDOStatement->execute(Array)\n#1 Command line code(14): App\\Core\\Database->run('INSERT INTO rea...', Array)\n#2 C:\\Users\\htper\\.codex\\worktrees\\boards-main-integration\\community-forums\\src\\Core\\Database.php(358): {closure}()\n#3 Command line code(12): App\\Core\\Database->transaction(Object(Closure))\n#4 {main}\n  thrown in C:\\Users\\htper\\.codex\\worktrees\\boards-main-integration\\community-forums\\src\\Core\\Database.php on line 252\n",
+  "schema": {
+    "columns": [
+      {
+        "Field": "id",
+        "Type": "bigint(20) unsigned",
+        "Collation": null,
+        "Null": "NO",
+        "Key": "PRI",
+        "Default": null,
+        "Extra": "auto_increment",
+        "Privileges": "select,insert,update,references",
+        "Comment": ""
+      },
+      {
+        "Field": "post_id",
+        "Type": "bigint(20) unsigned",
+        "Collation": null,
+        "Null": "NO",
+        "Key": "MUL",
+        "Default": null,
+        "Extra": "",
+        "Privileges": "select,insert,update,references",
+        "Comment": ""
+      },
+      {
+        "Field": "user_id",
+        "Type": "bigint(20) unsigned",
+        "Collation": null,
+        "Null": "NO",
+        "Key": "MUL",
+        "Default": null,
+        "Extra": "",
+        "Privileges": "select,insert,update,references",
+        "Comment": ""
+      },
+      {
+        "Field": "emoji",
+        "Type": "varchar(48)",
+        "Collation": "utf8mb4_general_ci",
+        "Null": "NO",
+        "Key": "",
+        "Default": null,
+        "Extra": "",
+        "Privileges": "select,insert,update,references",
+        "Comment": ""
+      },
+      {
+        "Field": "created_at",
+        "Type": "datetime",
+        "Collation": null,
+        "Null": "NO",
+        "Key": "",
+        "Default": "current_timestamp()",
+        "Extra": "",
+        "Privileges": "select,insert,update,references",
+        "Comment": ""
+      }
+    ],
+    "charset": [
+      {
+        "Variable_name": "character_set_client",
+        "Value": "utf8mb4"
+      },
+      {
+        "Variable_name": "character_set_collations",
+        "Value": ""
+      },
+      {
+        "Variable_name": "character_set_connection",
+        "Value": "utf8mb4"
+      },
+      {
+        "Variable_name": "character_set_database",
+        "Value": "utf8mb4"
+      },
+      {
+        "Variable_name": "character_set_filesystem",
+        "Value": "binary"
+      },
+      {
+        "Variable_name": "character_set_results",
+        "Value": "utf8mb4"
+      },
+      {
+        "Variable_name": "character_set_server",
+        "Value": "utf8mb4"
+      },
+      {
+        "Variable_name": "character_set_system",
+        "Value": "utf8mb3"
+      },
+      {
+        "Variable_name": "character_sets_dir",
+        "Value": "C:\\Users\\htper\\AppData\\Local\\Temp\\retroboards-boards-layout-db-01a130e3\\mariadb-11.4.8-winx64\\share\\charsets\\"
+      }
+    ],
+    "collation": [
+      {
+        "Variable_name": "collation_connection",
+        "Value": "utf8mb4_general_ci"
+      },
+      {
+        "Variable_name": "collation_database",
+        "Value": "utf8mb4_unicode_ci"
+      },
+      {
+        "Variable_name": "collation_server",
+        "Value": "utf8mb4_unicode_ci"
+      }
+    ]
+  }
+}

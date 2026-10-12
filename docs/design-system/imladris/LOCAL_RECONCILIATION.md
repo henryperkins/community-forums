@@ -1,5 +1,19 @@
 # RetroBoards runtime reconciliation
 
+## 2026-10-12 — Boards publication integration
+
+Integrating the four accessibility commits through fbaed0e9 retains their visual
+rules and deployment pins. The Boards adaptation block is unchanged from the
+reviewed refinement. The composed application digest is
+53331f86fef1d291065bd5bd98e3f83ab9ca57f2fd4e6135595cf7695ee2c9a2,
+and asset version 326ae04cd673029a publishes 55 files.
+
+The focused PHP run passes 110 tests. Directory/incoming mobile-controls
+Chromium passes 25 checks with two viewport skips; asset tests pass all 35.
+The private MariaDB reaction-collation correction and remaining native Windows
+verification limits are recorded in
+[integration evidence](../../evidence/boards-layout-typeset-2026-10-12/integration/README.md).
+
 ## 2026-10-12 — Boards layout, typeset and distill
 
 The owner requested the Boards refinement in ADR 0048, based on two supplied

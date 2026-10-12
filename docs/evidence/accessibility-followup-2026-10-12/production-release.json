@@ -1,0 +1,24 @@
+{
+  "source_commit": "c86a835613527509ef3d83bf9edd8bd0e36caa9e",
+  "asset_version": "be1d396948b3adcc",
+  "initial_live_hash_matches": 56,
+  "recorded_manifest_files": 54,
+  "retired_files": [
+    "/assets/dist/app-64d622826ba32cb9.js",
+    "/assets/dist/app-style-kNCnSn5Q.css"
+  ],
+  "pinned_deployed_versions": [
+    "be1d396948b3adcc",
+    "2883bddb08c95fd1",
+    "906231110793ea6f"
+  ],
+  "public_health": {
+    "status": "ok",
+    "database": "ok"
+  },
+  "guest_login_status": 200,
+  "guest_login_stylesheet": "/assets/dist/app-style-DxGgpq3E.css",
+  "direct_unauthenticated_origin_status": 403,
+  "authenticated_production_ui_checked": false,
+  "full_hosted_browser_matrix_required_for_this_release": false
+}

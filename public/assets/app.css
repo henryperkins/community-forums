@@ -665,17 +665,19 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .reaction-add > summary::-webkit-details-marker { display: none; }
 .reaction-pick { font-weight: 700; }
 .reaction-mark { display: inline-flex; flex: 0 0 auto; color: var(--star); }
-.reaction-mark .icon { width: 13px; height: 13px; }
+.reaction-mark .icon { width: 18px; height: 18px; }
 .reaction-name { font-family: var(--font-label); letter-spacing: .02em; }
 .reaction-on .reaction-mark { color: inherit; }
 .reaction-menu {
-    position: absolute; z-index: 20; margin-top: 4px; padding: 6px;
-    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+    position: absolute; inset-inline-end: 0; z-index: 20; margin-top: 4px; padding: 6px;
+    display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: var(--space-1);
     width: max-content; max-width: min(240px, 70vw); max-height: 280px; overflow: auto;
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
 }
-.reaction-menu .reaction { justify-content: flex-start; width: 100%; border-radius: var(--radius-sm); }
+.reaction-menu .reaction { justify-content: center; width: 100%; min-width: 44px; min-height: 44px; border-radius: var(--radius-sm); }
+/* Custom gestures keep their words until they have a distinct icon. */
+:is(.reaction-menu, .post-menu-reactions) .reaction-form:has(.reaction-name:not(.sr-only)) { grid-column: 1 / -1; }
 .reaction-form { margin: 0; }
 
 .star-btn { font-size: .9rem; }
@@ -1629,7 +1631,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* Accepted answer = outlined on the card surface, distinct from the filled Solved chip (§10). */
 .badge-solved { color: var(--on-done);   background: var(--surface-raised); border-color: var(--green-200); }
 .tag {
-    font-family: var(--font-label); font-size: .6rem; letter-spacing: .08em;
+    font-family: var(--font-label); font-size: var(--text-chip); letter-spacing: .08em;
     text-transform: uppercase; background: var(--surface-sunken); color: var(--text-muted);
     border-radius: var(--radius-pill); padding: 2px 8px; margin-left: 6px;
 }
@@ -1798,7 +1800,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     :root .app-shell { display: block; height: calc(100vh - var(--topbar-h)); height: calc(100dvh - var(--topbar-h)); }
     .app-shell > .board-rail {
         position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
-        display: flex; width: 322px; max-width: 86vw; max-height: none; z-index: var(--z-drawer);
+        display: flex; width: 240px; max-width: 70vw; max-height: none; z-index: var(--z-drawer);
         transform: translateX(-100%);
         /* A translated rail still participates in keyboard navigation. */
         visibility: hidden;
@@ -1933,8 +1935,8 @@ body[data-route="thread"] .thread-conversation {
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 4px;
-        padding: 3px;
-        border-radius: var(--radius-pill);
+        padding: var(--space-1);
+        border-radius: var(--radius-lg);
     }
     .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
     .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
@@ -1968,7 +1970,7 @@ body[data-route="thread"] .thread-conversation {
     .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
         width: auto;
         min-width: 0;
-        height: 36px;
+        height: 44px;
         padding: 0 14px;
         border-radius: var(--radius-md);
     }
@@ -1990,8 +1992,8 @@ body[data-route="thread"] .thread-conversation {
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 4px;
-        padding: 3px;
-        border-radius: var(--radius-pill);
+        padding: var(--space-1);
+        border-radius: var(--radius-lg);
     }
     .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
     .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
@@ -2025,7 +2027,7 @@ body[data-route="thread"] .thread-conversation {
     .dm-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
         width: auto;
         min-width: 0;
-        height: 36px;
+        height: 44px;
         padding: 0 14px;
         border-radius: var(--radius-md);
     }
@@ -2266,7 +2268,7 @@ body[data-route="thread"] .thread-conversation {
 .thread-actions .linkbtn.danger:hover { border-color: var(--rust); color: var(--rust); }
 
 /* — Participant avatar stack on the topic header (§5.1) — */
-.thread-participants-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: .58rem; color: var(--text-faint); margin: 10px 0 5px; }
+.thread-participants-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: var(--text-chip); color: var(--text-faint); margin: 10px 0 5px; }
 .thread-participants { display: inline-flex; align-items: center; margin: 0; padding: 0; list-style: none; }
 .thread-participants .participant { display: inline-flex; margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface-page); }
 .thread-participants .participant:first-child { margin-left: 0; }
@@ -8267,7 +8269,7 @@ textarea.textarea-engraved {
     font-family: var(--font-label);
     text-transform: uppercase;
     letter-spacing: .08em;
-    font-size: .56rem;
+    font-size: var(--text-chip);
     color: var(--dm-accent-ink);
 }
 .reference-card strong {
@@ -8963,7 +8965,7 @@ textarea.textarea-engraved {
 .board-view .board-identity-facts dt {
     color: var(--green-100);
     font-family: var(--font-label);
-    font-size: .58rem;
+    font-size: var(--text-chip);
     letter-spacing: .15em;
     text-transform: uppercase;
 }
@@ -9270,7 +9272,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
     align-items: center;
     gap: 4px;
     font-family: var(--font-label);
-    font-size: .6rem;
+    font-size: var(--text-chip);
     letter-spacing: .12em;
     text-transform: uppercase;
 }
@@ -9303,7 +9305,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 .board-view .thread-row-status { display: flex; justify-content: flex-end; min-width: 0; }
 .board-view .thread-row-status .chip {
     padding: 2px 9px;
-    font-size: .58rem;
+    font-size: var(--text-chip);
     letter-spacing: .14em;
     white-space: nowrap;
 }
@@ -11304,8 +11306,8 @@ body.thread-restructure-open { overflow: hidden; }
 /* Fine-pointer default: the toolbar itself carries react/quote/accept, so the
    menu's touch duplicates stay out of the DOM's accessibility tree entirely. */
 .post-menu-touch { display: none; }
-.post-menu-reactions { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 2px 6px 6px; }
-.post-menu-reactions .reaction { justify-content: flex-start; width: 100%; border-radius: var(--radius-sm); }
+.post-menu-reactions { display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: var(--space-1); padding: var(--space-1); }
+.post-menu-reactions .reaction { justify-content: center; width: 100%; min-width: 44px; min-height: 44px; border-radius: var(--radius-sm); }
 [data-thread-enhanced="1"] .post-native-disclosure > summary { display: none; }
 [data-thread-enhanced="1"] .post-native-disclosure:not([open]) { display: none; }
 .post-disclosure-close { min-width: 44px; margin: 0 0 8px auto; }
@@ -14260,7 +14262,7 @@ a.account-row-name:hover {
     background: var(--surface-done);
     color: var(--on-done);
     font-family: var(--font-label);
-    font-size: .6rem;
+    font-size: var(--text-chip);
     letter-spacing: .14em;
     text-transform: uppercase;
 }
@@ -14464,7 +14466,7 @@ a.account-row-name:hover {
     background: var(--surface-info);
     color: var(--on-info);
     font-family: var(--font-label);
-    font-size: .58rem;
+    font-size: var(--text-chip);
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -16192,6 +16194,16 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 }
 /* ══ End member surfaces production transfer ══ */
 
+/* ── Type floor: member-surface labels at --text-chip (audit follow-up) ───
+   The transfer above sets these labels at .56–.6rem, below the scale floor
+   DESIGN.md records for new work. The transfer stays verbatim (the fidelity
+   test pins it), so the application register lifts them here instead. */
+.inbox-scope-group-label { font-size: var(--text-chip); }
+.thread-row-inbox .thread-row-chips .chip { font-size: var(--text-chip); }
+/* Keep the inclusion cue a step above the status pills beside it. */
+.thread-row-inbox .thread-row-chips .chip-reason { font-size: var(--text-eyebrow); }
+.inbox-preview-tier { font-size: var(--text-chip); }
+
 /* ══ Member chrome — what the layer cannot express ═══════════════════════════
    ADR 0032. The topbar and the rail are the design system's ForumNav and
    BoardRail (docs/design-system/imladris/components/forum/), rendered by
@@ -17103,6 +17115,19 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
 }
 @media (min-width: 861px) and (pointer: coarse) {
     .forum-bar [data-bell] { min-width: 44px; height: 44px; }
+}
+/* ── Touch: 44px hit areas for the controls the earlier touch blocks do not
+   reach (audit follow-up). Each recipient chip reserves its removal button's
+   full target in the wrapping field; the icon keeps its small drawn size.
+   The activity line accommodates its disclosure and vertical padding.
+   Fine pointers keep the existing control sizes. */
+@media (pointer: coarse) {
+    .composer-upload-actions .btn { min-height: 44px; }
+    .composer-upload-card .input { height: 44px; }
+    .board-view .board-empty-cta { min-height: 44px; }
+    .profile-activity-line { min-height: 52px; }
+    .profile-activity-toggle { width: 44px; height: 44px; }
+    .dm-chip-x { flex: none; width: 44px; height: 44px; }
 }
 /* The current surface carries a rule as well as the design's wash. The wash
    alone measured 1.04:1 against the bar, and forced colours drop it entirely;

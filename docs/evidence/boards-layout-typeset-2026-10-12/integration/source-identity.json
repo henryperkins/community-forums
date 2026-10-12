@@ -1,0 +1,13 @@
+{
+  "originalCommit": "fef118d5bbbd60ab607f76b6f41f638732788bfb",
+  "incomingMain": "fbaed0e9e040dbed4889f776c9463be28bc261ad",
+  "assetVersion": "326ae04cd673029a",
+  "applicationDigest": "53331f86fef1d291065bd5bd98e3f83ab9ca57f2fd4e6135595cf7695ee2c9a2",
+  "deployedPins": [
+    "be1d396948b3adcc",
+    "2883bddb08c95fd1",
+    "906231110793ea6f"
+  ],
+  "publishedFiles": 55,
+  "boardsBlockUnchanged": true
+}

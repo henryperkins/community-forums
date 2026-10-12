@@ -1,0 +1,13 @@
+{
+  "base_commit": "e8285dbbea31a2793f8e692d6aa440f50f7e5da7",
+  "asset_version": "be1d396948b3adcc",
+  "files": {
+    "public/assets/app.css": "433860596636a46b4b99f8865d70306454fe9e1b1c3a5f0dc1531d8d1ba3b8d2",
+    "templates/partials/post_toolbar.php": "21c39b6513cffa3a69110df20f50107478cbc480c7fd37984bc79f1445be2130",
+    "tests/Integration/Core/AppThreadViewStudyTest.php": "1d54b357d4f1624702168dad4dbbc01688982830659e6a0fbfcb4eb50ad66a11",
+    "config/assets.json": "6c7f29a321077cf3028c636f3e7dc676e556d9d7633ea16b98c3da43c2727121",
+    "config/imladris-runtime-baseline.json": "7257dcef9d353791df7388f0420cd15b9deb062d86916bb97d604fc5dec41ec4",
+    "resources/imladris/manifest.json": "70d85e58a588e2aebcc0a647f20032b2a92db198f7aa83b5ad8187845c4c8d5d",
+    "public/assets/dist/app-style-DxGgpq3E.css": "7515d1850e190c891e658389eb24159dcf5179d8847d9fd72a53da202fb83aa7"
+  }
+}

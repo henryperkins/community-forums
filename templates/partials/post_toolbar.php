@@ -25,7 +25,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
                     <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                        <button type="submit" class="reaction<?= in_array($emoji, $mine ?? [], true) ? ' reaction-on' : '' ?>" aria-pressed="<?= in_array($emoji, $mine ?? [], true) ? 'true' : 'false' ?>" data-label="<?= $e(reaction_label((string) $emoji)) ?>"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?></button>
+                        <button type="submit" class="reaction<?= in_array($emoji, $mine ?? [], true) ? ' reaction-on' : '' ?>" aria-pressed="<?= in_array($emoji, $mine ?? [], true) ? 'true' : 'false' ?>" data-label="<?= $e(reaction_label((string) $emoji)) ?>" title="<?= $e(reaction_label((string) $emoji)) ?>"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?></button>
                     </form>
                 <?php endforeach; ?>
             </div>
@@ -55,7 +55,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
                             <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                                <button type="submit" class="reaction<?= in_array($emoji, $mine ?? [], true) ? ' reaction-on' : '' ?>" aria-pressed="<?= in_array($emoji, $mine ?? [], true) ? 'true' : 'false' ?>" data-label="<?= $e(reaction_label((string) $emoji)) ?>"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?></button>
+                                <button type="submit" class="reaction<?= in_array($emoji, $mine ?? [], true) ? ' reaction-on' : '' ?>" aria-pressed="<?= in_array($emoji, $mine ?? [], true) ? 'true' : 'false' ?>" data-label="<?= $e(reaction_label((string) $emoji)) ?>" title="<?= $e(reaction_label((string) $emoji)) ?>"><?= $this->partial('partials/reaction_face', ['emoji' => $emoji]) ?></button>
                             </form>
                         <?php endforeach; ?>
                     </div>
@@ -129,7 +129,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
             <button type="button" class="post-disclosure-close linkbtn muted" data-post-disclosure-close hidden aria-label="Close remove form">Close</button>
             <form method="post" action="/posts/<?= (int) $p['id'] ?>/delete" class="composer">
                 <?= $this->csrfField() ?>
-                <input type="text" name="reason" class="input" placeholder="Reason (required)" maxlength="255" required>
+                <input type="text" name="reason" class="input" placeholder="Reason (required)" aria-label="Reason for removal (required)" maxlength="255" required>
                 <button class="btn btn-small danger" type="submit"><?= $opRemoval ? 'Remove topic' : 'Remove post' ?></button>
             </form>
         </details>
@@ -183,12 +183,12 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
             <button type="button" class="post-disclosure-close linkbtn muted" data-post-disclosure-close hidden aria-label="Close report form">Close</button>
             <form method="post" action="/posts/<?= (int) $p['id'] ?>/report" class="composer">
                 <?= $this->csrfField() ?>
-                <select name="reason_code" class="input input-small">
+                <select name="reason_code" class="input input-small" aria-label="Report reason">
                     <?php foreach (['spam', 'harassment', 'off_topic', 'nsfw', 'illegal', 'other'] as $rc): ?>
                         <option value="<?= $e($rc) ?>"><?= $e(ucfirst(str_replace('_', ' ', $rc))) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <input type="text" name="reason" class="input" placeholder="Details (optional)" maxlength="255">
+                <input type="text" name="reason" class="input" placeholder="Details (optional)" aria-label="Report details (optional)" maxlength="255">
                 <label class="checkline"><input type="checkbox" name="notify_reporter" value="1"> Notify me of the outcome</label>
                 <button class="btn btn-small" type="submit">Submit report</button>
             </form>
