@@ -1,0 +1,290 @@
+{
+  "pointer": "touch",
+  "checks": [
+    {
+      "surface": "inbox",
+      "width": 320,
+      "theme": "light",
+      "density": "comfortable",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        214.96875,
+        221.515625,
+        150.703125,
+        199.484375,
+        192.9375,
+        201.3125,
+        170.90625,
+        172.734375
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 320,
+      "theme": "light",
+      "density": "compact",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        171.84375,
+        196.3125,
+        131.046875,
+        151.25,
+        151.640625,
+        176.109375
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 320,
+      "theme": "dark",
+      "density": "comfortable",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        214.96875,
+        221.515625,
+        150.703125,
+        199.484375,
+        192.9375,
+        201.3125,
+        170.90625,
+        172.734375
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 320,
+      "theme": "dark",
+      "density": "compact",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        171.84375,
+        196.3125,
+        131.046875,
+        151.25,
+        151.640625,
+        176.109375
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 390,
+      "theme": "light",
+      "density": "comfortable",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        192.9375,
+        150.703125,
+        201.3125,
+        179.28125
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 390,
+      "theme": "light",
+      "density": "compact",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        171.84375,
+        131.046875,
+        151.640625
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 390,
+      "theme": "dark",
+      "density": "comfortable",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        192.9375,
+        150.703125,
+        201.3125,
+        179.28125
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 390,
+      "theme": "dark",
+      "density": "compact",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        171.84375,
+        131.046875,
+        151.640625
+      ]
+    },
+    {
+      "surface": "recipients",
+      "width": 320,
+      "geometry": [
+        {
+          "chip": {
+            "x": 25,
+            "y": 417.96875,
+            "width": 146.421875,
+            "height": 50
+          },
+          "button": {
+            "x": 124.421875,
+            "y": 420.96875,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "chip": {
+            "x": 25,
+            "y": 473.96875,
+            "width": 146.734375,
+            "height": 50
+          },
+          "button": {
+            "x": 124.734375,
+            "y": 476.96875,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "chip": {
+            "x": 25,
+            "y": 529.96875,
+            "width": 144.40625,
+            "height": 50
+          },
+          "button": {
+            "x": 122.40625,
+            "y": 532.96875,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "chip": {
+            "x": 25,
+            "y": 585.96875,
+            "width": 131.34375,
+            "height": 50
+          },
+          "button": {
+            "x": 109.34375,
+            "y": 588.96875,
+            "width": 44,
+            "height": 44
+          }
+        }
+      ],
+      "correctEdgeRemovals": true
+    },
+    {
+      "surface": "recipients",
+      "width": 390,
+      "geometry": [
+        {
+          "chip": {
+            "x": 25,
+            "y": 396.359375,
+            "width": 146.421875,
+            "height": 50
+          },
+          "button": {
+            "x": 124.421875,
+            "y": 399.359375,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "chip": {
+            "x": 177.421875,
+            "y": 396.359375,
+            "width": 146.734375,
+            "height": 50
+          },
+          "button": {
+            "x": 277.15625,
+            "y": 399.359375,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "chip": {
+            "x": 25,
+            "y": 452.359375,
+            "width": 144.40625,
+            "height": 50
+          },
+          "button": {
+            "x": 122.40625,
+            "y": 455.359375,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "chip": {
+            "x": 175.40625,
+            "y": 452.359375,
+            "width": 131.34375,
+            "height": 50
+          },
+          "button": {
+            "x": 259.75,
+            "y": 455.359375,
+            "width": 44,
+            "height": 44
+          }
+        }
+      ],
+      "correctEdgeRemovals": true
+    },
+    {
+      "surface": "profile",
+      "width": 44,
+      "height": 44,
+      "rowHeight": 73.859375,
+      "fits": true,
+      "independentDisclosures": true
+    },
+    {
+      "surface": "session",
+      "size": 11.2
+    }
+  ],
+  "screenshots": [
+    "touch-inbox-320-light-comfortable.png",
+    "touch-inbox-320-light-compact.png",
+    "touch-inbox-320-dark-comfortable.png",
+    "touch-inbox-320-dark-compact.png",
+    "touch-inbox-390-light-comfortable.png",
+    "touch-inbox-390-light-compact.png",
+    "touch-inbox-390-dark-comfortable.png",
+    "touch-inbox-390-dark-compact.png",
+    "touch-recipients-320-light.png",
+    "touch-recipients-320-dark.png",
+    "touch-recipients-390-light.png",
+    "touch-recipients-390-dark.png",
+    "touch-profile-light.png",
+    "touch-profile-dark.png",
+    "touch-sessions.png"
+  ]
+}

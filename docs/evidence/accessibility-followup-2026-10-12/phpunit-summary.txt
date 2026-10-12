@@ -1,0 +1,6 @@
+Command: DB_TEST_DATABASE=retroboards_review_test_20261012 composer test
+
+Time: 01:45.075, Memory: 52.00 MB
+
+OK, but some tests were skipped!
+Tests: 3233, Assertions: 25651, Skipped: 1.

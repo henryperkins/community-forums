@@ -1,0 +1,151 @@
+{
+  "pointer": "mouse",
+  "checks": [
+    {
+      "surface": "inbox",
+      "width": 1280,
+      "theme": "light",
+      "density": "comfortable",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        118.6875,
+        121.765625,
+        79.140625,
+        96.65625
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 1280,
+      "theme": "light",
+      "density": "compact",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        83.171875,
+        87.046875,
+        53,
+        62.578125
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 1280,
+      "theme": "dark",
+      "density": "comfortable",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        118.6875,
+        121.765625,
+        79.140625,
+        96.65625
+      ]
+    },
+    {
+      "surface": "inbox",
+      "width": 1280,
+      "theme": "dark",
+      "density": "compact",
+      "rows": 14,
+      "reasonSize": 11.52,
+      "statusSize": 11.2,
+      "rowHeights": [
+        83.171875,
+        87.046875,
+        53,
+        62.578125
+      ]
+    },
+    {
+      "surface": "recipients",
+      "width": 1280,
+      "geometry": [
+        {
+          "chip": {
+            "x": 625,
+            "y": 346.328125,
+            "width": 126.421875,
+            "height": 30
+          },
+          "button": {
+            "x": 724.421875,
+            "y": 349.328125,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "chip": {
+            "x": 757.421875,
+            "y": 346.328125,
+            "width": 126.734375,
+            "height": 30
+          },
+          "button": {
+            "x": 857.15625,
+            "y": 349.328125,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "chip": {
+            "x": 890.15625,
+            "y": 346.328125,
+            "width": 124.40625,
+            "height": 30
+          },
+          "button": {
+            "x": 987.5625,
+            "y": 349.328125,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "chip": {
+            "x": 1020.5625,
+            "y": 346.328125,
+            "width": 111.34375,
+            "height": 30
+          },
+          "button": {
+            "x": 1104.90625,
+            "y": 349.328125,
+            "width": 24,
+            "height": 24
+          }
+        }
+      ],
+      "correctEdgeRemovals": true
+    },
+    {
+      "surface": "profile",
+      "width": 28,
+      "height": 28,
+      "rowHeight": 40,
+      "fits": true,
+      "independentDisclosures": true
+    },
+    {
+      "surface": "session",
+      "size": 11.2
+    }
+  ],
+  "screenshots": [
+    "mouse-inbox-1280-light-comfortable.png",
+    "mouse-inbox-1280-light-compact.png",
+    "mouse-inbox-1280-dark-comfortable.png",
+    "mouse-inbox-1280-dark-compact.png",
+    "mouse-recipients-1280-light.png",
+    "mouse-recipients-1280-dark.png",
+    "mouse-profile-light.png",
+    "mouse-profile-dark.png",
+    "mouse-sessions.png"
+  ]
+}

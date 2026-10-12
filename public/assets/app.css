@@ -1631,7 +1631,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* Accepted answer = outlined on the card surface, distinct from the filled Solved chip (§10). */
 .badge-solved { color: var(--on-done);   background: var(--surface-raised); border-color: var(--green-200); }
 .tag {
-    font-family: var(--font-label); font-size: .6rem; letter-spacing: .08em;
+    font-family: var(--font-label); font-size: var(--text-chip); letter-spacing: .08em;
     text-transform: uppercase; background: var(--surface-sunken); color: var(--text-muted);
     border-radius: var(--radius-pill); padding: 2px 8px; margin-left: 6px;
 }
@@ -2268,7 +2268,7 @@ body[data-route="thread"] .thread-conversation {
 .thread-actions .linkbtn.danger:hover { border-color: var(--rust); color: var(--rust); }
 
 /* — Participant avatar stack on the topic header (§5.1) — */
-.thread-participants-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: .58rem; color: var(--text-faint); margin: 10px 0 5px; }
+.thread-participants-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: var(--text-chip); color: var(--text-faint); margin: 10px 0 5px; }
 .thread-participants { display: inline-flex; align-items: center; margin: 0; padding: 0; list-style: none; }
 .thread-participants .participant { display: inline-flex; margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface-page); }
 .thread-participants .participant:first-child { margin-left: 0; }
@@ -8269,7 +8269,7 @@ textarea.textarea-engraved {
     font-family: var(--font-label);
     text-transform: uppercase;
     letter-spacing: .08em;
-    font-size: .56rem;
+    font-size: var(--text-chip);
     color: var(--dm-accent-ink);
 }
 .reference-card strong {
@@ -8965,7 +8965,7 @@ textarea.textarea-engraved {
 .board-view .board-identity-facts dt {
     color: var(--green-100);
     font-family: var(--font-label);
-    font-size: .58rem;
+    font-size: var(--text-chip);
     letter-spacing: .15em;
     text-transform: uppercase;
 }
@@ -9272,7 +9272,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
     align-items: center;
     gap: 4px;
     font-family: var(--font-label);
-    font-size: .6rem;
+    font-size: var(--text-chip);
     letter-spacing: .12em;
     text-transform: uppercase;
 }
@@ -9305,7 +9305,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 .board-view .thread-row-status { display: flex; justify-content: flex-end; min-width: 0; }
 .board-view .thread-row-status .chip {
     padding: 2px 9px;
-    font-size: .58rem;
+    font-size: var(--text-chip);
     letter-spacing: .14em;
     white-space: nowrap;
 }
@@ -14262,7 +14262,7 @@ a.account-row-name:hover {
     background: var(--surface-done);
     color: var(--on-done);
     font-family: var(--font-label);
-    font-size: .6rem;
+    font-size: var(--text-chip);
     letter-spacing: .14em;
     text-transform: uppercase;
 }
@@ -14466,7 +14466,7 @@ a.account-row-name:hover {
     background: var(--surface-info);
     color: var(--on-info);
     font-family: var(--font-label);
-    font-size: .58rem;
+    font-size: var(--text-chip);
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -16194,6 +16194,16 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 }
 /* ══ End member surfaces production transfer ══ */
 
+/* ── Type floor: member-surface labels at --text-chip (audit follow-up) ───
+   The transfer above sets these labels at .56–.6rem, below the scale floor
+   DESIGN.md records for new work. The transfer stays verbatim (the fidelity
+   test pins it), so the application register lifts them here instead. */
+.inbox-scope-group-label { font-size: var(--text-chip); }
+.thread-row-inbox .thread-row-chips .chip { font-size: var(--text-chip); }
+/* Keep the inclusion cue a step above the status pills beside it. */
+.thread-row-inbox .thread-row-chips .chip-reason { font-size: var(--text-eyebrow); }
+.inbox-preview-tier { font-size: var(--text-chip); }
+
 /* ══ Member chrome — what the layer cannot express ═══════════════════════════
    ADR 0032. The topbar and the rail are the design system's ForumNav and
    BoardRail (docs/design-system/imladris/components/forum/), rendered by
@@ -17105,6 +17115,19 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
 }
 @media (min-width: 861px) and (pointer: coarse) {
     .forum-bar [data-bell] { min-width: 44px; height: 44px; }
+}
+/* ── Touch: 44px hit areas for the controls the earlier touch blocks do not
+   reach (audit follow-up). Each recipient chip reserves its removal button's
+   full target in the wrapping field; the icon keeps its small drawn size.
+   The activity line accommodates its disclosure and vertical padding.
+   Fine pointers keep the existing control sizes. */
+@media (pointer: coarse) {
+    .composer-upload-actions .btn { min-height: 44px; }
+    .composer-upload-card .input { height: 44px; }
+    .board-view .board-empty-cta { min-height: 44px; }
+    .profile-activity-line { min-height: 52px; }
+    .profile-activity-toggle { width: 44px; height: 44px; }
+    .dm-chip-x { flex: none; width: 44px; height: 44px; }
 }
 /* The current surface carries a rule as well as the design's wash. The wash
    alone measured 1.04:1 against the bar, and forced colours drop it entirely;

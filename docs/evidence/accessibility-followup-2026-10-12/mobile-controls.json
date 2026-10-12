@@ -1,0 +1,86 @@
+{
+  "pointer": "touch",
+  "checks": [
+    {
+      "surface": "board",
+      "labels": [
+        {
+          "label": "Topics",
+          "size": 11.2,
+          "floor": 11.2
+        },
+        {
+          "label": "Posts",
+          "size": 11.2,
+          "floor": 11.2
+        },
+        {
+          "label": "Access",
+          "size": 11.2,
+          "floor": 11.2
+        },
+        {
+          "label": "Pinned",
+          "size": 11.2,
+          "floor": 11.2
+        },
+        {
+          "label": "Locked",
+          "size": 11.2,
+          "floor": 11.2
+        }
+      ]
+    },
+    {
+      "surface": "emptyBoard",
+      "actionHeight": 44,
+      "opensComposer": true
+    },
+    {
+      "surface": "upload",
+      "controls": [
+        {
+          "label": "Image alt text",
+          "height": 44
+        },
+        {
+          "label": "Up",
+          "height": 44
+        },
+        {
+          "label": "Down",
+          "height": 44
+        },
+        {
+          "label": "Remove touch-target.png",
+          "height": 44
+        }
+      ],
+      "removalWorks": true,
+      "responses": "controlled"
+    },
+    {
+      "surface": "thread",
+      "tagSize": 11.2,
+      "referenceSize": 11.2,
+      "namedRemoveAndReportControls": true,
+      "stylesheet": "http://localhost:8027/assets/dist/app-style-DxGgpq3E.css"
+    },
+    {
+      "surface": "drafts",
+      "chipSize": 11.2
+    }
+  ],
+  "screenshots": [
+    "touch-board-light.png",
+    "touch-board-dark.png",
+    "touch-empty-board-composer.png",
+    "touch-upload-light.png",
+    "touch-upload-dark.png",
+    "touch-thread-light.png",
+    "touch-thread-dark.png",
+    "touch-drafts-light.png",
+    "touch-drafts-dark.png"
+  ],
+  "browserErrors": []
+}

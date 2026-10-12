@@ -329,6 +329,11 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertStringContainsString('id="post-report-' . $opId . '"', $html);
         self::assertStringContainsString('name="reason"', $html);
         self::assertStringContainsString('name="reason_code"', $html);
+        // Every control in the remove/report forms carries an accessible name;
+        // a placeholder alone is not one (audit follow-up).
+        self::assertStringContainsString('aria-label="Reason for removal (required)"', $html);
+        self::assertStringContainsString('aria-label="Report reason"', $html);
+        self::assertStringContainsString('aria-label="Report details (optional)"', $html);
     }
 
     public function test_suspended_admin_and_board_moderator_get_no_post_write_controls(): void

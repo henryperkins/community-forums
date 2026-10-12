@@ -2,6 +2,16 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Member accessibility follow-up
+
+- Lift the audited small labels to the named type scale, keeping Inbox reason
+  cues larger than adjacent status pills. Reserve separate 44px recipient
+  removal targets on touch screens, accommodate profile disclosures in their
+  rows, and enlarge upload and empty-board controls. Name the removal and report
+  fields for assistive technology. Rebuild and explicitly track the delivered
+  stylesheet, refresh the runtime baseline, and record local PHP and browser
+  evidence in `docs/evidence/accessibility-followup-2026-10-12/README.md`.
+
 ## [Unreleased] - Dependency delivery
 
 - Patch ProseMirror paste handling, Sharp/librsvg, Source Map JS and Undici
