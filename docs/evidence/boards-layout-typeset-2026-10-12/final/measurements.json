@@ -1,0 +1,264 @@
+[
+  {
+    "name": "member-desktop-light",
+    "width": 1440,
+    "theme": "light",
+    "viewport": 1440,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 445.96875,
+    "hero": {
+      "size": "36px",
+      "lineHeight": "41.4px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 586.265625,
+    "previewTruncationCount": 0,
+    "controlCount": 20,
+    "minControlWidth": 44,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-desktop-dark",
+    "width": 1440,
+    "theme": "dark",
+    "viewport": 1440,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 445.96875,
+    "hero": {
+      "size": "36px",
+      "lineHeight": "41.4px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 586.265625,
+    "previewTruncationCount": 0,
+    "controlCount": 20,
+    "minControlWidth": 44,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-1024-light",
+    "width": 1024,
+    "theme": "light",
+    "viewport": 1024,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 445.96875,
+    "hero": {
+      "size": "36px",
+      "lineHeight": "41.4px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 488.265625,
+    "previewTruncationCount": 0,
+    "controlCount": 20,
+    "minControlWidth": 44,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-861-light",
+    "width": 861,
+    "theme": "light",
+    "viewport": 861,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 501.96875,
+    "hero": {
+      "size": "36px",
+      "lineHeight": "41.4px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 515,
+    "previewTruncationCount": 0,
+    "controlCount": 20,
+    "minControlWidth": 44,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-760-light",
+    "width": 760,
+    "theme": "light",
+    "viewport": 760,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 410.609375,
+    "hero": {
+      "size": "29.6px",
+      "lineHeight": "34.04px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 0,
+    "previewTruncationCount": 0,
+    "controlCount": 10,
+    "minControlWidth": 693,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-phone-light",
+    "width": 390,
+    "theme": "light",
+    "viewport": 390,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 437.796875,
+    "hero": {
+      "size": "29.6px",
+      "lineHeight": "34.04px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 0,
+    "previewTruncationCount": 0,
+    "controlCount": 10,
+    "minControlWidth": 323,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-phone-dark",
+    "width": 390,
+    "theme": "dark",
+    "viewport": 390,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 437.796875,
+    "hero": {
+      "size": "29.6px",
+      "lineHeight": "34.04px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 0,
+    "previewTruncationCount": 0,
+    "controlCount": 10,
+    "minControlWidth": 323,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-320-light",
+    "width": 320,
+    "theme": "light",
+    "viewport": 320,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 471.828125,
+    "hero": {
+      "size": "29.6px",
+      "lineHeight": "34.04px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "22px",
+      "lineHeight": "27.5px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 0,
+    "previewTruncationCount": 0,
+    "controlCount": 10,
+    "minControlWidth": 253,
+    "minControlHeight": 44,
+    "undersized": []
+  },
+  {
+    "name": "member-320-large-text",
+    "width": 320,
+    "theme": "light",
+    "enlarged": true,
+    "stress": true,
+    "viewport": 320,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 1598.953125,
+    "hero": {
+      "size": "66.6px",
+      "lineHeight": "76.59px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "49.5px",
+      "lineHeight": "61.875px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 0,
+    "previewTruncationCount": 0,
+    "controlCount": 10,
+    "minControlWidth": 193,
+    "minControlHeight": 178.640625,
+    "undersized": []
+  },
+  {
+    "name": "member-861-large-text",
+    "width": 861,
+    "theme": "light",
+    "enlarged": true,
+    "stress": true,
+    "viewport": 861,
+    "documentOverflow": -10,
+    "mainOverflow": 0,
+    "firstBoardTop": 1373.515625,
+    "hero": {
+      "size": "81px",
+      "lineHeight": "93.15px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "boardName": {
+      "size": "49.5px",
+      "lineHeight": "61.875px",
+      "family": "\"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif"
+    },
+    "orderGroupWidth": 435,
+    "previewTruncationCount": 0,
+    "controlCount": 20,
+    "minControlWidth": 44,
+    "minControlHeight": 49.515625,
+    "undersized": []
+  },
+  {
+    "name": "member-phone-viewing-sheet",
+    "expanded": true
+  },
+  {
+    "name": "sheet-escape",
+    "closed": true
+  }
+]

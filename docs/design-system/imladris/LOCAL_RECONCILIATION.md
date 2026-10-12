@@ -1,5 +1,20 @@
 # RetroBoards runtime reconciliation
 
+## 2026-10-12 — Boards layout, typeset and distill
+
+The owner requested the Boards refinement in ADR 0048, based on two supplied
+screenshots. The reviewed local application digest is
+f1ba0b3b84b7a76058e42ff3210ca08f2a25a2dfd5f4091e4053e8c889c99a2a
+on main's d06a303ae2723d7da303d62069f79a877a3f1f77 base, plus the uncommitted
+directory changes. The runtime baseline and resource manifest carry that digest.
+
+Adaptations stay outside the authored compatibility transfer. The imported
+components, tokens, font faces, navigation chrome and phone sheet behavior are
+unchanged. Asset version 0f13ca29e198cb3d names the rebuilt stylesheet; all three
+confirmed deployment pins remain intact. This record covers local preparation.
+Browser evidence, PHP results, Windows fixture corrections and unresolved checks
+are in [the directory evidence](../../evidence/boards-layout-typeset-2026-10-12/README.md).
+
 ## 2026-10-11 — security dependency delivery (PR #90)
 
 The ProseMirror view/model security updates regenerate the lazy editor entry and

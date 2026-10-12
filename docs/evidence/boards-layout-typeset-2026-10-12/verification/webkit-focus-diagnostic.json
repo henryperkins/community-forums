@@ -1,0 +1,556 @@
+[
+  {
+    "variant": "candidate",
+    "stages": [
+      {
+        "label": "first-enter",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<a href=\"/?pane=boards&amp;sort=category&amp;peek=3\" data-directory-sort-option=\"category\" aria-current=\"true\">By category</a>",
+        "open": true,
+        "events": [
+          {
+            "type": "focusin",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Enter",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Enter",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "first-tab",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<body class=\"variant-app is-rail-open is-reading-open directory-view-open\" data-route=\"boards\" data-drafts=\"1\" data-server-drafts=\"1\" data-rail-open=\"1\" data-inbox-reading-open=\"1\" data-nav-ready=\"1\">\n<a class=\"skip-link\" href=\"#main\" inert=\"\">Skip to content</a>\n<header class=\"forum-bar\" inert=\"\">\n            <a class=\"nav-toggle\" data-nav-fallback=\"\" href=\"#sidebar-nav\" aria-label=\"Open board ra",
+        "open": true,
+        "events": [
+          {
+            "type": "keydown",
+            "key": "Tab",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Tab",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "close-backdrop",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<summary aria-haspopup=\"dialog\">Viewing <strong>By category</strong> · peek 3</summary>",
+        "open": false,
+        "events": [
+          {
+            "type": "keydown",
+            "key": "Escape",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Escape",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "reopen-enter",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<a href=\"/?pane=boards&amp;sort=category&amp;peek=3\" data-directory-sort-option=\"category\" aria-current=\"true\">By category</a>",
+        "open": true,
+        "events": [
+          {
+            "type": "keydown",
+            "key": "Enter",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Enter",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "reopen-tab",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<body class=\"variant-app is-rail-open is-reading-open directory-view-open\" data-route=\"boards\" data-drafts=\"1\" data-server-drafts=\"1\" data-rail-open=\"1\" data-inbox-reading-open=\"1\" data-nav-ready=\"1\">\n<a class=\"skip-link\" href=\"#main\" inert=\"\">Skip to content</a>\n<header class=\"forum-bar\" inert=\"\">\n            <a class=\"nav-toggle\" data-nav-fallback=\"\" href=\"#sidebar-nav\" aria-label=\"Open board ra",
+        "open": true,
+        "events": [
+          {
+            "type": "keydown",
+            "key": "Tab",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Tab",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "alt-tab-from-category",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<body class=\"variant-app is-rail-open is-reading-open directory-view-open\" data-route=\"boards\" data-drafts=\"1\" data-server-drafts=\"1\" data-rail-open=\"1\" data-inbox-reading-open=\"1\" data-nav-ready=\"1\">\n<a class=\"skip-link\" href=\"#main\" inert=\"\">Skip to content</a>\n<header class=\"forum-bar\" inert=\"\">\n            <a class=\"nav-toggle\" data-nav-fallback=\"\" href=\"#sidebar-nav\" aria-label=\"Open board ra",
+        "open": true,
+        "events": [
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Alt",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Tab",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Tab",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Alt",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "variant": "baseline-css",
+    "stages": [
+      {
+        "label": "first-enter",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<a href=\"/?pane=boards&amp;sort=category&amp;peek=3\" data-directory-sort-option=\"category\" aria-current=\"true\">By category</a>",
+        "open": true,
+        "events": [
+          {
+            "type": "focusin",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Enter",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Enter",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "first-tab",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<body class=\"variant-app is-rail-open is-reading-open directory-view-open\" data-route=\"boards\" data-drafts=\"1\" data-server-drafts=\"1\" data-rail-open=\"1\" data-inbox-reading-open=\"1\" data-nav-ready=\"1\">\n<a class=\"skip-link\" href=\"#main\" inert=\"\">Skip to content</a>\n<header class=\"forum-bar\" inert=\"\">\n            <a class=\"nav-toggle\" data-nav-fallback=\"\" href=\"#sidebar-nav\" aria-label=\"Open board ra",
+        "open": true,
+        "events": [
+          {
+            "type": "keydown",
+            "key": "Tab",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Tab",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "close-backdrop",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<summary aria-haspopup=\"dialog\">Viewing <strong>By category</strong> · peek 3</summary>",
+        "open": false,
+        "events": [
+          {
+            "type": "keydown",
+            "key": "Escape",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Escape",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "reopen-enter",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<a href=\"/?pane=boards&amp;sort=category&amp;peek=3\" data-directory-sort-option=\"category\" aria-current=\"true\">By category</a>",
+        "open": true,
+        "events": [
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Enter",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "click",
+            "target": "SUMMARY:Viewing By category · pee",
+            "active": "SUMMARY:Viewing By category · pee",
+            "open": false,
+            "defaultPrevented": false
+          },
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Enter",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "reopen-tab",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<body class=\"variant-app is-rail-open is-reading-open directory-view-open\" data-route=\"boards\" data-drafts=\"1\" data-server-drafts=\"1\" data-rail-open=\"1\" data-inbox-reading-open=\"1\" data-nav-ready=\"1\">\n<a class=\"skip-link\" href=\"#main\" inert=\"\">Skip to content</a>\n<header class=\"forum-bar\" inert=\"\">\n            <a class=\"nav-toggle\" data-nav-fallback=\"\" href=\"#sidebar-nav\" aria-label=\"Open board ra",
+        "open": true,
+        "events": [
+          {
+            "type": "toggle",
+            "target": "DETAILS:Viewing By category · pee",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Tab",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Tab",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      },
+      {
+        "label": "alt-tab-from-category",
+        "url": "http://127.0.0.1:18016/?sort=category&peek=3",
+        "active": "<body class=\"variant-app is-rail-open is-reading-open directory-view-open\" data-route=\"boards\" data-drafts=\"1\" data-server-drafts=\"1\" data-rail-open=\"1\" data-inbox-reading-open=\"1\" data-nav-ready=\"1\">\n<a class=\"skip-link\" href=\"#main\" inert=\"\">Skip to content</a>\n<header class=\"forum-bar\" inert=\"\">\n            <a class=\"nav-toggle\" data-nav-fallback=\"\" href=\"#sidebar-nav\" aria-label=\"Open board ra",
+        "open": true,
+        "events": [
+          {
+            "type": "focusin",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Alt",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keydown",
+            "key": "Tab",
+            "target": "A:By category",
+            "active": "A:By category",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Tab",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "keyup",
+            "key": "Alt",
+            "target": "BODY:Skip to content\n\n        ",
+            "active": "BODY:Skip to content\n\n        ",
+            "open": true,
+            "defaultPrevented": false
+          }
+        ]
+      }
+    ]
+  }
+]

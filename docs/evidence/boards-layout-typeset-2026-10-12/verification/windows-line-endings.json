@@ -1,0 +1,10 @@
+{
+  "restoredCanonicalBytes": [
+    "docs/design-system/imladris/components.css",
+    "docs/design-system/imladris/tokens/colors.css",
+    "docs/design-system/imladris/tokens/fonts.css",
+    "docs/design-system/imladris/tokens/spacing.css",
+    "docs/design-system/imladris/tokens/typography.css",
+    "deploy/cloudrun/env.yaml"
+  ]
+}

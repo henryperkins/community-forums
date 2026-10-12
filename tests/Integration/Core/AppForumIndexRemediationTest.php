@@ -289,16 +289,20 @@ final class AppForumIndexRemediationTest extends TestCase
         self::assertMatchesRegularExpression('~<button[^>]*data-directory-sort-option="active"[^>]*aria-pressed="false"~', $member);
     }
 
-    /** The order note counts the boards it is describing, so it has to agree with itself at one. */
-    public function test_the_order_note_pluralises_its_own_board_count(): void
+    /** Totals own the board count; the ranking explanation must not repeat it. */
+    public function test_forum_totals_pluralise_board_counts_without_repeating_them_in_order_notes(): void
     {
         $category = $this->makeCategory('Council');
         $this->makeBoard($category, ['slug' => 'only-board']);
 
-        self::assertStringContainsString('· 1 board · the same order every member sees.', $this->get('/')->body());
+        $one = $this->get('/', ['sort' => 'active'])->body();
+        self::assertStringContainsString('data-forum-total="boards">1 board', $one);
+        self::assertSame(1, substr_count($one, '1 board'));
 
         $this->makeBoard($category, ['slug' => 'second-board']);
-        self::assertStringContainsString('· 2 boards · the same order every member sees.', $this->get('/')->body());
+        $two = $this->get('/', ['sort' => 'active'])->body();
+        self::assertStringContainsString('data-forum-total="boards">2 boards', $two);
+        self::assertSame(1, substr_count($two, '2 boards'));
     }
 
     /**

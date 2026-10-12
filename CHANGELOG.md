@@ -2,6 +2,18 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Boards layout and typography
+
+- Refine the Boards directory's introduction, viewing controls and type hierarchy
+  with the existing Imladris roles. Remove repeated category-order prose and
+  totals, let descriptions and topic previews wrap, and retain every ordering,
+  Peek choice, compact preference and native phone disclosure. Rebuild delivery
+  assets without advancing deployment pins. Local evidence and verification
+  limits are in docs/evidence/boards-layout-typeset-2026-10-12/README.md.
+- Make the asset-retention fixtures use native Windows paths and directory
+  junctions, and normalize failure-injection paths so rollback assertions actually
+  exercise the publisher on Windows.
+
 ## [Unreleased] - Dependency delivery
 
 - Patch ProseMirror paste handling, Sharp/librsvg, Source Map JS and Undici

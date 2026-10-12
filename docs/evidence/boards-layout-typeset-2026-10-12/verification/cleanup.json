@@ -1,0 +1,8 @@
+{
+  "previewStopped": true,
+  "databaseStopped": true,
+  "browserClosed": true,
+  "temporaryWorktreeRetained": true,
+  "junctionRemoval": "Automatic approval review rejected removal; reported blocked by policy",
+  "primaryDependenciesRetained": true
+}

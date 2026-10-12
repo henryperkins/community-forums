@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-12T18:36:26.341Z",
+  "base": "d06a303ae2723d7da303d62069f79a877a3f1f77",
+  "scope": "Local Boards directory layout/typeset/distill",
+  "assetVersion": "0f13ca29e198cb3d",
+  "applicationSurfaceSha256": "f1ba0b3b84b7a76058e42ff3210ca08f2a25a2dfd5f4091e4053e8c889c99a2a",
+  "publishedFiles": 62,
+  "deployedPins": [
+    "aa3e487a59d3d205",
+    "3642fd850eefb9c0",
+    "d8529d5d0f5e0219"
+  ],
+  "sourceFiles": [
+    {
+      "path": "templates/home.php",
+      "sha256": "75529d8dd73189f181a62d07d80d1c7c1df475614f8b307f43ba5c2a7f59df06"
+    },
+    {
+      "path": "public/assets/app.css",
+      "sha256": "aa01887b1d00eb29a8c93bc56748d52565009f231da1b9562b4a8bf6df7072f6"
+    },
+    {
+      "path": "tests/Integration/Core/AppForumIndexViewingTest.php",
+      "sha256": "c67072bc38cb44c84f3dd1bbcce3d1cf97edac10410c6b0c0f6c89cde7b48fe5"
+    },
+    {
+      "path": "tests/Integration/Core/AppForumIndexRemediationTest.php",
+      "sha256": "e30bd8e4f7f251fc9a33e099156fcfc69887788fac28a75ce913c2ab5f2ae1e1"
+    },
+    {
+      "path": "tests/worker/asset-release-retention.test.mjs",
+      "sha256": "40b56849052015da33ec77dc9cdaaedfad3cbebe59d83c06dbcabec985508ed8"
+    },
+    {
+      "path": "config/assets.json",
+      "sha256": "634e4b84bd2f4d6cf9259393f592881ab716c0b2ef0e27355ec4d464ad71ebb2"
+    },
+    {
+      "path": "config/imladris-runtime-baseline.json",
+      "sha256": "dec754b931bcd8260667a43cb0d87a9d262480e8d1489dfd4c051491e0f22cf3"
+    }
+  ],
+  "verification": {
+    "php": {
+      "tests": 3232,
+      "assertions": 25574,
+      "failures": 9,
+      "errors": 0,
+      "skipped": 2,
+      "warningSummary": "Tests: 3232, Assertions: 25574, Failures: 9, Warnings: 1, Skipped: 2.",
+      "scopedTests": 72,
+      "scopedFailures": 0,
+      "remainingFailures": [
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest",
+          "name": "test_child_final_step_requires_outer_success_and_a_complete_matching_archive",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_child_final_step_requires_outer_success_and_a_complete_matching_archive&#13;\nFailed asserting that 1 is identical to 0.\n&#13;"
+        },
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest",
+          "name": "test_outer_command_records_actual_docker_failure_after_it_returns",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_outer_command_records_actual_docker_failure_after_it_returns&#13;\nERROR: failed to build: unable to prepare context: path \"/workspace/source/tests/browser\" not found\nUnable to find image 'retroboards-browser-ci:latest' locally"
+        },
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest",
+          "name": "test_archive_creation_failure_cannot_leave_a_success_record_or_old_archive",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_archive_creation_failure_cannot_leave_a_success_record_or_old_archive&#13;\nFailed asserting that 1 is identical to 0.\n&#13;"
+        },
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest",
+          "name": "test_runner_attempts_every_independent_suite_and_retains_the_first_failure",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_runner_attempts_every_independent_suite_and_retains_the_first_failure&#13;\n/bin/bash: C:\\Users\\htper\\.codex\\worktrees\\boards-layout-typeset\\community-forums\\tests\\Unit\\Core/../../../deploy/cloudrun/browser-ci/run.sh: No such file or directory\n"
+        },
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest",
+          "name": "test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure&#13;\nFailed asserting that two arrays are identical.\n--- Expected"
+        },
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest",
+          "name": "test_completed_run_requires_capture_unified_and_every_upload_project_artifact",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_completed_run_requires_capture_unified_and_every_upload_project_artifact&#13;\nFailed asserting that 1 is identical to 0.\n&#13;"
+        },
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiPackageContractTest",
+          "name": "test_non_object_unified_results_fail_completion_and_preserve_the_diagnostic_archive",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiPackageContractTest::test_non_object_unified_results_fail_completion_and_preserve_the_diagnostic_archive&#13;\nFailed asserting that two arrays are identical.\n--- Expected"
+        },
+        {
+          "class": "Tests\\Unit\\Core\\CloudRunBrowserCiUploaderContractTest",
+          "name": "test_streaming_create_only_transport_and_credential_privacy_contracts",
+          "detail": "\n          Tests\\Unit\\Core\\CloudRunBrowserCiUploaderContractTest::test_streaming_create_only_transport_and_credential_privacy_contracts&#13;\nE.E.E..&#13;\n======================================================================&#13;"
+        },
+        {
+          "class": "Tests\\Integration\\Core\\AppReactionTest",
+          "name": "testReactionNamesAreBatchedAcrossPostsAndEmoji",
+          "detail": "\n          Tests\\Integration\\Core\\AppReactionTest::testReactionNamesAreBatchedAcrossPostsAndEmoji&#13;\nFailed asserting that two arrays are equal.\n--- Expected"
+        }
+      ]
+    },
+    "chromium": {
+      "passed": 15,
+      "failed": 0,
+      "geometry": {
+        "cases": 28,
+        "overflowCases": 0,
+        "nameOverflowCases": 0,
+        "minWidth": 44,
+        "minHeight": 44
+      }
+    },
+    "webkit": {
+      "passed": 6,
+      "failed": 1,
+      "geometry": {
+        "cases": 28,
+        "overflowCases": 0,
+        "nameOverflowCases": 0,
+        "minWidth": 44,
+        "minHeight": 44
+      },
+      "limit": "Guest link Tab failure reproduced with candidate and original stylesheet on Windows."
+    },
+    "assets": {
+      "passed": 35,
+      "failed": 0
+    },
+    "assetsCheck": "passed",
+    "imladrisCheck": "passed",
+    "impeccable": {
+      "total": 228,
+      "counts": {
+        "warning": 33,
+        "advisory": 195
+      },
+      "newOrTemplateFindings": []
+    }
+  },
+  "visualRounds": 2,
+  "largeText": "36px root-font-size simulation; no physical device or native zoom proof",
+  "publication": "Not published or deployed"
+}

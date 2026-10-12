@@ -1,0 +1,140 @@
+[
+  {
+    "original": "assets-build-final.log",
+    "archive": "assets-build-final.log.gz",
+    "sha256": "380c08dad3963b918eef08efd931313e0968e356178c36119e77b589b559bed7",
+    "bytes": 2918
+  },
+  {
+    "original": "assets-build.log",
+    "archive": "assets-build.log.gz",
+    "sha256": "bab72cd805bbbfa49970ca8455944600dacbaaa768ca87765f4d10aeff08c764",
+    "bytes": 2918
+  },
+  {
+    "original": "assets-check.log",
+    "archive": "assets-check.log.gz",
+    "sha256": "802af4383e8961cd5ec629474b011864f7a1b0b6c570d877c5ff7bd5d00a1039",
+    "bytes": 2914
+  },
+  {
+    "original": "assets-tests-initial-windows-fixture.log",
+    "archive": "assets-tests-initial-windows-fixture.log.gz",
+    "sha256": "3e9a304950ad6602d910e753e52a6f33565edb4fb20f0566d7ca7d2fb731448b",
+    "bytes": 27876
+  },
+  {
+    "original": "assets-tests-windows-injection.log",
+    "archive": "assets-tests-windows-injection.log.gz",
+    "sha256": "0acd83ea3a17b101d6c3d3d2b16968fcf14af911e621c85ae87e87a96746c8d4",
+    "bytes": 6721
+  },
+  {
+    "original": "assets-tests.log",
+    "archive": "assets-tests.log.gz",
+    "sha256": "793ef89f65dd4f7ec66fb4f7f345f91d9738beed974f025ac447893eb30c7819",
+    "bytes": 3497
+  },
+  {
+    "original": "chromium.log",
+    "archive": "chromium.log.gz",
+    "sha256": "c3c4801db7b53f8b60d158742135fb7bdcea4e4b569b5723e2b7fea8b7acf628",
+    "bytes": 2401
+  },
+  {
+    "original": "cloud-run-contract-environment.log",
+    "archive": "cloud-run-contract-environment.log.gz",
+    "sha256": "a3ed9db5eb5cd86133ae616932eec5401d1cd5c0ac17317c21722c815af907ae",
+    "bytes": 7999
+  },
+  {
+    "original": "imladris-check.log",
+    "archive": "imladris-check.log.gz",
+    "sha256": "273db77d7e9c58ba49b29cac986f1123bf6b5903bbdd44c0e977fa9053d3438a",
+    "bytes": 38
+  },
+  {
+    "original": "phpunit-final.log",
+    "archive": "phpunit-final.log.gz",
+    "sha256": "73be9565a4aea261c47f6e727c7e959fd62dfaa3e63ee43dc01f80d1e037f50f",
+    "bytes": 14314
+  },
+  {
+    "original": "phpunit-final.xml",
+    "archive": "phpunit-final.xml.gz",
+    "sha256": "3c0b20f35b548f82486b80eb05987af6fa898d536e7c31a5322c7cbc0aacfd5e",
+    "bytes": 1332934
+  },
+  {
+    "original": "phpunit-first-failure.log",
+    "archive": "phpunit-first-failure.log.gz",
+    "sha256": "5f726ad8fb6f8eeb9cde810338a63314a32f8395c7674d9fdc2bd284f0951037",
+    "bytes": 916
+  },
+  {
+    "original": "phpunit-focused.log",
+    "archive": "phpunit-focused.log.gz",
+    "sha256": "3e3b8acefbf30a60eb7e6d4990a85f92b0c8c54fc1deb0cb8bc900da07c4c841",
+    "bytes": 1481
+  },
+  {
+    "original": "phpunit-focused.xml",
+    "archive": "phpunit-focused.xml.gz",
+    "sha256": "90f3a877a05055ac7676a2bb4eec4331de987a12525a872a7d04ec676e2fa14f",
+    "bytes": 34634
+  },
+  {
+    "original": "phpunit-initial-128m.log",
+    "archive": "phpunit-initial-128m.log.gz",
+    "sha256": "79bf69e2ea8378d526f020a4daf0d8c4618d90df0fa44f2f08c2be53bafc4fdb",
+    "bytes": 1196
+  },
+  {
+    "original": "phpunit-initial-128m.xml",
+    "archive": "phpunit-initial-128m.xml.gz",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "original": "phpunit.log",
+    "archive": "phpunit.log.gz",
+    "sha256": "33583fb2db8219bf17770aa03522f6ae6b22b568c4e343b38c0d1c2810d25c8e",
+    "bytes": 778916
+  },
+  {
+    "original": "phpunit.xml",
+    "archive": "phpunit.xml.gz",
+    "sha256": "123f7fb221960b1e5f9db74f963d78b958a552a445d6f8082b5c689ade23240a",
+    "bytes": 2090456
+  },
+  {
+    "original": "webkit-error-context.md",
+    "archive": "webkit-error-context.md.gz",
+    "sha256": "7294b14f49c7f5d9c0e506e5923961eeb0ed51be9ba598fcfe49e32522b1b26b",
+    "bytes": 10660
+  },
+  {
+    "original": "webkit-focus-diagnostic.log",
+    "archive": "webkit-focus-diagnostic.log.gz",
+    "sha256": "fcecaba2138c748e275a000cecd80df86159f2904396ddab9704f7f38800d014",
+    "bytes": 5318
+  },
+  {
+    "original": "webkit.log",
+    "archive": "webkit.log.gz",
+    "sha256": "1168eb5856d76952c04c66c00351d1c379fc615295c9673050bcc01afb6ead4d",
+    "bytes": 3096
+  },
+  {
+    "original": "../round-one/capture.log",
+    "archive": "../round-one/capture.log.gz",
+    "sha256": "76ed430876169f19ad6f47cb684d14932c51cf14ee2c44fcba075dca2fd3dc3c",
+    "bytes": 359
+  },
+  {
+    "original": "../final/capture.log",
+    "archive": "../final/capture.log.gz",
+    "sha256": "f6763f259eaf29303baf43fe44c4e534acb15b054b8c855435ad47746313c7bf",
+    "bytes": 4540
+  }
+]

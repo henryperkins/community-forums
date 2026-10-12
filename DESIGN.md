@@ -445,6 +445,20 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Underline tabs:** no fill, with a 2px gold active underline drawn as an inset shadow. The foundation sets active strong-ink; the generic application's unlayered link rule overrides that to `--accent`, including the hover underline, unless the surface provides its own compatibility rule. The sidecar captures that final generic application treatment. Ruled section rows (`.text-tabs.is-ruled`, including the profile) wrap on a full-width hairline and keep Marcellus at its inherited regular weight; other underline tabs retain the existing semibold treatment. URL-changing tabs and segmented switches are links with `aria-current="page"` (ADR 0040).
 - **Admin chrome:** a sticky two-row block — a 58px identity row (brand, wordmark, exit link, an uppercase mode pill) above a scrolling tier of area links on desktop. At 860px and below, a native disclosure names the current area and opens the same ordered, role- and flag-gated destinations without JavaScript. Area navigation uses the pill register, distinct from the page's underline section tabs one heading below.
 
+**Boards directory.** A quiet Display page heading precedes Body introductory
+copy and one set of Mono totals. The wide viewing row groups all six orders
+beside the three Peek choices, with a gold underline for the selected choice
+and the existing focus halo. Density and useful ranked-order explanations
+share a Fine supporting row; category mode repeats neither its selected label
+nor the board count. Board names use Title with connected wrapping lines,
+descriptions use Small, and topic previews use readable, wrapping Body.
+Metadata uses Meta and category captions use the caps tracking token.
+Comfortable and compact rows retain 44px navigation targets, and density never
+overrides Peek. The phone keeps its native Viewing disclosure and enhanced
+focus-contained sheet; its selected Marcellus label uses the available regular
+weight. This is the owner's layout/typeset/distill refinement of ADR 0028,
+recorded in ADR 0048.
+
 ### Signature: the thread row
 
 The system's most-repeated object and the place its character is clearest. The default application presentation is a flat, ruled entry with a 3px status left-rule, a 44px avatar or monogram, a Cormorant byline, status chips, a Cormorant title at 1.2rem, a two-line clamped snippet in muted ink, and a Marcellus meta line with a gold-ink board reference. Unread state carries a **gold dot with a 2px translucent gold halo** and a semibold title. Selected state uses `--brand-subtle`; hover uses a tonal wash without lifting the row. The foundation's card border and hover shadow are overridden by the application layer.
