@@ -11,6 +11,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   fields for assistive technology. Rebuild and explicitly track the delivered
   stylesheet, refresh the runtime baseline, and record local PHP and browser
   evidence in `docs/evidence/accessibility-followup-2026-10-12/README.md`.
+- Verify the automatic Worker and Cloud Run deployments of `c86a8356`, public
+  health, the login stylesheet and all 56 published asset hashes. Record the
+  deployed asset version, retaining it and its two predecessors while retiring
+  two expired delivery files. Archive the production receipts with the evidence.
 
 ## [Unreleased] - Dependency delivery
 

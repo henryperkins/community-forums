@@ -1,0 +1,45 @@
+{
+  "revision": "retroboards-00022-lmf",
+  "traffic": [
+    {
+      "latestRevision": true,
+      "percent": 100,
+      "revisionName": "retroboards-00022-lmf"
+    }
+  ],
+  "origin_image": [
+    "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app@sha256:81395e2e0e554c233c6cb61d7c34b83e951954e5fbd62c951369b204e823ae29"
+  ],
+  "jobs": [
+    {
+      "name": "retroboards-cron-0310",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c86a835613527509ef3d83bf9edd8bd0e36caa9e"
+      ]
+    },
+    {
+      "name": "retroboards-cron-0700",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c86a835613527509ef3d83bf9edd8bd0e36caa9e"
+      ]
+    },
+    {
+      "name": "retroboards-cron-5m",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c86a835613527509ef3d83bf9edd8bd0e36caa9e"
+      ]
+    },
+    {
+      "name": "retroboards-cron-6h",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c86a835613527509ef3d83bf9edd8bd0e36caa9e"
+      ]
+    },
+    {
+      "name": "retroboards-monitor",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c86a835613527509ef3d83bf9edd8bd0e36caa9e"
+      ]
+    }
+  ]
+}

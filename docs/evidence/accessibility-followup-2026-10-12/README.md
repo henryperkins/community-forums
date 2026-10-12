@@ -101,12 +101,42 @@ result as its receipt. `inspect.js` covers Inbox, recipient, profile and session
 surfaces; `controls.js` covers board, upload, thread and draft surfaces. It pins
 this candidate's stylesheet hash and seeded topic URL deliberately.
 
-## Evidence boundaries
+## Local evidence boundaries
 
 These are local Chromium checks, including emulated touch and DOM hit testing;
-physical devices, WebKit, Firefox and production deployment were not checked.
+physical devices, WebKit, Firefox and production deployment were not checked
+as part of the local UI pass. Production verification follows below.
 Upload responses and the 1px image are controlled fixtures for layout and control
 behavior, not evidence of storage/provider delivery. Recipient checks do not send
 messages. Accessible-name checks inspect the rendered removal/report controls
 without submitting moderation actions. This is focused UI evidence in addition
 to the full PHP suite; the independent full browser matrix was not run.
+
+## Production release — 2026-10-12
+
+The source candidate was committed and pushed to `main` as
+`c86a835613527509ef3d83bf9edd8bd0e36caa9e`. Both automatic production deployments
+succeeded for that exact SHA:
+
+- Cloudflare build `712932eb-02ab-4b9b-82c2-ac96b9a110e5` deployed Worker version
+  `50beae2a-e851-4e2d-8a5f-e4c47c6e1c5b` at 100% traffic (`worker-release.json`).
+- Cloud Build `2cf11e17-4b7a-4818-ad8e-d6b1b8320a8c` completed every origin and
+  job deployment step. Cloud Run revision `retroboards-00022-lmf` serves 100%;
+  the four cron jobs and monitoring job reference this SHA's image
+  (`origin-release.json` and `cloud-build-release.json`).
+- All 56 originally published asset bodies match the source manifest's SHA-256
+  (`live-assets.json`). Public `/healthz` returns HTTP 200 with both status and
+  database `ok`; `/login` returns HTTP 200 and references the rebuilt stylesheet.
+  Direct unauthenticated origin access remains HTTP 403 (`production-release.json`).
+
+After these checks, the asset runbook's record command pins `be1d396948b3adcc`
+and its two predecessors. It retires the old `app-64d622826ba32cb9.js` and
+`app-style-kNCnSn5Q.css`, leaving 54 manifest files whose live hashes were already
+verified. The application/mirror baseline is refreshed for this generated-file
+retirement; the original local receipt remains a snapshot of the pre-record
+candidate. Authenticated production UI was not exercised.
+
+The recording change passes `composer verify:imladris` (24 tests, 305
+assertions), all 35 Worker tests, both generated-asset checks and the staged
+whitespace check (`recording-checks.txt`). Its runtime and mirror digest is
+`e31eca32352c7d96c160fa22f544e80ff9d46493c6c52f69d5c43c184144730b`.

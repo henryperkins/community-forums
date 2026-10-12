@@ -1,0 +1,31 @@
+{
+  "createTime": "2026-10-12T19:16:09.961824Z",
+  "finishTime": "2026-10-12T19:21:06.954771Z",
+  "id": "2cf11e17-4b7a-4818-ad8e-d6b1b8320a8c",
+  "status": "SUCCESS",
+  "steps": [
+    {
+      "id": "source",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "build",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "push",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "deploy-service",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "update-jobs",
+      "status": "SUCCESS"
+    }
+  ],
+  "substitutions": {
+    "_SHA": "c86a835613527509ef3d83bf9edd8bd0e36caa9e"
+  }
+}
