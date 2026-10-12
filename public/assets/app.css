@@ -17127,3 +17127,90 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
     .forum-bar-surface.is-active::after { right: 10px; left: 10px; bottom: 6px; }
     .forum-bar [data-bell].is-active::after { right: 8px; left: 8px; bottom: 6px; }
 }
+
+/* Board directory: content-driven rows and touch targets. Keep the reviewed
+   Imladris transfer intact; application adaptations belong in this section. */
+.forum-directory .forum-directory__boards { grid-template-columns: minmax(0, 1fr); }
+.forum-directory .forum-directory__board { min-width: 0; }
+.forum-directory .forum-directory__board-row > a {
+    min-height: 44px;
+    flex-wrap: wrap;
+}
+.forum-directory .forum-directory__board-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.forum-directory .forum-directory__board-description { overflow-wrap: anywhere; }
+.forum-directory .forum-directory__board-facts {
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.forum-directory .forum-directory__peek a {
+    display: block;
+    min-width: 44px;
+    min-height: 44px;
+    padding-block: max(var(--space-1), calc((44px - 1lh) / 2));
+}
+.forum-directory .forum-directory__peek li {
+    grid-template-columns: var(--space-1) minmax(44px, 1fr) minmax(0, auto);
+}
+.forum-directory .forum-directory__peek li > span:last-child {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.forum-directory :is(.directory-viewbar__choices, .directory-viewbar__peek) :is(a, button) {
+    min-width: 44px;
+    min-height: 44px;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+body.directory-view-open { overflow: hidden; }
+body.directory-view-open[data-route="boards"] .main { overflow: hidden; }
+@media (max-width: 760px) {
+    .forum-directory .forum-directory__peek li {
+        grid-template-columns: var(--space-1) minmax(44px, 1fr);
+    }
+    .forum-directory .directory-viewbar-mobile > summary {
+        flex-wrap: wrap;
+        gap: var(--space-1) var(--space-2);
+    }
+    .forum-directory .directory-viewbar-mobile > summary strong {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .forum-directory .directory-viewbar-mobile-panel .directory-viewbar__choices {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    /* The close header occupies its own band above the scrolling choices,
+       including in landscape and after text enlargement. */
+    .forum-directory .directory-viewbar-mobile[data-directory-view-ready][open] > summary {
+        position: fixed;
+        inset-inline: 0;
+        bottom: var(--directory-view-panel-height, min(78dvh, 620px));
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+    .forum-directory .directory-viewbar-mobile[data-directory-view-ready] .directory-viewbar-mobile-panel {
+        max-height: min(78vh, 620px, calc(100vh - var(--directory-view-summary-height, 44px) - var(--space-4)));
+        max-height: min(78dvh, 620px, calc(100dvh - var(--directory-view-summary-height, 44px) - var(--space-4)));
+        border-radius: 0;
+    }
+    /* Native HTML is an inline disclosure. The ready enhancement alone owns
+       the overlay, focus containment, Escape and backdrop dismissal. */
+    .forum-directory .directory-viewbar-mobile:not([data-directory-view-ready])[open]::before { content: none; }
+    .forum-directory .directory-viewbar-mobile:not([data-directory-view-ready]) .directory-viewbar-mobile-panel {
+        position: static;
+        max-height: none;
+        margin-block-start: var(--space-2);
+        border-radius: var(--radius-md);
+        box-shadow: none;
+    }
+}

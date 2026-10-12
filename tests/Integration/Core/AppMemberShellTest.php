@@ -23,6 +23,44 @@ final class AppMemberShellTest extends TestCase
         $this->makeAdmin();
     }
 
+    public function test_directory_skips_editor_and_passkey_assets_while_their_surfaces_keep_them(): void
+    {
+        (new SettingRepository($this->db))->set('features', [
+            'rich_composer' => true,
+            'wysiwyg_composer' => true,
+            'passkeys' => true,
+        ]);
+        $board = $this->makeBoard($this->makeCategory());
+        $member = $this->makeUser(['username' => 'directory_assets']);
+        $thread = $this->makeThread($board, $member);
+
+        foreach (['boards', 'tags', 'connections'] as $pane) {
+            $response = $this->get('/', ['pane' => $pane]);
+            $this->assertStatus(200, $response);
+            $dom = $this->dom($response->body());
+            self::assertSame(0, $dom->query('//script[contains(@src, "/composer-") or contains(@src, "/passkeys-")]')->length, $pane);
+            self::assertSame(0, $dom->query('//*[@data-wysiwyg-composer]')->length, $pane);
+        }
+        $login = $this->get('/login');
+        $this->assertStatus(200, $login);
+        self::assertSame(1, $this->dom($login->body())->query('//script[contains(@src, "/passkeys-")]')->length);
+
+        $this->actingAs($member);
+        foreach (['boards', 'tags', 'connections'] as $pane) {
+            $response = $this->get('/', ['pane' => $pane]);
+            $this->assertStatus(200, $response);
+            self::assertSame(0, $this->dom($response->body())->query('//script[contains(@src, "/composer-") or contains(@src, "/passkeys-")]')->length, $pane);
+        }
+        foreach ([['/compose', ['board' => $board['slug']]], ['/c/' . $board['slug'], []], ['/t/' . $thread['thread_id'] . '-' . $thread['slug'], []]] as [$path, $query]) {
+            $response = $this->get($path, $query);
+            $this->assertStatus(200, $response);
+            self::assertSame(1, $this->dom($response->body())->query('//script[contains(@src, "/composer-")]')->length, $path);
+        }
+        $security = $this->get('/settings/security');
+        $this->assertStatus(200, $security);
+        self::assertSame(1, $this->dom($security->body())->query('//script[contains(@src, "/passkeys-")]')->length);
+    }
+
     public function test_shared_shell_keeps_primary_routes_in_the_topbar_and_directory_navigation_in_the_rail(): void
     {
         $category = $this->makeCategory('Council places');

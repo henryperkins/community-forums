@@ -123,7 +123,7 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
 <?php endif; ?>
 <script src="<?= $e($assetUrl('app.js')) ?>" defer></script>
 <?php if ($richComposerOn): ?><script src="<?= $e($assetUrl('composer.js')) ?>" defer></script><?php endif; ?>
-<?php if (!empty($features['passkeys'])): ?><script src="<?= $e($assetUrl('passkeys.js')) ?>" defer></script><?php endif; ?>
+<?php if (!empty($features['passkeys']) && $this->block('passkeys', '1') !== '0'): ?><script src="<?= $e($assetUrl('passkeys.js')) ?>" defer></script><?php endif; ?>
 <?php if (!empty($features['product_tour']) && ($current_user ?? null) !== null): ?><script src="<?= $e($assetUrl('tour.js')) ?>" defer></script><?php endif; ?>
 </body>
 </html>

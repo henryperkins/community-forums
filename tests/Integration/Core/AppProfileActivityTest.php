@@ -763,12 +763,15 @@ final class AppProfileActivityTest extends TestCase
 
     public function test_profile_pages_skip_the_composer_script(): void
     {
-        $this->seedAuthor();
+        [$board, $author] = $this->seedAuthor();
         $this->makeUser(['username' => 'gated-seat']);
         $this->db->run("UPDATE users SET profile_visibility = 'members' WHERE username = 'gated-seat'");
         $composer = '#/assets/(?:dist/)?composer[-.]#';
 
-        self::assertMatchesRegularExpression($composer, $this->get('/')->body());
+        // Use the editor as the positive control; the directory has no composer.
+        $this->actingAs($author);
+        self::assertMatchesRegularExpression($composer, $this->get('/compose', ['board' => $board['slug']])->body());
+        $this->logoutClient();
         foreach (['/u/galadriel', '/u/galadriel/followers', '/u/galadriel/following', '/u/gated-seat'] as $path) {
             self::assertDoesNotMatchRegularExpression($composer, $this->get($path)->body(), $path);
         }

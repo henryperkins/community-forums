@@ -1,0 +1,35 @@
+{
+  "base_commit": "9e6e45b5a63e4bc8771e4f223d73794d22d3aa9b",
+  "local_delivery_version": "906231110793ea6f",
+  "scope": "Local board-index remediation; uncommitted changes",
+  "source_sha256": {
+    "templates/home.php": "f5cf5fc830f7249fff982f9613104b5e78f8b1ff18b26fd40ccb184d5745b602",
+    "templates/layout.php": "9281e2d9917bf3a2d401da62a69e0d72155614b8467fda794a2ab5df7f584604",
+    "public/assets/app.css": "528b07f9d43dcadda9ad278e6950ad22b7fc060897f2315cba7ea9f27504e22b",
+    "public/assets/app.js": "1c62eb5d3c77e81a8bf5b3d9735a11ada9b7ab2d063724b22951f53af2b639df",
+    "tests/browser/board-index-hardening.spec.ts": "820c93a5c84621db858a8c07d57a0695052a27edda5ef4d3649c657390da7b90"
+  },
+  "phpunit": {
+    "tests": 3232,
+    "assertions": 25626,
+    "skipped": 1
+  },
+  "browser": {
+    "chromium_checks": 15,
+    "webkit_checks": 7,
+    "geometry_cases_per_engine": 28,
+    "maximum_horizontal_overflow_px": 0,
+    "minimum_measured_target_px": 44,
+    "axe_scans": 8,
+    "axe_violations": 0,
+    "physical_devices_tested": false
+  },
+  "javascript": {
+    "before_decoded_bytes": 146015,
+    "after_decoded_bytes": 73528,
+    "saved_decoded_bytes": 72487
+  },
+  "copy": "Boards with the most settled topics first \u00b7 4 boards \u00b7 the same order every member sees.",
+  "source_assets_current": true,
+  "protected_imladris_transfer_unchanged": true
+}

@@ -3,6 +3,8 @@
 $this->layout('layout');
 $this->section('title', $site_name);
 $this->section('route', 'boards');
+$this->section('composer', '0');
+$this->section('passkeys', '0');
 $pane = (string) ($pane ?? 'boards');
 $sort = (string) ($directory_sort ?? 'category');
 $peek = (int) ($directory_peek ?? 3);
@@ -22,7 +24,7 @@ $orderNotes = [
     'newest' => 'Ranked by newest topic',
     'unanswered' => 'Boards with the most unanswered topics first',
     'top' => 'Ranked by most-commended topic',
-    'solved' => 'Boards with the most recently settled topics first',
+    'solved' => 'Boards with the most settled topics first',
 ];
 $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
     return '/?' . http_build_query(array_merge([
@@ -92,7 +94,8 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
                 <span class="directory-viewbar__density"><?= ($appearance['density'] ?? 'comfortable') === 'compact' ? 'Compact' : 'Comfortable' ?> rows <a href="/settings/appearance">change</a></span>
             </div>
 
-            <details class="directory-viewbar-mobile" data-viewbar="narrow">
+            <div data-directory-view-shell>
+            <details class="directory-viewbar-mobile" data-viewbar="narrow" data-directory-view-sheet>
                 <summary>Viewing <strong><?= $e($sortLabels[$sort] ?? $sortLabels['category']) ?></strong><?= $peek > 0 ? ' · peek ' . $peek : ' · no peek' ?></summary>
                 <div class="directory-viewbar-mobile-panel">
                     <span class="directory-viewbar__label">Order</span>
@@ -130,6 +133,7 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
                     <a class="directory-viewbar-mobile-settings" href="/settings/appearance">Row appearance settings</a>
                 </div>
             </details>
+            </div>
 
             <p class="directory-order-note"><?= $e($orderNotes[$sort] ?? $orderNotes['category']) ?> · <?= (int) $totals['boards'] ?> board<?= (int) $totals['boards'] === 1 ? '' : 's' ?> · the same order every member sees.</p>
             <?php if ($current_user === null): ?>

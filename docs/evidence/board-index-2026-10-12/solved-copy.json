@@ -1,0 +1,4 @@
+{
+  "note": "Boards with the most settled topics first \u00b7 4 boards \u00b7 the same order every member sees.",
+  "ranking": "settled_count descending; latest settlement breaks ties"
+}

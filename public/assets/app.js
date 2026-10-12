@@ -1946,6 +1946,109 @@
         });
     }
 
+    // Board view choices are native forms/links. On a phone, enhance the
+    // disclosure as a modal sheet while keeping its summary as the close path.
+    var directorySheet = document.querySelector('[data-directory-view-sheet]');
+    if (directorySheet) {
+        var directoryShell = directorySheet.closest('[data-directory-view-shell]');
+        var directorySummary = directorySheet.querySelector(':scope > summary');
+        var directoryPanel = directorySheet.querySelector('.directory-viewbar-mobile-panel');
+        var directoryWideBar = document.querySelector('.directory-viewbar');
+        var directoryViewport = window.matchMedia('(max-width: 760px)');
+        var directorySheetOpen = false;
+        var directoryInert = [];
+        var directoryLastFocus = document.activeElement;
+
+        var positionDirectorySheet = function () {
+            if (!directorySheetOpen) { return; }
+            directorySheet.style.setProperty('--directory-view-summary-height', Math.ceil(directorySummary.getBoundingClientRect().height) + 'px');
+            directorySheet.style.setProperty('--directory-view-panel-height', Math.ceil(directoryPanel.getBoundingClientRect().height) + 'px');
+        };
+        var setDirectorySheet = function (open, restoreFocus) {
+            open = !!open && directoryViewport.matches;
+            directorySheet.open = open;
+            if (open === directorySheetOpen) { return; }
+            directorySheetOpen = open;
+            document.body.classList.toggle('directory-view-open', open);
+            if (open) {
+                // Inert only siblings of the dialog's ancestor chain. Inerting
+                // main itself would also disable the sheet it contains.
+                var branch = directoryShell;
+                while (branch.parentElement && branch !== document.body) {
+                    Array.prototype.forEach.call(branch.parentElement.children, function (sibling) {
+                        if (sibling !== branch && !sibling.inert) {
+                            directoryInert.push(sibling);
+                            sibling.inert = true;
+                        }
+                    });
+                    branch = branch.parentElement;
+                }
+                directoryShell.setAttribute('role', 'dialog');
+                directoryShell.setAttribute('aria-modal', 'true');
+                directoryShell.setAttribute('aria-label', 'Board view');
+                positionDirectorySheet();
+                var current = directorySheet.querySelector('.directory-viewbar__choices [aria-pressed="true"], .directory-viewbar__choices [aria-current="true"]');
+                (current || directorySummary).focus();
+            } else {
+                directoryInert.forEach(function (element) { element.inert = false; });
+                directoryInert = [];
+                directoryShell.removeAttribute('role');
+                directoryShell.removeAttribute('aria-modal');
+                directoryShell.removeAttribute('aria-label');
+                if (restoreFocus !== false && visible(directorySummary)) { directorySummary.focus(); }
+            }
+        };
+        directorySummary.addEventListener('click', function (event) {
+            if (!directoryViewport.matches) { return; }
+            event.preventDefault();
+            // Native toggle is asynchronous; act now so a quick Enter/Tab sees
+            // the revealed controls and their focus boundary in the same task.
+            setDirectorySheet(!directorySheet.open);
+        });
+        directorySheet.addEventListener('toggle', function () { setDirectorySheet(directorySheet.open); });
+        directorySheet.addEventListener('click', function (event) {
+            if (directorySheetOpen && event.target === directorySheet) { setDirectorySheet(false); }
+        });
+        document.addEventListener('focusin', function (event) { directoryLastFocus = event.target; });
+        document.addEventListener('keydown', function (event) {
+            if (!directorySheetOpen) { return; }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setDirectorySheet(false);
+            } else if (event.key === 'Tab') {
+                wrapOverlayTab(event, directoryShell, true);
+            }
+        });
+        directoryViewport.addEventListener('change', function () {
+            // A browser may blur the newly hidden controls before this event.
+            var active = document.activeElement === document.body ? directoryLastFocus : document.activeElement;
+            var fromSheet = directoryShell.contains(active);
+            var fromWideBar = directoryWideBar && directoryWideBar.contains(active);
+            var sort = active && active.getAttribute('data-directory-sort-option');
+            var peek = active && active.getAttribute('data-directory-peek-option');
+            setDirectorySheet(false, false);
+            if (directoryViewport.matches && fromWideBar) {
+                directorySummary.focus();
+            } else if (!directoryViewport.matches && fromSheet && directoryWideBar) {
+                var equivalent = sort !== null
+                    ? directoryWideBar.querySelector('[data-directory-sort-option="' + sort + '"]')
+                    : peek !== null
+                        ? directoryWideBar.querySelector('[data-directory-peek-option="' + peek + '"]')
+                        : directoryWideBar.querySelector('[aria-pressed="true"], [aria-current="true"]');
+                if (equivalent) { equivalent.focus(); }
+            }
+        });
+        window.addEventListener('resize', positionDirectorySheet);
+        if (window.ResizeObserver) {
+            var directoryObserver = new ResizeObserver(positionDirectorySheet);
+            directoryObserver.observe(directorySummary);
+            directoryObserver.observe(directoryPanel);
+        }
+        directorySummary.setAttribute('aria-haspopup', 'dialog');
+        directorySheet.setAttribute('data-directory-view-ready', '1');
+        setDirectorySheet(directorySheet.open, false);
+    }
+
     // The phone bar gives the primary routes their own row under the lockup and
     // the account controls (ADR 0042), and CSS draws that row last. The reading
     // and focus order follow it here, so Tab and a screen reader's swipe move
