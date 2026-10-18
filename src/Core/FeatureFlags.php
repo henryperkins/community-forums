@@ -103,6 +103,25 @@ final class FeatureFlags
         'verified_links' => false,    // verified profile links + richer fields (P5-15)
     ];
 
+    /**
+     * Flags the /admin/features console may switch off but never on (ADR 0049).
+     * None has shipped, so enabling one stays a deliberate `settings.features`
+     * write (docs/runbooks/operations.md §2); an entry leaves this map in the
+     * change that clears its blocker. Switching off stays a console action,
+     * because rollback is the first response to a defect. The reasons name the
+     * readiness category the inventory shows for the same row.
+     *
+     * @var array<string,string>
+     */
+    private const CONSOLE_ENABLE_BLOCKED = [
+        'custom_css' => 'Safety-blocked: theme safe mode does not suppress custom CSS yet.',
+        'expanded_files' => 'Missing user UI: members have no file chooser or quarantine states yet.',
+        'server_extensions' => 'Reserved (ADR 0018): Phase 5 Gate B stays dark until it lands release evidence.',
+        'governance' => 'Reserved (ADR 0018): Phase 5 Gate B stays dark until it lands release evidence.',
+        'service_principals' => 'Reserved (ADR 0018): Phase 5 Gate B stays dark until it lands release evidence.',
+        'verified_links' => 'Reserved (ADR 0018): Phase 5 Gate B stays dark until it lands release evidence.',
+    ];
+
     /** @var array<string,bool>|null */
     private ?array $cache = null;
 
@@ -145,10 +164,31 @@ final class FeatureFlags
         return filter_var((string) $value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 
+    /**
+     * True when $overrides is the shape the loader reads: a JSON object map, or
+     * `[]`, which the runbook's array snippet stores when it removes the last
+     * key. A non-empty JSON list, a scalar, JSON null or an unreadable value is
+     * not, and the loader ignores it whole. This says nothing about whether PHP
+     * can write the map back: an object holding a number outside the float
+     * range still loads (its other keys keep applying) but cannot be re-encoded.
+     *
+     * @phpstan-assert-if-true array<int|string,mixed> $overrides
+     */
+    public static function isOverrideMap(mixed $overrides): bool
+    {
+        return is_array($overrides) && ($overrides === [] || !array_is_list($overrides));
+    }
+
     /** @return array<string,bool> */
     public static function defaults(): array
     {
         return self::DEFAULTS;
+    }
+
+    /** Why the admin console will not switch $flag on, or null when it may. */
+    public static function consoleEnableBlocker(string $flag): ?string
+    {
+        return self::CONSOLE_ENABLE_BLOCKED[$flag] ?? null;
     }
 
     /** @return array<string,bool> */
@@ -173,10 +213,10 @@ final class FeatureFlags
         // JSON string) means every stored rollback is being ignored — log it,
         // because the defaults it falls back to are ON for graduated flags.
         $overrides = $this->settings->get('features', null);
-        if ($overrides === null) {
+        if ($overrides === null && !$this->settings->has('features')) {
             return $map;
         }
-        if (!is_array($overrides)) {
+        if (!self::isOverrideMap($overrides)) {
             $this->overridesCorrupt = true;
             error_log('[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)');
             return $map;

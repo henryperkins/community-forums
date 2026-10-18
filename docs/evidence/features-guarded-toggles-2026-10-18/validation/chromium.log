@@ -1,0 +1,53 @@
+
+Running 12 tests using 1 worker
+
+  ✓   1 [desktop] › features-toggles.spec.ts:82:5 › a flag turns off and back on through its inline confirm, with proof in the row and the audit log (3.4s)
+  ✓   2 [desktop] › features-toggles.spec.ts:149:5 › confirms open without a request, one at a time, and cancel by keyboard (418ms)
+  ✓   3 [desktop] › features-toggles.spec.ts:181:5 › rows the console cannot act on say why, and a corrupt blob locks every row (1.7s)
+  ✓   4 [desktop] › features-toggles.spec.ts:203:5 › a refused write re-renders the inventory as a 422 alert that takes focus (922ms)
+  ✓   5 [desktop] › features-toggles.spec.ts:232:5 › the whole flow works with JavaScript disabled (496ms)
+  -   6 [desktop] › features-toggles.spec.ts:251:5 › the confirm fits the phone scroll area and keeps 44px targets
+  ✓   7 [mobile] › features-toggles.spec.ts:82:5 › a flag turns off and back on through its inline confirm, with proof in the row and the audit log (3.5s)
+  -   8 [mobile] › features-toggles.spec.ts:149:5 › confirms open without a request, one at a time, and cancel by keyboard
+  ✓   9 [mobile] › features-toggles.spec.ts:181:5 › rows the console cannot act on say why, and a corrupt blob locks every row (1.8s)
+  ✓  10 [mobile] › features-toggles.spec.ts:203:5 › a refused write re-renders the inventory as a 422 alert that takes focus (980ms)
+  ✓  11 [mobile] › features-toggles.spec.ts:232:5 › the whole flow works with JavaScript disabled (531ms)
+  ✓  12 [mobile] › features-toggles.spec.ts:251:5 › the confirm fits the phone scroll area and keeps 44px targets (490ms)
+
+  2 skipped
+  10 passed (16.1s)
+
+Running 2 tests using 1 worker
+
+  ✓  1 [desktop] › admin-features.spec.ts:84:5 › admin feature inventory classifies readiness and links actionable surfaces (3.1s)
+  ✓  2 [mobile] › admin-features.spec.ts:84:5 › admin feature inventory classifies readiness and links actionable surfaces (3.2s)
+
+  2 passed (8.0s)
+
+Running 10 tests using 1 worker
+
+  ✓   1 [desktop] › features-console.spec.ts:166:5 › the feature-flag ledger copies the tiles, table chrome and relocated legend in every register (5.4s)
+  ✓   2 [desktop] › features-console.spec.ts:200:5 › badge rules copies the two-up create card, rule rows and action order in every register (2.3s)
+  ✓   3 [desktop] › features-console.spec.ts:248:5 › the badge-rule preview drill-in keeps its parent tab lit and copies the monogram roster (2.0s)
+  ✓   4 [desktop] › features-console.spec.ts:275:5 › the custom emoji catalogue copies the switch, chip and status pills in every register (2.5s)
+  ✓   5 [desktop] › features-console.spec.ts:330:5 › every features route stays whole with JavaScript disabled (1.5s)
+  ✓   6 [mobile] › features-console.spec.ts:166:5 › the feature-flag ledger copies the tiles, table chrome and relocated legend in every register (5.5s)
+  ✓   7 [mobile] › features-console.spec.ts:200:5 › badge rules copies the two-up create card, rule rows and action order in every register (2.5s)
+  ✓   8 [mobile] › features-console.spec.ts:248:5 › the badge-rule preview drill-in keeps its parent tab lit and copies the monogram roster (2.0s)
+  ✓   9 [mobile] › features-console.spec.ts:275:5 › the custom emoji catalogue copies the switch, chip and status pills in every register (2.6s)
+  ✓  10 [mobile] › features-console.spec.ts:330:5 › every features route stays whole with JavaScript disabled (1.9s)
+
+  10 passed (29.9s)
+
+Running 8 tests using 1 worker
+
+  ✓  1 [desktop] › features-remediation.spec.ts:37:5 › inventory filters work without JavaScript and Operations links have 44px targets (928ms)
+  ✓  2 [desktop] › features-remediation.spec.ts:62:5 › badge bulk changes require an impact review and typed confirmation without JavaScript (1.1s)
+  ✓  3 [desktop] › features-remediation.spec.ts:95:5 › emoji reservations preserve inputs and every catalogue mutation is audited (1.9s)
+  ✓  4 [desktop] › features-remediation.spec.ts:129:5 › preview history reaches older rows and board actions remain visible at narrow widths (2.4s)
+  ✓  5 [mobile] › features-remediation.spec.ts:37:5 › inventory filters work without JavaScript and Operations links have 44px targets (1.0s)
+  ✓  6 [mobile] › features-remediation.spec.ts:62:5 › badge bulk changes require an impact review and typed confirmation without JavaScript (1.1s)
+  ✓  7 [mobile] › features-remediation.spec.ts:95:5 › emoji reservations preserve inputs and every catalogue mutation is audited (1.9s)
+  ✓  8 [mobile] › features-remediation.spec.ts:129:5 › preview history reaches older rows and board actions remain visible at narrow widths (3.4s)
+
+  8 passed (15.5s)

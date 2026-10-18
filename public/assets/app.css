@@ -17578,6 +17578,83 @@ body.directory-view-open[data-route="boards"] .main { overflow: hidden; }
     min-width: 44px;
     padding-inline: var(--space-1);
 }
+/* Guarded flag toggles (ADR 0049): a native disclosure in the Flag cell, the
+   one column on screen at 390px. A write returns to #flag-<name>; the sticky
+   admin bar is taller than the member topbar html's scroll-padding allows for. */
+.admin-console .features-flags-table tbody tr[id] { scroll-margin-block-start: var(--space-12); }
+.admin-console .features-flag-toggle,
+.admin-console .features-flag-locked { margin-block-start: var(--space-1); }
+.admin-console .features-flag-toggle > summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+    /* .audit td sets overflow-wrap: anywhere, which would split "Turn off…". */
+    white-space: nowrap;
+    list-style: none;
+    cursor: pointer;
+}
+.admin-console .features-flag-toggle > summary::-webkit-details-marker { display: none; }
+/* .table-scroll clips overflow and the Flag cell has no left padding, so the
+   global outset ring would lose its left edge; draw it inside instead. */
+.admin-console .features-flag-toggle > summary:focus-visible { outline-offset: -4px; }
+.admin-console .features-flag-toggle[open] > summary .features-flag-toggle-rest,
+.admin-console .features-flag-toggle:not([open]) > summary .features-flag-toggle-cancel { display: none; }
+/* No fill: the cell's code chips sit on --surface-sunken and must stay visible.
+   30ch fits the 390px scroll area without sideways scrolling. */
+.admin-console .features-flag-confirm {
+    width: 30ch;
+    margin-block-start: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    font-size: .86rem;
+    line-height: 1.5;
+    color: var(--text-body);
+    text-wrap: pretty;
+}
+.admin-console .features-flag-confirm > p { margin: 0 0 var(--space-2); }
+.admin-console .features-flag-warning {
+    padding-inline-start: var(--space-2);
+    border-inline-start: 2px solid var(--rust);
+}
+.admin-console .features-flag-write,
+.admin-console .features-flag-one-way { color: var(--text-muted); }
+.admin-console .features-flag-commit {
+    min-height: 44px;
+    white-space: nowrap;
+}
+/* After .features-toggle-btn:hover at equal specificity, so source order keeps
+   the chip inert under the pointer. Its own line, like the summary it stands in
+   for, so every row's action sits in the same place under the flag. */
+.admin-console .features-flag-locked,
+.admin-console .features-flag-locked:hover {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    min-height: 44px;
+    white-space: nowrap;
+    border-style: dashed;
+    background: transparent;
+    color: var(--text-faint);
+    cursor: default;
+}
+.admin-console .features-flag-toggle-note,
+.admin-console .features-flag-outcome {
+    max-width: 30ch;
+    margin: var(--space-1) 0 0;
+    font-size: .84rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+/* The base link has no underline; inside the muted intro it needs one to be
+   distinguishable from the sentence around it. */
+.admin-console .features-intro a {
+    text-decoration: underline;
+    text-decoration-thickness: .08em;
+    text-underline-offset: .18em;
+}
 .admin-console .table-scroll > .link-preview-board-table {
     width: 100%;
     min-width: 0;

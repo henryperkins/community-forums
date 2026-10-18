@@ -70,6 +70,29 @@ final class SettingRepository
         );
     }
 
+    /**
+     * Lock one setting row for a read-modify-write and return its decoded value
+     * (null when the stored JSON cannot be decoded). Call inside
+     * Database::transaction(). The no-op upsert runs first so a missing row is
+     * created and exclusively locked rather than gap-locked: two first writers
+     * then queue on the row instead of deadlocking on the insert. $seed is what
+     * a created row holds, so it must mean the same thing as an absent row.
+     */
+    public function lockForUpdate(string $key, mixed $seed): mixed
+    {
+        $this->db->run(
+            'INSERT INTO settings (`key`, `value`, updated_at) VALUES (:key, :value, UTC_TIMESTAMP())
+             ON DUPLICATE KEY UPDATE `key` = `key`',
+            ['key' => $key, 'value' => json_encode($seed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)],
+        );
+        $value = $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ? FOR UPDATE', [$key]);
+        if (!is_string($value)) {
+            return null;
+        }
+        $decoded = json_decode($value, true);
+        return json_last_error() === JSON_ERROR_NONE ? $decoded : null;
+    }
+
     public function has(string $key): bool
     {
         if ($this->db->isRequestCacheActive()) {

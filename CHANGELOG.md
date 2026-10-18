@@ -2,6 +2,20 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Guarded feature-flag toggles
+
+- Turn a feature flag off or back on from its row on `/admin/features`. An
+  inline confirmation names what the change does, any side effect to weigh and
+  the exact `settings.features` write; confirming writes the runbook's override
+  and a `feature_flag.enable`/`feature_flag.disable` audit entry in one locked
+  transaction and returns to the row with its cells updated (ADR 0049).
+- Repeated or stale submits change nothing and name the earlier change. Flags
+  that have not shipped can be turned off but never on, and an unreadable
+  `settings.features` or a restricted admin locks every row, with the reason
+  shown. Refusals re-render as an alert without losing filters.
+- Works without JavaScript and at 390px. Evidence is recorded in
+  `docs/evidence/features-guarded-toggles-2026-10-18/`.
+
 ## [Unreleased] - Members select contrast
 
 - Keep Members directory filters on the shared styled-select treatment so WebKit

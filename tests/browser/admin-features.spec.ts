@@ -100,12 +100,13 @@ test('admin feature inventory classifies readiness and links actionable surfaces
   await expect(flagRow(page, 'group_dms').locator('.state', { hasText: 'Ready for acceptance' })).toHaveCount(0);
   await expect(page.getByText('Ready for acceptance')).toHaveCount(0);
   await expect(page.getByText('Missing admin operations')).toHaveCount(0);
-  await expect(flagRow(page, 'expanded_files').getByText('Missing user UI')).toBeVisible();
+  // Exact: the row's locked toggle note repeats the category in its reason.
+  await expect(flagRow(page, 'expanded_files').getByText('Missing user UI', { exact: true })).toBeVisible();
   const linkPreviews = flagRow(page, 'link_previews');
   await expect(linkPreviews.getByText('Operational configuration required')).toHaveCount(0);
   await expect(linkPreviews.getByRole('link', { name: 'Operations' })).toHaveAttribute('href', '/admin/link-previews');
   const customCss = flagRow(page, 'custom_css');
-  await expect(customCss.getByText('Safety-blocked')).toBeVisible();
+  await expect(customCss.getByText('Safety-blocked', { exact: true })).toBeVisible();
   await expect(customCss.getByRole('link', { name: 'Custom CSS editor' })).toHaveAttribute('href', '/admin/branding');
 
   // The operational-configuration badge is computed live: capabilities is on

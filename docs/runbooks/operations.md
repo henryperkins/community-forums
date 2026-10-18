@@ -36,14 +36,39 @@ overrides the per-flag code defaults in `App\Core\FeatureFlags` — mixed since
 Phase 4: graduated subsystems default ON, unaccepted ones stay dark. A `false`
 override takes a subsystem offline **without a data change** (its routes 404;
 the core forum keeps serving); removing a key restores the code default.
-`/admin/features` lists every flag with its default, override, and effective
-state. Override values must be JSON booleans; unrecognizable values fail dark.
+Background jobs are the exception to "offline": with `email` or
+`notifications` off, a running `worker:email`/`worker:digest` marks queued mail
+suppressed and skips due digests, so pause those crons to hold mail; and
+`worker:purge-accounts` keeps purging due deletions with `account_lifecycle`
+off (§3a). `/admin/features` lists every flag with its default, override, and
+effective state. Override values must be JSON booleans; unrecognizable values
+fail dark.
 
-The read-only inventory can be narrowed by flag name, effective On/Off state,
-and readiness. Filters combine and work without JavaScript; readiness reflects
+The inventory can be narrowed by flag name, effective On/Off state, and
+readiness. Filters combine and work without JavaScript; readiness reflects
 current operational configuration. Summary totals and undeclared override keys
 remain inventory-wide. Clear filters restores the complete list. Filtering does
 not change any feature setting.
+
+**Changing a flag from the console (ADR 0049).** Each row has a **Turn off…**
+or **Turn on…** control. It opens an inline confirmation that names what the
+change does, the exact write, and any side effect to weigh (sign-in lockout,
+outbound traffic, queued work). Confirming performs the same read-modify-write
+as the commands below — returning a flag to its code default removes its key,
+anything else stores a JSON boolean, every other key is preserved as JSON —
+under a row lock, and records a `feature_flag.enable` or `feature_flag.disable`
+audit entry (reason `features.<flag>`) in the same transaction. A repeated or
+stale submit changes nothing and names the last audited console change when the
+stored override still matches it. The console can
+switch any flag off but never switches on one that has not shipped
+(`FeatureFlags::consoleEnableBlocker()`: Safety-blocked, Missing user UI, or
+Reserved under ADR 0018); that stays a deliberate write with the commands
+below. While `settings.features` is not a JSON object (a JSON list, a scalar or
+`null`) every row is locked: repair it with the commands below first. A stored
+number PHP cannot re-encode (for example `1e999`) does not lock the rows, since
+the overrides around it still apply, but every write is refused with that
+reason until the value is removed with the commands below. A restricted (for
+example suspended) admin sees every toggle locked.
 
 ```bash
 # Inspect current overrides (decoded; "array ()" means no overrides)

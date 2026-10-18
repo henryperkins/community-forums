@@ -1,0 +1,18 @@
+
+Running 12 tests using 1 worker
+
+  ✓   1 [webkit-desktop] › features-toggles.spec.ts:82:5 › a flag turns off and back on through its inline confirm, with proof in the row and the audit log (5.4s)
+  -   2 [webkit-desktop] › features-toggles.spec.ts:149:5 › confirms open without a request, one at a time, and cancel by keyboard
+  ✓   3 [webkit-desktop] › features-toggles.spec.ts:181:5 › rows the console cannot act on say why, and a corrupt blob locks every row (2.4s)
+  ✓   4 [webkit-desktop] › features-toggles.spec.ts:203:5 › a refused write re-renders the inventory as a 422 alert that takes focus (1.5s)
+  ✓   5 [webkit-desktop] › features-toggles.spec.ts:232:5 › the whole flow works with JavaScript disabled (1.3s)
+  -   6 [webkit-desktop] › features-toggles.spec.ts:251:5 › the confirm fits the phone scroll area and keeps 44px targets
+  ✓   7 [webkit-mobile] › features-toggles.spec.ts:82:5 › a flag turns off and back on through its inline confirm, with proof in the row and the audit log (5.3s)
+  -   8 [webkit-mobile] › features-toggles.spec.ts:149:5 › confirms open without a request, one at a time, and cancel by keyboard
+  ✓   9 [webkit-mobile] › features-toggles.spec.ts:181:5 › rows the console cannot act on say why, and a corrupt blob locks every row (2.4s)
+  ✓  10 [webkit-mobile] › features-toggles.spec.ts:203:5 › a refused write re-renders the inventory as a 422 alert that takes focus (1.6s)
+  ✓  11 [webkit-mobile] › features-toggles.spec.ts:232:5 › the whole flow works with JavaScript disabled (1.3s)
+  ✓  12 [webkit-mobile] › features-toggles.spec.ts:251:5 › the confirm fits the phone scroll area and keeps 44px targets (1.4s)
+
+  3 skipped
+  9 passed (24.8s)

@@ -1,0 +1,19 @@
+baseline: green :: OK (20 tests, 328 assertions)
+killed   REG  isOverrideMap rejects INF again (fail-open regression)  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_a_number_php_cannot_write_back_keeps_its_overrides_applied_and_refuses_only_the_write
+killed   SVC  no encodability check before write  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_a_number_php_cannot_write_back_keeps_its_overrides_applied_and_refuses_only_the_write
+killed   S08  service does not check isAdmin  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_service_enforces_admin_and_invalidates_feature_flags_cache
+killed   S09  service does not invalidate FeatureFlags  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_return_state_keeps_the_inventory_filters_but_drops_the_inverted_state
+killed   S11  lastChange credits any entry  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_attribution_names_the_newest_matching_change_of_the_named_flag
+killed   S11b lastChange ignores stored-override match  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_attribution_names_the_newest_matching_change_of_the_named_flag
+killed   S12  bool cast instead of normalizeOverride  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_a_hand_shaped_override_on_the_target_flag_is_read_like_the_inventory
+killed   S14  audit before is normalized, not raw  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_a_hand_shaped_override_on_the_target_flag_is_read_like_the_inventory
+killed   S15  lastChange reads another flag  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_attribution_names_the_newest_matching_change_of_the_named_flag
+killed   R03  latestSettingChange picks the oldest  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_attribution_names_the_newest_matching_change_of_the_named_flag
+killed   C05  controller trusts the raw posted return  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_return_state_keeps_the_inventory_filters_but_drops_the_inverted_state
+killed   C18  controller requires a user, not an admin  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_only_an_active_admin_with_a_token_can_write_a_declared_flag
+killed   C19  controller does not 404 an undeclared flag  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_only_an_active_admin_with_a_token_can_write_a_declared_flag
+killed   RDY  success redirect keeps a readiness filter the row no longer matches  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_return_state_keeps_the_inventory_filters_but_drops_the_inverted_state
+killed   T01  form without the CSRF field  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_each_row_offers_one_closed_confirm_naming_its_consequence
+killed   T02  return field ignores the filters  1) Tests\Integration\Admin\AppAdminFeatureToggleTest::test_return_state_keeps_the_inventory_filters_but_drops_the_inverted_state
+files restored byte-for-byte: True
+survivors: none

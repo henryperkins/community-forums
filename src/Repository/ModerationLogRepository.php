@@ -39,6 +39,24 @@ final class ModerationLogRepository
     }
 
     /**
+     * The newest entry for one configuration key: a `setting` target with row
+     * id 0 (idx_modlog_target), an action starting with $actionPrefix, and the
+     * key as its reason, as the settings and feature-flag writes record it.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function latestSettingChange(string $actionPrefix, string $reason): ?array
+    {
+        return $this->db->fetch(
+            "SELECT m.* FROM moderation_log m
+             WHERE m.target_type = 'setting' AND m.target_id = 0
+               AND m.action LIKE :action AND m.reason = :reason
+             ORDER BY m.id DESC LIMIT 1",
+            ['action' => addcslashes($actionPrefix, '\\%_') . '%', 'reason' => $reason],
+        );
+    }
+
+    /**
      * Recent entries, single-table (PR #44 spec §4) — actor handles are
      * reattached by AuditQueryService::enrich() in the consumers.
      *

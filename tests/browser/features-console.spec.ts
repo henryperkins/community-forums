@@ -14,10 +14,11 @@ import path from 'node:path';
  * a11y; this spec owns the copied body metrics, the register parity, the
  * anti-draft-loss 422 captures and the no-JS walk.
  *
- * Two states in the plan's capture list are unreachable from the browser and
+ * Two states in the plan's capture list are unreachable from the console and
  * are proved in PHPUnit instead: a corrupt `settings.features` blob and the
- * all-flags-dark tier, neither of which has a UI that can produce it — the
- * ledger is deliberately toggle-free. See AppAdminFeaturesTest.
+ * all-flags-dark tier. The ledger's guarded toggles (ADR 0049) never write a
+ * non-object, and turning every flag off by hand is not a console journey. See
+ * AppAdminFeaturesTest; features-toggles.spec.ts captures the corrupt lock.
  */
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
@@ -176,7 +177,8 @@ test('the feature-flag ledger copies the tiles, table chrome and relocated legen
 
   // The intro is the design's three sentences; the readiness key and both doc
   // pointers moved below the tables rather than being dropped.
-  await expect(page.locator('.features-intro')).toContainText('there are intentionally no toggles here');
+  await expect(page.locator('.features-intro')).toContainText('you confirm each change');
+  await expect(page.locator('.features-intro a[href="/admin/audit?action=feature_flag."]')).toHaveText('audit log');
   await expect(page.locator('.features-intro')).not.toContainText('Reserved (ADR 0018)');
   const legend = page.locator('.features-legend');
   await expect(legend).toContainText('Reserved (ADR 0018)');

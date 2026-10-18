@@ -1,10 +1,15 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Feature flags'); $this->section('variant', 'admin'); ?>
 <?= $this->partial('admin/_console', ['area' => 'features', 'tab' => 'features', 'pane_class' => 'admin-features features-flags']) ?>
-    <p class="pane-intro features-intro">A read-only view of the declared flags, their configured overrides in <code>settings.features</code>, and the effective runtime state. Readiness distinguishes rows that are not simply shipped. Enablement stays a deliberate <code>settings.features</code> write &mdash; there are intentionally no toggles here.</p>
+    <?php if (!empty($toggle_error)): ?>
+        <?php // A refused flag write re-renders here as a 422. The page's only
+              // autofocus: a 422 URL has no #fragment, so the browser honours it. ?>
+        <div class="flash flash-error features-toggle-error" role="alert" tabindex="-1" autofocus><?= $e($toggle_error) ?></div>
+    <?php endif; ?>
+    <p class="pane-intro features-intro">The declared flags, their overrides in <code>settings.features</code>, and the effective runtime state. Turn a flag off or back on from its row: you confirm each change, it writes the same <code>settings.features</code> override as the runbook, and it is recorded in the <a href="/admin/audit?action=feature_flag.">audit log</a>. Readiness distinguishes rows that are not simply shipped.</p>
 
     <?php if (!empty($features_corrupt)): ?>
-        <p class="callout callout-danger features-corrupt-alert" role="alert">The <code>settings.features</code> value is not a JSON object, so all stored feature overrides are being ignored and code defaults are in effect. Rewrite it as a JSON object (see <code>docs/runbooks/operations.md</code> §2) to restore your overrides.</p>
+        <p class="callout callout-danger features-corrupt-alert" role="alert">The <code>settings.features</code> value is not a JSON object, so all stored feature overrides are being ignored and code defaults are in effect. Rewrite it as a JSON object (see <code>docs/runbooks/operations.md</code> §2) to restore your overrides. Flag changes are locked here until then.</p>
     <?php endif; ?>
 
     <form method="get" action="/admin/features" class="features-inventory-filter" aria-label="Filter feature flags">
@@ -83,13 +88,18 @@
                     </thead>
                     <tbody>
                         <?php foreach ($rows as $row): ?>
-                            <tr>
+                            <?php // The anchor a flag write returns to lives on the row: the
+                                  // cell must open with exactly class="features-flag-cell" and
+                                  // its <code> chip (AppAdminFeaturesTest::inventoryFlags). ?>
+                            <tr id="flag-<?= $e((string) $row['flag']) ?>">
                                 <td class="features-flag-cell">
                                     <code><?= $e((string) $row['flag']) ?></code>
                                     <?php if (!empty($row['operations_href'])): ?>
                                         <?php // feature-added: the design has no operations affordance. ?>
                                         <a href="<?= $e($row['operations_href']) ?>">Operations</a>
                                     <?php endif; ?>
+                                    <?php // feature-added (ADR 0049): the design's ledger is read-only. ?>
+                                    <?= $this->partial('admin/_feature_flag_toggle', ['row' => $row, 'return_path' => $return_path]) ?>
                                 </td>
                                 <?php // constraint C-23: the design shortens these to a bare "on"/"off" pill.
                                       // The fail-dark proof in AppAdminFeaturesTest asserts "Override off" is
@@ -119,7 +129,7 @@
           // Production keeps them; they move below the tables so the intro reads as the
           // design's three sentences. Must stay outside any <table> (the Reserved-chip
           // count is table-scoped) and inside .admin-pane (the axe scope). ?>
-    <p class="features-legend">Flags are declared in <code>src/Core/FeatureFlags.php</code>. The readiness column distinguishes the rows that are not simply shipped &mdash; <strong>Missing user UI</strong>, <strong>Safety-blocked</strong>, <strong>Operational configuration required</strong> (computed live from posture/config, so it clears once the step is done), and <strong>Reserved (ADR 0018)</strong> &mdash; and links each actionable row to its operations surface. Enablement stays a deliberate <code>settings.features</code> write (<code>docs/runbooks/operations.md</code> §2).</p>
+    <p class="features-legend">Flags are declared in <code>src/Core/FeatureFlags.php</code>. The readiness column distinguishes the rows that are not simply shipped &mdash; <strong>Missing user UI</strong>, <strong>Safety-blocked</strong>, <strong>Operational configuration required</strong> (computed live from posture/config, so it clears once the step is done), and <strong>Reserved (ADR 0018)</strong> &mdash; and links each actionable row to its operations surface. Each row turns its flag off or back on after a confirmation; switching on a flag this console blocks stays a deliberate <code>settings.features</code> write (<code>docs/runbooks/operations.md</code> §2).</p>
 
     <section class="card features-unknown-card">
         <h2 class="features-group-title">Unknown overrides</h2>

@@ -1,7 +1,7 @@
 {
-  "version": "84546da1a0ad300b",
+  "version": "6151a9427e94295e",
   "urls": {
-    "app.css": "/assets/dist/app-style-QIxFKANu.css",
+    "app.css": "/assets/dist/app-style-DHP5-V1h.css",
     "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
     "app.js": "/assets/dist/app-6d007c03ee2fa15b.js",
@@ -28,7 +28,7 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "550618c202eec76064aedcc03efa1371d9f5c58f22e98ed3a78098333b47afa1",
+      "sha256": "a4a7542a6f99793537a9a08bea8cd5f64b358f40753cac4eb29b0cfb80d24860",
       "immutable": false
     },
     "/assets/app.js": {
@@ -59,12 +59,12 @@
       "sha256": "6049ddc6be156398fc1e31da0b5fd506893d4553feabf3f247e40dbdf4e30803",
       "immutable": true
     },
-    "/assets/dist/app-style-lm9W6BEA.css": {
-      "sha256": "6b78dd28f777e5be889f58e6634d1da3b9c372d7702d5bedba4a778b4ca6b5c7",
+    "/assets/dist/app-style-DHP5-V1h.css": {
+      "sha256": "ac9297a566866b61423eb941e85483de8f73f92486cbe694e050404cbff53044",
       "immutable": true
     },
-    "/assets/dist/app-style-QIxFKANu.css": {
-      "sha256": "d607acbead198a3a758e0c413d9a279df121d855a98a1283e8758e5e02d6cc9d",
+    "/assets/dist/app-style-lm9W6BEA.css": {
+      "sha256": "6b78dd28f777e5be889f58e6634d1da3b9c372d7702d5bedba4a778b4ca6b5c7",
       "immutable": true
     },
     "/assets/dist/composer-5aeaedfd8f662ec5.js": {
@@ -254,10 +254,10 @@
   },
   "releases": [
     {
-      "version": "84546da1a0ad300b",
+      "version": "6151a9427e94295e",
       "files": [
         "/assets/dist/app-6d007c03ee2fa15b.js",
-        "/assets/dist/app-style-QIxFKANu.css",
+        "/assets/dist/app-style-DHP5-V1h.css",
         "/assets/dist/composer-5aeaedfd8f662ec5.js",
         "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",

@@ -654,6 +654,10 @@ product decision per flag.
   creation (422, draft preserved) and the management routes (404) while
   existing group conversations stay readable and replyable, and staff access
   remains report-only.
+- *Superseded in part on 2026-10-18 (ADR 0049):* the inventory gained one
+  guarded toggle per row. The readiness classification below is unchanged and
+  still read-only, and the console still never switches on a row it marks
+  *Missing user UI*, *Safety-blocked* or *Reserved (ADR 0018)*.
 - Since 2026-07-13 the `/admin/features` inventory renders these readiness
   categories beside each affected flag (read-only — deliberately no toggles:
   enablement stays a deliberate `settings.features` write per

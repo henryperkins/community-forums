@@ -5,11 +5,18 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
+use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\ValidationException;
+use App\Domain\User;
 use App\Repository\SettingRepository;
+use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\WriteGate;
+use App\Service\FeatureFlagAdminService;
 use App\Service\LinkPreviewAdminService;
+use App\Support\FeatureFlagCatalog;
 
 final class AdminFeatureController extends Controller
 {
@@ -73,8 +80,10 @@ final class AdminFeatureController extends Controller
      * shadow posture, `link_previews` with no allowlist or no opted-in board,
      * `slash_giphy` without a key) are computed live in readiness() so the badge
      * clears once the operational step is done.
-     * Deliberately not a toggle — enablement stays an explicit
-     * settings.features write (docs/runbooks/operations.md §2). Findings and
+     * The static rows are exactly the flags the console will switch off but
+     * never on (FeatureFlags::consoleEnableBlocker(), ADR 0049); enabling one
+     * stays an explicit settings.features write (docs/runbooks/operations.md
+     * §2), and AppAdminFeatureToggleTest pins the two lists equal. Findings and
      * next steps trace to docs/evidence/deploy-dark-features.md (2026-07-13).
      *
      * @var array<string,array{status:string,class:string,note:string,href?:string,link?:string}>
@@ -127,16 +136,37 @@ final class AdminFeatureController extends Controller
     /** @param array<string,string> $params */
     public function index(Request $request, array $params): Response
     {
-        $this->requireAdmin();
+        $viewer = $this->requireAdmin();
 
+        return $this->inventory($viewer, $this->filters([
+            'q' => $request->query('q', ''),
+            'readiness' => $request->query('readiness', ''),
+            'state' => $request->query('state', ''),
+        ]));
+    }
+
+    /**
+     * The inventory. A refused flag write re-renders it as a 422 carrying the
+     * operator's filters and the refusal as an alert, because the console's
+     * flash only ever speaks success.
+     *
+     * @param array{q:string,readiness:string,state:string} $filters
+     */
+    private function inventory(User $viewer, array $filters, ?string $toggleError = null, int $status = 200): Response
+    {
         $flags = $this->container->get(FeatureFlags::class);
         $defaults = FeatureFlags::defaults();
         $effective = $flags->all();
         $settings = $this->container->get(SettingRepository::class);
         $overrides = $settings->get('features', []);
-        $overrides = is_array($overrides) ? $overrides : [];
+        $overrides = FeatureFlags::isOverrideMap($overrides) ? $overrides : [];
 
         $readiness = $this->readiness($effective, $settings);
+        $access = [
+            'corrupt' => $flags->overridesCorrupt(),
+            'can_write' => $this->container->get(WriteGate::class)->canWrite($viewer),
+            'outcome' => $this->flashOutcome(),
+        ];
 
         $rowsByGroup = [];
         foreach (self::GROUPS as $label => $flagNames) {
@@ -145,7 +175,7 @@ final class AdminFeatureController extends Controller
                 if (!array_key_exists($flag, $defaults)) {
                     continue;
                 }
-                $rowsByGroup[$label][] = $this->row($flag, $defaults, $effective, $overrides, $readiness);
+                $rowsByGroup[$label][] = $this->row($flag, $defaults, $effective, $overrides, $readiness, $access);
             }
         }
 
@@ -154,17 +184,11 @@ final class AdminFeatureController extends Controller
         if ($uncategorized !== []) {
             $rowsByGroup['Uncategorized'] = [];
             foreach ($uncategorized as $flag) {
-                $rowsByGroup['Uncategorized'][] = $this->row($flag, $defaults, $effective, $overrides, $readiness);
+                $rowsByGroup['Uncategorized'][] = $this->row($flag, $defaults, $effective, $overrides, $readiness, $access);
             }
         }
 
-        $search = $request->query('q', '');
-        $search = is_string($search) ? mb_substr(trim($search), 0, 128) : '';
-        $readinessFilter = $request->query('readiness', '');
-        $readinessFilter = is_string($readinessFilter) && array_key_exists($readinessFilter, self::READINESS_FILTERS)
-            ? $readinessFilter : '';
-        $stateFilter = $request->query('state', '');
-        $stateFilter = is_string($stateFilter) && in_array($stateFilter, ['on', 'off'], true) ? $stateFilter : '';
+        ['q' => $search, 'readiness' => $readinessFilter, 'state' => $stateFilter] = $filters;
         $shownCount = 0;
         foreach ($rowsByGroup as $group => $rows) {
             $rows = array_values(array_filter($rows, static function (array $row) use ($search, $readinessFilter, $stateFilter): bool {
@@ -174,16 +198,7 @@ final class AdminFeatureController extends Controller
                 if ($stateFilter !== '' && $row['effective'] !== ($stateFilter === 'on')) {
                     return false;
                 }
-                $status = $row['readiness_status'];
-                return match ($readinessFilter) {
-                    'attention' => $status !== null,
-                    'clear' => $status === null,
-                    'missing_ui' => $status === 'Missing user UI',
-                    'safety_blocked' => $status === 'Safety-blocked',
-                    'configuration' => $status === 'Operational configuration required',
-                    'reserved' => $status === 'Reserved (ADR 0018)',
-                    default => true,
-                };
+                return self::matchesReadiness($row['readiness_status'], $readinessFilter);
             }));
             if ($rows === []) {
                 unset($rowsByGroup[$group]);
@@ -213,10 +228,12 @@ final class AdminFeatureController extends Controller
         return $this->view('admin/features', [
             'groups' => $rowsByGroup,
             'unknown_overrides' => $unknownOverrides,
-            'features_corrupt' => $flags->overridesCorrupt(),
+            'features_corrupt' => $access['corrupt'],
             'filters' => ['q' => $search, 'readiness' => $readinessFilter, 'state' => $stateFilter],
             'filters_active' => $search !== '' || $readinessFilter !== '' || $stateFilter !== '',
             'readiness_options' => self::READINESS_FILTERS,
+            'return_path' => $this->inventoryPath($filters),
+            'toggle_error' => $toggleError,
             'stats' => [
                 'declared' => count($defaults),
                 'shown' => $shownCount,
@@ -227,7 +244,165 @@ final class AdminFeatureController extends Controller
                 'overrides' => count($declaredOverrides),
                 'unknown_overrides' => count($unknownOverrides),
             ],
-        ]);
+        ], $status);
+    }
+
+    /**
+     * One guarded flag write (ADR 0049). The inline confirm posts the explicit
+     * target state; the service owns the policy, the read-modify-write of
+     * `settings.features` and its audit entry. Success returns to the changed
+     * row; a refusal re-renders the inventory as a 422 alert.
+     *
+     * @param array<string,string> $params
+     */
+    public function update(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $flag = (string) ($params['flag'] ?? '');
+        if (!array_key_exists($flag, FeatureFlags::defaults())) {
+            throw new NotFoundException('Not found.');
+        }
+        $filters = $this->returnFilters($request);
+
+        $target = $request->post('enabled');
+        if (!in_array($target, ['0', '1'], true)) {
+            return $this->inventory($admin, $filters, $flag . ' was not changed: the request did not say whether to turn it on or off.', 422);
+        }
+
+        try {
+            $result = $this->container->get(FeatureFlagAdminService::class)->setEnabled($admin, $flag, $target === '1');
+        } catch (ValidationException $e) {
+            return $this->inventory($admin, $filters, $flag . ' was not changed. ' . implode(' ', $e->errors), 422);
+        }
+
+        // The write inverted the effective state, so a kept On/Off filter would
+        // hide the row whose cells prove it; a live-computed readiness filter
+        // that the row no longer matches would hide it the same way.
+        $filters['state'] = '';
+        if ($filters['readiness'] !== '') {
+            $readiness = $this->readiness(
+                $this->container->get(FeatureFlags::class)->all(),
+                $this->container->get(SettingRepository::class),
+            );
+            if (!self::matchesReadiness($readiness[$flag]['status'] ?? null, $filters['readiness'])) {
+                $filters['readiness'] = '';
+            }
+        }
+
+        return $this->redirectWithFlash(
+            $this->inventoryPath($filters) . '#flag-' . $flag,
+            $this->outcome($result, $admin),
+        );
+    }
+
+    /**
+     * The flash for a flag write. Its opening words are also what
+     * flashOutcome() reads back to mark the row, so change both together.
+     *
+     * @param array{flag:string,changed:bool,enabled:bool,override:?bool,audit_id:?int,last_change:?array{actor_id:?int,created_at:string}} $result
+     */
+    private function outcome(array $result, User $admin): string
+    {
+        $flag = $result['flag'];
+        $state = $result['enabled'] ? 'on' : 'off';
+        if (!$result['changed']) {
+            // A double submit lands here after its first request changed the
+            // flag, so say who did, rather than leave "nothing changed" alone.
+            $last = $result['last_change'];
+            $by = '';
+            if ($last !== null) {
+                $actor = $last['actor_id'] === $admin->id() ? 'you' : null;
+                if ($actor === null && $last['actor_id'] !== null) {
+                    $row = $this->container->get(UserRepository::class)->find($last['actor_id']);
+                    $actor = $row !== null ? '@' . $row['username'] : null;
+                }
+                $by = " It was turned $state" . ($actor !== null ? " by $actor" : '') . ' on ' . human_datetime($last['created_at']) . '.';
+            }
+            return "$flag is already $state.$by Nothing changed.";
+        }
+        $write = $result['override'] === null
+            ? "Removed the features.$flag override, so the code default applies."
+            : "Saved features.$flag=" . ($result['override'] ? 'true' : 'false') . '.';
+
+        return "$flag turned $state. $write The change is recorded in the audit log.";
+    }
+
+    /**
+     * The flag the current one-shot flash reports on, read back from
+     * outcome()'s opening words so the row it names can say so where the
+     * #flag- fragment lands. The cookie is client-held, so a row only shows
+     * it while its live Effective cell agrees; the cells and the audit log
+     * are the proof, the marker is wayfinding.
+     *
+     * @return array{flag:string,changed:bool,enabled:bool}|null
+     */
+    private function flashOutcome(): ?array
+    {
+        $flash = $this->flash()->current();
+        if ($flash === null || preg_match('/^([a-z0-9_]+) (turned|is already) (on|off)\./', $flash, $match) !== 1) {
+            return null;
+        }
+
+        return ['flag' => $match[1], 'changed' => $match[2] === 'turned', 'enabled' => $match[3] === 'on'];
+    }
+
+    /**
+     * The filters a flag write came from: only this inventory's own query
+     * fields, re-validated, never an arbitrary posted URL (cf. the link-preview
+     * console).
+     *
+     * @return array{q:string,readiness:string,state:string}
+     */
+    private function returnFilters(Request $request): array
+    {
+        $return = parse_url($this->localReturn($request, '/admin/features'));
+        $query = [];
+        if (is_array($return) && ($return['path'] ?? '') === '/admin/features') {
+            parse_str((string) ($return['query'] ?? ''), $query);
+        }
+
+        return $this->filters($query);
+    }
+
+    /** @param array{q:string,readiness:string,state:string} $filters */
+    private function inventoryPath(array $filters): string
+    {
+        $query = array_filter($filters, static fn (string $value): bool => $value !== '');
+
+        return '/admin/features' . ($query === [] ? '' : '?' . http_build_query($query));
+    }
+
+    /**
+     * The inventory's three GET filters, normalized the same way for the page
+     * itself and for the return state a flag write carries back to it.
+     *
+     * @param array<string,mixed> $raw
+     * @return array{q:string,readiness:string,state:string}
+     */
+    private function filters(array $raw): array
+    {
+        $search = $raw['q'] ?? '';
+        $readiness = $raw['readiness'] ?? '';
+        $state = $raw['state'] ?? '';
+
+        return [
+            'q' => is_string($search) ? mb_substr(trim($search), 0, 128) : '',
+            'readiness' => is_string($readiness) && array_key_exists($readiness, self::READINESS_FILTERS) ? $readiness : '',
+            'state' => is_string($state) && in_array($state, ['on', 'off'], true) ? $state : '',
+        ];
+    }
+
+    private static function matchesReadiness(?string $status, string $readinessFilter): bool
+    {
+        return match ($readinessFilter) {
+            'attention' => $status !== null,
+            'clear' => $status === null,
+            'missing_ui' => $status === 'Missing user UI',
+            'safety_blocked' => $status === 'Safety-blocked',
+            'configuration' => $status === 'Operational configuration required',
+            'reserved' => $status === 'Reserved (ADR 0018)',
+            default => true,
+        };
     }
 
     /**
@@ -293,17 +468,23 @@ final class AdminFeatureController extends Controller
      * @param array<string,bool> $effective
      * @param array<string,mixed> $overrides
      * @param array<string,array{status:string,class:string,note:string,href?:string,link?:string}> $readiness
+     * @param array{corrupt:bool,can_write:bool,outcome:?array{flag:string,changed:bool,enabled:bool}} $access
      * @return array<string,mixed>
      */
-    private function row(string $flag, array $defaults, array $effective, array $overrides, array $readiness): array
+    private function row(string $flag, array $defaults, array $effective, array $overrides, array $readiness, array $access): array
     {
         $default = (bool) $defaults[$flag];
         $current = (bool) ($effective[$flag] ?? $default);
         $hasOverride = array_key_exists($flag, $overrides);
         $override = $hasOverride ? FeatureFlags::normalizeOverride($overrides[$flag]) : null;
         $meta = $readiness[$flag] ?? null;
+        $outcome = $access['outcome'];
 
         return [
+            'toggle' => $this->toggle($flag, $default, $current, $access['corrupt'], $access['can_write']),
+            'outcome' => $outcome !== null && $outcome['flag'] === $flag && $outcome['enabled'] === $current
+                ? ['changed' => $outcome['changed'], 'state' => $current ? 'on' : 'off']
+                : null,
             'flag' => $flag,
             'default' => $default,
             'effective' => $current,
@@ -318,6 +499,42 @@ final class AdminFeatureController extends Controller
             'readiness_note' => $meta['note'] ?? '',
             'readiness_href' => $meta['href'] ?? null,
             'readiness_link' => $meta['link'] ?? 'Open',
+        ];
+    }
+
+    /**
+     * The row's one write affordance (ADR 0049): a confirm that asks for the
+     * opposite of the effective state, or a locked chip with its reason when
+     * this console cannot act. The policy is FeatureFlags'; the copy is the
+     * catalog's; the service enforces both again on POST.
+     *
+     * @return array{mode:string,target:bool,verb:string,label:string,consequence:string,warning:?string,write:string,one_way:?string,note:?string}
+     */
+    private function toggle(string $flag, bool $default, bool $effective, bool $corrupt, bool $canWrite): array
+    {
+        $target = !$effective;
+        $entry = FeatureFlagCatalog::entry($flag);
+        $blocker = FeatureFlags::consoleEnableBlocker($flag);
+        $note = match (true) {
+            $corrupt => 'Locked until settings.features is repaired.',
+            !$canWrite => 'Locked: your account cannot make changes right now.',
+            $target && $blocker !== null => 'Cannot be turned on here. ' . $blocker,
+            default => null,
+        };
+
+        return [
+            'mode' => $note === null ? 'confirm' : 'locked',
+            'target' => $target,
+            'verb' => $target ? 'Turn on' : 'Turn off',
+            'label' => $entry['label'],
+            'consequence' => $target ? $entry['on'] : $entry['off'],
+            'warning' => $target ? $entry['warn_on'] : $entry['warn_off'],
+            // Back to the code default removes the key, as the runbook does.
+            'write' => $target === $default ? 'remove' : 'store',
+            'one_way' => !$target && $blocker !== null
+                ? 'This console cannot turn it back on. ' . $blocker
+                : null,
+            'note' => $note,
         ];
     }
 

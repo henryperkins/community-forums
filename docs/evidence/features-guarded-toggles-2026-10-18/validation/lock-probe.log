@@ -1,0 +1,44 @@
+# Two-connection probe of the settings.features read-modify-write (MariaDB 11.8.9-MariaDB-ubu2404)
+# Connection A reads, holds 1.5s, writes alpha=false; B starts 0.3s later and writes beta=false.
+== variant=lock row=missing
+alpha read after 0.00s, saw []
+alpha committed after 1.50s
+beta read after 1.20s, saw {"alpha":false}
+beta committed after 1.70s
+final: {"alpha":false,"beta":false}
+
+== variant=lock row=existing
+alpha read after 0.00s, saw {"email":false}
+alpha committed after 1.50s
+beta read after 1.20s, saw {"email":false,"alpha":false}
+beta committed after 1.70s
+final: {"email":false,"alpha":false,"beta":false}
+
+== variant=gaplock row=missing
+alpha read after 0.00s, saw []
+alpha committed after 1.50s
+beta read after 0.00s, saw []
+beta FAILED after 1.20s: SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transactio
+final: {"alpha":false}
+
+== variant=gaplock row=existing
+alpha read after 0.00s, saw {"email":false}
+alpha committed after 1.50s
+beta read after 1.20s, saw {"email":false,"alpha":false}
+beta committed after 1.70s
+final: {"email":false,"alpha":false,"beta":false}
+
+== variant=nolock row=missing
+alpha read after 0.00s, saw []
+alpha FAILED after 1.50s: SQLSTATE[HY000]: General error: 1020 Record has changed since last read in table 'settings'; try restarting tr
+beta read after 0.00s, saw []
+beta committed after 0.50s
+final: {"beta":false}
+
+== variant=nolock row=existing
+alpha read after 0.00s, saw {"email":false}
+alpha FAILED after 1.50s: SQLSTATE[HY000]: General error: 1020 Record has changed since last read in table 'settings'; try restarting tr
+beta read after 0.00s, saw {"email":false}
+beta committed after 0.50s
+final: {"email":false,"beta":false}
+

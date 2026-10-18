@@ -206,6 +206,7 @@ use App\Service\BoardRecountService;
 use App\Service\CommunityMemoryService;
 use App\Service\ComposerSuggestionService;
 use App\Service\DirectMessageService;
+use App\Service\FeatureFlagAdminService;
 use App\Service\FeedService;
 use App\Service\FollowService;
 use App\Service\LegacyAuthorityProjection;
@@ -2328,6 +2329,13 @@ final class App
             $c->get(WriteGate::class),
             $c->get(FeatureFlags::class),
         ));
+        $c->bind(FeatureFlagAdminService::class, fn (Container $c) => new FeatureFlagAdminService(
+            $c->get(Database::class),
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
+        ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),
             $c->get(AuthService::class),
@@ -2673,6 +2681,7 @@ final class App
         $r->post('/admin/email/suppressions', [AdminEmailController::class, 'suppress']);
         $r->post('/admin/email/suppressions/remove', [AdminEmailController::class, 'unsuppress']);
         $r->get('/admin/features', [AdminFeatureController::class, 'index']);
+        $r->post('/admin/features/{flag}', [AdminFeatureController::class, 'update']);
         $r->get('/admin/thread-intelligence', [AdminThreadIntelligenceController::class, 'index']);
         $r->post('/admin/thread-intelligence/generation/pause', [AdminThreadIntelligenceController::class, 'pauseGeneration']);
         $r->post('/admin/thread-intelligence/generation/resume', [AdminThreadIntelligenceController::class, 'resumeGeneration']);
