@@ -1,0 +1,57 @@
+{
+  "sha": "c392ea8444c0d6080762fe9413062479e0eba3ac",
+  "health": {
+    "url": "https://forum.candidary.online/healthz",
+    "status": 200,
+    "headers": {
+      "content-type": "application/json; charset=UTF-8",
+      "content-length": "31",
+      "cf-cache-status": "DYNAMIC",
+      "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'"
+    },
+    "body": {
+      "status": "ok",
+      "database": "ok"
+    }
+  },
+  "login": {
+    "url": "https://forum.candidary.online/login",
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=UTF-8",
+      "cf-cache-status": "DYNAMIC",
+      "cache-control": "private",
+      "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'"
+    },
+    "current_stylesheet": true
+  },
+  "inbox_guest": {
+    "url": "https://forum.candidary.online/inbox",
+    "status": 302,
+    "headers": {
+      "content-type": "text/html; charset=UTF-8",
+      "location": "/login?next=%2Finbox",
+      "cf-cache-status": "DYNAMIC",
+      "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'"
+    }
+  },
+  "alias": {
+    "url": "https://boards.hperkins.blog/healthz",
+    "status": 404,
+    "headers": {
+      "content-type": "text/html; charset=UTF-8",
+      "content-length": "1568"
+    },
+    "expected_status": 301,
+    "expected_location": "https://forum.candidary.online/healthz",
+    "matches_expectation": false
+  },
+  "private_origin_unauthenticated": {
+    "url": "https://retroboards-3h5icvhrwq-uk.a.run.app/healthz/",
+    "status": 403,
+    "headers": {
+      "content-type": "text/html; charset=UTF-8",
+      "content-length": "303"
+    }
+  }
+}

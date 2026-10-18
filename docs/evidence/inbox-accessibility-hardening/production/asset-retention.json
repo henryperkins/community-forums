@@ -1,0 +1,21 @@
+{
+  "application_sha": "c392ea8444c0d6080762fe9413062479e0eba3ac",
+  "asset_version": "2371e926206bda24",
+  "files_before": 56,
+  "files_after": 55,
+  "deployed_versions": [
+    "2371e926206bda24",
+    "326ae04cd673029a",
+    "be1d396948b3adcc"
+  ],
+  "retired_urls": [
+    "/assets/dist/app-style-YO-75cSC.css"
+  ],
+  "current_url_mapping_unchanged": true,
+  "remaining_asset_hashes_unchanged": true,
+  "functional_source_diff": [
+    "public/assets/dist/app-style-YO-75cSC.css"
+  ],
+  "application_digest": "06d4e1487c32548e97e92afa85942b534f79fbf1e27312c9e102d329a1971ff6",
+  "verification": "Asset and Imladris checks are recorded separately; production receipts above precede this retention record."
+}

@@ -1,0 +1,38 @@
+{
+  "expected": "c392ea8444c0d6080762fe9413062479e0eba3ac",
+  "ready": true,
+  "deployment": {
+    "id": "9688d24c-0166-432f-8504-44b14ae3fe62",
+    "created_on": "2026-10-18T01:43:26.244166Z",
+    "source": "wrangler",
+    "versions": [
+      {
+        "version_id": "c3087830-ba4a-4e73-975c-2b53180490f3",
+        "percentage": 100
+      }
+    ]
+  },
+  "active_version_builds": [
+    {
+      "uuid": "9c2e359f-3b9b-423c-a9e5-a12c97b3e5df",
+      "status": "stopped",
+      "outcome": "success",
+      "commit": "c392ea8444c0d6080762fe9413062479e0eba3ac",
+      "branch": "main",
+      "created_on": "2026-10-18T01:42:24.932Z",
+      "stopped_on": "2026-10-18T01:43:33.128Z"
+    }
+  ],
+  "recent_builds": [
+    {
+      "uuid": "9c2e359f-3b9b-423c-a9e5-a12c97b3e5df",
+      "status": "stopped",
+      "outcome": "success",
+      "created_on": "2026-10-18T01:42:24.932Z",
+      "stopped_on": "2026-10-18T01:43:33.128Z",
+      "commit": "c392ea8444c0d6080762fe9413062479e0eba3ac",
+      "branch": "main"
+    }
+  ],
+  "errors": []
+}

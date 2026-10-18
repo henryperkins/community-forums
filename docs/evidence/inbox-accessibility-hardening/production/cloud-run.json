@@ -1,0 +1,70 @@
+{
+  "sha": "c392ea8444c0d6080762fe9413062479e0eba3ac",
+  "service": "retroboards",
+  "revision": "retroboards-00025-z7q",
+  "conditions": [
+    {
+      "lastTransitionTime": "2026-10-18T01:44:45.878762Z",
+      "status": "True",
+      "type": "Ready"
+    },
+    {
+      "lastTransitionTime": "2026-10-18T01:44:31.598714Z",
+      "status": "True",
+      "type": "ConfigurationsReady"
+    },
+    {
+      "lastTransitionTime": "2026-10-18T01:44:45.847376Z",
+      "status": "True",
+      "type": "RoutesReady"
+    }
+  ],
+  "traffic": [
+    {
+      "latestRevision": true,
+      "percent": 100,
+      "revisionName": "retroboards-00025-z7q"
+    }
+  ],
+  "image_tag": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c392ea8444c0d6080762fe9413062479e0eba3ac",
+  "image_digest": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app@sha256:9d541e295a648e8bb350b8f3a7fa58be592d3c8d58cf454c36cd0c59eefeb99b",
+  "registry_digest": "sha256:9d541e295a648e8bb350b8f3a7fa58be592d3c8d58cf454c36cd0c59eefeb99b",
+  "jobs": [
+    {
+      "name": "retroboards-cron-0310",
+      "role": "cron",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c392ea8444c0d6080762fe9413062479e0eba3ac"
+      ]
+    },
+    {
+      "name": "retroboards-cron-0700",
+      "role": "cron",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c392ea8444c0d6080762fe9413062479e0eba3ac"
+      ]
+    },
+    {
+      "name": "retroboards-cron-5m",
+      "role": "cron",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c392ea8444c0d6080762fe9413062479e0eba3ac"
+      ]
+    },
+    {
+      "name": "retroboards-cron-6h",
+      "role": "cron",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c392ea8444c0d6080762fe9413062479e0eba3ac"
+      ]
+    },
+    {
+      "name": "retroboards-monitor",
+      "role": "monitor",
+      "images": [
+        "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:c392ea8444c0d6080762fe9413062479e0eba3ac"
+      ]
+    }
+  ],
+  "verification": "Ready web revision at 100 percent and current job definitions; no jobs executed by this verification."
+}

@@ -40,5 +40,6 @@ outcomes omit environment data, cookies and request headers.
 - [WebKit desktop](webkit/desktop/for_you-1440-16px.png) and [doubled text at 320px](webkit/mobile/needs_answer-320-32px.png)
 
 This qualifies the combined local tree. Production build, active revision, live
-asset and public-endpoint receipts are recorded separately after publication.
+asset and public-endpoint receipts are recorded in the
+[production evidence](../production/README.md).
 No physical-device or assistive-technology acceptance is claimed.

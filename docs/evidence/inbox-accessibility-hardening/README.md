@@ -1,12 +1,13 @@
 # Inbox accessibility and polish
 
-Local fixes for the three P1 findings from the `/inbox` audit. Base commit:
-`fbaed0e9e040dbed4889f776c9463be28bc261ad`. The changes are uncommitted; this evidence establishes
-local behavior. No publication or production verification was requested.
+Original local evidence for the three P1 fixes from the `/inbox` audit. Base
+commit: `fbaed0e9e040dbed4889f776c9463be28bc261ad`. These measurements were
+captured before publication was requested and establish local behavior.
 
 The owner subsequently requested publication. The [release integration](integration/README.md)
 records the combined tree after preserving the newer Boards release on main;
-the original local measurements below remain tied to their recorded base.
+the [production receipts](production/README.md) record the application release
+and live checks. The original measurements below remain tied to their recorded base.
 
 | Finding | Result |
 | --- | --- |

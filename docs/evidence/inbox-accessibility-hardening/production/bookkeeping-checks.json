@@ -1,0 +1,25 @@
+{
+  "scope": "Post-deployment asset-retention bookkeeping",
+  "asset_version": "2371e926206bda24",
+  "asset_check": {
+    "command": "npm run check:assets",
+    "exit_code": 0,
+    "result": "Generated assets and manifest are current."
+  },
+  "asset_tests": {
+    "command": "npm run test:assets",
+    "exit_code": 0,
+    "passed": 35,
+    "failed": 0,
+    "skipped": 0
+  },
+  "imladris": {
+    "command": "composer verify:imladris",
+    "exit_code": 0,
+    "runtime_assets": "current",
+    "tests": 24,
+    "assertions": 305
+  },
+  "source_parity": "Current URL mapping and all 55 remaining asset hashes match the verified application release; the only public/assets change is removal of one expired stylesheet.",
+  "reused_verification": "Full PHP and Chromium/WebKit integration results remain in ../integration/; no functional source or current bundle changed."
+}

@@ -12,6 +12,12 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   and wrap queue metadata while retaining named choices and 44px controls.
   Hide inactive shortcut help without JavaScript. Local verification and
   coverage boundaries are in `docs/evidence/inbox-accessibility-hardening/README.md`.
+- Verify the automatic Worker and Cloud Run deployments of `c392ea84`, public
+  health and all 56 published asset hashes. Record the deployed asset version
+  with its two predecessors and retire one expired stylesheet. Production
+  receipts in `docs/evidence/inbox-accessibility-hardening/production/` also
+  record the legacy hostname's unexpected health-route 404.
+
 ## [Unreleased] - Boards layout and typography
 
 - Refine the Boards directory's introduction, viewing controls and type hierarchy

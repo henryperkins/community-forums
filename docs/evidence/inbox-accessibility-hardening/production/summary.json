@@ -1,0 +1,25 @@
+{
+  "sha": "c392ea8444c0d6080762fe9413062479e0eba3ac",
+  "verified_at": "2026-10-18T01:48:46.022209+00:00",
+  "cloud_build": "8d374fb6-3649-4bc9-b718-ba15fef94e69",
+  "revision": "retroboards-00025-z7q",
+  "asset_version": "2371e926206bda24",
+  "live_assets": 56,
+  "all_live_hashes_match": true,
+  "public_health": "ok",
+  "origin": "Ready; 100 percent traffic",
+  "job_definitions": 5,
+  "issues": [
+    {
+      "surface": "legacy hostname",
+      "url": "https://boards.hperkins.blog/healthz",
+      "observed_status": 404,
+      "expected_status": 301,
+      "expected_location": "https://forum.candidary.online/healthz"
+    }
+  ],
+  "limits": [
+    "Public routes and assets only; no authenticated member actions or manual cron executions.",
+    "Cloudflare Worker build/version verification is recorded separately."
+  ]
+}
