@@ -15,6 +15,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   inventory-wide totals and enlarge Operations links to 44px targets.
 - Local regression and browser evidence is recorded in
   `docs/evidence/admin-features-remediation-2026-10-18/`.
+- Deploy the Features fixes to production and verify all four authenticated
+  pages at desktop and narrow widths, including no-JavaScript filters. Worker,
+  Cloud Run, cron-image, live-asset and sanitized browser receipts are recorded
+  in that evidence directory's `production/` folder.
 
 ## [Unreleased] - Members and People reliability
 

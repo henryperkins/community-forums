@@ -1,0 +1,469 @@
+{
+  "captured_at": "2026-10-18T07:33:31.135Z",
+  "expected_source_sha_prefix": "17d0fef5",
+  "manifest_version": "50a62f5be30f6b09",
+  "transport": "Authenticated canonical HTTPS; GET/HEAD/OPTIONS only; mutable and cross-origin browser requests blocked.",
+  "browser": "Chromium",
+  "viewport_cases": [
+    "1280px",
+    "390px mobile emulation",
+    "320px mobile emulation",
+    "1280px no JavaScript"
+  ],
+  "session_side_effects": "Separate temporary session creation/revocation, normal session activity timestamps and presence may write. No feature configuration or content writes.",
+  "summary": {
+    "passed": 37,
+    "failed": 0,
+    "skipped": 8,
+    "requests": 520,
+    "blocked_mutable_requests": 0,
+    "blocked_cross_origin_requests": 0,
+    "runtime_errors": 0
+  },
+  "cases": [
+    {
+      "name": "features-route-desktop-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270
+    },
+    {
+      "name": "operations-targets-desktop-1280",
+      "status": "pass",
+      "operations_links": 15,
+      "minimum_width": 68.6875,
+      "minimum_height": 44
+    },
+    {
+      "name": "inventory-filter-journey-desktop-1280",
+      "status": "pass",
+      "baseline_rows": 57,
+      "combined_matches": 1,
+      "summary_totals_preserved": true,
+      "empty_and_reset_verified": true
+    },
+    {
+      "name": "badge-rules-route-desktop-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270
+    },
+    {
+      "name": "badge-rules-guidance-and-impacts-desktop-1280",
+      "status": "pass",
+      "manual_award_guidance_verified": true,
+      "existing_rule_impact_pages": 0
+    },
+    {
+      "name": "custom-emoji-route-desktop-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270,
+      "configuration_form_present": true,
+      "configuration_submissions": 0
+    },
+    {
+      "name": "link-previews-route-desktop-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270
+    },
+    {
+      "name": "board-controls-desktop-1280",
+      "status": "pass",
+      "board_controls": 3,
+      "all_controls_visible": true,
+      "table_horizontal_overflow": false,
+      "state_action_overlap": false
+    },
+    {
+      "name": "preview-history-desktop-1280",
+      "status": "pass",
+      "first_page_rows": 0,
+      "single_page_or_empty_state_verified": true,
+      "out_of_range_page_clamped": true,
+      "existing_pagination_traversed": false
+    },
+    {
+      "name": "features-route-mobile-390",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 390,
+      "document": 390
+    },
+    {
+      "name": "operations-targets-mobile-390",
+      "status": "pass",
+      "operations_links": 15,
+      "minimum_width": 63.15625,
+      "minimum_height": 44
+    },
+    {
+      "name": "inventory-filter-journey-mobile-390",
+      "status": "pass",
+      "baseline_rows": 57,
+      "combined_matches": 1,
+      "summary_totals_preserved": true,
+      "empty_and_reset_verified": true
+    },
+    {
+      "name": "badge-rules-route-mobile-390",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 390,
+      "document": 390
+    },
+    {
+      "name": "badge-rules-guidance-and-impacts-mobile-390",
+      "status": "pass",
+      "manual_award_guidance_verified": true,
+      "existing_rule_impact_pages": 0
+    },
+    {
+      "name": "custom-emoji-route-mobile-390",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 390,
+      "document": 390,
+      "configuration_form_present": true,
+      "configuration_submissions": 0
+    },
+    {
+      "name": "link-previews-route-mobile-390",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 390,
+      "document": 390
+    },
+    {
+      "name": "board-controls-mobile-390",
+      "status": "pass",
+      "board_controls": 3,
+      "all_controls_visible": true,
+      "table_horizontal_overflow": false,
+      "state_action_overlap": false
+    },
+    {
+      "name": "preview-history-mobile-390",
+      "status": "pass",
+      "first_page_rows": 0,
+      "single_page_or_empty_state_verified": true,
+      "out_of_range_page_clamped": true,
+      "existing_pagination_traversed": false
+    },
+    {
+      "name": "features-route-narrow-320",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 320,
+      "document": 320
+    },
+    {
+      "name": "operations-targets-narrow-320",
+      "status": "pass",
+      "operations_links": 15,
+      "minimum_width": 63.15625,
+      "minimum_height": 44
+    },
+    {
+      "name": "inventory-filter-journey-narrow-320",
+      "status": "pass",
+      "baseline_rows": 57,
+      "combined_matches": 1,
+      "summary_totals_preserved": true,
+      "empty_and_reset_verified": true
+    },
+    {
+      "name": "badge-rules-route-narrow-320",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 320,
+      "document": 320
+    },
+    {
+      "name": "badge-rules-guidance-and-impacts-narrow-320",
+      "status": "pass",
+      "manual_award_guidance_verified": true,
+      "existing_rule_impact_pages": 0
+    },
+    {
+      "name": "custom-emoji-route-narrow-320",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 320,
+      "document": 320,
+      "configuration_form_present": true,
+      "configuration_submissions": 0
+    },
+    {
+      "name": "link-previews-route-narrow-320",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 320,
+      "document": 320
+    },
+    {
+      "name": "board-controls-narrow-320",
+      "status": "pass",
+      "board_controls": 3,
+      "all_controls_visible": true,
+      "table_horizontal_overflow": false,
+      "state_action_overlap": false
+    },
+    {
+      "name": "preview-history-narrow-320",
+      "status": "pass",
+      "first_page_rows": 0,
+      "single_page_or_empty_state_verified": true,
+      "out_of_range_page_clamped": true,
+      "existing_pagination_traversed": false
+    },
+    {
+      "name": "features-route-nojs-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270
+    },
+    {
+      "name": "operations-targets-nojs-1280",
+      "status": "pass",
+      "operations_links": 15,
+      "minimum_width": 68.6875,
+      "minimum_height": 44
+    },
+    {
+      "name": "inventory-filter-journey-nojs-1280",
+      "status": "pass",
+      "baseline_rows": 57,
+      "combined_matches": 1,
+      "summary_totals_preserved": true,
+      "empty_and_reset_verified": true
+    },
+    {
+      "name": "badge-rules-route-nojs-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270
+    },
+    {
+      "name": "badge-rules-guidance-and-impacts-nojs-1280",
+      "status": "pass",
+      "manual_award_guidance_verified": true,
+      "existing_rule_impact_pages": 0
+    },
+    {
+      "name": "custom-emoji-route-nojs-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270,
+      "configuration_form_present": true,
+      "configuration_submissions": 0
+    },
+    {
+      "name": "link-previews-route-nojs-1280",
+      "status": "pass",
+      "status_code": 200,
+      "viewport": 1280,
+      "document": 1270
+    },
+    {
+      "name": "board-controls-nojs-1280",
+      "status": "pass",
+      "board_controls": 3,
+      "all_controls_visible": true,
+      "table_horizontal_overflow": false,
+      "state_action_overlap": false
+    },
+    {
+      "name": "preview-history-nojs-1280",
+      "status": "pass",
+      "first_page_rows": 0,
+      "single_page_or_empty_state_verified": true,
+      "out_of_range_page_clamped": true,
+      "existing_pagination_traversed": false
+    },
+    {
+      "name": "transport-and-runtime",
+      "status": "pass",
+      "mutable_http_requests": 0,
+      "cross_origin_requests": 0,
+      "runtime_errors": 0
+    }
+  ],
+  "skipped": [
+    {
+      "name": "badge-impact-pages-desktop-1280",
+      "reason": "Production has no existing badge rules; no fixture was created. Mutation validation remains covered by local evidence."
+    },
+    {
+      "name": "history-page-two-desktop-1280",
+      "reason": "Production history fits on one page; multi-page traversal remains covered by local synthetic evidence."
+    },
+    {
+      "name": "badge-impact-pages-mobile-390",
+      "reason": "Production has no existing badge rules; no fixture was created. Mutation validation remains covered by local evidence."
+    },
+    {
+      "name": "history-page-two-mobile-390",
+      "reason": "Production history fits on one page; multi-page traversal remains covered by local synthetic evidence."
+    },
+    {
+      "name": "badge-impact-pages-narrow-320",
+      "reason": "Production has no existing badge rules; no fixture was created. Mutation validation remains covered by local evidence."
+    },
+    {
+      "name": "history-page-two-narrow-320",
+      "reason": "Production history fits on one page; multi-page traversal remains covered by local synthetic evidence."
+    },
+    {
+      "name": "badge-impact-pages-nojs-1280",
+      "reason": "Production has no existing badge rules; no fixture was created. Mutation validation remains covered by local evidence."
+    },
+    {
+      "name": "history-page-two-nojs-1280",
+      "reason": "Production history fits on one page; multi-page traversal remains covered by local synthetic evidence."
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "features-desktop-1280.png",
+      "sha256": "9e26fd93bc0c346953afa9d4d78975d5ac6ec6323b3ac3c8db2fe5665a4cf907"
+    },
+    {
+      "file": "features-combined-filter-desktop-1280.png",
+      "sha256": "819a240f491f0d72ae7e636f2c006b919c18067225d197b9ce0aa8a53ed3f600"
+    },
+    {
+      "file": "features-empty-filter-desktop-1280.png",
+      "sha256": "11d80afc6f557fc1c4dab9d1257e2f5ffd875e424cbc642ce220a1a5c2710334"
+    },
+    {
+      "file": "badge-rules-desktop-1280.png",
+      "sha256": "d8096828544b4cf96e485bf6f2a54ac2f22023fbd9eaa98df7d0c690b28750ba"
+    },
+    {
+      "file": "custom-emoji-desktop-1280.png",
+      "sha256": "b975115aaa4a53fe2a93e3bd3f6b1381564c1c58197740f78308d3c588d58be4"
+    },
+    {
+      "file": "link-previews-desktop-1280.png",
+      "sha256": "441f7695d9a5711d873a0a6f7de3f5493b62ba19106088afc86205a4c10b9ee7"
+    },
+    {
+      "file": "link-board-controls-desktop-1280.png",
+      "sha256": "05b7d28121c43350cedec8c0741c6c512e3af6301bd2af521753dae7ec89443c"
+    },
+    {
+      "file": "link-history-clamped-desktop-1280.png",
+      "sha256": "441f7695d9a5711d873a0a6f7de3f5493b62ba19106088afc86205a4c10b9ee7"
+    },
+    {
+      "file": "features-mobile-390.png",
+      "sha256": "aa8cc15f991b5b7ee103a958c702a7bf7a15938017e3573e069f789fecf076ae"
+    },
+    {
+      "file": "features-combined-filter-mobile-390.png",
+      "sha256": "4b4ccf709e8d62b106b2dd58895fe5f746062e71171e9156055c0e324028dd41"
+    },
+    {
+      "file": "features-empty-filter-mobile-390.png",
+      "sha256": "100b7e856b24818ad580ab67f760438f19272a24036ea7825789649f9391070b"
+    },
+    {
+      "file": "badge-rules-mobile-390.png",
+      "sha256": "5f6dbe8baae3a3a12df63a0dcbe325d979139ef9363ce0ae07bd39ccdd3b0abe"
+    },
+    {
+      "file": "custom-emoji-mobile-390.png",
+      "sha256": "cb44912b5ac9935981f9c7e64138145c61f8f76ecc2ebaeef243967040393362"
+    },
+    {
+      "file": "link-previews-mobile-390.png",
+      "sha256": "b38fd5df8c6192949835d48ffb9ce8422879058ec9c2ddc2d504081675e93310"
+    },
+    {
+      "file": "link-board-controls-mobile-390.png",
+      "sha256": "5c97193644e6c61cd9b731bd78e217027aa9c64fe8e1df5be01cac03e1045fb6"
+    },
+    {
+      "file": "link-history-clamped-mobile-390.png",
+      "sha256": "b38fd5df8c6192949835d48ffb9ce8422879058ec9c2ddc2d504081675e93310"
+    },
+    {
+      "file": "features-narrow-320.png",
+      "sha256": "b6125a4f958ef00e30dd7f58a0f7eca9f2a51664ad6890fd65f6c539741feca6"
+    },
+    {
+      "file": "features-combined-filter-narrow-320.png",
+      "sha256": "ad7890bbb52d85795438a1b21a728ccd79c17659c3225b6d83c4b2c0979ebb1c"
+    },
+    {
+      "file": "features-empty-filter-narrow-320.png",
+      "sha256": "2de54c8070d2bb317691a08efd7835aa9856f703647c70a95ac717ad899fe866"
+    },
+    {
+      "file": "badge-rules-narrow-320.png",
+      "sha256": "ae137a4a1b087e527b94e929161a4dd095de590fed969c304714b2e1e89b850e"
+    },
+    {
+      "file": "custom-emoji-narrow-320.png",
+      "sha256": "46ab22a546e04e3f46c4d637bbf82b6f3a3c8bed159bcd5baf1b966df622bd1b"
+    },
+    {
+      "file": "link-previews-narrow-320.png",
+      "sha256": "af769c775301f96ca13b66d20751cf682b24459c5fed68b17a555dfef8325a7a"
+    },
+    {
+      "file": "link-board-controls-narrow-320.png",
+      "sha256": "8460f07d53156a7c72a925000b446f5d29ca977b2dad54f790aa64ceb4f2dae9"
+    },
+    {
+      "file": "link-history-clamped-narrow-320.png",
+      "sha256": "9c9466f4fd7c200aaab0fdb6cc0a63ddc08e52bb1ebf633cb890963863c37d8d"
+    },
+    {
+      "file": "features-nojs-1280.png",
+      "sha256": "9e26fd93bc0c346953afa9d4d78975d5ac6ec6323b3ac3c8db2fe5665a4cf907"
+    },
+    {
+      "file": "features-combined-filter-nojs-1280.png",
+      "sha256": "819a240f491f0d72ae7e636f2c006b919c18067225d197b9ce0aa8a53ed3f600"
+    },
+    {
+      "file": "features-empty-filter-nojs-1280.png",
+      "sha256": "11d80afc6f557fc1c4dab9d1257e2f5ffd875e424cbc642ce220a1a5c2710334"
+    },
+    {
+      "file": "badge-rules-nojs-1280.png",
+      "sha256": "d8096828544b4cf96e485bf6f2a54ac2f22023fbd9eaa98df7d0c690b28750ba"
+    },
+    {
+      "file": "custom-emoji-nojs-1280.png",
+      "sha256": "b975115aaa4a53fe2a93e3bd3f6b1381564c1c58197740f78308d3c588d58be4"
+    },
+    {
+      "file": "link-previews-nojs-1280.png",
+      "sha256": "441f7695d9a5711d873a0a6f7de3f5493b62ba19106088afc86205a4c10b9ee7"
+    },
+    {
+      "file": "link-board-controls-nojs-1280.png",
+      "sha256": "05b7d28121c43350cedec8c0741c6c512e3af6301bd2af521753dae7ec89443c"
+    },
+    {
+      "file": "link-history-clamped-nojs-1280.png",
+      "sha256": "441f7695d9a5711d873a0a6f7de3f5493b62ba19106088afc86205a4c10b9ee7"
+    }
+  ],
+  "limitations": [
+    "Viewport emulation does not establish physical-device or assistive-technology acceptance.",
+    "Emoji mutation auditing/reservations and badge POST protections remain qualified by local tests; production mutation forms were never submitted.",
+    "Production screenshots are private and must not be committed."
+  ]
+}

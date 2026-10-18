@@ -3,7 +3,8 @@
 Local verification of `/admin/features`, `/admin/badge-rules`,
 `/admin/custom-emoji`, and `/admin/link-previews`, preserving the Imladris design.
 The review and implementation use ADMIN §§3.6 and 9.4 and the subsystem runbooks.
-All databases contain isolated, synthetic fixtures. No production settings or
+Local test databases contain isolated, synthetic fixtures. The subsequent
+production verification used read-only page requests; no production settings or
 content were changed.
 
 ## Resolved requirements
@@ -48,7 +49,37 @@ for readable native controls; this task preserves the existing visual system.
 
 ## Evidence limits
 
-This is local browser and database evidence. Viewport emulation is not a physical
-device or assistive-technology acceptance test. Authenticated production,
-outbound preview fetching, production email delivery and deployment were outside
-this change. No new provider calls were made.
+Viewport emulation is not a physical device or assistive-technology acceptance
+test. Outbound preview fetching and production email delivery were not exercised.
+No new provider calls were made.
+
+## Production release
+
+Application commit `17d0fef5805d8d18dec07c0f04fc54c826d3ee9a` was pushed to
+`main` and independently deployed by Workers Builds and Cloud Build. The Worker
+build succeeded and its version serves 100% traffic. Cloud Run revision
+`retroboards-00034-t26` serves 100% traffic; all four cron jobs use the same
+application image. `/healthz` reports the application and database healthy.
+Sanitized deployment receipts are in [production/](production/).
+
+All 57 application-release asset URLs returned HTTP 200 with matching SHA-256
+hashes. After recording deployed version `50a62f5be30f6b09`, all 55 retained
+manifest URLs also matched. Retention removed only two obsolete bundles. The
+Imladris baseline and generated metadata were refreshed for those removals;
+current application assets and design-system CSS are unchanged. The asset suite
+again passed all 35 tests, with asset and Imladris checks passing.
+
+Authenticated Chromium verification passed 37 checks across desktop, 390px,
+320px and no-JavaScript contexts. All four Features routes returned HTTP 200;
+combined filters, empty/reset behavior, inventory totals, 44px Operations targets,
+and board-control visibility passed. There were no runtime errors or attempted
+mutable/cross-origin requests. Production has no badge rules or preview records,
+so eight populated-data checks were skipped; confirmation POSTs and multi-page
+history remain covered by the local fixtures and tests above. Production forms
+were not submitted. The temporary verification session was revoked afterward.
+
+The [browser receipt](production/live-features-verification.json) includes
+aggregate results and hashes for 32 private captures. Production screenshots and
+session credentials are excluded from the repository. The earlier
+`verification.json` remains the original local pre-commit snapshot; production
+receipts identify the published application commit separately.

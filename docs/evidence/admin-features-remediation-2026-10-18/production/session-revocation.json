@@ -1,0 +1,6 @@
+{
+  "execution": "retroboards-cron-5m-b2c4v",
+  "event": "retroboards_features_verify_revoke",
+  "revoked": true,
+  "status": "ok"
+}

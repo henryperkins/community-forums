@@ -1,0 +1,20 @@
+{
+  "expected_source_sha": "17d0fef5805d8d18dec07c0f04fc54c826d3ee9a",
+  "session_created": true,
+  "browser_exit": 0,
+  "session_revoked": true,
+  "private_material_removed": true,
+  "session_create_execution": "retroboards-cron-5m-jvn77",
+  "browser_summary": {
+    "passed": 37,
+    "failed": 0,
+    "skipped": 8,
+    "requests": 520,
+    "blocked_mutable_requests": 0,
+    "blocked_cross_origin_requests": 0,
+    "runtime_errors": 0,
+    "manifest_version": "50a62f5be30f6b09",
+    "private_receipt": "/tmp/retroboards-features-release-20261018/production/live-features-verification.json"
+  },
+  "session_revoke_execution": "retroboards-cron-5m-b2c4v"
+}
