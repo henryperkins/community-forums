@@ -2,6 +2,17 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Legacy health redirect and reaction-test isolation
+
+- Restore `boards.hperkins.blog`'s WordPress.com CNAME to the existing Cloudflare
+  attachment after Google address records sent the legacy health URL to a 404.
+  Preserve the other 19 DNS records and document propagation checks.
+- Isolate the nine built-in reaction-icon browser contract from custom emoji
+  created by earlier journeys. Restore the original feature map in `finally`,
+  preserving the custom catalogue and the original count, icon, label, touch-grid
+  and reaction-toggle assertions. Evidence is in
+  `docs/evidence/legacy-health-and-reaction-fixture-2026-10-18/`.
+
 ## [Unreleased] - Inbox accessibility and polish
 
 - Match System dark mode's board-reference ink to explicit Dark. Keep Inbox

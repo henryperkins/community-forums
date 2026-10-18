@@ -1,0 +1,826 @@
+[
+  {
+    "engine": "chromium",
+    "group": "context",
+    "stats": {
+      "startTime": "2026-10-18T02:39:25.418Z",
+      "duration": 6159.447,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "cases": [
+      {
+        "title": "phase 4 custom emoji: admin catalogue, Markdown render, and reaction",
+        "file": "gate-a.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2505
+          }
+        ]
+      },
+      {
+        "title": "phase 4 custom emoji: admin catalogue, Markdown render, and reaction",
+        "file": "gate-a.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2161
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "group": "controls",
+    "stats": {
+      "startTime": "2026-10-18T02:39:32.087Z",
+      "duration": 46002.611999999994,
+      "expected": 20,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "cases": [
+      {
+        "title": "mobile board drawer leaves room beside every member surface",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "mobile drawer"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 102
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (Markdown)",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1515
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (rich)",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1531
+          }
+        ]
+      },
+      {
+        "title": "mobile reaction choices are distinct named icons in a compact touch grid",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "mobile post menu"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 75
+          }
+        ]
+      },
+      {
+        "title": "mobile board drawer leaves room beside every member surface",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 8136
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (Markdown)",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1951
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (rich)",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1934
+          }
+        ]
+      },
+      {
+        "title": "mobile reaction choices are distinct named icons in a compact touch grid",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1473
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 5910
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1075
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1594
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1549
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "fine-pointer picker"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 71
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1093
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1688
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1581
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 5515
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 930
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1476
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1456
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "fine-pointer picker"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 67
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 951
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1457
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 1509
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "group": "context",
+    "stats": {
+      "startTime": "2026-10-18T02:40:24.568Z",
+      "duration": 8872.28,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "cases": [
+      {
+        "title": "phase 4 custom emoji: admin catalogue, Markdown render, and reaction",
+        "file": "gate-a.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3277
+          }
+        ]
+      },
+      {
+        "title": "phase 4 custom emoji: admin catalogue, Markdown render, and reaction",
+        "file": "gate-a.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3277
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "group": "controls",
+    "stats": {
+      "startTime": "2026-10-18T02:40:33.916Z",
+      "duration": 92920.681,
+      "expected": 20,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "cases": [
+      {
+        "title": "mobile board drawer leaves room beside every member surface",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "mobile drawer"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 179
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (Markdown)",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2433
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (rich)",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2481
+          }
+        ]
+      },
+      {
+        "title": "mobile reaction choices are distinct named icons in a compact touch grid",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "mobile post menu"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 188
+          }
+        ]
+      },
+      {
+        "title": "mobile board drawer leaves room beside every member surface",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 9405
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (Markdown)",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3481
+          }
+        ]
+      },
+      {
+        "title": "reply stays inside its frame and preserves a minimized draft (rich)",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3435
+          }
+        ]
+      },
+      {
+        "title": "mobile reaction choices are distinct named icons in a compact touch grid",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2212
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 13816
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2819
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3801
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3776
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "fine-pointer picker"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 190
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2716
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3821
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3835
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 13305
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2447
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3600
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "desktop",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3533
+          }
+        ]
+      },
+      {
+        "title": "desktop reaction picker stays inside the viewport and retains native submission",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "skipped",
+        "outcome": "skipped",
+        "annotations": [
+          {
+            "type": "skip",
+            "description": "fine-pointer picker"
+          }
+        ],
+        "results": [
+          {
+            "status": "skipped",
+            "duration": 171
+          }
+        ]
+      },
+      {
+        "title": "guest reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 2597
+          }
+        ]
+      },
+      {
+        "title": "suspended reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3699
+          }
+        ]
+      },
+      {
+        "title": "banned reaction counts keep visible names without reactor identities",
+        "file": "mobile-controls.spec.ts",
+        "project": "mobile",
+        "expected_status": "passed",
+        "outcome": "expected",
+        "annotations": [],
+        "results": [
+          {
+            "status": "passed",
+            "duration": 3719
+          }
+        ]
+      }
+    ]
+  }
+]

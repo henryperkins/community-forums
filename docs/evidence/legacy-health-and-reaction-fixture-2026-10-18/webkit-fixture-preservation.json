@@ -1,0 +1,30 @@
+{
+  "engine": "webkit",
+  "features_unchanged": true,
+  "features_sha256": "1e357e8a9e4ae738c551d7eadba04a0af33d71447893562e840d51dea02e3bd4",
+  "custom_emoji_enabled_after": true,
+  "custom_reactions_before": [
+    {
+      "shortcode": "party_desktop",
+      "is_enabled": 1,
+      "allow_reactions": 1
+    },
+    {
+      "shortcode": "party_mobile",
+      "is_enabled": 1,
+      "allow_reactions": 1
+    }
+  ],
+  "custom_reactions_after": [
+    {
+      "shortcode": "party_desktop",
+      "is_enabled": 1,
+      "allow_reactions": 1
+    },
+    {
+      "shortcode": "party_mobile",
+      "is_enabled": 1,
+      "allow_reactions": 1
+    }
+  ]
+}

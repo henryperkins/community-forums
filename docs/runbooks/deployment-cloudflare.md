@@ -1070,6 +1070,24 @@ not authorize that move.
   anywhere yet), 0 OAuth identities, 2 users. `docs/phase5/canonical-origin-and-rp-id.md` §5
   is the general procedure; with these numbers it collapses to the steps below.
 
+### 2026-10-18: restore the alias DNS target
+
+The alias returned Google's 404 because WordPress.com DNS contained four
+Google A records and four Google AAAA records for `boards`. Direct requests
+to both Cloudflare fallback addresses, preserving the alias hostname and TLS
+verification, returned the expected `301` and `Cache-Control: no-store`.
+The existing Worker route and certificate were working.
+
+Replace those eight `boards` records with `boards CNAME
+saas-fallback.candidary.online.` (TTL 300). The repair preserved all 19 other
+WordPress.com records, including the blog and mail configuration. Before any
+future repair, refresh the inventory and compare the unrelated records after
+the targeted edit. An old A/AAAA answer can remain cached for its previous TTL
+(3600 seconds); verify the authoritative nameserver, public resolvers and a
+normal HTTPS request separately. A forced-address probe establishes the
+attachment's behavior, while a normal request establishes DNS propagation.
+Evidence: `docs/evidence/legacy-health-and-reaction-fixture-2026-10-18/`.
+
 ### The invariant that makes this safe
 
 `worker/canonical.mjs` answers every request whose scheme+host differ from

@@ -1,0 +1,77 @@
+{
+  "domain": "hperkins.blog",
+  "alias": "boards.hperkins.blog",
+  "nameservers": "WordPress.com",
+  "domain_status": "active",
+  "dns_management_confirmed": true,
+  "dnssec_enabled": true,
+  "records_before": 27,
+  "records_after": 20,
+  "removed": [
+    {
+      "type": "AAAA",
+      "name": "boards",
+      "data": "2001:4860:4802:32::15",
+      "ttl": 3600
+    },
+    {
+      "type": "AAAA",
+      "name": "boards",
+      "data": "2001:4860:4802:34::15",
+      "ttl": 3600
+    },
+    {
+      "type": "AAAA",
+      "name": "boards",
+      "data": "2001:4860:4802:36::15",
+      "ttl": 3600
+    },
+    {
+      "type": "AAAA",
+      "name": "boards",
+      "data": "2001:4860:4802:38::15",
+      "ttl": 3600
+    },
+    {
+      "type": "A",
+      "name": "boards",
+      "data": "216.239.32.21",
+      "ttl": 3600
+    },
+    {
+      "type": "A",
+      "name": "boards",
+      "data": "216.239.34.21",
+      "ttl": 3600
+    },
+    {
+      "type": "A",
+      "name": "boards",
+      "data": "216.239.36.21",
+      "ttl": 3600
+    },
+    {
+      "type": "A",
+      "name": "boards",
+      "data": "216.239.38.21",
+      "ttl": 3600
+    }
+  ],
+  "added": [
+    {
+      "type": "CNAME",
+      "name": "boards",
+      "data": "saas-fallback.candidary.online.",
+      "ttl": 300
+    }
+  ],
+  "unrelated_records": 19,
+  "unrelated_unchanged": true,
+  "unrelated_sha256": "598538a8cdcbd0dde3c8c5b8852a9fdd28fbd9c8421a76bb6181789a27b6e661",
+  "cloudflare_route": {
+    "id": "cdd04d8a5b6147099b5daf73940c7f27",
+    "pattern": "boards.hperkins.blog/*",
+    "script": "retroboards"
+  },
+  "scope": "Targeted alias record replacement; full DNS snapshots remain private outside Git."
+}

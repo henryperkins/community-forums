@@ -1,0 +1,55 @@
+{
+  "verified_at": "2026-10-18T02:43:05.014732+00:00",
+  "base_sha": "917625e95201e8eac0a8aa4b393e35fceee89e7c",
+  "source_sha256": {
+    "tests/browser/mobile-controls.spec.ts": "ef1826af6f9cd551d13af2401387e165266e85d4a10213d0dc87bb13ad554add",
+    "tests/browser/gate-a.spec.ts": "0ade3baa91ab2a3441cc4f3f7948bc1eef94f489c58f22120c3b457def28622c",
+    "worker/canonical.mjs": "3643afe363596819b103a9cbb6263f1c816902c4e41ca0669bc955317b94e86f",
+    "worker/index.js": "603b36f7b00a68d79bca498e402f9f674fede5861458667ffee92a4b6c145bf4",
+    "wrangler.jsonc": "f30099c4c1e53b464c2c9cf43a1fe9cd0ae48f92c6d7c844db6c00d563c9b7da",
+    "config/assets.json": "322e32d51da95b9b89ac7062bcd9cf29ebe0cadc775ad95166fbf7de13505670",
+    "config/imladris-runtime-baseline.json": "fb46e75e8dab9b7fb4e038137ff20d5ebdc8da6f6c69ef72ee60012bd6d73b88",
+    "docs/runbooks/deployment-cloudflare.md": "b58ec408542d8b6df00526cdfdc69479ba645d094818f594c6a96e166da3a679",
+    "CHANGELOG.md": "68b21a2be468de83c7101877b4582baeeffd9036573c724dd5775e5ee006f43e"
+  },
+  "red": {
+    "engine": "chromium",
+    "result": "Expected 9 reaction buttons, received 11",
+    "failed": 1,
+    "setup": "Two enabled custom reaction entries with the standard nine available."
+  },
+  "focused_green": {
+    "engine": "chromium",
+    "passed": 1,
+    "features_and_custom_catalogue_restored": true
+  },
+  "broader_browsers": {
+    "passed": 44,
+    "skipped": 8,
+    "failed": 0,
+    "flaky": 0,
+    "sequence": "Per engine: actual desktop/mobile custom-emoji journeys, then mobile-controls on the same private DB."
+  },
+  "phpunit": {
+    "tests": 3233,
+    "assertions": 25653,
+    "skipped": 1,
+    "exit_code": 0,
+    "skip": "Dedicated throwaway-schema migration down/up rehearsal"
+  },
+  "assets": {
+    "tests_passed": 35,
+    "exit_code": 0,
+    "generated_assets": "current",
+    "version": "2371e926206bda24",
+    "manifest_urls": 55,
+    "manifest_unchanged_from_base": true
+  },
+  "imladris": "Runtime assets current",
+  "review": "Independent source, DNS and focused-hosted-recipe review: no actionable findings.",
+  "limits": [
+    "Browser checks use local Linux engines and mobile emulation.",
+    "Automatic production deployments and a separately scoped hosted Chromium regression are verified after publication.",
+    "Raw browser reports and full DNS zone snapshots remain private outside Git."
+  ]
+}

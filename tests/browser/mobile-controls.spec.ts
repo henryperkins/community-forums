@@ -181,48 +181,60 @@ $db->run('DELETE FROM server_drafts WHERE user_id=(SELECT id FROM users WHERE em
 
 test('mobile reaction choices are distinct named icons in a compact touch grid', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile post menu');
-  await login(page);
-  await page.goto(topic());
-  const post = page.locator('.post').first();
-  await post.locator('.post-menu > summary').click();
-  const tray = post.locator('.post-menu-reactions');
-  const heartButton = tray.getByRole('button', { name: 'Heart', exact: true });
-  const wasOn = await heartButton.getAttribute('aria-pressed') === 'true';
-  if (wasOn) {
-    const removed = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
+  // This contract covers the nine built-in icons. Gate A's earlier journeys
+  // leave custom reactions in the shared DB; preserve their catalogue and
+  // restore the original feature map even if this test fails.
+  const originalFeatures = php(`echo json_encode($settings->get('features', []));`);
+  const encodedFeatures = Buffer.from(originalFeatures).toString('base64');
+  php(`$features = json_decode(base64_decode('${encodedFeatures}'), true);
+$features['custom_emoji'] = false;
+$settings->set('features', $features);`);
+  try {
+    await login(page);
+    await page.goto(topic());
+    const post = page.locator('.post').first();
+    await post.locator('.post-menu > summary').click();
+    const tray = post.locator('.post-menu-reactions');
+    const heartButton = tray.getByRole('button', { name: 'Heart', exact: true });
+    const wasOn = await heartButton.getAttribute('aria-pressed') === 'true';
+    if (wasOn) {
+      const removed = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
+      await heartButton.click();
+      expect((await removed).ok()).toBe(true);
+      await expect(heartButton).toHaveAttribute('aria-pressed', 'false');
+    }
+    const buttons = tray.locator('button.reaction');
+    await expect(buttons).toHaveCount(9);
+    const shapes = new Set<string>();
+    const rows = new Set<number>();
+    for (const button of await buttons.all()) {
+      const label = await button.getAttribute('data-label');
+      await expect(button).toHaveAccessibleName(label!);
+      const box = (await button.boundingBox())!;
+      expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      expect.soft(box.height).toBeGreaterThanOrEqual(44);
+      expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+      rows.add(Math.round(box.y));
+      shapes.add(await button.locator('svg').innerHTML());
+    }
+    expect.soft(rows.size).toBeLessThanOrEqual(3);
+    expect.soft(shapes.size).toBe(9);
+    await screenshot(page, 'reaction-menu-' + info.project.name);
+    const response = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
     await heartButton.click();
-    expect((await removed).ok()).toBe(true);
-    await expect(heartButton).toHaveAttribute('aria-pressed', 'false');
-  }
-  const buttons = tray.locator('button.reaction');
-  await expect(buttons).toHaveCount(9);
-  const shapes = new Set<string>();
-  const rows = new Set<number>();
-  for (const button of await buttons.all()) {
-    const label = await button.getAttribute('data-label');
-    await expect(button).toHaveAccessibleName(label!);
-    const box = (await button.boundingBox())!;
-    expect.soft(box.width).toBeGreaterThanOrEqual(44);
-    expect.soft(box.height).toBeGreaterThanOrEqual(44);
-    expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
-    rows.add(Math.round(box.y));
-    shapes.add(await button.locator('svg').innerHTML());
-  }
-  expect.soft(rows.size).toBeLessThanOrEqual(3);
-  expect.soft(shapes.size).toBe(9);
-  await screenshot(page, 'reaction-menu-' + info.project.name);
-  const response = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
-  await heartButton.click();
-  expect((await response).ok()).toBe(true);
-  const chip = post.locator('.reactions button[data-label="Heart"]');
-  await expect(chip).toHaveAttribute('aria-pressed', 'true');
-  await expect(chip.locator('svg')).toHaveClass(/icon-heart/);
-  await expect(chip).toHaveAccessibleName(/Heart/);
-  if (!wasOn) {
-    const removed = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
-    await heartButton.click();
-    expect((await removed).ok()).toBe(true);
-    await expect(heartButton).toHaveAttribute('aria-pressed', 'false');
+    expect((await response).ok()).toBe(true);
+    const chip = post.locator('.reactions button[data-label="Heart"]');
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+    await expect(chip.locator('svg')).toHaveClass(/icon-heart/);
+    await expect(chip).toHaveAccessibleName(/Heart/);
+    if (!wasOn) {
+      const removed = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
+      await heartButton.click();
+      expect((await removed).ok()).toBe(true);
+      await expect(heartButton).toHaveAttribute('aria-pressed', 'false');
+    }
+  } finally {
+    php(`$settings->set('features', json_decode(base64_decode('${encodedFeatures}'), true));`);
   }
 });
 
