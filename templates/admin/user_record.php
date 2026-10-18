@@ -78,66 +78,87 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             </section>
         </div>
 
-        <section class="card member-record-card member-record-restrictions">
-            <h3>Account restrictions</h3>
-            <?php if (!empty($errs['user']) && in_array($ctx, ['suspend', 'ban'], true)): ?>
-                <p class="field-error" role="alert"><?= $e($errs['user']) ?></p>
-            <?php endif; ?>
-            <?php if (!empty($is_self)): ?>
-                <p class="member-record-copy">You cannot suspend or ban your own account.</p>
-            <?php elseif (empty($can_govern)): ?>
-                <p class="member-record-copy">Administrators cannot be suspended or banned here.</p>
-            <?php else: ?>
-                <?php if ($status !== 'active'): ?>
-                    <div class="member-record-restriction-banner">
-                        <span><?= $status === 'banned' ? 'This account is banned. Lifting restores it to active.' : 'This account is suspended (read-only).' ?></span>
-                        <form method="post" action="/admin/users/<?= $uid ?>/lift" class="inline-form">
-                            <?= $this->csrfField() ?>
-                            <button class="btn btn-small" type="submit">Lift restriction</button>
-                        </form>
-                    </div>
-                <?php endif; ?>
-
-                <div class="member-record-restriction-grid">
-                    <div>
-                        <h4>Suspend</h4>
-                        <p class="member-record-copy">Temporary read-only state; reversible with Lift and auto-expires when an Until is set.</p>
-                        <form method="post" action="/admin/users/<?= $uid ?>/suspend" class="stacked member-record-form">
-                            <?= $this->csrfField() ?>
-                            <label class="field">
-                                <span>Reason</span>
-                                <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('suspend', 'reason')) ?>"<?= $fattr('suspend', 'reason') ?> required>
-                            </label>
-                            <?= $ferr('suspend', 'reason') ?>
-                            <label class="field">
-                                <span>Until (UTC, optional)</span>
-                                <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($oldv('suspend', 'until')) ?>"<?= $fattr('suspend', 'until') ?>>
-                            </label>
-                            <?= $ferr('suspend', 'until') ?>
-                            <div class="form-actions"><button class="btn btn-small danger" type="submit">Suspend</button></div>
-                        </form>
-                    </div>
-
-                    <div>
-                        <h4>Permanent ban</h4>
-                        <p class="member-record-copy">Revokes access until an admin lifts it. Type the username to confirm — this is the record’s most consequential action.</p>
-                        <form method="post" action="/admin/users/<?= $uid ?>/ban" class="stacked member-record-form">
-                            <?= $this->csrfField() ?>
-                            <label class="field">
-                                <span>Reason</span>
-                                <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('ban', 'reason')) ?>"<?= $fattr('ban', 'reason') ?> required>
-                            </label>
-                            <?= $ferr('ban', 'reason') ?>
-                            <label class="field">
-                                <span>Type <?= $e($subject['username']) ?> to confirm</span>
-                                <input type="text" name="confirm_username" class="input" autocomplete="off" autocapitalize="off" spellcheck="false"<?= $fattr('ban', 'confirm_username') ?> required>
-                            </label>
-                            <?= $ferr('ban', 'confirm_username') ?>
-                            <div class="form-actions"><button class="btn btn-small danger" type="submit">Ban permanently</button></div>
-                        </form>
-                    </div>
+        <section class="card member-record-card member-record-history">
+            <h3>History</h3>
+            <div class="member-record-history-grid">
+                <div>
+                    <h4>Warnings</h4>
+                    <?php if (empty($history['warnings'])): ?>
+                        <p class="member-record-empty">No warnings.</p>
+                    <?php else: ?>
+                        <ul class="member-record-history-list">
+                            <?php foreach ($history['warnings'] as $w): ?>
+                                <li>
+                                    <span class="member-record-when"><?= $e(human_datetime((string) $w['created_at'])) ?></span>
+                                    <span class="member-record-body"><?= $e($w['reason']) ?></span>
+                                    <span class="member-record-by">by @<?= $e($w['issued_by_username'] ?? 'system') ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
+
+                <div>
+                    <h4>Bans &amp; suspensions</h4>
+                    <?php if (empty($history['bans'])): ?>
+                        <p class="member-record-empty">No ban history.</p>
+                    <?php else: ?>
+                        <ul class="member-record-history-list">
+                            <?php foreach ($history['bans'] as $bn): ?>
+                                <li>
+                                    <span class="member-record-when"><?= $e(human_datetime((string) $bn['created_at'])) ?></span>
+                                    <span class="member-record-body">
+                                        <?= ($bn['type'] ?? '') === 'post' ? 'read-only (suspension)' : 'full ban' ?> · <?= $e($bn['reason']) ?>
+                                        <?php if (!empty($bn['lifted_at'])): ?>
+                                            <span class="pill">lifted <?= $e(human_date((string) $bn['lifted_at'])) ?></span>
+                                        <?php elseif (!empty($bn['expires_at'])): ?>
+                                            <span class="member-record-ban-period">· until <?= $e(human_date((string) $bn['expires_at'])) ?></span>
+                                        <?php else: ?>
+                                            <span class="member-record-ban-period">· indefinite</span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="member-record-by">by @<?= $e($bn['created_by_username'] ?? 'system') ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <h4>Private staff notes</h4>
+                    <?php if (empty($history['notes'])): ?>
+                        <p class="member-record-empty">No staff notes.</p>
+                    <?php else: ?>
+                        <ul class="member-record-history-list">
+                            <?php foreach ($history['notes'] as $n): ?>
+                                <li>
+                                    <span class="member-record-when"><?= $e(human_datetime((string) $n['created_at'])) ?></span>
+                                    <span class="member-record-body"><?= nl2br($e($n['body'])) ?></span>
+                                    <span class="member-record-by">by @<?= $e($n['author_username'] ?? 'system') ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <h4>Audit trail</h4>
+                    <?php if (empty($history['log'])): ?>
+                        <p class="member-record-empty">No audit entries.</p>
+                    <?php else: ?>
+                        <ul class="member-record-history-list">
+                            <?php foreach ($history['log'] as $lg): ?>
+                                <li>
+                                    <span class="member-record-when"><?= $e(human_datetime((string) $lg['created_at'])) ?></span>
+                                    <span class="member-record-body member-record-audit-action"><?= $e($lg['action']) ?><?= !empty($lg['reason']) ? ' — ' . $e($lg['reason']) : '' ?></span>
+                                    <span class="member-record-by">by @<?= $e($lg['actor_username'] ?? 'system') ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                    <p class="member-record-audit-link"><a href="/admin/audit?target_type=user&amp;target_id=<?= $uid ?>">Full trail in the audit log</a></p>
+                </div>
+            </div>
         </section>
 
         <div class="member-record-action-grid">
@@ -281,86 +302,77 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             </section>
         </div>
 
-        <section class="card member-record-card member-record-history">
-            <h3>History</h3>
-            <div class="member-record-history-grid">
-                <div>
-                    <h4>Warnings</h4>
-                    <?php if (empty($history['warnings'])): ?>
-                        <p class="member-record-empty">No warnings.</p>
-                    <?php else: ?>
-                        <ul class="member-record-history-list">
-                            <?php foreach ($history['warnings'] as $w): ?>
-                                <li>
-                                    <span class="member-record-when"><?= $e(human_datetime((string) $w['created_at'])) ?></span>
-                                    <span class="member-record-body"><?= $e($w['reason']) ?></span>
-                                    <span class="member-record-by">by @<?= $e($w['issued_by_username'] ?? 'system') ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
+        <?php
+        // Restrictions follow History so the record is read before it is acted on.
+        // Only the two forms sit behind the disclosure: the Lift banner and the
+        // self/admin explanations stay visible, and it opens itself while the
+        // account is suspended or banned or a suspend/ban submit came back 422.
+        // A member's own deactivation or pending deletion is not a restriction.
+        $restrictOpen = in_array($status, ['suspended', 'banned'], true) || in_array($ctx, ['suspend', 'ban'], true);
+        ?>
+        <section class="card member-record-card member-record-restrictions">
+            <h3>Account restrictions</h3>
+            <?php if (!empty($errs['user']) && in_array($ctx, ['suspend', 'ban'], true)): ?>
+                <p class="field-error" role="alert"><?= $e($errs['user']) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($is_self)): ?>
+                <p class="member-record-copy">You cannot suspend or ban your own account.</p>
+            <?php elseif (empty($can_govern)): ?>
+                <p class="member-record-copy">Administrators cannot be suspended or banned here.</p>
+            <?php else: ?>
+                <?php if ($status !== 'active'): ?>
+                    <div class="member-record-restriction-banner">
+                        <span><?= $status === 'banned' ? 'This account is banned. Lifting restores it to active.' : 'This account is suspended (read-only).' ?></span>
+                        <form method="post" action="/admin/users/<?= $uid ?>/lift" class="inline-form">
+                            <?= $this->csrfField() ?>
+                            <button class="btn btn-small" type="submit">Lift restriction</button>
+                        </form>
+                    </div>
+                <?php endif; ?>
 
-                <div>
-                    <h4>Bans &amp; suspensions</h4>
-                    <?php if (empty($history['bans'])): ?>
-                        <p class="member-record-empty">No ban history.</p>
-                    <?php else: ?>
-                        <ul class="member-record-history-list">
-                            <?php foreach ($history['bans'] as $bn): ?>
-                                <li>
-                                    <span class="member-record-when"><?= $e(human_datetime((string) $bn['created_at'])) ?></span>
-                                    <span class="member-record-body">
-                                        <?= ($bn['type'] ?? '') === 'post' ? 'read-only (suspension)' : 'full ban' ?> · <?= $e($bn['reason']) ?>
-                                        <?php if (!empty($bn['lifted_at'])): ?>
-                                            <span class="pill">lifted <?= $e(human_date((string) $bn['lifted_at'])) ?></span>
-                                        <?php elseif (!empty($bn['expires_at'])): ?>
-                                            <span class="member-record-ban-period">· until <?= $e(human_date((string) $bn['expires_at'])) ?></span>
-                                        <?php else: ?>
-                                            <span class="member-record-ban-period">· indefinite</span>
-                                        <?php endif; ?>
-                                    </span>
-                                    <span class="member-record-by">by @<?= $e($bn['created_by_username'] ?? 'system') ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
+                <details class="member-record-restrict"<?= $restrictOpen ? ' open' : '' ?>>
+                    <summary>Suspend or ban</summary>
+                    <div class="member-record-restriction-grid">
+                        <div>
+                            <h4>Suspend</h4>
+                            <p class="member-record-copy">Temporary read-only state; reversible with Lift and auto-expires when an Until is set.</p>
+                            <form method="post" action="/admin/users/<?= $uid ?>/suspend" class="stacked member-record-form">
+                                <?= $this->csrfField() ?>
+                                <label class="field">
+                                    <span>Reason</span>
+                                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('suspend', 'reason')) ?>"<?= $fattr('suspend', 'reason') ?> required>
+                                </label>
+                                <?= $ferr('suspend', 'reason') ?>
+                                <label class="field">
+                                    <span>Until (UTC, optional)</span>
+                                    <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($oldv('suspend', 'until')) ?>"<?= $fattr('suspend', 'until') ?>>
+                                </label>
+                                <?= $ferr('suspend', 'until') ?>
+                                <div class="form-actions"><button class="btn btn-small danger" type="submit">Suspend</button></div>
+                            </form>
+                        </div>
 
-                <div>
-                    <h4>Private staff notes</h4>
-                    <?php if (empty($history['notes'])): ?>
-                        <p class="member-record-empty">No staff notes.</p>
-                    <?php else: ?>
-                        <ul class="member-record-history-list">
-                            <?php foreach ($history['notes'] as $n): ?>
-                                <li>
-                                    <span class="member-record-when"><?= $e(human_datetime((string) $n['created_at'])) ?></span>
-                                    <span class="member-record-body"><?= nl2br($e($n['body'])) ?></span>
-                                    <span class="member-record-by">by @<?= $e($n['author_username'] ?? 'system') ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
-
-                <div>
-                    <h4>Audit trail</h4>
-                    <?php if (empty($history['log'])): ?>
-                        <p class="member-record-empty">No audit entries.</p>
-                    <?php else: ?>
-                        <ul class="member-record-history-list">
-                            <?php foreach ($history['log'] as $lg): ?>
-                                <li>
-                                    <span class="member-record-when"><?= $e(human_datetime((string) $lg['created_at'])) ?></span>
-                                    <span class="member-record-body member-record-audit-action"><?= $e($lg['action']) ?><?= !empty($lg['reason']) ? ' — ' . $e($lg['reason']) : '' ?></span>
-                                    <span class="member-record-by">by @<?= $e($lg['actor_username'] ?? 'system') ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                    <p class="member-record-audit-link"><a href="/admin/audit?target_type=user&amp;target_id=<?= $uid ?>">Full trail in the audit log</a></p>
-                </div>
-            </div>
+                        <div>
+                            <h4>Permanent ban</h4>
+                            <p class="member-record-copy">Revokes access until an admin lifts it. Type the username to confirm — this is the record’s most consequential action.</p>
+                            <form method="post" action="/admin/users/<?= $uid ?>/ban" class="stacked member-record-form">
+                                <?= $this->csrfField() ?>
+                                <label class="field">
+                                    <span>Reason</span>
+                                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('ban', 'reason')) ?>"<?= $fattr('ban', 'reason') ?> required>
+                                </label>
+                                <?= $ferr('ban', 'reason') ?>
+                                <label class="field">
+                                    <span>Type <?= $e($subject['username']) ?> to confirm</span>
+                                    <input type="text" name="confirm_username" class="input" autocomplete="off" autocapitalize="off" spellcheck="false"<?= $fattr('ban', 'confirm_username') ?> required>
+                                </label>
+                                <?= $ferr('ban', 'confirm_username') ?>
+                                <div class="form-actions"><button class="btn btn-small danger" type="submit">Ban permanently</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </details>
+            <?php endif; ?>
         </section>
+
 <?= $this->partial('admin/_console_end') ?>

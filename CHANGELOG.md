@@ -2,6 +2,16 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Member record restrictions disclosure
+
+- Read the member record before acting on it: History now follows Status and
+  Contact, and Suspend and Permanent ban sit behind a "Suspend or ban"
+  disclosure at the end of the record. It opens itself for suspended or banned
+  accounts and after a failed suspend/ban submit; Lift and the self/administrator
+  explanations are never hidden. It works without JavaScript.
+- Recorded as a `feature-changed` deviation in ADR 0024; evidence is recorded in
+  `docs/evidence/admin-record-restrict-2026-10-18/`.
+
 ## [Unreleased] - Members select contrast
 
 - Keep Members directory filters on the shared styled-select treatment so WebKit

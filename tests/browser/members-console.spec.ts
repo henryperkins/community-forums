@@ -10,7 +10,9 @@ import path from 'node:path';
  *
  * The behavioural contracts (selection count, no-JS 422, audited PII reveal,
  * typed ban confirmation, show-once invite link) live in admin-remediation and
- * invitations; this spec owns the copied body metrics and the register parity.
+ * invitations; this spec owns the copied body metrics and the register parity,
+ * plus the record's Suspend or ban disclosure (a feature-changed deviation from
+ * the design's always-open restrictions card, recorded in ADR 0024).
  */
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
@@ -228,6 +230,68 @@ test('the member record copies the status, restriction and history anatomy in ev
   await exerciseThemeRegisters(page, info, 'members-record');
 });
 
+test('the record keeps suspend and ban behind a disclosure that announces itself and carries a ban through Lift', async ({ page }, info) => {
+  test.setTimeout(180_000);
+  await login(page);
+  await page.goto('/admin/users?q=finduilas');
+  await page.locator('a.member-directory-member-link', { hasText: 'finduilas' }).first().click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  await expectMembersArea(page, 'Directory');
+
+  // History is read before the record is acted on, and the card keeps a real
+  // heading instead of one buried inside the summary's button semantics.
+  const historyFirst = await page.evaluate(() => {
+    const history = document.querySelector('.member-record-history');
+    const restrictions = document.querySelector('.member-record-restrictions');
+    return !!history && !!restrictions
+      && (history.compareDocumentPosition(restrictions) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  });
+  expect(historyFirst).toBe(true);
+  const card = page.locator('section.member-record-restrictions');
+  await expect(card.getByRole('heading', { level: 3, name: 'Account restrictions' })).toBeVisible();
+
+  // Closed by default for an active member, with the Members console's own
+  // disclosure glyph saying there is more behind it. The glyph carries empty
+  // alt text: the disclosure already announces its state, so "+" never joins
+  // the accessible name.
+  const restrict = card.locator('details.member-record-restrict');
+  const summary = restrict.locator('summary');
+  const glyph = () => summary.evaluate((element) => getComputedStyle(element, '::after').content);
+  await expect(restrict).not.toHaveAttribute('open', '');
+  await expect(summary).toHaveText('Suspend or ban');
+  await expect(summary).toHaveAccessibleName('Suspend or ban');
+  expect(await glyph()).toBe('"+" / ""');
+  await expect(card.locator('input[name="confirm_username"]')).toBeHidden();
+  if (info.project.name === 'mobile') {
+    expect(await summary.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  }
+  await expectNoDocumentOverflow(page);
+  await shot(page, info, 'members-record-restrict-closed');
+
+  // The keyboard opens it like any native disclosure, and the glyph flips.
+  await summary.focus();
+  await page.keyboard.press('Enter');
+  await expect(restrict).toHaveAttribute('open', '');
+  expect(await glyph()).toBe('"-" / ""');
+  await expect(card.locator('input[name="confirm_username"]')).toBeVisible();
+  await exerciseThemeRegisters(page, info, 'members-record-restrict-open');
+
+  // The typed ban goes through, and the record comes back restricted: Lift sits
+  // outside the disclosure and the forms are already open.
+  const banForm = card.locator('form[action$="/ban"]');
+  await banForm.locator('input[name="reason"]').fill('Browser evidence: restrict disclosure ban');
+  await banForm.locator('input[name="confirm_username"]').fill('finduilas');
+  await banForm.getByRole('button', { name: 'Ban permanently' }).click();
+  await expect(card.locator('.member-record-restriction-banner')).toContainText('This account is banned.');
+  await expect(restrict).toHaveAttribute('open', '');
+  await shot(page, info, 'members-record-restrict-banned');
+
+  // Lift restores the member, and with it the closed default.
+  await card.getByRole('button', { name: 'Lift restriction' }).click();
+  await expect(card.locator('.member-record-restriction-banner')).toHaveCount(0);
+  await expect(restrict).not.toHaveAttribute('open', '');
+});
+
 test('every members route stays whole with JavaScript disabled', async ({ browser, baseURL }, info) => {
   const context = await browser.newContext({
     baseURL: baseURL!,
@@ -264,10 +328,17 @@ test('every members route stays whole with JavaScript disabled', async ({ browse
     await expectNoDocumentOverflow(page);
     await shot(page, info, 'members-bulk-confirm-no-js');
 
-    // The record's re-auth and typed-confirm controls render inline, always (C-14).
+    // The record's re-auth and typed-confirm controls render inline, always (C-14):
+    // the typed ban confirmation shares a native disclosure with its own submit,
+    // so opening it needs no script and a closed form can never be submitted.
     await page.goto('/admin/users');
     await page.locator('a.member-directory-member-link', { hasText: 'alice' }).first().click();
     await page.waitForURL(/\/admin\/users\/\d+$/);
+    const restrict = page.locator('details.member-record-restrict');
+    await expect(restrict).not.toHaveAttribute('open', '');
+    await expect(page.locator('input[name="confirm_username"]')).toBeHidden();
+    await restrict.locator('summary').click();
+    await expect(restrict).toHaveAttribute('open', '');
     await expect(page.locator('input[name="confirm_username"]')).toBeVisible();
     await expect(page.locator('input[name="current_password"]')).toBeVisible();
     await expect(page.locator('form[action$="/pii"] button[type="submit"]')).toBeVisible();

@@ -11590,11 +11590,16 @@ body.thread-restructure-open { overflow: hidden; }
         outline-offset: 2px;
     }
 }
-.member-directory-advanced-filters {
+/* The Members console has one disclosure anatomy: the directory's More filters
+   and the record's Suspend or ban share it, so a hidden set of controls always
+   announces itself with the same hairline row and +/- glyph. */
+.member-directory-advanced-filters,
+.member-record-restrict {
     margin: 14px 0 0;
     border-top: 1px solid var(--border-hair);
 }
-.member-directory-advanced-filters > summary {
+.member-directory-advanced-filters > summary,
+.member-record-restrict > summary {
     display: flex;
     align-items: center;
     min-height: 38px;
@@ -11606,22 +11611,32 @@ body.thread-restructure-open { overflow: hidden; }
     list-style: none;
     text-transform: uppercase;
 }
-.member-directory-advanced-filters > summary::marker { content: ""; }
-.member-directory-advanced-filters > summary::-webkit-details-marker { display: none; }
-.member-directory-advanced-filters > summary::after {
+.member-directory-advanced-filters > summary::marker,
+.member-record-restrict > summary::marker { content: ""; }
+.member-directory-advanced-filters > summary::-webkit-details-marker,
+.member-record-restrict > summary::-webkit-details-marker { display: none; }
+/* The glyph is decoration: the disclosure already announces expanded/collapsed,
+   so the empty alt text keeps "+"/"-" out of the accessible name. A browser
+   without CSS alt text drops the second declaration and keeps the first. */
+.member-directory-advanced-filters > summary::after,
+.member-record-restrict > summary::after {
     content: "+";
+    content: "+" / "";
     margin-left: auto;
     color: var(--text-faint);
     font-family: var(--font-mono);
     font-size: 1rem;
 }
-.member-directory-advanced-filters[open] > summary::after { content: "-"; }
-.member-directory-advanced-filters > summary:focus-visible {
+.member-directory-advanced-filters[open] > summary::after,
+.member-record-restrict[open] > summary::after { content: "-"; content: "-" / ""; }
+.member-directory-advanced-filters > summary:focus-visible,
+.member-record-restrict > summary:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 @media (max-width: 860px) {
-    .member-directory-advanced-filters > summary { min-height: 44px; }
+    .member-directory-advanced-filters > summary,
+    .member-record-restrict > summary { min-height: 44px; }
 }
 .member-directory-advanced-filter-grid {
     margin-top: 10px;

@@ -358,3 +358,37 @@ exists elsewhere: it does not visit `/mod/u/{id}` (`admin-remediation.spec.ts:28
 **None of this changes the merge blocker above**, which remains the owner's call. The `app.css` edit in
 item 5 moves the application digest again — expected, and it is why obligation 4 refreshes on `main`
 after the merge rather than on the branch.
+
+---
+
+## Member record restrictions disclosure (`feature-changed`, 2026-10-18)
+
+A 2026-10-18 critique of `/admin` found the user record's worst cognitive-load point: Suspend, Ban,
+Role, Warn, Note, Title and Badges render simultaneously, eleven submit actions on one screen. The owner
+approved one change to `AdminMembers.dc.html`'s record anatomy, recorded here as `feature-changed`:
+
+- **Order.** History moves up to follow Status and Contact & signals. Account restrictions moves to the
+  end, after Role, Staff actions, Title and Badges, so the record is read before it is acted on.
+- **Disclosure.** The `Account restrictions` card keeps its `<h3>` as a real heading, never inside
+  `<summary>`. Within it, the Suspend and Permanent ban forms sit behind a native `<details>` whose
+  summary reads **Suspend or ban**. It reuses the Members console's existing disclosure anatomy, the
+  directory's More filters row and +/− glyph. It renders open while the account is `suspended` or
+  `banned`, and on a suspend/ban 422 re-render. A member's own `deactivated` or `pending_deletion` hold
+  is not a restriction and does not open it.
+- **What never hides.** The Lift banner, the scoped `user` error and the self/peer-admin explanations
+  render outside the disclosure. A record the viewer cannot govern gets no disclosure at all, so no
+  summary promises controls that are absent.
+- **C-14 still holds.** The typed confirmation renders inline with its own submit inside the same
+  native disclosure. It opens with JavaScript off, and a closed form has no reachable submit, so the
+  closed-`<details>` `required` trap cannot occur.
+
+Pinned by `AppAdminUserRecordTest` (open state per account state and per 422 context; no disclosure on
+self or peer-admin records) and `members-console.spec.ts` (closed default, keyboard open, glyph, 44px
+target at 390px, axe in every register, a ban carried through Lift). Evidence is in
+`docs/evidence/admin-record-restrict-2026-10-18/`.
+
+**Considered and not taken.** The same critique proposed naming the leaf in the console `<h1>` and
+grouping the area tier (Operations / Community / System). Both were built and reverted before commit.
+The first contradicts `ADMIN.md` §9.2 ("the page heading is a property of the area") and the second
+contradicts Decision 1's flat tier; the owner chose to keep both rules unamended. The critique's
+question, "If the H1 cannot distinguish Structure from Tags, what is it for?", stays open for the owner.

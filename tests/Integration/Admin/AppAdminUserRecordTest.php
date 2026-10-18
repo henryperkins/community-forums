@@ -313,6 +313,85 @@ final class AppAdminUserRecordTest extends TestCase
         $body = $this->get('/admin/users/' . (int) $admin['id'])->body();
         self::assertStringContainsString('cannot suspend or ban your own account', $body);
         self::assertStringNotContainsString('action="/admin/users/' . (int) $admin['id'] . '/ban"', $body);
+        // The explanation is the whole card, never hidden behind a disclosure
+        // whose summary would promise controls that are not there.
+        self::assertStringNotContainsString('class="member-record-restrict"', $body);
+        self::assertStringNotContainsString('<summary>Suspend or ban</summary>', $body);
+    }
+
+    public function test_peer_admin_record_explains_restrictions_without_a_disclosure(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $peer = $this->makeAdmin(['username' => 'peerrecord']);
+        $body = $this->get('/admin/users/' . (int) $peer['id'])->body();
+
+        self::assertMatchesRegularExpression(
+            '~<section class="card member-record-card member-record-restrictions">\s*<h3>Account restrictions</h3>\s*<p class="member-record-copy">Administrators cannot be suspended or banned here.</p>\s*</section>~',
+            $body,
+        );
+        self::assertStringNotContainsString('class="member-record-restrict"', $body);
+    }
+
+    public function test_restrict_disclosure_is_closed_for_an_active_member_and_follows_history(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'restrictclosed'])['id'];
+        $body = $this->get('/admin/users/' . $sid)->body();
+
+        $history = strpos($body, 'member-record-history');
+        $restrictions = strpos($body, 'member-record-restrictions');
+        self::assertNotFalse($history);
+        self::assertNotFalse($restrictions);
+        self::assertLessThan($restrictions, $history, 'History must precede the restrictions card');
+
+        // A real heading as the card's first child (not inside <summary>), then a
+        // closed disclosure that holds both forms and nothing else.
+        self::assertMatchesRegularExpression(
+            '~<section class="card member-record-card member-record-restrictions">\s*<h3>Account restrictions</h3>\s*<details class="member-record-restrict">\s*<summary>Suspend or ban</summary>\s*<div class="member-record-restriction-grid">.*?action="/admin/users/' . $sid . '/suspend".*?action="/admin/users/' . $sid . '/ban".*?</details>\s*</section>~s',
+            $body,
+        );
+        self::assertStringNotContainsString('class="member-record-restriction-banner"', $body);
+        self::assertSame(1, substr_count($body, 'most consequential'));
+    }
+
+    public function test_restrict_disclosure_opens_for_a_suspended_or_banned_member_below_the_lift_banner(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        foreach (['suspended' => 'This account is suspended (read-only).', 'banned' => 'This account is banned. Lifting restores it to active.'] as $status => $banner) {
+            $sid = (int) $this->makeUser(['username' => 'restrict' . $status, 'status' => $status])['id'];
+            $body = $this->get('/admin/users/' . $sid)->body();
+
+            self::assertMatchesRegularExpression(
+                '~<div class="member-record-restriction-banner">\s*<span>' . preg_quote($banner, '~') . '</span>\s*<form method="post" action="/admin/users/' . $sid . '/lift".*?</div>\s*<details class="member-record-restrict" open>~s',
+                $body,
+                $status . ': Lift stays outside the disclosure and the forms start open',
+            );
+        }
+    }
+
+    public function test_restrict_disclosure_reopens_on_a_failed_suspend_or_ban_submit(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'restrictreopen'])['id'];
+
+        $ban = $this->post('/admin/users/' . $sid . '/ban', ['reason' => 'typed ban', 'confirm_username' => 'nope']);
+        $this->assertStatus(422, $ban);
+        self::assertMatchesRegularExpression(
+            '~<details class="member-record-restrict" open>.*?The username does not match.*?</details>~s',
+            $ban->body(),
+        );
+
+        $suspend = $this->post('/admin/users/' . $sid . '/suspend', ['reason' => 'typed suspend', 'until' => 'not-a-date']);
+        $this->assertStatus(422, $suspend);
+        self::assertMatchesRegularExpression(
+            '~<details class="member-record-restrict" open>.*?name="reason"[^>]*value="typed suspend".*?</details>~s',
+            $suspend->body(),
+        );
+
+        // A failure on any other record form leaves the disclosure as it was.
+        $warn = $this->post('/admin/users/' . $sid . '/warn', ['reason' => '']);
+        $this->assertStatus(422, $warn);
+        self::assertStringContainsString('<details class="member-record-restrict">', $warn->body());
     }
 
     public function test_warn_records_warning_and_returns_to_admin_record(): void
