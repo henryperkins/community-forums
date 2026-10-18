@@ -47,7 +47,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                 <h3>Status</h3>
                 <dl class="member-record-status-list">
                     <div><dt>Role</dt><dd><?= $e($subject['role']) ?></dd></div>
-                    <div><dt>State</dt><dd><?= $e($status) ?></dd></div>
+                    <div><dt>State</dt><dd><?= $e(ucfirst(str_replace('_', ' ', $status))) ?></dd></div>
                     <div><dt>Reputation</dt><dd><?= number_format((int) $subject['reputation']) ?></dd></div>
                     <div><dt>Posts</dt><dd><?= number_format((int) ($subject['post_count'] ?? 0)) ?></dd></div>
                     <div><dt>Joined</dt><dd><?= $e(human_date((string) $subject['created_at'])) ?></dd></div>

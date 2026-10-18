@@ -20,15 +20,6 @@ $allErrors = is_array($errors ?? null) ? $errors : [];
 $defErrors = $defErrorContext ? $allErrors : [];
 $cloneErrors = $cloneErrorContext ? $allErrors : [];
 $assignErrors = $assignErrorContext ? $allErrors : [];
-// Group the flat capability catalogue by its middle namespace token
-// (core.board.* → Board, core.user.* → User, …) so the checkbox run scans as
-// tiers instead of one undifferentiated list.
-$groupedCatalogue = [];
-foreach ($catalogue as $capKey => $capMeta) {
-    $parts = explode('.', (string) $capKey);
-    $groupedCatalogue[ucfirst($parts[1] ?? 'other')][$capKey] = $capMeta;
-}
-ksort($groupedCatalogue);
 ?>
 <?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles', 'pane_class' => 'admin-roles admin-role-record']) ?>
     <?= $this->partial('partials/back_link', ['href' => '/admin/roles', 'label' => 'All roles']) ?>
@@ -39,7 +30,7 @@ ksort($groupedCatalogue);
     <p class="role-record-note">
         <code><?= $e($role['role_key']) ?></code> —
         <?= $isSystem ? 'Protected system anchor, read-only.' : 'Custom role.' ?>
-        Active assignments affected by changes: <strong><?= (int) $row['impact'] ?></strong>.
+        Active explicit assignments: <strong><?= (int) $row['impact'] ?></strong>.
     </p>
 
     <?php if (!$isSystem): ?>
@@ -62,23 +53,9 @@ ksort($groupedCatalogue);
                 </div>
             </div>
 
-            <div class="role-capability-grid"<?php if (!empty($defErrors['capabilities'])): ?> role="group" aria-invalid="true" aria-describedby="err-role-definition-capabilities"<?php endif; ?>>
-                <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
-                    <fieldset>
-                        <legend><?= $e($groupLabel) ?></legend>
-                        <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
-                            <label class="role-capability-option">
-                                <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
-                                <span><code><?= $e($key) ?></code><span class="role-capability-description"> — <?= $e($meta['consent'] ?? $meta['description']) ?></span>
-                                <?php if ($meta['risk'] === 'high'): ?><span class="role-risk">High risk</span><?php endif; ?>
-                                <?php if (!$enforced): ?><span class="role-capability-locked">(not yet enforceable)</span><?php endif; ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </fieldset>
-                <?php endforeach; ?>
-            </div>
-            <?= field_error($defErrors, 'capabilities', 'err-role-definition-capabilities') ?>
+            <?= $this->partial('admin/_role_capabilities', ['catalogue' => $catalogue, 'checked' => $checked, 'errors' => $defErrors, 'error_prefix' => 'err-role-definition']) ?>
 
+            <?= $this->partial('admin/_role_live_effect', ['mode' => $mode]) ?>
             <div class="role-definition-footer">
                 <div class="role-reauth-field">
                     <label class="role-form-label"><span>Confirm your password</span>
@@ -86,7 +63,7 @@ ksort($groupedCatalogue);
                     </label>
                     <?= field_error($defErrors, 'current_password', 'err-role-definition-current_password') ?>
                 </div>
-                <button class="btn" type="submit">Save (bumps version)</button>
+                <button class="btn" type="submit">Save role</button>
             </div>
         </form>
     </section>
@@ -206,25 +183,37 @@ ksort($groupedCatalogue);
                 <?= field_error($assignErrors, 'username', 'err-role-assign-username') ?>
             </div>
 
+            <?php
+            $targetOptions = ['site' => 'Site-wide'];
+            foreach (($categories ?? []) as $category) {
+                $targetOptions['category:' . (int) $category['id']] = 'Category: ' . $category['name'];
+            }
+            foreach (($boards ?? []) as $board) {
+                $targetOptions['board:' . (int) $board['id']] = 'Board: ' . $board['name'];
+            }
+            $oldScopeType = (string) ($old['assignment']['scope_type'] ?? 'site');
+            $scopeTarget = $old['assignment']['scope_target'] ?? ($oldScopeType === 'site' ? 'site' : $oldScopeType . ':' . (string) ($old['assignment']['scope_id'] ?? ''));
+            ?>
             <div>
-                <label class="role-form-label"><span>Scope</span>
-                    <select class="input" name="scope_type"<?= field_attrs($assignErrors, 'scope_type', 'err-role-assign-scope_type') ?>>
-                        <?php foreach (['site' => 'Site-wide', 'category' => 'Category', 'board' => 'Board'] as $value => $label): ?>
-                            <option value="<?= $e($value) ?>"<?= ($old['assignment']['scope_type'] ?? 'site') === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
-                        <?php endforeach; ?>
+                <label class="role-form-label"><span>Scope and target</span>
+                    <select class="input" name="scope_target"<?= field_attrs($assignErrors, 'scope_target', 'err-role-assign-scope_target') ?>>
+                        <option value="site"<?= $scopeTarget === 'site' ? ' selected' : '' ?>>Site-wide</option>
+                        <?php if (!isset($targetOptions[$scopeTarget])): ?>
+                            <option value="<?= $e($scopeTarget) ?>" selected>Unavailable target: <?= $e($scopeTarget) ?> — choose again</option>
+                        <?php endif; ?>
+                        <optgroup label="Categories">
+                            <?php foreach (($categories ?? []) as $category): $value = 'category:' . (int) $category['id']; ?>
+                                <option value="<?= $e($value) ?>"<?= $scopeTarget === $value ? ' selected' : '' ?>><?= $e($targetOptions[$value]) ?></option>
+                            <?php endforeach; ?>
+                        </optgroup>
+                        <optgroup label="Boards">
+                            <?php foreach (($boards ?? []) as $board): $value = 'board:' . (int) $board['id']; ?>
+                                <option value="<?= $e($value) ?>"<?= $scopeTarget === $value ? ' selected' : '' ?>><?= $e($targetOptions[$value]) ?></option>
+                            <?php endforeach; ?>
+                        </optgroup>
                     </select>
                 </label>
-                <?= field_error($assignErrors, 'scope_type', 'err-role-assign-scope_type') ?>
-            </div>
-
-            <div>
-                <label class="role-form-label"><span>Board / category id <span class="role-label-note">(blank = site-wide)</span></span>
-                    <input class="input role-mono-input" type="text" name="scope_id" list="assignment-board-options" value="<?= $e((string) ($old['assignment']['scope_id'] ?? '')) ?>"<?= field_attrs($assignErrors, 'scope_id', 'err-role-assign-scope_id') ?>>
-                    <datalist id="assignment-board-options">
-                        <?php foreach (($boards ?? []) as $b): ?><option value="<?= (int) $b['id'] ?>" label="<?= $e((string) $b['name']) ?>"><?php endforeach; ?>
-                    </datalist>
-                </label>
-                <?= field_error($assignErrors, 'scope_id', 'err-role-assign-scope_id') ?>
+                <?= field_error($assignErrors, 'scope_target', 'err-role-assign-scope_target') ?>
             </div>
 
             <div>
@@ -255,6 +244,7 @@ ksort($groupedCatalogue);
             </div>
 
             <p class="role-time-format" id="role-assign-time-format">Date-time format: <code>YYYY-MM-DD HH:MM</code> (UTC).</p>
+            <?= $this->partial('admin/_role_live_effect', ['mode' => $mode]) ?>
             <div class="role-assign-actions"><button class="btn" type="submit">Assign</button></div>
         </form>
     </section>

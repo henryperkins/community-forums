@@ -741,8 +741,11 @@ final class UserRepository
             $params['joined_from'] = $joinedFrom;
         }
         $joinedTo = trim((string) ($filters['joined_to'] ?? ''));
-        if ($joinedTo !== '') {
-            $where[] = 'created_at <= :joined_to';
+        if ($joinedTo !== '' && $joinedTo !== '9999-12-31') {
+            // A date input includes its whole UTC day. Keep the indexed column
+            // bare and compare against the next midnight, shared by rows/count.
+            // The final DATETIME day needs no upper bound: no later day exists.
+            $where[] = 'created_at < DATE_ADD(:joined_to, INTERVAL 1 DAY)';
             $params['joined_to'] = $joinedTo;
         }
 

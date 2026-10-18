@@ -1,0 +1,46 @@
+{
+  "captured_at": "2026-10-18T04:32:11.727605+00:00",
+  "baseline_sha": "2f02ce1bbe7522d39be9d2284606a410c7c571e7",
+  "manifest_version": "244ddf3d50bbd19e",
+  "new_browser": {
+    "passed": 30,
+    "failed": 0,
+    "posture": "shadow",
+    "enforce_passed": 2,
+    "axe_scans": 20,
+    "axe_violations": 0,
+    "outbound_deliveries": 0
+  },
+  "existing_browser": {
+    "expected": 36,
+    "skipped": 14,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "worker_asset_tests": {
+    "passed": 35,
+    "failed": 0
+  },
+  "screenshots": [
+    "member-record-320.png",
+    "bulk-warning-eligible-preview.png",
+    "roles-mobile-actions.png",
+    "roles-text200-capabilities.png",
+    "create-capabilities-error.png",
+    "category-board-scopes-no-js.png",
+    "role-editor-live-effect-save.png",
+    "simulator-invalid-date.png"
+  ],
+  "browser_environment": "Bundled Chromium, isolated local MariaDB databases, synthetic users, array mail transport",
+  "limits": [
+    "Browser emulation is not physical-device evidence",
+    "No screen-reader certification",
+    "Hosted full regression matrix not invoked"
+  ],
+  "phpunit": {
+    "tests": 3277,
+    "assertions": 25834,
+    "skipped": 1,
+    "failures": 0
+  }
+}

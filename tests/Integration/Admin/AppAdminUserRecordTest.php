@@ -235,7 +235,7 @@ final class AppAdminUserRecordTest extends TestCase
         self::assertStringContainsString('class="member-record-summary-grid"', $body);
 
         self::assertMatchesRegularExpression(
-            '~<dl class="member-record-status-list">.*?<dt>Role</dt><dd>user</dd>.*?<dt>State</dt><dd>suspended</dd>.*?<dt>Reputation</dt><dd>8,740</dd>.*?<dt>Posts</dt><dd>12</dd>.*?<dt>Joined</dt>.*?<dt>Last seen</dt>.*?</dl>\s*<p class="member-record-suspended">Suspended until Jan 2, 2030 at 03:04 UTC</p>\s*<p class="member-record-profile-link"><a href="/u/recordshape">View public profile</a></p>~s',
+            '~<dl class="member-record-status-list">.*?<dt>Role</dt><dd>user</dd>.*?<dt>State</dt><dd>Suspended</dd>.*?<dt>Reputation</dt><dd>8,740</dd>.*?<dt>Posts</dt><dd>12</dd>.*?<dt>Joined</dt>.*?<dt>Last seen</dt>.*?</dl>\s*<p class="member-record-suspended">Suspended until Jan 2, 2030 at 03:04 UTC</p>\s*<p class="member-record-profile-link"><a href="/u/recordshape">View public profile</a></p>~s',
             $body,
         );
         self::assertStringContainsString('class="member-record-restriction-grid"', $body);

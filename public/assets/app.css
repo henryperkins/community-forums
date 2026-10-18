@@ -5223,13 +5223,17 @@ textarea.textarea-engraved {
     margin-top: 2px;
 }
 .admin-console .admin-roles .role-callout p {
+    min-width: 0;
     max-width: 82ch;
     margin: 0;
     color: var(--on-info);
     font-size: .93rem;
     line-height: 1.55;
     text-wrap: pretty;
+    overflow-wrap: anywhere;
 }
+.admin-console .admin-roles .role-callout > div { min-width: 0; }
+.admin-console .admin-roles .role-callout p + p { margin-top: var(--space-2); }
 .admin-console .admin-roles .role-callout code {
     font-family: var(--font-mono);
     font-size: .84rem;
@@ -5274,7 +5278,11 @@ textarea.textarea-engraved {
 }
 .admin-console .admin-roles .role-table td:first-child {
     color: var(--text-strong);
+    width: 12ch;
+    max-width: 12ch;
+    overflow-wrap: anywhere;
 }
+.admin-console .admin-roles .role-table td:nth-child(3) { min-width: 16ch; }
 .admin-console .admin-roles .role-key {
     padding: 1px 6px;
     border-radius: var(--radius-sm);
@@ -5314,6 +5322,12 @@ textarea.textarea-engraved {
 }
 .admin-console .admin-roles .role-row-action {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    box-sizing: border-box;
+    white-space: nowrap;
     padding: 4px 12px;
     border: 1.5px solid var(--border-soft);
     border-radius: var(--radius-md);
@@ -5416,6 +5430,8 @@ textarea.textarea-engraved {
     font-size: .88rem;
     line-height: 1.4;
     cursor: pointer;
+    min-height: 44px;
+    box-sizing: border-box;
 }
 .admin-console .admin-roles .role-capability-option > input {
     flex: 0 0 auto;
@@ -5428,13 +5444,42 @@ textarea.textarea-engraved {
     min-width: 0;
 }
 .admin-console .admin-roles .role-capability-option code {
-    color: var(--text-strong);
+    display: block;
+    color: var(--text-muted);
     font-family: var(--font-mono);
     font-size: .78rem;
+    font-weight: 400;
+    overflow-wrap: anywhere;
 }
 .admin-console .admin-roles .role-capability-description {
+    color: var(--text-body);
+    overflow-wrap: anywhere;
+}
+.admin-console .admin-roles .role-capabilities-heading {
+    margin: var(--space-4) 0 var(--space-2);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 400;
+}
+.admin-console .admin-roles .role-unavailable-capabilities { margin-top: var(--space-4); }
+.admin-console .admin-roles .role-unavailable-capabilities > summary {
+    display: list-item;
+    min-height: 44px;
+    padding-block: var(--space-2);
+    box-sizing: border-box;
+    cursor: pointer;
     color: var(--text-muted);
 }
+.admin-console .admin-roles .role-live-effect {
+    grid-column: 1 / -1;
+    max-width: 74ch;
+    margin: var(--space-4) 0 0;
+    color: var(--text-body);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.admin-console .admin-roles .role-assignment-count-note { margin: var(--space-3) 0 0; }
+.admin-console .admin-roles .role-table-shell { position: relative; }
 .admin-console .admin-roles .role-risk {
     margin-left: 6px;
     padding: 0 7px;
@@ -5538,6 +5583,7 @@ textarea.textarea-engraved {
     color: var(--text-body);
     font-family: var(--font-mono);
     font-size: .85rem;
+    overflow-wrap: anywhere;
 }
 .admin-console .admin-role-record .role-record-note strong {
     color: var(--text-body);
@@ -5581,6 +5627,7 @@ textarea.textarea-engraved {
     color: var(--text-strong);
     font-family: var(--font-mono);
     font-size: .78rem;
+    overflow-wrap: anywhere;
 }
 .admin-console .admin-role-record .role-clone-card > h3 {
     margin-bottom: 6px;
@@ -5902,6 +5949,7 @@ textarea.textarea-engraved {
         flex-direction: column;
     }
     .admin-console .admin-roles .role-reauth-field,
+    .admin-console .admin-role-record .role-definition-footer .role-reauth-field,
     .admin-console .admin-role-record .role-clone-form .role-reauth-field {
         flex-basis: auto;
         width: 100%;
@@ -5969,7 +6017,8 @@ textarea.textarea-engraved {
         transition: opacity var(--dur-fast) var(--ease-calm);
     }
     .activity-table-shell::after,
-    .member-directory-table-shell::after {
+    .member-directory-table-shell::after,
+    .role-table-shell::after {
         content: "";
         position: absolute;
         z-index: 2;
@@ -5984,11 +6033,15 @@ textarea.textarea-engraved {
     .activity-table-shell.is-at-end::after,
     .activity-table-shell.is-unneeded::after,
     .member-directory-table-shell.is-at-end::after,
-    .member-directory-table-shell.is-unneeded::after { opacity: 0; }
+    .member-directory-table-shell.is-unneeded::after,
+    .role-table-shell.is-at-end::after,
+    .role-table-shell.is-unneeded::after { opacity: 0; }
     .activity-table-shell.is-at-end .table-scroll-cue,
     .activity-table-shell.is-unneeded .table-scroll-cue,
     .member-directory-table-shell.is-at-end .table-scroll-cue,
-    .member-directory-table-shell.is-unneeded .table-scroll-cue {
+    .member-directory-table-shell.is-unneeded .table-scroll-cue,
+    .role-table-shell.is-at-end .table-scroll-cue,
+    .role-table-shell.is-unneeded .table-scroll-cue {
         opacity: 0;
         visibility: hidden;
     }
@@ -11614,7 +11667,7 @@ body.thread-restructure-open { overflow: hidden; }
     padding-right: 0;
 }
 .admin-console .member-directory-table th.col-select {
-    width: 34px;
+    width: 44px;
     padding-right: 6px;
 }
 .admin-console .member-directory-table td {
@@ -11632,6 +11685,20 @@ body.thread-restructure-open { overflow: hidden; }
     height: 15px;
     accent-color: var(--accent);
     cursor: pointer;
+}
+.member-directory-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    cursor: pointer;
+}
+.member-directory-check[hidden] { display: none; }
+.member-directory-check:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
 }
 .admin-console .member-directory-sort {
     border: 0;
@@ -12048,7 +12115,7 @@ body.thread-restructure-open { overflow: hidden; }
 /* Record — Status card */
 .member-record-summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
     gap: 18px;
     align-items: start;
 }
@@ -12146,7 +12213,7 @@ body.thread-restructure-open { overflow: hidden; }
 }
 .member-record-restriction-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
     gap: 22px;
     margin-top: 14px;
 }
@@ -12234,7 +12301,7 @@ body.thread-restructure-open { overflow: hidden; }
    (FA: profile_media), placed between Cosmetic title and Badges. */
 .member-record-action-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
     gap: 18px;
     margin-top: 18px;
     align-items: start;
@@ -12316,7 +12383,7 @@ body.thread-restructure-open { overflow: hidden; }
 }
 .member-record-history-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     gap: 24px;
 }
 .member-record-history-list {
@@ -12572,6 +12639,10 @@ body.thread-restructure-open { overflow: hidden; }
 }
 
 @media (max-width: 760px) {
+    .admin-console .member-directory-common-filter-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+    }
+    .member-directory-common-filter-grid > .field:first-child { grid-column: 1 / -1; }
     .admin-console .member-record-card,
     .admin-console .member-invitations-issue {
         padding-inline: 16px;

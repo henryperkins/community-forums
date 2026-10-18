@@ -182,7 +182,7 @@ final class AppImladrisFidelityHighImpactTest extends TestCase
         $this->assertStatus(200, $res);
         self::assertStringContainsString('member-record-status-list', $res->body());
         self::assertMatchesRegularExpression('/<dt>Role<\/dt><dd>user<\/dd>/', $res->body());
-        self::assertMatchesRegularExpression('/<dt>State<\/dt><dd>active<\/dd>/', $res->body());
+        self::assertMatchesRegularExpression('/<dt>State<\/dt><dd>Active<\/dd>/', $res->body());
         self::assertStringNotContainsString('role-pill', $res->body());
         self::assertStringNotContainsString('class="state state-', $res->body());
     }

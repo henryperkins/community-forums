@@ -2979,18 +2979,21 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-member-bulk-form]'), function (form) {
         var toggle = form.querySelector('[data-bulk-toggle]');
         var counter = form.querySelector('[data-bulk-selected-count]');
-        var boxes = form.querySelectorAll('input[name="selected[]"]');
+        var boxes = form.querySelectorAll('input[type="checkbox"][name="selected[]"]');
+        var preserved = form.querySelectorAll('input[type="hidden"][name="selected[]"]').length;
+        var toggleLabel = form.querySelector('[data-bulk-toggle-label]');
 
         var update = function () {
-            var selected = form.querySelectorAll('input[name="selected[]"]:checked').length;
+            var visibleSelected = form.querySelectorAll('input[type="checkbox"][name="selected[]"]:checked').length;
+            var selected = preserved + visibleSelected;
             if (counter) {
                 counter.textContent = selected === 0
                     ? 'None selected'
                     : selected + ' ' + (selected === 1 ? 'member' : 'members') + ' selected';
             }
             if (toggle) {
-                toggle.checked = boxes.length > 0 && selected === boxes.length;
-                toggle.indeterminate = selected > 0 && selected < boxes.length;
+                toggle.checked = boxes.length > 0 && visibleSelected === boxes.length;
+                toggle.indeterminate = visibleSelected > 0 && visibleSelected < boxes.length;
             }
         };
 
@@ -3008,6 +3011,7 @@
         });
 
         update();
+        if (toggleLabel && boxes.length > 0) { toggleLabel.hidden = false; }
     });
 })();
 

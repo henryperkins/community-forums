@@ -2,6 +2,22 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Members and People reliability
+
+- Make bulk warnings skip the operator consistently, show eligible counts before
+  confirmation, and validate shared input before any member action. Preserve
+  selected member IDs through invalid-filter recovery.
+- Include the whole final UTC day in join-date filters and reject invalid date
+  ranges and impossible permission-simulator timestamps without losing input.
+- Use named board/category targets, including without JavaScript; link role
+  capability errors to focused choices, explain the live effect of permission
+  changes, and put available human-readable capabilities before the unavailable
+  reference catalogue.
+- Keep role actions visible on phones, enlarge member selection targets, hide
+  JavaScript-only select-all controls until ready, and let narrow records and
+  enlarged text reflow. Local regression evidence is recorded in
+  `docs/evidence/members-people-remediation-2026-10-18/`.
+
 ## [Unreleased] - Email DKIM selector
 
 - Configure the domain checker's DKIM selector through `MAIL_DKIM_SELECTOR` and

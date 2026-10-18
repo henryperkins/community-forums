@@ -102,6 +102,8 @@ final class AdminRoleController extends Controller
 
         return $this->noindex($this->view('admin/role_simulator', [
             'catalogue' => CapabilityCatalog::all(),
+            'boards' => $this->container->get(BoardRepository::class)->allOrdered(),
+            'mode' => $this->container->get(AuthorityGate::class)->mode(),
             'result' => $result,
             'q' => [
                 'actor' => (string) $request->query('actor', ''),
@@ -182,24 +184,52 @@ final class AdminRoleController extends Controller
         $this->gate();
         $roleId = (int) ($params['id'] ?? 0);
 
+        $scopeType = $request->str('scope_type');
+        $scopeId = $request->str('scope_id');
+        $scopeTarget = $request->post('scope_target');
+
         try {
+            if ($scopeTarget !== null) {
+                // Native select couples the target's kind and identity, including
+                // when JavaScript is unavailable. Existing direct callers can
+                // still submit scope_type/scope_id through the service boundary.
+                if ($scopeTarget === 'site') {
+                    $scopeType = 'site';
+                    $scopeId = '';
+                } elseif (is_string($scopeTarget)
+                    && preg_match('/\A(board|category):([1-9][0-9]*)\z/D', $scopeTarget, $match)
+                    && filter_var($match[2], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) !== false) {
+                    $scopeType = $match[1];
+                    $scopeId = $match[2];
+                } else {
+                    throw new ValidationException(['scope_target' => 'Choose a site, category, or board from the scope list.']);
+                }
+            }
             $this->container->get(RoleAssignmentService::class)->grant(
                 $admin,
                 (string) $request->post('current_password', ''),
                 $roleId,
                 $request->str('username'),
-                $request->str('scope_type'),
-                $request->str('scope_id') !== '' ? (int) $request->str('scope_id') : null,
+                $scopeType,
+                $scopeId !== '' ? (int) $scopeId : null,
                 $request->str('starts_at') !== '' ? $request->str('starts_at') : null,
                 $request->str('ends_at') !== '' ? $request->str('ends_at') : null,
                 $request->str('reason') !== '' ? $request->str('reason') : null,
             );
             return $this->noindex($this->redirectWithFlash('/admin/roles/' . $roleId, 'Role assigned.'));
         } catch (ValidationException $e) {
-            return $this->roleEditView($roleId, $e->errors, [
+            $errors = $e->errors;
+            foreach (['scope_type', 'scope_id'] as $field) {
+                if (isset($errors[$field])) {
+                    $errors['scope_target'] = $errors[$field];
+                    unset($errors[$field]);
+                }
+            }
+            return $this->roleEditView($roleId, $errors, [
                 'assignment' => [
-                    'username' => $request->str('username'), 'scope_type' => $request->str('scope_type'),
-                    'scope_id' => $request->str('scope_id'), 'starts_at' => $request->str('starts_at'),
+                    'username' => $request->str('username'), 'scope_type' => $scopeType,
+                    'scope_id' => $scopeId, 'scope_target' => is_string($scopeTarget) ? $scopeTarget : null,
+                    'starts_at' => $request->str('starts_at'),
                     'ends_at' => $request->str('ends_at'), 'reason' => $request->str('reason'),
                 ],
             ], 422);
@@ -292,6 +322,7 @@ final class AdminRoleController extends Controller
             'assignments' => $this->container->get(RoleAssignmentService::class)->listForRole($roleId),
             'boards' => $this->container->get(BoardRepository::class)->allOrdered(),
             'categories' => $this->container->get(CategoryRepository::class)->all(),
+            'mode' => $this->container->get(AuthorityGate::class)->mode(),
             'errors' => $errors,
             'old' => $old,
         ], $status));

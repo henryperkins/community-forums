@@ -87,11 +87,13 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                     </label>
                     <label class="field">
                         <span>Joined from</span>
-                        <input type="date" name="joined_from" class="input" value="<?= $e($filters['joined_from'] ?? '') ?>">
+                        <input type="date" name="joined_from" class="input" value="<?= $e($filters['joined_from'] ?? '') ?>"<?= field_attrs($filter_errors ?? [], 'joined_from') ?>>
+                        <?= field_error($filter_errors ?? [], 'joined_from') ?>
                     </label>
                     <label class="field">
                         <span>Joined to</span>
-                        <input type="date" name="joined_to" class="input" value="<?= $e($filters['joined_to'] ?? '') ?>">
+                        <input type="date" name="joined_to" class="input" value="<?= $e($filters['joined_to'] ?? '') ?>"<?= field_attrs($filter_errors ?? [], 'joined_to') ?>>
+                        <?= field_error($filter_errors ?? [], 'joined_to') ?>
                     </label>
                     <label class="field">
                         <span>Min posts</span>
@@ -119,6 +121,9 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
 
     <form method="post" action="/admin/users/bulk" class="member-directory-bulk-form" data-member-bulk-form>
         <?= $this->csrfField() ?>
+        <?php foreach (array_diff($bulkSelected, array_map('intval', array_column($users, 'id'))) as $preservedId): ?>
+            <input type="hidden" name="selected[]" value="<?= $preservedId ?>">
+        <?php endforeach; ?>
         <?php foreach ($filters as $key => $value): ?>
             <?php if ($value !== ''): ?>
                 <input type="hidden" name="<?= $e((string) $key) ?>" value="<?= $e((string) $value) ?>">
@@ -133,7 +138,7 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                     <table class="audit member-directory-table">
                     <thead>
                         <tr>
-                            <th scope="col" class="col-select"><input type="checkbox" data-bulk-toggle aria-label="Select all members on this page"></th>
+                            <th scope="col" class="col-select"><label class="member-directory-check" data-bulk-toggle-label hidden><input type="checkbox" data-bulk-toggle aria-label="Select all members on this page"></label></th>
                             <?= $sortHeader('username', 'Member', 'member-directory-member-heading') ?>
                             <?= $sortHeader('role', 'Role') ?>
                             <?= $sortHeader('status', 'State') ?>
@@ -154,7 +159,7 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                         ?>
                         <tr>
                             <td class="col-select">
-                                <input type="checkbox" name="selected[]" value="<?= (int) $u['id'] ?>"<?= in_array((int) $u['id'], $bulkSelected, true) ? ' checked' : '' ?> aria-label="Select <?= $e($u['username']) ?>">
+                                <label class="member-directory-check"><input type="checkbox" name="selected[]" value="<?= (int) $u['id'] ?>"<?= in_array((int) $u['id'], $bulkSelected, true) ? ' checked' : '' ?> aria-label="Select <?= $e($u['username']) ?>"></label>
                             </td>
                             <td data-label="Member">
                                 <span class="member-directory-member">
@@ -169,7 +174,7 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                                     <span class="tag member-directory-board-mod" title="Moderates <?= $moderatedBoards ?> board<?= $moderatedBoards === 1 ? '' : 's' ?>">board mod</span>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="State"><span class="state state-<?= $e($state) ?> member-directory-state is-<?= $e($state) ?>"><?= $e($state) ?></span></td>
+                            <td data-label="State"><span class="state state-<?= $e($state) ?> member-directory-state is-<?= $e($state) ?>"><?= $e(ucfirst(str_replace('_', ' ', $state))) ?></span></td>
                             <td class="member-directory-number" data-label="Reputation"><?= $e(number_format((int) $u['reputation'])) ?></td>
                             <td class="member-directory-number" data-label="Posts"><?= $e(number_format((int) ($u['post_count'] ?? 0))) ?></td>
                             <td data-label="Last seen"><?= !empty($u['last_seen_at']) ? $e(human_date((string) $u['last_seen_at'])) : '<span class="muted">never</span>' ?></td>

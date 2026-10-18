@@ -3,49 +3,42 @@
 $this->layout('layout');
 $this->section('title', 'Roles');
 $this->section('variant', 'admin');
-// Group the flat capability catalogue by its middle namespace token
-// (core.board.* → Board, core.user.* → User, …) so the checkbox run scans as
-// tiers instead of one undifferentiated list.
-$groupedCatalogue = [];
-foreach ($catalogue as $capKey => $capMeta) {
-    $parts = explode('.', (string) $capKey);
-    $groupedCatalogue[ucfirst($parts[1] ?? 'other')][$capKey] = $capMeta;
-}
-ksort($groupedCatalogue);
 ?>
 <?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles', 'pane_class' => 'admin-roles admin-roles-list']) ?>
     <div class="role-callout">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
-        <p>Resolver posture: <strong><?= $e($mode ?? 'shadow') ?></strong>
-        (<code>CAPABILITIES_MODE</code>). Under <code>shadow</code> the legacy rules decide and the
-        resolver only shadow-compares; under <code>enforce</code> the resolver decides and fails
-        closed. Unknown mode values run <code>shadow</code> and emit
-        <code>capabilities.mode_invalid</code> telemetry. System roles are protected
-        compatibility anchors and cannot be edited — clone one to adapt it. Try changes safely in
-        the <a href="/admin/roles/simulator">permission simulator</a>.</p>
+        <div>
+            <?= $this->partial('admin/_role_live_effect', ['mode' => $mode]) ?>
+            <p>System roles are protected compatibility anchors and cannot be edited. Clone one to adapt it.
+            Check a proposed permission in the <a href="/admin/roles/simulator">permission simulator</a>.</p>
+        </div>
     </div>
 
     <?php $roleCount = count($rows); ?>
     <div class="role-list-meta"><span data-role-count><?= $roleCount ?> <?= $roleCount === 1 ? 'role' : 'roles' ?></span></div>
     <section class="card role-table-card">
-        <div class="table-scroll" tabindex="0" role="region" aria-label="Role definitions">
+        <div class="role-table-shell" data-overflow-cue>
+        <p class="table-scroll-cue" data-overflow-cue-label>Scroll for role details and explicit assignments <span aria-hidden="true">→</span></p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Role definitions" data-overflow-region>
         <table class="audit role-table">
-            <thead><tr><th scope="col">Name</th><th scope="col">Key</th><th scope="col">Kind</th><th scope="col" class="role-number">Version</th><th scope="col" class="role-number">Capabilities</th><th scope="col" class="role-number">Active assignments</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+            <thead><tr><th scope="col">Name</th><th scope="col"><span class="sr-only">Actions</span></th><th scope="col">Key</th><th scope="col">Kind</th><th scope="col" class="role-number">Version</th><th scope="col" class="role-number">Capabilities</th><th scope="col" class="role-number">Active explicit assignments</th></tr></thead>
             <tbody>
             <?php foreach ($rows as $r): $role = $r['role']; ?>
                 <tr>
                     <td><?= $e($role['name']) ?></td>
+                    <td><a class="role-row-action" href="/admin/roles/<?= (int) $role['id'] ?>"><?= ((string) $role['kind']) === 'system' ? 'View / clone' : 'Edit' ?></a></td>
                     <td><code class="role-key"><?= $e($role['role_key']) ?></code></td>
                     <td><?php if (((string) $role['kind']) === 'system'): ?><span class="role-kind role-kind-system">Protected anchor</span><?php else: ?><span class="role-kind role-kind-custom">Custom</span><?php endif; ?></td>
                     <td class="role-number role-version">v<?= (int) $role['version'] ?></td>
                     <td class="role-number"><?= (int) $r['capability_count'] ?></td>
                     <td class="role-number"><?= (int) $r['impact'] ?></td>
-                    <td><a class="role-row-action" href="/admin/roles/<?= (int) $role['id'] ?>"><?= ((string) $role['kind']) === 'system' ? 'View / clone' : 'Edit' ?></a></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
         </div>
+        </div>
+        <p class="role-section-intro role-assignment-count-note">These counts cover explicit role grants. They do not count members’ built-in User, Moderator, or Admin roles.</p>
     </section>
 
     <section class="card role-create-card">
@@ -69,22 +62,7 @@ ksort($groupedCatalogue);
             </div>
 
             <?php $checked = (array) ($old['capabilities'] ?? []); ?>
-            <div class="role-capability-grid">
-                <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
-                    <fieldset>
-                        <legend><?= $e($groupLabel) ?></legend>
-                        <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
-                            <label class="role-capability-option">
-                                <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
-                                <span><code><?= $e($key) ?></code><span class="role-capability-description"> — <?= $e($meta['consent'] ?? $meta['description']) ?></span>
-                                <?php if ($meta['risk'] === 'high'): ?><span class="role-risk">High risk</span><?php endif; ?>
-                                <?php if (!$enforced): ?><span class="role-capability-locked">(not yet enforceable)</span><?php endif; ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </fieldset>
-                <?php endforeach; ?>
-            </div>
-            <?= field_error($errors ?? [], 'capabilities') ?>
+            <?= $this->partial('admin/_role_capabilities', ['catalogue' => $catalogue, 'checked' => $checked, 'errors' => $errors ?? [], 'error_prefix' => 'err-role-create']) ?>
 
             <div class="role-create-footer">
                 <div class="role-reauth-field">

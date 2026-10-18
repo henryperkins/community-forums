@@ -143,14 +143,13 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then 
   const roleId = Number(new URL(page.url()).pathname.match(/(\d+)$/)?.[1]);
   expect(roleId, 'role id parsed from the edit URL').toBeGreaterThan(0);
 
-  // Resolve #general's board id from the assign form's own datalist rather than
+  // Resolve #general's named scope option rather than
   // hardcoding a seed-order-dependent id.
-  const generalBoardId = await page.locator('#assignment-board-options option[label="General"]').getAttribute('value');
-  expect(generalBoardId, 'General board id from the assignment datalist').not.toBeNull();
+  const generalTarget = await page.locator('select[name="scope_target"] option', { hasText: /^Board: General$/ }).getAttribute('value');
+  expect(generalTarget, 'General board target from the named scope select').not.toBeNull();
 
   await page.fill('input[name="username"]', 'bob');
-  await page.selectOption('select[name="scope_type"]', 'board');
-  await page.fill('input[name="scope_id"]', generalBoardId!);
+  await page.selectOption('select[name="scope_target"]', generalTarget!);
   await page.fill('input[name="reason"]', 'Browser evidence: Inc 6 deputy grant');
   await page.fill('form[action$="/assignments"] input[name="current_password"]', 'password123');
   const assignButton = page.locator('form[action$="/assignments"] button[type="submit"]');
@@ -228,7 +227,7 @@ test('roles remain operable without JavaScript: create, assign, renew, and revok
 
     const assignForm = page.locator('form.role-assign-form');
     await assignForm.locator('input[name="username"]').fill('bob');
-    await assignForm.locator('select[name="scope_type"]').selectOption('site');
+    await assignForm.locator('select[name="scope_target"]').selectOption('site');
     await assignForm.locator('input[name="reason"]').fill('No-JS lifecycle browser evidence');
     await assignForm.locator('input[name="current_password"]').fill('password123');
     await assignForm.getByRole('button', { name: 'Assign', exact: true }).click();
@@ -272,7 +271,7 @@ test('deputy queue discovery: approve-only deputy reaches their scoped approvals
 
   // The roles page surfaces the effective posture (Inc 6 follow-up).
   await visit(page, '/admin/roles');
-  await expect(page.locator('p', { hasText: 'Resolver posture:' })).toContainText('enforce');
+  await expect(page.locator('[data-role-live-effect]').first()).toContainText('Permissions are live (enforce).');
 
   // Two fresh approval-required boards: carol will be scoped to one only.
   const makeApprovalBoard = async (name: string): Promise<{ id: string; slug: string }> => {
@@ -305,8 +304,7 @@ test('deputy queue discovery: approve-only deputy reaches their scoped approvals
   await page.locator('table tbody tr', { hasText: roleName }).getByRole('link', { name: 'Edit' }).click();
   await page.waitForURL(/\/admin\/roles\/\d+$/);
   await page.fill('input[name="username"]', 'carol');
-  await page.selectOption('select[name="scope_type"]', 'board');
-  await page.fill('input[name="scope_id"]', scopedBoardId);
+  await page.selectOption('select[name="scope_target"]', `board:${scopedBoardId}`);
   await page.fill('input[name="reason"]', 'Browser evidence: queue discovery');
   await page.fill('form[action$="/assignments"] input[name="current_password"]', 'password123');
   const assignButton = page.locator('form[action$="/assignments"] button[type="submit"]');

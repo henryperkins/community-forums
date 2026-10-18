@@ -685,6 +685,26 @@ final class UserModerationService
      */
     public function directoryModel(array $filters, int $page, int $perPage = 50): array
     {
+        $errors = [];
+        foreach (['joined_from', 'joined_to'] as $key) {
+            $value = (string) ($filters[$key] ?? '');
+            if ($value === '') {
+                continue;
+            }
+            $date = preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/', $value) === 1
+                ? DateTimeImmutable::createFromFormat('!Y-m-d', $value, new DateTimeZone('UTC'))
+                : false;
+            if ($date === false || $date->format('Y-m-d') !== $value || $value < '1000-01-01' || $value > '9999-12-31') {
+                $errors[$key] = 'Use a valid UTC date in YYYY-MM-DD format, between 1000-01-01 and 9999-12-31.';
+            }
+        }
+        if ($errors === [] && ($filters['joined_from'] ?? '') !== '' && ($filters['joined_to'] ?? '') !== ''
+            && $filters['joined_from'] > $filters['joined_to']) {
+            $errors['joined_to'] = 'The end date must be on or after the start date.';
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors, $filters);
+        }
         $page = max(0, $page);
         $perPage = max(1, min(200, $perPage));
         $total = $this->users->directoryCount($filters);
@@ -725,19 +745,27 @@ final class UserModerationService
     /**
      * Step-2 bulk apply — one audited service call per member. Per-member
      * refusals (an admin target, yourself) are skipped and reported; a
-     * shared-input failure (empty reason, malformed expiry) on the first
-     * member rethrows before anything is written (behavior-preserving move
-     * from AdminUserController::bulkApply — PR #44 spec §4 boundary).
+     * shared-input failure (empty reason, malformed expiry) is rejected before
+     * any target is considered, even when every selected account is ineligible.
      *
      * @param list<int> $ids
      * @return array{done:int, skipped:list<string>}
      */
     public function bulkApply(User $admin, string $action, array $ids, string $reason, ?string $until): array
     {
+        $this->assertAdmin($admin);
         $ids = $this->normalizeBulkCommand($action, $ids);
+        // Shared input is validated before eligibility skips or per-member
+        // writes, including a batch containing only ineligible targets.
+        $reason = $this->requireReason($reason);
+        $until = $action === 'suspend' ? $this->validateSuspendUntil($until) : null;
         $done = 0;
         $skipped = [];
         foreach ($ids as $id) {
+            if ($action === 'warn' && $id === $admin->id()) {
+                $skipped[] = $this->usernameOf($id) . ' (You cannot warn your own account.)';
+                continue;
+            }
             try {
                 if ($action === 'suspend') {
                     $this->suspend($admin, $id, $until, $reason);
@@ -746,10 +774,6 @@ final class UserModerationService
                 }
                 $done++;
             } catch (ValidationException $e) {
-                if ($done === 0 && (isset($e->errors['reason']) || isset($e->errors['until']))) {
-                    // Shared-input failure — nothing has been written yet.
-                    throw $e;
-                }
                 $skipped[] = $this->usernameOf($id) . ' (' . $e->first() . ')';
             } catch (ForbiddenException $e) {
                 $skipped[] = $this->usernameOf($id) . ' (' . $e->getMessage() . ')';

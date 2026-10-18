@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Repository;
 
 use App\Repository\UserRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\TestCase;
 
 final class UserRepositoryDirectoryTest extends TestCase
@@ -121,5 +122,32 @@ final class UserRepositoryDirectoryTest extends TestCase
         $usernames = self::usernames($repo->directory(['sort' => 'id; DROP TABLE users', 'limit' => 200]));
 
         self::assertContains('safe_sort', $usernames);
+    }
+
+    /** @return array<string,array{string,?string}> */
+    public static function endDays(): array
+    {
+        return [
+            'leap day' => ['2024-02-29', '2024-03-01'],
+            'year end' => ['2026-12-31', '2027-01-01'],
+            'last database day' => ['9999-12-31', null],
+        ];
+    }
+
+    #[DataProvider('endDays')]
+    public function test_joined_to_includes_the_final_second_without_crossing_into_the_next_day(string $day, ?string $nextDay): void
+    {
+        $repo = new UserRepository($this->db);
+        $included = $this->makeUser(['username' => 'date_bound_included']);
+        $this->db->run('UPDATE users SET created_at = ? WHERE id = ?', [$day . ' 23:59:59', $included['id']]);
+        if ($nextDay !== null) {
+            $excluded = $this->makeUser(['username' => 'date_bound_excluded']);
+            $this->db->run('UPDATE users SET created_at = ? WHERE id = ?', [$nextDay . ' 00:00:00', $excluded['id']]);
+        }
+
+        $filters = ['q' => 'date_bound_', 'joined_to' => $day, 'limit' => 200];
+
+        self::assertSame(['date_bound_included'], self::usernames($repo->directory($filters)));
+        self::assertSame(1, $repo->directoryCount($filters));
     }
 }

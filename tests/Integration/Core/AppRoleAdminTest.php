@@ -249,12 +249,13 @@ final class AppRoleAdminTest extends TestCase
         $this->actingAs($this->makeAdmin());
         $resp = $this->get('/admin/roles');
         $this->assertStatus(200, $resp);
-        $this->assertSeeText($resp, 'Resolver posture');
-        $this->assertSeeText($resp, 'shadow');
+        $this->assertSeeText($resp, 'Permissions are in preview mode (shadow).');
+        $this->assertSeeText($resp, 'Saving roles and assignments does not change live access.');
 
         $this->withCapabilitiesEnforced();
         $resp = $this->get('/admin/roles');
         $this->assertStatus(200, $resp);
-        $this->assertSeeText($resp, 'enforce');
+        $this->assertSeeText($resp, 'Permissions are live (enforce).');
+        $this->assertSeeText($resp, 'Changes apply to live access when assignments are active.');
     }
 }

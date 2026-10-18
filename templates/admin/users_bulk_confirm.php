@@ -12,12 +12,13 @@ $actorId = (int) ($actor_id ?? 0);
 $subjectRows = [];
 $actionableCount = 0;
 foreach ($subjects as $subject) {
-    $skipped = $isSuspend
-        && ((string) ($subject['role'] ?? '') === 'admin' || (int) ($subject['id'] ?? 0) === $actorId);
+    $isSelf = (int) ($subject['id'] ?? 0) === $actorId;
+    $skipped = $isSelf || ($isSuspend && (string) ($subject['role'] ?? '') === 'admin');
+    $skipReason = $isSelf ? 'your own account' : 'administrator';
     if (!$skipped) {
         $actionableCount++;
     }
-    $subjectRows[] = ['subject' => $subject, 'skipped' => $skipped];
+    $subjectRows[] = ['subject' => $subject, 'skipped' => $skipped, 'skip_reason' => $skipReason];
 }
 $verb = $isSuspend ? 'Suspend' : 'Warn';
 // Drill-ins name the action, not the area (cf. structure_confirm, tag_merge_confirm).
@@ -27,12 +28,15 @@ $this->section('title', $verb . ' members');
     <?= $this->partial('partials/back_link', ['href' => '/admin/users', 'label' => 'All members', 'class' => 'admin-back member-bulk-back']) ?>
 
     <section class="card member-bulk-card">
-        <h2><?= $verb ?> <?= $count ?> member<?= $count === 1 ? '' : 's' ?></h2>
+        <h2><?= $verb ?> <?= $actionableCount ?> member<?= $actionableCount === 1 ? '' : 's' ?></h2>
+        <?php if ($actionableCount !== $count): ?>
+            <p class="member-bulk-intro"><?= $count ?> selected; <?= $count - $actionableCount ?> skipped.</p>
+        <?php endif; ?>
         <p class="member-bulk-intro">
             <?php if ($isSuspend): ?>
                 Every selected member becomes read-only until the expiry (blank is indefinite). Your own account and other administrators are skipped automatically. Each suspension is audited individually and reversible with Lift.
             <?php else: ?>
-                Every selected member receives the same formal warning; it appears on their record and counts toward their history. Each warning is audited individually.
+                Every eligible selected member receives the same formal warning; it appears on their record and counts toward their history. Your own account is skipped automatically. Each warning is audited individually.
             <?php endif; ?>
         </p>
 
@@ -48,7 +52,7 @@ $this->section('title', $verb . ' members');
                     <a class="member-bulk-subject-link" href="/admin/users/<?= (int) $subject['id'] ?>">@<?= $e($subject['username']) ?></a>
                     <span class="role-pill role-<?= $e($subject['role']) ?> member-bulk-role"><?= $e($subject['role']) ?></span>
                     <span class="member-bulk-state"><?= $e($subject['status']) ?></span>
-                    <?php if ($row['skipped']): ?><span class="member-bulk-skipped">skipped — administrator</span><?php endif; ?>
+                    <?php if ($row['skipped']): ?><span class="member-bulk-skipped">skipped — <?= $e($row['skip_reason']) ?></span><?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>
@@ -75,7 +79,7 @@ $this->section('title', $verb . ' members');
             <?php endif; ?>
 
             <div class="form-actions member-bulk-actions">
-                <button class="btn<?= $isSuspend ? ' danger' : '' ?>" type="submit"><?= $verb ?> <?= $actionableCount ?> member<?= $actionableCount === 1 ? '' : 's' ?></button>
+                <button class="btn<?= $isSuspend ? ' danger' : '' ?>" type="submit"<?= $actionableCount === 0 ? ' disabled' : '' ?>><?= $verb ?> <?= $actionableCount ?> member<?= $actionableCount === 1 ? '' : 's' ?></button>
                 <a class="linkbtn" href="/admin/users">Cancel</a>
             </div>
         </form>

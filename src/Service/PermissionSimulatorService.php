@@ -57,9 +57,12 @@ final class PermissionSimulatorService
 
         $atTime = null;
         if ($at !== null && trim($at) !== '') {
-            $atTime = \DateTimeImmutable::createFromFormat('Y-m-d H:i', trim($at), new \DateTimeZone('UTC'))
-                ?: \DateTimeImmutable::createFromFormat('Y-m-d\TH:i', trim($at), new \DateTimeZone('UTC'));
-            if ($atTime === false || $atTime === null) {
+            $at = str_replace('T', ' ', trim($at));
+            $atTime = preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}\z/', $at) === 1
+                ? \DateTimeImmutable::createFromFormat('!Y-m-d H:i', $at, new \DateTimeZone('UTC'))
+                : false;
+            $errors = \DateTimeImmutable::getLastErrors();
+            if ($atTime === false || (is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
                 $result['error'] = 'Time must be UTC "YYYY-MM-DD HH:MM".';
                 return $result;
             }

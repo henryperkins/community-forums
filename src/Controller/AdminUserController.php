@@ -367,13 +367,27 @@ final class AdminUserController extends Controller
      */
     private function directoryView(Request $request, ?string $bulkError = null, int $status = 200, array $selectedIds = []): Response
     {
-        $model = $this->container->get(UserModerationService::class)->directoryModel(
-            $this->readFilters($request),
-            max(0, $request->int('page', 0)),
-            self::PER_PAGE,
-        );
+        $filters = $this->readFilters($request);
+        $page = max(0, $request->int('page', 0));
+        try {
+            $model = $this->container->get(UserModerationService::class)->directoryModel($filters, $page, self::PER_PAGE);
+        } catch (ValidationException $e) {
+            // Invalid bounds must preserve the originating filter/selection
+            // state without querying a broader, partly filtered directory.
+            $model = [
+                'users' => [],
+                'filters' => $e->old,
+                'q' => $filters['q'],
+                'page' => $page,
+                'total' => 0,
+                'has_next' => false,
+                'base_query' => array_filter($filters, static fn ($v): bool => $v !== '' && $v !== null),
+                'filter_errors' => $e->errors,
+            ];
+            $status = 422;
+        }
 
-        return $this->view('admin/users', $model + ['bulk_error' => $bulkError, 'bulk_selected' => $selectedIds], $status);
+        return $this->view('admin/users', $model + ['filter_errors' => [], 'bulk_error' => $bulkError, 'bulk_selected' => $selectedIds], $status);
     }
 
     /**

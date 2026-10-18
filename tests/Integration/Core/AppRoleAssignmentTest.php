@@ -74,8 +74,7 @@ final class AppRoleAssignmentTest extends TestCase
         $this->assertStatus(422, $r);
         $body = $r->body();
         self::assertStringContainsString('value="nobody-here"', $body);
-        self::assertMatchesRegularExpression('/<option value="category"\s+selected>Category<\/option>/', $body);
-        self::assertStringContainsString('value="424242"', $body);
+        self::assertMatchesRegularExpression('/<option value="category:424242"\s+selected>Unavailable target: category:424242/', $body);
         self::assertStringContainsString('value="2030-01-02 03:04"', $body);
         self::assertStringContainsString('value="2031-02-03 04:05"', $body);
         self::assertStringContainsString('value="keep every assignment field"', $body);

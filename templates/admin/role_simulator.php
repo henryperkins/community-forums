@@ -5,8 +5,8 @@ $this->section('title', 'Permission simulator');
 $this->section('variant', 'admin');
 ?>
 <?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'simulator', 'pane_class' => 'admin-roles admin-role-simulator']) ?>
-    <p class="role-simulator-intro">Runs <code>can(actor, capability, target, time)</code> on the real resolver.
-    While capabilities are in shadow, answers predict the post-cutover decision; live requests still use legacy authority.</p>
+    <p class="role-simulator-intro">Check a member’s permission for a board and time. The result explains which role or rule decides access.</p>
+    <?= $this->partial('admin/_role_live_effect', ['mode' => $mode]) ?>
 
     <section class="card role-simulator-form-card">
         <h2>Simulate</h2>
@@ -18,12 +18,21 @@ $this->section('variant', 'admin');
                 <select class="input role-time-input" name="capability" required>
                     <option value="">— pick —</option>
                     <?php foreach ($catalogue as $key => $meta): ?>
-                        <option value="<?= $e($key) ?>" <?= $q['capability'] === $key ? 'selected' : '' ?>><?= $e($key) ?></option>
+                        <option value="<?= $e($key) ?>" <?= $q['capability'] === $key ? 'selected' : '' ?>><?= $e($meta['consent'] ?? $meta['description']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label class="role-form-label"><span>Board id (optional target)</span>
-                <input class="input role-mono-input" type="number" name="board_id" min="1" value="<?= $e($q['board_id']) ?>">
+            <label class="role-form-label"><span>Board (optional target)</span>
+                <select class="input" name="board_id">
+                    <option value="">No board target</option>
+                    <?php $boardIds = array_map('strval', array_column($boards ?? [], 'id')); ?>
+                    <?php if ($q['board_id'] !== '' && !in_array($q['board_id'], $boardIds, true)): ?>
+                        <option value="<?= $e($q['board_id']) ?>" selected>Unavailable board: <?= $e($q['board_id']) ?></option>
+                    <?php endif; ?>
+                    <?php foreach (($boards ?? []) as $board): ?>
+                        <option value="<?= (int) $board['id'] ?>"<?= (string) $board['id'] === $q['board_id'] ? ' selected' : '' ?>><?= $e($board['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
             </label>
             <label class="role-form-label"><span>At (optional, UTC)</span>
                 <input class="input role-time-input" type="text" name="at" value="<?= $e($q['at']) ?>" placeholder="2026-08-15 12:00">

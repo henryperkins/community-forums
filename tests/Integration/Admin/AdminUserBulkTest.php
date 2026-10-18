@@ -138,8 +138,9 @@ final class AdminUserBulkTest extends TestCase
         ]);
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'Suspend 3 members');
-        self::assertSame(2, substr_count($res->body(), 'skipped — administrator'));
+        $this->assertSeeText($res, '3 selected; 2 skipped.');
+        self::assertSame(1, substr_count($res->body(), 'skipped — administrator'));
+        self::assertSame(1, substr_count($res->body(), 'skipped — your own account'));
         self::assertMatchesRegularExpression('/<button[^>]*type="submit"[^>]*>Suspend 1 member<\/button>/', $res->body());
         $this->assertSeeText(
             $res,
