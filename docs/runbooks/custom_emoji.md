@@ -5,7 +5,7 @@ Custom emoji is default-on as of 2026-07-03 and remains operator-reversible with
 
 ## Surface
 
-- Admin surface: `/admin`, section `Custom emoji`.
+- Admin surface: `/admin/custom-emoji`, in the Features area.
 - Member surface: Markdown shortcodes render in posts outside `code` and `pre`.
 - Reaction surface: only entries saved with `Allow as a reaction` appear in the
   reaction picker.
@@ -15,12 +15,23 @@ Custom emoji is default-on as of 2026-07-03 and remains operator-reversible with
 1. Prepare a static PNG or WebP asset.
 2. Use either a reviewed `/emoji/{file}.png|webp` path or a finalized `/media/{id}`
    asset path.
-3. In `/admin`, enter the shortcode without colons, a readable name, the asset
+3. In `/admin/custom-emoji`, enter the shortcode without colons, a readable name, the asset
    path, and the MIME type.
 4. Check `Allow as a reaction` only for shortcodes that are appropriate for
    lightweight public reactions.
 5. Save the entry and verify a test post renders `:shortcode:` as an image while
    inline code such as `` `:shortcode:` `` stays literal.
+
+The built-in shortcodes `smile`, `heart`, `thumbsup`, `thumbs_up`, and `tada`
+are reserved because the Markdown renderer expands them before custom emoji.
+Saving one returns a field error and preserves the other form values. Choose a
+different shortcode for the custom asset.
+
+Saving an existing custom shortcode replaces its settings and re-enables it;
+the success message identifies this as a replacement. Create, replace, enable,
+and disable each append an audit entry with the acting admin, emoji ID, and
+before/after shortcode, name, asset path, MIME, enabled state, and reaction
+setting. The configuration write and audit entry commit in one transaction.
 
 ## Media Moderation
 
@@ -34,7 +45,7 @@ Custom emoji is default-on as of 2026-07-03 and remains operator-reversible with
 
 ## Disable A Shortcode
 
-Use the `Disable` action in the `/admin` custom emoji table.
+Use the `Disable` action in the `/admin/custom-emoji` catalogue.
 
 Effects:
 - New Markdown renders the literal `:shortcode:` text instead of an image.
@@ -43,6 +54,10 @@ Effects:
 - Existing reaction rows remain as historical records.
 
 Re-enable with the `Enable` action if the asset is cleared for use again.
+Existing entries that collide with a built-in shortcode can still be disabled,
+but cannot be re-enabled. A failed enable returns a field error and fills the
+add-or-replace form with the existing asset settings; change the shortcode and
+save it as a new entry. Leave the old reserved entry disabled.
 
 ## Rollback
 

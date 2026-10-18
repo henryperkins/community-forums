@@ -77,6 +77,14 @@ the stored metadata immediately. Both are audited against the post the row
 belongs to, so `Admin → Overview → Audit log` shows them beside every other
 action on that post.
 
+**History** — Recent previews lists 50 rows per page, newest first. Use the
+status filter and Previous/Next links to reach every stored row; changing the
+status starts at page 1. Settings, board toggles and row actions keep the
+current history filter and page, including when an allowlist save is rejected.
+If an action removes the final row from the current filtered page, the next
+render moves to the last remaining page. Empty filtered lists show an empty
+state rather than an empty page range. All of this works without JavaScript.
+
 ## Author removal, and why refresh cannot undo it
 
 A post's author — and anyone with board-scoped `core.post.delete_any` — can

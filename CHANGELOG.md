@@ -2,6 +2,20 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Features console safety and navigation
+
+- Require impact review and typed confirmation before badge-rule Backfill or
+  Revoke; reject changed batches before applying awards. Explain the manual
+  workflow and disclose preview/processing limits.
+- Audit custom emoji creation, replacement and availability changes in the same
+  transaction, and reject built-in shortcode collisions with preserved input.
+- Paginate link preview history while preserving status and page through actions;
+  keep board state and controls visible at desktop and narrow widths.
+- Add no-JavaScript flag-name, effective-state and readiness filters; preserve
+  inventory-wide totals and enlarge Operations links to 44px targets.
+- Local regression and browser evidence is recorded in
+  `docs/evidence/admin-features-remediation-2026-10-18/`.
+
 ## [Unreleased] - Members and People reliability
 
 - Make bulk warnings skip the operator consistently, show eligible counts before

@@ -202,7 +202,7 @@ test('badge rules copies the two-up create card, rule rows and action order in e
   await expectFeaturesArea(page, 'Badge rules');
 
   await expect(page.locator('.features-two-up')).toHaveCount(1);
-  await expect(page.getByText('Rules award automatically once the metric crosses the threshold.')).toBeVisible();
+  await expect(page.getByText(/Awards happen only when you run Backfill/)).toBeVisible();
   await expect(page.locator('.features-field-pair')).toHaveCount(1);
 
   // Rules are created inert, so the first row offers Enable, and the design's
@@ -212,9 +212,11 @@ test('badge rules copies the two-up create card, rule rows and action order in e
   await expect(row.locator('.features-rule-star')).toHaveAttribute('aria-hidden', 'true');
   const actions = row.locator('.features-rowbtn');
   await expect(actions).toHaveText(['Preview', 'Backfill', 'Enable', 'Revoke awards']);
-  // Preview navigates; every mutation is a POST form (C-11).
+  // Bulk actions navigate to impact review; the remaining toggle mutates by POST.
   await expect(row.getByRole('link', { name: 'Preview' })).toHaveAttribute('href', /\/preview$/);
-  await expect(row.locator('form[method="post"]')).toHaveCount(3);
+  await expect(row.getByRole('link', { name: /Backfill/ })).toHaveAttribute('href', /\/backfill$/);
+  await expect(row.getByRole('link', { name: /Revoke/ })).toHaveAttribute('href', /\/revoke$/);
+  await expect(row.locator('form[method="post"]')).toHaveCount(1);
 
   await exerciseThemeRegisters(page, info, 'features-badge-rules');
 

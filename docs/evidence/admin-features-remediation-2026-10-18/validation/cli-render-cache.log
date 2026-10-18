@@ -1,0 +1,5 @@
+  posts              scanned=120 changed=0
+  dm_messages        scanned=0 changed=0
+  thread_summaries   scanned=14 changed=0
+  post_revisions     scanned=0 changed=0
+Render-cache dry run complete; no rows were written.

@@ -39,6 +39,12 @@ the core forum keeps serving); removing a key restores the code default.
 `/admin/features` lists every flag with its default, override, and effective
 state. Override values must be JSON booleans; unrecognizable values fail dark.
 
+The read-only inventory can be narrowed by flag name, effective On/Off state,
+and readiness. Filters combine and work without JavaScript; readiness reflects
+current operational configuration. Summary totals and undeclared override keys
+remain inventory-wide. Clear filters restores the complete list. Filtering does
+not change any feature setting.
+
 ```bash
 # Inspect current overrides (decoded; "array ()" means no overrides)
 php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env};

@@ -13,9 +13,8 @@ $this->section('variant', 'admin');
     <section class="card features-preview-card">
         <h2 class="features-preview-badge"><?= $e($rule['badge_name']) ?></h2>
         <p class="features-preview-meta"><?= $e($rule['rule_type']) ?> &ge; <?= (int) $rule['threshold'] ?><?= !empty($rule['board_name']) ? ' · ' . $e($rule['board_name']) : '' ?></p>
-        <?php // feature-removed FC-14: the design leads with "{n} member(s) meet this rule
-              // today." preview()['total'] counts a LIMIT-100 page while backfill runs at
-              // 1000, so the lead would understate the grant. Ship no count. ?>
+        <p class="features-card-intro">Preview shows up to 100 members who qualify and do not already hold this badge. Backfill processes up to 1,000 members per run. Review the current batch and confirm before awarding; enabling a rule does not schedule awards.</p>
+        <p><a class="linkbtn features-rowbtn" href="/admin/badge-rules/<?= (int) $rule['id'] ?>/backfill">Review Backfill</a></p>
         <?php if (empty($users)): ?>
             <p class="features-empty">No members would receive this badge.</p>
         <?php else: ?>

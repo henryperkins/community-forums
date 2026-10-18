@@ -1373,7 +1373,11 @@ test('phase 4 badge rules: create, preview, enable, backfill, disable, revoke', 
   await page.waitForURL(/\/admin\/badge-rules$/);
   await expect(ruleRow.getByText('Enabled')).toBeVisible();
 
-  await ruleRow.locator('form[action$="/backfill"] button[type="submit"]').click();
+  await ruleRow.getByRole('link', { name: /Backfill/ }).click();
+  const backfillId = page.url().match(/badge-rules\/(\d+)\/backfill$/)?.[1];
+  expect(backfillId).toBeTruthy();
+  await page.locator('input[name="confirm"]').fill(`BACKFILL ${backfillId}`);
+  await page.getByRole('button', { name: 'Backfill', exact: true }).click();
   await page.waitForURL(/\/admin\/badge-rules$/);
   await expect(page.getByText(/Badge rule backfilled \d+ awards\./)).toBeVisible();
   await shot(page, info, '34-badge-rule-backfilled');
@@ -1383,7 +1387,11 @@ test('phase 4 badge rules: create, preview, enable, backfill, disable, revoke', 
   await page.waitForURL(/\/admin\/badge-rules$/);
   await expect(ruleRow.getByText('Disabled')).toBeVisible();
 
-  await ruleRow.locator('form[action$="/revoke"] button[type="submit"]').click();
+  await ruleRow.getByRole('link', { name: /Revoke/ }).click();
+  const revokeId = page.url().match(/badge-rules\/(\d+)\/revoke$/)?.[1];
+  expect(revokeId).toBeTruthy();
+  await page.locator('input[name="confirm"]').fill(`REVOKE ${revokeId}`);
+  await page.getByRole('button', { name: 'Revoke awards', exact: true }).click();
   await page.waitForURL(/\/admin\/badge-rules$/);
   await expect(page.getByText(/Badge rule revoked \d+ awards\./)).toBeVisible();
 });

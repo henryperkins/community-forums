@@ -730,6 +730,103 @@ final class AppLinkPreviewTest extends TestCase
         self::assertStringContainsString('autofocus', $textarea);
     }
 
+    public function test_console_paginates_preview_history_and_clamps_page_inputs(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'historyadmin']));
+        for ($i = 1; $i <= 52; $i++) {
+            $this->seedPreview('http://preview.example.test/history-' . $i);
+        }
+
+        $first = $this->get('/admin/link-previews');
+        $this->assertStatus(200, $first);
+        $this->assertSeeText($first, 'history-52');
+        $this->assertDontSeeText($first, 'http://preview.example.test/history-1<');
+        $this->assertSeeText($first, 'Showing 1–50 of 52 previews');
+        $this->assertSeeText($first, 'href="/admin/link-previews?page=2"');
+
+        foreach (['2', '999999999999999999999999999'] as $page) {
+            $last = $this->get('/admin/link-previews', ['page' => $page]);
+            $this->assertStatus(200, $last);
+            $this->assertSeeText($last, 'http://preview.example.test/history-1<');
+            $this->assertDontSeeText($last, 'history-52');
+            $this->assertSeeText($last, 'Showing 51–52 of 52 previews');
+            $this->assertSeeText($last, 'Page 2 of 2');
+        }
+
+        foreach (['-5', 'bad', '1.5', '0', '[]'] as $page) {
+            $response = $this->get('/admin/link-previews', ['page' => $page]);
+            $this->assertStatus(200, $response);
+            $this->assertSeeText($response, 'Showing 1–50 of 52 previews');
+        }
+        $this->assertStatus(200, $this->get('/admin/link-previews', ['status' => ['queued'], 'page' => ['2']]));
+    }
+
+    public function test_console_pagination_keeps_status_and_row_action_return_state(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'filteredhistoryadmin']));
+        $oldest = 0;
+        for ($i = 1; $i <= 51; $i++) {
+            $id = $this->seedPreview('http://preview.example.test/rendered-' . $i);
+            $oldest = $oldest === 0 ? $id : $oldest;
+            $this->db->run("UPDATE link_previews SET status = 'fetched' WHERE id = ?", [$id]);
+        }
+        $this->seedPreview('http://preview.example.test/queued-only');
+
+        $first = $this->get('/admin/link-previews', ['status' => 'fetched']);
+        $this->assertStatus(200, $first);
+        $this->assertSeeText($first, 'href="/admin/link-previews?status=fetched&amp;page=2"');
+        $this->assertDontSeeText($first, 'queued-only');
+        $this->assertSeeText($first, 'Showing 1–50 of 51 previews');
+
+        $last = $this->get('/admin/link-previews', ['status' => 'fetched', 'page' => '2']);
+        $this->assertStatus(200, $last);
+        $this->assertSeeText($last, 'http://preview.example.test/rendered-1<');
+        $this->assertSeeText($last, 'name="return" value="/admin/link-previews?status=fetched&amp;page=2"');
+        $this->assertRedirect($this->post('/admin/link-previews/' . $oldest . '/refresh', [
+            'return' => '/admin/link-previews?status=fetched&page=2',
+        ]), '/admin/link-previews?status=fetched&page=2');
+        $after = $this->get('/admin/link-previews', ['status' => 'fetched', 'page' => '2']);
+        $this->assertStatus(200, $after);
+        $this->assertSeeText($after, 'Showing 1–50 of 50 previews');
+        $this->assertDontSeeText($after, 'http://preview.example.test/rendered-1<');
+
+        $this->assertRedirect($this->post('/admin/link-previews/' . $oldest . '/purge', [
+            'return' => '/admin/link-previews?status=queued&page=2&unexpected=discard',
+        ]), '/admin/link-previews?status=queued&page=2');
+        foreach (['https://evil.example/test', '//evil.example/test', '/admin/users?page=2'] as $return) {
+            $this->assertRedirect($this->post('/admin/link-previews/' . $oldest . '/refresh', [
+                'return' => $return,
+            ]), '/admin/link-previews');
+        }
+    }
+
+    public function test_console_settings_error_keeps_the_filtered_history_page_and_typed_allowlist(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'historysettingsadmin']));
+        for ($i = 1; $i <= 51; $i++) {
+            $this->seedPreview('http://preview.example.test/settings-history-' . $i);
+        }
+
+        $response = $this->post('/admin/link-previews/settings', [
+            'allowed_hosts' => 'https://invalid.example/path',
+            'return' => '/admin/link-previews?status=queued&page=2',
+        ]);
+        $this->assertStatus(422, $response);
+        $this->assertSeeText($response, 'https://invalid.example/path');
+        $this->assertSeeText($response, 'Showing 51–51 of 51 previews');
+        $this->assertSeeText($response, 'name="return" value="/admin/link-previews?status=queued&amp;page=2"');
+        $this->assertRedirect($this->post('/admin/link-previews/settings', [
+            'allowed_hosts' => 'preview.example.test',
+            'return' => '/admin/link-previews?status=queued&page=2',
+        ]), '/admin/link-previews?status=queued&page=2');
+
+        $empty = $this->get('/admin/link-previews', ['status' => 'failed', 'page' => '900']);
+        $this->assertStatus(200, $empty);
+        $this->assertSeeText($empty, 'No previews with that status.');
+        $this->assertDontSeeText($empty, 'Showing 1');
+        $this->assertDontSeeText($empty, 'Page 900');
+    }
+
     public function test_console_and_member_routes_disappear_when_an_operator_rolls_the_flag_back(): void
     {
         (new SettingRepository($this->db))->set('features', ['link_previews' => false]);

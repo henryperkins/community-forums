@@ -13,6 +13,16 @@ use App\Service\LinkPreviewAdminService;
 
 final class AdminFeatureController extends Controller
 {
+    private const READINESS_FILTERS = [
+        '' => 'All readiness',
+        'attention' => 'Needs attention',
+        'clear' => 'No readiness warning',
+        'missing_ui' => 'Missing user UI',
+        'safety_blocked' => 'Safety-blocked',
+        'configuration' => 'Operational configuration required',
+        'reserved' => 'Reserved (ADR 0018)',
+    ];
+
     /** @var array<string,list<string>> */
     private const GROUPS = [
         'Phase 2 / Base' => [
@@ -148,6 +158,41 @@ final class AdminFeatureController extends Controller
             }
         }
 
+        $search = $request->query('q', '');
+        $search = is_string($search) ? mb_substr(trim($search), 0, 128) : '';
+        $readinessFilter = $request->query('readiness', '');
+        $readinessFilter = is_string($readinessFilter) && array_key_exists($readinessFilter, self::READINESS_FILTERS)
+            ? $readinessFilter : '';
+        $stateFilter = $request->query('state', '');
+        $stateFilter = is_string($stateFilter) && in_array($stateFilter, ['on', 'off'], true) ? $stateFilter : '';
+        $shownCount = 0;
+        foreach ($rowsByGroup as $group => $rows) {
+            $rows = array_values(array_filter($rows, static function (array $row) use ($search, $readinessFilter, $stateFilter): bool {
+                if ($search !== '' && stripos($row['flag'], $search) === false) {
+                    return false;
+                }
+                if ($stateFilter !== '' && $row['effective'] !== ($stateFilter === 'on')) {
+                    return false;
+                }
+                $status = $row['readiness_status'];
+                return match ($readinessFilter) {
+                    'attention' => $status !== null,
+                    'clear' => $status === null,
+                    'missing_ui' => $status === 'Missing user UI',
+                    'safety_blocked' => $status === 'Safety-blocked',
+                    'configuration' => $status === 'Operational configuration required',
+                    'reserved' => $status === 'Reserved (ADR 0018)',
+                    default => true,
+                };
+            }));
+            if ($rows === []) {
+                unset($rowsByGroup[$group]);
+            } else {
+                $rowsByGroup[$group] = $rows;
+                $shownCount += count($rows);
+            }
+        }
+
         $declaredOverrides = array_intersect_key($overrides, $defaults);
         $unknownOverrides = [];
         foreach (array_diff_key($overrides, $defaults) as $flag => $value) {
@@ -169,8 +214,12 @@ final class AdminFeatureController extends Controller
             'groups' => $rowsByGroup,
             'unknown_overrides' => $unknownOverrides,
             'features_corrupt' => $flags->overridesCorrupt(),
+            'filters' => ['q' => $search, 'readiness' => $readinessFilter, 'state' => $stateFilter],
+            'filters_active' => $search !== '' || $readinessFilter !== '' || $stateFilter !== '',
+            'readiness_options' => self::READINESS_FILTERS,
             'stats' => [
                 'declared' => count($defaults),
+                'shown' => $shownCount,
                 'default_on' => $defaultOn,
                 'default_off' => count($defaults) - $defaultOn,
                 'effective_on' => $effectiveOn,

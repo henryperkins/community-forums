@@ -215,7 +215,7 @@ $threadIntelligenceGraph = static function (Database $db) use ($config): array {
             allowGiphyImages: $flags->enabled('slash_giphy')
                 && trim((string) $config->get('giphy.public_key', '')) !== '',
         ),
-        $flags->enabled('custom_emoji') ? new CustomEmojiService($db, new WriteGate()) : null,
+        $flags->enabled('custom_emoji') ? new CustomEmojiService($db, new WriteGate(), new ModerationLogRepository($db)) : null,
         new MentionLinker(new UserRepository($db), $flags->enabled('mentions')),
     );
     $transport = new CurlOpenAiTransport($apiKey, $typed);
@@ -799,7 +799,7 @@ try {
                 new HtmlSanitizer(
                     allowGiphyImages: $flags->enabled('slash_giphy') && $giphyKey !== '',
                 ),
-                $flags->enabled('custom_emoji') ? new CustomEmojiService($db, new WriteGate()) : null,
+                $flags->enabled('custom_emoji') ? new CustomEmojiService($db, new WriteGate(), new ModerationLogRepository($db)) : null,
                 new MentionLinker(new UserRepository($db), $flags->enabled('mentions')),
             );
             $stats = (new MarkdownCacheRepairService($db, $markdown))->rebuild($batchSize, $dryRun);

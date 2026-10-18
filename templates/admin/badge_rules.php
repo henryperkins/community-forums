@@ -8,7 +8,7 @@ $this->section('variant', 'admin');
     <div class="features-two-up">
         <section class="card features-form-card">
             <h2>Create rule</h2>
-            <p class="features-card-intro">Rules award automatically once the metric crosses the threshold. Scope to a board to count only what happened there.</p>
+            <p class="features-card-intro">Rules identify members who meet a threshold. Awards happen only when you run Backfill; enabling a rule does not schedule awards. Scope to a board to count only what happened there.</p>
             <form method="post" action="/admin/badge-rules" class="stacked">
                 <?= $this->csrfField() ?>
                 <label class="field">
@@ -73,17 +73,17 @@ $this->section('variant', 'admin');
                             <span class="features-rule-meta"><?= $e($rule['rule_type']) ?> &ge; <?= (int) $rule['threshold'] ?><?= !empty($rule['board_name']) ? ' · ' . $e($rule['board_name']) : '' ?></span>
                             <span class="state <?= $ruleEnabled ? 'state-done' : 'state-muted' ?>"><?= $ruleEnabled ? 'Enabled' : 'Disabled' ?></span>
                             <?php // copy: the design's action order is Preview · Backfill · {toggle} · Revoke.
-                                  // constraint C-11: Preview is a GET link; every mutation is a POST form
-                                  // carrying csrfField() with a row-scoped aria-label. ?>
+                                  // Preview and award actions open read-only GET pages; enable/disable
+                                  // remain CSRF-protected POST forms. ?>
                             <span class="features-rule-actions">
                                 <a class="linkbtn features-rowbtn" href="/admin/badge-rules/<?= (int) $rule['id'] ?>/preview">Preview</a>
-                                <form class="inline-form" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/backfill"><?= $this->csrfField() ?><button class="linkbtn features-rowbtn" type="submit" aria-label="Backfill the <?= $e($ruleName) ?> rule">Backfill</button></form>
+                                <a class="linkbtn features-rowbtn" href="/admin/badge-rules/<?= (int) $rule['id'] ?>/backfill" aria-label="Backfill the <?= $e($ruleName) ?> rule">Backfill</a>
                                 <?php if (!$ruleEnabled): ?>
                                     <form class="inline-form" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/enable"><?= $this->csrfField() ?><button class="linkbtn muted features-rowbtn" type="submit" aria-label="Enable the <?= $e($ruleName) ?> rule">Enable</button></form>
                                 <?php else: ?>
                                     <form class="inline-form" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/disable"><?= $this->csrfField() ?><button class="linkbtn muted features-rowbtn" type="submit" aria-label="Disable the <?= $e($ruleName) ?> rule">Disable</button></form>
                                 <?php endif; ?>
-                                <form class="inline-form" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/revoke"><?= $this->csrfField() ?><button class="linkbtn danger features-rowbtn" type="submit" aria-label="Revoke all awards from the <?= $e($ruleName) ?> rule">Revoke awards</button></form>
+                                <a class="linkbtn danger features-rowbtn" href="/admin/badge-rules/<?= (int) $rule['id'] ?>/revoke" aria-label="Revoke all awards from the <?= $e($ruleName) ?> rule">Revoke awards</a>
                             </span>
                         </li>
                     <?php endforeach; ?>

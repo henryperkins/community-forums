@@ -9,6 +9,15 @@ $counts = $preview['counts'];
 $rows = $preview['rows'];
 $boards = $preview['boards'];
 $filter = (string) ($preview['status_filter'] ?? '');
+$page = (int) $preview['page'];
+$pageCount = (int) $preview['page_count'];
+$total = (int) $preview['total'];
+$historyQuery = $filter === '' ? [] : ['status' => $filter];
+$returnQuery = $historyQuery;
+if ($page > 1) {
+    $returnQuery['page'] = $page;
+}
+$returnPath = '/admin/link-previews' . ($returnQuery === [] ? '' : '?' . http_build_query($returnQuery));
 // Re-render after a rejected save keeps what the operator typed; a clean render
 // shows what is stored.
 $hostsText = array_key_exists('allowed_hosts', $old)
@@ -74,6 +83,7 @@ $statusClass = [
             <h2 id="link-preview-settings-heading">Allowlist &amp; kill switch</h2>
             <form method="post" action="/admin/link-previews/settings" class="stacked">
                 <?= $this->csrfField() ?>
+                <input type="hidden" name="return" value="<?= $e($returnPath) ?>">
                 <label class="field">
                     <span>Allowed hosts</span>
                     <textarea name="allowed_hosts" class="input link-preview-hosts" rows="6" placeholder="example.com&#10;*.wikipedia.org"<?= field_attrs($errors, 'allowed_hosts', 'err-preview-hosts', 'hint-preview-hosts') ?>><?= $e($hostsText) ?></textarea>
@@ -120,7 +130,7 @@ $statusClass = [
                                     <form method="post" action="/admin/link-previews/boards/<?= (int) $board['id'] ?>" class="inline-form">
                                         <?= $this->csrfField() ?>
                                         <input type="hidden" name="enabled" value="<?= !empty($board['enabled']) ? '0' : '1' ?>">
-                                        <input type="hidden" name="return" value="/admin/link-previews">
+                                        <input type="hidden" name="return" value="<?= $e($returnPath) ?>">
                                         <button class="btn btn-small features-toggle-btn" type="submit" aria-label="<?= !empty($board['enabled']) ? 'Disable' : 'Enable' ?> link previews on <?= $e((string) $board['name']) ?>"><?= !empty($board['enabled']) ? 'Disable' : 'Enable' ?></button>
                                     </form>
                                 </td>
@@ -153,6 +163,7 @@ $statusClass = [
         <?php if ($rows === []): ?>
             <p class="features-empty"><?= $filter === '' ? 'No link previews have been discovered yet.' : 'No previews with that status.' ?></p>
         <?php else: ?>
+            <p class="features-note">Showing <?= ($page - 1) * (int) $preview['per_page'] + 1 ?>–<?= min($page * (int) $preview['per_page'], $total) ?> of <?= $total ?> preview<?= $total === 1 ? '' : 's' ?>.</p>
             <div class="table-scroll" tabindex="0" role="region" aria-label="Recent link previews">
                 <table class="audit features-table link-preview-table">
                     <thead>
@@ -194,14 +205,14 @@ $statusClass = [
                                 <?php if (!empty($row['can_refresh'])): ?>
                                     <form method="post" action="/admin/link-previews/<?= (int) $row['id'] ?>/refresh" class="inline-form">
                                         <?= $this->csrfField() ?>
-                                        <input type="hidden" name="return" value="/admin/link-previews">
+                                        <input type="hidden" name="return" value="<?= $e($returnPath) ?>">
                                         <button class="btn btn-small" type="submit" aria-label="Re-queue the preview for <?= $e((string) $row['url']) ?>">Refresh</button>
                                     </form>
                                 <?php endif; ?>
                                 <?php if (!empty($row['can_purge'])): ?>
                                     <form method="post" action="/admin/link-previews/<?= (int) $row['id'] ?>/purge" class="inline-form">
                                         <?= $this->csrfField() ?>
-                                        <input type="hidden" name="return" value="/admin/link-previews">
+                                        <input type="hidden" name="return" value="<?= $e($returnPath) ?>">
                                         <button class="btn btn-small danger" type="submit" aria-label="Purge the stored metadata for <?= $e((string) $row['url']) ?>">Purge</button>
                                     </form>
                                 <?php endif; ?>
@@ -211,6 +222,16 @@ $statusClass = [
                     </tbody>
                 </table>
             </div>
+        <?php endif; ?>
+        <?php if ($pageCount > 1): ?>
+            <?= $this->partial('partials/pager', [
+                'page' => $page,
+                'total_pages' => $pageCount,
+                'path' => '/admin/link-previews',
+                'query' => $historyQuery,
+                'aria_label' => 'Link preview history pages',
+                'noun' => 'preview history',
+            ]) ?>
         <?php endif; ?>
         <p class="features-note">Purging clears the stored metadata; the URL is re-queued the next time its post is saved. An author-removed row stays removed &mdash; the console deliberately offers neither refresh nor purge for it, because purging would re-queue the card on the author&rsquo;s next edit. Operator actions here are written to the audit log against the post they belong to.</p>
     </section>

@@ -6,6 +6,7 @@ use App\Core\Config;
 use App\Core\Database;
 use App\Core\Env;
 use App\Repository\BoardRepository;
+use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
@@ -32,7 +33,7 @@ if ($admin === null || $alice === null || $general === null) {
 }
 
 $writeGate = new WriteGate();
-$customEmoji = new CustomEmojiService($db, $writeGate);
+$customEmoji = new CustomEmojiService($db, $writeGate, new ModerationLogRepository($db));
 $customEmoji->create($users->findEntity((int) $admin['id']), [
     'shortcode' => 'render_spark',
     'name' => 'Rendering sparkle',

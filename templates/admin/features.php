@@ -7,6 +7,32 @@
         <p class="callout callout-danger features-corrupt-alert" role="alert">The <code>settings.features</code> value is not a JSON object, so all stored feature overrides are being ignored and code defaults are in effect. Rewrite it as a JSON object (see <code>docs/runbooks/operations.md</code> §2) to restore your overrides.</p>
     <?php endif; ?>
 
+    <form method="get" action="/admin/features" class="features-inventory-filter" aria-label="Filter feature flags">
+        <label class="field">
+            <span>Flag name</span>
+            <input type="search" name="q" class="input" value="<?= $e($filters['q']) ?>" maxlength="128" placeholder="Find a flag…">
+        </label>
+        <label class="field">
+            <span>Effective state</span>
+            <select name="state" class="input">
+                <?php foreach (['' => 'All states', 'on' => 'On', 'off' => 'Off'] as $value => $label): ?>
+                    <option value="<?= $e($value) ?>"<?= $filters['state'] === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label class="field">
+            <span>Readiness</span>
+            <select name="readiness" class="input">
+                <?php foreach ($readiness_options as $value => $label): ?>
+                    <option value="<?= $e($value) ?>"<?= $filters['readiness'] === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <button class="btn" type="submit">Filter flags</button>
+        <?php if ($filters_active): ?><a class="btn btn-secondary" href="/admin/features">Clear filters</a><?php endif; ?>
+    </form>
+    <p class="features-note">Showing <?= (int) $stats['shown'] ?> of <?= (int) $stats['declared'] ?> declared flags. Summary totals cover the whole inventory; undeclared keys stay listed below.</p>
+
     <section class="features-stat-grid" aria-label="Feature flag summary">
         <div class="card features-stat">
             <span class="features-stat-head">Declared</span>
@@ -35,6 +61,10 @@
                 : ((int) $stats['unknown_overrides'] . ' unknown override' . ((int) $stats['unknown_overrides'] === 1 ? '' : 's')) ?></span>
         </div>
     </section>
+
+    <?php if ($groups === []): ?>
+        <p class="callout">No flags match these filters.</p>
+    <?php endif; ?>
 
     <?php foreach ($groups as $group => $rows): ?>
         <section class="card features-group-card">

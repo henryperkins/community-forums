@@ -9,6 +9,79 @@ use Tests\Support\TestCase;
 
 final class AppAdminFeaturesTest extends TestCase
 {
+    public function test_flag_search_is_case_insensitive_and_keeps_inventory_totals(): void
+    {
+        $this->actingAs($this->makeAdmin());
+
+        $page = $this->get('/admin/features', ['q' => ' LINK_PREVIEWS ']);
+
+        $this->assertStatus(200, $page);
+        self::assertSame(['link_previews'], $this->inventoryFlags($page->body()));
+        self::assertStringContainsString('Showing 1 of 57 declared flags', $page->body());
+        self::assertStringContainsString('57 declared flags', $page->body());
+        self::assertStringContainsString('name="q"', $page->body());
+    }
+
+    public function test_flag_search_and_readiness_filter_intersect(): void
+    {
+        $this->actingAs($this->makeAdmin());
+
+        $page = $this->get('/admin/features', ['q' => 'css', 'readiness' => 'safety_blocked']);
+
+        $this->assertStatus(200, $page);
+        self::assertSame(['custom_css'], $this->inventoryFlags($page->body()));
+        self::assertStringContainsString('value="safety_blocked" selected', $page->body());
+        self::assertStringNotContainsString('Phase 2 / Base feature flags', $page->body());
+    }
+
+    public function test_readiness_filter_tracks_live_configuration(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $settings = new SettingRepository($this->db);
+        $settings->set('giphy_public_key', '');
+
+        $before = $this->get('/admin/features', ['q' => 'slash_giphy', 'readiness' => 'configuration']);
+        self::assertSame(['slash_giphy'], $this->inventoryFlags($before->body()));
+
+        $settings->set('giphy_public_key', 'public-browser-fixture-key');
+        $after = $this->get('/admin/features', ['q' => 'slash_giphy', 'readiness' => 'configuration']);
+        $this->assertStatus(200, $after);
+        self::assertSame([], $this->inventoryFlags($after->body()));
+        self::assertStringContainsString('No flags match these filters.', $after->body());
+        self::assertStringContainsString('Clear filters', $after->body());
+    }
+
+    public function test_effective_state_filter_combines_with_flag_search(): void
+    {
+        $this->setFlags(['email' => false]);
+        $this->actingAs($this->makeAdmin());
+
+        $off = $this->get('/admin/features', ['q' => 'email', 'state' => 'off']);
+        self::assertSame(['email'], $this->inventoryFlags($off->body()));
+        $on = $this->get('/admin/features', ['q' => 'email', 'state' => 'on']);
+        self::assertSame([], $this->inventoryFlags($on->body()));
+        self::assertStringContainsString('Showing 0 of 57 declared flags', $on->body());
+    }
+
+    public function test_malformed_filter_shapes_do_not_break_the_inventory(): void
+    {
+        $this->actingAs($this->makeAdmin());
+
+        $page = $this->get('/admin/features', ['q' => ['email'], 'readiness' => ['reserved'], 'state' => ['off']]);
+
+        $this->assertStatus(200, $page);
+        self::assertCount(57, $this->inventoryFlags($page->body()));
+        $unknown = $this->get('/admin/features', ['readiness' => 'unknown', 'state' => 'invalid']);
+        self::assertCount(57, $this->inventoryFlags($unknown->body()));
+    }
+
+    /** @return list<string> */
+    private function inventoryFlags(string $html): array
+    {
+        preg_match_all('/class="features-flag-cell"\s*>\s*<code>([^<]+)<\/code>/', $html, $matches);
+        return $matches[1];
+    }
+
     /** @param array<string,mixed> $flags */
     private function setFlags(array $flags): void
     {

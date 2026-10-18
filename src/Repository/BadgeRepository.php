@@ -270,11 +270,12 @@ final class BadgeRepository
         return $prefix . ($max + 1);
     }
 
-    /** @return list<array{id:int,user_id:int,achievement_key:string}> */
+    /** @return list<array{id:int,user_id:int,achievement_key:string,has_badge:bool}> */
     public function activeRuleAwards(int $ruleId): array
     {
         $rows = $this->db->fetchAll(
-            "SELECT h.id, h.user_id, h.achievement_key
+            "SELECT h.id, h.user_id, h.achievement_key,
+                    EXISTS (SELECT 1 FROM user_badges ub WHERE ub.user_id = h.user_id AND ub.badge_id = h.badge_id) AS has_badge
              FROM badge_award_history h
              WHERE h.badge_rule_id = ? AND h.action = 'award'
                AND NOT EXISTS (
@@ -294,6 +295,7 @@ final class BadgeRepository
                 'id' => (int) $row['id'],
                 'user_id' => (int) $row['user_id'],
                 'achievement_key' => (string) $row['achievement_key'],
+                'has_badge' => (bool) $row['has_badge'],
             ],
             $rows,
         );

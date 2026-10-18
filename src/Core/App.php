@@ -1281,6 +1281,7 @@ final class App
         $c->bind(CustomEmojiService::class, fn (Container $c) => new CustomEmojiService(
             $c->get(Database::class),
             $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
         ));
         $c->bind(ContentReferenceService::class, fn (Container $c) => new ContentReferenceService(
             $c->get(Database::class),
@@ -2686,6 +2687,8 @@ final class App
         $r->get('/admin/badge-rules', [AdminBadgeRuleController::class, 'index']);
         $r->post('/admin/badge-rules', [AdminBadgeRuleController::class, 'create']);
         $r->get('/admin/badge-rules/{id}/preview', [AdminBadgeRuleController::class, 'preview']);
+        $r->get('/admin/badge-rules/{id}/backfill', [AdminBadgeRuleController::class, 'confirmBackfill']);
+        $r->get('/admin/badge-rules/{id}/revoke', [AdminBadgeRuleController::class, 'confirmRevoke']);
         $r->post('/admin/badge-rules/{id}/enable', [AdminBadgeRuleController::class, 'enable']);
         $r->post('/admin/badge-rules/{id}/disable', [AdminBadgeRuleController::class, 'disable']);
         $r->post('/admin/badge-rules/{id}/backfill', [AdminBadgeRuleController::class, 'backfill']);

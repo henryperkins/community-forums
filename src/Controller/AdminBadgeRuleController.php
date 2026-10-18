@@ -71,18 +71,49 @@ final class AdminBadgeRuleController extends Controller
         return $this->redirectWithFlash('/admin/badge-rules', 'Badge rule disabled.');
     }
 
+    public function confirmBackfill(Request $request, array $params): Response
+    {
+        $this->requireEnabled();
+        return $this->confirmationView((int) ($params['id'] ?? 0), 'backfill');
+    }
+
+    public function confirmRevoke(Request $request, array $params): Response
+    {
+        $this->requireEnabled();
+        return $this->confirmationView((int) ($params['id'] ?? 0), 'revoke');
+    }
+
     public function backfill(Request $request, array $params): Response
     {
         $this->requireEnabled();
-        $count = $this->container->get(BadgeRuleService::class)->backfill($this->requireAdmin(), (int) ($params['id'] ?? 0));
+        $admin = $this->requireAdmin();
+        $ruleId = (int) ($params['id'] ?? 0);
+        try {
+            $count = $this->container->get(BadgeRuleService::class)->backfill($admin, $ruleId, $request->allInput());
+        } catch (ValidationException $e) {
+            return $this->confirmationView($ruleId, 'backfill', $e->errors, $e->old, 422);
+        }
         return $this->redirectWithFlash('/admin/badge-rules', 'Badge rule backfilled ' . $count . ' awards.');
     }
 
     public function revoke(Request $request, array $params): Response
     {
         $this->requireEnabled();
-        $count = $this->container->get(BadgeRuleService::class)->revoke($this->requireAdmin(), (int) ($params['id'] ?? 0));
+        $admin = $this->requireAdmin();
+        $ruleId = (int) ($params['id'] ?? 0);
+        try {
+            $count = $this->container->get(BadgeRuleService::class)->revoke($admin, $ruleId, $request->allInput());
+        } catch (ValidationException $e) {
+            return $this->confirmationView($ruleId, 'revoke', $e->errors, $e->old, 422);
+        }
         return $this->redirectWithFlash('/admin/badge-rules', 'Badge rule revoked ' . $count . ' awards.');
+    }
+
+    /** @param array<string,string> $errors @param array<string,mixed> $old */
+    private function confirmationView(int $ruleId, string $action, array $errors = [], array $old = [], int $status = 200): Response
+    {
+        $impact = $this->container->get(BadgeRuleService::class)->confirmation($this->requireAdmin(), $ruleId, $action);
+        return $this->view('admin/badge_rule_confirm', $impact + ['errors' => $errors, 'old' => $old], $status);
     }
 
     private function requireEnabled(): void

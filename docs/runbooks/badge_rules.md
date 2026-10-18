@@ -10,7 +10,7 @@ reversible via the `features` override. Follows the same conventions as
 `docs/runbooks/slash_giphy.md`.
 
 > **Golden rule:** for any logic defect (bad eligibility SQL, wrong awards,
-> notification storm), **disable the `badge_rules` flag first** (all seven
+> notification storm), **disable the `badge_rules` flag first** (all nine
 > `/admin/badge-rules*` routes 404; the rest of the app keeps serving), then
 > investigate. Disabling is non-destructive — the `badge_rules` and
 > `badge_award_history` rows are retained and reappear when the flag is
@@ -32,12 +32,13 @@ Routes (all admin-only; every POST is CSRF-protected):
 - `GET  /admin/badge-rules/{id}/preview` — list the users who currently qualify.
 - `POST /admin/badge-rules/{id}/enable` — set `is_enabled=1` (a label; see below).
 - `POST /admin/badge-rules/{id}/disable` — set `is_enabled=0`.
-- `POST /admin/badge-rules/{id}/backfill` — **award** the badge to every current
-  qualifier (the only action that grants badges).
-- `POST /admin/badge-rules/{id}/revoke` — revoke the badges this rule awarded.
+- `GET  /admin/badge-rules/{id}/backfill` — review the current award batch and typed confirmation.
+- `POST /admin/badge-rules/{id}/backfill` — confirm and **award** up to 1000 current
+  qualifiers (the only action that grants badges).
+- `GET  /admin/badge-rules/{id}/revoke` — review active rule awards and typed confirmation.
+- `POST /admin/badge-rules/{id}/revoke` — confirm revocation of the awards this rule owns.
 
-The surface has **no in-app navigation link** (the admin dashboard does not link
-to it); operators reach it directly at `/admin/badge-rules`.
+The surface is linked from **Features → Badge rules** in the admin console.
 
 ## Roll back / re-enable
 
@@ -56,7 +57,7 @@ $f=$r->get("features",[]); $f["badge_rules"]=false; $r->set("features",$f);'
 
 Re-enable by setting `badge_rules` back to `true` or removing the key (the default
 is now `true`). Toggling the flag never awards or revokes anything — awards change
-**only** on an explicit backfill/revoke click — so a flag round-trip is safe and
+**only** after an explicit backfill/revoke confirmation — so a flag round-trip is safe and
 the `badge_award_history` ledger is preserved intact.
 
 ## Operating semantics (what to tell operators)
@@ -69,7 +70,7 @@ the `badge_award_history` ledger is preserved intact.
   board's posts/threads/reputation/accepted answers.
 - **Enable/Disable is a label, not automation.** There is **no cron/worker** that
   awards badges. `is_enabled` records operator intent only; **awards happen solely
-  when an operator clicks Backfill** (and Backfill works even on a *disabled*
+  when an operator reviews and confirms Backfill** (and Backfill works even on a *disabled*
   rule, as does Preview). Plan to Enable → Backfill as an explicit two-step, and
   re-run Backfill after the community grows to catch newly-qualifying members.
 - **Idempotent.** Awards use `INSERT IGNORE`, so re-running Backfill (or toggling
@@ -77,14 +78,29 @@ the `badge_award_history` ledger is preserved intact.
   not already hold the badge**.
 - **Revoke removes this rule's ownership, then checks other enabled rules.**
   Revoke iterates the users *this rule* awarded (per the ledger) and records a
-  revoke event for this rule. If another **enabled** rule for the same badge still
-  qualifies that active user, the visible `(user_id, badge_id)` row is preserved
-  and active award ownership is transferred to the qualifying rule with a
-  `badge_rule_overlap` award-history row. If no enabled qualifying rule owns the
-  badge, Revoke removes the visible badge row. Manual grants are not represented
+  revoke event for this rule. The visible `(user_id, badge_id)` row may be
+  preserved when another **enabled** rule qualifies that active user and can
+  retain ownership. Ownership transfers to that rule with a `badge_rule_overlap`
+  award-history row where permitted. Previous explicit revocations take
+  precedence: eligibility alone does not revive an explicitly revoked ownership
+  cycle. If no other rule can retain ownership, Revoke removes the visible badge
+  row. Manual grants are not represented
   in `badge_award_history`, so a rule Revoke can still remove a badge that was
-  also manually granted. Prefer **Disable** when you only want to stop future
-  awards; use **Revoke** when you intend to remove this rule's awards.
+  also manually granted. **Disable** changes the label and overlap-preservation
+  intent without removing existing awards; it does not block a later manual
+  Backfill. Use **Revoke** when you intend to remove this rule's award ownership.
+- **Review and typed confirmation.** Backfill and Revoke open read-only confirmation
+  pages; GET never grants or revokes awards. Backfill shows the actual processing
+  batch (up to 1000), with a notice when more members qualify. Revoke shows all
+  active rule awards and the number of those members currently holding the
+  visible badge; overlap rules can preserve badges as described above. Type
+  `BACKFILL {rule id}` or `REVOKE {rule id}` exactly, then submit the CSRF-protected
+  form. The server recomputes the affected batch inside the action transaction;
+  if it changed since review, the request returns `422` with refreshed impact
+  and the typed text preserved, before any award, notification, or audit write.
+  Missing or incorrect confirmation also returns `422` without effects.
+  Admin authorization, the feature flag, and the account write gate apply to
+  both the confirmation pages and the action submissions.
 - **Create-once.** There is no edit or delete for a rule — only enable/disable and
   backfill/revoke of its awards. To change a threshold, create a new rule (and
   revoke the old one's awards if desired).
@@ -104,7 +120,9 @@ the `badge_award_history` ledger is preserved intact.
   not feed any denormalized counter, so `RepairService` has nothing to reconcile
   for this feature.
 - **Eligibility query is bounded.** Preview lists up to 100 qualifiers; Backfill
-  processes up to 1000 per run inside a single transaction. For very large
+  processes up to 1000 per run inside a single transaction. Both limits are
+  disclosed in the UI; the Backfill confirmation uses the 1000-member processing
+  batch rather than the shorter preview. For very large
   communities, run Backfill repeatedly until the awarded count reaches 0.
 - **Restore from backup with the flag disabled.** The `badge_rules` /
   `badge_award_history` tables are authoritative operator content with no
@@ -124,13 +142,18 @@ the `badge_award_history` ledger is preserved intact.
   `test_badge_rules_flag_rollback_preserves_award_history` (disable/re-enable the
   flag with the award ledger intact), and
   `test_rule_creation_rejects_unknown_vocabulary` (`422` vocabulary enforcement);
+  typed-confirmation regression coverage also rejects bare/wrong submissions
+  without effects, rejects stale Backfill/Revoke batches, proves the 1000-member
+  processing impact is not understated by the 100-member preview, and checks
+  feature/admin/account gates on the confirmation pages and actions;
   `tests/Integration/Core/AppFeatureFlagTest.php` asserts `badge_rules` is
   declared **default-on** after graduation.
 - **Browser:** `docs/evidence/browser/{desktop,mobile}/32-badge-rules.png`
   (create form + rule list), `33-badge-rule-preview.png` (eligible users), and
   `34-badge-rule-backfilled.png` (enabled rule + backfill flash), driven by the
   `phase 4 badge rules` journey in `tests/browser/gate-a.spec.ts` (create →
-  preview → enable → backfill → disable → revoke, all through the no-JS forms).
+  preview → enable → review/confirm Backfill → disable → review/confirm Revoke,
+  all through the no-JS forms).
 - **Accessibility:** `tests/browser/a11y.spec.ts` — the admin dark-surface axe
   scan now includes `/admin/badge-rules` (create form + rule list), desktop +
   mobile, no serious/critical violations.

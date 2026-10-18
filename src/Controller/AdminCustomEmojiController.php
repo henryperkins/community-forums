@@ -42,7 +42,14 @@ final class AdminCustomEmojiController extends Controller
     {
         $admin = $this->requireEmojiAdmin();
         $shortcode = (string) ($params['shortcode'] ?? '');
-        $this->container->get(CustomEmojiService::class)->setEnabled($admin, $shortcode, true);
+        try {
+            $this->container->get(CustomEmojiService::class)->setEnabled($admin, $shortcode, true);
+        } catch (ValidationException $e) {
+            return $this->page([
+                'emoji_errors' => $e->errors,
+                'emoji_old' => $e->old,
+            ], 422);
+        }
         // A catalogue of many rows must not flash a generic outcome; name the row.
         return $this->redirectWithFlash('/admin/custom-emoji', ':' . $shortcode . ': enabled.');
     }

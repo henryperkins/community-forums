@@ -17539,3 +17539,64 @@ body.directory-view-open[data-route="boards"] .main { overflow: hidden; }
         display: none;
     }
 }
+
+/* Features console: retain the existing cards and type while making the
+   inventory filter and per-board actions usable at narrow widths. */
+.admin-console .features-inventory-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+    margin-block-end: var(--space-3);
+}
+.admin-console .features-inventory-filter .field {
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+.admin-console .features-inventory-filter .field:has(select[name="readiness"]) {
+    flex-basis: 16rem;
+}
+.admin-console .features-inventory-filter .input {
+    width: 100%;
+    max-width: 100%;
+    min-height: 44px;
+    font-size: 1rem;
+}
+.admin-console .features-inventory-filter .btn {
+    min-height: 44px;
+}
+.admin-console .features-flags-table .features-flag-cell > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding-inline: var(--space-1);
+}
+.admin-console .table-scroll > .link-preview-board-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+.admin-console .link-preview-board-table th:first-child { width: 42%; }
+.admin-console .link-preview-board-table th:nth-child(2) { width: 30%; }
+.admin-console .link-preview-board-table th,
+.admin-console .link-preview-board-table td { padding-inline: var(--space-2); }
+.admin-console .link-preview-board-table td {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+.admin-console .link-preview-board-table .state {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.admin-console .link-preview-board-table .features-toggle-btn {
+    max-width: 100%;
+    min-height: 44px;
+    padding-inline: var(--space-2);
+    white-space: normal;
+}
+@media (max-width: 760px) {
+    .admin-console .link-preview-board-table th,
+    .admin-console .link-preview-board-table td { padding-inline: var(--space-1); }
+}

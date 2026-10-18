@@ -17,10 +17,11 @@ final class AdminLinkPreviewController extends Controller
     public function index(Request $request, array $params): Response
     {
         $this->requirePreviewOps();
-        $status = (string) $request->query('status', '');
-
         return $this->noindex($this->view('admin/link_previews', [
-            'preview' => $this->admin()->dashboard($status === '' ? null : $status),
+            'preview' => $this->admin()->dashboard(
+                $this->status($request->query('status')),
+                $this->page($request->query('page')),
+            ),
             'errors' => [],
             'old' => [],
         ]));
@@ -35,14 +36,15 @@ final class AdminLinkPreviewController extends Controller
         } catch (ValidationException $e) {
             // Anti-draft-loss: re-render the console carrying the operator's
             // typed allowlist rather than redirecting and dropping it.
+            $state = $this->returnState($request);
             return $this->view('admin/link_previews', [
-                'preview' => $this->admin()->dashboard(null),
+                'preview' => $this->admin()->dashboard($state['status'], $state['page']),
                 'errors' => $e->errors,
                 'old' => $request->allInput(),
             ], 422);
         }
 
-        return $this->redirectWithFlash('/admin/link-previews', 'Link preview settings saved.');
+        return $this->redirectWithFlash($this->back($request), 'Link preview settings saved.');
     }
 
     /** @param array<string,string> $params */
@@ -99,6 +101,46 @@ final class AdminLinkPreviewController extends Controller
 
     private function back(Request $request): string
     {
-        return $this->localReturn($request, '/admin/link-previews');
+        $state = $this->returnState($request);
+        $query = [];
+        if ($state['status'] !== null) {
+            $query['status'] = $state['status'];
+        }
+        if ($state['page'] > 1) {
+            $query['page'] = $state['page'];
+        }
+
+        return '/admin/link-previews' . ($query === [] ? '' : '?' . http_build_query($query));
+    }
+
+    /** @return array{status:?string,page:int} */
+    private function returnState(Request $request): array
+    {
+        // Accept only this console's known query fields, never an arbitrary
+        // posted URL. Its GET clamps a page that became empty after a row action.
+        $return = parse_url($this->localReturn($request, '/admin/link-previews'));
+        $query = [];
+        if (is_array($return) && ($return['path'] ?? '') === '/admin/link-previews') {
+            parse_str((string) ($return['query'] ?? ''), $query);
+        }
+
+        return [
+            'status' => $this->status($query['status'] ?? null),
+            'page' => $this->page($query['page'] ?? null),
+        ];
+    }
+
+    private function status(mixed $value): ?string
+    {
+        return is_string($value) && in_array($value, LinkPreviewAdminService::STATUSES, true)
+            ? $value
+            : null;
+    }
+
+    private function page(mixed $value): int
+    {
+        // Overflowing positive strings saturate at PHP_INT_MAX; dashboard()
+        // clamps that value to the last real page before calculating OFFSET.
+        return is_string($value) && ctype_digit($value) ? max(1, (int) $value) : 1;
     }
 }

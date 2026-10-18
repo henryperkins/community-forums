@@ -14,6 +14,8 @@ use App\Security\WriteGate;
 
 final class BadgeRuleService
 {
+    private const BACKFILL_LIMIT = 1000;
+
     private const TYPES = ['post_count', 'thread_count', 'reputation', 'solved_count'];
 
     public function __construct(
@@ -87,13 +89,16 @@ final class BadgeRuleService
         $this->audit($actor->id(), 'badge_rule.disable', $ruleId);
     }
 
-    public function backfill(User $actor, int $ruleId): int
+    /** @param array<string,mixed> $input */
+    public function backfill(User $actor, int $ruleId, array $input): int
     {
         $this->writeGate->assertCanWrite($actor);
-        $rule = $this->ruleOrFail($ruleId);
         $awarded = 0;
-        $this->db->transaction(function () use ($actor, $rule, &$awarded): void {
-            foreach ($this->eligibleUsers($rule, 1000) as $user) {
+        $this->db->transaction(function () use ($actor, $ruleId, $input, &$awarded): void {
+            $impact = $this->actionImpact($ruleId, 'backfill');
+            $this->assertConfirmed($impact, $input);
+            $rule = $impact['rule'];
+            foreach ($impact['users'] as $user) {
                 $key = $this->achievementKey($rule, (int) $user['id']);
                 if ($this->badges->awardRuleBadge((int) $user['id'], (int) $rule['badge_id'], (int) $rule['id'], $actor->id(), $key)) {
                     $awarded++;
@@ -105,13 +110,16 @@ final class BadgeRuleService
         return $awarded;
     }
 
-    public function revoke(User $actor, int $ruleId): int
+    /** @param array<string,mixed> $input */
+    public function revoke(User $actor, int $ruleId, array $input): int
     {
         $this->writeGate->assertCanWrite($actor);
-        $rule = $this->ruleOrFail($ruleId);
         $revoked = 0;
-        $this->db->transaction(function () use ($actor, $rule, &$revoked): void {
-            foreach ($this->badges->activeRuleAwards((int) $rule['id']) as $award) {
+        $this->db->transaction(function () use ($actor, $ruleId, $input, &$revoked): void {
+            $impact = $this->actionImpact($ruleId, 'revoke');
+            $this->assertConfirmed($impact, $input);
+            $rule = $impact['rule'];
+            foreach ($impact['awards'] as $award) {
                 $userId = (int) $award['user_id'];
                 $key = (string) $award['achievement_key'];
                 $removeBadge = !$this->ensureOtherEnabledRuleOwnsBadge($rule, $userId, $actor->id(), (int) $award['id']);
@@ -122,6 +130,66 @@ final class BadgeRuleService
             $this->audit($actor->id(), 'badge_rule.revoke', (int) $rule['id'], 'revoked=' . $revoked);
         });
         return $revoked;
+    }
+
+    /** @return array<string,mixed> */
+    public function confirmation(User $actor, int $ruleId, string $action): array
+    {
+        $this->writeGate->assertCanWrite($actor);
+        return $this->actionImpact($ruleId, $action);
+    }
+
+    /** @return array<string,mixed> */
+    private function actionImpact(int $ruleId, string $action): array
+    {
+        $rule = $this->ruleOrFail($ruleId);
+        $users = [];
+        $awards = [];
+        $hasMore = false;
+        $visibleBadgeCount = 0;
+        if ($action === 'backfill') {
+            // Read one beyond the processing limit so the confirmation never
+            // presents a capped batch as the whole eligible community.
+            $users = $this->eligibleUsers($rule, self::BACKFILL_LIMIT + 1);
+            $hasMore = count($users) > self::BACKFILL_LIMIT;
+            $users = array_slice($users, 0, self::BACKFILL_LIMIT);
+            $identities = array_column($users, 'id');
+            $count = count($users);
+        } elseif ($action === 'revoke') {
+            $awards = $this->badges->activeRuleAwards($ruleId);
+            $identities = array_map(static fn (array $award): array => [$award['id'], $award['user_id'], $award['has_badge']], $awards);
+            $visibleBadgeCount = count(array_unique(array_column(array_filter($awards, static fn (array $award): bool => $award['has_badge']), 'user_id')));
+            $count = count($awards);
+        } else {
+            throw new NotFoundException('Badge rule action not found.');
+        }
+
+        return [
+            'rule' => $rule,
+            'action' => $action,
+            'confirm_target' => strtoupper($action) . ' ' . $ruleId,
+            'batch_count' => $count,
+            'has_more' => $hasMore,
+            'visible_badge_count' => $visibleBadgeCount,
+            'impact_token' => hash('sha256', json_encode([$action, $ruleId, $identities, $hasMore], JSON_THROW_ON_ERROR)),
+            'users' => $users,
+            'awards' => $awards,
+        ];
+    }
+
+    /** @param array<string,mixed> $impact @param array<string,mixed> $input */
+    private function assertConfirmed(array $impact, array $input): void
+    {
+        $errors = [];
+        if (trim((string) ($input['confirm'] ?? '')) !== $impact['confirm_target']) {
+            $errors['confirm'] = 'Type ' . $impact['confirm_target'] . ' exactly to confirm.';
+        }
+        if (!hash_equals($impact['impact_token'], (string) ($input['impact_token'] ?? ''))) {
+            $errors['impact_token'] = 'The impact has changed or has not been reviewed. Review the current impact and confirm again.';
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors, $input);
+        }
     }
 
     /** @return array<string,mixed> */
@@ -140,7 +208,7 @@ final class BadgeRuleService
      */
     private function eligibleUsers(array $rule, int $limit): array
     {
-        $limit = max(1, min(1000, $limit));
+        $limit = max(1, min(self::BACKFILL_LIMIT + 1, $limit));
         $threshold = (int) $rule['threshold'];
         $badgeId = (int) $rule['badge_id'];
         $boardId = $rule['board_id'] === null ? null : (int) $rule['board_id'];

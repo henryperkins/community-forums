@@ -1,0 +1,528 @@
+{
+  "date_utc": "2026-10-18",
+  "scope": [
+    "/admin/features",
+    "/admin/badge-rules",
+    "/admin/custom-emoji",
+    "/admin/link-previews"
+  ],
+  "source_head": "ad29cacab6a7c0d4af4ab3f7d6ae5ee21c5b2031",
+  "branch": "main",
+  "state": "Local uncommitted remediation; no deployment performed",
+  "verification": {
+    "phpunit": {
+      "tests": 3294,
+      "assertions": 26074,
+      "skipped": 1,
+      "passed": true,
+      "fresh_private_database": true
+    },
+    "native_prepares": {
+      "tests": 68,
+      "assertions": 632,
+      "passed": true
+    },
+    "chromium": {
+      "scenarios": 30,
+      "passed": true,
+      "viewports": [
+        1280,
+        390
+      ],
+      "extra_geometry_widths": [
+        1440,
+        901,
+        390,
+        320
+      ]
+    },
+    "webkit": {
+      "scenarios": 8,
+      "passed": true,
+      "viewports": [
+        1280,
+        390
+      ],
+      "extra_geometry_widths": [
+        1440,
+        901,
+        390,
+        320
+      ]
+    },
+    "assets": {
+      "tests": 35,
+      "passed": true,
+      "build_check": true
+    },
+    "imladris": {
+      "generated_file_check": true,
+      "design_tokens_unchanged": true
+    },
+    "cli_consumers": {
+      "render_cache_dry_run": true,
+      "thread_intelligence_status": true
+    },
+    "independent_review": {
+      "behavior": "No remaining actionable findings",
+      "visual": "Final mobile table and confirmation captures clean"
+    }
+  },
+  "asset_version": "50a62f5be30f6b09",
+  "application_css": "/assets/dist/app-style-lm9W6BEA.css",
+  "source_sha256": {
+    "CHANGELOG.md": "54fb6039eb036b68e2e0d6bf105f47e59b7de7272d3c617a20e15d6d1a36bcc8",
+    "bin/console": "eaa4ff947b596544ab14b4ef99cc5107512d0c2f4f23adfef7c4f245210e342a",
+    "config/assets.json": "39b5a28335d071cd627e33857125d1131bb5448ca647912179f2d311e6b13b6a",
+    "config/imladris-runtime-baseline.json": "d7eb50d11f5e969e39d86eacc64123c258caded44505d85d6ca826c956c7cff6",
+    "docs/runbooks/badge_rules.md": "d1413aad259c4565af54854145f77d64b924878c3f78098dae2108accc1c9571",
+    "docs/runbooks/custom_emoji.md": "56b4f2f98c3e73c0b95b28f2d6fa56921685c4a06a562c8b50b7989906f0420b",
+    "docs/runbooks/link_previews.md": "6a3cbafe090eed0eb06b34f0380995c231b9a78937e7f47b95f46cfc2240916b",
+    "docs/runbooks/operations.md": "d06f961c328b0014684d4e2dc8bae5e8dfb0f45c0271e4153e1da139b1086283",
+    "public/assets/app.css": "07b9af38d95bb66110e517bef7e8aa882425df1c382ce4fb38ee4a8b64a49ae6",
+    "resources/imladris/manifest.json": "ce7dad5b7af946c5c04cf5fe53f88d2b46425e78a2945a4a040c68d2ec494ef8",
+    "src/Controller/AdminBadgeRuleController.php": "ef1289e7cc073b7ba1f0b81c6ce65c5c5a36743ef5ad7aac99755266348123be",
+    "src/Controller/AdminCustomEmojiController.php": "a1c88a20b2a091d14bbc208de35d9d51e48950e9cc1e68bf738b4fc059becd84",
+    "src/Controller/AdminFeatureController.php": "d7535326e7d81654b905937893d47f0b368d7d2ed8bb5451e384d6f07deb7332",
+    "src/Controller/AdminLinkPreviewController.php": "169e9fb84592591399ff072abfe2024a8c1e258e9d87711414b9768aef3c7f2e",
+    "src/Core/App.php": "407dd3a41d3e5943312e9ed83ed1e657d47d8a8f749ffed78856663ef8059f52",
+    "src/Repository/BadgeRepository.php": "5cda3e65e04d28999cdb597e9c58b78843892bc9a7e998f2ec080561e9b68027",
+    "src/Repository/LinkPreviewRepository.php": "3b6e955d7ba2f45d5f6559798af2156861fb02595dfd9933e5cb0d64b4c2faee",
+    "src/Service/BadgeRuleService.php": "a91642eccd2abf949e10289d3aca6d949abdc93e291b76d9fbe8c20620770992",
+    "src/Service/CustomEmojiService.php": "62383e7104f870c43f6db9a9cba8e4acdcef4e2032b2d6121d506717b4120e7b",
+    "src/Service/LinkPreviewAdminService.php": "a3650688316a643f11d2aeb372006d2342ab146b238f38313a28b24f89bee44f",
+    "templates/admin/badge_rule_confirm.php": "4e4af20d84ce5cb9367d9df3b093dfb9e5be0ccdbdeae19cc5f39fe75ff76c98",
+    "templates/admin/badge_rule_preview.php": "75dde5c1c42d51873228402343aecc6e742740db2cc70f89d5412887095d2ea6",
+    "templates/admin/badge_rules.php": "7c82eca96cb5ae3912744361f365ef37d44e20bc8e45173d7a7290aa8440c9aa",
+    "templates/admin/features.php": "7f172ba58ce09b9763c00a8098cb0376fa3a7c6c0b873c27abe93f6faec0de2c",
+    "templates/admin/link_previews.php": "8da73101d366712347431e57b96e2afc4853c4e4a1f9eddfc939125f649a1e3e",
+    "tests/Integration/Admin/AppAdminBadgeRulesTest.php": "a7a064ea122e15453e54c7d927c362ed01a845aa89c7f3ff572c44a33f242025",
+    "tests/Integration/Admin/AppAdminFeaturesTest.php": "d6fa974cdce530e1de99f9c3e69fcf3560f55894164bc66308d884baa16effbf",
+    "tests/Integration/Core/AppCustomEmojiGiphyTest.php": "6a9d64978891e5bcd6de55c7ce177414ade092b2ac03d0db2b3ab97bb25bf200",
+    "tests/Integration/Core/AppLinkPreviewTest.php": "3487571cc6ba6bc6470ba57408f626679b1ca4b77aa388005f1201099565472c",
+    "tests/browser/features-console.spec.ts": "0af39c3dff8629382c8591a8d5215648402fd1db5a89ef5f3da29b8f87061465",
+    "tests/browser/features-remediation-fixture.php": "78380798ebb2b8112aa16e649183af089ed743e85d99226521b888d09ba20b17",
+    "tests/browser/features-remediation.spec.ts": "61d557b73b7b098ae9d9586cc41f7ebb7c7f26a16231bd8ba1f7bf58cbf6ab2d",
+    "tests/browser/gate-a.spec.ts": "6989bb2f13299cf535487baa25f253d2f333135e69da8ce570ab8eec63dc591c",
+    "tests/browser/rich-content-fixture.php": "219ff200c27d8baf27d2649dbb12f0ba732db5b4573a3e3aa4dd875e2b7e1e81",
+    "public/assets/dist/app-style-lm9W6BEA.css": "6b78dd28f777e5be889f58e6634d1da3b9c372d7702d5bedba4a778b4ca6b5c7"
+  },
+  "screenshot_count": 82,
+  "screenshots": [
+    {
+      "file": "desktop/32-badge-rules.png",
+      "sha256": "2987863c619ad36f3c8cbcaf0fac25c805a37d90db3c2db5ebaf7763283cc40b",
+      "bytes": 219861
+    },
+    {
+      "file": "desktop/33-badge-rule-preview.png",
+      "sha256": "8f2fe73219d3ad3be48e283f93d532bd34343894aafc82fe0e48d0b35fada3d2",
+      "bytes": 59640
+    },
+    {
+      "file": "desktop/34-badge-rule-backfilled.png",
+      "sha256": "492e944f0821ee2826aea6d11d8c64c296380d28b21537624833e7f52d9b5890",
+      "bytes": 220710
+    },
+    {
+      "file": "desktop/admin-feature-readiness.png",
+      "sha256": "33c836fbc01f60fc7fd341c0e25124f84b1f287cee1d8b0dfc29cee878effe9b",
+      "bytes": 796071
+    },
+    {
+      "file": "desktop/features-badge-rule-preview-light.png",
+      "sha256": "abe9b149ecfd74d9a319eff4cdabc3f09723c26c9edb8d9a8e33832080229b4b",
+      "bytes": 52149
+    },
+    {
+      "file": "desktop/features-badge-rule-preview-no-js.png",
+      "sha256": "1b96f55270fb830a6f9471c3ee37e99858cb9ec2421dea98ed3ec283f3fb513e",
+      "bytes": 52791
+    },
+    {
+      "file": "desktop/features-badge-rule-preview-twilight.png",
+      "sha256": "0a479c407a834f0aab2dde65e96ae09182eb6883242c03700227318e9cd9fab3",
+      "bytes": 52490
+    },
+    {
+      "file": "desktop/features-badge-rules-422.png",
+      "sha256": "8aaf1429f0d10ccbfefd23c2e637fa4fc6a5faee3e7d2913b8e71db7d84eb39f",
+      "bytes": 160151
+    },
+    {
+      "file": "desktop/features-badge-rules-light.png",
+      "sha256": "5cc8dc97cc0f3954c4337ff1d0d44f3252a4f5d7242e36cb1df1ef28d62e4043",
+      "bytes": 160203
+    },
+    {
+      "file": "desktop/features-badge-rules-no-js.png",
+      "sha256": "3125d39b8f04cbf45d9e7222fa67bc48a5d310b5c36415d26fc01df50cbc4e38",
+      "bytes": 175055
+    },
+    {
+      "file": "desktop/features-badge-rules-twilight.png",
+      "sha256": "08cb4fd5b7c625fab1a4ced1f90742dbf96cb740010ac6abbc2bc2d80a0d8f12",
+      "bytes": 160061
+    },
+    {
+      "file": "desktop/features-custom-emoji-422.png",
+      "sha256": "5bd0a184ebcc711ffa6608e9f583fb437a82eaaa36abaedb7c38305433050a45",
+      "bytes": 188521
+    },
+    {
+      "file": "desktop/features-custom-emoji-light.png",
+      "sha256": "bbc686cb85985ed8f0357a6853658d09ddc4bd2149e6600f48f38c8e6152b769",
+      "bytes": 186335
+    },
+    {
+      "file": "desktop/features-custom-emoji-no-js.png",
+      "sha256": "7e1cb651918406b152bffd7f8fcee20d028e9823b7395af961847be0873e50e2",
+      "bytes": 200156
+    },
+    {
+      "file": "desktop/features-custom-emoji-twilight.png",
+      "sha256": "6908c4bcabeefb9efdd54f39b6e63a581bf7b657cd66265e8de97de0f6aff466",
+      "bytes": 186109
+    },
+    {
+      "file": "desktop/features-flags-light.png",
+      "sha256": "33c836fbc01f60fc7fd341c0e25124f84b1f287cee1d8b0dfc29cee878effe9b",
+      "bytes": 796071
+    },
+    {
+      "file": "desktop/features-flags-no-js.png",
+      "sha256": "33c836fbc01f60fc7fd341c0e25124f84b1f287cee1d8b0dfc29cee878effe9b",
+      "bytes": 796071
+    },
+    {
+      "file": "desktop/features-flags-twilight.png",
+      "sha256": "bceecd2ac15dab0a0a6807be23e83e53054d87505456b82d6ceb54e60d8e0ee8",
+      "bytes": 802470
+    },
+    {
+      "file": "desktop/link-preview-card.png",
+      "sha256": "4d918f2e569cd9f4d643f8159fc67ac48221729c8925ada1ba7e6e480d5c32f9",
+      "bytes": 178364
+    },
+    {
+      "file": "desktop/link-preview-other-member.png",
+      "sha256": "5513214736336874fc86abe4d5620eff165a19098925b4a29e4ff8b48236565e",
+      "bytes": 110090
+    },
+    {
+      "file": "desktop/link-preview-removed-by-author.png",
+      "sha256": "c6fffeef301008aa1406767a0f88616bd9e9b7a78c5b6a512e5f87f69c8b8e77",
+      "bytes": 169366
+    },
+    {
+      "file": "desktop/link-previews-console-opted-out.png",
+      "sha256": "6d89adecaff327c3d5fda55dd2527c6b8023e022bf8c975db4a2c29a8b9721bf",
+      "bytes": 193567
+    },
+    {
+      "file": "desktop/link-previews-console.png",
+      "sha256": "1e8dda12b97a7e77b20af2770d3a7dd610175430549ec5eb4c91de2c6afe5f64",
+      "bytes": 177758
+    },
+    {
+      "file": "desktop/remediation-backfill-confirmation-422.png",
+      "sha256": "9ad348724e915ddfe6c0ae8241c8e6d34f36d0dca448f83d2f35fc3840e4d2e9",
+      "bytes": 77321
+    },
+    {
+      "file": "desktop/remediation-board-controls-1440-detail.png",
+      "sha256": "4dae68f7800b151624e34465db4aa0e8de1e803ca20b9af1af2cc5cb0b00ccde",
+      "bytes": 28314
+    },
+    {
+      "file": "desktop/remediation-board-controls-1440.png",
+      "sha256": "0e1fe44d3909f1d1a12c5f308f4e5b335eee3c6d47c64f48bfbd069898b6113d",
+      "bytes": 923318
+    },
+    {
+      "file": "desktop/remediation-board-controls-390-detail.png",
+      "sha256": "45d26fa10a49bb9a324df038d66a70e8f6d8a4a571096084d226a1d9ba21a404",
+      "bytes": 27583
+    },
+    {
+      "file": "desktop/remediation-board-controls-390.png",
+      "sha256": "5de21adcfe9b4dcf156d514a22fa3aa38f011bb912a7362914fe0e5dcc43ec48",
+      "bytes": 467547
+    },
+    {
+      "file": "desktop/remediation-filtered-flags.png",
+      "sha256": "841bcefe016e0385bdb9de747c7397011e78ad360bed582e35a19a49a3c1be28",
+      "bytes": 137945
+    },
+    {
+      "file": "desktop/remediation-preview-history-page-2.png",
+      "sha256": "6ce40b61ffd03f361559a8986cfabb22bf6df0302f706519ae947d7724b5498c",
+      "bytes": 167287
+    },
+    {
+      "file": "desktop/remediation-reserved-emoji-422.png",
+      "sha256": "4fa9ef8abd783eca0b626bbf6bd7302f16a51051160ef86f6ed84d11f6b2f282",
+      "bytes": 204476
+    },
+    {
+      "file": "desktop/remediation-revoke-impact.png",
+      "sha256": "ba53fb733f562c460192f68b336dd9897fa9f70ecacc85616309a5af5bc023c9",
+      "bytes": 75538
+    },
+    {
+      "file": "mobile/32-badge-rules.png",
+      "sha256": "8b3b5055102f7fbf01f685e4de80056b807d53c15d7d467d8f06ece556f722c9",
+      "bytes": 538409
+    },
+    {
+      "file": "mobile/33-badge-rule-preview.png",
+      "sha256": "c7adb69e4b987bd0eb0965723dffcfcc6255dce8123f693ba8540939810adc8e",
+      "bytes": 127404
+    },
+    {
+      "file": "mobile/34-badge-rule-backfilled.png",
+      "sha256": "a2a04ba49ac5d4759428dae232ae7c6f18d2f930c62e9890f4cea1af0f0df95a",
+      "bytes": 541089
+    },
+    {
+      "file": "mobile/admin-feature-readiness.png",
+      "sha256": "7f31e50247efa0f920baac7906e9cb79b68a0e8b4ac8492a423cc91eb2f65f90",
+      "bytes": 855975
+    },
+    {
+      "file": "mobile/features-badge-rule-preview-light.png",
+      "sha256": "81e9a88e991da63c26488eb41b182ffd133ab487527b64ba337ee8ce3fadbe6a",
+      "bytes": 110878
+    },
+    {
+      "file": "mobile/features-badge-rule-preview-no-js.png",
+      "sha256": "ac787c46cdff705143d9ff360f0e2cc99dbf4df05de1448fa4a4939e7e594805",
+      "bytes": 110949
+    },
+    {
+      "file": "mobile/features-badge-rule-preview-twilight.png",
+      "sha256": "34863a2d0a2ec7f593fdc584aa7f6fc046255d581a73f850b650577510fbc4aa",
+      "bytes": 112006
+    },
+    {
+      "file": "mobile/features-badge-rules-422.png",
+      "sha256": "d802710d2e03cf410213dccb754714b6f6d9b711c207634f1f8f3287f9df269d",
+      "bytes": 446666
+    },
+    {
+      "file": "mobile/features-badge-rules-light.png",
+      "sha256": "cd373fa7ff423630e3cf43b2ae1354e77857b07e827f9edfc50e96023f4cfb7b",
+      "bytes": 446485
+    },
+    {
+      "file": "mobile/features-badge-rules-no-js.png",
+      "sha256": "07e5ab5bd95df7f90bc8dfd87e27c9033b4797d5049e1ad7c3789a94801128ee",
+      "bytes": 482931
+    },
+    {
+      "file": "mobile/features-badge-rules-twilight.png",
+      "sha256": "0145695245dc330e97461a91247f430409459dbd5c4f79d806feedf99c52be71",
+      "bytes": 449219
+    },
+    {
+      "file": "mobile/features-custom-emoji-422.png",
+      "sha256": "2b86c09f1e023e7baaaf11ec34e55a2cb106ae0a37310c0d8989b08880182f04",
+      "bytes": 282308
+    },
+    {
+      "file": "mobile/features-custom-emoji-light.png",
+      "sha256": "bce64deb80394db22a159642e5e1a4e8a9c348c960f75b0382f0dbb5863ace96",
+      "bytes": 276352
+    },
+    {
+      "file": "mobile/features-custom-emoji-no-js.png",
+      "sha256": "c8d0379663586831d85c685a07f4ee0fed2650487f29d2259970d2ca3ec0eb62",
+      "bytes": 287847
+    },
+    {
+      "file": "mobile/features-custom-emoji-twilight.png",
+      "sha256": "5a7b903c5c5d10b08feb90278064ffc89f89060270298bd7572a997ecb58b400",
+      "bytes": 277256
+    },
+    {
+      "file": "mobile/features-flags-light.png",
+      "sha256": "7f31e50247efa0f920baac7906e9cb79b68a0e8b4ac8492a423cc91eb2f65f90",
+      "bytes": 855975
+    },
+    {
+      "file": "mobile/features-flags-no-js.png",
+      "sha256": "7f31e50247efa0f920baac7906e9cb79b68a0e8b4ac8492a423cc91eb2f65f90",
+      "bytes": 855975
+    },
+    {
+      "file": "mobile/features-flags-twilight.png",
+      "sha256": "d7f2071b86766458c5653d89d93a3167ebf0fd6ae38825fe8fa4411402e77b90",
+      "bytes": 853484
+    },
+    {
+      "file": "mobile/link-preview-card.png",
+      "sha256": "07c95eae3df226530fdb3d3b953b64fcae82489d9b0a73c9af5af47c04c9895d",
+      "bytes": 348940
+    },
+    {
+      "file": "mobile/link-preview-other-member.png",
+      "sha256": "0f80343883592c6377e6521a8692a2ffba799375a941f4e91ddfd5bbc20235c3",
+      "bytes": 183290
+    },
+    {
+      "file": "mobile/link-preview-removed-by-author.png",
+      "sha256": "ddd57c395352efb3070902075da21567881a02f833937a755bdc6677ffe9284d",
+      "bytes": 308017
+    },
+    {
+      "file": "mobile/link-previews-console-opted-out.png",
+      "sha256": "d25811bc1ee89615f2f0f623d56c804ff1dfbac46da088022f2702a9eba73ad9",
+      "bytes": 421753
+    },
+    {
+      "file": "mobile/link-previews-console.png",
+      "sha256": "08dc9f785cdbd872d8f46e8c57c3f1715847714c0cfd2c878b231d849092eceb",
+      "bytes": 380970
+    },
+    {
+      "file": "mobile/remediation-backfill-confirmation-422.png",
+      "sha256": "acb61794fb83fc2f6afd6c2eb2e638898f61a0c5c0ece9ba87624e5111b4ea0a",
+      "bytes": 170282
+    },
+    {
+      "file": "mobile/remediation-board-controls-1440-detail.png",
+      "sha256": "6cccc13499baba89c33b52c3b5d683dee3e1006cd1dbfa5d1041d8a5dce18817",
+      "bytes": 68891
+    },
+    {
+      "file": "mobile/remediation-board-controls-1440.png",
+      "sha256": "ede24a652c1f5a1671c361228fe901b01a940b1fae73819fd003f3f1ee4a8c66",
+      "bytes": 2182688
+    },
+    {
+      "file": "mobile/remediation-board-controls-390-detail.png",
+      "sha256": "d3726d615717f70e887d385ee314931ac5a2d29520efc15cdee5911fe7c54881",
+      "bytes": 64711
+    },
+    {
+      "file": "mobile/remediation-board-controls-390.png",
+      "sha256": "9bd9895c741a094e0e9043b517939cb576cba02a58b7a64900f628f36474a512",
+      "bytes": 1185207
+    },
+    {
+      "file": "mobile/remediation-filtered-flags.png",
+      "sha256": "97620da79399847dcfb6f9b9f20f3fc0d075910109c426fcc46e23b518c3bee2",
+      "bytes": 284415
+    },
+    {
+      "file": "mobile/remediation-preview-history-page-2.png",
+      "sha256": "b97ef5caf55f8896eea1b58268940c928b5d6fc5955d3ef35a2c1690381b4f65",
+      "bytes": 380431
+    },
+    {
+      "file": "mobile/remediation-reserved-emoji-422.png",
+      "sha256": "3b74439f4c6a5fa20d1eff4cc5413ca3c5a66b13d417155c51318a02a4b63ce2",
+      "bytes": 296569
+    },
+    {
+      "file": "mobile/remediation-revoke-impact.png",
+      "sha256": "8468ce1fad8d41aa2dcd7b57bb813a3f6db94b3d6fa5c53fedcec35233dc8110",
+      "bytes": 168962
+    },
+    {
+      "file": "webkit-desktop/remediation-backfill-confirmation-422.png",
+      "sha256": "75da78eb30298097cd4ad4d653237b6ae49c2971aa5c935297ef0c267301f977",
+      "bytes": 105175
+    },
+    {
+      "file": "webkit-desktop/remediation-board-controls-1440-detail.png",
+      "sha256": "9661c89fd301dd26926c10cde0f8846a111a1eb584f63b48e977099cd4b08c7d",
+      "bytes": 32914
+    },
+    {
+      "file": "webkit-desktop/remediation-board-controls-1440.png",
+      "sha256": "6a29b07406c38b28b5441d9655994aebbccf6e29c38a5082628752aa0196f749",
+      "bytes": 1132861
+    },
+    {
+      "file": "webkit-desktop/remediation-board-controls-390-detail.png",
+      "sha256": "eb4676d4453889460a061c1ce199fdf4ca37971a5fdcb1505c8b1ecbd72157a0",
+      "bytes": 31561
+    },
+    {
+      "file": "webkit-desktop/remediation-board-controls-390.png",
+      "sha256": "25cf5c80d8d8813903130f644e54fbd57ccfdbdff8603571e3705da53302915d",
+      "bytes": 591079
+    },
+    {
+      "file": "webkit-desktop/remediation-filtered-flags.png",
+      "sha256": "173fbb15011aaaed811dc60059b954ae5623550595201c70e87dc9c6f5699310",
+      "bytes": 190127
+    },
+    {
+      "file": "webkit-desktop/remediation-preview-history-page-2.png",
+      "sha256": "873a18153f49d1df79fabd1bed32ceeb7afd97c34bfd89e50fa0c33eea492b7e",
+      "bytes": 220321
+    },
+    {
+      "file": "webkit-desktop/remediation-reserved-emoji-422.png",
+      "sha256": "383d682dde1438df471a6012e33767ee89eb25d2e535a30a2871299ac0af74c0",
+      "bytes": 114512
+    },
+    {
+      "file": "webkit-desktop/remediation-revoke-impact.png",
+      "sha256": "e1f2f4401a350e58d7cc8d7a9acab2237806f4b6f515aa55e60d813ccae0563a",
+      "bytes": 104798
+    },
+    {
+      "file": "webkit-mobile/remediation-backfill-confirmation-422.png",
+      "sha256": "c705a89cd7f91b6b356ac52054ec87f1376745c8dfb6372764c0000fadb9744d",
+      "bytes": 92389
+    },
+    {
+      "file": "webkit-mobile/remediation-board-controls-1440-detail.png",
+      "sha256": "9661c89fd301dd26926c10cde0f8846a111a1eb584f63b48e977099cd4b08c7d",
+      "bytes": 32914
+    },
+    {
+      "file": "webkit-mobile/remediation-board-controls-1440.png",
+      "sha256": "167bc6e842dbbb534eb4aca79e2b5b11fa419d3016179648ed8da62edbedcae2",
+      "bytes": 1132888
+    },
+    {
+      "file": "webkit-mobile/remediation-board-controls-390-detail.png",
+      "sha256": "eb4676d4453889460a061c1ce199fdf4ca37971a5fdcb1505c8b1ecbd72157a0",
+      "bytes": 31561
+    },
+    {
+      "file": "webkit-mobile/remediation-board-controls-390.png",
+      "sha256": "febac21f0200971c078d6199a81d2ea8071c364fe9f3fd264617506c13a3214d",
+      "bytes": 591118
+    },
+    {
+      "file": "webkit-mobile/remediation-filtered-flags.png",
+      "sha256": "1000bca967d44e21f7248c0b636d77cffc608002cd816b2fc4e3a63dc3d8bb39",
+      "bytes": 157822
+    },
+    {
+      "file": "webkit-mobile/remediation-preview-history-page-2.png",
+      "sha256": "7c424beefc6218ef5bb325c4a3de2361ea92c8c7f832f4099773d0942dcf5b14",
+      "bytes": 201046
+    },
+    {
+      "file": "webkit-mobile/remediation-reserved-emoji-422.png",
+      "sha256": "0e2a05bbdbc23c795480cb915b601f62bdc004eaec31c0b79a5a4444880e4b63",
+      "bytes": 83908
+    },
+    {
+      "file": "webkit-mobile/remediation-revoke-impact.png",
+      "sha256": "cda16c7a0eda8d442c20f5d1205846e5dc0857527101f256c71e783fe5216737",
+      "bytes": 93390
+    }
+  ],
+  "limits": [
+    "Local synthetic databases only",
+    "No authenticated production, physical-device, or screen-reader acceptance",
+    "No live outbound preview/provider or production email qualification"
+  ]
+}

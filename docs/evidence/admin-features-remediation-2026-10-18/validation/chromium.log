@@ -1,0 +1,45 @@
+
+Running 28 tests using 1 worker
+
+(node:3095304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › admin-features.spec.ts:84:5 › admin feature inventory classifies readiness and links actionable surfaces (3.4s)
+  ✓   2 [desktop] › features-console.spec.ts:165:5 › the feature-flag ledger copies the tiles, table chrome and relocated legend in every register (4.9s)
+  ✓   3 [desktop] › features-console.spec.ts:198:5 › badge rules copies the two-up create card, rule rows and action order in every register (4.0s)
+  ✓   4 [desktop] › features-console.spec.ts:246:5 › the badge-rule preview drill-in keeps its parent tab lit and copies the monogram roster (2.4s)
+  ✓   5 [desktop] › features-console.spec.ts:273:5 › the custom emoji catalogue copies the switch, chip and status pills in every register (3.7s)
+  ✓   6 [desktop] › features-console.spec.ts:328:5 › every features route stays whole with JavaScript disabled (1.9s)
+  ✓   7 [desktop] › features-remediation.spec.ts:37:5 › inventory filters work without JavaScript and Operations links have 44px targets (927ms)
+  ✓   8 [desktop] › features-remediation.spec.ts:62:5 › badge bulk changes require an impact review and typed confirmation without JavaScript (1.4s)
+  ✓   9 [desktop] › features-remediation.spec.ts:95:5 › emoji reservations preserve inputs and every catalogue mutation is audited (2.5s)
+  ✓  10 [desktop] › features-remediation.spec.ts:129:5 › preview history reaches older rows and board actions remain visible at narrow widths (2.8s)
+
+  ✓  11 [desktop] › link-previews.spec.ts:102:5 › link preview console reports its gates and drives the allowlist and board opt-in (1.7s)
+
+  ✓  12 [desktop] › link-previews.spec.ts:143:5 › an author can remove and restore the preview on their own post with no JavaScript (1.3s)
+
+  ✓  13 [desktop] › link-previews.spec.ts:175:5 › the preview card and its removed state are free of serious axe violations (1.6s)
+
+  ✓  14 [desktop] › link-previews.spec.ts:189:5 › a member who is not the author sees the card but is offered no control over it (958ms)
+(node:3102532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [mobile] › admin-features.spec.ts:84:5 › admin feature inventory classifies readiness and links actionable surfaces (3.0s)
+  ✓  16 [mobile] › features-console.spec.ts:165:5 › the feature-flag ledger copies the tiles, table chrome and relocated legend in every register (4.4s)
+  ✓  17 [mobile] › features-console.spec.ts:198:5 › badge rules copies the two-up create card, rule rows and action order in every register (3.9s)
+  ✓  18 [mobile] › features-console.spec.ts:246:5 › the badge-rule preview drill-in keeps its parent tab lit and copies the monogram roster (2.1s)
+  ✓  19 [mobile] › features-console.spec.ts:273:5 › the custom emoji catalogue copies the switch, chip and status pills in every register (3.5s)
+  ✓  20 [mobile] › features-console.spec.ts:328:5 › every features route stays whole with JavaScript disabled (2.2s)
+  ✓  21 [mobile] › features-remediation.spec.ts:37:5 › inventory filters work without JavaScript and Operations links have 44px targets (984ms)
+  ✓  22 [mobile] › features-remediation.spec.ts:62:5 › badge bulk changes require an impact review and typed confirmation without JavaScript (1.2s)
+  ✓  23 [mobile] › features-remediation.spec.ts:95:5 › emoji reservations preserve inputs and every catalogue mutation is audited (2.7s)
+  ✓  24 [mobile] › features-remediation.spec.ts:129:5 › preview history reaches older rows and board actions remain visible at narrow widths (3.6s)
+
+  ✓  25 [mobile] › link-previews.spec.ts:102:5 › link preview console reports its gates and drives the allowlist and board opt-in (1.9s)
+
+  ✓  26 [mobile] › link-previews.spec.ts:143:5 › an author can remove and restore the preview on their own post with no JavaScript (1.3s)
+
+  ✓  27 [mobile] › link-previews.spec.ts:175:5 › the preview card and its removed state are free of serious axe violations (1.8s)
+
+  ✓  28 [mobile] › link-previews.spec.ts:189:5 › a member who is not the author sees the card but is offered no control over it (1.1s)
+
+  28 passed (1.1m)

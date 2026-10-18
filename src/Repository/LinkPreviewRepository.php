@@ -132,9 +132,10 @@ final class LinkPreviewRepository
      *
      * @return array<int,array<string,mixed>>
      */
-    public function listRecent(?string $status, int $limit): array
+    public function listRecent(?string $status, int $limit, int $offset = 0): array
     {
         $limit = max(1, min(200, $limit));
+        $offset = max(0, $offset);
         $where = '';
         $params = [];
         if ($status !== null && $status !== '') {
@@ -153,7 +154,7 @@ final class LinkPreviewRepository
              LEFT JOIN boards b ON b.id = t.board_id
              $where
              ORDER BY lp.id DESC
-             LIMIT " . $limit,
+             LIMIT " . $limit . ' OFFSET ' . $offset,
             $params,
         );
     }

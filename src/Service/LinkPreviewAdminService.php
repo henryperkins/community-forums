@@ -27,7 +27,7 @@ final class LinkPreviewAdminService
     /** Bound on the stored allowlist so one paste cannot make the settings row unbounded. */
     private const MAX_HOSTS = 100;
 
-    /** How many rows the console table shows. */
+    /** How many rows each console history page shows. */
     public const RECENT_LIMIT = 50;
 
     public const STATUSES = ['queued', 'fetched', 'blocked', 'failed', 'purged', 'removed'];
@@ -45,9 +45,13 @@ final class LinkPreviewAdminService
     }
 
     /** @return array<string,mixed> */
-    public function dashboard(?string $status = null): array
+    public function dashboard(?string $status = null, int $page = 1): array
     {
         $status = in_array((string) $status, self::STATUSES, true) ? (string) $status : null;
+        $counts = $this->previews->statusCounts();
+        $total = $status === null ? array_sum($counts) : $counts[$status];
+        $pageCount = max(1, (int) ceil($total / self::RECENT_LIMIT));
+        $page = max(1, min($page, $pageCount));
         $hosts = $this->service->allowedHosts();
         $boards = [];
         $optedIn = 0;
@@ -72,7 +76,7 @@ final class LinkPreviewAdminService
         }
 
         return [
-            'counts' => $this->previews->statusCounts(),
+            'counts' => $counts,
             'kill_switch' => $this->service->killSwitchEngaged(),
             'allowed_hosts' => $hosts,
             'allowed_hosts_text' => implode("\n", $hosts),
@@ -80,7 +84,11 @@ final class LinkPreviewAdminService
             'boards' => $boards,
             'boards_opted_in' => $optedIn,
             'status_filter' => $status,
-            'rows' => $this->rows($status),
+            'page' => $page,
+            'page_count' => $pageCount,
+            'total' => $total,
+            'per_page' => self::RECENT_LIMIT,
+            'rows' => $this->rows($status, ($page - 1) * self::RECENT_LIMIT),
             'transport' => [
                 'allow_http' => (bool) $this->config->get('link_previews.allow_http', false),
                 'timeout_seconds' => (int) $this->config->get('link_previews.timeout_seconds', 4),
@@ -113,10 +121,10 @@ final class LinkPreviewAdminService
     }
 
     /** @return array<int,array<string,mixed>> */
-    private function rows(?string $status): array
+    private function rows(?string $status, int $offset): array
     {
         $rows = [];
-        foreach ($this->previews->listRecent($status, self::RECENT_LIMIT) as $row) {
+        foreach ($this->previews->listRecent($status, self::RECENT_LIMIT, $offset) as $row) {
             $threadId = (int) ($row['thread_id'] ?? 0);
             $rows[] = [
                 'id' => (int) $row['id'],
