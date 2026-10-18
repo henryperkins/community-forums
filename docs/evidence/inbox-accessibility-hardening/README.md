@@ -4,6 +4,10 @@ Local fixes for the three P1 findings from the `/inbox` audit. Base commit:
 `fbaed0e9e040dbed4889f776c9463be28bc261ad`. The changes are uncommitted; this evidence establishes
 local behavior. No publication or production verification was requested.
 
+The owner subsequently requested publication. The [release integration](integration/README.md)
+records the combined tree after preserving the newer Boards release on main;
+the original local measurements below remain tied to their recorded base.
+
 | Finding | Result |
 | --- | --- |
 | System dark used a low-contrast board-reference link (3.07:1) | Both dark token blocks explicitly use Imladris river ink. Measured System contrast is 10.82:1 in Chromium and 10.82:1 in WebKit; System and explicit Dark also pass the scoped axe checks. |

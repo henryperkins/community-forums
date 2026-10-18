@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process';
 import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { test } from 'node:test';
 import { createHash } from 'node:crypto';
@@ -24,7 +25,8 @@ async function fixture(t) {
   await mkdir(path.join(directory, 'config'));
   await copyFile(new URL('bin/build-assets.mjs', root), path.join(directory, 'bin/build-assets.mjs'));
   await copyFile(new URL('vite.config.mjs', root), path.join(directory, 'vite.config.mjs'));
-  await symlink(new URL('node_modules', root).pathname, path.join(directory, 'node_modules'), 'dir');
+  await symlink(fileURLToPath(new URL('node_modules', root)), path.join(directory, 'node_modules'),
+    process.platform === 'win32' ? 'junction' : 'dir');
   await put('public/assets/imladris.css', '@font-face{font-family:fixture;src:url(./fonts/fixture.woff2)}');
   await put('public/assets/fonts/fixture.woff2', 'font fixture');
   await put('public/assets/elven-star.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
@@ -200,17 +202,18 @@ for (const failure of ['write', 'static-install', 'manifest-install', 'overlay-s
       const writeFile = fs.promises.writeFile;
       const rename = fs.promises.rename;
       let failed = false;
+      const portablePath = value => String(value).split(String.fromCharCode(92)).join('/');
       const fail = () => { failed = true; throw Object.assign(new Error('simulated ENOSPC'), { code: 'ENOSPC' }); };
       fs.promises.writeFile = async (file, ...args) => {
-        if (${JSON.stringify(failure)} === 'write' && String(file).includes('/public/assets/')) fail();
+        if (${JSON.stringify(failure)} === 'write' && portablePath(file).includes('/public/assets/')) fail();
         return writeFile(file, ...args);
       };
       fs.promises.rename = async (source, destination) => {
-        if (${JSON.stringify(failure)} === 'overlay-static-install' && String(destination).endsWith('/previous')) {
+        if (${JSON.stringify(failure)} === 'overlay-static-install' && portablePath(destination).endsWith('/previous')) {
           throw Object.assign(new Error('simulated overlayfs EXDEV'), { code: 'EXDEV' });
         }
-        if (!failed && ((['static-install', 'overlay-static-install'].includes(${JSON.stringify(failure)}) && String(destination).endsWith('/.build/static'))
-          || (${JSON.stringify(failure)} === 'manifest-install' && String(destination).endsWith('/config/assets.json')))) fail();
+        if (!failed && ((['static-install', 'overlay-static-install'].includes(${JSON.stringify(failure)}) && portablePath(destination).endsWith('/.build/static'))
+          || (${JSON.stringify(failure)} === 'manifest-install' && portablePath(destination).endsWith('/config/assets.json')))) fail();
         return rename(source, destination);
       };
       syncBuiltinESMExports();
@@ -240,8 +243,9 @@ test('overlayfs directory backups permit publication without losing deployed fil
     import fs from 'node:fs';
     import { syncBuiltinESMExports } from 'node:module';
     const rename = fs.promises.rename;
+    const portablePath = value => String(value).split(String.fromCharCode(92)).join('/');
     fs.promises.rename = async (source, destination) => {
-      if (String(destination).endsWith('/previous')) {
+      if (portablePath(destination).endsWith('/previous')) {
         throw Object.assign(new Error('simulated overlayfs EXDEV'), { code: 'EXDEV' });
       }
       return rename(source, destination);

@@ -1,0 +1,15 @@
+{
+  "version": "2371e926206bda24",
+  "served": [
+    {
+      "entry": "app.css",
+      "url": "/assets/dist/app-style-CEE93iUR.css",
+      "sha256": "6049ddc6be156398fc1e31da0b5fd506893d4553feabf3f247e40dbdf4e30803"
+    },
+    {
+      "entry": "app.js",
+      "url": "/assets/dist/app-e558f7d15ccb3fa8.js",
+      "sha256": "e558f7d15ccb3fa83e45d55c76bdd3124969dbb46bb455f08f3a4dbb6a0c2087"
+    }
+  ]
+}

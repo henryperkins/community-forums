@@ -1,0 +1,4 @@
+Time: 01:48.231, Memory: 52.00 MB
+
+OK, but some tests were skipped!
+Tests: 3233, Assertions: 25653, Skipped: 1.

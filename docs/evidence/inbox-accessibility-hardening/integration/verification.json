@@ -1,0 +1,39 @@
+{
+  "inbox_checkpoint": "7b863b3493b95c934572d670b15d1cd7e97a984a",
+  "incoming_main": "62ae895b5ec310fff1bfad527d899d4b07aba067",
+  "asset_version": "2371e926206bda24",
+  "application_digest": "242054f46a76f47a1e8728f0e1e103a841be3fed21790cf8e09524732057f964",
+  "source_sha256": {
+    "public/assets/app.css": "c9f8056f3d19545960b23c473d398c451c2a2653defd9c756bed51924c033c11",
+    "public/assets/app.js": "9a6f48682372acabd03a0a74b7d03b3c1f1000bb69b449854f3c4aaf5850a99a",
+    "templates/inbox.php": "73f68bd4a61af42a15b397ec448b7b2190e757fe3049141947557502f6ed6870",
+    "templates/home.php": "f2ef5e740331551ecaebe38f6129ed66bdf58c2d8d826a23f8983135081d29d1",
+    "DESIGN.md": "be61f0585167c286c501da1573ff9c61c5489d65aca4052c9e0bdf9df204731d",
+    "PRODUCT_DESIGN.md": "f06e1e25336363431ecbe3dc379b967d0d4777078a90d6111bf97d77ef3adfc8",
+    "USER.md": "e480d9d16250d45856fbc606844c781299c1aca43ed6e110e41b46cb6e74270d",
+    "config/assets.json": "2248c4eac891c18e9058fae8142a3aac54a0ea17ca7767bd33724c061b0ca437",
+    "config/imladris-runtime-baseline.json": "5a7d8ea16efe11eecf5cebbb601dfd5551da906e979e4115d5268e69e5959a2d",
+    "resources/imladris/manifest.json": "f7bb44f39bd69010af01fb3d1821c82c149ee3784fe309e350856c0e4f5dea5b",
+    "public/assets/dist/app-style-CEE93iUR.css": "6049ddc6be156398fc1e31da0b5fd506893d4553feabf3f247e40dbdf4e30803",
+    "public/assets/dist/app-e558f7d15ccb3fa8.js": "e558f7d15ccb3fa83e45d55c76bdd3124969dbb46bb455f08f3a4dbb6a0c2087"
+  },
+  "browser_totals": {
+    "passed": 136,
+    "skipped": 12,
+    "failed": 0,
+    "flaky": 0
+  },
+  "phpunit": {
+    "tests": 3233,
+    "assertions": 25653,
+    "skipped": 1
+  },
+  "asset_tests": 35,
+  "preservation": {
+    "boards_css": "byte-identical to origin/main",
+    "inbox_javascript": "byte-identical to Inbox checkpoint",
+    "deployment_pins": "preserved from origin/main before build"
+  },
+  "independent_source_review": "No actionable findings in composed source; all 56 manifest files and both runtime digests match.",
+  "scope": "Pre-push local integration qualification; production verification follows separately."
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "original": "assets-build-missing-script.log",
+    "archive": "assets-build-missing-script.log.gz",
+    "bytes": 253,
+    "sha256": "8c6d89578253eff210930ad4fd0c3046979eb9977e644e109098d3daee6d5987"
+  },
+  {
+    "original": "assets-build-retention-gap.log",
+    "archive": "assets-build-retention-gap.log.gz",
+    "bytes": 3652,
+    "sha256": "425800edf66d7fa0a87f3da8d5d341deace1618fc3f65f9db51068b8696c71f7"
+  },
+  {
+    "original": "assets-build-source-correction.log",
+    "archive": "assets-build-source-correction.log.gz",
+    "bytes": 2918,
+    "sha256": "e247389c59eec67e3bbf6421460d3f5b86795e15c1c2cc5febde5ae45a8d94bc"
+  },
+  {
+    "original": "assets-build.log",
+    "archive": "assets-build.log.gz",
+    "bytes": 2918,
+    "sha256": "6fadeec6a2b8d1d16b6e80febc14f5f0888da57989e574accc5b58c732d62fc0"
+  },
+  {
+    "original": "assets-check.log",
+    "archive": "assets-check.log.gz",
+    "bytes": 2914,
+    "sha256": "29a371fd841028009bb7f339d323cf5601fe583eb4d1ff7285251486a4da6cad"
+  },
+  {
+    "original": "assets-tests.log",
+    "archive": "assets-tests.log.gz",
+    "bytes": 3498,
+    "sha256": "2ff9071676e215e097c1d4c58eaaa9c78ed25cafcaac7cba911a7211493d8ff2"
+  },
+  {
+    "original": "chromium-before-collation.log",
+    "archive": "chromium-before-collation.log.gz",
+    "bytes": 25717,
+    "sha256": "af005b0eafe9b98af66803d9fd6c446e179b3d1196575fcaafd9466465b7edd0"
+  },
+  {
+    "original": "chromium.log",
+    "archive": "chromium.log.gz",
+    "bytes": 4222,
+    "sha256": "d5dbe9f93ff549cfaeafda666194fa6c505aeb5c3644e9e5f6a26f91d3b55a0b"
+  },
+  {
+    "original": "imladris-check.log",
+    "archive": "imladris-check.log.gz",
+    "bytes": 38,
+    "sha256": "273db77d7e9c58ba49b29cac986f1123bf6b5903bbdd44c0e977fa9053d3438a"
+  },
+  {
+    "original": "phpunit-focused.log",
+    "archive": "phpunit-focused.log.gz",
+    "bytes": 425,
+    "sha256": "6fdef9d0647a68c771e36b56f96d741a423a38cd2062de83fd8b125aaa07c23a"
+  },
+  {
+    "original": "phpunit-focused.xml",
+    "archive": "phpunit-focused.xml.gz",
+    "bytes": 43530,
+    "sha256": "d0082f18154f36e3244b1168e150dc39a769fc08a63556b870123de7d274a28a"
+  },
+  {
+    "original": "phpunit.log",
+    "archive": "phpunit.log.gz",
+    "bytes": 14696,
+    "sha256": "a7613a36cf331d9113b2045c5ed2555832ba8fbe1f8c936eb9dbea695ab9c835"
+  },
+  {
+    "original": "phpunit.xml",
+    "archive": "phpunit.xml.gz",
+    "bytes": 1340969,
+    "sha256": "1c713bc0cb20bc43fac626c45ce655f26c936679aea07331837cb62805470b79"
+  },
+  {
+    "original": "webkit.log",
+    "archive": "webkit.log.gz",
+    "bytes": 3109,
+    "sha256": "5f28dc2dcebdde90b1068dc040afa4123e0dbe68b497a53c305a40283bc1d385"
+  }
+]

@@ -1,5 +1,43 @@
 # RetroBoards runtime reconciliation
 
+## 2026-10-12 — verified Boards Worker assets
+
+All 55 live Worker hashes match asset version 326ae04cd673029a. Recording that
+verified asset release keeps it and the two preceding deployments, retiring only
+app-style-_B45kYl1.css. The resulting 54-file delivery set has reviewed application
+digest 645bfcbfb0c49c7f9bfcb2e05f684bdeb4b8329f784b7e9183867111d2e0f7b1.
+This proves the static asset rollout. Cloud Run's d928d6f2 image deployment remains
+queued; the production login still names the previous stylesheet.
+
+## 2026-10-12 — Boards publication integration
+
+Integrating the four accessibility commits through fbaed0e9 retains their visual
+rules and deployment pins. The Boards adaptation block is unchanged from the
+reviewed refinement. The composed application digest is
+53331f86fef1d291065bd5bd98e3f83ab9ca57f2fd4e6135595cf7695ee2c9a2,
+and asset version 326ae04cd673029a publishes 55 files.
+
+The focused PHP run passes 110 tests. Directory/incoming mobile-controls
+Chromium passes 25 checks with two viewport skips; asset tests pass all 35.
+The private MariaDB reaction-collation correction and remaining native Windows
+verification limits are recorded in
+[integration evidence](../../evidence/boards-layout-typeset-2026-10-12/integration/README.md).
+
+## 2026-10-12 — Boards layout, typeset and distill
+
+The owner requested the Boards refinement in ADR 0048, based on two supplied
+screenshots. The reviewed local application digest is
+f1ba0b3b84b7a76058e42ff3210ca08f2a25a2dfd5f4091e4053e8c889c99a2a
+on main's d06a303ae2723d7da303d62069f79a877a3f1f77 base, plus the uncommitted
+directory changes. The runtime baseline and resource manifest carry that digest.
+
+Adaptations stay outside the authored compatibility transfer. The imported
+components, tokens, font faces, navigation chrome and phone sheet behavior are
+unchanged. Asset version 0f13ca29e198cb3d names the rebuilt stylesheet; all three
+confirmed deployment pins remain intact. This record covers local preparation.
+Browser evidence, PHP results, Windows fixture corrections and unresolved checks
+are in [the directory evidence](../../evidence/boards-layout-typeset-2026-10-12/README.md).
+
 ## 2026-10-11 — security dependency delivery (PR #90)
 
 The ProseMirror view/model security updates regenerate the lazy editor entry and

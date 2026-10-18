@@ -59,7 +59,6 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
             </header>
 
             <div class="directory-viewbar" data-viewbar="wide">
-                <span class="directory-viewbar__label">Viewing</span>
                 <div class="directory-viewbar__choices" role="group" aria-label="Order">
                     <?php foreach ($sortLabels as $sortKey => $label): ?>
                         <?php $return = $viewUrl(['sort' => $sortKey]); ?>
@@ -91,7 +90,6 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
-                <span class="directory-viewbar__density"><?= ($appearance['density'] ?? 'comfortable') === 'compact' ? 'Compact' : 'Comfortable' ?> rows <a href="/settings/appearance">change</a></span>
             </div>
 
             <div data-directory-view-shell>
@@ -135,7 +133,12 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
             </details>
             </div>
 
-            <p class="directory-order-note"><?= $e($orderNotes[$sort] ?? $orderNotes['category']) ?> · <?= (int) $totals['boards'] ?> board<?= (int) $totals['boards'] === 1 ? '' : 's' ?> · the same order every member sees.</p>
+            <div class="directory-viewbar__meta">
+                <span class="directory-viewbar__density"><?= ($appearance['density'] ?? 'comfortable') === 'compact' ? 'Compact' : 'Comfortable' ?> rows <a href="/settings/appearance">change</a></span>
+                <?php if ($sort !== 'category'): ?>
+                    <p class="directory-order-note"><?= $e($orderNotes[$sort] ?? $orderNotes['category']) ?></p>
+                <?php endif; ?>
+            </div>
             <?php if ($current_user === null): ?>
                 <p class="directory-guest-note">Order and peek are yours to set as a guest. <a href="/login?next=%2F">Log in</a> to have this view remembered, and to keep a queue of your own.</p>
             <?php endif; ?>

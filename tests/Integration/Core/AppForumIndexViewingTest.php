@@ -115,7 +115,7 @@ final class AppForumIndexViewingTest extends TestCase
         $rankedBody = $this->get('/', ['sort' => 'active'])->body();
         self::assertStringContainsString('data-directory-ranked', $rankedBody);
         self::assertStringNotContainsString('data-directory-category="Council"', $rankedBody);
-        self::assertStringContainsString('the same order every member sees', $rankedBody);
+        self::assertStringContainsString('Ranked by last reply', $rankedBody);
     }
 
     public function test_peek_sizes_are_bounded_and_topic_filters_match_the_selected_order(): void

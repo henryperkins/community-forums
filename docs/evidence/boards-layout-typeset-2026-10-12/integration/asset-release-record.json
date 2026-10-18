@@ -1,0 +1,16 @@
+{
+  "assetVersion": "326ae04cd673029a",
+  "files": 54,
+  "pins": [
+    "326ae04cd673029a",
+    "be1d396948b3adcc",
+    "2883bddb08c95fd1"
+  ],
+  "retired": [
+    "/assets/dist/app-style-_B45kYl1.css"
+  ],
+  "allCurrentBytesMatch": true,
+  "workerAssetsVerified": true,
+  "originDeployment": "queued",
+  "sourceCommit": "d928d6f23c6b56e3c903206f837ddbb9c1f6c7a3"
+}

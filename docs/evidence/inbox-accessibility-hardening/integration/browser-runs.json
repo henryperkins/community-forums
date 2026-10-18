@@ -1,0 +1,1134 @@
+{
+  "chromium-inbox": {
+    "stats": {
+      "startTime": "2026-10-18T01:35:21.767Z",
+      "duration": 103560.768,
+      "expected": 58,
+      "skipped": 6,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "System dark keeps Inbox references readable like explicit Dark",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "character shortcuts leave member chrome alone",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "queue and reading-pane focus retain topic shortcuts",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "topic actions follow the focused topic instead of an older cursor",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "retained Unread previews never triage another topic or capture unrelated controls",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "a pending keyboard preview respects focus moved to another control",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "focused list navigation owns immediate opening before a preview responds",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "enlarged Inbox text keeps controls and queue content within their panes",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "System dark keeps Inbox references readable like explicit Dark",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "character shortcuts leave member chrome alone",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "queue and reading-pane focus retain topic shortcuts",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "topic actions follow the focused topic instead of an older cursor",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "retained Unread previews never triage another topic or capture unrelated controls",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "a pending keyboard preview respects focus moved to another control",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "focused list navigation owns immediate opening before a preview responds",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "enlarged Inbox text keeps controls and queue content within their panes",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long scope and order labels preserve one row, counts and readable content across constrained layouts",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "shared panels stay contained, expose recovery early and use consistent touch targets and dismissal",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work enhanced",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page enhanced",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work without JavaScript",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page without JavaScript",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "the snooze shortcut uses the same tomorrow action as the menu",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "preview removal preserves live range selection and page actions; persistent rows offer the current read action",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long unbroken topic text stays within its content column at default and large type",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long scope and order labels preserve one row, counts and readable content across constrained layouts",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "shared panels stay contained, expose recovery early and use consistent touch targets and dismissal",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work enhanced",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page enhanced",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work without JavaScript",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page without JavaScript",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "the snooze shortcut uses the same tomorrow action as the menu",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "preview removal preserves live range selection and page actions; persistent rows offer the current read action",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long unbroken topic text stays within its content column at default and large type",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "topics appear early and every primary destination fits without horizontal scrolling",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope and sort preserve each other and menus support keyboard dismissal and help",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope, sort and page actions work without JavaScript",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "topics appear early and every primary destination fits without horizontal scrolling",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope and sort preserve each other and menus support keyboard dismissal and help",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope, sort and page actions work without JavaScript",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "failed preview retries keep a removed Unread topic and its exact reply draft resumable",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "an initial preview failure offers retry and full topic without a previous-topic command",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "return after failed history restoration aligns the URL with the retained topic without adding an entry",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "timeout without AbortController keeps the old draft and ignores a late preview",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview with AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview with AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview without AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview without AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "pane preferences retain failed-preview recovery and its return command",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "a prevented form submission leaves the requested preview in progress",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native row submission owns navigation when an old preview answers with an access error",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native bulk submission owns navigation when an old preview answers with an access error",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "failed preview retries keep a removed Unread topic and its exact reply draft resumable",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "an initial preview failure offers retry and full topic without a previous-topic command",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "return after failed history restoration aligns the URL with the retained topic without adding an entry",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "timeout without AbortController keeps the old draft and ignores a late preview",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview with AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview with AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview without AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview without AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "pane preferences retain failed-preview recovery and its return command",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "a prevented form submission leaves the requested preview in progress",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "One desktop case covers the generic submit event contract."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native row submission owns navigation when an old preview answers with an access error",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native bulk submission owns navigation when an old preview answers with an access error",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      }
+    ]
+  },
+  "chromium-keyboard": {
+    "stats": {
+      "startTime": "2026-10-18T01:38:01.599Z",
+      "duration": 5496.629,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "file": "auth-hardening.spec.ts",
+        "title": "Enter on a focused link on /inbox follows it; the list still opens its cursor",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "auth-hardening.spec.ts",
+        "title": "Enter on a focused link on /inbox follows it; the list still opens its cursor",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "member-surfaces.spec.ts",
+        "title": "inbox menu, selection, cursor, preview, and fallback remain canonical",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "member-surfaces.spec.ts",
+        "title": "inbox menu, selection, cursor, preview, and fallback remain canonical",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      }
+    ]
+  },
+  "chromium-boards": {
+    "stats": {
+      "startTime": "2026-10-18T01:38:07.558Z",
+      "duration": 11227.313,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "valid long board names and touch targets fit every directory breakpoint",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the viewing header does not cover choices in landscape or with enlarged text",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the directory removes unused script requests while creation and sign-in retain their scripts",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "valid long board names and touch targets fit every directory breakpoint",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the viewing header does not cover choices in landscape or with enlarged text",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the directory removes unused script requests while creation and sign-in retain their scripts",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      }
+    ]
+  },
+  "webkit-inbox": {
+    "stats": {
+      "startTime": "2026-10-18T01:38:25.313Z",
+      "duration": 185274.83299999998,
+      "expected": 58,
+      "skipped": 6,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "System dark keeps Inbox references readable like explicit Dark",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "character shortcuts leave member chrome alone",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "queue and reading-pane focus retain topic shortcuts",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "topic actions follow the focused topic instead of an older cursor",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "retained Unread previews never triage another topic or capture unrelated controls",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "a pending keyboard preview respects focus moved to another control",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "focused list navigation owns immediate opening before a preview responds",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "enlarged Inbox text keeps controls and queue content within their panes",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "System dark keeps Inbox references readable like explicit Dark",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "character shortcuts leave member chrome alone",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "queue and reading-pane focus retain topic shortcuts",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "topic actions follow the focused topic instead of an older cursor",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "retained Unread previews never triage another topic or capture unrelated controls",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "a pending keyboard preview respects focus moved to another control",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "focused list navigation owns immediate opening before a preview responds",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-accessibility-hardening.spec.ts",
+        "title": "enlarged Inbox text keeps controls and queue content within their panes",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long scope and order labels preserve one row, counts and readable content across constrained layouts",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "shared panels stay contained, expose recovery early and use consistent touch targets and dismissal",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work enhanced",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page enhanced",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work without JavaScript",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page without JavaScript",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "the snooze shortcut uses the same tomorrow action as the menu",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "preview removal preserves live range selection and page actions; persistent rows offer the current read action",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long unbroken topic text stays within its content column at default and large type",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long scope and order labels preserve one row, counts and readable content across constrained layouts",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "shared panels stay contained, expose recovery early and use consistent touch targets and dismissal",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work enhanced",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page enhanced",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "row hiding, tomorrow and restoration work without JavaScript",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "bulk hide, tomorrow and restore operate on the selected page without JavaScript",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "the snooze shortcut uses the same tomorrow action as the menu",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "preview removal preserves live range selection and page actions; persistent rows offer the current read action",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-controls-polish.spec.ts",
+        "title": "long unbroken topic text stays within its content column at default and large type",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "topics appear early and every primary destination fits without horizontal scrolling",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope and sort preserve each other and menus support keyboard dismissal and help",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope, sort and page actions work without JavaScript",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "topics appear early and every primary destination fits without horizontal scrolling",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope and sort preserve each other and menus support keyboard dismissal and help",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-header.spec.ts",
+        "title": "scope, sort and page actions work without JavaScript",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "failed preview retries keep a removed Unread topic and its exact reply draft resumable",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "an initial preview failure offers retry and full topic without a previous-topic command",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "return after failed history restoration aligns the URL with the retained topic without adding an entry",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "timeout without AbortController keeps the old draft and ignores a late preview",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview with AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview with AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview without AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview without AbortController",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "pane preferences retain failed-preview recovery and its return command",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "a prevented form submission leaves the requested preview in progress",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native row submission owns navigation when an old preview answers with an access error",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native bulk submission owns navigation when an old preview answers with an access error",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "failed preview retries keep a removed Unread topic and its exact reply draft resumable",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "an initial preview failure offers retry and full topic without a previous-topic command",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "return after failed history restoration aligns the URL with the retained topic without adding an entry",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "timeout without AbortController keeps the old draft and ignores a late preview",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview with AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview with AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "rail preference submission preserves a pending preview without AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "reading preference submission preserves a pending preview without AbortController",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "pane preferences retain failed-preview recovery and its return command",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "Pane preference toggles are desktop controls."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "a prevented form submission leaves the requested preview in progress",
+        "project": "mobile",
+        "status": "skipped",
+        "skip_reasons": [
+          "One desktop case covers the generic submit event contract."
+        ]
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native row submission owns navigation when an old preview answers with an access error",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "inbox-preview-recovery.spec.ts",
+        "title": "native bulk submission owns navigation when an old preview answers with an access error",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      }
+    ]
+  },
+  "webkit-keyboard": {
+    "stats": {
+      "startTime": "2026-10-18T01:41:31.043Z",
+      "duration": 8706.225,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "file": "auth-hardening.spec.ts",
+        "title": "Enter on a focused link on /inbox follows it; the list still opens its cursor",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "auth-hardening.spec.ts",
+        "title": "Enter on a focused link on /inbox follows it; the list still opens its cursor",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "member-surfaces.spec.ts",
+        "title": "inbox menu, selection, cursor, preview, and fallback remain canonical",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "member-surfaces.spec.ts",
+        "title": "inbox menu, selection, cursor, preview, and fallback remain canonical",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      }
+    ]
+  },
+  "webkit-boards": {
+    "stats": {
+      "startTime": "2026-10-18T01:41:40.200Z",
+      "duration": 16998.363,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "valid long board names and touch targets fit every directory breakpoint",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the viewing header does not cover choices in landscape or with enlarged text",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the directory removes unused script requests while creation and sign-in retain their scripts",
+        "project": "desktop",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "valid long board names and touch targets fit every directory breakpoint",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the viewing header does not cover choices in landscape or with enlarged text",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      },
+      {
+        "file": "board-index-hardening.spec.ts",
+        "title": "the directory removes unused script requests while creation and sign-in retain their scripts",
+        "project": "mobile",
+        "status": "expected",
+        "skip_reasons": []
+      }
+    ]
+  }
+}

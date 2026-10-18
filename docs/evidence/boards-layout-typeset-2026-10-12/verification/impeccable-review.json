@@ -1,0 +1,8 @@
+{
+  "total": 228,
+  "counts": {
+    "warning": 33,
+    "advisory": 195
+  },
+  "newOrTemplateFindings": []
+}

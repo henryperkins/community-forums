@@ -17279,3 +17279,192 @@ body.directory-view-open[data-route="boards"] .main { overflow: hidden; }
         box-shadow: none;
     }
 }
+
+/* Board directory: a quiet introduction, one viewing row, then the boards.
+   Preserve the authored transfer above; this refinement uses its type and
+   spacing roles, keeps every view choice, and retains the 44px target floor. */
+.board-index[data-directory-pane="boards"] {
+    padding: var(--space-5) var(--space-6) var(--space-8);
+}
+.board-index .forum-directory__hero h1 {
+    margin-block-end: var(--space-2);
+    font-size: var(--text-display-lg);
+    letter-spacing: -.01em;
+    line-height: 1.15;
+}
+.board-index .forum-directory__hero > p:not(.forum-directory__stats) {
+    max-width: var(--measure-narrow);
+    font-size: var(--text-size-body);
+}
+.forum-directory .forum-directory__stats {
+    gap: var(--space-1) var(--space-3);
+    margin-block-start: var(--space-3);
+    font-size: var(--text-meta);
+    font-variant-numeric: tabular-nums;
+}
+.forum-directory .forum-directory__stats span + span::before {
+    margin-inline-end: var(--space-2);
+    color: var(--text-faint);
+}
+.forum-directory .directory-viewbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    gap: var(--space-3) var(--space-4);
+    margin-block-start: var(--space-4);
+    padding-block: var(--space-2);
+}
+.forum-directory .directory-viewbar__choices {
+    flex: 1 1 var(--measure-narrow);
+    min-width: 0;
+    gap: var(--space-1);
+}
+.forum-directory .directory-viewbar > .directory-viewbar__peek {
+    flex: 0 1 auto;
+    gap: 0;
+    margin-inline-start: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+.forum-directory .directory-viewbar > .directory-viewbar__peek > span {
+    padding-inline: var(--space-2);
+    font-size: var(--text-meta);
+    letter-spacing: normal;
+    text-transform: none;
+}
+.forum-directory .directory-viewbar :is(.directory-viewbar__choices, .directory-viewbar__peek) :is(a, button) {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 2px solid transparent;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    font-size: var(--text-meta);
+}
+.forum-directory .directory-viewbar :is(.directory-viewbar__choices, .directory-viewbar__peek) :is([aria-pressed="true"], [aria-current="true"]) {
+    border-bottom-color: var(--gold-ink);
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-strong);
+}
+.forum-directory .directory-viewbar :is(.directory-viewbar__choices, .directory-viewbar__peek) :is(a, button):focus-visible {
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.forum-directory .directory-viewbar__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-5);
+    margin-block-start: var(--space-1);
+}
+.forum-directory .directory-viewbar__density {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-fine);
+}
+.forum-directory .directory-viewbar__density a {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    padding-inline: var(--space-1);
+}
+.forum-directory .directory-viewbar__density a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.forum-directory .directory-order-note {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-fine);
+}
+.forum-directory .forum-directory__groups {
+    gap: var(--space-6);
+    margin-block-start: var(--space-5);
+}
+.forum-directory .forum-directory__group h2 {
+    gap: var(--space-3);
+    font-size: var(--text-eyebrow);
+    letter-spacing: var(--tracking-caps);
+}
+.forum-directory .forum-directory__board-row {
+    padding-block: var(--space-2);
+}
+.forum-directory .forum-directory__board-name {
+    font-size: var(--text-title);
+    line-height: 1.25;
+}
+.forum-directory .forum-directory__board-description {
+    overflow: visible;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    text-overflow: clip;
+    white-space: normal;
+}
+.forum-directory .forum-directory__board-facts {
+    gap: var(--space-2);
+    font-size: var(--text-meta);
+    line-height: 1.4;
+}
+.forum-directory .forum-directory__board-signal {
+    font-size: var(--text-eyebrow);
+    letter-spacing: var(--tracking-caps);
+}
+.forum-directory .forum-directory__peek {
+    gap: var(--space-1);
+    padding-inline-start: var(--space-3);
+    padding-block-end: var(--space-2);
+}
+.forum-directory .forum-directory__peek a {
+    overflow: visible;
+    font-size: var(--text-size-body);
+    line-height: 1.4;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.forum-directory .forum-directory__peek li > span:last-child {
+    font-size: var(--text-meta);
+    line-height: 1.4;
+}
+.forum-directory .forum-directory__peek .forum-directory__peek-empty {
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+.forum-directory .forum-directory__peek:has(> .forum-directory__peek-empty),
+[data-density="compact"] .forum-directory .forum-directory__peek {
+    padding-block-end: var(--space-1);
+}
+[data-density="compact"] .forum-directory .forum-directory__board-row {
+    padding-block: var(--space-1);
+}
+.forum-directory .directory-viewbar-mobile > summary strong {
+    color: var(--text-strong);
+    font-weight: var(--weight-regular);
+}
+.forum-directory [data-directory-peek-option]:not([data-directory-peek-option="0"]) {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+@media (max-width: 760px) {
+    .board-index[data-directory-pane="boards"] {
+        padding-inline: var(--space-4);
+        padding-block-start: var(--space-4);
+    }
+    .board-index .forum-directory__hero h1 {
+        font-size: var(--text-display-md);
+    }
+    .forum-directory .directory-viewbar {
+        display: none;
+    }
+    .forum-directory .directory-viewbar-mobile {
+        margin-block-start: var(--space-4);
+    }
+    .forum-directory .directory-viewbar__meta {
+        margin-block-start: var(--space-2);
+    }
+    .forum-directory .directory-viewbar__density,
+    .forum-directory[data-directory-sort="category"] .directory-viewbar__meta {
+        display: none;
+    }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "transport": "native",
+    "status": 0,
+    "stdout": "f09f918d",
+    "stderr": ""
+  },
+  {
+    "transport": "base64",
+    "status": 0,
+    "stdout": "f09f918d",
+    "stderr": ""
+  }
+]
