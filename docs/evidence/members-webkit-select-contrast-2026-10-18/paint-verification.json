@@ -1,0 +1,52 @@
+{
+  "baseline_native_background": [
+    244,
+    244,
+    244
+  ],
+  "baseline_maximum_label_contrast": 1.268,
+  "fixed_webkit_dark": [
+    {
+      "name": "role",
+      "background": [
+        22,
+        29,
+        36
+      ],
+      "maximumTextContrast": 12.188852929260394,
+      "readableTextPixels": 76,
+      "width": 342,
+      "height": 43,
+      "expectedBackground": [
+        22,
+        29,
+        36
+      ]
+    },
+    {
+      "name": "status",
+      "background": [
+        22,
+        29,
+        36
+      ],
+      "maximumTextContrast": 11.503955082556335,
+      "readableTextPixels": 83,
+      "width": 342,
+      "height": 43,
+      "expectedBackground": [
+        22,
+        29,
+        36
+      ]
+    }
+  ],
+  "focused_browser_passed": 18,
+  "focused_browser_skipped": 2,
+  "skip_reason": "WebKit forced-colors emulation unavailable; Chromium desktop/mobile qualify this case.",
+  "existing_members_people_passed": 30,
+  "axe_scans": 20,
+  "axe_violations": 0,
+  "worker_asset_tests": 35,
+  "transport": "Private local database with synthetic members and array mail"
+}

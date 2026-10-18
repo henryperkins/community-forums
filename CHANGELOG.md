@@ -2,6 +2,15 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Members select contrast
+
+- Keep Members directory filters on the shared styled-select treatment so WebKit
+  paints readable values in both themes, while retaining native keyboard and
+  no-JavaScript filtering. Restore visible keyboard focus in forced-colors mode.
+- Add rendered-pixel contrast and focus regressions across Chromium and WebKit,
+  desktop/mobile, light/dark and JavaScript on/off; evidence is recorded in
+  `docs/evidence/members-webkit-select-contrast-2026-10-18/`.
+
 ## [Unreleased] - Features console safety and navigation
 
 - Require impact review and typed confirmation before badge-rule Backfill or

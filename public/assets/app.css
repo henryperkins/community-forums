@@ -11570,9 +11570,9 @@ body.thread-restructure-open { overflow: hidden; }
     box-shadow: none;
 }
 .admin-console .member-directory-filter-grid select.input {
-    appearance: auto;
-    padding-right: 11px;
-    background-image: none;
+    /* Keep the shared styled select: WebKit's native fill can cover the dark
+       surface while retaining its pale text. Reserve the shared arrow's gutter. */
+    padding-right: 32px;
 }
 .admin-console .member-directory-filter-grid .member-directory-number-input,
 .admin-console .member-directory-filter-grid input[type="date"] {
@@ -11583,6 +11583,12 @@ body.thread-restructure-open { overflow: hidden; }
     outline: none;
     border-color: var(--gold-500);
     box-shadow: 0 0 0 3px var(--focus-ring);
+}
+@media (forced-colors: active) {
+    .admin-console .member-directory-filter-grid select.input:focus-visible {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
 }
 .member-directory-advanced-filters {
     margin: 14px 0 0;

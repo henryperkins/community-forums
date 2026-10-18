@@ -1,7 +1,7 @@
 {
-  "version": "50a62f5be30f6b09",
+  "version": "84546da1a0ad300b",
   "urls": {
-    "app.css": "/assets/dist/app-style-lm9W6BEA.css",
+    "app.css": "/assets/dist/app-style-QIxFKANu.css",
     "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
     "app.js": "/assets/dist/app-6d007c03ee2fa15b.js",
@@ -28,7 +28,7 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "07b9af38d95bb66110e517bef7e8aa882425df1c382ce4fb38ee4a8b64a49ae6",
+      "sha256": "550618c202eec76064aedcc03efa1371d9f5c58f22e98ed3a78098333b47afa1",
       "immutable": false
     },
     "/assets/app.js": {
@@ -61,6 +61,10 @@
     },
     "/assets/dist/app-style-lm9W6BEA.css": {
       "sha256": "6b78dd28f777e5be889f58e6634d1da3b9c372d7702d5bedba4a778b4ca6b5c7",
+      "immutable": true
+    },
+    "/assets/dist/app-style-QIxFKANu.css": {
+      "sha256": "d607acbead198a3a758e0c413d9a279df121d855a98a1283e8758e5e02d6cc9d",
       "immutable": true
     },
     "/assets/dist/composer-5aeaedfd8f662ec5.js": {
@@ -249,6 +253,36 @@
     }
   },
   "releases": [
+    {
+      "version": "84546da1a0ad300b",
+      "files": [
+        "/assets/dist/app-6d007c03ee2fa15b.js",
+        "/assets/dist/app-style-QIxFKANu.css",
+        "/assets/dist/composer-5aeaedfd8f662ec5.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+        "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
+        "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+        "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+        "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
+        "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+        "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+        "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
+        "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
+        "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
+        "/assets/dist/imladris-style-bT2GVmLw.css",
+        "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+        "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
+        "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
+        "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+        "/assets/dist/milkdown-adapter-zC8kMFUx.js",
+        "/assets/dist/passkeys-16e7134417f0d6af.js",
+        "/assets/dist/tour-1801eafe66889a28.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
+      ]
+    },
     {
       "version": "50a62f5be30f6b09",
       "files": [
