@@ -1,0 +1,24 @@
+{
+  "captured_at": "2026-10-18T04:34:36.791Z",
+  "deployment": [
+    {
+      "id": "80740f39-d7d5-4af8-8352-bae1e384cccb",
+      "created_on": "2026-10-18T04:33:48.288919Z",
+      "versions": [
+        {
+          "version_id": "14410fe6-edbf-4724-a72d-2382a37abd6d",
+          "percentage": 100
+        }
+      ]
+    }
+  ],
+  "build": {
+    "id": "8817ae63-5af2-473d-9566-f1c8904e69bd",
+    "status": "stopped",
+    "outcome": "success",
+    "created_on": "2026-10-18T04:32:57.601Z",
+    "stopped_on": "2026-10-18T04:33:51.706Z",
+    "branch": "main",
+    "commit_hash": "2e1a5e51c52bb9d227a396ec76ca69d80db6953b"
+  }
+}

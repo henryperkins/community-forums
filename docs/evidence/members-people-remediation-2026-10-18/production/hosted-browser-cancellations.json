@@ -1,0 +1,32 @@
+{
+  "captured_at": "2026-10-18T04:34:17.978964+00:00",
+  "runs": [
+    {
+      "build_id": "aa38cd27-b6d6-4975-8b1e-d8e15e978542",
+      "source_sha": "2f02ce1bbe7522d39be9d2284606a410c7c571e7",
+      "service_account": "retroboards-browser-verifier",
+      "before_status": "WORKING",
+      "after_status": "CANCELLED",
+      "reason": "Canceled in error while prioritizing the deploy queue; a separate active task owned full hosted coverage. No hosted pass is claimed."
+    },
+    {
+      "build_id": "707fee65-7d61-439c-9e9b-5c67e6037136",
+      "source_sha": "2f02ce1bbe7522d39be9d2284606a410c7c571e7",
+      "service_account": "retroboards-browser-ci",
+      "before_status": "WORKING",
+      "after_status": "CANCELLED",
+      "reason": "Canceled in error while prioritizing the deploy queue; a separate active task owned full hosted coverage. No hosted pass is claimed."
+    },
+    {
+      "build_id": "0d5c800d-02d1-4ccf-8389-924550d93943",
+      "source_sha": "2e1a5e51c52bb9d227a396ec76ca69d80db6953b",
+      "service_account": "retroboards-browser-verifier",
+      "before_status": "QUEUED",
+      "after_status": "CANCELLED",
+      "reason": "Canceled in error while prioritizing the deploy queue; a separate active task owned full hosted coverage. No hosted pass is claimed."
+    }
+  ],
+  "claimed_hosted_pass": false,
+  "confirmed_at": "2026-10-18T04:35:08.977860+00:00",
+  "coordination": "Owning task reported it will restart full hosted acceptance on the final published SHA. Further hosted build cancellations stopped."
+}

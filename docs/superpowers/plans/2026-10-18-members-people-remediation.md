@@ -14,7 +14,7 @@
 - [x] Clarity: explain live permission effect near save/assign, lead capability choices with human descriptions, distinguish unavailable capabilities, clarify explicit assignment counts, and humanize member state labels.
 - [x] Responsive/progressive enhancement: shrink record grids and wrap identifiers; surface mobile role actions and overflow cues; provide 44px member-selection labels; hide the JavaScript-only select-all control until enhanced.
 - [x] Validate: run focused PHP regressions, complete composer test, generated asset/Worker checks, targeted existing browser suites and new desktop/mobile/320px/enlarged-text/light/dark/keyboard/no-JS regressions; inspect captured screenshots.
-- [ ] Review the complete diff independently, resolve findings, commit only this scope, and push main.
+- [x] Review the complete diff independently, resolve findings, commit only this scope, and push main.
 - [ ] Verify exact Cloud Run/cron and Workers Builds releases, live asset bytes, and authenticated read-only Members/People page behavior. Revoke the temporary audit session and remove private material.
 
 ## Review focus
