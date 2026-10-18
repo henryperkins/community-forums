@@ -454,10 +454,8 @@ test('ordinary Markdown and existing image references remain usable without Java
   const page = await context.newPage();
   // Use the configured origin even when running against the built-in server.
   const origin = process.env.E2E_BASE_URL || `http://localhost:${process.env.E2E_PORT || 8011}`;
-  await page.goto(origin + '/login');
-  await page.locator('[name=email]').fill('alice@retro.test');
-  await page.locator('[name=password]').fill('password123');
-  await page.locator('button[type=submit]').click();
+  // Wait for the login redirect before a second navigation can cancel WebKit's form POST.
+  await login(page);
   await page.goto(origin + info.thread);
   const form = page.locator('form.reply-composer');
   const csrf = await form.locator('[name=_token]').inputValue();
