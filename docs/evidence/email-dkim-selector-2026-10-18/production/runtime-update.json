@@ -1,0 +1,76 @@
+{
+  "captured_at": "2026-10-18T03:44:31.558140+00:00",
+  "release_sha": "06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+  "resources": [
+    {
+      "before": {
+        "resource": "retroboards",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": null,
+        "ready_revision": "retroboards-00028-jdl"
+      },
+      "after": {
+        "resource": "retroboards",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": "cf2024-1",
+        "ready_revision": "retroboards-00029-2b5"
+      }
+    },
+    {
+      "before": {
+        "resource": "retroboards-cron-5m",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": null,
+        "ready_revision": null
+      },
+      "after": {
+        "resource": "retroboards-cron-5m",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": "cf2024-1",
+        "ready_revision": null
+      }
+    },
+    {
+      "before": {
+        "resource": "retroboards-cron-6h",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": null,
+        "ready_revision": null
+      },
+      "after": {
+        "resource": "retroboards-cron-6h",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": "cf2024-1",
+        "ready_revision": null
+      }
+    },
+    {
+      "before": {
+        "resource": "retroboards-cron-0310",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": null,
+        "ready_revision": null
+      },
+      "after": {
+        "resource": "retroboards-cron-0310",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": "cf2024-1",
+        "ready_revision": null
+      }
+    },
+    {
+      "before": {
+        "resource": "retroboards-cron-0700",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": null,
+        "ready_revision": null
+      },
+      "after": {
+        "resource": "retroboards-cron-0700",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+        "selector": "cf2024-1",
+        "ready_revision": null
+      }
+    }
+  ]
+}

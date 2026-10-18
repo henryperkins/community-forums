@@ -10,6 +10,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   preventing both stale failure badges and stale passes through domain blocking.
   Local PHPUnit and browser evidence is in
   `docs/evidence/email-dkim-selector-2026-10-18/`.
+- Release the fix to production, apply the selector to the service and all four
+  scheduled jobs, and verify the authenticated live email page reports SPF and
+  DKIM passing after its native refresh. Sanitized deployment and admin-page
+  receipts are in that evidence directory's `production/` folder.
 
 ## [Unreleased] - Legacy health redirect and reaction-test isolation
 

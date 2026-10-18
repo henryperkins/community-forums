@@ -1,0 +1,137 @@
+{
+  "captured_at": "2026-10-18T03:44:36.040187+00:00",
+  "build": {
+    "id": "4086757a-06f5-435f-8008-2e0b8c8e7731",
+    "status": "SUCCESS",
+    "sha": "06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+    "startTime": "2026-10-18T03:40:29.406062611Z",
+    "finishTime": "2026-10-18T03:43:32.317141Z",
+    "step_statuses": [
+      {
+        "id": "source",
+        "status": "SUCCESS"
+      },
+      {
+        "id": "build",
+        "status": "SUCCESS"
+      },
+      {
+        "id": "push",
+        "status": "SUCCESS"
+      },
+      {
+        "id": "deploy-service",
+        "status": "SUCCESS"
+      },
+      {
+        "id": "update-jobs",
+        "status": "SUCCESS"
+      }
+    ],
+    "images": []
+  },
+  "resources": [
+    {
+      "kind": "services",
+      "name": "retroboards",
+      "containers": [
+        {
+          "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+          "MAIL_DKIM_SELECTOR": "cf2024-1",
+          "MAIL_DKIM_SELECTOR_present": true
+        }
+      ],
+      "ready_conditions": [
+        {
+          "type": "Ready",
+          "status": "True"
+        },
+        {
+          "type": "ConfigurationsReady",
+          "status": "True"
+        },
+        {
+          "type": "RoutesReady",
+          "status": "True"
+        }
+      ],
+      "latestReadyRevisionName": "retroboards-00029-2b5",
+      "latestCreatedRevisionName": "retroboards-00029-2b5",
+      "traffic": [
+        {
+          "latestRevision": true,
+          "percent": 100,
+          "revisionName": "retroboards-00029-2b5"
+        }
+      ]
+    },
+    {
+      "kind": "jobs",
+      "name": "retroboards-cron-5m",
+      "containers": [
+        {
+          "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+          "MAIL_DKIM_SELECTOR": "cf2024-1",
+          "MAIL_DKIM_SELECTOR_present": true
+        }
+      ],
+      "ready_conditions": [
+        {
+          "type": "Ready",
+          "status": "True"
+        }
+      ]
+    },
+    {
+      "kind": "jobs",
+      "name": "retroboards-cron-6h",
+      "containers": [
+        {
+          "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+          "MAIL_DKIM_SELECTOR": "cf2024-1",
+          "MAIL_DKIM_SELECTOR_present": true
+        }
+      ],
+      "ready_conditions": [
+        {
+          "type": "Ready",
+          "status": "True"
+        }
+      ]
+    },
+    {
+      "kind": "jobs",
+      "name": "retroboards-cron-0310",
+      "containers": [
+        {
+          "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+          "MAIL_DKIM_SELECTOR": "cf2024-1",
+          "MAIL_DKIM_SELECTOR_present": true
+        }
+      ],
+      "ready_conditions": [
+        {
+          "type": "Ready",
+          "status": "True"
+        }
+      ]
+    },
+    {
+      "kind": "jobs",
+      "name": "retroboards-cron-0700",
+      "containers": [
+        {
+          "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:06a05e3bbd69f1a96b62ff305dbe9a55f8f49157",
+          "MAIL_DKIM_SELECTOR": "cf2024-1",
+          "MAIL_DKIM_SELECTOR_present": true
+        }
+      ],
+      "ready_conditions": [
+        {
+          "type": "Ready",
+          "status": "True"
+        }
+      ]
+    }
+  ]
+}

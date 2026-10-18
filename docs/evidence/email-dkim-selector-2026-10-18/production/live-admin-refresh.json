@@ -1,0 +1,43 @@
+{
+  "captured_at": "2026-10-18T03:45:03.414102+00:00",
+  "execution": "retroboards-cron-5m-vwdzq",
+  "execution_exit": 0,
+  "events": [
+    {
+      "timestamp": "2026-10-18T03:44:56.285617Z",
+      "receipt": {
+        "after": {
+          "checked_at_display": "checked Oct 18, 2026 at 03:44 UTC",
+          "dkim": "pass",
+          "final_route": "/admin/email",
+          "http_status": 200,
+          "readiness": "verified",
+          "selector": "cf2024-1",
+          "spf": "pass"
+        },
+        "before": {
+          "checked_at_display": null,
+          "dkim": "unknown",
+          "final_route": "/admin/email",
+          "http_status": 200,
+          "readiness": "unverified_blocking_off",
+          "selector": "cf2024-1",
+          "spf": "unknown"
+        },
+        "configured_selector": "cf2024-1",
+        "effective_selector": "cf2024-1",
+        "event": "retroboards_dkim_live_probe",
+        "mode": "refresh",
+        "probe_session_revoked": true,
+        "refresh_post": {
+          "http_status": 303,
+          "redirect_route": "/admin/email",
+          "route": "/admin/email/domain/verify"
+        },
+        "stage": "complete",
+        "status": "ok"
+      }
+    }
+  ],
+  "application_release_sha": "06a05e3bbd69f1a96b62ff305dbe9a55f8f49157"
+}

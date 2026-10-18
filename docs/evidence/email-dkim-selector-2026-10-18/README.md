@@ -23,6 +23,37 @@ DNS results are synthetic, stored through the existing `email_dns_txt_records` f
 - Focused PHPUnit regression: **35 tests, 263 assertions**, passed. The pre-fix run had the three intended failures for stale failed cache, stale passing cache, and missing production selector configuration.
 - `composer check:imladris` passed. Generic-default and explicit-environment configuration smoke checks passed. Independent code review found no actionable findings. `git diff --check` passed.
 
+## Production release
+
+Application commit `06a05e3bbd69f1a96b62ff305dbe9a55f8f49157` was pushed to
+`main`. Both automatic deployment lanes completed for that exact commit:
+Cloud Build `4086757a-06f5-435f-8008-2e0b8c8e7731` and Workers Build
+`1a8f86c1-f2d9-4086-b250-0515637b3922` succeeded. The Cloud Run service and
+all four scheduled jobs use that image. A targeted environment update applied
+`MAIL_DKIM_SELECTOR=cf2024-1` to all five resources, preserving their images
+and other configuration. Revision `retroboards-00029-2b5` serves 100% of traffic.
+
+Execution `retroboards-cron-5m-vwdzq` performed an authenticated public HTTPS
+GET of `/admin/email`, submitted its native CSRF-protected domain refresh form
+(HTTP 303), then independently fetched the same public page (HTTP 200). The
+final HTML reported selector `cf2024-1`, SPF pass, DKIM pass, verified readiness,
+and a checked timestamp of 2026-10-18 03:44 UTC. The probe required the DNS fixture
+setting to be absent/empty and used real runtime DNS. It created one operator
+session for the unambiguous active protected owner, shortened its expiry to five
+minutes, and confirmed revocation afterward. Cookies, CSRF tokens, credentials
+and raw admin HTML were not logged. No test email was sent by this probe.
+
+Public health returned HTTP 200 with application/database `ok`; all 55 live
+asset hashes matched manifest `2371e926206bda24`. The deployed asset-retention
+record and generated-asset check completed without changing the manifest.
+
+Sanitized receipts: [live admin refresh](production/live-admin-refresh.json),
+[Cloud Run and build state](production/after-runtime-selector-gcp.json),
+[runtime setting changes](production/runtime-update.json),
+[Worker release](production/worker-release-final.json),
+[image digest](production/revision-image-digest-final.json), and
+[live assets and health](production/live-assets.json).
+
 ## Reproduce the focused browser flow
 
 Prerequisites: installed application dependencies, an installed Chromium browser, Playwright CLI wrapper from the Playwright skill, and an existing empty local disposable database with a name matching `retroboards_e2e_dkim_*`. The fixture refuses other database names, non-local hosts, database sockets, non-test application mode, other mail transports/senders, or another configured selector. Credentials are loaded privately through the normal `.env` loader.
