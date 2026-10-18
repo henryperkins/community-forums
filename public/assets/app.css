@@ -875,6 +875,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     --surface-info: rgba(63,110,137,.20); --on-info: var(--river-200);
     --star: var(--gold-400);
     --presence: var(--green-400);
+    --artifact-link: var(--river-200);
     --focus-ring: rgba(210,176,98,.75);
     --field-rule: var(--gold-600);
     /* Restated in BOTH dark registers on purpose. imladris.css declares --scrim
@@ -927,6 +928,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
         --surface-info: rgba(63,110,137,.20); --on-info: var(--river-200);
         --star: var(--gold-400);
         --presence: var(--green-400);
+        --artifact-link: var(--river-200);
         --focus-ring: rgba(210,176,98,.75);
         --field-rule: var(--gold-600);
         /* See the twilight block above: this is the audience that needed it. */
@@ -16813,6 +16815,44 @@ html:not(.has-js) .inbox-bulk-menu > .inbox-menu-panel { left: auto; right: 0; m
 .inbox-visibility-toggle[aria-checked="true"] .inbox-switch-track { justify-content: flex-end; border-color: var(--accent); background: var(--accent); }
 .inbox-visibility-toggle[aria-checked="true"] .inbox-switch-thumb { background: var(--accent-contrast); }
 .inbox-visibility-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.inbox-help-panel [data-inbox-keyboard-help][hidden] { display: none; }
+
+/* Inbox remains one toolbar row as text grows. Reuse its 760/460px steps in
+   font-relative units so larger text reaches the compact controls sooner.
+   Keep gutters bounded: enlarging text need not double the space around it. */
+.thread-row-inbox .thread-meta { white-space: normal; }
+.thread-row-inbox .thread-meta > * { min-width: 0; overflow-wrap: anywhere; }
+@container member-page-row (max-width: 47.5rem) {
+    .inbox-toolbar,
+    .inbox-toolbar .inbox-view-bar { gap: min(var(--space-1), 4px); }
+    .inbox-toolbar .inbox-scope-menu { flex: none; min-width: 44px; }
+    .inbox-toolbar .inbox-scope-menu > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 min(var(--space-1), 4px); padding: min(var(--space-1), 4px) min(var(--space-2), 8px); }
+    .inbox-toolbar .inbox-control-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .inbox-toolbar .inbox-selected-scope { grid-column: 1; white-space: normal; overflow-wrap: normal; }
+    .inbox-toolbar .inbox-scope-count { grid-column: 1; font-size: var(--text-chip); }
+    .inbox-toolbar .inbox-scope-menu > summary > .icon { grid-column: 2; grid-row: 1 / 3; }
+    .inbox-toolbar .inbox-order-full { display: none; }
+    .inbox-toolbar .inbox-order-short { display: inline; }
+}
+@container member-page-row (max-width: 28.75rem) {
+    .inbox-toolbar,
+    .inbox-toolbar .inbox-view-bar { gap: min(var(--space-1), 2px); }
+    .inbox-toolbar .inbox-title-line { flex: 0 1 auto; min-width: min-content; }
+    .inbox-toolbar .forum-page-title { font-size: var(--text-size-body); white-space: nowrap; }
+    .inbox-toolbar .inbox-title-line .badge { max-width: 100%; white-space: normal; }
+    .inbox-toolbar .inbox-view-bar > :is(.inbox-scope-menu, .inbox-sort-menu) { display: none; }
+    .inbox-toolbar .inbox-view-bar > .inbox-compact-menu { display: block; flex: 1; min-width: 0; }
+    .forum-subheader .inbox-toolbar .inbox-compact-menu > summary { display: flex; flex-wrap: wrap; gap: 0 min(var(--space-1), 4px); padding: min(var(--space-1), 4px); white-space: normal; }
+    .inbox-toolbar .inbox-compact-menu .inbox-selected-scope { flex: 1 0 100%; min-width: 0; overflow-wrap: anywhere; }
+    .inbox-toolbar .inbox-compact-meta { display: flex; flex: 1 1 min-content; flex-wrap: wrap; min-width: 0; gap: 0 min(var(--space-1), 4px); }
+    .inbox-toolbar .inbox-compact-meta > span { min-width: 0; overflow-wrap: anywhere; }
+    .inbox-toolbar .inbox-compact-meta > [aria-hidden] { display: none; }
+    .inbox-toolbar .inbox-compact-meta .inbox-scope-count { white-space: normal; }
+    .inbox-toolbar .inbox-compact-menu > summary > .icon { flex: none; align-self: flex-end; margin-inline-start: auto; }
+}
+@media (max-width: 860px) {
+    .forum-subheader:has(.inbox-toolbar) { padding-inline: min(var(--space-2), 8px); gap: min(var(--space-1), 4px); }
+}
 .snooze-row { display: grid; gap: var(--space-2); width: 100%; }
 .snooze-choice { min-height: 44px; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--text-body); font-family: var(--font-label); font-size: var(--text-fine); }
 .forum-subheader .dm-listpane-filters .pill { min-height: 44px; border-radius: var(--radius-md); }

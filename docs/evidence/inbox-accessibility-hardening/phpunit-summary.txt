@@ -1,0 +1,18 @@
+Full suite: composer test (private DB; APP_URL=http://localhost:8000; WEBAUTHN_RP_ID=localhost)
+Time: 01:46.255, Memory: 52.00 MB
+
+OK, but some tests were skipped!
+Tests: 3233, Assertions: 25651, Skipped: 1.
+
+composer verify:imladris
+Imladris runtime assets are current.
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.26
+Configuration: /home/ubuntu/community-forums/phpunit.xml
+
+........................                                          24 / 24 (100%)
+
+Time: 00:00.158, Memory: 8.00 MB
+
+OK (24 tests, 305 assertions)

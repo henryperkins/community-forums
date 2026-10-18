@@ -164,11 +164,11 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
   await login(page);
   await page.goto('/inbox?scope=starred&order=active');
 
-  const scope = page.locator('[data-inbox-scope-menu]');
+  const scope = page.locator('[data-inbox-scope-menu]:visible, .inbox-compact-menu:visible');
   const summary = scope.locator('summary');
   await summary.click();
   await expect(scope).toHaveAttribute('open', '');
-  const scopePanel = scope.locator('.inbox-scope-menu-panel');
+  const scopePanel = scope.locator('.inbox-menu-panel');
   await expect(scopePanel).toBeVisible();
   await expect(scopePanel).toHaveCSS('position', 'fixed');
   const scopeBox = await scopePanel.boundingBox();
@@ -233,8 +233,17 @@ test('inbox menu, selection, cursor, preview, and fallback remain canonical', as
 
   const available = page.locator('[data-inbox-row] .thread-title').last();
   const canonical = await available.getAttribute('href');
+  const previousId = await page.locator('[data-inbox-preview]').count()
+    ? await page.locator('[data-inbox-preview]').getAttribute('data-inbox-preview') : null;
   await page.route('**/inbox/preview/*', (route) => route.fulfill({ status: 503, body: 'unavailable' }));
   await available.click();
+  // Transient failures retain the preview; the member chooses the canonical
+  // fallback explicitly through the recovery command (ADR 0045).
+  await expect(page.locator('[data-inbox-recovery]')).toBeVisible();
+  if (previousId) await expect(page.locator('[data-inbox-preview]')).toHaveAttribute('data-inbox-preview', previousId);
+  else await expect(page.locator('[data-inbox-preview]')).toHaveCount(0);
+  await expect(page.locator('[data-inbox-full-topic]')).toHaveAttribute('href', canonical!);
+  await page.locator('[data-inbox-full-topic]').click();
   await expect(page).toHaveURL(new RegExp(`${canonical!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
 });
 

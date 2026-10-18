@@ -127,6 +127,7 @@ test('scope, sort and page actions work without JavaScript', async ({ browser, b
     await page.locator('.inbox-actions > summary').click();
     await page.locator('.inbox-help > summary').click();
     await expect(page.locator('.inbox-help-panel')).toContainText('Find either kind in Snoozed');
+    await expect(page.locator('[data-inbox-keyboard-help]')).toBeHidden();
     const helpBox = (await page.locator('.inbox-actions > .inbox-menu-panel').boundingBox())!;
     expect(helpBox.x).toBeGreaterThanOrEqual(0);
     expect(helpBox.x + helpBox.width).toBeLessThanOrEqual(page.viewportSize()!.width);

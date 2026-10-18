@@ -1,0 +1,15 @@
+{
+  "version": "90536ffee7c9974d",
+  "served": [
+    {
+      "entry": "app.css",
+      "url": "/assets/dist/app-style-CH7CNM8K.css",
+      "sha256": "5babb6803a5a8e7f8ad3e615ba90f07407cb17be6a649f32783035663ad17d08"
+    },
+    {
+      "entry": "app.js",
+      "url": "/assets/dist/app-e558f7d15ccb3fa8.js",
+      "sha256": "e558f7d15ccb3fa83e45d55c76bdd3124969dbb46bb455f08f3a4dbb6a0c2087"
+    }
+  ]
+}

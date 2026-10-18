@@ -2,6 +2,17 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Inbox accessibility and polish
+
+- Match System dark mode's board-reference ink to explicit Dark. Keep Inbox
+  character shortcuts on the focused topic or preview heading, target that
+  topic's forms, and retain navigation focus without overriding a member who
+  moved to another control while a preview loaded.
+- Let enlarged text reach the compact Inbox toolbar sooner, bound its gutters,
+  and wrap queue metadata while retaining named choices and 44px controls.
+  Hide inactive shortcut help without JavaScript. Local verification and
+  coverage boundaries are in `docs/evidence/inbox-accessibility-hardening/README.md`.
+
 ## [Unreleased] - Member accessibility follow-up
 
 - Lift the audited small labels to the named type scale, keeping Inbox reason

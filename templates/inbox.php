@@ -41,8 +41,9 @@ $selectedIds = array_fill_keys($selected_thread_ids ?? [], true);
                             <header class="inbox-help-head"><h2 id="inbox-help-heading">Inbox help</h2><button type="button" data-inbox-help-close hidden aria-label="Close Inbox help"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button></header>
                             <p>The view chooses which topics appear. Sorting changes their order.</p>
                             <?php if (!empty($features['topic_workflow'])): ?><p>Til tomorrow hides a topic for 24 hours. Turn Show in Inbox off to hide it until you restore it. Find either kind in Snoozed.</p><?php endif; ?>
-                            <div class="inbox-keyboard-help">
+                            <div class="inbox-keyboard-help" data-inbox-keyboard-help hidden>
                                 <p>Keyboard shortcuts</p>
+                                <p>Focus a topic title or the preview heading to use these shortcuts.</p>
                                 <dl>
                                     <div><dt><kbd>j</kbd> / <kbd>k</kbd></dt><dd>Move between topics</dd></div>
                                     <div><dt><kbd>Enter</kbd></dt><dd>Open topic</dd></div>

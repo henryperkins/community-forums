@@ -1409,7 +1409,7 @@
                 row.classList.toggle('is-active', !!link && linkIn(row) === link);
             });
         };
-        var setCursor = function (row, follow) {
+        var setCursor = function (row) {
             Array.prototype.forEach.call(allRows(), function (candidate) {
                 candidate.classList.toggle('is-cursor', candidate === row);
             });
@@ -1418,7 +1418,6 @@
             var link = linkIn(row);
             if (link) { selectedLink = link; }
             row.scrollIntoView({ block: 'nearest' });
-            if (follow && link) { loadThread(link, false, false); }
         };
         var setMobileReading = function (open) {
             inboxList.classList.toggle('is-hidden', open);
@@ -1530,6 +1529,7 @@
             var canonical = link ? link.getAttribute('href') : historyTarget && historyTarget.href;
             var endpoint = link ? link.getAttribute('data-inbox-preview-url') : historyTarget && historyTarget.endpoint;
             if (!canonical || !endpoint) { canonicalFallback(canonical || '/inbox'); return; }
+            var focusOrigin = document.activeElement;
             var restoreRetryFocus = document.activeElement === inboxRetry;
             var generation = cancelInboxRequest();
             var request = window.AbortController ? new window.AbortController() : null;
@@ -1567,6 +1567,9 @@
                     showPreviewFailure(attempt, "Couldn't load this topic. Try again, or open the full topic.");
                     return;
                 }
+                // A keyboard-initiated replacement keeps its place. A member
+                // who moved to another control while loading keeps that focus.
+                var restoreFocus = focus && document.activeElement === focusOrigin;
                 if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
                     window.RetroBoardsComposer.destroyWithin(readingContent);
                 }
@@ -1587,7 +1590,7 @@
                     try { history.pushState({ rbInboxTopic: true, href: canonical, endpoint: endpoint }, '', url.toString()); }
                     catch (error) { /* The preview remains usable when history is unavailable. */ }
                 }
-                if (focus) {
+                if (restoreFocus) {
                     var heading = readingContent.querySelector('h2, h1');
                     if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus(); }
                     else { reading.focus(); }
@@ -1603,6 +1606,8 @@
         };
 
         if (reading && readingContent && inboxList) {
+            var keyboardHelp = document.querySelector('[data-inbox-keyboard-help]');
+            if (keyboardHelp) { keyboardHelp.hidden = false; }
             // Enhanced forms decide whether to navigate in their submit handlers.
             // Only native submissions own the next page and invalidate previews
             // before an access error can trigger a competing canonical fallback.
@@ -1625,7 +1630,7 @@
                     var row = rowForId(id);
                     var link = linkIn(row);
                     selectedLink = link;
-                    setCursor(row, false);
+                    setCursor(row);
                     markActive(link);
                     // Retain the same composer and DOM, even if reading removed
                     // its originating Unread row from the queue.
@@ -1658,16 +1663,29 @@
                 // Nothing fires from inside an open menu or dialog — the account
                 // menu included — where e or s would mark or star a topic out of sight.
                 if (event.target.closest && event.target.closest('details[open], [role="dialog"], dialog[open]')) { return; }
+                // Only the focused topic link or preview/navigation surface owns
+                // these keys. Buttons, content links and member chrome do not.
+                var focusedRow = event.target.closest ? event.target.closest('[data-inbox-row]') : null;
+                var topicFocus = focusedRow && inboxList.contains(focusedRow) && linkIn(focusedRow) === event.target;
+                var preview = readingContent.querySelector('[data-inbox-preview]');
+                var previewFocus = event.target === reading || (preview && event.target === preview.querySelector('h2, h1'));
+                if (!topicFocus && !previewFocus && event.target !== inboxList) { return; }
+                var activeRow = topicFocus ? focusedRow : previewFocus && preview ? rowForId(preview.getAttribute('data-inbox-preview')) : null;
                 var rows = Array.prototype.slice.call(allRows());
                 if (!rows.length) { return; }
-                var index = cursorRow ? rows.indexOf(cursorRow) : -1;
                 if (event.key === 'j' || event.key === 'k') {
                     event.preventDefault();
+                    var index = rows.indexOf(inboxRequest && previewFocus ? cursorRow : activeRow);
                     index = event.key === 'j' ? Math.min(rows.length - 1, index + 1) : Math.max(0, index < 0 ? 0 : index - 1);
-                    setCursor(rows[index], true);
+                    setCursor(rows[index]);
+                    var nextLink = linkIn(rows[index]);
+                    if (topicFocus || event.target === inboxList) { nextLink.focus(); }
+                    loadThread(nextLink, false, true);
                     return;
                 }
-                var activeRow = cursorRow || rows[0];
+                // Reading can remove its Unread row. Never redirect a topic
+                // action to an unrelated row left behind in the queue.
+                if (!activeRow) { return; }
                 var activeLink = linkIn(activeRow);
                 if (event.key === 'Enter' || event.key.toLowerCase() === 'o') {
                     // Enter on a focused control is that control's: the cursor is not
@@ -1676,7 +1694,7 @@
                     // in the pane — its native click reaches the list's click handler.
                     if (event.key === 'Enter' && activationTarget(event.target)) { return; }
                     event.preventDefault();
-                    setCursor(activeRow, false);
+                    setCursor(activeRow);
                     loadThread(activeLink, true, true);
                 } else if (event.key.toLowerCase() === 'e') {
                     var readForm = activeRow.querySelector('[data-inbox-action="read"]');
@@ -1695,7 +1713,7 @@
                 if (!link || !inboxList.contains(link)) { return; }
                 if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return; }
                 event.preventDefault();
-                setCursor(link.closest('[data-inbox-row]'), false);
+                setCursor(link.closest('[data-inbox-row]'));
                 loadThread(link, true, true);
             });
 
@@ -1759,7 +1777,7 @@
                 if (!id) { showEmpty(true); return; }
                 var row = rowForId(id);
                 var link = linkIn(row);
-                if (link) { setCursor(row, false); loadThread(link, false, true); }
+                if (link) { setCursor(row); loadThread(link, false, true); }
                 else {
                     var state = history.state || {};
                     if (
@@ -1777,7 +1795,7 @@
             if (initialId) {
                 var initialRow = rowForId(initialId);
                 var initialLink = linkIn(initialRow);
-                if (initialLink) { setCursor(initialRow, false); loadThread(initialLink, false, true); }
+                if (initialLink) { setCursor(initialRow); loadThread(initialLink, false, true); }
                 else { canonicalFallback('/t/' + encodeURIComponent(initialId)); }
             }
         }

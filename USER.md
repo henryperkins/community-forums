@@ -272,6 +272,15 @@ Rejected bulk actions preserve only available selections on the current page.
 Star forms submit their intended state, so repeating a submission keeps that
 state (ADR 0045). Native links and forms remain complete without JavaScript.
 
+Inbox character shortcuts are enhanced controls: focus a topic title or the
+preview heading to use `j`/`k` to move, `o` to open, `e` to mark read/unread,
+`s` to star, or `#` to hide until tomorrow. Actions target that topic, including
+when the keyboard cursor previously visited another row. A retained Unread
+preview whose row has left the queue still supports navigation; topic actions
+wait until a topic with a queue row has focus. Other links, buttons and text
+fields keep their own keys. Help shows shortcut instructions only when the
+enhancement is available.
+
 ### 4.4 Bookmarks & saved
 
 > **Reconciliation:** "bookmark a thread" and the **star** from PRODUCT_DESIGN.md (`thread_user.is_starred`) are the **same action** — we surface it as **Save/Star** consistently and do not create a parallel concept. "Subscribe" (get notified) stays distinct from "Save" (bookmark for later).

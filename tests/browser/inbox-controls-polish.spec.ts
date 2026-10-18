@@ -407,7 +407,8 @@ test('the snooze shortcut uses the same tomorrow action as the menu', async ({ p
   await page.goto('/inbox?scope=starred&order=active');
   const first = page.locator('[data-inbox-row]').first();
   const id = (await first.getAttribute('data-thread-id'))!;
-  await page.keyboard.press('j');
+  await first.locator('[data-inbox-preview-url]').focus();
+  await page.keyboard.press('o');
   const [snoozeResponse] = await Promise.all([
     page.waitForResponse(response => response.request().method() === 'POST'
       && new URL(response.url()).pathname === `/t/${id}/snooze`),

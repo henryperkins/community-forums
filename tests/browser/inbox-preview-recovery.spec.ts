@@ -340,7 +340,7 @@ for (const action of ['row', 'bulk']) {
       }, { once: true });
     });
     await link.focus();
-    await page.keyboard.press('j');
+    await page.keyboard.press('o');
     await expect.poll(() => page.evaluate(() => (window as any).inboxNativePreviewEndpoint)).toBe(endpoint);
     await expect(page.locator('[data-inbox-reading]')).toHaveAttribute('aria-busy', 'true');
     if (action === 'row') await row.locator('.star-toggle').click({ noWaitAfter: true });

@@ -1,0 +1,40 @@
+[
+  {
+    "engine": "chromium",
+    "version": "155.0.8059.12",
+    "themes": [
+      {
+        "theme": "system",
+        "foreground": "rgb(186, 210, 223)",
+        "background": "rgb(22, 29, 36)",
+        "contrast": 10.824590039109065
+      },
+      {
+        "theme": "dark",
+        "foreground": "rgb(186, 210, 223)",
+        "background": "rgb(22, 29, 36)",
+        "contrast": 10.824590039109065
+      }
+    ],
+    "errors": []
+  },
+  {
+    "engine": "webkit",
+    "version": "26.5",
+    "themes": [
+      {
+        "theme": "system",
+        "foreground": "rgb(186, 210, 223)",
+        "background": "rgb(22, 29, 36)",
+        "contrast": 10.824590039109065
+      },
+      {
+        "theme": "dark",
+        "foreground": "rgb(186, 210, 223)",
+        "background": "rgb(22, 29, 36)",
+        "contrast": 10.824590039109065
+      }
+    ],
+    "errors": []
+  }
+]

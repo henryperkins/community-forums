@@ -1,0 +1,74 @@
+{
+  "base_commit": "fbaed0e9e040dbed4889f776c9463be28bc261ad",
+  "scope": "Uncommitted local Inbox accessibility fixes and polish",
+  "application_surface_sha256": "d24de723ebca89aba62986bbf10261eb4dc0af85be5329728e63d954c11f703b",
+  "asset_manifest_version": "90536ffee7c9974d",
+  "source_file_sha256": {
+    "public/assets/app.css": "507d6dcc64b46c48d8459670d0e7ebf1f82ab166fd74c823c0fd5268fe56029f",
+    "public/assets/app.js": "9a6f48682372acabd03a0a74b7d03b3c1f1000bb69b449854f3c4aaf5850a99a",
+    "templates/inbox.php": "73f68bd4a61af42a15b397ec448b7b2190e757fe3049141947557502f6ed6870",
+    "USER.md": "e480d9d16250d45856fbc606844c781299c1aca43ed6e110e41b46cb6e74270d",
+    "config/assets.json": "b02e0b1eee4fcf8b8dad2989db9ac4968723624f16b18d155cad805bff323255",
+    "config/imladris-runtime-baseline.json": "2fbfb3010d1ba588b3a57055a732c412fa8059151b73cc64109ffe57ab66bc34",
+    "resources/imladris/manifest.json": "c03278ed8daf2a7919c5a20c0325e10f6a2047ff1dae25f748deb1cc7b903b44",
+    "tests/browser/inbox-accessibility-hardening.spec.ts": "effa9cd4e861f801812befccbfab1615ac3fd4476e815d47bf8fe7838dab8355",
+    "tests/browser/inbox-controls-polish.spec.ts": "726a02352a72b41fa96efb80f12e9e8d38904374e2e29b56d3c36f015f24f4a7",
+    "tests/browser/inbox-header.spec.ts": "51b6672376969aeccc64b5283c1c1330167a5784802541da1cde65486e1d1d76",
+    "tests/browser/inbox-preview-recovery.spec.ts": "f3fad5fefade123c2360e34eb2199cad9921457515b9c8e64d59224f712d5482",
+    "tests/browser/member-surfaces.spec.ts": "90b253fef5fb8c9694723a1253207a91ed88ceb5290aab1542a283b0fb0fdeed",
+    "tests/browser/auth-hardening.spec.ts": "dbecb2e23f84846fef4187deebb1c10d9c7d73549e53cbecff9b42445673ae9e"
+  },
+  "browser_versions": {
+    "chromium": "155.0.8059.12",
+    "webkit": "26.5"
+  },
+  "browser_totals": {
+    "passed": 124,
+    "skipped": 12,
+    "failed": 0,
+    "flaky": 0
+  },
+  "layout_states": 320,
+  "phpunit": {
+    "tests": 3233,
+    "assertions": 25651,
+    "skipped": 1
+  },
+  "checks": {
+    "asset_build_check": "passed",
+    "imladris_check": "passed",
+    "imladris_tests": 24,
+    "git_diff_check": "passed"
+  },
+  "independent_source_review": "No remaining actionable source findings after wrong-topic, repeated-navigation and pending-focus corrections.",
+  "baseline_regressions": [
+    {
+      "finding": "System dark reference contrast",
+      "before": "3.07:1; explicit Dark passed",
+      "after": "System and explicit Dark both pass axe and measured contrast"
+    },
+    {
+      "finding": "Global character shortcuts",
+      "before": "s submitted a topic star form with Boards focused",
+      "after": "Exact focused-topic or preview ownership; no unrelated control submission"
+    },
+    {
+      "finding": "Enlarged-text layout",
+      "before": "Toolbar collisions and 136px queue overflow at 320px/32px root text",
+      "after": "No clipping, identity collision, undersized controls or horizontal overflow in 320 layout states"
+    }
+  ],
+  "boundaries": [
+    "Local Linux Chromium and WebKit; emulated mobile contexts.",
+    "Root-font enlargement and viewport resizing; no physical-device or assistive-technology acceptance.",
+    "No commit, push, deployment or production validation performed."
+  ],
+  "cleanup": {
+    "preview_port_8126": "closed",
+    "private_databases": {
+      "retroboards_e2e_inbox_fix_bnjcedoy": "removed",
+      "retroboards_test_inbox_fix_bnjcedoy": "removed"
+    },
+    "temporary_database_grants": "revoked"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "primary_findings_in_whole_shared_files": 223,
+  "rules": {
+    "side-tab": 32,
+    "design-system-color": 11,
+    "design-system-font-size": 175,
+    "design-system-radius": 4,
+    "design-system-font": 1
+  },
+  "findings_on_changed_lines": [],
+  "disposition": "Existing shared-file findings are outside this bounded Inbox change; no detector ignores were added."
+}
