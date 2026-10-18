@@ -7,6 +7,7 @@ namespace Tests\Integration\Admin;
 use App\Core\App;
 use App\Core\Config;
 use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailDomainStatusRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
@@ -334,6 +335,68 @@ final class AppAdminEmailTest extends TestCase
         $body = $this->get('/admin/email')->body();
         self::assertStringContainsString('example.test', $body);
         self::assertStringContainsString('SPF pass', $body);
+        self::assertStringContainsString('DKIM pass', $body);
+    }
+
+    public function test_selector_change_discards_cached_failure_until_refreshed(): void
+    {
+        $this->useArrayMailer('sender@example.test', 'cf2024-1');
+        (new SettingRepository($this->db))->set('email_dns_txt_records', [
+            'example.test' => ['v=spf1 include:_spf.example.test ~all'],
+            'cf2024-1._domainkey.example.test' => ['v=DKIM1; k=rsa; p=abc123'],
+        ]);
+        (new EmailDomainStatusRepository($this->db))->save('example.test', 'default', 'pass', 'fail', [
+            'dkim_host' => 'default._domainkey.example.test',
+        ]);
+        $this->actingAs($this->makeAdmin(['username' => 'selectoradmin']));
+
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('selector <code>cf2024-1</code>', $body);
+        self::assertStringContainsString('SPF unknown', $body);
+        self::assertStringContainsString('DKIM unknown', $body);
+        self::assertStringNotContainsString('DKIM fail', $body);
+        // Reading the dashboard does not rewrite the old verification result.
+        self::assertSame('default', $this->db->fetchValue('SELECT dkim_selector FROM email_domain_status WHERE domain = ?', ['example.test']));
+
+        $this->assertRedirectContains($this->post('/admin/email/domain/verify'), '/admin/email');
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('SPF pass', $body);
+        self::assertStringContainsString('DKIM pass', $body);
+        self::assertStringContainsString('verified (SPF and DKIM pass)', $body);
+        $status = (new EmailDomainStatusRepository($this->db))->find('example.test');
+        self::assertSame('cf2024-1', $status['dkim_selector']);
+        self::assertSame('cf2024-1._domainkey.example.test', $status['details']['dkim_host']);
+    }
+
+    public function test_selector_change_cannot_reuse_an_old_pass_to_bypass_domain_blocking(): void
+    {
+        $this->useArrayMailer('sender@example.test', 'cf2024-1', true);
+        (new EmailDomainStatusRepository($this->db))->save('example.test', 'default', 'pass', 'pass', []);
+        $this->actingAs($this->makeAdmin(['username' => 'selectorblocked']));
+
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('selector <code>cf2024-1</code>', $body);
+        self::assertStringContainsString('DKIM unknown', $body);
+        self::assertStringNotContainsString('verified (SPF and DKIM pass)', $body);
+        $this->assertRedirectContains($this->post('/admin/email/test'), '/admin/email');
+        self::assertStringContainsString('Email sending is blocked until SPF and DKIM pass.', $this->get('/admin/email')->body());
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'test'"));
+    }
+
+    public function test_stored_selector_override_is_used_for_verification(): void
+    {
+        $this->useArrayMailer('sender@example.test', 'default');
+        $settings = new SettingRepository($this->db);
+        $settings->set('email_dkim_selector', 'cf2024-1');
+        $settings->set('email_dns_txt_records', [
+            'example.test' => ['v=spf1 include:_spf.example.test ~all'],
+            'cf2024-1._domainkey.example.test' => ['v=DKIM1; k=rsa; p=abc123'],
+        ]);
+        $this->actingAs($this->makeAdmin(['username' => 'selectoroverride']));
+
+        $this->assertRedirectContains($this->post('/admin/email/domain/verify'), '/admin/email');
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('selector <code>cf2024-1</code>', $body);
         self::assertStringContainsString('DKIM pass', $body);
     }
 

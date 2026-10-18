@@ -67,7 +67,8 @@ final class CloudRunDeploymentContractTest extends TestCase
     public function test_production_mail_configuration_selects_the_configured_rest_transport(): void
     {
         $env = $this->env();
-        $keys = ['MAIL_DRIVER', 'MAIL_FROM', 'MAIL_CLOUDFLARE_ACCOUNT_ID', 'MAIL_TIMEOUT_SECONDS'];
+        self::assertSame('cf2024-1', $env['MAIL_DKIM_SELECTOR'] ?? null);
+        $keys = ['MAIL_DRIVER', 'MAIL_FROM', 'MAIL_CLOUDFLARE_ACCOUNT_ID', 'MAIL_TIMEOUT_SECONDS', 'MAIL_DKIM_SELECTOR'];
         $previous = [];
         foreach ([...$keys, 'MAIL_CLOUDFLARE_API_TOKEN'] as $key) {
             $previous[$key] = getenv($key);
@@ -79,6 +80,7 @@ final class CloudRunDeploymentContractTest extends TestCase
             // Stand-in for the Secret Manager binding, never a real token.
             putenv('MAIL_CLOUDFLARE_API_TOKEN=unit-test-token');
             $config = Config::fromFile(self::ROOT . '/config/config.php');
+            self::assertSame('cf2024-1', $config->get('mail.dkim_selector'));
             $mailer = MailerFactory::fromConfig($config, static fn (): string => 'RetroBoards');
             self::assertInstanceOf(CloudflareMailer::class, $mailer);
             self::assertTrue($mailer->isConfigured());

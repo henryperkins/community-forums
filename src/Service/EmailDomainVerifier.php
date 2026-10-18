@@ -26,6 +26,11 @@ final class EmailDomainVerifier
         $domain = $this->fromDomain();
         $selector = $this->selector();
         $row = $domain !== '' ? $this->statuses->find($domain) : null;
+        // A cached pass or failure belongs to the selector that was checked.
+        // Keep GET read-only; the operator refreshes the new selector explicitly.
+        if ($row !== null && (string) $row['dkim_selector'] !== $selector) {
+            $row = null;
+        }
         $spf = (string) ($row['spf_status'] ?? 'unknown');
         $dkim = (string) ($row['dkim_status'] ?? 'unknown');
 

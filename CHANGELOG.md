@@ -2,6 +2,15 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Email DKIM selector
+
+- Configure the domain checker's DKIM selector through `MAIL_DKIM_SELECTOR` and
+  pin Cloud Run to the observed production selector, `cf2024-1`. Ignore cached
+  results from a different selector until the operator refreshes SPF/DKIM status,
+  preventing both stale failure badges and stale passes through domain blocking.
+  Local PHPUnit and browser evidence is in
+  `docs/evidence/email-dkim-selector-2026-10-18/`.
+
 ## [Unreleased] - Legacy health redirect and reaction-test isolation
 
 - Restore `boards.hperkins.blog`'s WordPress.com CNAME to the existing Cloudflare

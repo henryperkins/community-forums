@@ -1,0 +1,147 @@
+- generic [active] [ref=f5e1]:
+  - link "Skip to content" [ref=f5e2] [cursor=pointer]:
+    - /url: "#main"
+  - generic [ref=f5e3]:
+    - generic [ref=f5e4]:
+      - link "Email selector regression" [ref=f5e5] [cursor=pointer]:
+        - /url: /
+      - link "Back to the forum" [ref=f5e12] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f5e15]:
+        - link "Notifications" [ref=f5e16] [cursor=pointer]:
+          - /url: /notifications
+        - link "DKIM evidence admin" [ref=f5e21] [cursor=pointer]:
+          - /url: /u/dkim-admin
+          - generic [aria-hidden] [ref=f5e22]: DE
+        - button "Log out" [ref=f5e24] [cursor=pointer]
+        - generic [ref=f5e28]: Admin mode
+    - group [ref=f5e29]:
+      - generic "Admin areas Notifications" [ref=f5e30] [cursor=pointer]:
+        - generic [ref=f5e31]: Admin areas
+        - strong [ref=f5e32]: Notifications
+  - main [ref=f5e35]:
+    - heading "Email & announcements" [level=1] [ref=f5e36]
+    - navigation "Notification sections" [ref=f5e37]:
+      - generic [ref=f5e38]: Email
+      - link "Announcements" [ref=f5e39] [cursor=pointer]:
+        - /url: /admin/announcements
+    - generic [ref=f5e40]:
+      - list "Email readiness" [ref=f5e41]:
+        - listitem [ref=f5e42]:
+          - strong [ref=f5e43]: "Transport:"
+          - generic [ref=f5e44]: configured — the delivery worker drains queued mail
+        - listitem [ref=f5e45]:
+          - strong [ref=f5e46]: "From address:"
+          - code [ref=f5e48]: dkim-evidence@example.test
+        - listitem [ref=f5e49]:
+          - strong [ref=f5e50]: "Sending domain:"
+          - generic [ref=f5e51]:
+            - code [ref=f5e52]: example.test
+            - text: — blocked until SPF and DKIM pass
+      - alert [ref=f5e53]:
+        - strong [ref=f5e54]: Email sending is blocked until SPF and DKIM pass.
+        - text: Refresh the sending-domain status after DNS records are published.
+      - generic [ref=f5e55]:
+        - generic [ref=f5e56]:
+          - heading "Sending domain" [level=2] [ref=f5e57]
+          - paragraph [ref=f5e58]:
+            - strong [ref=f5e59]: example.test
+            - generic [ref=f5e60]:
+              - text: selector
+              - code [ref=f5e61]: cf2024-1
+          - paragraph [ref=f5e62]:
+            - generic [ref=f5e63]: SPF unknown
+            - generic [ref=f5e64]: DKIM unknown
+          - generic [ref=f5e65]:
+            - button "Refresh SPF/DKIM status" [ref=f5e67] [cursor=pointer]
+            - generic [ref=f5e68]: Verified-domain send blocking is enabled.
+        - generic [ref=f5e69]:
+          - heading "Send a test email" [level=2] [ref=f5e70]
+          - paragraph [ref=f5e71]: Sends a one-off message to your own account address and records it in the log below.
+          - button "Send test email" [ref=f5e74] [cursor=pointer]
+      - generic [ref=f5e75]:
+        - heading "Queue status" [level=2] [ref=f5e76]
+        - list [ref=f5e77]:
+          - listitem [ref=f5e78]:
+            - generic [ref=f5e79]: "0"
+            - generic [ref=f5e80]: queued
+          - listitem [ref=f5e81]:
+            - generic [ref=f5e82]: "0"
+            - generic [ref=f5e83]: sent
+          - listitem [ref=f5e84]:
+            - generic [ref=f5e85]: "0"
+            - generic [ref=f5e86]: failed
+          - listitem [ref=f5e87]:
+            - generic [ref=f5e88]: "0"
+            - generic [ref=f5e89]: suppressed
+          - listitem [ref=f5e90]:
+            - generic [ref=f5e91]: "0"
+            - generic [ref=f5e92]: bounced
+          - listitem [ref=f5e93]:
+            - generic [ref=f5e94]: "0"
+            - generic [ref=f5e95]: complained
+      - generic [ref=f5e96]:
+        - heading "Delivery log" [level=2] [ref=f5e97]
+        - generic [ref=f5e98]:
+          - generic [ref=f5e99]:
+            - generic [ref=f5e100]: Status
+            - combobox "Status" [ref=f5e101]:
+              - option "Any" [selected]
+              - option "queued"
+              - option "sent"
+              - option "failed"
+              - option "suppressed"
+              - option "bounced"
+              - option "complained"
+          - generic [ref=f5e102]:
+            - generic [ref=f5e103]: Kind
+            - combobox "Kind" [ref=f5e104]:
+              - option "Any" [selected]
+              - option "instant"
+              - option "digest"
+              - option "test"
+              - option "system"
+          - generic [ref=f5e105]:
+            - generic [ref=f5e106]: Email
+            - textbox "Email" [ref=f5e107]:
+              - /placeholder: address@example.com
+          - button "Filter" [ref=f5e108] [cursor=pointer]
+          - link "Reset" [ref=f5e109] [cursor=pointer]:
+            - /url: /admin/email
+          - link "Download CSV" [ref=f5e110] [cursor=pointer]:
+            - /url: /admin/email/export
+          - generic [ref=f5e111]: 0 messages
+        - region "Email delivery log" [ref=f5e112]:
+          - table [ref=f5e113]:
+            - rowgroup [ref=f5e114]:
+              - row [ref=f5e115]:
+                - columnheader "When" [ref=f5e116]
+                - columnheader "To" [ref=f5e117]
+                - columnheader "Kind" [ref=f5e118]
+                - columnheader "Status" [ref=f5e119]
+                - columnheader "Attempts" [ref=f5e120]
+                - columnheader "Subject" [ref=f5e121]
+                - columnheader "Detail" [ref=f5e122]
+                - columnheader "Action" [ref=f5e123]
+            - rowgroup
+        - generic [ref=f5e124]:
+          - heading "Nothing matches these filters" [level=3] [ref=f5e125]
+          - paragraph [ref=f5e126]: Widen the filters to see more of the log.
+      - generic [ref=f5e127]:
+        - heading "Suppressed addresses" [level=2] [ref=f5e128]
+        - generic [ref=f5e129]:
+          - generic [ref=f5e130]:
+            - generic [ref=f5e131]: Email
+            - textbox "Email" [ref=f5e132]:
+              - /placeholder: address@example.com
+          - button "Suppress" [ref=f5e133] [cursor=pointer]
+        - region "Suppressed addresses" [ref=f5e134]:
+          - table [ref=f5e135]:
+            - rowgroup [ref=f5e136]:
+              - row [ref=f5e137]:
+                - columnheader "Email" [ref=f5e138]
+                - columnheader "Reason" [ref=f5e139]
+                - columnheader "Since" [ref=f5e140]
+                - columnheader "Actions" [ref=f5e141]
+            - rowgroup
+        - paragraph [ref=f5e143]: No addresses are suppressed. Unsubscribes and operator additions land here.

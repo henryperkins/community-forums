@@ -1,0 +1,259 @@
+{
+  "captured_at": "2026-10-18T02:49:05.961Z",
+  "database": "retroboards_e2e_dkim_20261018",
+  "base_url": "http://localhost:8078",
+  "browser_executable": "/home/ubuntu/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome",
+  "browser_cli": "Playwright CLI",
+  "results": [
+    {
+      "project": "desktop",
+      "initial_cache": {
+        "database": "retroboards_e2e_dkim_20261018",
+        "mail_driver": "array",
+        "configured_selector": "cf2024-1",
+        "selector_override": null,
+        "cached_status": {
+          "domain": "example.test",
+          "dkim_selector": "default",
+          "spf_status": "pass",
+          "dkim_status": "fail",
+          "details": {
+            "spf_host": "example.test",
+            "dkim_host": "default._domainkey.example.test",
+            "dkim_records": []
+          },
+          "checked_at": "2020-01-01 00:00:00",
+          "updated_at": "2026-10-18 02:48:28"
+        },
+        "refresh_audit_count": 0,
+        "email_delivery_count": 0
+      },
+      "before_refresh": {
+        "path": "/admin/email",
+        "selector": "cf2024-1",
+        "chips": [
+          "SPF unknown",
+          "DKIM unknown"
+        ],
+        "checked": null,
+        "readiness": "Transport: configured — the delivery worker drains queued mail From address: dkim-evidence@example.test Sending domain: example.test — blocked until SPF and DKIM pass",
+        "blocking": true,
+        "refresh_action": "/admin/email/domain/verify",
+        "overflow": false,
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        }
+      },
+      "after_refresh": {
+        "path": "/admin/email",
+        "selector": "cf2024-1",
+        "chips": [
+          "SPF pass",
+          "DKIM pass"
+        ],
+        "checked": "checked Oct 18, 2026 at 02:48 UTC",
+        "readiness": "Transport: configured — the delivery worker drains queued mail From address: dkim-evidence@example.test Sending domain: example.test — verified (SPF and DKIM pass)",
+        "blocking": true,
+        "refresh_action": "/admin/email/domain/verify",
+        "overflow": false,
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        }
+      },
+      "persisted_after_refresh": {
+        "database": "retroboards_e2e_dkim_20261018",
+        "mail_driver": "array",
+        "configured_selector": "cf2024-1",
+        "selector_override": null,
+        "cached_status": {
+          "domain": "example.test",
+          "dkim_selector": "cf2024-1",
+          "spf_status": "pass",
+          "dkim_status": "pass",
+          "details": {
+            "spf_host": "example.test",
+            "spf_records": [
+              "v=spf1 include:_spf.example.test -all"
+            ],
+            "dkim_host": "cf2024-1._domainkey.example.test",
+            "dkim_records": [
+              "v=DKIM1; k=rsa; p=fixture-public-key"
+            ]
+          },
+          "checked_at": "2026-10-18 02:48:38",
+          "updated_at": "2026-10-18 02:48:38"
+        },
+        "refresh_audit_count": 1,
+        "email_delivery_count": 0
+      },
+      "wrong_selector_pass": {
+        "database": "retroboards_e2e_dkim_20261018",
+        "mail_driver": "array",
+        "configured_selector": "cf2024-1",
+        "selector_override": null,
+        "cached_status": {
+          "domain": "example.test",
+          "dkim_selector": "default",
+          "spf_status": "pass",
+          "dkim_status": "pass",
+          "details": {
+            "spf_host": "example.test",
+            "dkim_host": "default._domainkey.example.test",
+            "dkim_records": [
+              "v=DKIM1; p=old-fixture-key"
+            ]
+          },
+          "checked_at": "2020-01-01 00:00:00",
+          "updated_at": "2026-10-18 02:48:43"
+        },
+        "refresh_audit_count": 1,
+        "email_delivery_count": 0
+      },
+      "stale_pass_render": {
+        "path": "/admin/email",
+        "selector": "cf2024-1",
+        "chips": [
+          "SPF unknown",
+          "DKIM unknown"
+        ],
+        "checked": null,
+        "readiness": "Transport: configured — the delivery worker drains queued mail From address: dkim-evidence@example.test Sending domain: example.test — blocked until SPF and DKIM pass",
+        "blocking": true,
+        "refresh_action": "/admin/email/domain/verify",
+        "overflow": false,
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        }
+      },
+      "outcome": "passed"
+    },
+    {
+      "project": "mobile",
+      "initial_cache": {
+        "database": "retroboards_e2e_dkim_20261018",
+        "mail_driver": "array",
+        "configured_selector": "cf2024-1",
+        "selector_override": null,
+        "cached_status": {
+          "domain": "example.test",
+          "dkim_selector": "default",
+          "spf_status": "pass",
+          "dkim_status": "fail",
+          "details": {
+            "spf_host": "example.test",
+            "dkim_host": "default._domainkey.example.test",
+            "dkim_records": []
+          },
+          "checked_at": "2020-01-01 00:00:00",
+          "updated_at": "2026-10-18 02:48:47"
+        },
+        "refresh_audit_count": 1,
+        "email_delivery_count": 0
+      },
+      "before_refresh": {
+        "path": "/admin/email",
+        "selector": "cf2024-1",
+        "chips": [
+          "SPF unknown",
+          "DKIM unknown"
+        ],
+        "checked": null,
+        "readiness": "Transport: configured — the delivery worker drains queued mail From address: dkim-evidence@example.test Sending domain: example.test — blocked until SPF and DKIM pass",
+        "blocking": true,
+        "refresh_action": "/admin/email/domain/verify",
+        "overflow": false,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "after_refresh": {
+        "path": "/admin/email",
+        "selector": "cf2024-1",
+        "chips": [
+          "SPF pass",
+          "DKIM pass"
+        ],
+        "checked": "checked Oct 18, 2026 at 02:48 UTC",
+        "readiness": "Transport: configured — the delivery worker drains queued mail From address: dkim-evidence@example.test Sending domain: example.test — verified (SPF and DKIM pass)",
+        "blocking": true,
+        "refresh_action": "/admin/email/domain/verify",
+        "overflow": false,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "persisted_after_refresh": {
+        "database": "retroboards_e2e_dkim_20261018",
+        "mail_driver": "array",
+        "configured_selector": "cf2024-1",
+        "selector_override": null,
+        "cached_status": {
+          "domain": "example.test",
+          "dkim_selector": "cf2024-1",
+          "spf_status": "pass",
+          "dkim_status": "pass",
+          "details": {
+            "spf_host": "example.test",
+            "spf_records": [
+              "v=spf1 include:_spf.example.test -all"
+            ],
+            "dkim_host": "cf2024-1._domainkey.example.test",
+            "dkim_records": [
+              "v=DKIM1; k=rsa; p=fixture-public-key"
+            ]
+          },
+          "checked_at": "2026-10-18 02:48:56",
+          "updated_at": "2026-10-18 02:48:56"
+        },
+        "refresh_audit_count": 2,
+        "email_delivery_count": 0
+      },
+      "wrong_selector_pass": {
+        "database": "retroboards_e2e_dkim_20261018",
+        "mail_driver": "array",
+        "configured_selector": "cf2024-1",
+        "selector_override": null,
+        "cached_status": {
+          "domain": "example.test",
+          "dkim_selector": "default",
+          "spf_status": "pass",
+          "dkim_status": "pass",
+          "details": {
+            "spf_host": "example.test",
+            "dkim_host": "default._domainkey.example.test",
+            "dkim_records": [
+              "v=DKIM1; p=old-fixture-key"
+            ]
+          },
+          "checked_at": "2020-01-01 00:00:00",
+          "updated_at": "2026-10-18 02:49:02"
+        },
+        "refresh_audit_count": 2,
+        "email_delivery_count": 0
+      },
+      "stale_pass_render": {
+        "path": "/admin/email",
+        "selector": "cf2024-1",
+        "chips": [
+          "SPF unknown",
+          "DKIM unknown"
+        ],
+        "checked": null,
+        "readiness": "Transport: configured — the delivery worker drains queued mail From address: dkim-evidence@example.test Sending domain: example.test — blocked until SPF and DKIM pass",
+        "blocking": true,
+        "refresh_action": "/admin/email/domain/verify",
+        "overflow": false,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "outcome": "passed"
+    }
+  ]
+}

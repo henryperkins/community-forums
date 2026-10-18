@@ -362,6 +362,17 @@ kind, a backlog drain or future delivery. Sanitized receipts are in
 The REST API returns accepted recipient outcomes rather than a provider message
 ID; `CloudflareMailer` records its own `cf-…` transport identifier.
 
+The production domain checker explicitly uses `MAIL_DKIM_SELECTOR=cf2024-1`,
+matching the selector in the received operator test's DKIM signature. The generic
+application default is `default`; it has no record for this sending domain.
+`email_dkim_selector`, when stored in settings, overrides the environment value.
+After changing selectors, `/admin/email` shows unknown status until **Refresh
+SPF/DKIM status** checks the selected DNS record. A cached result for another
+selector cannot report verification or satisfy opt-in domain send-blocking.
+Apply the updated `env.yaml` to the service and cron jobs with `configure.sh`
+during the authorized rollout; the routine image-only deployment does not update
+their environment variables. Then refresh the domain status in the admin page.
+
 **Why REST:** earlier SMTP probes authenticated (`235`) and completed `NOOP`
 (`250`), but the actual sender envelope was rejected (`550`) in execution
 `retroboards-cron-5m-m9hgt`, despite the sending domain being onboarded. No

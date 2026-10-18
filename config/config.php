@@ -82,6 +82,9 @@ return [
         'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
         'from' => Env::get('MAIL_FROM', ''),
         'from_name' => Env::get('MAIL_FROM_NAME', ''),
+        // Match the selector in the provider's DKIM-Signature, not a generic
+        // selector that may have no DNS record for this sender.
+        'dkim_selector' => Env::get('MAIL_DKIM_SELECTOR', 'default'),
         // MAIL_DRIVER=cloudflare_smtp
         'cloudflare_api_token' => Env::get('CLOUDFLARE_EMAIL_API_TOKEN', ''),
         'timeout_seconds' => (int) Env::get('MAIL_TIMEOUT_SECONDS', '30'),
