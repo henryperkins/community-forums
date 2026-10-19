@@ -2518,8 +2518,12 @@
     // Enhanced chips and suggestions maintain it synchronously before any send.
     document.querySelectorAll('[data-dm-picker]').forEach(function (picker) {
         if (!window.fetch) { return; }
-        var canonical = picker.querySelector('input[name="to"]'), form = picker.closest('form');
+        // The compose mounts name the canonical field "to"; the group rail's
+        // Add member tool names its single-recipient field "username". Both
+        // keep the same no-JS contract: one plain input the server reads.
+        var canonical = picker.querySelector('input[name="to"], input[name="username"]'), form = picker.closest('form');
         var chipTemplate = picker.querySelector('[data-dm-chip-template]');
+        if (!canonical || !chipTemplate || !form) { return; }
         var groupTitle = form.querySelector('[data-dm-group-title]');
         var allowGroups = picker.dataset.dmAllowGroups === '1';
         var selected = [], matches = [], active = -1, sequence = 0, timer = null, request = null;
@@ -2528,7 +2532,7 @@
         var input = document.createElement('input'); input.type = 'text'; input.className = 'dm-to-input';
         input.autocomplete = 'off'; input.placeholder = 'Name or @username'; input.maxLength = 255;
         input.id = canonical.id; canonical.id += '-value';
-        ['aria-describedby', 'aria-invalid', 'data-error-focus'].forEach(function (key) {
+        ['aria-describedby', 'aria-invalid', 'aria-label', 'data-error-focus'].forEach(function (key) {
             if (canonical.hasAttribute(key)) { input.setAttribute(key, canonical.getAttribute(key)); }
         });
         var takeFocus = canonical.hasAttribute('autofocus') || canonical.hasAttribute('data-error-focus');
@@ -2718,17 +2722,20 @@
         };
         var stored = null;
         try { stored = localStorage.getItem(RAIL_KEY); } catch (e) {}
+        // A rail the server rendered open (a failed owner tool re-rendered at
+        // 422 on its own field) is an explicit request too, like #dm-rail.
+        var serverRailOpen = dmShell.classList.contains('rail-open');
         // #dm-rail is an explicit request at any width; a remembered choice
         // only reopens a column, so an overlay always starts closed. WebKit can
         // run this deferred script before the stylesheets are ready: keep the
         // default closed until their position rules can classify the rail.
-        setRail(location.hash === '#dm-rail', false, false);
+        setRail(location.hash === '#dm-rail' || serverRailOpen, false, false);
         var restoreRailChoice = function () {
             railOverlay = railIsOverlay();
             // A choice made while resources loaded takes precedence over the
             // saved one, including an explicitly opened overlay.
             if (!railChoiceMade) {
-                setRail(location.hash === '#dm-rail' || (stored === '0' && !railOverlay), false, false);
+                setRail(location.hash === '#dm-rail' || serverRailOpen || (stored === '0' && !railOverlay), false, false);
             }
         };
         var railStylesPending = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(function (link) {
@@ -2781,7 +2788,7 @@
         });
         window.addEventListener('hashchange', function () { setRail(location.hash === '#dm-rail', false, false); });
         document.addEventListener('keydown', function (e) {
-            if (!railIsOpen() || document.querySelector('.dm-compose-panel:not([hidden]), details.dm-menu[open], details.dm-report[open]')) { return; }
+            if (!railIsOpen() || document.querySelector('.dm-compose-panel:not([hidden]), details.dm-menu[open], details.dm-report[open], details.dm-confirm[open]')) { return; }
             if (e.key === 'Escape') { setRail(false, true, true); }
             if (e.key === 'Tab' && getComputedStyle(dmRail).position === 'fixed') { wrapOverlayTab(e, dmRail, false); }
         });
@@ -2845,6 +2852,37 @@
         var nested = menu.querySelectorAll('details[open]');
         for (var ni = 0; ni < nested.length; ni++) { nested[ni].open = false; }
     }, true);
+
+    // Destructive steps (Leave group, Remove, Make owner, Block) are native
+    // <details> so they work without script; this only adds the dismissal a
+    // menu has: Escape or a click elsewhere folds the step back to its first
+    // level, returning focus to its summary when focus was inside it.
+    document.addEventListener('click', function (e) {
+        document.querySelectorAll('details.dm-confirm[open]').forEach(function (step) {
+            if (!step.contains(e.target)) { step.open = false; }
+        });
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') { return; }
+        document.querySelectorAll('details.dm-confirm[open]').forEach(function (step) {
+            var hadFocus = step.contains(document.activeElement);
+            step.open = false;
+            if (hadFocus) { var summary = step.querySelector('summary'); if (summary) { summary.focus(); } }
+        });
+    });
+
+    // One-shot forms (the confirmation steps, the owner tools) post once: a
+    // second submit is dropped and the button reads as spent without leaving
+    // the focus order, the reaction forms' pattern. The server actions are
+    // idempotent as well; this keeps the duplicate request from being made.
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form.matches || !form.matches('[data-submit-once]')) { return; }
+        if (form.dataset.submitted === '1') { e.preventDefault(); return; }
+        form.dataset.submitted = '1';
+        var submitter = form.querySelector('button[type="submit"], button:not([type])');
+        if (submitter) { submitter.setAttribute('aria-disabled', 'true'); }
+    });
 
     // The shared New message link decorates its canonical destination only
     // while this page has a compose panel. Server validation can also reveal

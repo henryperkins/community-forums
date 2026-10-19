@@ -893,7 +893,7 @@ test('P3-5 one h1 per page, owner tools name the member, unread leads the row na
   await page.locator('[data-rail-toggle]').click();
   await expect(page.locator('#dm-rail')).toBeInViewport();
   for (const name of ['Make owner: Bob Brooks', 'Remove Bob Brooks', 'Make owner: Carol Chen', 'Remove Carol Chen']) {
-    await expect.soft(page.getByRole('button', { name, exact: true }), `owner tool named "${name}"`).toBeVisible();
+    await expect.soft(page.locator(`summary.dm-linkbtn[aria-label="${name}"]`), `owner tool named "${name}"`).toBeVisible();
   }
   expect.soft(errors).toEqual([]);
   await context.close();
@@ -905,6 +905,45 @@ test('P3-5 one h1 per page, owner tools name the member, unread leads the row na
   await expect.soft(nojs.page.locator('[data-rail-toggle]'), 'no-JS toggle claims no state').not.toHaveAttribute('aria-expanded', /.*/);
   await expect.soft(nojs.page.locator('[data-rail-toggle]')).not.toHaveAttribute('role', /.*/);
   await nojs.context.close();
+});
+
+test('Harden: destructive steps confirm first, and a failed owner tool reopens the rail on its field', async ({ browser, baseURL }) => {
+  test.setTimeout(120000);
+  const { group } = seed();
+  const { context, page, errors } = await member(browser, baseURL!, 'alice');
+  await page.goto(`/messages/${group.id}`);
+  await page.locator('[data-rail-toggle]').click();
+  await expect(page.locator('#dm-rail')).toBeInViewport();
+
+  // Make owner is a step, not a submit: the confirm names the member, and
+  // Escape folds the step back to its summary without touching the rail.
+  const bobRow = page.locator('.dm-inforail .dm-member', { hasText: '@bob' });
+  const makeOwnerSummary = bobRow.locator('summary', { hasText: 'Make owner' });
+  await makeOwnerSummary.click();
+  const confirmOwner = bobRow.getByRole('button', { name: 'Make Bob Brooks owner' });
+  await expect(confirmOwner).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(confirmOwner).toBeHidden();
+  await expect(makeOwnerSummary).toBeFocused();
+  await expect(page.locator('#dm-rail')).toBeInViewport();
+
+  // The owner's Leave step explains the transfer and offers no submit.
+  await page.locator('.dm-inforail .dm-rail-btn.danger', { hasText: 'Leave group' }).click();
+  const leaveStep = page.locator('.dm-inforail .dm-confirm', { hasText: 'Leave group' });
+  await expect(leaveStep).toContainText('You own this group. Make another member owner before you leave.');
+  await expect(leaveStep.locator('.dm-confirm-step button')).toHaveCount(0);
+
+  // A failed Add member re-renders at 422 with the rail open, the typed name
+  // kept as a chip, and the error under the field.
+  await page.locator('.dm-inforail .dm-to-input').fill('no_such_member');
+  await page.locator('.dm-inforail').getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(page.locator('.dm-shell')).toHaveClass(/rail-open/);
+  await expect(page.locator('#dm-rail')).toBeInViewport();
+  await expect(page.locator('.dm-inforail .dm-chip')).toContainText('no_such_member');
+  await expect(page.locator('.dm-inforail .field-error')).toContainText('No member found with that username.');
+  await expect(page.locator('.dm-inforail .dm-to-input')).toHaveAttribute('aria-invalid', 'true');
+  expect.soft(errors).toEqual([]);
+  await context.close();
 });
 
 test('P3-6 clocks, titles and the details presence read cleanly (en-US, America/Chicago)', async ({ browser, baseURL }) => {

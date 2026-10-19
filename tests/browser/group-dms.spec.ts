@@ -128,7 +128,10 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   // ── Owner actions: add a member, rename, and read the group history ───────
   await page.goto(convPath);
   await openRail(page);
-  await page.fill('.dm-inforail input[name="username"]', 'dana');
+  // With script the picker enhances the username field into its combobox.
+  const addField = page.locator('.dm-inforail .dm-to-input');
+  if (await addField.count()) { await addField.fill('dana'); }
+  else { await page.fill('.dm-inforail input[name="username"]', 'dana'); }
   await page.locator('.dm-inforail .dm-owner-tool').filter({ has: page.locator('input[name="username"]') }).getByRole('button', { name: 'Add' }).click();
   await expect(page.locator('.flash')).toContainText('Member added.');
   await openRail(page);
@@ -173,10 +176,14 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   await login(page, 'alice@retro.test');
   await page.goto(convPath);
   await openRail(page);
+  // The owner's Leave step explains the transfer instead of offering a
+  // submit the server would refuse.
   await page.locator('.dm-inforail .dm-rail-btn.danger', { hasText: 'Leave group' }).click();
-  await expect(page.locator('.flash')).toContainText('Transfer ownership before the owner leaves.');
-  await openRail(page);
-  await page.locator('.dm-inforail .dm-member', { hasText: '@bob' }).getByRole('button', { name: 'Make owner' }).click();
+  const ownerLeave = page.locator('.dm-inforail .dm-confirm', { hasText: 'Leave group' });
+  await expect(ownerLeave).toContainText('You own this group. Make another member owner before you leave.');
+  await expect(ownerLeave.locator('.dm-confirm-step button')).toHaveCount(0);
+  await page.locator('.dm-inforail .dm-member', { hasText: '@bob' }).locator('summary', { hasText: 'Make owner' }).click();
+  await page.locator('.dm-inforail .dm-member', { hasText: '@bob' }).getByRole('button', { name: 'Make Bob Brooks owner' }).click();
   await expect(page.locator('.flash')).toContainText('Ownership transferred.');
   await openRail(page);
   await expect(page.locator('.dm-inforail .dm-owner-tool')).toHaveCount(0);
@@ -192,7 +199,8 @@ test('group DMs: create, draft-preserving validation, owner actions, membership 
   await expect(page.locator('.dm-thread-sub')).toContainText('muted');
   await openRail(page);
   await page.locator('.dm-inforail .dm-rail-btn.danger', { hasText: 'Leave group' }).click();
-  await expect(page.locator('.flash')).toContainText('Member removed.');
+  await page.locator('.dm-inforail .dm-confirm-step').getByRole('button', { name: 'Leave group' }).click();
+  await expect(page.locator('.flash')).toContainText('You left the group.');
   await page.goto(convPath);
   await expect(page.locator('.joinbar')).toContainText('no longer an active participant');
   await expect(page.locator('.dm-composer')).toHaveCount(0);

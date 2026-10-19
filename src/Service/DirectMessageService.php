@@ -186,6 +186,13 @@ final class DirectMessageService
         if ($recipient === null) {
             throw new NotFoundException('That person could not be found.');
         }
+        // Adding someone already here would move their join boundary to now and
+        // hide everything they could already read.
+        if ($this->conversations->isParticipant($conversationId, $userId)) {
+            throw new ValidationException(['member' => $userId === $actor->id()
+                ? 'You are already in this group.'
+                : '@' . $recipient['username'] . ' is already in this group.']);
+        }
         $this->assertCanContact($actor, $recipient, newConversation: true);
         $cap = max(3, (int) $this->config->get('dm.group_participant_cap', 12));
         if ($this->conversations->activeCount($conversationId) + 1 > $cap) {
@@ -201,6 +208,11 @@ final class DirectMessageService
         if ($actor->id() !== $userId) {
             $this->groupForOwnerAction($actor, $conversationId);
         } elseif (!$this->conversations->isParticipant($conversationId, $actor->id())) {
+            // A repeated Leave (a double submit, a second tab) finds the member
+            // already gone: nothing more to do.
+            if ($this->conversations->membership($conversationId, $actor->id()) !== null) {
+                return;
+            }
             throw new NotFoundException('Conversation not found.');
         }
         $conversation = $this->conversations->find($conversationId);
@@ -233,6 +245,14 @@ final class DirectMessageService
     public function transferOwner(User $actor, int $conversationId, int $newOwnerId): void
     {
         $this->writeGate->assertCanWrite($actor);
+        // A repeated submit finds ownership already with that member.
+        $conversation = $this->conversations->find($conversationId);
+        if ($conversation !== null
+            && $newOwnerId !== $actor->id()
+            && (int) ($conversation['owner_user_id'] ?? 0) === $newOwnerId
+            && $this->conversations->isParticipant($conversationId, $actor->id())) {
+            return;
+        }
         $this->groupForOwnerAction($actor, $conversationId);
         if (!$this->conversations->isParticipant($conversationId, $newOwnerId)) {
             throw new ValidationException(['member' => 'Choose a current group member.']);

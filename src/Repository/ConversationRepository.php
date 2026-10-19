@@ -125,12 +125,15 @@ final class ConversationRepository
 
     public function removeParticipant(int $conversationId, int $actorId, int $userId): void
     {
-        $this->db->run(
+        $removed = $this->db->run(
             'UPDATE conversation_participants
              SET left_at = UTC_TIMESTAMP(), removed_by = ?
              WHERE conversation_id = ? AND user_id = ? AND left_at IS NULL',
             [$actorId, $conversationId, $userId],
-        );
+        )->rowCount();
+        if ($removed === 0) {
+            return; // already gone: a repeated submit leaves no second history line
+        }
         $event = $actorId === $userId ? 'member_left' : 'member_removed';
         $this->addEvent($conversationId, $actorId, $event, $userId, null);
     }

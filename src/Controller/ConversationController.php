@@ -66,6 +66,16 @@ final class ConversationController extends Controller
         $user = $this->requireDms();
         $rawTo = $request->query('to', '');
         $to = is_string($rawTo) ? trim($rawTo) : '';
+        $filter = $request->query('filter', 'all') === 'unread' ? 'unread' : 'all';
+        $rawQ = $request->query('q', '');
+        $q = is_string($rawQ) ? trim($rawQ) : '';
+        $conversations = $this->container->get(ConversationRepository::class)->listForUser($user->id(), $q !== '' ? $q : null);
+        if ($filter === 'unread') {
+            $conversations = array_values(array_filter(
+                $conversations,
+                static fn (array $c): bool => !empty($c['is_unread']),
+            ));
+        }
         $allowGroups = $this->container->get(FeatureFlags::class)->enabled('group_dms');
         return $this->view('dm/new', [
             'to' => $to,
@@ -73,7 +83,9 @@ final class ConversationController extends Controller
             'errors' => [],
             'body' => '',
             'allowGroups' => $allowGroups,
-            'conversations' => $this->container->get(ConversationRepository::class)->listForUser($user->id()),
+            'conversations' => $conversations,
+            'filter' => $filter,
+            'q' => $q,
             'new_user_throttled' => $this->container->get(DirectMessageService::class)->isThrottledNewUser($user),
             'show_avatars' => $this->showAvatars($user),
         ]);
@@ -185,6 +197,17 @@ final class ConversationController extends Controller
         $isGroup = (string) ($conversation['kind'] ?? 'direct') === 'group';
         $isOwner = $isGroup && (int) ($conversation['owner_user_id'] ?? 0) === $user->id();
 
+        $filter = $request->query('filter', 'all') === 'unread' ? 'unread' : 'all';
+        $rawQ = $request->query('q', '');
+        $q = is_string($rawQ) ? trim($rawQ) : '';
+        $conversations = $convRepo->listForUser($user->id(), $q !== '' ? $q : null);
+        if ($filter === 'unread') {
+            $conversations = array_values(array_filter(
+                $conversations,
+                static fn (array $c): bool => !empty($c['is_unread']) || (int) $c['conversation_id'] === $conversationId,
+            ));
+        }
+
         $participants = $convRepo->participants($conversationId);
         return $this->view('dm/show', array_merge([
             'presence_states' => $this->container->get(ConversationReadService::class)->presence($user, $participants),
@@ -201,7 +224,9 @@ final class ConversationController extends Controller
             'other' => $other,
             // The list is the always-present left column of the reading room, and
             // the details rail needs the viewer's mute + block state (additive reads).
-            'conversations' => $this->container->get(ConversationRepository::class)->listForUser($user->id()),
+            'conversations' => $conversations,
+            'filter' => $filter,
+            'q' => $q,
             'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
             'muted' => (($membership['notification_mode'] ?? 'normal') === 'muted'),
             'other_is_blocked' => (!$isGroup && $otherId !== null)
@@ -215,6 +240,10 @@ final class ConversationController extends Controller
             'reasons' => self::REASONS,
             'errors' => [],
             'body' => '',
+            // A failed owner tool reopens the details rail on its own field.
+            'rail_open' => false,
+            'rail_errors' => [],
+            'rail_old' => [],
             'show_avatars' => $this->showAvatars($user),
         ], $extra), $status);
     }
@@ -277,14 +306,18 @@ final class ConversationController extends Controller
     {
         $user = $this->requireGroupDms();
         $conversationId = (int) ($params['id'] ?? 0);
+        $username = $request->str('username');
         return $this->runGroupAction(
+            $request,
+            $user,
+            $conversationId,
             fn () => $this->container->get(DirectMessageService::class)->addParticipant(
                 $user,
                 $conversationId,
-                $this->resolveSingleUser((string) $request->str('username')),
+                $this->resolveSingleUser($username),
             ),
-            $conversationId,
             'Member added.',
+            ['username' => $username],
         );
     }
 
@@ -295,9 +328,11 @@ final class ConversationController extends Controller
         $conversationId = (int) ($params['id'] ?? 0);
         $target = (int) $request->post('user_id', 0);
         return $this->runGroupAction(
-            fn () => $this->container->get(DirectMessageService::class)->removeParticipant($user, $conversationId, $target),
+            $request,
+            $user,
             $conversationId,
-            'Member removed.',
+            fn () => $this->container->get(DirectMessageService::class)->removeParticipant($user, $conversationId, $target),
+            $target === $user->id() ? 'You left the group.' : 'Member removed.',
         );
     }
 
@@ -306,10 +341,14 @@ final class ConversationController extends Controller
     {
         $user = $this->requireGroupDms();
         $conversationId = (int) ($params['id'] ?? 0);
+        $title = $request->str('title');
         return $this->runGroupAction(
-            fn () => $this->container->get(DirectMessageService::class)->rename($user, $conversationId, (string) $request->str('title')),
+            $request,
+            $user,
             $conversationId,
+            fn () => $this->container->get(DirectMessageService::class)->rename($user, $conversationId, $title),
             'Group renamed.',
+            ['title' => $title],
         );
     }
 
@@ -330,8 +369,10 @@ final class ConversationController extends Controller
         $conversationId = (int) ($params['id'] ?? 0);
         $target = (int) $request->post('user_id', 0);
         return $this->runGroupAction(
-            fn () => $this->container->get(DirectMessageService::class)->transferOwner($user, $conversationId, $target),
+            $request,
+            $user,
             $conversationId,
+            fn () => $this->container->get(DirectMessageService::class)->transferOwner($user, $conversationId, $target),
             'Ownership transferred.',
         );
     }
@@ -446,13 +487,40 @@ final class ConversationController extends Controller
         return (int) $row['id'];
     }
 
-    private function runGroupAction(callable $action, int $conversationId, string $success): Response
+    /**
+     * One failure path for the group tools. A typed owner tool (Add member,
+     * Rename) re-renders the conversation at 422 with the details rail open,
+     * the error under its field and the typed value kept, as the composers do.
+     * A one-click action has nothing typed to keep, and neither does a tool
+     * whose owner has since handed the group on, so those keep the toast.
+     * Account state is checked first and still answers with its refusal page.
+     *
+     * @param array<string,string>|null $typed the one rail field the action came from, name => value
+     */
+    private function runGroupAction(Request $request, User $user, int $conversationId, callable $action, string $success, ?array $typed = null): Response
     {
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
         try {
             $action();
-        } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/messages/' . $conversationId, $e->first());
+        } catch (ValidationException | ForbiddenException $e) {
+            $message = $e instanceof ValidationException ? $e->first() : $e->getMessage();
+            if ($typed !== null && $this->ownsGroup($conversationId, $user)) {
+                return $this->renderConversation($request, $user, $conversationId, [
+                    'rail_open' => true,
+                    'rail_errors' => [(string) array_key_first($typed) => $message],
+                    'rail_old' => $typed,
+                ], 422);
+            }
+            return $this->redirectWithFlash('/messages/' . $conversationId, $message);
         }
         return $this->redirectWithFlash('/messages/' . $conversationId, $success);
+    }
+
+    private function ownsGroup(int $conversationId, User $user): bool
+    {
+        $conversation = $this->container->get(ConversationRepository::class)->find($conversationId);
+        return $conversation !== null
+            && (string) ($conversation['kind'] ?? '') === 'group'
+            && (int) ($conversation['owner_user_id'] ?? 0) === $user->id();
     }
 }

@@ -2,6 +2,27 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Messages critique fixes: layout, confirmations, phone header, type weights
+
+- Re-anchor the conversation list's All/Unread filters and search to the list
+  pane, hide them on single-pane phone reading views, drop the duplicated
+  "Private counsel" eyebrow there, and keep `?filter=unread` / `?q=` across
+  conversation and compose navigation.
+- Put Leave group, Remove member, Make owner and Block behind two-step inline
+  confirmation disclosures; an owner with members is told to transfer
+  ownership instead of being offered a Leave submit. Failed Add member /
+  Rename submissions re-render at 422 with the details rail open and the typed
+  value kept; the Add member field gains the single-recipient picker.
+  Re-adding an existing member no longer moves their join boundary, and
+  leaving or transferring twice leaves one history line. Blocking the
+  counterpart replaces the composer with the blocked state.
+- Fix the 320–430px conversation header (163→107px group, 145→88px direct at
+  320px; evidence in `docs/evidence/dm-adapt-mobile-2026-10-19/`) and stop
+  requesting font weights the self-hosted families do not ship.
+- Driven by `.impeccable/critique/2026-10-19T00-01-01Z__templates-dm.md`;
+  the 1400px three-column rail, the rail/handle type sizes and Bruinen-ground
+  contrast items remain open.
+
 ## [Unreleased] - Member record restrictions disclosure
 
 - Read the member record before acting on it: History now follows Status and

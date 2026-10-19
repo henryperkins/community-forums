@@ -20,6 +20,11 @@ $dmHeadingTag = ($heading_tag ?? 'h1') === 'h2' ? 'h2' : 'h1';
 // to the long-pinned hrefs.
 $dmAllHref = '/messages' . ($dmQ !== '' ? '?q=' . urlencode($dmQ) : '');
 $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dmQ) : '');
+$dmRowParams = array_filter([
+    'filter' => $dmFilter === 'unread' ? 'unread' : null,
+    'q' => $dmQ !== '' ? $dmQ : null,
+], static fn ($value) => $value !== null);
+$dmRowQuery = $dmRowParams !== [] ? '?' . http_build_query($dmRowParams) : '';
 ?>
 <?php $this->start('subheader_leading'); ?>
 <header class="dm-listpane-head page-toolbar">
@@ -81,7 +86,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                 $rowSearch = $rowRaw !== $rowPreview ? mb_strimwidth($rowRaw, 0, 120, '') : '';
                 ?>
                 <li<?= $rowSearch !== '' ? ' data-dm-search-text="' . $e($rowSearch) . '"' : '' ?>>
-                    <a class="dm-row dm-link<?= $cid === $dmActiveId ? ' active' : '' ?><?= !empty($c['is_unread']) ? ' is-unread' : '' ?>" href="/messages/<?= $cid ?>"<?= $cid === $dmActiveId ? ' aria-current="page"' : '' ?>>
+                    <a class="dm-row dm-link<?= $cid === $dmActiveId ? ' active' : '' ?><?= !empty($c['is_unread']) ? ' is-unread' : '' ?>" href="/messages/<?= $cid ?><?= $e($dmRowQuery) ?>"<?= $cid === $dmActiveId ? ' aria-current="page"' : '' ?>>
                         <?php if (!empty($c['is_unread'])): ?><span class="sr-only">Unread. </span><?php endif; ?>
                         <?= $this->partial('partials/monogram', ['name' => $rowName, 'username' => $seed, 'avatar_path' => $isGroup ? null : ($c['other_avatar_path'] ?? null), 'gilt' => $isGroup]) ?>
                         <span class="dm-row-top"><span class="dm-other"><?= $e($rowName) ?></span></span>

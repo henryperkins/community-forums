@@ -118,7 +118,7 @@
 .dm-to-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; min-height: 44px; cursor: text; }
 .dm-to-field.is-focus { border-color: var(--dm-accent-line); outline: 0; box-shadow: var(--shadow-inset), var(--dm-focus-ring); }
 .dm-to-field.is-invalid { border-color: var(--danger); }
-.dm-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 2px 2px 3px; border-radius: var(--radius-pill); background: var(--dm-sunken); border: 1px solid var(--dm-accent-line); font-family: var(--font-body); font-size: .94rem; line-height: 1; color: var(--text-strong); }
+.dm-chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--dm-sunken); border: 1px solid var(--dm-accent-line); font-family: var(--font-body); font-size: .94rem; line-height: 1; color: var(--text-strong); }
 .dm-chip-mono { width: 20px; height: 20px; font-size: .5rem; }
 .dm-chip-x { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: none; color: var(--text-muted); cursor: pointer; }
 .dm-chip-x .icon { width: 12px; height: 12px; }
