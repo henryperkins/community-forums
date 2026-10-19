@@ -1,0 +1,41 @@
+{
+  "spec": {
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:b63b0a52395f4542db0ee32c12c50dc7061ce289"
+          }
+        ]
+      }
+    }
+  },
+  "status": {
+    "conditions": [
+      {
+        "lastTransitionTime": "2026-10-19T04:26:19.236039Z",
+        "status": "True",
+        "type": "Ready"
+      },
+      {
+        "lastTransitionTime": "2026-10-19T04:26:05.370611Z",
+        "status": "True",
+        "type": "ConfigurationsReady"
+      },
+      {
+        "lastTransitionTime": "2026-10-19T04:26:19.196800Z",
+        "status": "True",
+        "type": "RoutesReady"
+      }
+    ],
+    "latestCreatedRevisionName": "retroboards-00041-bhl",
+    "latestReadyRevisionName": "retroboards-00041-bhl",
+    "traffic": [
+      {
+        "latestRevision": true,
+        "percent": 100,
+        "revisionName": "retroboards-00041-bhl"
+      }
+    ]
+  }
+}

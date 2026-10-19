@@ -15,6 +15,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   shown. Refusals re-render as an alert without losing filters.
 - Works without JavaScript and at 390px. Evidence is recorded in
   `docs/evidence/features-guarded-toggles-2026-10-18/`.
+- Deploy the toggles to production and pin their asset version
+  (`adc1494dbfa0cd3d`). Worker, Cloud Run, cron-image and live-asset receipts
+  are recorded in `docs/evidence/features-guarded-toggles-2026-10-18/production/`.
 
 ## [Unreleased] - Messages critique fixes: layout, confirmations, phone header, type weights
 

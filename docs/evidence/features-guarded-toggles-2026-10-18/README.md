@@ -49,6 +49,16 @@ Merge commit `69193508` brings current `main` into this branch: the member recor
 - **WebKit desktop and mobile:** `features-toggles` (10 passed, 2 skips) and `admin-features` (2) pass ([log](validation/post-merge-webkit.log)). Here the projects keep their Chromium names, so the desktop-only keyboard test runs in WebKit too. `features-console` (3 failures) and `members-console` (5 failures in each of two runs) also fail on `main` ([baseline](validation/post-merge-webkit-main-baseline.log): 3 failures, then 2 and 5). Every axe failure is a twilight `.btn` sampled mid-transition: its `color` switches at once while its background transitions from the parchment accent `#2E4A3A` to the twilight `#D2B062`, so axe reads 1.74:1 or an intermediate value. The settled pair is 8.20:1. `members-console.spec.ts:151` fails identically on `main`, because WebKit logs a CSP "Refused to apply a stylesheet" console message. None of these involve the merge, whose only CSS is the `.features-flag-*` block.
 - **Captures:** 37 of the 38 captures these specs re-shoot are byte-identical to the committed files. `desktop/toggle-no-js-confirm.png` differs only in bytes and looks the same, so the committed images stand.
 
+## Production release
+
+Application commit `b63b0a52395f4542db0ee32c12c50dc7061ce289` (this branch merged with current `main`) was pushed to `main` and deployed by Workers Builds and Cloud Build. The production Worker build succeeded and its version serves 100% traffic. Cloud Run revision `retroboards-00041-bhl` serves 100% traffic, and the four cron jobs and the monitor job all use the same application image. `/healthz` reports the application and database healthy, and a guest request for `/admin/features` redirects to `/login`. Sanitized deployment receipts are in [production/](production/).
+
+The Cloud Build deploy sat queued for 43 minutes behind browser-evidence lanes. With two concurrent builds available, the lanes started by the branch and `main` pushes of the same commit held both slots while each waited for its own child build. Cancelling the redundant branch lane let the deploy start. The Worker went live at 03:39 UTC and Cloud Run at 04:26 UTC. In between, pages from the previous release kept loading, because that release's asset version, `ef40d97306cc2167`, had been recorded and pinned before this merge.
+
+All 56 application-release asset URLs returned HTTP 200 with matching SHA-256 hashes. After recording deployed version `adc1494dbfa0cd3d`, all 55 retained manifest URLs also matched. Retention removed only the bundle exclusive to the oldest pin (`244ddf3d50bbd19e`). The Imladris baseline and generated metadata were refreshed for that removal; current application assets and design-system CSS are unchanged. The asset suite passed all 35 tests, and the asset and Imladris checks pass.
+
+The verification made read-only requests only. Authenticated production pages, including the toggles themselves, were not checked, and no production flag was changed.
+
 ## Review and mutation check
 
 The planned four-reviewer adversarial review (backend, UX, copy, process) was interrupted twice and returned no verdicts, so there is no independent reviewer sign-off to cite. Its saved probes were triaged in the main session and each confirmed finding was fixed:
