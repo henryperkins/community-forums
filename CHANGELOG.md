@@ -22,6 +22,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Driven by `.impeccable/critique/2026-10-19T00-01-01Z__templates-dm.md`;
   the 1400px three-column rail, the rail/handle type sizes and Bruinen-ground
   contrast items remain open.
+- Deploy the Messages fixes to production and pin their live asset version
+  (`ef40d97306cc2167`). Worker, Cloud Run, cron-image and live-asset receipts
+  are recorded in `docs/evidence/dm-adapt-mobile-2026-10-19/production/`.
 
 ## [Unreleased] - Member record restrictions disclosure
 

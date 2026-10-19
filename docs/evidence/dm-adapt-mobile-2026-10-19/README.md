@@ -41,3 +41,25 @@ Not verified: a physical iOS/Android device and the safe-area inset under a
 notched phone (the global viewport meta has no `viewport-fit=cover`; that is
 a shell-wide question, left untouched here). Gesture behaviour is unchanged
 — no custom drag/slider control is in scope.
+
+## Production release
+
+Application commit `fb6cb391dfeb017d859e930a4ab7f858ffd91816` was pushed to
+`main` and deployed by Workers Builds and Cloud Build. The Worker build
+succeeded and its version serves 100% traffic. Cloud Run revision
+`retroboards-00040-72t` serves 100% traffic, and the four cron jobs and the
+monitor job all use the same application image. `/healthz` reports the
+application and database healthy. Sanitized deployment receipts are in
+[production/](production/).
+
+All 57 application-release asset URLs returned HTTP 200 with matching SHA-256
+hashes. After recording deployed version `ef40d97306cc2167`, all 55 retained
+manifest URLs also matched. Retention removed only the two bundles exclusive to
+the oldest pin (`2371e926206bda24`). The Imladris baseline and generated
+metadata were refreshed for those removals; current application assets and
+design-system CSS are unchanged. The asset suite passed all 35 tests, and the
+asset and Imladris checks pass.
+
+The verification made read-only requests only. Authenticated production pages
+were not checked. The record exists so the next release keeps this version's
+files for pages opened before it (ADR 0041).
