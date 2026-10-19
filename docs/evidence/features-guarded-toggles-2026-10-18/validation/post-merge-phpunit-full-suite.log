@@ -1,0 +1,15 @@
+# Post-merge full suite at 69193508 (merge of main 6a2ed330 into the branch), four round-robin shards on private databases
+# started 2026-10-19T03:21:15Z, finished 2026-10-19T03:22:24Z
+== shard 0
+OK (693 tests, 4440 assertions)
+exit=0
+== shard 1
+OK (805 tests, 9079 assertions)
+exit=0
+== shard 2
+OK (984 tests, 10059 assertions)
+exit=0
+== shard 3
+OK, but some tests were skipped!
+Tests: 850, Assertions: 5939, Skipped: 1.
+exit=0

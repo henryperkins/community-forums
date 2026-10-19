@@ -1,0 +1,210 @@
+{
+  "date_utc": "2026-10-19",
+  "scope": [
+    "/admin/features",
+    "POST /admin/features/{flag}",
+    "merged surfaces: /admin/users and the member record"
+  ],
+  "merge_commit": "69193508690bbb8a9c79f5a47eafbace3eecb1bf",
+  "merged_main": "6a2ed3303b7cffa9d780d0744b4b671b3e4f5702",
+  "branch_before_merge": "61dda2f185cc1e90a47e9e480de69d9ca26b58b2",
+  "state": "Re-run on the tree of merge_commit. verification.json remains the pre-merge snapshot taken on 1a9ac166.",
+  "asset_version": "adc1494dbfa0cd3d",
+  "application_css": "/assets/dist/app-style-Cccoax6v.css",
+  "deployed_release_pins": [
+    "ef40d97306cc2167",
+    "50a62f5be30f6b09",
+    "244ddf3d50bbd19e"
+  ],
+  "imladris_application_digest": "626514819796c4a56a4683abac7aa1c82c73cfc3622373e816daf3d75a54d1bb",
+  "verification": {
+    "phpunit_full_suite": {
+      "tests": 3332,
+      "assertions": 29517,
+      "skipped": 1,
+      "failures": 0,
+      "shards": [
+        {
+          "tests": 693,
+          "assertions": 4440,
+          "skipped": 0,
+          "failures": 0
+        },
+        {
+          "tests": 805,
+          "assertions": 9079,
+          "skipped": 0,
+          "failures": 0
+        },
+        {
+          "tests": 984,
+          "assertions": 10059,
+          "skipped": 0,
+          "failures": 0
+        },
+        {
+          "tests": 850,
+          "assertions": 5939,
+          "skipped": 1,
+          "failures": 0
+        }
+      ]
+    },
+    "phpunit_targeted": {
+      "tests": 78,
+      "assertions": 3814,
+      "skipped": 0,
+      "failures": 0,
+      "prepares": "emulated"
+    },
+    "phpunit_native_prepares": {
+      "tests": 78,
+      "assertions": 3814,
+      "skipped": 0,
+      "failures": 0,
+      "prepares": "native"
+    },
+    "verify_imladris": {
+      "tests": 24,
+      "assertions": 305,
+      "skipped": 0,
+      "failures": 0
+    },
+    "asset_check": true,
+    "asset_tests": {
+      "tests": 35,
+      "pass": 35,
+      "fail": 0
+    },
+    "chromium": {
+      "features-toggles": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 2
+      },
+      "admin-features": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "features-console": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0
+      },
+      "features-remediation": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      "members-console": {
+        "passed": 14,
+        "failed": 0,
+        "skipped": 2
+      }
+    },
+    "chromium_note": "features-remediation first attempt: {\"passed\": 4, \"failed\": 4, \"skipped\": 0}; its no-JS context fell back to the hard-coded http://localhost:8011 while the private server ran on 8023. Re-run with E2E_BASE_URL set.",
+    "webkit": {
+      "features-toggles": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 2
+      },
+      "admin-features": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "features-console": {
+        "passed": 7,
+        "failed": 3,
+        "skipped": 0
+      },
+      "members-console": [
+        {
+          "passed": 9,
+          "failed": 5,
+          "skipped": 2
+        },
+        {
+          "passed": 9,
+          "failed": 5,
+          "skipped": 2
+        }
+      ]
+    },
+    "webkit_main_baseline": {
+      "commit": "6a2ed3303b7cffa9d780d0744b4b671b3e4f5702",
+      "features-console": {
+        "passed": 7,
+        "failed": 3,
+        "skipped": 0
+      },
+      "members-console": [
+        {
+          "passed": 12,
+          "failed": 2,
+          "skipped": 2
+        },
+        {
+          "passed": 9,
+          "failed": 5,
+          "skipped": 2
+        }
+      ]
+    },
+    "webkit_failure_classification": "Pre-existing on main and not caused by the merge, whose CSS change is scoped to .features-flag-* rules. Every axe failure is a twilight .btn sampled mid-transition: color switches at once while background transitions (var(--dur-fast)) from the parchment accent #2E4A3A to the twilight #D2B062, so axe reads #161D24 on #2E4A3A (1.74:1) or an intermediate; the settled pair is 8.20:1. The failing set varies run to run on both trees. members-console.spec.ts:151 fails identically on main: WebKit logs a CSP \"Refused to apply a stylesheet\" console message."
+  },
+  "screenshots": {
+    "compared_with_committed": 38,
+    "identical": 37,
+    "byte_different_visually_identical": [
+      "desktop/toggle-no-js-confirm.png"
+    ],
+    "post_merge_sha256": {
+      "desktop/admin-feature-readiness.png": "cdd3f81cfa2ac1d46953d4583b815c32b2ddfe8ce57b4554d67071883a9a0a18",
+      "desktop/features-flags-light.png": "0333a8668b3d499c41c0e14e6edd33704e2db8bdb8b9306ca7e908d81ba6b81f",
+      "desktop/features-flags-no-js.png": "cdd3f81cfa2ac1d46953d4583b815c32b2ddfe8ce57b4554d67071883a9a0a18",
+      "desktop/features-flags-twilight.png": "b49e125475963a7bd3146a60737534a4697bd701b4dca00589e2ad4afdaebb92",
+      "desktop/toggle-after-off.png": "4f507c5e00f06f4d9a94caa17dcce44c67f3aa94a5d63f3541f7852e18973096",
+      "desktop/toggle-confirm-open-twilight.png": "9aa9ce1858289effe2080fa84c0cd7489b1649e711108deaa662661e6ad1f543",
+      "desktop/toggle-confirm-open.png": "9823893d0048efa27de927bd28569c5aea7f213517d52de25554ab6f897950ee",
+      "desktop/toggle-corrupt-locked.png": "64faa15e803f2c91bd3bced5f27e78fca929a21de072b1b44adda9d9fc8936db",
+      "desktop/toggle-locked-blocked.png": "9ff1ba5fa01e0ddb1e99585baa6aff1544d10a1a6cf2a2017751acd56f3f8a5d",
+      "desktop/toggle-no-js-confirm.png": "30af65774c3e6bea92045cd2203a3a1bb2ed6c4226cfb75b13ba976a9b2bab79",
+      "desktop/toggle-refused-422.png": "24041caad2194c2ef55fe461a854628d4b6965860745f37979052d78f560656d",
+      "mobile/admin-feature-readiness.png": "f8146af400d9ce77c455e0bd4a2087e4a2f04edf8c352b30f8d03411314316f6",
+      "mobile/features-flags-light.png": "f8146af400d9ce77c455e0bd4a2087e4a2f04edf8c352b30f8d03411314316f6",
+      "mobile/features-flags-no-js.png": "f8146af400d9ce77c455e0bd4a2087e4a2f04edf8c352b30f8d03411314316f6",
+      "mobile/features-flags-twilight.png": "260e02434b4c9bafcfd68f1533cfc496fdb476a988e632b68b911e032e1bb232",
+      "mobile/toggle-after-off.png": "7f9b1cf1dd54006a4ca2684e5de43e5b6260ba98894263f96c39b4fabc8056a6",
+      "mobile/toggle-confirm-open-twilight.png": "11d9acd53c7e350e77f497eab46b15ba7e1c30b18fd0031ba335d02e772fdb9d",
+      "mobile/toggle-confirm-open.png": "641c88efe92c37becdfb186db7ee3caf013cfb41d5b935da0dcf4f2bfe660584",
+      "mobile/toggle-corrupt-locked.png": "ae7c6886ae9464a2e2f8a9b60d504137b4ecf5f8bc985750fc8ff5cd7af76be9",
+      "mobile/toggle-locked-blocked.png": "3e1272ddd444b73740354b2e969fa7426fc0f10346094a5ec439a9dd1024221f",
+      "mobile/toggle-mobile-confirm.png": "69625b66c7e724f87fa0566a538680acf982154748af594fae46a6a95cc7786c",
+      "mobile/toggle-no-js-confirm.png": "006acbccf0214a65134c48cdf61eec47d8c25cdb0366406f8735d49a00270cc2",
+      "mobile/toggle-refused-422.png": "5e70cd030ba6331530b427eef62d1692a4f5940b3e923abb3b7a4875b2d8dfe0",
+      "webkit-desktop/toggle-after-off.png": "652d75703aa32c2d53933bbeed36c5de5b6ac7533a3d5f2fc8b809fa41468249",
+      "webkit-desktop/toggle-confirm-open-twilight.png": "b871b2fc558ff7fb04d4d9cee856090ca42d36df779a77a6cf25fc2896767555",
+      "webkit-desktop/toggle-confirm-open.png": "d8cb4dfcdcf00b7de286f9c7e14a48eb2047d0de8f7406375709da380c16e125",
+      "webkit-desktop/toggle-corrupt-locked.png": "f0efab12ded9e3691531c3feae6a318c295d9553622d3584a949b8c8e67b50cc",
+      "webkit-desktop/toggle-locked-blocked.png": "90d3735ea876ad4b5015e0aa24874d5c5a281682cde1218d2cb502111bb41944",
+      "webkit-desktop/toggle-no-js-confirm.png": "c1d37a01b7efb7b88f2555585e6b12acb67c922d86989e1432632b4983b2e4ad",
+      "webkit-desktop/toggle-refused-422.png": "212ab0e9b7e3def3e27c0164df1ef03bf4137c0a1cdb0c069799f570b473637b",
+      "webkit-mobile/toggle-after-off.png": "68a6336b22eea0b7f0612ca15df14e006af1b7c822acc7ac6972d2b535d841a3",
+      "webkit-mobile/toggle-confirm-open-twilight.png": "46483d37f8244167c22eeadd59579a4901fdf6712614efe2999561e5a2ee56b7",
+      "webkit-mobile/toggle-confirm-open.png": "eceafb6fa1a6e5d0aaea883e2f68d0d2f0861c368cc57b46d1014876540904af",
+      "webkit-mobile/toggle-corrupt-locked.png": "022528c351dc2921e835c281cfed81063d4280a1a99075857cddcb02d136c8e0",
+      "webkit-mobile/toggle-locked-blocked.png": "be875b65abb98161d95ae2171f9445cc8d72e4ebe749d655059e9d2810f764af",
+      "webkit-mobile/toggle-mobile-confirm.png": "3eea931424909a04cd1228eac4468108ed03f765ba0dc57ed45283896a2aed79",
+      "webkit-mobile/toggle-no-js-confirm.png": "8e15d53520bae1527aa00accd3dc3d8f105ca98f1959f7d1b7f742953c2ed802",
+      "webkit-mobile/toggle-refused-422.png": "d2576d66cb1015c8a42987d45686bd847b4f52854d711c68939fd8ebde6712be"
+    }
+  },
+  "limits": [
+    "Local synthetic databases only",
+    "Viewport emulation, not a physical device or screen reader",
+    "WebKit runs reuse the Chromium project definitions with browserName webkit"
+  ]
+}

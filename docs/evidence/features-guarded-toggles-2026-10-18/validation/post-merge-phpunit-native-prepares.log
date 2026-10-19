@@ -1,0 +1,21 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.26
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/features-toggles/phpunit.xml
+
+.......[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.............[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.................... 65 / 78 ( 83%)
+.............                                                     78 / 78 (100%)
+
+Time: 00:01.433, Memory: 14.00 MB
+
+OK (78 tests, 3814 assertions)

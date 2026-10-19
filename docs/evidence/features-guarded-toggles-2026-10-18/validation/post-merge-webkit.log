@@ -1,0 +1,112 @@
+# Post-merge WebKit run at 69193508 (the base projects with browserName webkit, same viewports). features-console and members-console twilight axe failures also occur on main (see post-merge-webkit-main-baseline.log); members-console was run twice.
+
+## webkit-features-toggles
+Running 12 tests using 1 worker
+  ✓   1 [desktop] › features-toggles.spec.ts:82:5 › a flag turns off and back on through its inline confirm, with proof in the row and the audit log (5.3s)
+  ✓   2 [desktop] › features-toggles.spec.ts:149:5 › confirms open without a request, one at a time, and cancel by keyboard (1.2s)
+  ✓   3 [desktop] › features-toggles.spec.ts:181:5 › rows the console cannot act on say why, and a corrupt blob locks every row (2.3s)
+  ✓   4 [desktop] › features-toggles.spec.ts:203:5 › a refused write re-renders the inventory as a 422 alert that takes focus (1.5s)
+  ✓   5 [desktop] › features-toggles.spec.ts:232:5 › the whole flow works with JavaScript disabled (1.3s)
+  -   6 [desktop] › features-toggles.spec.ts:251:5 › the confirm fits the phone scroll area and keeps 44px targets
+  ✓   7 [mobile] › features-toggles.spec.ts:82:5 › a flag turns off and back on through its inline confirm, with proof in the row and the audit log (5.3s)
+  -   8 [mobile] › features-toggles.spec.ts:149:5 › confirms open without a request, one at a time, and cancel by keyboard
+  ✓   9 [mobile] › features-toggles.spec.ts:181:5 › rows the console cannot act on say why, and a corrupt blob locks every row (2.4s)
+  ✓  10 [mobile] › features-toggles.spec.ts:203:5 › a refused write re-renders the inventory as a 422 alert that takes focus (1.5s)
+  ✓  11 [mobile] › features-toggles.spec.ts:232:5 › the whole flow works with JavaScript disabled (1.3s)
+  ✓  12 [mobile] › features-toggles.spec.ts:251:5 › the confirm fits the phone scroll area and keeps 44px targets (1.4s)
+  2 skipped
+  10 passed (25.5s)
+
+## webkit-admin-features
+Running 2 tests using 1 worker
+  ✓  1 [desktop] › admin-features.spec.ts:84:5 › admin feature inventory classifies readiness and links actionable surfaces (4.7s)
+  ✓  2 [mobile] › admin-features.spec.ts:84:5 › admin feature inventory classifies readiness and links actionable surfaces (4.3s)
+  2 passed (12.0s)
+
+## webkit-features-console
+Running 10 tests using 1 worker
+  ✓   1 [desktop] › features-console.spec.ts:166:5 › the feature-flag ledger copies the tiles, table chrome and relocated legend in every register (7.7s)
+  ✘   2 [desktop] › features-console.spec.ts:200:5 › badge rules copies the two-up create card, rule rows and action order in every register (2.4s)
+  ✓   3 [desktop] › features-console.spec.ts:248:5 › the badge-rule preview drill-in keeps its parent tab lit and copies the monogram roster (3.0s)
+  ✓   4 [desktop] › features-console.spec.ts:275:5 › the custom emoji catalogue copies the switch, chip and status pills in every register (3.4s)
+  ✓   5 [desktop] › features-console.spec.ts:330:5 › every features route stays whole with JavaScript disabled (3.3s)
+  ✓   6 [mobile] › features-console.spec.ts:166:5 › the feature-flag ledger copies the tiles, table chrome and relocated legend in every register (7.1s)
+  ✘   7 [mobile] › features-console.spec.ts:200:5 › badge rules copies the two-up create card, rule rows and action order in every register (2.7s)
+  ✓   8 [mobile] › features-console.spec.ts:248:5 › the badge-rule preview drill-in keeps its parent tab lit and copies the monogram roster (3.1s)
+  ✘   9 [mobile] › features-console.spec.ts:275:5 › the custom emoji catalogue copies the switch, chip and status pills in every register (2.7s)
+  ✓  10 [mobile] › features-console.spec.ts:330:5 › every features route stays whole with JavaScript disabled (3.4s)
+  3 failed
+  7 passed (42.2s)
+failures:
+  1) [desktop] › features-console.spec.ts:200:5 › badge rules copies the two-up create card, rule rows and action order in every register
+     desktop twilight serious/critical axe violations -> #161d24 on #2e4a3a = 1.74:1 (<button class=\"btn\" type=\"submit\">Create rule</button>)
+  2) [mobile] › features-console.spec.ts:200:5 › badge rules copies the two-up create card, rule rows and action order in every register
+     mobile twilight serious/critical axe violations -> #161d24 on #2e4a3a = 1.74:1 (<button class=\"btn\" type=\"submit\">Create rule</button>)
+  3) [mobile] › features-console.spec.ts:275:5 › the custom emoji catalogue copies the switch, chip and status pills in every register
+     mobile twilight serious/critical axe violations -> #161d24 on #2e4a3a = 1.74:1 (<button class=\"btn\" type=\"submit\">Save emoji</button>)
+
+## webkit-members-console
+Running 16 tests using 1 worker
+  ✘   1 [desktop] › members-console.spec.ts:128:5 › the directory copies the filter grid, roster anatomy and bulk bar in every register (3.6s)
+  -   2 [desktop] › members-console.spec.ts:151:5 › the mobile directory signals the member table scroll boundary
+  ✓   3 [desktop] › members-console.spec.ts:180:5 › the directory disclosure keeps a 44px target through the 860px console range (1.4s)
+  ✓   4 [desktop] › members-console.spec.ts:194:5 › the bulk confirmation copies the subject list and actionable count in every register (3.0s)
+  ✓   5 [desktop] › members-console.spec.ts:212:5 › the member record copies the status, restriction and history anatomy in every register (3.3s)
+  ✓   6 [desktop] › members-console.spec.ts:233:5 › the record keeps suspend and ban behind a disclosure that announces itself and carries a ban through Lift (4.0s)
+  ✓   7 [desktop] › members-console.spec.ts:295:5 › every members route stays whole with JavaScript disabled (2.7s)
+  ✓   8 [desktop] › members-console.spec.ts:358:5 › invitations copies the issue card and issued table in every register (3.0s)
+  ✘   9 [mobile] › members-console.spec.ts:128:5 › the directory copies the filter grid, roster anatomy and bulk bar in every register (3.4s)
+  ✘  10 [mobile] › members-console.spec.ts:151:5 › the mobile directory signals the member table scroll boundary (2.0s)
+  -  11 [mobile] › members-console.spec.ts:180:5 › the directory disclosure keeps a 44px target through the 860px console range
+  ✓  12 [mobile] › members-console.spec.ts:194:5 › the bulk confirmation copies the subject list and actionable count in every register (3.1s)
+  ✘  13 [mobile] › members-console.spec.ts:212:5 › the member record copies the status, restriction and history anatomy in every register (2.8s)
+  ✓  14 [mobile] › members-console.spec.ts:233:5 › the record keeps suspend and ban behind a disclosure that announces itself and carries a ban through Lift (4.9s)
+  ✓  15 [mobile] › members-console.spec.ts:295:5 › every members route stays whole with JavaScript disabled (3.1s)
+  ✘  16 [mobile] › members-console.spec.ts:358:5 › invitations copies the issue card and issued table in every register (2.7s)
+  5 failed
+  2 skipped
+  9 passed (49.7s)
+failures:
+  1) [desktop] › members-console.spec.ts:128:5 › the directory copies the filter grid, roster anatomy and bulk bar in every register
+     desktop twilight serious/critical axe violations -> #161d24 on #2e4a3a = 1.74:1; #161d24 on #2e4a3a = 1.74:1 (<button class=\"btn btn-small\" type=\"submit\">Apply filters</button>)
+  2) [mobile] › members-console.spec.ts:128:5 › the directory copies the filter grid, roster anatomy and bulk bar in every register
+     mobile twilight serious/critical axe violations -> #161d24 on #2e4a3a = 1.74:1; #161d24 on #2e4a3a = 1.74:1 (<button class=\"btn btn-small\" type=\"submit\">Apply filters</button>)
+  3) [mobile] › members-console.spec.ts:151:5 › the mobile directory signals the member table scroll boundary
+     expect(received).toEqual(expected) // deep equality -> console: Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.
+  4) [mobile] › members-console.spec.ts:212:5 › the member record copies the status, restriction and history anatomy in every register
+     mobile twilight serious/critical axe violations -> #ece4d2 on #faf6ec = 1.17:1; #161d24 on #2e4a3a = 1.74:1; #ece4d2 on #faf6ec = 1.17:1 (<button class=\"btn btn-small btn-secondary\" type=\"submit\">Reveal email &amp; IPs (audited)</button>)
+  5) [mobile] › members-console.spec.ts:358:5 › invitations copies the issue card and issued table in every register
+     mobile twilight serious/critical axe violations -> #161d24 on #606946 = 2.91:1 (<button class=\"btn btn-small\" type=\"submit\">Issue invitation</button>)
+
+## webkit-members-console.rerun
+Running 16 tests using 1 worker
+  ✓   1 [desktop] › members-console.spec.ts:128:5 › the directory copies the filter grid, roster anatomy and bulk bar in every register (4.8s)
+  -   2 [desktop] › members-console.spec.ts:151:5 › the mobile directory signals the member table scroll boundary
+  ✓   3 [desktop] › members-console.spec.ts:180:5 › the directory disclosure keeps a 44px target through the 860px console range (1.4s)
+  ✓   4 [desktop] › members-console.spec.ts:194:5 › the bulk confirmation copies the subject list and actionable count in every register (3.0s)
+  ✓   5 [desktop] › members-console.spec.ts:212:5 › the member record copies the status, restriction and history anatomy in every register (3.3s)
+  ✓   6 [desktop] › members-console.spec.ts:233:5 › the record keeps suspend and ban behind a disclosure that announces itself and carries a ban through Lift (4.1s)
+  ✓   7 [desktop] › members-console.spec.ts:295:5 › every members route stays whole with JavaScript disabled (2.7s)
+  ✘   8 [desktop] › members-console.spec.ts:358:5 › invitations copies the issue card and issued table in every register (2.4s)
+  ✘   9 [mobile] › members-console.spec.ts:128:5 › the directory copies the filter grid, roster anatomy and bulk bar in every register (3.4s)
+  ✘  10 [mobile] › members-console.spec.ts:151:5 › the mobile directory signals the member table scroll boundary (2.1s)
+  -  11 [mobile] › members-console.spec.ts:180:5 › the directory disclosure keeps a 44px target through the 860px console range
+  ✓  12 [mobile] › members-console.spec.ts:194:5 › the bulk confirmation copies the subject list and actionable count in every register (3.1s)
+  ✘  13 [mobile] › members-console.spec.ts:212:5 › the member record copies the status, restriction and history anatomy in every register (2.8s)
+  ✘  14 [mobile] › members-console.spec.ts:233:5 › the record keeps suspend and ban behind a disclosure that announces itself and carries a ban through Lift (3.4s)
+  ✓  15 [mobile] › members-console.spec.ts:295:5 › every members route stays whole with JavaScript disabled (3.1s)
+  ✓  16 [mobile] › members-console.spec.ts:358:5 › invitations copies the issue card and issued table in every register (3.1s)
+  5 failed
+  2 skipped
+  9 passed (49.2s)
+failures:
+  1) [desktop] › members-console.spec.ts:358:5 › invitations copies the issue card and issued table in every register
+     desktop twilight serious/critical axe violations -> #161d24 on #696f48 = 3.21:1 (<button class=\"btn btn-small\" type=\"submit\">Issue invitation</button>)
+  2) [mobile] › members-console.spec.ts:128:5 › the directory copies the filter grid, roster anatomy and bulk bar in every register
+     mobile twilight serious/critical axe violations -> #161d24 on #2e4a3a = 1.74:1; #161d24 on #2e4a3a = 1.74:1 (<button class=\"btn btn-small\" type=\"submit\">Apply filters</button>)
+  3) [mobile] › members-console.spec.ts:151:5 › the mobile directory signals the member table scroll boundary
+     expect(received).toEqual(expected) // deep equality -> console: Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.
+  4) [mobile] › members-console.spec.ts:212:5 › the member record copies the status, restriction and history anatomy in every register
+     mobile twilight serious/critical axe violations -> #ece4d2 on #faf6ec = 1.17:1; #161d24 on #2e4a3a = 1.74:1; #ece4d2 on #faf6ec = 1.17:1 (<button class=\"btn btn-small btn-secondary\" type=\"submit\">Reveal email &amp; IPs (audited)</button>)
+  5) [mobile] › members-console.spec.ts:233:5 › the record keeps suspend and ban behind a disclosure that announces itself and carries a ban through Lift
+     mobile twilight serious/critical axe violations -> #ece4d2 on #faf6ec = 1.17:1; #161d24 on #2e4a3a = 1.74:1; #ece4d2 on #faf6ec = 1.17:1 (<button class=\"btn btn-small btn-secondary\" type=\"submit\">Reveal email &amp; IPs (audited)</button>)
