@@ -9,7 +9,7 @@ itself is unchanged and stays read-only.
 
 ## Context
 
-The 2026-10-18 admin critique (`.impeccable/critique/2026-10-18T08-18-16Z__admin.md`)
+The 2026-10-18 design critique of `/admin` (not committed; see ADR 0024)
 rated Features read-only as a P1. The inventory could diagnose but not treat:
 turning a subsystem off — the runbook's first response to a logic defect
 (`docs/runbooks/operations.md` §2) — meant hand-running a PHP read-modify-write
