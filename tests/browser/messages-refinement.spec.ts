@@ -195,7 +195,7 @@ test('reference states: group counsel, first visit and list', async ({ page }, i
   await page.context().clearCookies();
   await login(page, 'nimrodel');
   await page.goto('/messages');
-  await expect(page.locator('.dm-listpane')).toContainText('New accounts');
+  await expect(page.locator('.dm-listpane')).toContainText('make your first post');
   for (const [width, height, theme, name] of [
     [1440, 1000, 'light', 'first-run-desktop-day'], [390, 844, 'dark', 'first-run-phone-twilight'],
   ] as const) {

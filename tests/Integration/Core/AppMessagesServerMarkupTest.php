@@ -216,10 +216,142 @@ final class AppMessagesServerMarkupTest extends TestCase
         $members = $this->slice($this->get('/messages/' . $group)->body(), '<ul class="dm-members">', '</ul>');
 
         foreach (['Bob Brooks', 'Carol Chen'] as $name) {
-            self::assertStringContainsString('aria-label="Make owner: ' . $name . '">Make owner</button>', $members);
-            self::assertStringContainsString('aria-label="Remove ' . $name . '">Remove</button>', $members);
+            self::assertStringContainsString('aria-label="Make owner: ' . $name . '"><span>Make owner</span></summary>', $members);
+            self::assertStringContainsString('aria-label="Remove ' . $name . '"><span>Remove</span></summary>', $members);
+            // The member is named again on the confirm step itself.
+            self::assertStringContainsString('>Make ' . $name . ' owner</button>', $members);
+            self::assertStringContainsString('>Remove ' . $name . '</button>', $members);
         }
-        self::assertSame(2, substr_count($members, '>Make owner</button>'));
+        self::assertSame(2, substr_count($members, '>Make owner</span>'));
+    }
+
+    public function testDestructiveActionsSitBehindConfirmationSteps(): void
+    {
+        [$alice, $bob, $direct] = $this->pair();
+        $carol = $this->makeUser(['username' => 'carol', 'display_name' => 'Carol Chen']);
+        $group = $this->group($alice, $bob, $carol);
+        $this->actingAs($alice);
+
+        $groupPage = $this->get('/messages/' . $group)->body();
+        // No one-click submits remain for the four destructive actions.
+        self::assertStringNotContainsString('<button class="dm-linkbtn" type="submit"', $groupPage);
+        self::assertStringNotContainsString('<button class="dm-linkbtn danger" type="submit"', $groupPage);
+        self::assertStringContainsString('<details class="dm-confirm" name="dm-member-' . $group . '-' . (int) $bob['id'] . '">', $groupPage);
+        self::assertStringContainsString('id="dm-owner-note-' . $group . '-' . (int) $bob['id'] . '"', $groupPage);
+        self::assertStringContainsString('id="dm-remove-note-' . $group . '-' . (int) $bob['id'] . '"', $groupPage);
+        self::assertStringContainsString('id="dm-leave-note-rail-' . $group . '"', $groupPage);
+        self::assertStringContainsString('id="dm-leave-note-menu-' . $group . '"', $groupPage);
+
+        $directPage = $this->get('/messages/' . $direct)->body();
+        self::assertStringNotContainsString('<button class="dm-menu-item danger" type="submit"', $directPage);
+        self::assertStringNotContainsString('<button class="dm-rail-btn danger" type="submit"', $directPage);
+        self::assertStringContainsString('id="dm-block-note-menu-' . $direct . '"', $directPage);
+        self::assertStringContainsString('id="dm-block-note-rail-' . $direct . '"', $directPage);
+        self::assertSame(2, substr_count($directPage, '>Block @bob</button>'));
+    }
+
+    public function testFailedAddMemberReRendersTheRailOpenWithTheTypedNameAndError(): void
+    {
+        [$alice, $bob] = $this->pair();
+        $carol = $this->makeUser(['username' => 'carol']);
+        $group = $this->group($alice, $bob, $carol);
+        $this->actingAs($alice);
+
+        $response = $this->post('/messages/' . $group . '/members', ['username' => 'no_such_member']);
+        $this->assertStatus(422, $response);
+        $body = $response->body();
+        self::assertStringContainsString('dm-shell reading has-rail rail-open', $body);
+        self::assertStringContainsString('value="no_such_member"', $body);
+        self::assertStringContainsString('id="dm-add-member-error-' . $group . '">No member found with that username.</p>', $body);
+        self::assertStringContainsString('aria-invalid="true"', $body);
+        // The Add member field carries the single-recipient picker.
+        self::assertStringContainsString('<div data-dm-picker data-dm-allow-groups="0"', $body);
+    }
+
+    public function testFailedRenameReRendersTheRailOpenWithTheTypedTitleAndError(): void
+    {
+        [$alice, $bob] = $this->pair();
+        $carol = $this->makeUser(['username' => 'carol']);
+        $group = $this->group($alice, $bob, $carol);
+        $this->actingAs($alice);
+        $tooLong = str_repeat('a', 121);
+
+        $response = $this->post('/messages/' . $group . '/rename', ['title' => $tooLong]);
+        $this->assertStatus(422, $response);
+        $body = $response->body();
+        self::assertStringContainsString('dm-shell reading has-rail rail-open', $body);
+        self::assertStringContainsString('value="' . $tooLong . '"', $body);
+        self::assertStringContainsString('id="dm-rename-group-error-' . $group . '">Group title is too long.</p>', $body);
+    }
+
+    public function testAddingAMemberAlreadyInTheGroupIsRefusedInPlaceAndKeepsTheirHistory(): void
+    {
+        [$alice, $bob] = $this->pair();
+        $carol = $this->makeUser(['username' => 'carol']);
+        $group = $this->group($alice, $bob, $carol);
+        (new DmMessageRepository($this->db))->create($group, (int) $alice['id'], 'Early counsel', '<p>Early counsel</p>');
+        $this->actingAs($alice);
+
+        $response = $this->post('/messages/' . $group . '/members', ['username' => 'bob']);
+        $this->assertStatus(422, $response);
+        self::assertStringContainsString('@bob is already in this group.', $response->body());
+
+        // The refused re-add must not have moved Bob's join boundary.
+        $this->actingAs($bob);
+        self::assertStringContainsString('Early counsel', $this->get('/messages/' . $group)->body());
+    }
+
+    public function testTheOwnerLeaveStepExplainsTheTransferInsteadOfOfferingASubmit(): void
+    {
+        [$alice, $bob] = $this->pair();
+        $carol = $this->makeUser(['username' => 'carol']);
+        $group = $this->group($alice, $bob, $carol);
+        $this->actingAs($alice);
+
+        $ownerPage = $this->get('/messages/' . $group)->body();
+        self::assertSame(2, substr_count($ownerPage, 'You own this group. Make another member owner before you leave.'));
+        // Only the two Remove steps post to the removal endpoint for the owner.
+        self::assertSame(2, substr_count($ownerPage, 'action="/messages/' . $group . '/members/remove"'));
+
+        $this->actingAs($bob);
+        $memberPage = $this->get('/messages/' . $group)->body();
+        self::assertSame(2, substr_count($memberPage, 'You stop receiving its messages and it leaves your list.'));
+        self::assertSame(2, substr_count($memberPage, 'action="/messages/' . $group . '/members/remove"'));
+    }
+
+    public function testLeavingAndTransferringTwiceLeaveOneHistoryLineEach(): void
+    {
+        [$alice, $bob] = $this->pair();
+        $carol = $this->makeUser(['username' => 'carol']);
+        $group = $this->group($alice, $bob, $carol);
+
+        $this->actingAs($carol);
+        $this->assertRedirect($this->post('/messages/' . $group . '/members/remove', ['user_id' => (int) $carol['id']]), '/messages/' . $group);
+        $this->assertRedirect($this->post('/messages/' . $group . '/members/remove', ['user_id' => (int) $carol['id']]), '/messages/' . $group);
+
+        $this->actingAs($alice);
+        $this->assertRedirect($this->post('/messages/' . $group . '/transfer', ['user_id' => (int) $bob['id']]), '/messages/' . $group);
+        $this->assertRedirect($this->post('/messages/' . $group . '/transfer', ['user_id' => (int) $bob['id']]), '/messages/' . $group);
+
+        $history = $this->get('/messages/' . $group)->body();
+        self::assertSame(1, substr_count($history, 'member left @carol'));
+        self::assertSame(1, substr_count($history, 'owner transferred @bob'));
+    }
+
+    public function testBlockingTheCounterpartReplacesTheComposerWithTheBlockedState(): void
+    {
+        [$alice, , $direct] = $this->pair();
+        $this->actingAs($alice);
+        $this->assertRedirect(
+            $this->post('/u/bob/block', ['intent' => 'block', 'return' => '/messages/' . $direct]),
+            '/messages/' . $direct,
+        );
+
+        $body = $this->get('/messages/' . $direct)->body();
+        self::assertStringContainsString('You blocked Bob Brooks. Neither of you can send messages here.', $body);
+        self::assertStringNotContainsString('placeholder="Message @bob…"', $body);
+        // Unblocking stays one click, in the bar and in the rail.
+        self::assertSame(3, substr_count($body, 'name="intent" value="unblock"'));
     }
 
     public function testUnreadRowsAnnounceUnreadBeforeTheirNameAndPreview(): void
@@ -329,5 +461,30 @@ final class AppMessagesServerMarkupTest extends TestCase
         $group = $this->group($alice, $bob, $carol);
         $conversations->markRead($group, (int) $bob['id'], $mine);
         self::assertNull(json_decode($this->post('/messages/' . $group . '/poll')->body(), true, flags: JSON_THROW_ON_ERROR)['other_last_read_message_id']);
+    }
+
+    public function testListFilterAndSearchSurviveConversationAndComposeNavigation(): void
+    {
+        [$alice, $bob, $id] = $this->pair();
+        $carol = $this->makeUser(['username' => 'carol', 'display_name' => 'Carol Chen', 'post_count' => 1]);
+        $otherId = (new ConversationRepository($this->db))->findOrCreateBetween((int) $alice['id'], (int) $carol['id']);
+        $messages = new DmMessageRepository($this->db);
+        $messages->create($id, (int) $bob['id'], 'Rollback drill note', '<p>Rollback drill note</p>');
+        $seenId = $messages->create($otherId, (int) $carol['id'], 'Quiet garden note', '<p>Quiet garden note</p>');
+        (new ConversationRepository($this->db))->markRead($otherId, (int) $alice['id'], $seenId);
+        $this->actingAs($alice);
+
+        $filteredIndex = $this->get('/messages', ['filter' => 'unread', 'q' => 'drill'])->body();
+        self::assertStringContainsString('href="/messages/' . $id . '?filter=unread&amp;q=drill"', $filteredIndex);
+
+        $show = $this->get('/messages/' . $id, ['filter' => 'unread', 'q' => 'drill'])->body();
+        self::assertStringContainsString('href="/messages?filter=unread&amp;q=drill" aria-current="page"', $show);
+        self::assertStringContainsString('value="drill"', $show);
+        self::assertStringContainsString('href="/messages/' . $id . '?filter=unread&amp;q=drill" aria-current="page"', $show);
+        self::assertStringNotContainsString('Carol Chen', $show);
+
+        $newForm = $this->get('/messages/new', ['filter' => 'unread', 'q' => 'drill'])->body();
+        self::assertStringContainsString('href="/messages?filter=unread&amp;q=drill" aria-current="page"', $newForm);
+        self::assertStringContainsString('value="drill"', $newForm);
     }
 }

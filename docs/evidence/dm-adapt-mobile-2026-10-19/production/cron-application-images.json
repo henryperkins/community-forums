@@ -1,0 +1,102 @@
+[
+  {
+    "metadata": {
+      "name": "retroboards-cron-0310"
+    },
+    "spec": {
+      "template": {
+        "spec": {
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:fb6cb391dfeb017d859e930a4ab7f858ffd91816"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "metadata": {
+      "name": "retroboards-cron-0700"
+    },
+    "spec": {
+      "template": {
+        "spec": {
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:fb6cb391dfeb017d859e930a4ab7f858ffd91816"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "metadata": {
+      "name": "retroboards-cron-5m"
+    },
+    "spec": {
+      "template": {
+        "spec": {
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:fb6cb391dfeb017d859e930a4ab7f858ffd91816"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "metadata": {
+      "name": "retroboards-cron-6h"
+    },
+    "spec": {
+      "template": {
+        "spec": {
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:fb6cb391dfeb017d859e930a4ab7f858ffd91816"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "metadata": {
+      "name": "retroboards-monitor"
+    },
+    "spec": {
+      "template": {
+        "spec": {
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:fb6cb391dfeb017d859e930a4ab7f858ffd91816"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+]

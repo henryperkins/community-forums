@@ -26,7 +26,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
 };
 ?>
 <div class="dm-shell reading">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'show_avatars' => $dmNewShowAvatars, 'heading_tag' => 'h2']) ?>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => $filter ?? 'all', 'q' => $q ?? '', 'show_avatars' => $dmNewShowAvatars, 'heading_tag' => 'h2']) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head dm-thread-head-compose">

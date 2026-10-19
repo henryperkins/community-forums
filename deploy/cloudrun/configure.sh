@@ -31,6 +31,11 @@ CRON_JOBS=(
     "retroboards-cron-0700|0 7 * * *|worker:digest"
 )
 
+# The instance has only a private IP (the project enforces
+# constraints/sql.restrictPublicIp), so the service and every job reach it over
+# Direct VPC egress on the default network. Only private ranges use the VPC.
+VPC_EGRESS=(--network=default --subnet=default --vpc-egress=private-ranges-only)
+
 # /data is the uploads bucket, owned by www-data (uid/gid 33) in the container.
 DATA_VOLUME="name=data,type=cloud-storage,bucket=$DATA_BUCKET,mount-options=uid=33;gid=33;file-mode=644;dir-mode=755;implicit-dirs"
 
@@ -79,7 +84,7 @@ gcloud run deploy "$SERVICE" --project="$PROJECT" --region="$REGION" --quiet \
     --execution-environment=gen2 \
     --cpu=1 --memory=1Gi --concurrency=16 --cpu-boost --timeout=300 \
     --min-instances=0 --max-instances=1 \
-    --set-cloudsql-instances="$SQL_INSTANCE" \
+    --set-cloudsql-instances="$SQL_INSTANCE" "${VPC_EGRESS[@]}" \
     --clear-volumes --clear-volume-mounts \
     --add-volume="$DATA_VOLUME" --add-volume-mount=volume=data,mount-path=/data \
     --env-vars-file="$HERE/env.yaml" \
@@ -103,7 +108,7 @@ for entry in "${CRON_JOBS[@]}"; do
         --image="$IMAGE" \
         --service-account="$RUNTIME_SA" \
         --cpu=1 --memory=512Mi --tasks=1 --max-retries=0 --task-timeout=15m \
-        --set-cloudsql-instances="$SQL_INSTANCE" \
+        --set-cloudsql-instances="$SQL_INSTANCE" "${VPC_EGRESS[@]}" \
         --clear-volumes --clear-volume-mounts \
         --add-volume="$DATA_VOLUME" --add-volume-mount=volume=data,mount-path=/data \
         --env-vars-file="$JOB_ENV" \

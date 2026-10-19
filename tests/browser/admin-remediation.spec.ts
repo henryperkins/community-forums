@@ -287,14 +287,20 @@ test('member record reveals PII only on audited demand and ban needs the typed u
   await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page.locator('body')).toContainText('view_pii');
 
-  // A ban attempt without the exact username 422s and keeps the rationale.
+  // A ban attempt without the exact username 422s and keeps the rationale. The
+  // forms sit behind the record's Suspend or ban disclosure, which the failed
+  // submit must re-open so the error and the typed reason are never hidden.
   await page.goto(recordPath);
+  const restrict = page.locator('details.member-record-restrict');
+  await expect(restrict).not.toHaveAttribute('open', '');
+  await restrict.locator('summary').click();
   const banForm = page.locator('form:has(input[name="confirm_username"])');
   await banForm.locator('input[name="reason"]').fill('Rationale that must survive the failed confirm.');
   await banForm.locator('input[name="confirm_username"]').fill('wrong-name');
   await banForm.getByRole('button', { name: /Ban/ }).click();
   await expect(page.locator('body')).toContainText('The username does not match');
-  await expect(page.locator('input[name="reason"][value*="survive"]')).toHaveCount(1);
+  await expect(restrict).toHaveAttribute('open', '');
+  await expect(page.locator('input[name="reason"][value*="survive"]')).toBeVisible();
   await shot(page, info, 'remediation-ban-typed-confirmation');
 });
 

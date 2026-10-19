@@ -148,12 +148,16 @@ final class MessagesStylesContractTest extends TestCase
 
         self::assertSame(1, preg_match('/@media \(pointer: coarse\) \{(?<block>.*?)\n\}/s', $css, $touch));
         self::assertMatchesRegularExpression('/\.dm-back, \.dm-iconbtn \{ width: 44px; height: 44px; \}/', $touch['block']);
+        self::assertMatchesRegularExpression('/\.dm-dialog-close \{ width: 44px; height: 44px; \}/', $touch['block']);
         self::assertMatchesRegularExpression('/\.dm-earlier, \.dm-latest \{ min-height: 44px; \}/', $touch['block']);
         self::assertStringContainsString('inset: min(0px, calc((100% - 44px) / 2));', $touch['block']);
-        foreach (['.dm-listpane-filters .pill::after', '.dm-dotbtn::after'] as $hit) {
+        foreach (['.dm-listpane-filters .pill::after', '.dm-dotbtn::after', '.dm-chip-x::after'] as $hit) {
             self::assertStringContainsString($hit, $touch['block']);
         }
         self::assertMatchesRegularExpression('/\.dm-linkbtn \{[^}]*min-height: 44px/', $touch['block']);
+        self::assertMatchesRegularExpression('/padding:\s*var\(--space-1\)\s+var\(--space-2\)/', self::rule($css, '.dm-chip'));
+        self::assertMatchesRegularExpression('/display:\s*none/', self::rule($css, '.main:has(> .dm-shell.reading) > .forum-subheader .dm-lock-eyebrow'));
+        self::assertMatchesRegularExpression('/display:\s*none/', self::rule($css, '.main:has(> .dm-shell.reading) > .forum-subheader :is(.dm-listpane-filters, .dm-search-menu)'));
 
         foreach (['.dm-thread-eyebrow', '.dm-rail-sec > h3', '.dm-tier-pill'] as $selector) {
             self::assertMatchesRegularExpression(
@@ -162,6 +166,46 @@ final class MessagesStylesContractTest extends TestCase
                 $selector . ' must sit on the type ramp at or above its 0.7rem floor.',
             );
         }
+    }
+
+    public function test_phone_header_spans_the_eyebrow_across_the_monogram_column(): void
+    {
+        $css = self::css();
+
+        // At the 900px single-pane step the eyebrow sets beside the title in a
+        // column too narrow for it (measured 69px at 320px, where it wrapped
+        // and "Here now" broke mid-phrase). The grid spans it across the
+        // monogram column instead; presence stays one unit, the sub wraps
+        // between phrases, and the dock takes phone padding.
+        $head = self::rule($css, '.dm-thread-head:not(.dm-thread-head-compose)');
+        self::assertMatchesRegularExpression('/display:\s*grid/', $head);
+        self::assertStringContainsString('"back eyebrow eyebrow actions"', $head);
+        self::assertMatchesRegularExpression('/\.dm-thread-id > div \{ display: contents; \}/', $css);
+        self::assertMatchesRegularExpression('/white-space:\s*nowrap/', self::rule($css, '.dm-thread-eyebrow'));
+        self::assertMatchesRegularExpression('/white-space:\s*nowrap/', self::rule($css, '.dm-presence, .dm-presence [data-dm-presence-label]'));
+        self::assertMatchesRegularExpression('/padding-inline:\s*var\(--space-3\)/', self::rule($css, '.dm-composer'));
+    }
+
+    public function test_confirmation_steps_rail_picker_and_one_shot_forms_are_styled(): void
+    {
+        $css = self::css();
+
+        // The shared two-step confirmation: markerless summary, a fine-print
+        // note, and steps aligned under their host control's label.
+        self::assertMatchesRegularExpression('/list-style:\s*none/', self::rule($css, '.dm-confirm > summary'));
+        self::assertMatchesRegularExpression('/font-size:\s*var\(--text-fine\)/', self::rule($css, '.dm-confirm-note'));
+        self::assertMatchesRegularExpression(
+            '/padding-left:\s*calc\(var\(--space-3\) \+ 16px \+ var\(--space-3\)\)/',
+            self::rule($css, '.dm-menu-pop .dm-confirm-step, .dm-rail-actions .dm-confirm-step'),
+        );
+        // An opened member step leaves the hover overlay and takes its own row.
+        $openTools = self::rule($css, '.dm-member:has(.dm-confirm[open]) .dm-member-tools');
+        self::assertMatchesRegularExpression('/position:\s*static/', $openTools);
+        self::assertMatchesRegularExpression('/flex:\s*1 0 100%/', $openTools);
+        // The rail's Add member picker takes the tool's flexible share, and a
+        // spent one-shot submit reads as spent.
+        self::assertMatchesRegularExpression('/flex:\s*1/', self::rule($css, '.dm-owner-tool > [data-dm-picker]'));
+        self::assertMatchesRegularExpression('/opacity:\s*\.55/', self::rule($css, 'form[data-submit-once] button[aria-disabled="true"]'));
     }
 
     private static function css(): string

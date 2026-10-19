@@ -16,6 +16,40 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Works without JavaScript and at 390px. Evidence is recorded in
   `docs/evidence/features-guarded-toggles-2026-10-18/`.
 
+## [Unreleased] - Messages critique fixes: layout, confirmations, phone header, type weights
+
+- Re-anchor the conversation list's All/Unread filters and search to the list
+  pane, hide them on single-pane phone reading views, drop the duplicated
+  "Private counsel" eyebrow there, and keep `?filter=unread` / `?q=` across
+  conversation and compose navigation.
+- Put Leave group, Remove member, Make owner and Block behind two-step inline
+  confirmation disclosures; an owner with members is told to transfer
+  ownership instead of being offered a Leave submit. Failed Add member /
+  Rename submissions re-render at 422 with the details rail open and the typed
+  value kept; the Add member field gains the single-recipient picker.
+  Re-adding an existing member no longer moves their join boundary, and
+  leaving or transferring twice leaves one history line. Blocking the
+  counterpart replaces the composer with the blocked state.
+- Fix the 320–430px conversation header (163→107px group, 145→88px direct at
+  320px; evidence in `docs/evidence/dm-adapt-mobile-2026-10-19/`) and stop
+  requesting font weights the self-hosted families do not ship.
+- Driven by `.impeccable/critique/2026-10-19T00-01-01Z__templates-dm.md`;
+  the 1400px three-column rail, the rail/handle type sizes and Bruinen-ground
+  contrast items remain open.
+- Deploy the Messages fixes to production and pin their live asset version
+  (`ef40d97306cc2167`). Worker, Cloud Run, cron-image and live-asset receipts
+  are recorded in `docs/evidence/dm-adapt-mobile-2026-10-19/production/`.
+
+## [Unreleased] - Member record restrictions disclosure
+
+- Read the member record before acting on it: History now follows Status and
+  Contact, and Suspend and Permanent ban sit behind a "Suspend or ban"
+  disclosure at the end of the record. It opens itself for suspended or banned
+  accounts and after a failed suspend/ban submit; Lift and the self/administrator
+  explanations are never hidden. It works without JavaScript.
+- Recorded as a `feature-changed` deviation in ADR 0024; evidence is recorded in
+  `docs/evidence/admin-record-restrict-2026-10-18/`.
+
 ## [Unreleased] - Members select contrast
 
 - Keep Members directory filters on the shared styled-select treatment so WebKit

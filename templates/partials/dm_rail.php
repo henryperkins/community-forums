@@ -13,7 +13,10 @@
  * Params: conversation, conversation_id, is_group, is_owner, other, participants,
  * muted, other_is_blocked, rail_label (optional — the caller's precomputed
  * icon/label text, kept in sync with the header toggle + menu item that name
- * the same rail). $current_user and $e are ambient — the View shares them with
+ * the same rail), rail_errors / rail_old (a failed owner tool's field error
+ * and typed value), rail_close_href, leave_note / leave_action (the caller's
+ * Leave step; a null action renders the reason without a submit),
+ * show_avatars. $current_user and $e are ambient — the View shares them with
  * every template/partial, not passed explicitly.
  */
 $railId = (int) $conversation_id;
@@ -22,11 +25,21 @@ $railMuted = !empty($muted);
 $muteLabel = $railMuted ? 'Unmute conversation' : 'Mute conversation';
 $muteNext = $railMuted ? '0' : '1';
 $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
+$railErrors = $rail_errors ?? [];
+$railOld = $rail_old ?? [];
+$railCloseHref = (string) ($rail_close_href ?? '#');
+$railDefined = get_defined_vars();
+$railLeaveNote = (string) ($leave_note ?? 'You stop receiving its messages and it leaves your list. Only the owner can add you back, and you would read only what follows.');
+$railLeaveAction = array_key_exists('leave_action', $railDefined) ? $leave_action : '/messages/' . $railId . '/members/remove';
+$railAddId = 'dm-add-member-' . $railId;
+$railAddErrId = 'dm-add-member-error-' . $railId;
+$railTitleId = 'dm-rename-group-' . $railId;
+$railTitleErrId = 'dm-rename-group-error-' . $railId;
 ?>
 <aside class="dm-inforail" id="dm-rail" aria-label="<?= $e($railLabel) ?>">
     <div class="dm-rail-head">
         <span class="eyebrow"><?= $e($railLabel) ?></span>
-        <a href="#" class="dm-iconbtn" data-rail-close aria-label="Close details"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
+        <a href="<?= $e($railCloseHref) ?>" class="dm-iconbtn" data-rail-close aria-label="Close details"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
     </div>
 
     <div class="dm-rail-body">
@@ -66,16 +79,29 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                             <?php if ($canManage): ?>
                                 <?php /* Names start with the visible words (WCAG 2.5.3) and say which member. */ ?>
                                 <span class="dm-member-tools">
-                                    <form class="inline" method="post" action="/messages/<?= $railId ?>/transfer">
-                                        <?= $this->csrfField() ?>
-                                        <input type="hidden" name="user_id" value="<?= (int) $p['user_id'] ?>">
-                                        <button class="dm-linkbtn" type="submit" aria-label="Make owner: <?= $e($pName) ?>">Make owner</button>
-                                    </form>
-                                    <form class="inline" method="post" action="/messages/<?= $railId ?>/members/remove">
-                                        <?= $this->csrfField() ?>
-                                        <input type="hidden" name="user_id" value="<?= (int) $p['user_id'] ?>">
-                                        <button class="dm-linkbtn danger" type="submit" aria-label="Remove <?= $e($pName) ?>">Remove</button>
-                                    </form>
+                                    <?= $this->partial('partials/dm_confirm', [
+                                        'summary_class' => 'dm-linkbtn',
+                                        'label' => 'Make owner',
+                                        'label_name' => 'Make owner: ' . $pName,
+                                        'note' => $pName . ' becomes the owner. They can add and remove members and rename the group, and you become a member. Only the new owner can hand ownership on.',
+                                        'note_id' => 'dm-owner-note-' . $railId . '-' . (int) $p['user_id'],
+                                        'action' => '/messages/' . $railId . '/transfer',
+                                        'fields' => ['user_id' => (int) $p['user_id']],
+                                        'confirm' => 'Make ' . $pName . ' owner',
+                                        'group' => 'dm-member-' . $railId . '-' . (int) $p['user_id'],
+                                    ]) ?>
+                                    <?= $this->partial('partials/dm_confirm', [
+                                        'summary_class' => 'dm-linkbtn danger',
+                                        'label' => 'Remove',
+                                        'label_name' => 'Remove ' . $pName,
+                                        'note' => $pName . ' stops receiving new messages here and keeps only what came before. Only the owner can add them back, and they would read only what follows.',
+                                        'note_id' => 'dm-remove-note-' . $railId . '-' . (int) $p['user_id'],
+                                        'action' => '/messages/' . $railId . '/members/remove',
+                                        'fields' => ['user_id' => (int) $p['user_id']],
+                                        'confirm' => 'Remove ' . $pName,
+                                        'danger' => true,
+                                        'group' => 'dm-member-' . $railId . '-' . (int) $p['user_id'],
+                                    ]) ?>
                                 </span>
                             <?php endif; ?>
                         </li>
@@ -86,15 +112,20 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
             <?php if (!empty($is_owner)): ?>
                 <div class="dm-rail-sec">
                     <h3>Owner tools</h3>
-                    <form class="dm-owner-tool" method="post" action="/messages/<?= $railId ?>/members">
+                    <form class="dm-owner-tool" method="post" action="/messages/<?= $railId ?>/members" data-submit-once>
                         <?= $this->csrfField() ?>
-                        <input class="input input-small" type="text" name="username" maxlength="32" placeholder="username" aria-label="Add member" required>
+                        <div data-dm-picker data-dm-allow-groups="0" data-dm-avatars="<?= ($show_avatars ?? true) ? '1' : '0' ?>">
+                            <input class="input input-small" type="text" id="<?= $e($railAddId) ?>" name="username" maxlength="32" placeholder="username" aria-label="Add member" value="<?= $e($railOld['username'] ?? '') ?>"<?= field_attrs($railErrors, 'username', $railAddErrId) ?> required>
+                            <template data-dm-chip-template><span class="dm-chip"><?php if ($show_avatars ?? true): ?><span class="monogram dm-chip-mono" aria-hidden="true"></span><?php endif; ?><span data-chip-name></span><button type="button" class="dm-chip-x"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button></span></template>
+                        </div>
                         <button class="btn btn-small" type="submit">Add</button>
+                        <?= field_error($railErrors, 'username', $railAddErrId) ?>
                     </form>
-                    <form class="dm-owner-tool" method="post" action="/messages/<?= $railId ?>/rename">
+                    <form class="dm-owner-tool" method="post" action="/messages/<?= $railId ?>/rename" data-submit-once>
                         <?= $this->csrfField() ?>
-                        <input class="input input-small" type="text" name="title" maxlength="120" value="<?= $e($conversation['title'] ?? '') ?>" aria-label="Rename group" required>
+                        <input class="input input-small" type="text" id="<?= $e($railTitleId) ?>" name="title" maxlength="120" value="<?= $e($railOld['title'] ?? ($conversation['title'] ?? '')) ?>" aria-label="Rename group"<?= field_attrs($railErrors, 'title', $railTitleErrId) ?> required>
                         <button class="btn btn-small" type="submit">Rename</button>
+                        <?= field_error($railErrors, 'title', $railTitleErrId) ?>
                     </form>
                 </div>
             <?php endif; ?>
@@ -107,11 +138,17 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                         <input type="hidden" name="muted" value="<?= $muteNext ?>">
                         <button class="dm-rail-btn" type="submit"><?= $this->partial('partials/icon', ['name' => 'bell-off']) ?><span><?= $e($muteLabel) ?></span></button>
                     </form>
-                    <form class="dm-rail-form" method="post" action="/messages/<?= $railId ?>/members/remove">
-                        <?= $this->csrfField() ?>
-                        <input type="hidden" name="user_id" value="<?= $current_user !== null ? (int) $current_user->id() : 0 ?>">
-                        <button class="dm-rail-btn danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'log-out']) ?><span>Leave group</span></button>
-                    </form>
+                    <?= $this->partial('partials/dm_confirm', [
+                        'summary_class' => 'dm-rail-btn danger',
+                        'icon' => 'log-out',
+                        'label' => 'Leave group',
+                        'note' => $railLeaveNote,
+                        'note_id' => 'dm-leave-note-rail-' . $railId,
+                        'action' => $railLeaveAction,
+                        'fields' => ['user_id' => $current_user !== null ? (int) $current_user->id() : 0],
+                        'confirm' => 'Leave group',
+                        'danger' => true,
+                    ]) ?>
                 </div>
             </div>
         <?php else: ?>
@@ -150,12 +187,26 @@ $railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
                     </form>
                     <?php if ($railOtherUser !== ''): ?>
                         <a class="dm-rail-btn" href="/u/<?= $e($railOtherUser) ?>"><?= $this->partial('partials/icon', ['name' => 'user']) ?><span>View profile</span></a>
-                        <form class="dm-rail-form" method="post" action="/u/<?= $e($railOtherUser) ?>/block">
-                            <?= $this->csrfField() ?>
-                            <input type="hidden" name="return" value="/messages/<?= $railId ?>">
-                            <input type="hidden" name="intent" value="<?= !empty($other_is_blocked) ? 'unblock' : 'block' ?>">
-                            <button class="dm-rail-btn danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span><?= !empty($other_is_blocked) ? 'Unblock ' : 'Block ' ?><?= $e($railOtherName) ?></span></button>
-                        </form>
+                        <?php if (!empty($other_is_blocked)): ?>
+                            <form class="dm-rail-form" method="post" action="/u/<?= $e($railOtherUser) ?>/block">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="return" value="/messages/<?= $railId ?>">
+                                <input type="hidden" name="intent" value="unblock">
+                                <button class="dm-rail-btn" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span>Unblock <?= $e($railOtherName) ?></span></button>
+                            </form>
+                        <?php else: ?>
+                            <?= $this->partial('partials/dm_confirm', [
+                                'summary_class' => 'dm-rail-btn danger',
+                                'icon' => 'ban',
+                                'label' => 'Block ' . $railOtherName,
+                                'note' => '@' . $railOtherUser . ' can no longer message you or mention you. Any follow between you ends, and unblocking does not restore it.',
+                                'note_id' => 'dm-block-note-rail-' . $railId,
+                                'action' => '/u/' . $railOtherUser . '/block',
+                                'fields' => ['return' => '/messages/' . $railId, 'intent' => 'block'],
+                                'confirm' => 'Block @' . $railOtherUser,
+                                'danger' => true,
+                            ]) ?>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>

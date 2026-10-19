@@ -162,6 +162,8 @@ def ensure_collector(api):
                             "resources": {"limits": {"cpu": "1", "memory": "512Mi"}},
                             "volumeMounts": [{"name": "cloudsql", "mountPath": "/cloudsql"}]}],
             "volumes": [{"name": "cloudsql", "cloudSqlInstance": {"instances": [f"{PROJECT}:{REGION}:imladris-boards"]}}],
+            # Private-IP-only instance: the same Direct VPC egress as ../configure.sh.
+            "vpcAccess": {"networkInterfaces": [{"network": "default", "subnetwork": "default"}], "egress": "PRIVATE_RANGES_ONLY"},
         }},
     }
     existing = gcloud("run", "jobs", "describe", JOB, f"--region={REGION}", "--format=value(metadata.name)", missing_ok=True)

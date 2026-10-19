@@ -14,11 +14,24 @@ if (empty($is_group) && (int) $page === (int) $pages) {
         if ((int) $message['user_id'] === $current_user->id()) { $receipt_message_id = (int) $message['id']; }
     }
 }
+// Leaving is open to every member but an owner with company: the owner hands
+// the group on first, and the Leave step says so instead of offering a submit
+// the server refuses.
+$activeCount = count(array_filter($participants ?? [], static fn ($p) => empty($p['left_at'])));
+$leaveNote = empty($is_owner)
+    ? 'You stop receiving its messages and it leaves your list. Only the owner can add you back, and you would read only what follows.'
+    : ($activeCount > 1
+        ? 'You own this group. Make another member owner before you leave.'
+        : 'You are the last member. Once you leave, no one can return to this group.');
+$leaveAction = !empty($is_owner) && $activeCount > 1 ? null : '/messages/' . (int) $conversation_id . '/members/remove';
+// A rail opened by a failed owner tool closes without script by returning to
+// the conversation; one opened by its #dm-rail anchor closes by leaving it.
+$railCloseHref = !empty($rail_open) ? '/messages/' . (int) $conversation_id : '#';
 $this->layout('layout');
 $this->section('title', $title);
 ?>
-<div class="dm-shell reading has-rail" data-dm-conversation="<?= (int) $conversation_id ?>" data-dm-latest="<?= (int) $page === (int) $pages && !empty($can_reply) ? '1' : '0' ?>" data-dm-viewer="<?= $current_user->id() ?>" data-dm-group="<?= !empty($is_group) ? '1' : '0' ?>" data-dm-other="<?= (int) ($other['id'] ?? 0) ?>">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id, 'show_avatars' => $show_avatars ?? true, 'heading_tag' => 'h2']) ?>
+<div class="dm-shell reading has-rail<?= !empty($rail_open) ? ' rail-open' : '' ?>" data-dm-conversation="<?= (int) $conversation_id ?>" data-dm-latest="<?= (int) $page === (int) $pages && !empty($can_reply) ? '1' : '0' ?>" data-dm-viewer="<?= $current_user->id() ?>" data-dm-group="<?= !empty($is_group) ? '1' : '0' ?>" data-dm-other="<?= (int) ($other['id'] ?? 0) ?>">
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => $filter ?? 'all', 'q' => $q ?? '', 'active_id' => $conversation_id, 'show_avatars' => $show_avatars ?? true, 'heading_tag' => 'h2']) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head">
@@ -59,19 +72,39 @@ $this->section('title', $title);
                         <?php if (empty($is_group) && $other !== null): ?>
                             <a class="dm-menu-item" href="/u/<?= $e($other['username']) ?>"><?= $this->partial('partials/icon', ['name' => 'user']) ?><span>View profile</span></a>
                             <div class="dm-menu-sep"></div>
-                            <form method="post" action="/u/<?= $e($other['username']) ?>/block">
-                                <?= $this->csrfField() ?>
-                                <input type="hidden" name="return" value="/messages/<?= (int) $conversation_id ?>">
-                                <input type="hidden" name="intent" value="<?= !empty($other_is_blocked) ? 'unblock' : 'block' ?>">
-                                <button class="dm-menu-item danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span><?= !empty($other_is_blocked) ? 'Unblock' : 'Block' ?> <?= $e($otherName) ?></span></button>
-                            </form>
+                            <?php if (!empty($other_is_blocked)): ?>
+                                <form method="post" action="/u/<?= $e($other['username']) ?>/block">
+                                    <?= $this->csrfField() ?>
+                                    <input type="hidden" name="return" value="/messages/<?= (int) $conversation_id ?>">
+                                    <input type="hidden" name="intent" value="unblock">
+                                    <button class="dm-menu-item" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span>Unblock <?= $e($otherName) ?></span></button>
+                                </form>
+                            <?php else: ?>
+                                <?= $this->partial('partials/dm_confirm', [
+                                    'summary_class' => 'dm-menu-item danger',
+                                    'icon' => 'ban',
+                                    'label' => 'Block ' . $otherName,
+                                    'note' => '@' . $other['username'] . ' can no longer message you or mention you. Any follow between you ends, and unblocking does not restore it.',
+                                    'note_id' => 'dm-block-note-menu-' . (int) $conversation_id,
+                                    'action' => '/u/' . $other['username'] . '/block',
+                                    'fields' => ['return' => '/messages/' . (int) $conversation_id, 'intent' => 'block'],
+                                    'confirm' => 'Block @' . $other['username'],
+                                    'danger' => true,
+                                ]) ?>
+                            <?php endif; ?>
                         <?php elseif (!empty($is_group)): ?>
                             <div class="dm-menu-sep"></div>
-                            <form method="post" action="/messages/<?= (int) $conversation_id ?>/members/remove">
-                                <?= $this->csrfField() ?>
-                                <input type="hidden" name="user_id" value="<?= $current_user !== null ? (int) $current_user->id() : 0 ?>">
-                                <button class="dm-menu-item danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'log-out']) ?><span>Leave group</span></button>
-                            </form>
+                            <?= $this->partial('partials/dm_confirm', [
+                                'summary_class' => 'dm-menu-item danger',
+                                'icon' => 'log-out',
+                                'label' => 'Leave group',
+                                'note' => $leaveNote,
+                                'note_id' => 'dm-leave-note-menu-' . (int) $conversation_id,
+                                'action' => $leaveAction,
+                                'fields' => ['user_id' => (int) $current_user->id()],
+                                'confirm' => 'Leave group',
+                                'danger' => true,
+                            ]) ?>
                         <?php endif; ?>
                     </div>
                 </details>
@@ -114,7 +147,18 @@ $this->section('title', $title);
             <span class="sr-only" role="status" data-dm-update-status></span>
         </div>
 
-        <?php if (!empty($can_reply)): ?>
+        <?php if (!empty($can_reply) && empty($is_group) && !empty($other_is_blocked) && $other !== null): ?>
+            <?php /* A block stops letters both ways, so the dock would only end in a refusal. */ ?>
+            <div class="joinbar dm-blocked-bar">
+                <span>You blocked <?= $e($otherName) ?>. Neither of you can send messages here.</span>
+                <form method="post" action="/u/<?= $e($other['username']) ?>/block">
+                    <?= $this->csrfField() ?>
+                    <input type="hidden" name="return" value="/messages/<?= (int) $conversation_id ?>">
+                    <input type="hidden" name="intent" value="unblock">
+                    <button class="btn btn-small" type="submit">Unblock</button>
+                </form>
+            </div>
+        <?php elseif (!empty($can_reply)): ?>
             <?php
             $dmConversationId = (int) $conversation_id;
             $dmConversationRecipient = $other !== null && (string) ($other['username'] ?? '') !== ''
@@ -163,7 +207,13 @@ $this->section('title', $title);
         'other_is_blocked' => $other_is_blocked ?? false,
         'rail_label' => $railLabel,
         'presence_states' => $presence_states ?? [],
+        'rail_errors' => $rail_errors ?? [],
+        'rail_old' => $rail_old ?? [],
+        'rail_close_href' => $railCloseHref,
+        'leave_note' => $leaveNote,
+        'leave_action' => $leaveAction,
+        'show_avatars' => $show_avatars ?? true,
     ]) ?>
-    <a class="dm-rail-scrim" href="#" data-rail-scrim aria-label="Close details"></a>
+    <a class="dm-rail-scrim" href="<?= $e($railCloseHref) ?>" data-rail-scrim aria-label="Close details"></a>
 </div>
 <?= $this->partial('partials/dm_compose_panel', ['allow_groups' => $allow_groups ?? false, 'show_avatars' => $show_avatars ?? true]) ?>

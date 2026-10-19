@@ -65,6 +65,9 @@ test.describe('account settings repairs without JavaScript', () => {
       const admin = await adminContext.newPage();
       await login(admin, 'admin@retro.test');
       await admin.goto(`/admin/users/${member.id}`);
+      const restrict = admin.locator('details.member-record-restrict');
+      await restrict.locator('summary').click();
+      await expect(restrict).toHaveAttribute('open', '');
       const suspend = admin.locator(`form[action="/admin/users/${member.id}/suspend"]`);
       await suspend.locator('[name="reason"]').fill('Indefinite site hold');
       await suspend.getByRole('button', { name: 'Suspend', exact: true }).click();
@@ -113,6 +116,11 @@ test.describe('account settings repairs without JavaScript', () => {
         const admin = await adminContext.newPage();
         await login(admin, 'admin@retro.test');
         await admin.goto(`/admin/users/${data.id}`);
+        // A member's own deactivation or deletion request is not a restriction,
+        // so the Suspend or ban disclosure starts closed for this hold too.
+        const restrict = admin.locator('details.member-record-restrict');
+        await restrict.locator('summary').click();
+        await expect(restrict).toHaveAttribute('open', '');
         const suspend = admin.locator(`form[action="/admin/users/${data.id}/suspend"]`);
         await suspend.locator('[name="reason"]').fill('Temporary browser evidence suspension');
         await suspend.locator('[name="until"]').fill('2030-01-01 00:00:00');
