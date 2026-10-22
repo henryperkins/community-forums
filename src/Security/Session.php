@@ -26,6 +26,7 @@ final class Session
     /** @var array<string,string> */
     private const COOKIE_KEYS = [
         'theme_preview_build' => self::PREVIEW_COOKIE,
+        'composer_completed' => 'rb_composer_completed',
     ];
 
     private ?Request $request = null;
@@ -166,6 +167,39 @@ final class Session
         $this->pending[] = function (Response $r) use ($cookie): void {
             $r->forgetCookie($cookie, $this->config['secure']);
         };
+    }
+
+    /** Confirm a committed composer write without putting message text in a cookie. */
+    public function completeComposerSubmission(string $context, string $submission): void
+    {
+        if ($this->user === null || $submission === '' || strlen($submission) > 191) {
+            return;
+        }
+        $payload = json_encode(['context' => $context, 'submission' => $submission], JSON_THROW_ON_ERROR);
+        $this->set('composer_completed', json_encode([
+            'payload' => $payload,
+            'signature' => hash_hmac('sha256', $payload, $this->csrfSecret()),
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    /** @return array{context:string,submission:string}|null */
+    public function consumeComposerCompletion(): ?array
+    {
+        $raw = $this->get('composer_completed');
+        if (!is_string($raw) || $raw === '') {
+            return null;
+        }
+        $this->forget('composer_completed');
+        $receipt = json_decode($raw, true);
+        if ($this->user === null || !is_array($receipt)
+            || !is_string($receipt['payload'] ?? null) || !is_string($receipt['signature'] ?? null)
+            || !hash_equals(hash_hmac('sha256', $receipt['payload'], $this->csrfSecret()), $receipt['signature'])) {
+            return null;
+        }
+        $payload = json_decode($receipt['payload'], true);
+        return is_array($payload) && is_string($payload['context'] ?? null) && is_string($payload['submission'] ?? null)
+            ? ['context' => $payload['context'], 'submission' => $payload['submission']]
+            : null;
     }
 
     /** Create a session for the user and queue the cookie. Rotates the id. */

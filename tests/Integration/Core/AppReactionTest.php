@@ -184,9 +184,10 @@ final class AppReactionTest extends TestCase
         self::assertStringContainsString('class="reaction-name sr-only">Commend</span>', $html);
         self::assertStringContainsString('icon-commend-star', $html);
         self::assertStringNotContainsString('reaction-bare', $html);
-        self::assertStringContainsString('class="reaction-name sr-only">Kindled</span>', $html);
-        self::assertStringContainsString('class="reaction-name sr-only">Seconded</span>', $html);
-        self::assertStringContainsString('class="reaction-name sr-only">Illuminating</span>', $html);
+        // Picker choices expose their names before activation on touch as well.
+        self::assertStringContainsString('class="reaction-name">Kindled</span>', $html);
+        self::assertStringContainsString('class="reaction-name">Seconded</span>', $html);
+        self::assertStringContainsString('class="reaction-name">Illuminating</span>', $html);
         self::assertStringContainsString('icon-flame', $html);
         self::assertStringContainsString('icon-check', $html);
         self::assertStringContainsString('icon-lightbulb', $html);

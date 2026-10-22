@@ -479,7 +479,9 @@ An uploaded avatar replaces that fallback wherever the member is drawn. `partial
 
 ### Shared components
 
-Reaction choices use distinct SVG icons for the nine built-in gestures, with their existing names retained for assistive technology and hover hints. Pickers arrange them in three columns with 44px targets; the desktop picker aligns to its trigger's trailing edge so the grid stays inside the viewport. Reaction counts keep the same icons, and static counts for guests and read-only members retain visible gesture names without identifying reactors. Custom gestures retain visible names until they have distinct artwork. The resting reply and mobile Messages composers use the ordinary 12px frame, a 4px inset, and a contained 44px submit control.
+At the 860px mobile shell breakpoint, thread posts use a compact avatar/byline row with full-width prose, references, signatures and reactions beneath it. Grouped continuations omit the empty avatar rail; removed-post stubs retain their stacked layout. Topic actions wrap when text is enlarged, and View answer stays available after catch-up. The complete expanded reply dock fits below the member header; input and preview scroll within its budget while Minimize and Send remain reachable (ADR 0050).
+
+Reaction choices use distinct SVG icons for the nine built-in gestures, with their existing names visible beside the icons before activation, as well as in assistive technology and hover hints. Pickers use labelled rows with 44px targets; the desktop picker aligns to its trigger's trailing edge so the grid stays inside the viewport. Reaction counts keep the same icons, and static counts for guests and read-only members retain visible gesture names without identifying reactors. Custom gestures retain visible names until they have distinct artwork. The resting reply and mobile Messages composers use the ordinary 12px frame, a 4px inset, and a contained 44px submit control.
 
 When a job already has a shared component, use it. A variant is a parameter or a tone, not a new class (ADR 0036, ADR 0037).
 

@@ -1,0 +1,11 @@
+{
+  "php_pid": 18760,
+  "php_status": "stopped after exact PID/command validation",
+  "original_php_pid": 27568,
+  "original_php_status": "Ended during user interruption",
+  "container": "rb-thread-ux-20261022-01",
+  "container_status": "stopped and removed after exact task-label validation",
+  "mounted_volumes": "none",
+  "data_scope": "Only this audit-owned isolated DB container",
+  "remaining_http_listeners": 0
+}

@@ -1,0 +1,164 @@
+
+Running 24 tests using 1 worker
+
+
+
+(node:30144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:54:5 › failed navigation keeps the draft and restores a usable submit button
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:54:5 › failed navigation keeps the draft and restores a usable submit button
+
+
+
+[2/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:76:5 › confirmation clears only the submitted version and Back permits a new reply
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:76:5 › confirmation clears only the submitted version and Back permits a new reply
+
+
+
+[3/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:97:5 › a later edit in another tab survives confirmation of the older draft
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:97:5 › a later edit in another tab survives confirmation of the older draft
+
+
+
+[4/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:109:5 › enlarged header labels reflow and mobile prose spans beneath the byline
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:109:5 › enlarged header labels reflow and mobile prose spans beneath the byline
+
+
+
+[5/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+
+
+[6/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:155:5 › reaction choices have visible names before activation
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:155:5 › reaction choices have visible names before activation
+
+
+
+[7/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:168:5 › rich editor recovers a failed send and submits the retained draft exactly once
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:168:5 › rich editor recovers a failed send and submits the retained draft exactly once
+
+
+
+
+
+[8/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:192:5 › a later draft may deliberately repeat a confirmed reply
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:192:5 › a later draft may deliberately repeat a confirmed reply
+
+
+
+[9/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:206:5 › editing after a committed response is lost uses a fresh submission key
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:206:5 › editing after a committed response is lost uses a fresh submission key
+
+
+
+[10/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:236:5 › rich history cleanup preserves a newer draft in another tab after settling
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:236:5 › rich history cleanup preserves a newer draft in another tab after settling
+
+
+
+
+
+[11/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:257:5 › multiple completed history entries cannot reuse an older consumed key
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:257:5 › multiple completed history entries cannot reuse an older consumed key
+
+
+
+[12/24] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:280:5 › a late multiline autosave from the confirmed submission is not restored
+
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:280:5 › a late multiline autosave from the confirmed submission is not restored
+
+
+
+(node:30248) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[13/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:54:5 › failed navigation keeps the draft and restores a usable submit button
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:54:5 › failed navigation keeps the draft and restores a usable submit button
+
+
+
+[14/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:76:5 › confirmation clears only the submitted version and Back permits a new reply
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:76:5 › confirmation clears only the submitted version and Back permits a new reply
+
+
+
+[15/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:97:5 › a later edit in another tab survives confirmation of the older draft
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:97:5 › a later edit in another tab survives confirmation of the older draft
+
+
+
+[16/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:109:5 › enlarged header labels reflow and mobile prose spans beneath the byline
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:109:5 › enlarged header labels reflow and mobile prose spans beneath the byline
+
+
+
+
+[17/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+
+
+[18/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:155:5 › reaction choices have visible names before activation
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:155:5 › reaction choices have visible names before activation
+
+
+
+[19/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:168:5 › rich editor recovers a failed send and submits the retained draft exactly once
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:168:5 › rich editor recovers a failed send and submits the retained draft exactly once
+
+
+
+
+
+[20/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:192:5 › a later draft may deliberately repeat a confirmed reply
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:192:5 › a later draft may deliberately repeat a confirmed reply
+
+
+
+[21/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:206:5 › editing after a committed response is lost uses a fresh submission key
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:206:5 › editing after a committed response is lost uses a fresh submission key
+
+
+
+[22/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:236:5 › rich history cleanup preserves a newer draft in another tab after settling
+
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:236:5 › rich history cleanup preserves a newer draft in another tab after settling
+
+
+
+
+[23/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:257:5 › multiple completed history entries cannot reuse an older consumed key
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:257:5 › multiple completed history entries cannot reuse an older consumed key
+
+
+
+[24/24] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:280:5 › a late multiline autosave from the confirmed submission is not restored
+
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:280:5 › a late multiline autosave from the confirmed submission is not restored
+
+
+  24 passed (1.9m)

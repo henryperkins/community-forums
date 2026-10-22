@@ -118,6 +118,7 @@ $this->start('subheader_leading');
         <?php endif; ?>
         </div>
         <div class="thread-facts-actions">
+        <?php if (!empty($accepted_answer_url)): ?><a class="topic-tools-open thread-answer-link" href="<?= $e($accepted_answer_url) ?>">View answer</a><?php endif; ?>
         <?php if (($engagement ?? false) && $current_user !== null && !empty($can_write)): ?>
             <?= $this->partial('partials/star_toggle', [
                 'thread_id' => (int) $thread['id'],

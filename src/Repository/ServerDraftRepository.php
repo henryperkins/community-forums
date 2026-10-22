@@ -91,6 +91,18 @@ final class ServerDraftRepository
         )->rowCount() > 0;
     }
 
+    /** A successful send must not discard a newer edit from another tab. */
+    public function discardSubmitted(int $userId, string $contextKey, string $body, ?string $title = null): void
+    {
+        $sql = 'DELETE FROM server_drafts WHERE user_id = ? AND context_key = ? AND BINARY body = BINARY ?';
+        $params = [$userId, $this->normalizeContextKey($contextKey), $body];
+        if ($title !== null) {
+            $sql .= ' AND BINARY COALESCE(title, \'\') = BINARY ?';
+            $params[] = trim($title);
+        }
+        $this->db->run($sql, $params);
+    }
+
     public function discardById(int $userId, int $id): bool
     {
         return $this->db->run('DELETE FROM server_drafts WHERE user_id = ? AND id = ?', [$userId, $id])->rowCount() > 0;

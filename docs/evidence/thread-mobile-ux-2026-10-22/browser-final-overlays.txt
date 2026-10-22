@@ -1,0 +1,36 @@
+
+Running 4 tests using 1 worker
+
+
+
+(node:30300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/4] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+
+
+[2/4] [desktop] › tests\browser\thread-mobile-recovery.spec.ts:165:5 › reaction choices have visible names before activation
+
+[desktop] › tests\browser\thread-mobile-recovery.spec.ts:165:5 › reaction choices have visible names before activation
+
+
+
+
+(node:16408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/4] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:133:5 › landscape preview leaves Minimize and Reply reachable below the header
+
+
+
+[4/4] [mobile] › tests\browser\thread-mobile-recovery.spec.ts:165:5 › reaction choices have visible names before activation
+
+[mobile] › tests\browser\thread-mobile-recovery.spec.ts:165:5 › reaction choices have visible names before activation
+
+
+
+  4 passed (14.5s)

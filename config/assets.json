@@ -1,11 +1,11 @@
 {
-  "version": "adc1494dbfa0cd3d",
+  "version": "035b6defb6d21565",
   "urls": {
-    "app.css": "/assets/dist/app-style-Cccoax6v.css",
+    "app.css": "/assets/dist/app-style-R3j3Xoat.css",
     "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
-    "app.js": "/assets/dist/app-c89b55420ad2231f.js",
-    "composer.js": "/assets/dist/composer-5aeaedfd8f662ec5.js",
+    "app.js": "/assets/dist/app-f5e64357204190eb.js",
+    "composer.js": "/assets/dist/composer-4ebc8d0c1f6dd474.js",
     "passkeys.js": "/assets/dist/passkeys-16e7134417f0d6af.js",
     "tour.js": "/assets/dist/tour-1801eafe66889a28.js",
     "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-Br17XC-G.js",
@@ -28,15 +28,15 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "1b2f36037c75f5577bc76e81532a3f744e4d5dcc6077ca5a8aa57304c18b57cc",
+      "sha256": "ed00499fe2ec2bbdaeb6339e953094676f2e569b15faf5fae168742b94939e35",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "ee91d2dfaedce14b4b54404f5290f5255140c6588011efaab8f81c30a1321a30",
+      "sha256": "98ee17839729d6006c39e60aaeee9559b622f50fe06eaa553f3de9874204592d",
       "immutable": false
     },
     "/assets/composer.js": {
-      "sha256": "d3264c4ef376a7a16b3874f05140cf657876244e89862bee01825bed6ca133eb",
+      "sha256": "06a9918e4c51c500631a774b11513f2bfd0e919306582fcbd5cd4bb7f8416530",
       "immutable": false
     },
     "/assets/conversation-entry.js": {
@@ -51,6 +51,10 @@
       "sha256": "c89b55420ad2231f22ff82ad6f19d34751cd3ebfbe1935e82fa944c150c8c2a3",
       "immutable": true
     },
+    "/assets/dist/app-f5e64357204190eb.js": {
+      "sha256": "f5e64357204190ebc5ec13a10837a4ccc9388e06bd20987efe6f7050d2f8e758",
+      "immutable": true
+    },
     "/assets/dist/app-style-Cccoax6v.css": {
       "sha256": "11ffb8ad6bd43abdc401f7d81a47a829ad27bc5c7d14246266a4ba6546a56a1f",
       "immutable": true
@@ -61,6 +65,14 @@
     },
     "/assets/dist/app-style-lm9W6BEA.css": {
       "sha256": "6b78dd28f777e5be889f58e6634d1da3b9c372d7702d5bedba4a778b4ca6b5c7",
+      "immutable": true
+    },
+    "/assets/dist/app-style-R3j3Xoat.css": {
+      "sha256": "52e5fc781e1d24c2fd489387a51b4cd27050f00aca06cb00c5e49fd56b765343",
+      "immutable": true
+    },
+    "/assets/dist/composer-4ebc8d0c1f6dd474.js": {
+      "sha256": "4ebc8d0c1f6dd474dd5955313ddaee5a03eb9e7b489788572f53f34325f13d7c",
       "immutable": true
     },
     "/assets/dist/composer-5aeaedfd8f662ec5.js": {
@@ -216,19 +228,19 @@
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-cormorant-garamond.txt": {
-      "sha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
+      "sha256": "2d18818d1e2044bda96e663840ef64c32d1e6aa53a11d05cc8b70e4aa0dffef8",
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-eb-garamond.txt": {
-      "sha256": "af751618923413517f388a73a903ff4334622ea4aa62dfe13a5861c6034fa2f2",
+      "sha256": "282923c4c3f825975a6619095175836afd50201c7e65bb326ef745a4a28ce1d3",
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-jetbrains-mono.txt": {
-      "sha256": "60d55f23c6ce05a81099a762cb67ca2c9b6ea251c7912720998b4c89ebfd4faa",
+      "sha256": "0572ebbc28a24069b2bb23aa27767664162d819f7ccaca48d4b2e99cdc4ae192",
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-marcellus.txt": {
-      "sha256": "c77ba70be4679b87b26960538cdce281b8d61dcc837a40aad5afa8132ef22497",
+      "sha256": "8a72cfb68afaed118f889cb5a401a3a423c78afe86365a527b718efa611ade21",
       "immutable": false
     },
     "/assets/fonts/imladris/marcellus-latin-400-normal.woff2": {
@@ -249,6 +261,36 @@
     }
   },
   "releases": [
+    {
+      "version": "035b6defb6d21565",
+      "files": [
+        "/assets/dist/app-f5e64357204190eb.js",
+        "/assets/dist/app-style-R3j3Xoat.css",
+        "/assets/dist/composer-4ebc8d0c1f6dd474.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+        "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
+        "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+        "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+        "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
+        "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+        "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+        "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
+        "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
+        "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
+        "/assets/dist/imladris-style-bT2GVmLw.css",
+        "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+        "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
+        "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
+        "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+        "/assets/dist/milkdown-adapter-zC8kMFUx.js",
+        "/assets/dist/passkeys-16e7134417f0d6af.js",
+        "/assets/dist/tour-1801eafe66889a28.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
+      ]
+    },
     {
       "version": "adc1494dbfa0cd3d",
       "files": [

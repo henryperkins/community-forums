@@ -1909,6 +1909,24 @@ body[data-route="thread"] .thread-conversation {
     background: var(--surface-raised);
 }
 .thread-dock #reply.composer, .thread-dock .joinbar { margin: 0; }
+/* Budget the complete expanded dock, including preview, sync status and meta.
+   Formatting and submission stay outside the scrollable body regions. */
+.thread-dock {
+    bottom: var(--keyboard-inset, 0px);
+    z-index: calc(var(--z-chrome, 40) - 1);
+    max-block-size: var(--thread-dock-available-height, calc(100dvh - var(--topbar-h) - 8px));
+}
+.thread-dock #reply.is-expanded {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 0;
+    max-block-size: calc(var(--thread-dock-available-height, 100dvh - var(--topbar-h) - 8px) - var(--space-3) - env(safe-area-inset-bottom) - 1px);
+}
+.thread-dock #reply.is-expanded .composer-box { display: flex; flex-direction: column; flex: 1 1 auto; min-block-size: 0; }
+.thread-dock #reply.is-expanded .composer-input-wrap { flex: 1 1 auto; min-block-size: 0; overflow-y: auto; }
+.thread-dock #reply.is-expanded :is(.composer-format-slot, .composer-actions-bar, .composer-meta-row) { flex: 0 0 auto; }
+.thread-dock #reply.is-expanded [data-composer-after-box] { flex: 0 1 auto; min-block-size: 0; max-block-size: min(22dvh, 8rem); overflow-y: auto; }
+.thread-dock #reply.is-expanded .composer-upload-tray { min-block-size: 0; max-block-size: 5rem; overflow-y: auto; }
 .inbox-reading.is-open { overflow: hidden; }
 .inbox-reading.is-open [data-inbox-reading-content],
 .inbox-reading.is-open .thread-conversation { height: 100%; min-height: 0; }
@@ -10693,7 +10711,9 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
    controls never do. The row wraps again below 768px, where two lines are right. */
 .thread-facts { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px 16px; margin-top: 10px; }
 .thread-facts-identity { display: flex; align-items: center; flex-wrap: nowrap; gap: 12px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
-.thread-facts-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; margin-left: auto; }
+.thread-facts-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); flex: 0 1 auto; min-width: 0; max-width: 100%; margin-left: auto; }
+.thread-facts-actions > * { min-width: 0; max-width: 100%; }
+.thread-facts-actions :is(.topic-tools-open, .star-btn) { white-space: normal; overflow-wrap: anywhere; }
 /* display: block, against imladris.css's `.thread-byline { display: flex }` —
    a flex container has no text-overflow, so the byline broke onto a second line
    at the first flex item (the opened-date <time>) instead of eliding. */
@@ -11462,7 +11482,8 @@ body.thread-restructure-open { overflow: hidden; }
        the controls the second, and nothing is ellipsised away to reach one line. */
     .thread-facts { flex-wrap: wrap; }
     .thread-facts-identity { flex: 1 1 100%; flex-wrap: wrap; overflow: visible; }
-    .thread-facts-actions { margin-left: 0; }
+    .thread-facts-actions { margin-left: 0; flex-basis: 100%; }
+    .thread-facts-actions :is(.topic-tools-open, .star-btn) { min-height: 44px; }
     .thread-facts .thread-byline { flex-basis: 100%; overflow: visible; white-space: normal; }
     .thread-facts .thread-participants-rule { padding-left: 0; border-left: 0; }
     @media (scripting: enabled) {
@@ -11504,7 +11525,7 @@ body.thread-restructure-open { overflow: hidden; }
         border-radius: 0;
         padding-bottom: max(24px, env(safe-area-inset-bottom));
     }
-    .thread-dock { padding-bottom: max(env(safe-area-inset-bottom), var(--keyboard-inset)); }
+    .thread-dock { padding-bottom: env(safe-area-inset-bottom); }
 }
 @keyframes study-sheet-in { from { transform: translateY(104%); } to { transform: translateY(0); } }
 
@@ -11521,10 +11542,7 @@ body.thread-restructure-open { overflow: hidden; }
    is not coarse, but both want the collapsed layout — and one block cannot drift
    from itself. The neighbouring 768px block stays separate on purpose; the sheet
    and dialog rules in it are viewport decisions, not pointer ones. */
-@media (max-width: 768px), (hover: none), (pointer: coarse) {
-    /* 4px of inline padding left the 48px identity rail no gutter, so the
-       "Commends" label reached the card edge. 10px restores it at a cost of
-       12px of measure; the reference's own value is 14px. */
+@media (max-width: 860px), (hover: none), (pointer: coarse) {
     .post { gap: 10px; padding: 12px 10px; }
     /* Reassert the semantic same-author state after the padding shorthand. */
     .post.post-grouped { padding-block-start: 0; }
@@ -11568,6 +11586,23 @@ body.thread-restructure-open { overflow: hidden; }
     .post-menu-pop > form > button,
     .post-menu-touch > button,
     .post-menu-touch > form > button { min-height: 44px; }
+}
+
+/* On a narrow reading pane, identity is a compact byline. Prose and attachments
+   use the full measure below it rather than paying for an empty avatar rail. */
+@media (max-width: 860px) {
+    .post:not(.post-deleted) { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--space-2); row-gap: var(--space-2); }
+    .post:not(.post-deleted) > .post-main { display: contents; }
+    .post-main > * { grid-column: 1 / -1; min-width: 0; }
+    .post-avatar { grid-column: 1; grid-row: 1; }
+    .post-avatar-spacer { display: none; }
+    .post-main > .post-head { grid-column: 2; grid-row: 1; align-self: center; margin: 0; padding-inline-end: 48px; }
+    .post:not(:has(> .post-avatar)) .post-head { grid-column: 1 / -1; }
+    .post-main > .post-toolbar { position: relative; grid-column: 2; grid-row: 1; justify-self: end; align-self: start; top: auto; right: auto; }
+    .post-accepted > .post-main > .accepted-flag { grid-row: 1; margin: 0; }
+    .post-accepted > .post-avatar,
+    .post-accepted > .post-main > :is(.post-head, .post-toolbar) { grid-row: 2; }
+    .post-main > .post-body { margin: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

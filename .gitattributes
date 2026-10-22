@@ -2,3 +2,6 @@
 # (ENOENT for '/bin/sh\r'), so pin them to LF even on Windows checkouts.
 *.sh text eol=lf
 bin/console text eol=lf
+public/assets/dist/** -text
+public/assets/app.css text eol=lf
+docs/design-system/imladris/components.css text eol=lf

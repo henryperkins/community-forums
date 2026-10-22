@@ -1,0 +1,82 @@
+{
+  "source_base": "468dd5b44a37bfcafacf2649223ef2c548ed9bd5",
+  "browser_new_previous": {
+    "tests": 24,
+    "passed": 24,
+    "evidence": "output/thread-mobile-fixes/browser-final.txt"
+  },
+  "browser_new_pinned": {
+    "tests": 24,
+    "passed": 24,
+    "browser": "Chromium149.0.7827.55",
+    "harness": "Playwright1.61.1",
+    "evidence": "browser-pinned.txt"
+  },
+  "php_focused": {
+    "tests": 56,
+    "passed": 56,
+    "assertions": 474
+  },
+  "browser_server_drafts": {
+    "tests": 10,
+    "passed": 10
+  },
+  "asset_tests": {
+    "tests": 35,
+    "passed": 35
+  },
+  "asset_integrity": "passed with exact HEAD-locked dependencies",
+  "independent_review": "No remaining concrete P1/P2 issue in reviewed source.",
+  "physical_checks": {
+    "reserved_entries": 4,
+    "status": "NOT READY",
+    "reason": "Physical devices and matching isolated reachable preview unprovisioned"
+  },
+  "unrelated_work": "72 unrelated original paths hash-checked and byte-preserved during guarded integration; strict Git allowlist follows.",
+  "browser_overlays": {
+    "tests": 4,
+    "passed": 4,
+    "evidence": "browser-final-overlays.txt"
+  },
+  "imladris_runtime": "passed on main after application baseline refresh",
+  "full_windows_suite_historical": {
+    "tests": 3337,
+    "assertions": 29462,
+    "failures": 14,
+    "warnings": 1,
+    "skipped": 1,
+    "note": "Historical run before reaction expectation and CRLF compatibility fixes; those were subsequently rechecked in56/56 focused tests. Baseline-only CloudRun checks independently reproduce12 failures/2 warnings on unchanged primary."
+  },
+  "full_windows_suite": {
+    "tests": 3337,
+    "assertions": 29473,
+    "failures": 12,
+    "warnings": 2,
+    "skipped": 1,
+    "new_failure_names": [],
+    "baseline_failure_names": [
+      "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_archive_creation_failure_cannot_leave_a_success_record_or_old_archive",
+      "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_child_final_step_requires_outer_success_and_a_complete_matching_archive",
+      "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_completed_run_requires_capture_unified_and_every_upload_project_artifact",
+      "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_outer_command_records_actual_docker_failure_after_it_returns",
+      "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure",
+      "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_runner_attempts_every_independent_suite_and_retains_the_first_failure",
+      "Tests\\Unit\\Core\\CloudRunBrowserCiPackageContractTest::test_non_object_unified_results_fail_completion_and_preserve_the_diagnostic_archive",
+      "Tests\\Unit\\Core\\CloudRunBrowserCiUploaderContractTest::test_streaming_create_only_transport_and_credential_privacy_contracts",
+      "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_console_batch_runs_every_command_in_order_and_reports_any_failure",
+      "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_cron_jobs_keep_the_former_worker_schedule_and_never_migrate",
+      "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_production_mail_configuration_selects_the_configured_rest_transport",
+      "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_service_is_one_private_instance_on_the_cloud_sql_connector_and_the_data_bucket"
+    ],
+    "baseline_confirmed": true,
+    "note": "All12 failures and both warnings reproduce in the untouched baseline CloudRun contract group. The affected feature, asset, browser and Imladris checks pass."
+  },
+  "cleanup": {
+    "preview_process": 15752,
+    "preview_stopped": true,
+    "database_container": "rb-thread-fixes-20261022",
+    "owned_label_confirmed": true,
+    "container_removed": true,
+    "unrelated_services": "untouched"
+  }
+}

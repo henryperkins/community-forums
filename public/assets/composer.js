@@ -657,9 +657,10 @@
     }
 
     // ---- Idempotency: stamp a fresh token per composer instance -----------
-    function stampIdempotency(form) {
-        if (form.querySelector('input[name="idempotency_key"]')) { return; }
-        var input = document.createElement('input');
+    function stampIdempotency(form, rotate) {
+        var input = form.querySelector('input[name="idempotency_key"]');
+        if (input && !rotate) { return; }
+        input = input || document.createElement('input');
         input.type = 'hidden';
         input.name = 'idempotency_key';
         input.value = 'c-' + Date.now() + '-' + Math.random().toString(36).slice(2);
@@ -675,6 +676,36 @@
     }
     function draftKeyFor(who, context) {
         return 'rb-draft:' + who + ':' + context;
+    }
+    function sameDraftBody(left, right) {
+        return typeof left === 'string' && typeof right === 'string'
+            && left.replace(/\r\n?/g, '\n') === right.replace(/\r\n?/g, '\n');
+    }
+    function rememberHistorySubmission(form, context, restore) {
+        try {
+            var state = history.state || {};
+            if (typeof state !== 'object' || Array.isArray(state)) { return; }
+            var tokens = state.rbComposerTokens || {};
+            var input = form.querySelector('input[name="idempotency_key"]');
+            if (!input) { return; }
+            if (restore && typeof tokens[context] === 'string') {
+                var remembered = tokens[context];
+                // Old history entries can outlive the bounded submit journal.
+                if (pendingDraftSubmits().some(function (item) { return item && item.submission === remembered; })) {
+                    input.value = remembered;
+                }
+            }
+            tokens[context] = input.value;
+            history.replaceState(Object.assign({}, state, { rbComposerTokens: tokens }), '');
+        } catch (e) {}
+    }
+    function submissionContent(form, markdown) {
+        var fields = [];
+        new FormData(form).forEach(function (value, key) {
+            if (['_token', 'idempotency_key', 'draft_revision', 'body'].indexOf(key) !== -1) { return; }
+            fields.push([key, typeof value === 'string' ? value : [value.name, value.size]]);
+        });
+        return JSON.stringify([markdown, fields]);
     }
     function serverDraftKey(context) {
         var key = encodeURIComponent(context).replace(/%/g, '~');
@@ -741,7 +772,8 @@
             data.append('revision', String(expectedRevision));
             data.append('title', title || '');
             data.append('body', body);
-            data.append('metadata', JSON.stringify({ context: context, path: location.pathname }));
+            var submission = form.querySelector('input[name="idempotency_key"]');
+            data.append('metadata', JSON.stringify({ context: context, path: location.pathname, submission: submission ? submission.value : '' }));
             return request('POST', '', data)
                 .then(function (r) {
                     return r.json().then(function (j) { return { status: r.status, json: j }; });
@@ -844,7 +876,7 @@
             panel.appendChild(actions);
         }
         function saveCurrent() {
-            if (paused || applying) { return; }
+            if (paused || applying || form._rbSubmitting) { return; }
             var body = adapter.getMarkdown();
             if (!body) {
                 request('POST', '/discard', new FormData()).catch(function () {});
@@ -865,6 +897,10 @@
             .then(function (j) {
                 var server = j && j.draft ? j.draft : null;
                 if (!server) { return; }
+                if (pendingDraftSubmits().some(function (item) {
+                    return item && item.completed && item.user === draftUser() && item.context === context
+                        && server.metadata && item.submission === server.metadata.submission && sameDraftBody(item.body, server.body);
+                })) { return; }
                 revision = parseInt(server.revision, 10) || 0;
                 if (adapter.getMarkdown() && adapter.getMarkdown() !== (server.body || '')) {
                     renderConflict(server, adapter.getMarkdown(), draftTitle(form, draftLabel(context)));
@@ -885,6 +921,7 @@
 
         return {
             input: scheduleSave,
+            suspend: function () { if (timer) { clearTimeout(timer); timer = null; } },
             discard: function () { request('POST', '/discard', new FormData()).catch(function () {}); }
         };
     }
@@ -904,56 +941,28 @@
             else { sessionStorage.removeItem(pendingDraftSubmitKey); }
         } catch (e) {}
     }
-    function rememberPendingDraftSubmit(key, context) {
-        var items = pendingDraftSubmits().filter(function (item) { return item && item.key !== key; });
-        items.push({ key: key, context: context, user: draftUser(), at: Date.now() });
+    function rememberPendingDraftSubmit(key, context, submission, body, content) {
+        var items = pendingDraftSubmits().filter(function (item) { return item && item.submission !== submission; });
+        items.push({ key: key, context: context, user: draftUser(), submission: submission, body: body, content: content, at: Date.now() });
         writePendingDraftSubmits(items.slice(-20));
     }
     function clearCompletedDraftSubmits() {
+        var receiptNode = document.querySelector('[data-composer-completion]');
+        if (!receiptNode) { return; }
+        var receipt;
+        try { receipt = JSON.parse(receiptNode.getAttribute('data-composer-completion')); } catch (e) { return; }
+        if (!receipt || !receipt.context || !receipt.submission) { return; }
         var pending = pendingDraftSubmits();
-        if (!pending.length) { return; }
         var currentUser = draftUser();
-        var tokenInput = document.querySelector('input[name="_token"]');
-        var csrfToken = tokenInput ? tokenInput.value : '';
-        var keep = [];
-
-        function discardServerDraftForContext(context) {
-            if (!serverDraftsEnabled() || !csrfToken) { return; }
-            var data = new FormData();
-            data.append('_token', csrfToken);
-            fetch('/api/drafts/' + serverDraftKey(context) + '/discard', {
-                method: 'POST',
-                body: data,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin'
-            }).catch(function () {});
-        }
-
-        var forms = document.querySelectorAll('form.composer');
         pending.forEach(function (item) {
-            if (!item || !item.key || !item.context) { return; }
-            if (item.user && item.user !== currentUser) {
-                try { localStorage.removeItem(item.key); } catch (e) {}
-                return;
-            }
-            var samePostUrlWithBody = false;
-            for (var i = 0; i < forms.length; i++) {
-                var form = forms[i];
-                if (form.getAttribute('action') !== item.context) { continue; }
-                var ta = form.querySelector('.composer-input');
-                if (location.pathname === item.context && ta && ta.value) {
-                    samePostUrlWithBody = true;
-                    break;
-                }
-            }
-            if (samePostUrlWithBody) {
-                keep.push(item);
-                return;
-            }
-            try { localStorage.removeItem(item.key); } catch (e) {}
-            discardServerDraftForContext(item.context);
+            if (!item || item.user !== currentUser || item.context !== receipt.context
+                || item.submission !== receipt.submission || typeof item.body !== 'string') { return; }
+            item.completed = true;
+            // Another tab may already have saved a newer draft in this context.
+            try { if (sameDraftBody(localStorage.getItem(item.key), item.body)) { localStorage.removeItem(item.key); } } catch (e) {}
         });
-        writePendingDraftSubmits(keep);
+        // Keep the receipt in this tab for history-restored composer instances.
+        writePendingDraftSubmits(pending);
     }
     function migrateAnonDrafts(who) {
         if (who === 'anon') { return; }
@@ -999,6 +1008,7 @@
         var ta = adapter.ta;
         var who = draftUser();
         var context = draftContext(form);
+        rememberHistorySubmission(form, context, true);
         migrateAnonDrafts(who);
         var key = draftKeyFor(who, context);
         try {
@@ -1012,15 +1022,68 @@
         var serverDrafts = serverDraftsEnabled() ? wireServerDrafts(form, adapter, key, context, updateDiscard) : null;
         if (serverDrafts) { remoteDiscard = serverDrafts.discard; }
         adapter.onChange(function (markdown) {
+            // Rich adapters emit again when a programmatic clear settles. Keep
+            // another tab's saved text until this form receives a new edit.
+            if (form._rbRestoringCompletedDraft || (form._rbCompletedDraftClear && markdown === '')) { updateDiscard(); return; }
+            form._rbCompletedDraftClear = false;
             try { markdown ? localStorage.setItem(key, markdown) : localStorage.removeItem(key); } catch (e) {}
             if (serverDrafts) { serverDrafts.input(); }
             updateDiscard();
         });
-        form.addEventListener('submit', function () {
-            // Do not clear immediately: a dropped connection can leave the user on
-            // the same page. The next successfully loaded page clears this context
-            // before an empty composer can repopulate from localStorage.
-            rememberPendingDraftSubmit(key, context);
+        function rotateEditedSubmission() {
+            if (form._rbRestoringCompletedDraft || (form._rbCompletedDraftClear && !(form._rbComposerAdapter || adapter).getMarkdown())) { return; }
+            var input = form.querySelector('input[name="idempotency_key"]');
+            var active = form._rbComposerAdapter || adapter;
+            pendingDraftSubmits().forEach(function (item) {
+                if (item && !item.completed && item.user === who && item.context === context && input
+                    && item.submission === input.value && item.content
+                    && item.content !== submissionContent(form, active.getMarkdown())) {
+                    stampIdempotency(form, true);
+                    rememberHistorySubmission(form, context, false);
+                }
+            });
+        }
+        adapter.onChange(rotateEditedSubmission);
+        listenWithCleanup(form, form, 'input', rotateEditedSubmission);
+        listenWithCleanup(form, form, 'change', rotateEditedSubmission);
+        function rotateEvictedSubmission() {
+            var input = form.querySelector('input[name="idempotency_key"]');
+            if (input && input.value === form._rbLastSubmittedToken && !pendingDraftSubmits().some(function (item) {
+                return item && item.user === who && item.context === context && item.submission === input.value;
+            })) {
+                stampIdempotency(form, true);
+                rememberHistorySubmission(form, context, false);
+            }
+        }
+        form._rbDraftController = { restore: function () {
+            var input = form.querySelector('input[name="idempotency_key"]');
+            pendingDraftSubmits().forEach(function (item) {
+                if (!item || item.user !== who || item.context !== context || !input || !item.submission) { return; }
+                var active = form._rbComposerAdapter || adapter;
+                if (!item.completed || item.submission !== input.value) { return; }
+                if (sameDraftBody(active.getMarkdown(), item.body) || sameDraftBody(ta.value, item.body)) {
+                    form._rbRestoringCompletedDraft = true;
+                    form._rbCompletedDraftClear = true;
+                    active.setMarkdown('');
+                    form._rbRestoringCompletedDraft = false;
+                    stampIdempotency(form, true);
+                } else { stampIdempotency(form, true); }
+                rememberHistorySubmission(form, context, false);
+            });
+            rotateEvictedSubmission();
+            rotateEditedSubmission();
+            updateDiscard();
+        } };
+        form.addEventListener('submit', function (event) {
+            if (event.defaultPrevented) { return; }
+            if (serverDrafts) { serverDrafts.suspend(); }
+            rotateEvictedSubmission();
+            rotateEditedSubmission();
+            var active = form._rbComposerAdapter || adapter;
+            var input = form.querySelector('input[name="idempotency_key"]');
+            form._rbLastSubmittedToken = input ? input.value : '';
+            // Only a matching server receipt may clear this exact submitted body.
+            rememberPendingDraftSubmit(key, context, input ? input.value : '', active.getMarkdown(), submissionContent(form, active.getMarkdown()));
             updateDiscard();
         });
     }
@@ -3075,7 +3138,24 @@
         }, true);
 
         attach(adapter);
-        form._rbSubmitController = { attach: attach };
+        function restoreSubmitState() {
+            // Native form restoration can happen after pageshow. Reconcile on the
+            // next frame so a failed navigation never leaves a disabled Send.
+            requestAnimationFrame(function () {
+                form._rbSubmitting = false;
+                form.removeAttribute('aria-busy');
+                form.classList.remove('is-submitting');
+                if (status) { status.textContent = ''; }
+                var active = activeAdapter();
+                if (active !== form._rbComposerFallbackAdapter && ta.value && !active.getMarkdown()) {
+                    active.setMarkdown(ta.value);
+                }
+                if (form._rbDraftController) { form._rbDraftController.restore(); }
+                update();
+            });
+        }
+        listenWithCleanup(form, window, 'pageshow', restoreSubmitState);
+        form._rbSubmitController = { attach: attach, restore: restoreSubmitState };
     }
 
     // ---- Expansion / minimize (the inline reply dock) ---------------------
@@ -3300,6 +3380,8 @@
         // Last: emptiness is read through the active adapter, so the dock must
         // be wired after the WYSIWYG upgrade and the draft restore have settled.
         wireExpansion(form);
+        // Lazy rich-editor imports can finish after the initial pageshow event.
+        if (form._rbSubmitController) { form._rbSubmitController.restore(); }
     }
 
     document.addEventListener('DOMContentLoaded', function () {

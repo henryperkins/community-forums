@@ -2,6 +2,18 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Thread mobile recovery and reading
+
+- Preserve unconfirmed replies through failed navigation, Back and reload;
+  confirm draft cleanup from a signed successful submission and preserve newer
+  local/remote edits. Restore Send and submission identity safely in Markdown
+  and rich-editor history entries (ADR 0050).
+- Keep View answer available with reader-specific pagination, wrap enlarged
+  topic controls, and bound the expanded reply dock below the member header.
+- Use a compact mobile byline with full-width prose and visible reaction names.
+  Local browser evidence and outstanding physical-device checks are recorded in
+  `docs/evidence/thread-mobile-ux-2026-10-22/`.
+
 ## [Unreleased] - Guarded feature-flag toggles
 
 - Turn a feature flag off or back on from its row on `/admin/features`. An
