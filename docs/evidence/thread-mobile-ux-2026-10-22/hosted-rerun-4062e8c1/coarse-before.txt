@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+(node:26968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 [mobile] › thread-view-study.spec.ts:586:5 › coarse pointers keep post actions visible and reachable above the mobile breakpoint (7.6s)
+
+
+  1) [mobile] › thread-view-study.spec.ts:586:5 › coarse pointers keep post actions visible and reachable above the mobile breakpoint
+
+    Error: expect(locator).toHaveCSS(expected) failed
+
+    Locator:  locator('article[data-post]').first().locator('[data-post-toolbar]')
+    Expected: "absolute"
+    Received: "relative"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCSS" with timeout 5000ms
+      - waiting for locator('article[data-post]').first().locator('[data-post-toolbar]')
+        14 × locator resolved to <div class="post-toolbar" data-post-toolbar="">…</div>
+           - unexpected value "relative"
+
+
+      607 |   // of 44px targets was adding ~52px under every post.
+      608 |   expect(targetBoxes).toHaveLength(1);
+    > 609 |   await expect(toolbar).toHaveCSS('position', 'absolute');
+          |                         ^
+      610 |   // Out of flow is only safe if it does not land on the prose. The byline row
+      611 |   // reserves the control's own height and trailing edge for exactly this.
+      612 |   const overlap = await post.evaluate((element) => {
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\thread-view-study.spec.ts:609:25
+
+    Error Context: ..\..\docs\evidence\browser\.artifacts\thread-view-study-coarse-p-80811-above-the-mobile-breakpoint-mobile\error-context.md
+
+  1 failed
+    [mobile] › thread-view-study.spec.ts:586:5 › coarse pointers keep post actions visible and reachable above the mobile breakpoint

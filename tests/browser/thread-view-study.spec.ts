@@ -583,50 +583,59 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
 
-test('coarse pointers keep post actions visible and reachable above the mobile breakpoint', async ({ page }, info) => {
+test('coarse pointers keep post actions in the byline across the mobile shell breakpoint', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile');
   await page.setViewportSize({ width: 820, height: 1000 });
   await login(page);
-  await openSeedTopic(page);
 
-  expect(page.viewportSize()!.width).toBeGreaterThan(768);
-  expect(await page.evaluate(() => matchMedia('(hover: none), (pointer: coarse)').matches)).toBe(true);
-  const post = page.locator('article[data-post]').first();
-  const toolbar = post.locator('[data-post-toolbar]');
-  await expect(toolbar).toBeVisible();
-  await expect(toolbar).toHaveCSS('opacity', '1');
-  const targetBoxes = await toolbar.locator('button:visible, summary:visible').evaluateAll((items) => items.map((item) => {
-    const box = item.getBoundingClientRect();
-    return { width: box.width, height: box.height };
-  }));
-  expect(targetBoxes.length).toBeGreaterThan(0);
-  expect(targetBoxes.every((item) => item.width >= 44 && item.height >= 44)).toBe(true);
+  for (const width of [390, 820, 860, 861, 900]) {
+    await test.step(`${width}px touch viewport`, async () => {
+      await page.setViewportSize({ width, height: 1000 });
+      await openSeedTopic(page);
 
-  // The toolbar collapses to exactly one control here, and it is out of flow —
-  // the reference stream's actions cost zero layout height, and an in-flow row
-  // of 44px targets was adding ~52px under every post.
-  expect(targetBoxes).toHaveLength(1);
-  await expect(toolbar).toHaveCSS('position', 'absolute');
-  // Out of flow is only safe if it does not land on the prose. The byline row
-  // reserves the control's own height and trailing edge for exactly this.
-  const overlap = await post.evaluate((element) => {
-    const bar = element.querySelector('[data-post-toolbar]')!.getBoundingClientRect();
-    const body = element.querySelector('.post-body')!.getBoundingClientRect();
-    const head = element.querySelector('.post-head')!.getBoundingClientRect();
-    return {
-      body: bar.bottom > body.top && bar.top < body.bottom && bar.right > body.left && bar.left < body.right,
-      withinHead: bar.top >= head.top - 1 && bar.bottom <= head.bottom + 1,
-    };
-  });
-  expect(overlap.body).toBe(false);
-  expect(overlap.withinHead).toBe(true);
+      expect(await page.evaluate(() => matchMedia('(hover: none), (pointer: coarse)').matches)).toBe(true);
+      const post = page.locator('article[data-post]').first();
+      const toolbar = post.locator('[data-post-toolbar]');
+      await expect(toolbar).toBeVisible();
+      await expect(toolbar).toHaveCSS('opacity', '1');
+      const targetBoxes = await toolbar.locator('button:visible, summary:visible').evaluateAll((items) => items.map((item) => {
+        const box = item.getBoundingClientRect();
+        return { width: box.width, height: box.height };
+      }));
+      expect(targetBoxes).toHaveLength(1);
+      expect(targetBoxes.every((item) => item.width >= 44 && item.height >= 44)).toBe(true);
 
-  // What left the toolbar has to still be reachable, so the menu carries it.
-  await toolbar.locator('[data-post-menu] > summary').click();
-  const touch = post.locator('.post-menu-touch');
-  await expect(touch).toBeVisible();
-  await expect(touch.locator('[data-quote-post]')).toBeVisible();
-  await expect(touch.locator('.post-menu-reactions .reaction').first()).toBeVisible();
+      // ADR 0050 shares the compact avatar/byline grid row with the menu.
+      // Assert the space and overlap contract for both layouts, without
+      // requiring the wider layout's absolute positioning below 861px.
+      const overlap = await post.evaluate((element) => {
+        const bar = element.querySelector('[data-post-toolbar]')!.getBoundingClientRect();
+        const body = element.querySelector('.post-body')!.getBoundingClientRect();
+        const head = element.querySelector('.post-head')!.getBoundingClientRect();
+        // The monogram shares the first row; its entire desktop author rail
+        // can stretch through the prose and must not mask an extra toolbar row.
+        const avatar = element.querySelector('.post-avatar > :first-child')?.getBoundingClientRect();
+        return {
+          body: bar.bottom > body.top && bar.top < body.bottom && bar.right > body.left && bar.left < body.right,
+          withinByline: bar.top >= Math.min(head.top, avatar?.top ?? head.top) - 1
+            && bar.bottom <= Math.max(head.bottom, avatar?.bottom ?? head.bottom) + 1,
+        };
+      });
+      expect(overlap.body).toBe(false);
+      expect(overlap.withinByline).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+
+      // The only touch target must actually open the actions it replaced.
+      const trigger = toolbar.locator('[data-post-menu] > summary');
+      await expect(trigger).toBeInViewport();
+      const box = (await trigger.boundingBox())!;
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+      const touch = post.locator('.post-menu-touch');
+      await expect(touch).toBeVisible();
+      await expect(touch.locator('[data-quote-post]')).toBeVisible();
+      await expect(touch.locator('.post-menu-reactions .reaction').first()).toBeVisible();
+    });
+  }
 });
 
 /**

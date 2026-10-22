@@ -1,0 +1,69 @@
+{
+  "recorded_at": "2026-10-22T18:43:36.327384+00:00",
+  "baseline_commit": "4062e8c159a3bb85efa9bf76be6859b961e875ee",
+  "hosted_parent_build": "5600c61a-296a-4435-bf69-28576ee61d11",
+  "hosted_child_build": "6f5b007d-8503-4eae-b143-29b0f0008662",
+  "control_commit": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "original_failure": {
+    "file": "tests/browser/thread-view-study.spec.ts",
+    "line": 609,
+    "project": "mobile",
+    "width": 820,
+    "expected_position": "absolute",
+    "actual_position": "relative",
+    "scope": "test conflicts with approved compact grid; direct local reproduction before edits"
+  },
+  "runtime_comparison": {
+    "paths_checked": 671,
+    "differences": 0,
+    "text_basis": "LF-normalized comparisons; binary assets compared as bytes",
+    "commit": "4062e8c159a3bb85efa9bf76be6859b961e875ee"
+  },
+  "local": {
+    "coarse_before": {
+      "failed": 1
+    },
+    "coarse_after": {
+      "passed": 1,
+      "widths": [
+        390,
+        820,
+        860,
+        861,
+        900
+      ]
+    },
+    "full_thread_desktop": {
+      "passed": 22,
+      "skipped": 2,
+      "failed": 0
+    },
+    "full_thread_mobile": {
+      "passed": 12,
+      "skipped": 12,
+      "failed": 0
+    }
+  },
+  "implementation": {
+    "changed_application_files": [],
+    "changed_browser_spec": "tests/browser/thread-view-study.spec.ts",
+    "retained_contract": [
+      "One visible menu target with minimum 44px width and height",
+      "Menu remains inside the avatar/byline row",
+      "Only the monogram can extend the head bounds; full desktop author rail is excluded",
+      "No menu/prose overlap or horizontal overflow",
+      "Direct touchscreen tap opens visible Quote and Reactions"
+    ],
+    "spec_before_sha256": "1f104bd3a5605cf74df498f4b0669d577267d6c36b4e24906a8ce91a4d587300",
+    "spec_after_sha256": "a3e61f0b0039d3b20ed43951dee141bd56c295fef9145fe1d03cc130635eae0f"
+  },
+  "preservation": {
+    "preexisting_dirty_or_untracked_paths": 76,
+    "all_existing_hashes_or_links_unchanged": true
+  },
+  "limits": [
+    "Original hosted parent was still active at this evidence snapshot; capture stage is already failed, and remaining lanes must finish separately.",
+    "No physical-device or full hosted acceptance claim.",
+    "PHP application source and immutable bundles did not change; previous full Windows suite limitations remain historical evidence, not a new run."
+  ]
+}
