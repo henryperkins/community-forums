@@ -1,7 +1,7 @@
 {
   "version": "1c24a3765cdd43f9",
   "urls": {
-    "app.css": "/assets/dist/app-style-DDK8a-0C.css",
+    "app.css": "/assets/dist/app-style-C6suf3LA.css",
     "imladris.css": "/assets/dist/imladris-style-CRsa_HRN.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
     "app.js": "/assets/dist/app-f5e64357204190eb.js",
@@ -28,7 +28,7 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "c27b9cb3e524da85ad09e338d4cd6096d820b96d27a53acbefb35b031aec46d5",
+      "sha256": "0beeca2150cf97fb6308fc0962e758b8b6825d35eb9bff1dd3f98ea3f74b13d9",
       "immutable": false
     },
     "/assets/app.js": {
@@ -49,6 +49,10 @@
     },
     "/assets/dist/app-f5e64357204190eb.js": {
       "sha256": "f5e64357204190ebc5ec13a10837a4ccc9388e06bd20987efe6f7050d2f8e758",
+      "immutable": true
+    },
+    "/assets/dist/app-style-C6suf3LA.css": {
+      "sha256": "8634f3e52060954e7f4dbd9e8b26241d1d874b7824bf8d7ac9481e91ea72b94b",
       "immutable": true
     },
     "/assets/dist/app-style-Cccoax6v.css": {

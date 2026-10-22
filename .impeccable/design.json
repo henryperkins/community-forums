@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-06T17:03:08Z",
+  "generatedAt": "2026-10-22T23:30:54+00:00",
   "title": "Design System: RetroBoards — Imladris",
   "extensions": {
     "navigationChrome": {
@@ -224,7 +224,7 @@
       {
         "name": "shadow-lg",
         "value": "0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)",
-        "purpose": "Popovers and menus."
+        "purpose": "Popovers and menus, and the member profile's identity cover — the one resting surface that wears it, a hero plate (§5.4)."
       },
       {
         "name": "shadow-xl",
@@ -281,6 +281,14 @@
       {
         "name": "pane-density",
         "value": "760px"
+      },
+      {
+        "name": "profile-tools-wrap",
+        "value": "700px"
+      },
+      {
+        "name": "profile-compact",
+        "value": "560px"
       },
       {
         "name": "messages-details-column-board-rail-closed",
@@ -428,7 +436,7 @@
       },
       {
         "name": "The Two-Breakpoint Rule",
-        "body": "860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it.",
+        "body": "860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it. The profile's two recorded thresholds — 700px, where the list and connection tool rows wrap, and 560px, where the cover, the commends grid and the connection cards compact — are implementation facts of the same kind, chosen where the content breaks.",
         "section": "layout"
       },
       {
@@ -438,13 +446,18 @@
       },
       {
         "name": "The Lift-On-State Rule",
-        "body": "Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded.",
+        "body": "Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded. The profile identity cover is the documented exception; nothing else rests above `--shadow-xs`.",
         "section": "elevation"
       },
       {
         "name": "The Twelve-Max Rule",
         "body": "Nothing that holds content is rounder than 12px. 20px exists for a handful of large containers and should be justified; pills are for tokens only. *Audit test: a `border-radius` above 12px on anything that is not a token or a large container is wrong.*",
         "section": "shapes"
+      },
+      {
+        "name": "The Constant-Ground Rule",
+        "body": "A surface whose ground does not flip takes its state colours from constant tokens in this family, never from the register's. *Audit test: on an always-twilight surface, grep the rule for `--accent` or `--presence`; a register token there fails by day.*",
+        "section": "components"
       }
     ],
     "dos": [

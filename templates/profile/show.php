@@ -47,7 +47,7 @@ $profileExcerpt = static function (string $html): string {
             <p class="profile-handle">@<?= $e($profile['username']) ?><?php if (!empty($profile['pronouns'])): ?> · <?= $e($profile['pronouns']) ?><?php endif; ?></p>
             <p class="profile-meta">Member since <?= $e(human_date($profile['created_at'])) ?><?php if (!empty($profile['location'])): ?> · <?= $e($profile['location']) ?><?php endif; ?></p>
             <?php if (!empty($profile['website'])): ?>
-                <p class="profile-web"><a href="<?= $e($profile['website']) ?>" rel="nofollow noopener ugc" target="_blank"><?= $e(preg_replace('~^https?://~i', '', rtrim((string) $profile['website'], '/'))) ?></a></p>
+                <p class="profile-web"><a href="<?= $e($profile['website']) ?>" rel="nofollow noopener ugc" target="_blank"><?= $e(preg_replace('~^https?://~i', '', rtrim((string) $profile['website'], '/'))) ?><span class="sr-only"> (opens in a new tab)</span></a></p>
             <?php endif; ?>
             <dl class="profile-stats">
                 <div><dt>Posts</dt><dd><?= number_format((int) $profile['post_count']) ?></dd></div>

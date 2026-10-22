@@ -784,7 +784,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 
 @media (max-width: 860px) {
     /* Comfortable touch targets on small screens (≥44px). */
-    .btn, .linkbtn, .topbar-link, .reaction, .subnav a, .subnav .subnav-action, .inbox-tab { min-height: 44px; display: inline-flex; align-items: center; }
+    .btn, .linkbtn, .topbar-link, .reaction, .subnav a, .subnav .subnav-action, .inbox-tab, .profile-tab, .profile-sort-opt, .profile-seg-opt { min-height: 44px; display: inline-flex; align-items: center; }
     .profile-stats { gap: 14px; }
     .profile-stats dd { font-size: 1.05rem; }
     .feed-meta { font-size: .8rem; }
@@ -824,6 +824,14 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     --stage-raised: var(--twilight-800);
     --stage-ink: var(--parchment-50);
     --stage-accent: var(--gold-400);
+    /* The profile cover shares the stage's constraint: its ground is constant
+       twilight in both registers, so register-flipping tokens drawn for the
+       page fail on it. --accent (evergreen by day) reads 1.55:1 as the focus
+       ring, and --presence (leaf, tuned for parchment) reads 2.86:1 — both
+       under WCAG 1.4.11's 3:1. The cover's constant tokens: gold-400 holds
+       7.30:1 and green-400 4.45:1 against twilight-800 in either register. */
+    --cover-accent: var(--gold-400);
+    --presence-on-cover: var(--green-400);
     --z-chrome: 40;
     --z-scrim: 55;
     --z-drawer: 60;
@@ -2098,7 +2106,7 @@ body[data-route="thread"] .thread-conversation {
 .profile-cover-star { position: absolute; top: -58px; right: -46px; width: 230px; height: 230px; color: var(--gold-500); opacity: .11; pointer-events: none; }
 .profile-avatar { position: relative; display: inline-flex; }
 .profile-avatar .monogram { width: 84px; height: 84px; font-size: 1.9rem; box-shadow: var(--gilt); }
-.profile-avatar .presence-dot { position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--presence); box-shadow: 0 0 0 3px var(--twilight-800); }
+.profile-avatar .presence-dot { position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--presence-on-cover); box-shadow: 0 0 0 3px var(--twilight-800); }
 /* Nothing clips the cover, so an unbroken name or handle must wrap inside it. */
 .profile-cover .profile-id { min-width: 0; overflow-wrap: anywhere; }
 .profile-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin: 2px 0 0; font-family: var(--font-display); font-weight: var(--weight-medium); color: var(--parchment-50); font-size: 2.25rem; line-height: 1.08; letter-spacing: -.01em; }
@@ -2128,7 +2136,9 @@ body[data-route="thread"] .thread-conversation {
 .profile-cover-action,
 .profile-cover .dm-iconbtn {
     padding: 6px 13px; font-family: var(--font-label); font-size: .82rem; letter-spacing: .03em;
-    border: 1.5px solid color-mix(in srgb, var(--mist-200) 34%, transparent);
+    /* 45% mist on twilight measures 3.55:1, clearing WCAG 1.4.11's 3:1 for a
+       control boundary; 34% read 2.62:1. */
+    border: 1.5px solid color-mix(in srgb, var(--mist-200) 45%, transparent);
     border-radius: var(--radius-md); background: transparent; color: var(--mist-200);
 }
 .profile-cover .dm-iconbtn { width: 32px; height: 100%; min-height: 32px; padding: 0; }
@@ -2137,6 +2147,12 @@ body[data-route="thread"] .thread-conversation {
 .profile-cover-action.btn-on { display: inline-flex; align-items: center; gap: 6px; }
 .profile-cover-action.btn-on .icon { width: 13px; height: 13px; }
 .profile-cover .profile-actions .btn-on { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
+/* The cover's ground is constant twilight, and the register's focus colour is
+   drawn for the page: evergreen reads 1.55:1 here by day. Ring in the cover's
+   constant gold (7.30:1 either register). The action popover flips with the
+   register, so its items keep the page's ring. */
+.profile-cover :focus-visible { outline-color: var(--cover-accent); }
+.profile-cover .dm-menu-pop :focus-visible { outline-color: var(--accent); }
 /* Baseline, not centre: an open description grows the chip row, and the label
    belongs to the row's first line of chips rather than to its middle. */
 .profile-badges { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 14px 0 0; }
@@ -2239,7 +2255,9 @@ body[data-route="thread"] .thread-conversation {
     .profile-cover .dm-iconbtn { width: 44px; height: 44px; }
     /* 44px taps without taller boxes: the stat numbers keep one baseline. The
        guest's Log in link is the cover's only action for a guest, so it gets the
-       same target. */
+       same target. max() floors the plate at 44px each way: the old negative-
+       inset formula could land a hair under 44 when the link sat within 1/64px
+       of it, because Chromium rounds the computed inset to its layout unit. */
     .profile-cover .profile-stats dt a,
     .profile-cover .profile-web a,
     .profile-cover .profile-cover-note a { position: relative; }
@@ -2248,7 +2266,9 @@ body[data-route="thread"] .thread-conversation {
     .profile-cover .profile-cover-note a::after {
         content: "";
         position: absolute;
-        inset: min(0px, calc((100% - 44px) / 2));
+        top: 50%; left: 50%;
+        width: max(100%, 44px); height: max(100%, 44px);
+        transform: translate(-50%, -50%);
     }
 }
 
@@ -2511,6 +2531,9 @@ body[data-route="thread"] .thread-conversation {
     .profile-commends { grid-template-columns: minmax(0, 1fr); }
     .profile-overview-aside { width: 100%; }
     .profile-cover-note { max-width: 100%; text-align: left; }
+    /* The 44px touch floor the drawer breakpoint applies to the bar and the
+       tab rows; width/height only, so the no-JS hidden toggle stays hidden. */
+    .profile-activity-toggle { width: 44px; height: 44px; }
 }
 /* A clipped title's only other copy is its title tooltip, which a touch screen
    never shows. The query is a union: at 820px a tablet sets the details card

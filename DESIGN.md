@@ -355,7 +355,7 @@ The three panes map to real URLs rather than to client state: `/` is the forum i
 
 **The Real-URL Rule.** Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view. *Audit test: load it with JavaScript disabled; if the content is gone, the layout is wrong.*
 
-**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it.
+**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it. The profile's two recorded thresholds — 700px, where the list and connection tool rows wrap, and 560px, where the cover, the commends grid and the connection cards compact — are implementation facts of the same kind, chosen where the content breaks.
 
 ## Elevation & Depth
 
@@ -368,7 +368,7 @@ Shadows are cast in **warm ink** (`rgba(27,35,29,…)`), never neutral black. Th
 - **`--shadow-xs`** (`0 1px 2px rgba(27,35,29,.06)`): the foundation's low resting elevation, retained by ordinary cards, buttons and posts. Ruled application topic rows override it to no shadow.
 - **`--shadow-sm`** (`0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)`): the selected row, the accepted answer, a switch knob.
 - **`--shadow-md`** (`0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)`): available hover elevation in the foundation; the final application topic row responds with a tonal wash instead.
-- **`--shadow-lg`** (`0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)`): popovers and menus.
+- **`--shadow-lg`** (`0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)`): popovers and menus, and the member profile's identity cover — the one resting surface that wears it, a hero plate (§5.4).
 - **`--shadow-xl`** (`0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08)`): modal dialogs only.
 - **`--shadow-inset`** (`inset 0 1px 2px rgba(27,35,29,.07)`): fields and tracks — the impression of something pressed into the page.
 - **`--gilt`** (`inset 0 0 0 1px rgba(194,154,68,.38)`): not a shadow but a thin gold inner ring, marking a "precious" avatar — the OP, an accepted answer, a profile, a top-three leaderboard place.
@@ -377,7 +377,7 @@ Shadows are cast in **warm ink** (`rgba(27,35,29,…)`), never neutral black. Th
 
 **The Warm-Shadow Rule.** No pure-black drop shadows anywhere. Every shadow is mixed from ink or twilight so it reads as candlelight on parchment rather than as a UI kit default. *Audit test: any `rgba(0,0,0,…)` in a shadow is wrong.*
 
-**The Lift-On-State Rule.** Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded.
+**The Lift-On-State Rule.** Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded. The profile identity cover is the documented exception; nothing else rests above `--shadow-xs`.
 
 **The Chrome-On-Top Rule.** Page content stacks at `z-index` 30 or below. The member bar sits above it at `--z-chrome` (40), so nothing on the page paints over the bar or its account menu. The phone drawer's scrim (`--z-scrim`, 55) and rail (`--z-drawer`, 60) come next. Popovers anchored to page content, sheets and dialogs already start at 42. A page control that must cover the bar is an overlay and takes an overlay's tier. These are application tokens (ADR 0039's block in `app.css`), because the layer's own bar sits at 20. *Audit test: on a phone, scroll content under the bar and tap its lower edge; the tap must land on the bar.*
 
@@ -501,6 +501,8 @@ Families that still have more than one implementation are listed, ranked, in ADR
 The ornamented treatment that dresses the account templates and five of the six auth screens — gold-ruled parchment frames, engraved panel headings, gold row dots. It is **ink, not geometry**: an engraved frame is the same box as a plain one, drawn in gold.
 
 The auth screens sit on a **stage** that is twilight in both registers, while the seal card on it flips with the theme. The stage paints from tokens that do not flip: `--stage-ground`, `--stage-raised` (the skip link's plate), `--stage-ink` and `--stage-accent`, the one gold of the brand star, the card's rule, and focus on the stage. Focus there cannot use the page's `--accent`: it is evergreen by day, drawn for parchment, and measured 1.75:1 on the stage (ADR 0039).
+
+The member profile's identity cover is the second surface whose ground is constant twilight (approved, §5.4), and it paints its state colours from the same non-flipping family: `--cover-accent` for the focus ring and `--presence-on-cover` for the presence dot. The register's own tokens are drawn for the page and fail WCAG 1.4.11 on the cover by day — the focus ring measured 1.55:1, the online dot 2.86:1 — while `--cover-accent` (gold-400) holds 7.30:1 and `--presence-on-cover` (green-400) 4.45:1 in either register. **The Constant-Ground Rule.** A surface whose ground does not flip takes its state colours from constant tokens in this family, never from the register's. *Audit test: on an always-twilight surface, grep the rule for `--accent` or `--presence`; a register token there fails by day.*
 
 It was not always. Until **2026-09-13** these frames cut their corners at 45°, an octagon made from a `clip-path` plus eight background-gradient layers standing in for a border, with a second inset octagon on `.scribe-panel` and `.auth-card` as a doubled rule. That chamfer is removed (**ADR 0033**). It was expensive — every state restated all eight layers — and it was actively harmful: a `clip-path` cuts everything outside the octagon, so the outer focus ring on an engraved field, a choice card and a search well had *never rendered*, and the octagon on `/compose` flooded the title field solid gold on focus.
 
