@@ -48,3 +48,22 @@ Focused kernel/browser regressions, review resolutions, test logs and the mobile
 runner continuation are recorded in `docs/evidence/thread-mobile-ux-2026-10-22/`.
 The original audit remains unchanged. The continuation distinguishes implemented
 fixes, local proxy observations and outstanding physical-device checks.
+
+## Follow-up: conflict saving and delayed rich recovery
+
+The follow-up reproduced an older native textarea restored by Back before the
+lazy rich editor initialized. Local storage and the pending-submit journal still
+held the latest body; using the nonempty native value opened the wrong revision
+and rotated its submission key. Initialize from the matching unconfirmed
+user/context/history entry only when its body still matches the saved local
+draft. Preserve any new typing while the optional editor module loads.
+
+The conflict's Save local action reads the current body and title at activation,
+rather than retaining the values captured when the conflict was displayed.
+The populated open preview also exposes a named keyboard scroll region with
+visible focus. Active gold text uses semantic theme tokens; the unlayered legacy
+rules hand color ownership back to the component layer with `revert-layer`.
+
+Reproduction traces, current local tests and the remaining device checks are in
+`docs/evidence/thread-mobile-followup-2026-10-22/`. These are local changes and
+do not amend the earlier deployment receipts.

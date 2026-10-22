@@ -2,6 +2,16 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Thread contrast, preview access and rich-draft follow-up
+
+- Use theme-aware gold text for active Starred and reaction counts, and make
+  the open reply preview a named keyboard-scrollable region with visible focus.
+- Save the latest local edits when resolving a server-draft conflict. Recover
+  the matching unconfirmed draft before rich-editor initialization when Back
+  restores an older native textarea, while preserving typing during loading.
+- Local regression results, retained failures and outstanding physical checks
+  are recorded in `docs/evidence/thread-mobile-followup-2026-10-22/`.
+
 ## [Unreleased] - Thread mobile recovery and reading
 
 - Preserve unconfirmed replies through failed navigation, Back and reload;

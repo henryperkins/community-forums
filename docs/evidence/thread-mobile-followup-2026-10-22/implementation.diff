@@ -1,0 +1,700 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 334b0c00..65fe1497 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,16 @@
+ 
+ All notable changes to RetroBoards are recorded here. Dates are UTC.
+ 
++## [Unreleased] - Thread contrast, preview access and rich-draft follow-up
++
++- Use theme-aware gold text for active Starred and reaction counts, and make
++  the open reply preview a named keyboard-scrollable region with visible focus.
++- Save the latest local edits when resolving a server-draft conflict. Recover
++  the matching unconfirmed draft before rich-editor initialization when Back
++  restores an older native textarea, while preserving typing during loading.
++- Local regression results, retained failures and outstanding physical checks
++  are recorded in `docs/evidence/thread-mobile-followup-2026-10-22/`.
++
+ ## [Unreleased] - Thread mobile recovery and reading
+ 
+ - Preserve unconfirmed replies through failed navigation, Back and reload;
+diff --git a/config/assets.json b/config/assets.json
+index 21fef0d8..8384d042 100644
+--- a/config/assets.json
++++ b/config/assets.json
+@@ -1,11 +1,11 @@
+ {
+-  "version": "cd261fb5782f8107",
++  "version": "1c24a3765cdd43f9",
+   "urls": {
+-    "app.css": "/assets/dist/app-style-R3j3Xoat.css",
+-    "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
++    "app.css": "/assets/dist/app-style-DDK8a-0C.css",
++    "imladris.css": "/assets/dist/imladris-style-CRsa_HRN.css",
+     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+     "app.js": "/assets/dist/app-f5e64357204190eb.js",
+-    "composer.js": "/assets/dist/composer-4ebc8d0c1f6dd474.js",
++    "composer.js": "/assets/dist/composer-5e088bd27ea38363.js",
+     "passkeys.js": "/assets/dist/passkeys-16e7134417f0d6af.js",
+     "tour.js": "/assets/dist/tour-1801eafe66889a28.js",
+     "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-Br17XC-G.js",
+@@ -28,7 +28,7 @@
+   },
+   "files": {
+     "/assets/app.css": {
+-      "sha256": "ed00499fe2ec2bbdaeb6339e953094676f2e569b15faf5fae168742b94939e35",
++      "sha256": "c27b9cb3e524da85ad09e338d4cd6096d820b96d27a53acbefb35b031aec46d5",
+       "immutable": false
+     },
+     "/assets/app.js": {
+@@ -36,7 +36,7 @@
+       "immutable": false
+     },
+     "/assets/composer.js": {
+-      "sha256": "06a9918e4c51c500631a774b11513f2bfd0e919306582fcbd5cd4bb7f8416530",
++      "sha256": "ce073e11882cfc7a89cac10873bcee19c1da10946424d576aaaabd2f7c989cb6",
+       "immutable": false
+     },
+     "/assets/conversation-entry.js": {
+@@ -55,6 +55,10 @@
+       "sha256": "11ffb8ad6bd43abdc401f7d81a47a829ad27bc5c7d14246266a4ba6546a56a1f",
+       "immutable": true
+     },
++    "/assets/dist/app-style-DDK8a-0C.css": {
++      "sha256": "66575bf762bd7da615cffbd1d5f7210a25b54142f008359496ab40d35b828c4a",
++      "immutable": true
++    },
+     "/assets/dist/app-style-DkLhYoyf.css": {
+       "sha256": "6b4287bcede55d62aaa9e94f87a7b4f71da7ff7b7d9dbc22d1e320b3d0c7191b",
+       "immutable": true
+@@ -71,6 +75,10 @@
+       "sha256": "5aeaedfd8f662ec5e181af7d84d52a4f52797ed0616b540fbf7997b539fc9234",
+       "immutable": true
+     },
++    "/assets/dist/composer-5e088bd27ea38363.js": {
++      "sha256": "5e088bd27ea3836339d00270931c47b6336f21ad744c9b1b7541686886f37b44",
++      "immutable": true
++    },
+     "/assets/dist/conversation-entry-74964ff3b56c482d.js": {
+       "sha256": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
+       "immutable": true
+@@ -123,6 +131,10 @@
+       "sha256": "da673a340f594e229dc5f45363b3b7c48851fa4938a6775c0087b32e0de840e4",
+       "immutable": true
+     },
++    "/assets/dist/imladris-style-CRsa_HRN.css": {
++      "sha256": "2930fb188aae30a2ef3a0a5ab1eb8f35d97e65ff6ba4f330d6b9789b9ad0a2a9",
++      "immutable": true
++    },
+     "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2": {
+       "sha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
+       "immutable": true
+@@ -240,7 +252,7 @@
+       "immutable": false
+     },
+     "/assets/imladris.css": {
+-      "sha256": "2ac7935e7da0abfac09bfe0ffc6bfddf594f75c2870c3d419c935e2198218eff",
++      "sha256": "0ffe926bec55a63c187d76beb5dae15409dcdaf8b6f5beefb0a777db2f5b5191",
+       "immutable": false
+     },
+     "/assets/passkeys.js": {
+@@ -253,6 +265,36 @@
+     }
+   },
+   "releases": [
++    {
++      "version": "1c24a3765cdd43f9",
++      "files": [
++        "/assets/dist/app-f5e64357204190eb.js",
++        "/assets/dist/app-style-DDK8a-0C.css",
++        "/assets/dist/composer-5e088bd27ea38363.js",
++        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
++        "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
++        "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
++        "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
++        "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
++        "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
++        "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
++        "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
++        "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
++        "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
++        "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
++        "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
++        "/assets/dist/imladris-style-CRsa_HRN.css",
++        "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
++        "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
++        "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
++        "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
++        "/assets/dist/milkdown-adapter-zC8kMFUx.js",
++        "/assets/dist/passkeys-16e7134417f0d6af.js",
++        "/assets/dist/tour-1801eafe66889a28.js",
++        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
++        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
++      ]
++    },
+     {
+       "version": "cd261fb5782f8107",
+       "files": [
+diff --git a/config/imladris-runtime-baseline.json b/config/imladris-runtime-baseline.json
+index ccd0776b..fd29c0bf 100644
+--- a/config/imladris-runtime-baseline.json
++++ b/config/imladris-runtime-baseline.json
+@@ -21,6 +21,6 @@
+     "excluded": [
+       "public/assets/imladris.css"
+     ],
+-    "sha256": "fc4865c2d523f57c4a3cbad1482828c6459cbfeb55b77ff4a5c19b5199dc0bba"
++    "sha256": "de8ce50f861573c0de7ad9b7227d0cb6f7914886e56fdfe1ca7a6655c5afe757"
+   }
+ }
+diff --git a/docs/adr/0050-thread-mobile-recovery-and-reading.md b/docs/adr/0050-thread-mobile-recovery-and-reading.md
+index 4ffd2165..539650a4 100644
+--- a/docs/adr/0050-thread-mobile-recovery-and-reading.md
++++ b/docs/adr/0050-thread-mobile-recovery-and-reading.md
+@@ -48,3 +48,22 @@ Focused kernel/browser regressions, review resolutions, test logs and the mobile
+ runner continuation are recorded in `docs/evidence/thread-mobile-ux-2026-10-22/`.
+ The original audit remains unchanged. The continuation distinguishes implemented
+ fixes, local proxy observations and outstanding physical-device checks.
++
++## Follow-up: conflict saving and delayed rich recovery
++
++The follow-up reproduced an older native textarea restored by Back before the
++lazy rich editor initialized. Local storage and the pending-submit journal still
++held the latest body; using the nonempty native value opened the wrong revision
++and rotated its submission key. Initialize from the matching unconfirmed
++user/context/history entry only when its body still matches the saved local
++draft. Preserve any new typing while the optional editor module loads.
++
++The conflict's Save local action reads the current body and title at activation,
++rather than retaining the values captured when the conflict was displayed.
++The populated open preview also exposes a named keyboard scroll region with
++visible focus. Active gold text uses semantic theme tokens; the unlayered legacy
++rules hand color ownership back to the component layer with `revert-layer`.
++
++Reproduction traces, current local tests and the remaining device checks are in
++`docs/evidence/thread-mobile-followup-2026-10-22/`. These are local changes and
++do not amend the earlier deployment receipts.
+diff --git a/docs/design-system/imladris/components.css b/docs/design-system/imladris/components.css
+index dab6715d..8c11b0e5 100644
+--- a/docs/design-system/imladris/components.css
++++ b/docs/design-system/imladris/components.css
+@@ -157,7 +157,7 @@
+     padding: 6px 13px; cursor: pointer;
+ }
+ .star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
+-.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
++.star-btn.star-on { color: var(--gold-ink); border-color: var(--gold-200); background: var(--gold-soft); }
+ .star-marker { color: var(--star); }
+ 
+ /* ── Reactions — "✦ name · count"; on-state warms to gold ──────────────────── */
+@@ -171,17 +171,17 @@
+ .reaction:hover { background: var(--surface-sunken); }
+ .reaction:not(.reaction-static):hover { transform: translateY(-.5px); }
+ .reaction:not(.reaction-static):active { transform: scale(.97); }
+-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
++.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-ink); }
+ .reaction-static { cursor: default; }
+ .reaction-glyph { color: var(--star); }
+-.reaction-on .reaction-glyph { color: var(--gold-700); }
++.reaction-on .reaction-glyph { color: var(--gold-ink); }
+ .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+ .reaction-n::before { content: "· "; opacity: .7; }
+ /* The "·" separates the NAME from the count. In the raw-emoji form there is no
+    name, so the separator has nothing to separate and reads as a stray dot
+    between the glyph and the number — "👍 · 4". Dropped with the label. */
+ .reaction-bare .reaction-n::before { content: none; }
+-.reaction-on .reaction-n { color: var(--gold-700); }
++.reaction-on .reaction-n { color: var(--gold-ink); }
+ .reaction-n-val { display: inline-block; }
+ .reaction-n-val.is-up { animation: reaction-tick-up var(--dur-base) var(--ease-calm) both; }
+ .reaction-n-val.is-down { animation: reaction-tick-down var(--dur-base) var(--ease-calm) both; }
+diff --git a/public/assets/app.css b/public/assets/app.css
+index f8f9338b..0ba47adf 100644
+--- a/public/assets/app.css
++++ b/public/assets/app.css
+@@ -659,10 +659,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
+     background: var(--surface); color: var(--text); cursor: pointer;
+ }
+ .reaction:hover { background: var(--surface-3); }
+-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
++.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: revert-layer; }
+ .reaction-static { cursor: default; }
+ .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+-.reaction-on .reaction-n { color: var(--gold-700); }
++.reaction-on .reaction-n { color: revert-layer; }
+ .reaction-add { position: relative; display: inline-block; }
+ .reaction-add > summary { list-style: none; }
+ .reaction-add > summary::-webkit-details-marker { display: none; }
+@@ -1926,6 +1926,7 @@ body[data-route="thread"] .thread-conversation {
+ .thread-dock #reply.is-expanded .composer-input-wrap { flex: 1 1 auto; min-block-size: 0; overflow-y: auto; }
+ .thread-dock #reply.is-expanded :is(.composer-format-slot, .composer-actions-bar, .composer-meta-row) { flex: 0 0 auto; }
+ .thread-dock #reply.is-expanded [data-composer-after-box] { flex: 0 1 auto; min-block-size: 0; max-block-size: min(22dvh, 8rem); overflow-y: auto; }
++.composer [data-composer-after-box]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+ .thread-dock #reply.is-expanded .composer-upload-tray { min-block-size: 0; max-block-size: 5rem; overflow-y: auto; }
+ .inbox-reading.is-open { overflow: hidden; }
+ .inbox-reading.is-open [data-inbox-reading-content],
+@@ -2071,7 +2072,7 @@ body[data-route="thread"] .thread-conversation {
+     border: 1.5px solid var(--border-soft); border-radius: var(--radius-md); padding: 6px 13px;
+ }
+ .star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
+-.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
++.star-btn.star-on { color: revert-layer; border-color: var(--gold-200); background: revert-layer; }
+ 
+ /* — Thread breadcrumb reads as a back control (the figure's back chevron, §6) — */
+ .breadcrumb-back-ic { width: 13px; height: 13px; vertical-align: -1px; margin-right: 3px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+diff --git a/public/assets/composer.js b/public/assets/composer.js
+index 11b3c850..5dc8a0cf 100644
+--- a/public/assets/composer.js
++++ b/public/assets/composer.js
+@@ -599,6 +599,19 @@
+         var open = stored === 'open' || (stored === null && prefs.showPreview && adapterIsSourceMode(adapter, fallback));
+ 
+         function activeAdapter() { return form._rbComposerAdapter || adapter; }
++        function updatePreviewFocus() {
++            // The dock clips this shared wrapper. Give plain previews the same
++            // keyboard scroll path as previews containing links or controls.
++            if (open && pane.childElementCount) {
++                afterBox.setAttribute('tabindex', '0');
++                afterBox.setAttribute('role', 'region');
++                afterBox.setAttribute('aria-label', 'Preview and draft status');
++            } else {
++                afterBox.removeAttribute('tabindex');
++                afterBox.removeAttribute('role');
++                afterBox.removeAttribute('aria-label');
++            }
++        }
+         function renderNow() {
+             if (!open) { return; }
+             var active = activeAdapter();
+@@ -610,7 +623,10 @@
+             composerFetch(form, '/composer/preview', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                 .then(function (r) { return r.ok ? r.json() : null; })
+                 .then(function (j) {
+-                    if (seq === requestSeq && open && j && j.ok) { pane.innerHTML = j.html; }
++                    if (seq === requestSeq && open && j && j.ok) {
++                        pane.innerHTML = j.html;
++                        updatePreviewFocus();
++                    }
+                 })
+                 .catch(function () {});
+         }
+@@ -622,6 +638,7 @@
+         function setOpen(nextOpen, persist, fetchOnOpen) {
+             open = !!nextOpen;
+             pane.hidden = !open;
++            updatePreviewFocus();
+             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+             if (!open) {
+                 requestSeq++;
+@@ -682,6 +699,7 @@
+             && left.replace(/\r\n?/g, '\n') === right.replace(/\r\n?/g, '\n');
+     }
+     function rememberHistorySubmission(form, context, restore) {
++        var restored = null;
+         try {
+             var state = history.state || {};
+             if (typeof state !== 'object' || Array.isArray(state)) { return; }
+@@ -691,13 +709,17 @@
+             if (restore && typeof tokens[context] === 'string') {
+                 var remembered = tokens[context];
+                 // Old history entries can outlive the bounded submit journal.
+-                if (pendingDraftSubmits().some(function (item) { return item && item.submission === remembered; })) {
++                restored = pendingDraftSubmits().find(function (item) {
++                    return item && item.user === draftUser() && item.context === context && item.submission === remembered;
++                });
++                if (restored) {
+                     input.value = remembered;
+                 }
+             }
+             tokens[context] = input.value;
+             history.replaceState(Object.assign({}, state, { rbComposerTokens: tokens }), '');
+         } catch (e) {}
++        return restored;
+     }
+     function submissionContent(form, markdown) {
+         var fields = [];
+@@ -792,7 +814,7 @@
+                         return;
+                     }
+                     if (res.status === 409) {
+-                        renderConflict(res.json.server || null, body, title);
++                        renderConflict(res.json.server || null);
+                         return;
+                     }
+                     if (res.status >= 200 && res.status < 300 && res.json && res.json.draft) {
+@@ -817,7 +839,7 @@
+             applying = false;
+             updateDiscard();
+         }
+-        function renderConflict(server, localBody, localTitle) {
++        function renderConflict(server) {
+             if (!server) {
+                 revision = 0;
+                 return;
+@@ -865,7 +887,10 @@
+             saveLocal.textContent = 'Save local as next revision';
+             saveLocal.addEventListener('click', function () {
+                 paused = false;
+-                saveWithRevision(parseInt(server.revision, 10) || revision, localBody, localTitle);
++                // The member may have kept editing while this choice was open.
++                // Save the current draft, not the snapshot that raised conflict.
++                saveWithRevision(parseInt(server.revision, 10) || revision,
++                    adapter.getMarkdown(), draftTitle(form, draftLabel(context)));
+             });
+ 
+             actions.appendChild(keepLocal);
+@@ -903,7 +928,7 @@
+                 })) { return; }
+                 revision = parseInt(server.revision, 10) || 0;
+                 if (adapter.getMarkdown() && adapter.getMarkdown() !== (server.body || '')) {
+-                    renderConflict(server, adapter.getMarkdown(), draftTitle(form, draftLabel(context)));
++                    renderConflict(server);
+                     return;
+                 }
+                 if (!adapter.getMarkdown() && server.body) {
+@@ -3340,6 +3365,10 @@
+         // enhances the textarea instead; later inbox forms use the same result.
+         if (document.body.getAttribute('data-wysiwyg-composer') === '1'
+             && !form.hasAttribute('data-no-wysiwyg') && !wysiwygResolved) {
++            if (!form._rbPendingComposerInput) {
++                form._rbPendingComposerInput = function () { form._rbEditedBeforeEnhance = true; };
++                ta.addEventListener('input', form._rbPendingComposerInput);
++            }
+             loadWysiwygAdapter();
+             return;
+         }
+@@ -3354,6 +3383,22 @@
+         form._rbComposerCleanups = [];
+         form._rbComposerRequests = [];
+         ta.setAttribute('data-rb-enhanced', '1');
++        if (form._rbPendingComposerInput) {
++            ta.removeEventListener('input', form._rbPendingComposerInput);
++            form._rbPendingComposerInput = null;
++        }
++        stampIdempotency(form);
++        if (draftsEnabled() && !form.hasAttribute('data-no-draft')) {
++            var context = draftContext(form);
++            var pending = rememberHistorySubmission(form, context, true);
++            var saved = storageRead(draftKeyFor(draftUser(), context));
++            // Back may restore an older native textarea before the lazy editor
++            // loads. Initialize from the matching unconfirmed submission, but
++            // never replace a newer local draft or typing during the import.
++            if (pending && !pending.completed && !form._rbEditedBeforeEnhance && sameDraftBody(saved, pending.body)) {
++                ta.value = saved;
++            }
++        }
+         var adapter = new TextareaComposerAdapter(form, ta);
+         form._rbComposerFallbackAdapter = adapter;
+         form._rbComposerAdapter = adapter;
+@@ -3369,7 +3414,6 @@
+         buildEmojiPicker(form, adapter);
+         wireKeys(form, adapter, prefs);
+         wireSubmitState(form, ta, adapter);
+-        stampIdempotency(form);
+         // A form may opt out of local draft autosave (data-no-draft). The inline
+         // post-edit form does: its textarea is server-pre-filled with the current
+         // body, so a saved draft is never restored into it (the !ta.value guard
+diff --git a/public/assets/imladris.css b/public/assets/imladris.css
+index 7d6aaa1d..5496765d 100644
+--- a/public/assets/imladris.css
++++ b/public/assets/imladris.css
+@@ -581,7 +581,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
+     padding: 6px 13px; cursor: pointer;
+ }
+ .star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
+-.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
++.star-btn.star-on { color: var(--gold-ink); border-color: var(--gold-200); background: var(--gold-soft); }
+ .star-marker { color: var(--star); }
+ 
+ /* ── Reactions — "✦ name · count"; on-state warms to gold ──────────────────── */
+@@ -595,17 +595,17 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
+ .reaction:hover { background: var(--surface-sunken); }
+ .reaction:not(.reaction-static):hover { transform: translateY(-.5px); }
+ .reaction:not(.reaction-static):active { transform: scale(.97); }
+-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
++.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-ink); }
+ .reaction-static { cursor: default; }
+ .reaction-glyph { color: var(--star); }
+-.reaction-on .reaction-glyph { color: var(--gold-700); }
++.reaction-on .reaction-glyph { color: var(--gold-ink); }
+ .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+ .reaction-n::before { content: "· "; opacity: .7; }
+ /* The "·" separates the NAME from the count. In the raw-emoji form there is no
+    name, so the separator has nothing to separate and reads as a stray dot
+    between the glyph and the number — "👍 · 4". Dropped with the label. */
+ .reaction-bare .reaction-n::before { content: none; }
+-.reaction-on .reaction-n { color: var(--gold-700); }
++.reaction-on .reaction-n { color: var(--gold-ink); }
+ .reaction-n-val { display: inline-block; }
+ .reaction-n-val.is-up { animation: reaction-tick-up var(--dur-base) var(--ease-calm) both; }
+ .reaction-n-val.is-down { animation: reaction-tick-down var(--dur-base) var(--ease-calm) both; }
+diff --git a/resources/imladris/components.css b/resources/imladris/components.css
+index dab6715d..8c11b0e5 100644
+--- a/resources/imladris/components.css
++++ b/resources/imladris/components.css
+@@ -157,7 +157,7 @@
+     padding: 6px 13px; cursor: pointer;
+ }
+ .star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
+-.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
++.star-btn.star-on { color: var(--gold-ink); border-color: var(--gold-200); background: var(--gold-soft); }
+ .star-marker { color: var(--star); }
+ 
+ /* ── Reactions — "✦ name · count"; on-state warms to gold ──────────────────── */
+@@ -171,17 +171,17 @@
+ .reaction:hover { background: var(--surface-sunken); }
+ .reaction:not(.reaction-static):hover { transform: translateY(-.5px); }
+ .reaction:not(.reaction-static):active { transform: scale(.97); }
+-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
++.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-ink); }
+ .reaction-static { cursor: default; }
+ .reaction-glyph { color: var(--star); }
+-.reaction-on .reaction-glyph { color: var(--gold-700); }
++.reaction-on .reaction-glyph { color: var(--gold-ink); }
+ .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+ .reaction-n::before { content: "· "; opacity: .7; }
+ /* The "·" separates the NAME from the count. In the raw-emoji form there is no
+    name, so the separator has nothing to separate and reads as a stray dot
+    between the glyph and the number — "👍 · 4". Dropped with the label. */
+ .reaction-bare .reaction-n::before { content: none; }
+-.reaction-on .reaction-n { color: var(--gold-700); }
++.reaction-on .reaction-n { color: var(--gold-ink); }
+ .reaction-n-val { display: inline-block; }
+ .reaction-n-val.is-up { animation: reaction-tick-up var(--dur-base) var(--ease-calm) both; }
+ .reaction-n-val.is-down { animation: reaction-tick-down var(--dur-base) var(--ease-calm) both; }
+diff --git a/resources/imladris/manifest.json b/resources/imladris/manifest.json
+index e7a0cf0c..ed2eaf49 100644
+--- a/resources/imladris/manifest.json
++++ b/resources/imladris/manifest.json
+@@ -4,7 +4,7 @@
+     "application_baseline": {
+         "reconciled_through_commit": "6d81da590a12bd09bb8d0e282c042aa03d755a94",
+         "composer_contract": "COMPOSER.md v0.8",
+-        "surface_sha256": "fc4865c2d523f57c4a3cbad1482828c6459cbfeb55b77ff4a5c19b5199dc0bba"
++        "surface_sha256": "de8ce50f861573c0de7ad9b7227d0cb6f7914886e56fdfe1ca7a6655c5afe757"
+     },
+     "design_contract": {
+         "source": "docs/design-system/imladris/production-contract.json",
+@@ -22,7 +22,7 @@
+         "tokens/colors.css": "ba3bb0e23251ee4c5692a0d647b7353223b7c4e57cc33cd8b005ee7bfc7155bb",
+         "tokens/typography.css": "e0124c784a949edfae7918aebcb5c6c2b20b772c6723ca9a476b61d63d2c1857",
+         "tokens/spacing.css": "fc1c04e15acde9eb72648de244900b8a97c3b5a1094b5db689de66e754bd7384",
+-        "components.css": "f44cc9d9875609007f187bde678c2680e1133d027512b29135a2feaf2db25c1e"
++        "components.css": "cbc489eae2844bdcda5ab6686aec7b97ca9a591ea985c251444e96c93f587b4f"
+     },
+     "font_files": [
+         "LICENSES/OFL-cormorant-garamond.txt",
+diff --git a/tests/browser/thread-mobile-recovery.spec.ts b/tests/browser/thread-mobile-recovery.spec.ts
+index b47d08e1..39bfb000 100644
+--- a/tests/browser/thread-mobile-recovery.spec.ts
++++ b/tests/browser/thread-mobile-recovery.spec.ts
+@@ -1,11 +1,14 @@
+ import { expect, test, type Page } from '@playwright/test';
+ import { execFileSync } from 'node:child_process';
+ import path from 'node:path';
+-import { mkdirSync } from 'node:fs';
++import { mkdirSync, writeFileSync } from 'node:fs';
++import AxeBuilder from '@axe-core/playwright';
+ 
+ const topic = '/t/30-ratified-decisions';
+ const body = 'A failed reply must survive Back, navigation, and reload.';
+-const captures = path.resolve(__dirname, '../../docs/evidence/thread-mobile-ux-2026-10-22/browser');
++const captures = process.env.RB_EVIDENCE_DIR
++  ? path.resolve(__dirname, '../..', process.env.RB_EVIDENCE_DIR)
++  : path.resolve(__dirname, '../../docs/evidence/thread-mobile-ux-2026-10-22/browser');
+ 
+ async function capture(page: Page, name: string): Promise<void> {
+   mkdirSync(captures, { recursive: true });
+@@ -37,7 +40,10 @@ $db = new \App\Core\Database($config->get('db'));
+ $db->run('DELETE FROM server_drafts WHERE user_id = (SELECT id FROM users WHERE username = ?) AND context_key = ?', ['elladan', '~2Ft~2F30~2Freply']);
+ $limiter = new \App\Security\FileRateLimiter((string) $config->get('paths.ratelimit'));
+ $user = (new \App\Repository\UserRepository($db))->findByUsername('elladan');
+-if ($user) { $limiter->clear('rl:post:u' . $user['id']); }
++if ($user) {
++    $limiter->clear('rl:post:u' . $user['id']);
++    (new \App\Repository\UserPreferenceRepository($db))->merge((int) $user['id'], ['theme' => 'system']);
++}
+ `], { cwd: path.resolve(__dirname, '../..'), env: process.env });
+ });
+ 
+@@ -308,3 +314,179 @@ test('a late multiline autosave from the confirmed submission is not restored',
+   await expect(input).toHaveValue('');
+   await expect(page.locator('#reply .composer-draft-sync')).not.toContainText('Loaded server draft.');
+ });
++
++for (const theme of ['light', 'dark']) {
++  test('active thread labels meet normal-text contrast in ' + theme, async ({ page }, info) => {
++    await openThread(page);
++    // Use the real saved appearance and a fresh render. Switching the root
++    // attribute mid-page leaves offscreen WebKit background transitions pending.
++    await page.goto('/settings/appearance');
++    await page.locator(`input[name="theme"][value="${theme}"]`).check({ force: true });
++    await page.getByRole('button', { name: 'Save appearance' }).click();
++    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
++    await page.goto(topic);
++    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
++    const themeState = await page.locator('.star-btn.star-on, .reaction-on').evaluateAll(elements =>
++      elements.map(element => ({
++        control: element.className,
++        background: getComputedStyle(element).backgroundColor,
++        color: getComputedStyle(element.querySelector('.reaction-n') || element).color,
++      })));
++    const results = await new AxeBuilder({ page })
++      .include('.star-btn.star-on')
++      .include('.reaction-on .reaction-n')
++      .withRules(['color-contrast'])
++      .analyze();
++    expect(await page.locator('.star-btn.star-on').count()).toBeGreaterThan(0);
++    expect(await page.locator('.reaction-on .reaction-n').count()).toBeGreaterThan(0);
++    await info.attach('contrast-' + theme, { body: JSON.stringify(results), contentType: 'application/json' });
++    mkdirSync(captures, { recursive: true });
++    writeFileSync(path.join(captures, 'contrast-' + theme + '-' + info.project.name + '.json'), JSON.stringify({
++      themeState, violations: results.violations, incomplete: results.incomplete,
++      passes: results.passes.filter(rule => rule.id === 'color-contrast'),
++    }, null, 2));
++    await capture(page, 'active-labels-' + theme + '-' + info.project.name);
++    expect(results.violations).toEqual([]);
++    expect(results.incomplete).toEqual([]);
++  });
++}
++
++test('keyboard reaches and scrolls the complete plain reply preview', async ({ page }, info) => {
++  await openThread(page);
++  const input = page.locator('#reply textarea');
++  const text = Array.from({ length: 18 }, (_, i) => 'Preview paragraph ' + (i + 1) + ': A complete review must be possible using the keyboard.').join('\n\n');
++  await input.fill(text);
++  await expect(page.locator('#reply .composer-preview')).toContainText('Preview paragraph 18:');
++  const box = page.locator('#reply [data-composer-after-box]');
++  expect(await box.evaluate(e => e.scrollHeight > e.clientHeight)).toBe(true);
++  await input.focus();
++  let reached = false;
++  for (let i = 0; i < 18; i++) {
++    await page.keyboard.press('Tab');
++    if (await box.evaluate(e => e === document.activeElement)) { reached = true; break; }
++  }
++  expect(reached, 'Tab must enter the overflow region without requiring an incidental link or conflict button').toBe(true);
++  await expect(box).toHaveAccessibleName(/preview/i);
++  const before = await box.evaluate(e => e.scrollTop);
++  await page.keyboard.press('PageDown');
++  await expect.poll(() => box.evaluate(e => e.scrollTop)).toBeGreaterThan(before);
++  const focusStyle = await box.evaluate(e => ({ style: getComputedStyle(e).outlineStyle, width: parseFloat(getComputedStyle(e).outlineWidth) }));
++  expect(focusStyle.style).not.toBe('none');
++  expect(focusStyle.width).toBeGreaterThanOrEqual(2);
++  await capture(page, 'keyboard-preview-' + info.project.name);
++  await page.locator('#reply .composer-preview-toggle').click();
++  await expect(box).not.toHaveAttribute('tabindex', '0');
++});
++
++async function currentRemoteDraft(page: Page) {
++  const response = await page.request.get('/api/drafts/~2Ft~2F30~2Freply', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
++  expect(response.ok()).toBe(true);
++  return (await response.json()).draft;
++}
++
++async function makeRichConflict(page: Page) {
++  setRich(true);
++  await openThread(page);
++  const editor = page.locator('#reply .ProseMirror');
++  await editor.fill('Initial local rich revision.');
++  await expect(page.locator('#reply .composer-draft-sync')).toContainText('Saved to server drafts.');
++  const draft = await currentRemoteDraft(page);
++  const token = await page.locator('#reply [name=_token]').inputValue();
++  const remote = await page.request.post('/api/drafts/~2Ft~2F30~2Freply', {
++    headers: { 'X-Requested-With': 'XMLHttpRequest' },
++    multipart: { _token: token, revision: String(draft.revision), body: 'A different remote revision.', title: 'Remote fixture', metadata: JSON.stringify({ context: '/t/30/reply' }) },
++  });
++  expect(remote.ok()).toBe(true);
++  await editor.fill('Local text when the conflict appeared.');
++  await expect(page.getByRole('button', { name: 'Save local as next revision', exact: true })).toBeVisible();
++  return editor;
++}
++
++test('saving a rich conflict uses the latest local edits', async ({ page }, info) => {
++  const editor = await makeRichConflict(page);
++  const latest = 'Newest local revision after the conflict — café, 你好.';
++  await editor.fill(latest);
++  const saved = page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === '/api/drafts/~2Ft~2F30~2Freply' && r.status() === 200);
++  await page.getByRole('button', { name: 'Save local as next revision', exact: true }).click();
++  const response = await saved;
++  const result = await response.json();
++  await info.attach('saved-conflict', { body: JSON.stringify({ sent: latest, response: result, visible: await editor.innerText(), remote: await currentRemoteDraft(page) }), contentType: 'application/json' });
++  expect(result.draft.body).toBe(latest);
++  await expect(editor).toHaveText(latest);
++});
++
++test('rapid rich edit after resolving a conflict survives offline Back', async ({ page, context, browserName }, info) => {
++  test.skip(browserName !== 'chromium', 'This scenario requires Chromium navigation to an offline error history entry.');
++  const editor = await makeRichConflict(page);
++  await page.getByRole('button', { name: 'Save local as next revision', exact: true }).click();
++  const latest = 'Rapid rich draft after conflict resolution — café, 你好.';
++  await editor.fill(latest);
++  await expect(page.locator('#reply textarea')).toHaveValue(latest);
++  const key = await page.locator('#reply [name=idempotency_key]').inputValue();
++  const failed = page.waitForEvent('requestfailed', r => r.isNavigationRequest() && r.method() === 'POST');
++  await context.setOffline(true);
++  await page.locator('#reply .composer-send').click({ noWaitAfter: true });
++  await failed;
++  await context.setOffline(false);
++  await page.goBack();
++  await editor.waitFor();
++  const immediate = await page.locator('#reply').evaluate((form: HTMLFormElement) => ({
++    rich: (form.querySelector('.ProseMirror') as HTMLElement)?.innerText.trim(),
++    textarea: (form.querySelector('textarea') as HTMLTextAreaElement)?.value,
++    key: (form.querySelector('[name=idempotency_key]') as HTMLInputElement)?.value,
++    local: localStorage.getItem('rb-draft:elladan:/t/30/reply'),
++    busy: form.getAttribute('aria-busy'),
++  }));
++  await info.attach('immediate-back-state', { body: JSON.stringify({ expected: latest, expectedKey: key, immediate }), contentType: 'application/json' });
++  expect(immediate.rich).toBe(latest);
++  await expect(page.locator('#reply .composer-send')).toBeEnabled();
++  await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(key);
++  await expect(editor).toHaveText(latest);
++});
++
++for (const editWhileLoading of [false, true]) {
++  test('delayed rich recovery ' + (editWhileLoading ? 'preserves new typing' : 'replaces a stale native snapshot'), async ({ page, context, browserName }) => {
++    test.skip(browserName !== 'chromium', 'This scenario requires Chromium navigation to an offline error history entry.');
++    const editor = await makeRichConflict(page);
++    await page.getByRole('button', { name: 'Save local as next revision', exact: true }).click();
++    const latest = 'The latest submitted rich draft — café, 你好.';
++    await editor.fill(latest);
++    const key = await page.locator('#reply [name=idempotency_key]').inputValue();
++    const moduleUrl = new URL((await page.locator('body').getAttribute('data-wysiwyg-src'))!, page.url()).href;
++    const failed = page.waitForEvent('requestfailed', r => r.isNavigationRequest() && r.method() === 'POST');
++    await context.setOffline(true);
++    await page.locator('#reply .composer-send').click({ noWaitAfter: true });
++    await failed;
++    await context.setOffline(false);
++
++    let release!: () => void;
++    let requested!: () => void;
++    const gate = new Promise<void>(resolve => { release = resolve; });
++    const requestStarted = new Promise<void>(resolve => { requested = resolve; });
++    await page.route(moduleUrl, async route => { requested(); await gate; await route.continue(); });
++    const newer = 'New typing while the rich editor is loading.';
++    try {
++      await page.goBack();
++      await requestStarted;
++      const input = page.locator('#reply textarea');
++      await expect(input).toBeVisible();
++      // Reproduce the stale native form snapshot captured in the failing Back
++      // trace. Keep real local storage, history and the failed-submit journal.
++      await input.evaluate((element: HTMLTextAreaElement) => { element.value = 'Local text when the conflict appeared.'; });
++      if (editWhileLoading) await input.fill(newer);
++    } finally {
++      release();
++    }
++    await expect(page.locator('#reply textarea')).toHaveAttribute('data-rb-enhanced', '1');
++    if (editWhileLoading) {
++      // Enhancement keeps a focused native textarea in source mode.
++      await expect(page.locator('#reply textarea')).toHaveValue(newer);
++      await page.getByRole('button', { name: 'Rich text', exact: true }).click();
++    }
++    await editor.waitFor();
++    expect(await editor.innerText()).toBe(editWhileLoading ? newer : latest);
++    await expect(page.locator('#reply .composer-send')).toBeEnabled();
++    if (editWhileLoading) await expect(page.locator('#reply [name=idempotency_key]')).not.toHaveValue(key);
++    else await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(key);
++  });
++}

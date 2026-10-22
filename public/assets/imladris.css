@@ -581,7 +581,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     padding: 6px 13px; cursor: pointer;
 }
 .star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
-.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
+.star-btn.star-on { color: var(--gold-ink); border-color: var(--gold-200); background: var(--gold-soft); }
 .star-marker { color: var(--star); }
 
 /* ── Reactions — "✦ name · count"; on-state warms to gold ──────────────────── */
@@ -595,17 +595,17 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .reaction:hover { background: var(--surface-sunken); }
 .reaction:not(.reaction-static):hover { transform: translateY(-.5px); }
 .reaction:not(.reaction-static):active { transform: scale(.97); }
-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
+.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-ink); }
 .reaction-static { cursor: default; }
 .reaction-glyph { color: var(--star); }
-.reaction-on .reaction-glyph { color: var(--gold-700); }
+.reaction-on .reaction-glyph { color: var(--gold-ink); }
 .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
 .reaction-n::before { content: "· "; opacity: .7; }
 /* The "·" separates the NAME from the count. In the raw-emoji form there is no
    name, so the separator has nothing to separate and reads as a stray dot
    between the glyph and the number — "👍 · 4". Dropped with the label. */
 .reaction-bare .reaction-n::before { content: none; }
-.reaction-on .reaction-n { color: var(--gold-700); }
+.reaction-on .reaction-n { color: var(--gold-ink); }
 .reaction-n-val { display: inline-block; }
 .reaction-n-val.is-up { animation: reaction-tick-up var(--dur-base) var(--ease-calm) both; }
 .reaction-n-val.is-down { animation: reaction-tick-down var(--dur-base) var(--ease-calm) both; }

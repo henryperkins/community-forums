@@ -1,0 +1,85 @@
+
+Running 38 tests using 1 worker
+
+(node:29616) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok  1 [desktop] › thread-mobile-recovery.spec.ts:57:5 › failed navigation keeps the draft and restores a usable submit button (4.7s)
+
+  ok  2 [desktop] › thread-mobile-recovery.spec.ts:79:5 › confirmation clears only the submitted version and Back permits a new reply (4.8s)
+
+  ok  3 [desktop] › thread-mobile-recovery.spec.ts:100:5 › a later edit in another tab survives confirmation of the older draft (5.5s)
+
+  ok  4 [desktop] › thread-mobile-recovery.spec.ts:112:5 › enlarged header labels reflow and mobile prose spans beneath the byline (2.6s)
+
+  ok  5 [desktop] › thread-mobile-recovery.spec.ts:136:5 › landscape preview leaves Minimize and Reply reachable below the header (3.2s)
+
+  ok  6 [desktop] › thread-mobile-recovery.spec.ts:168:5 › reaction choices have visible names before activation (2.1s)
+
+  ok  7 [desktop] › thread-mobile-recovery.spec.ts:182:5 › rich editor recovers a failed send and submits the retained draft exactly once (5.5s)
+
+  ok  8 [desktop] › thread-mobile-recovery.spec.ts:206:5 › a later draft may deliberately repeat a confirmed reply (3.7s)
+
+  ok  9 [desktop] › thread-mobile-recovery.spec.ts:220:5 › editing after a committed response is lost uses a fresh submission key (3.6s)
+
+  ok 10 [desktop] › thread-mobile-recovery.spec.ts:250:5 › rich history cleanup preserves a newer draft in another tab after settling (6.3s)
+
+  ok 11 [desktop] › thread-mobile-recovery.spec.ts:271:5 › multiple completed history entries cannot reuse an older consumed key (5.0s)
+
+  ok 12 [desktop] › thread-mobile-recovery.spec.ts:294:5 › a late multiline autosave from the confirmed submission is not restored (2.6s)
+
+  ok 13 [desktop] › thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light (2.7s)
+
+  ok 14 [desktop] › thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark (2.8s)
+
+  ok 15 [desktop] › thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview (3.6s)
+
+  ok 16 [desktop] › thread-mobile-recovery.spec.ts:384:5 › saving a rich conflict uses the latest local edits (5.7s)
+
+  ok 17 [desktop] › thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (6.7s)
+
+  ok 18 [desktop] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot (6.8s)
+
+  ok 19 [desktop] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing (7.0s)
+(node:5104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 20 [mobile] › thread-mobile-recovery.spec.ts:57:5 › failed navigation keeps the draft and restores a usable submit button (5.1s)
+
+  ok 21 [mobile] › thread-mobile-recovery.spec.ts:79:5 › confirmation clears only the submitted version and Back permits a new reply (4.6s)
+
+  ok 22 [mobile] › thread-mobile-recovery.spec.ts:100:5 › a later edit in another tab survives confirmation of the older draft (5.5s)
+
+  ok 23 [mobile] › thread-mobile-recovery.spec.ts:112:5 › enlarged header labels reflow and mobile prose spans beneath the byline (3.0s)
+
+  ok 24 [mobile] › thread-mobile-recovery.spec.ts:136:5 › landscape preview leaves Minimize and Reply reachable below the header (3.2s)
+
+  ok 25 [mobile] › thread-mobile-recovery.spec.ts:168:5 › reaction choices have visible names before activation (2.0s)
+
+  ok 26 [mobile] › thread-mobile-recovery.spec.ts:182:5 › rich editor recovers a failed send and submits the retained draft exactly once (5.2s)
+
+  ok 27 [mobile] › thread-mobile-recovery.spec.ts:206:5 › a later draft may deliberately repeat a confirmed reply (4.1s)
+
+  ok 28 [mobile] › thread-mobile-recovery.spec.ts:220:5 › editing after a committed response is lost uses a fresh submission key (4.0s)
+
+  ok 29 [mobile] › thread-mobile-recovery.spec.ts:250:5 › rich history cleanup preserves a newer draft in another tab after settling (7.8s)
+
+  ok 30 [mobile] › thread-mobile-recovery.spec.ts:271:5 › multiple completed history entries cannot reuse an older consumed key (6.6s)
+
+  ok 31 [mobile] › thread-mobile-recovery.spec.ts:294:5 › a late multiline autosave from the confirmed submission is not restored (3.9s)
+
+  ok 32 [mobile] › thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light (2.9s)
+
+  ok 33 [mobile] › thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark (3.1s)
+
+  ok 34 [mobile] › thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview (3.7s)
+
+  ok 35 [mobile] › thread-mobile-recovery.spec.ts:384:5 › saving a rich conflict uses the latest local edits (5.9s)
+
+  ok 36 [mobile] › thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (6.8s)
+
+  ok 37 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot (7.0s)
+
+  ok 38 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing (7.3s)
+
+  38 passed (3.0m)

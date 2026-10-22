@@ -1,0 +1,106 @@
+{
+  "errors": [],
+  "gaps": [
+    "F-07: confirmed finding is implemented",
+    "F-08: confirmed finding is implemented",
+    "F-08/DR-IOS-PREVIEW: device regression target verification not_run",
+    "F-08/DR-ANDROID-PREVIEW: device regression target verification not_run",
+    "F-09: confirmed finding is implemented",
+    "F-09/DR-IOS-RECOVERY: device regression target verification not_run",
+    "F-09/DR-ANDROID-RECOVERY: device regression target verification not_run",
+    "C-CONTRAST-DAY: current recorded failure",
+    "C-CONTRAST-TWILIGHT: current recorded failure",
+    "C-WK-PREVIEW: current recorded failure",
+    "C-WK-KEYBOARD: current recorded failure",
+    "C-DIAG-NATIVE-BACK: current recorded failure",
+    "C-CONTRAST-DAY: required verification incomplete",
+    "C-CONTRAST-TWILIGHT: required verification incomplete",
+    "C-WK-RESIZE: required verification incomplete",
+    "C-WK-PREVIEW: required verification incomplete",
+    "C-WK-KEYBOARD: required verification incomplete",
+    "C-CONFLICT: required verification incomplete",
+    "C-RICH-MIXED: required verification incomplete",
+    "C-PHONE-IOS-FORMS: required verification incomplete",
+    "C-PHONE-ANDROID-FORMS: required verification incomplete",
+    "C-PHONE-IOS-OVERLAYS: required verification incomplete",
+    "C-PHONE-ANDROID-GESTURES: required verification incomplete",
+    "C-PHONE-IOS-PREVIEW: required verification incomplete",
+    "C-PHONE-IOS-RECOVERY: required verification incomplete",
+    "C-PHONE-ANDROID-RECOVERY: required verification incomplete",
+    "C-PHONE-ANDROID-PERF: required verification incomplete",
+    "C-DIAG-NATIVE-BACK: required verification incomplete",
+    "C-PHONE-IOS-FORMS-FIX: required verification incomplete",
+    "C-PHONE-ANDROID-FORMS-FIX: required verification incomplete",
+    "C-PHONE-IOS-OVERLAYS-FIX: required verification incomplete",
+    "C-PHONE-ANDROID-GESTURES-FIX: required verification incomplete",
+    "C-PHONE-IOS-PREVIEW-FIX: required verification incomplete",
+    "C-PHONE-IOS-RECOVERY-FIX: required verification incomplete",
+    "C-PHONE-ANDROID-RECOVERY-FIX: required verification incomplete",
+    "C-PHONE-ANDROID-PERF-FIX: required verification incomplete",
+    "C-PHONE-ANDROID-PREVIEW-FIX: required verification incomplete",
+    "Unresolved failed command: composer test (PHP memory_limit1024M)"
+  ],
+  "coverage": "complete",
+  "assessment_complete": true,
+  "verification": "failed",
+  "verification_ceiling": "proxy",
+  "impeccable": "executed",
+  "open_p0_p1": [
+    "F-09"
+  ],
+  "applied_device_entries": [
+    "C-PHONE-ANDROID-PREVIEW-FIX",
+    "C-PHONE-ANDROID-RECOVERY-FIX",
+    "C-PHONE-IOS-PREVIEW-FIX",
+    "C-PHONE-IOS-RECOVERY-FIX"
+  ],
+  "device_regressions": [
+    {
+      "finding_id": "F-08",
+      "regression_id": "DR-IOS-PREVIEW",
+      "source_scope_ids": [
+        "webkit-plain-preview"
+      ],
+      "check_ids": [
+        "C-PHONE-IOS-PREVIEW-FIX"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-08",
+      "regression_id": "DR-ANDROID-PREVIEW",
+      "source_scope_ids": [
+        "webkit-plain-preview"
+      ],
+      "check_ids": [
+        "C-PHONE-ANDROID-PREVIEW-FIX"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-09",
+      "regression_id": "DR-IOS-RECOVERY",
+      "source_scope_ids": [
+        "mixed-rich-history",
+        "native-back-reproduced"
+      ],
+      "check_ids": [
+        "C-PHONE-IOS-RECOVERY-FIX"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-09",
+      "regression_id": "DR-ANDROID-RECOVERY",
+      "source_scope_ids": [
+        "mixed-rich-history",
+        "native-back-reproduced"
+      ],
+      "check_ids": [
+        "C-PHONE-ANDROID-RECOVERY-FIX"
+      ],
+      "status": "not_run"
+    }
+  ],
+  "claimable_complete": false
+}

@@ -1,0 +1,314 @@
+
+Running 5 tests using 1 worker
+
+(node:29228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  1 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light (2.7s)
+(node:30980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  2 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark (2.7s)
+(node:23064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  3 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview (8.3s)
+(node:25532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  4 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:384:5 › saving a rich conflict uses the latest local edits (5.5s)
+(node:32484) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 5 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (6.1s)
+
+
+  1) [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 93
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    +     "help": "Elements must meet minimum color contrast ratio thresholds",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+    +     "id": "color-contrast",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#f4ebcf",
+    +               "contrastRatio": 3.55,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#9a7530",
+    +               "fontSize": "9.4pt (12.48px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 9.4pt (12.48px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button class=\"linkbtn star-btn star-on\" type=\"submit\" aria-pressed=\"true\">",
+    +                 "target": Array [
+    +                   ".star-btn",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 9.4pt (12.48px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<span>Starred</span>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".star-btn > span",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#f4ebcf",
+    +               "contrastRatio": 3.55,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#9a7530",
+    +               "fontSize": "10.2pt (13.6px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button type=\"submit\" class=\"reaction reaction-on\" aria-pressed=\"true\" data-label=\"Commend\" aria-describedby=\"reaction-tip-126-0\">",
+    +                 "target": Array [
+    +                   "button[aria-describedby=\"reaction-tip-126-0\"]",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<span class=\"reaction-n-val\">13</span>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[aria-describedby=\"reaction-tip-126-0\"] > .reaction-n > .reaction-n-val",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.color",
+    +       "wcag2aa",
+    +       "wcag143",
+    +       "TTv5",
+    +       "TT13.c",
+    +       "EN-301-549",
+    +       "EN-9.1.4.3",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-3.2.1",
+    +     ],
+    +   },
+    + ]
+
+      326 |     await info.attach('contrast-' + theme, { body: JSON.stringify(results), contentType: 'application/json' });
+      327 |     await capture(page, 'active-labels-' + theme + '-' + info.project.name);
+    > 328 |     expect(results.violations).toEqual([]);
+          |                                ^
+      329 |     expect(results.incomplete).toEqual([]);
+      330 |   });
+      331 | }
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:328:32
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\browser\.artifacts\thread-mobile-recovery-act-f541e-rmal-text-contrast-in-light-mobile\error-context.md
+
+  2) [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -   1
+    + Received  + 105
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    +     "help": "Elements must meet minimum color contrast ratio thresholds",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+    +     "id": "color-contrast",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#f4ebcf",
+    +               "contrastRatio": 3.55,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#9a7530",
+    +               "fontSize": "9.4pt (12.48px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 9.4pt (12.48px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button class=\"linkbtn star-btn star-on\" type=\"submit\" aria-pressed=\"true\">",
+    +                 "target": Array [
+    +                   ".star-btn",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 3.55 (foreground color: #9a7530, background color: #f4ebcf, font size: 9.4pt (12.48px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<span>Starred</span>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".star-btn > span",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#3b4032",
+    +               "contrastRatio": 2.52,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#9a7530",
+    +               "fontSize": "10.2pt (13.6px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.52 (foreground color: #9a7530, background color: #3b4032, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button type=\"submit\" class=\"reaction reaction-on\" aria-pressed=\"true\" data-label=\"Commend\" aria-describedby=\"reaction-tip-126-0\">",
+    +                 "target": Array [
+    +                   "button[aria-describedby=\"reaction-tip-126-0\"]",
+    +                 ],
+    +               },
+    +               Object {
+    +                 "html": "<article class=\"post post-accepted\" id=\"p126\" data-post=\"\">",
+    +                 "target": Array [
+    +                   "#p126",
+    +                 ],
+    +               },
+    +               Object {
+    +                 "html": "<body class=\"variant-app is-rail-open is-reading-open\" data-route=\"thread\" data-drafts=\"1\" data-server-drafts=\"1\" data-rail-open=\"1\" data-inbox-reading-open=\"1\" data-user=\"elladan\" data-enter-to-send=\"1\" data-show-preview=\"1\" data-smart-lists=\"1\" data-nav-ready=\"1\">",
+    +                 "target": Array [
+    +                   "body",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.52 (foreground color: #9a7530, background color: #3b4032, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<span class=\"reaction-n-val\">13</span>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[aria-describedby=\"reaction-tip-126-0\"] > .reaction-n > .reaction-n-val",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.color",
+    +       "wcag2aa",
+    +       "wcag143",
+    +       "TTv5",
+    +       "TT13.c",
+    +       "EN-301-549",
+    +       "EN-9.1.4.3",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-3.2.1",
+    +     ],
+    +   },
+    + ]
+
+      326 |     await info.attach('contrast-' + theme, { body: JSON.stringify(results), contentType: 'application/json' });
+      327 |     await capture(page, 'active-labels-' + theme + '-' + info.project.name);
+    > 328 |     expect(results.violations).toEqual([]);
+          |                                ^
+      329 |     expect(results.incomplete).toEqual([]);
+      330 |   });
+      331 | }
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:328:32
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\browser\.artifacts\thread-mobile-recovery-act-d7e68-ormal-text-contrast-in-dark-mobile\error-context.md
+
+  3) [mobile] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview 
+
+    Error: expect(locator).toHaveAccessibleName(expected) failed
+
+    Locator: locator('#reply [data-composer-after-box]')
+    Expected pattern: /preview/i
+    Received string:  ""
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveAccessibleName" with timeout 5000ms
+      - waiting for locator('#reply [data-composer-after-box]')
+        14 × locator resolved to <div data-composer-after-box="">…</div>
+           - unexpected value ""
+
+
+      346 |   }
+      347 |   expect(reached, 'Tab must enter the overflow region without requiring an incidental link or conflict button').toBe(true);
+    > 348 |   await expect(box).toHaveAccessibleName(/preview/i);
+          |                     ^
+      349 |   const before = await box.evaluate(e => e.scrollTop);
+      350 |   await page.keyboard.press('PageDown');
+      351 |   await expect.poll(() => box.evaluate(e => e.scrollTop)).toBeGreaterThan(before);
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:348:21
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\browser\.artifacts\thread-mobile-recovery-key-6a7ac-omplete-plain-reply-preview-mobile\error-context.md
+
+  4) [mobile] › tests\browser\thread-mobile-recovery.spec.ts:384:5 › saving a rich conflict uses the latest local edits 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Newest local revision after the conflict — café, 你好."
+    Received: "Local text when the conflict appeared."
+
+      391 |   const result = await response.json();
+      392 |   await info.attach('saved-conflict', { body: JSON.stringify({ sent: latest, response: result, visible: await editor.innerText(), remote: await currentRemoteDraft(page) }), contentType: 'application/json' });
+    > 393 |   expect(result.draft.body).toBe(latest);
+          |                             ^
+      394 |   await expect(editor).toHaveText(latest);
+      395 | });
+      396 |
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:393:29
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\browser\.artifacts\thread-mobile-recovery-sav-70582-uses-the-latest-local-edits-mobile\error-context.md
+
+  4 failed
+    [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light 
+    [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark 
+    [mobile] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview 
+    [mobile] › tests\browser\thread-mobile-recovery.spec.ts:384:5 › saving a rich conflict uses the latest local edits 
+  1 passed (30.9s)

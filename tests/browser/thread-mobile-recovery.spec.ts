@@ -1,11 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import AxeBuilder from '@axe-core/playwright';
 
 const topic = '/t/30-ratified-decisions';
 const body = 'A failed reply must survive Back, navigation, and reload.';
-const captures = path.resolve(__dirname, '../../docs/evidence/thread-mobile-ux-2026-10-22/browser');
+const captures = process.env.RB_EVIDENCE_DIR
+  ? path.resolve(__dirname, '../..', process.env.RB_EVIDENCE_DIR)
+  : path.resolve(__dirname, '../../docs/evidence/thread-mobile-ux-2026-10-22/browser');
 
 async function capture(page: Page, name: string): Promise<void> {
   mkdirSync(captures, { recursive: true });
@@ -37,7 +40,10 @@ $db = new \App\Core\Database($config->get('db'));
 $db->run('DELETE FROM server_drafts WHERE user_id = (SELECT id FROM users WHERE username = ?) AND context_key = ?', ['elladan', '~2Ft~2F30~2Freply']);
 $limiter = new \App\Security\FileRateLimiter((string) $config->get('paths.ratelimit'));
 $user = (new \App\Repository\UserRepository($db))->findByUsername('elladan');
-if ($user) { $limiter->clear('rl:post:u' . $user['id']); }
+if ($user) {
+    $limiter->clear('rl:post:u' . $user['id']);
+    (new \App\Repository\UserPreferenceRepository($db))->merge((int) $user['id'], ['theme' => 'system']);
+}
 `], { cwd: path.resolve(__dirname, '../..'), env: process.env });
 });
 
@@ -308,3 +314,179 @@ test('a late multiline autosave from the confirmed submission is not restored', 
   await expect(input).toHaveValue('');
   await expect(page.locator('#reply .composer-draft-sync')).not.toContainText('Loaded server draft.');
 });
+
+for (const theme of ['light', 'dark']) {
+  test('active thread labels meet normal-text contrast in ' + theme, async ({ page }, info) => {
+    await openThread(page);
+    // Use the real saved appearance and a fresh render. Switching the root
+    // attribute mid-page leaves offscreen WebKit background transitions pending.
+    await page.goto('/settings/appearance');
+    await page.locator(`input[name="theme"][value="${theme}"]`).check({ force: true });
+    await page.getByRole('button', { name: 'Save appearance' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    await page.goto(topic);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    const themeState = await page.locator('.star-btn.star-on, .reaction-on').evaluateAll(elements =>
+      elements.map(element => ({
+        control: element.className,
+        background: getComputedStyle(element).backgroundColor,
+        color: getComputedStyle(element.querySelector('.reaction-n') || element).color,
+      })));
+    const results = await new AxeBuilder({ page })
+      .include('.star-btn.star-on')
+      .include('.reaction-on .reaction-n')
+      .withRules(['color-contrast'])
+      .analyze();
+    expect(await page.locator('.star-btn.star-on').count()).toBeGreaterThan(0);
+    expect(await page.locator('.reaction-on .reaction-n').count()).toBeGreaterThan(0);
+    await info.attach('contrast-' + theme, { body: JSON.stringify(results), contentType: 'application/json' });
+    mkdirSync(captures, { recursive: true });
+    writeFileSync(path.join(captures, 'contrast-' + theme + '-' + info.project.name + '.json'), JSON.stringify({
+      themeState, violations: results.violations, incomplete: results.incomplete,
+      passes: results.passes.filter(rule => rule.id === 'color-contrast'),
+    }, null, 2));
+    await capture(page, 'active-labels-' + theme + '-' + info.project.name);
+    expect(results.violations).toEqual([]);
+    expect(results.incomplete).toEqual([]);
+  });
+}
+
+test('keyboard reaches and scrolls the complete plain reply preview', async ({ page }, info) => {
+  await openThread(page);
+  const input = page.locator('#reply textarea');
+  const text = Array.from({ length: 18 }, (_, i) => 'Preview paragraph ' + (i + 1) + ': A complete review must be possible using the keyboard.').join('\n\n');
+  await input.fill(text);
+  await expect(page.locator('#reply .composer-preview')).toContainText('Preview paragraph 18:');
+  const box = page.locator('#reply [data-composer-after-box]');
+  expect(await box.evaluate(e => e.scrollHeight > e.clientHeight)).toBe(true);
+  await input.focus();
+  let reached = false;
+  for (let i = 0; i < 18; i++) {
+    await page.keyboard.press('Tab');
+    if (await box.evaluate(e => e === document.activeElement)) { reached = true; break; }
+  }
+  expect(reached, 'Tab must enter the overflow region without requiring an incidental link or conflict button').toBe(true);
+  await expect(box).toHaveAccessibleName(/preview/i);
+  const before = await box.evaluate(e => e.scrollTop);
+  await page.keyboard.press('PageDown');
+  await expect.poll(() => box.evaluate(e => e.scrollTop)).toBeGreaterThan(before);
+  const focusStyle = await box.evaluate(e => ({ style: getComputedStyle(e).outlineStyle, width: parseFloat(getComputedStyle(e).outlineWidth) }));
+  expect(focusStyle.style).not.toBe('none');
+  expect(focusStyle.width).toBeGreaterThanOrEqual(2);
+  await capture(page, 'keyboard-preview-' + info.project.name);
+  await page.locator('#reply .composer-preview-toggle').click();
+  await expect(box).not.toHaveAttribute('tabindex', '0');
+});
+
+async function currentRemoteDraft(page: Page) {
+  const response = await page.request.get('/api/drafts/~2Ft~2F30~2Freply', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+  expect(response.ok()).toBe(true);
+  return (await response.json()).draft;
+}
+
+async function makeRichConflict(page: Page) {
+  setRich(true);
+  await openThread(page);
+  const editor = page.locator('#reply .ProseMirror');
+  await editor.fill('Initial local rich revision.');
+  await expect(page.locator('#reply .composer-draft-sync')).toContainText('Saved to server drafts.');
+  const draft = await currentRemoteDraft(page);
+  const token = await page.locator('#reply [name=_token]').inputValue();
+  const remote = await page.request.post('/api/drafts/~2Ft~2F30~2Freply', {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    multipart: { _token: token, revision: String(draft.revision), body: 'A different remote revision.', title: 'Remote fixture', metadata: JSON.stringify({ context: '/t/30/reply' }) },
+  });
+  expect(remote.ok()).toBe(true);
+  await editor.fill('Local text when the conflict appeared.');
+  await expect(page.getByRole('button', { name: 'Save local as next revision', exact: true })).toBeVisible();
+  return editor;
+}
+
+test('saving a rich conflict uses the latest local edits', async ({ page }, info) => {
+  const editor = await makeRichConflict(page);
+  const latest = 'Newest local revision after the conflict — café, 你好.';
+  await editor.fill(latest);
+  const saved = page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === '/api/drafts/~2Ft~2F30~2Freply' && r.status() === 200);
+  await page.getByRole('button', { name: 'Save local as next revision', exact: true }).click();
+  const response = await saved;
+  const result = await response.json();
+  await info.attach('saved-conflict', { body: JSON.stringify({ sent: latest, response: result, visible: await editor.innerText(), remote: await currentRemoteDraft(page) }), contentType: 'application/json' });
+  expect(result.draft.body).toBe(latest);
+  await expect(editor).toHaveText(latest);
+});
+
+test('rapid rich edit after resolving a conflict survives offline Back', async ({ page, context, browserName }, info) => {
+  test.skip(browserName !== 'chromium', 'This scenario requires Chromium navigation to an offline error history entry.');
+  const editor = await makeRichConflict(page);
+  await page.getByRole('button', { name: 'Save local as next revision', exact: true }).click();
+  const latest = 'Rapid rich draft after conflict resolution — café, 你好.';
+  await editor.fill(latest);
+  await expect(page.locator('#reply textarea')).toHaveValue(latest);
+  const key = await page.locator('#reply [name=idempotency_key]').inputValue();
+  const failed = page.waitForEvent('requestfailed', r => r.isNavigationRequest() && r.method() === 'POST');
+  await context.setOffline(true);
+  await page.locator('#reply .composer-send').click({ noWaitAfter: true });
+  await failed;
+  await context.setOffline(false);
+  await page.goBack();
+  await editor.waitFor();
+  const immediate = await page.locator('#reply').evaluate((form: HTMLFormElement) => ({
+    rich: (form.querySelector('.ProseMirror') as HTMLElement)?.innerText.trim(),
+    textarea: (form.querySelector('textarea') as HTMLTextAreaElement)?.value,
+    key: (form.querySelector('[name=idempotency_key]') as HTMLInputElement)?.value,
+    local: localStorage.getItem('rb-draft:elladan:/t/30/reply'),
+    busy: form.getAttribute('aria-busy'),
+  }));
+  await info.attach('immediate-back-state', { body: JSON.stringify({ expected: latest, expectedKey: key, immediate }), contentType: 'application/json' });
+  expect(immediate.rich).toBe(latest);
+  await expect(page.locator('#reply .composer-send')).toBeEnabled();
+  await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(key);
+  await expect(editor).toHaveText(latest);
+});
+
+for (const editWhileLoading of [false, true]) {
+  test('delayed rich recovery ' + (editWhileLoading ? 'preserves new typing' : 'replaces a stale native snapshot'), async ({ page, context, browserName }) => {
+    test.skip(browserName !== 'chromium', 'This scenario requires Chromium navigation to an offline error history entry.');
+    const editor = await makeRichConflict(page);
+    await page.getByRole('button', { name: 'Save local as next revision', exact: true }).click();
+    const latest = 'The latest submitted rich draft — café, 你好.';
+    await editor.fill(latest);
+    const key = await page.locator('#reply [name=idempotency_key]').inputValue();
+    const moduleUrl = new URL((await page.locator('body').getAttribute('data-wysiwyg-src'))!, page.url()).href;
+    const failed = page.waitForEvent('requestfailed', r => r.isNavigationRequest() && r.method() === 'POST');
+    await context.setOffline(true);
+    await page.locator('#reply .composer-send').click({ noWaitAfter: true });
+    await failed;
+    await context.setOffline(false);
+
+    let release!: () => void;
+    let requested!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const requestStarted = new Promise<void>(resolve => { requested = resolve; });
+    await page.route(moduleUrl, async route => { requested(); await gate; await route.continue(); });
+    const newer = 'New typing while the rich editor is loading.';
+    try {
+      await page.goBack();
+      await requestStarted;
+      const input = page.locator('#reply textarea');
+      await expect(input).toBeVisible();
+      // Reproduce the stale native form snapshot captured in the failing Back
+      // trace. Keep real local storage, history and the failed-submit journal.
+      await input.evaluate((element: HTMLTextAreaElement) => { element.value = 'Local text when the conflict appeared.'; });
+      if (editWhileLoading) await input.fill(newer);
+    } finally {
+      release();
+    }
+    await expect(page.locator('#reply textarea')).toHaveAttribute('data-rb-enhanced', '1');
+    if (editWhileLoading) {
+      // Enhancement keeps a focused native textarea in source mode.
+      await expect(page.locator('#reply textarea')).toHaveValue(newer);
+      await page.getByRole('button', { name: 'Rich text', exact: true }).click();
+    }
+    await editor.waitFor();
+    expect(await editor.innerText()).toBe(editWhileLoading ? newer : latest);
+    await expect(page.locator('#reply .composer-send')).toBeEnabled();
+    if (editWhileLoading) await expect(page.locator('#reply [name=idempotency_key]')).not.toHaveValue(key);
+    else await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(key);
+  });
+}

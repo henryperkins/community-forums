@@ -1,0 +1,17 @@
+
+Running 5 tests using 1 worker
+
+(node:25856) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 1 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:139:5 › landscape preview leaves Minimize and Reply reachable below the header (3.5s)
+
+  ok 2 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:319:7 › active thread labels meet normal-text contrast in light (4.8s)
+
+  ok 3 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:319:7 › active thread labels meet normal-text contrast in dark (4.8s)
+
+  ok 4 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:354:5 › keyboard reaches and scrolls the complete plain reply preview (3.5s)
+
+  ok 5 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:405:5 › saving a rich conflict uses the latest local edits (5.7s)
+
+  5 passed (23.2s)

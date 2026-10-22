@@ -599,6 +599,19 @@
         var open = stored === 'open' || (stored === null && prefs.showPreview && adapterIsSourceMode(adapter, fallback));
 
         function activeAdapter() { return form._rbComposerAdapter || adapter; }
+        function updatePreviewFocus() {
+            // The dock clips this shared wrapper. Give plain previews the same
+            // keyboard scroll path as previews containing links or controls.
+            if (open && pane.childElementCount) {
+                afterBox.setAttribute('tabindex', '0');
+                afterBox.setAttribute('role', 'region');
+                afterBox.setAttribute('aria-label', 'Preview and draft status');
+            } else {
+                afterBox.removeAttribute('tabindex');
+                afterBox.removeAttribute('role');
+                afterBox.removeAttribute('aria-label');
+            }
+        }
         function renderNow() {
             if (!open) { return; }
             var active = activeAdapter();
@@ -610,7 +623,10 @@
             composerFetch(form, '/composer/preview', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (j) {
-                    if (seq === requestSeq && open && j && j.ok) { pane.innerHTML = j.html; }
+                    if (seq === requestSeq && open && j && j.ok) {
+                        pane.innerHTML = j.html;
+                        updatePreviewFocus();
+                    }
                 })
                 .catch(function () {});
         }
@@ -622,6 +638,7 @@
         function setOpen(nextOpen, persist, fetchOnOpen) {
             open = !!nextOpen;
             pane.hidden = !open;
+            updatePreviewFocus();
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             if (!open) {
                 requestSeq++;
@@ -682,6 +699,7 @@
             && left.replace(/\r\n?/g, '\n') === right.replace(/\r\n?/g, '\n');
     }
     function rememberHistorySubmission(form, context, restore) {
+        var restored = null;
         try {
             var state = history.state || {};
             if (typeof state !== 'object' || Array.isArray(state)) { return; }
@@ -691,13 +709,17 @@
             if (restore && typeof tokens[context] === 'string') {
                 var remembered = tokens[context];
                 // Old history entries can outlive the bounded submit journal.
-                if (pendingDraftSubmits().some(function (item) { return item && item.submission === remembered; })) {
+                restored = pendingDraftSubmits().find(function (item) {
+                    return item && item.user === draftUser() && item.context === context && item.submission === remembered;
+                });
+                if (restored) {
                     input.value = remembered;
                 }
             }
             tokens[context] = input.value;
             history.replaceState(Object.assign({}, state, { rbComposerTokens: tokens }), '');
         } catch (e) {}
+        return restored;
     }
     function submissionContent(form, markdown) {
         var fields = [];
@@ -792,7 +814,7 @@
                         return;
                     }
                     if (res.status === 409) {
-                        renderConflict(res.json.server || null, body, title);
+                        renderConflict(res.json.server || null);
                         return;
                     }
                     if (res.status >= 200 && res.status < 300 && res.json && res.json.draft) {
@@ -817,7 +839,7 @@
             applying = false;
             updateDiscard();
         }
-        function renderConflict(server, localBody, localTitle) {
+        function renderConflict(server) {
             if (!server) {
                 revision = 0;
                 return;
@@ -865,7 +887,10 @@
             saveLocal.textContent = 'Save local as next revision';
             saveLocal.addEventListener('click', function () {
                 paused = false;
-                saveWithRevision(parseInt(server.revision, 10) || revision, localBody, localTitle);
+                // The member may have kept editing while this choice was open.
+                // Save the current draft, not the snapshot that raised conflict.
+                saveWithRevision(parseInt(server.revision, 10) || revision,
+                    adapter.getMarkdown(), draftTitle(form, draftLabel(context)));
             });
 
             actions.appendChild(keepLocal);
@@ -903,7 +928,7 @@
                 })) { return; }
                 revision = parseInt(server.revision, 10) || 0;
                 if (adapter.getMarkdown() && adapter.getMarkdown() !== (server.body || '')) {
-                    renderConflict(server, adapter.getMarkdown(), draftTitle(form, draftLabel(context)));
+                    renderConflict(server);
                     return;
                 }
                 if (!adapter.getMarkdown() && server.body) {
@@ -3340,6 +3365,10 @@
         // enhances the textarea instead; later inbox forms use the same result.
         if (document.body.getAttribute('data-wysiwyg-composer') === '1'
             && !form.hasAttribute('data-no-wysiwyg') && !wysiwygResolved) {
+            if (!form._rbPendingComposerInput) {
+                form._rbPendingComposerInput = function () { form._rbEditedBeforeEnhance = true; };
+                ta.addEventListener('input', form._rbPendingComposerInput);
+            }
             loadWysiwygAdapter();
             return;
         }
@@ -3354,6 +3383,22 @@
         form._rbComposerCleanups = [];
         form._rbComposerRequests = [];
         ta.setAttribute('data-rb-enhanced', '1');
+        if (form._rbPendingComposerInput) {
+            ta.removeEventListener('input', form._rbPendingComposerInput);
+            form._rbPendingComposerInput = null;
+        }
+        stampIdempotency(form);
+        if (draftsEnabled() && !form.hasAttribute('data-no-draft')) {
+            var context = draftContext(form);
+            var pending = rememberHistorySubmission(form, context, true);
+            var saved = storageRead(draftKeyFor(draftUser(), context));
+            // Back may restore an older native textarea before the lazy editor
+            // loads. Initialize from the matching unconfirmed submission, but
+            // never replace a newer local draft or typing during the import.
+            if (pending && !pending.completed && !form._rbEditedBeforeEnhance && sameDraftBody(saved, pending.body)) {
+                ta.value = saved;
+            }
+        }
         var adapter = new TextareaComposerAdapter(form, ta);
         form._rbComposerFallbackAdapter = adapter;
         form._rbComposerAdapter = adapter;
@@ -3369,7 +3414,6 @@
         buildEmojiPicker(form, adapter);
         wireKeys(form, adapter, prefs);
         wireSubmitState(form, ta, adapter);
-        stampIdempotency(form);
         // A form may opt out of local draft autosave (data-no-draft). The inline
         // post-edit form does: its textarea is server-pre-filled with the current
         // body, so a saved draft is never restored into it (the !ta.value guard

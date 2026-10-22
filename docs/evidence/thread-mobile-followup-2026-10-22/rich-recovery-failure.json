@@ -1,0 +1,397 @@
+{
+  "expected": "Rapid rich draft after conflict resolution — café, 你好.",
+  "key": "af56646d95586ef49bd0b040833ea94d",
+  "immediate": {
+    "rich": "Local text when the conflict appeared.",
+    "textarea": "Local text when the conflict appeared.",
+    "key": "c-1792705079126-7i3iya9fwaw",
+    "local": "Rapid rich draft after conflict resolution — café, 你好.",
+    "busy": null
+  },
+  "trace": [
+    {
+      "phase": "DOMContentLoaded",
+      "time": 632.5999999977648,
+      "ready": "interactive",
+      "textarea": "",
+      "local": null,
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": null,
+      "pending": null
+    },
+    {
+      "phase": "DOMContentLoaded:microtask",
+      "time": 633.1999999992549,
+      "ready": "interactive",
+      "textarea": "",
+      "local": null,
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": null,
+      "pending": null
+    },
+    {
+      "phase": "pageshow",
+      "time": 668.2999999970198,
+      "ready": "complete",
+      "textarea": "",
+      "local": null,
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": null,
+      "pending": null
+    },
+    {
+      "phase": "pageshow:two-frames",
+      "time": 686.6999999992549,
+      "ready": "complete",
+      "textarea": "",
+      "local": null,
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": null,
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 980.5999999977648,
+      "ready": "complete",
+      "rich": "Initial local rich revision.",
+      "textarea": "",
+      "local": null,
+      "canonical": "",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 986.0999999977648,
+      "ready": "complete",
+      "rich": "Initial local rich revision.",
+      "textarea": "",
+      "local": null,
+      "canonical": "",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 986.7999999970198,
+      "ready": "complete",
+      "rich": "Initial local rich revision.",
+      "textarea": "Initial local rich revision.",
+      "local": null,
+      "canonical": "Initial local rich revision.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 995.8999999985099,
+      "ready": "complete",
+      "rich": "Initial local rich revision.",
+      "textarea": "Initial local rich revision.",
+      "local": "Initial local rich revision.",
+      "canonical": "Initial local rich revision.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 1186.3999999985099,
+      "ready": "complete",
+      "rich": "Initial local rich revision.",
+      "textarea": "Initial local rich revision.",
+      "local": "Initial local rich revision.",
+      "canonical": "Initial local rich revision.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 1193,
+      "ready": "complete",
+      "rich": "Initial local rich revision.",
+      "textarea": "Initial local rich revision.",
+      "local": "Initial local rich revision.",
+      "canonical": "Initial local rich revision.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 2730.699999999255,
+      "ready": "complete",
+      "rich": "Local text when the conflict appeared.",
+      "textarea": "Initial local rich revision.",
+      "local": "Initial local rich revision.",
+      "canonical": "Initial local rich revision.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 2733.2999999970198,
+      "ready": "complete",
+      "rich": "Local text when the conflict appeared.",
+      "textarea": "Initial local rich revision.",
+      "local": "Initial local rich revision.",
+      "canonical": "Local text when the conflict appeared.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 2733.699999999255,
+      "ready": "complete",
+      "rich": "Local text when the conflict appeared.",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Initial local rich revision.",
+      "canonical": "Local text when the conflict appeared.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 2745,
+      "ready": "complete",
+      "rich": "Local text when the conflict appeared.",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Local text when the conflict appeared.",
+      "canonical": "Local text when the conflict appeared.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 2942.5,
+      "ready": "complete",
+      "rich": "Local text when the conflict appeared.",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Local text when the conflict appeared.",
+      "canonical": "Local text when the conflict appeared.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 2957.199999999255,
+      "ready": "complete",
+      "rich": "Local text when the conflict appeared.",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Local text when the conflict appeared.",
+      "canonical": "Local text when the conflict appeared.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 4017.599999997765,
+      "ready": "complete",
+      "rich": "Rapid rich draft after conflict resolution — café, 你好.",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Local text when the conflict appeared.",
+      "canonical": "Local text when the conflict appeared.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 4019.599999997765,
+      "ready": "complete",
+      "rich": "Rapid rich draft after conflict resolution — café, 你好.",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Local text when the conflict appeared.",
+      "canonical": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input",
+      "time": 4020.099999997765,
+      "ready": "complete",
+      "rich": "Rapid rich draft after conflict resolution — café, 你好.",
+      "textarea": "Rapid rich draft after conflict resolution — café, 你好.",
+      "local": "Local text when the conflict appeared.",
+      "canonical": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "input:microtask",
+      "time": 4031,
+      "ready": "complete",
+      "rich": "Rapid rich draft after conflict resolution — café, 你好.",
+      "textarea": "Rapid rich draft after conflict resolution — café, 你好.",
+      "local": "Rapid rich draft after conflict resolution — café, 你好.",
+      "canonical": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "submit",
+      "time": 4135.199999999255,
+      "ready": "complete",
+      "rich": "Rapid rich draft after conflict resolution — café, 你好.",
+      "textarea": "Rapid rich draft after conflict resolution — café, 你好.",
+      "local": "Rapid rich draft after conflict resolution — café, 你好.",
+      "canonical": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "submit:microtask",
+      "time": 4135.599999997765,
+      "ready": "complete",
+      "rich": "Rapid rich draft after conflict resolution — café, 你好.",
+      "textarea": "Rapid rich draft after conflict resolution — café, 你好.",
+      "local": "Rapid rich draft after conflict resolution — café, 你好.",
+      "canonical": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "af56646d95586ef49bd0b040833ea94d",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": null
+    },
+    {
+      "phase": "DOMContentLoaded",
+      "time": 815.0999999977648,
+      "ready": "interactive",
+      "textarea": "",
+      "local": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "e9fdfa8cd246ac762df866d155163ff1",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": "[{\"key\":\"rb-draft:elladan:/t/30/reply\",\"context\":\"/t/30/reply\",\"user\":\"elladan\",\"submission\":\"af56646d95586ef49bd0b040833ea94d\",\"body\":\"Rapid rich draft after conflict resolution — café, 你好.\",\"content\":\"[\\\"Rapid rich draft after conflict resolution — café, 你好.\\\",[[\\\"page\\\",\\\"1\\\"]]]\",\"at\":1792705077934}]"
+    },
+    {
+      "phase": "DOMContentLoaded:microtask",
+      "time": 815.7999999970198,
+      "ready": "interactive",
+      "textarea": "",
+      "local": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "e9fdfa8cd246ac762df866d155163ff1",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": "[{\"key\":\"rb-draft:elladan:/t/30/reply\",\"context\":\"/t/30/reply\",\"user\":\"elladan\",\"submission\":\"af56646d95586ef49bd0b040833ea94d\",\"body\":\"Rapid rich draft after conflict resolution — café, 你好.\",\"content\":\"[\\\"Rapid rich draft after conflict resolution — café, 你好.\\\",[[\\\"page\\\",\\\"1\\\"]]]\",\"at\":1792705077934}]"
+    },
+    {
+      "phase": "pageshow",
+      "time": 834.7999999970198,
+      "ready": "complete",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "e9fdfa8cd246ac762df866d155163ff1",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": "[{\"key\":\"rb-draft:elladan:/t/30/reply\",\"context\":\"/t/30/reply\",\"user\":\"elladan\",\"submission\":\"af56646d95586ef49bd0b040833ea94d\",\"body\":\"Rapid rich draft after conflict resolution — café, 你好.\",\"content\":\"[\\\"Rapid rich draft after conflict resolution — café, 你好.\\\",[[\\\"page\\\",\\\"1\\\"]]]\",\"at\":1792705077934}]"
+    },
+    {
+      "phase": "pageshow:two-frames",
+      "time": 877.8999999985099,
+      "ready": "complete",
+      "textarea": "Local text when the conflict appeared.",
+      "local": "Rapid rich draft after conflict resolution — café, 你好.",
+      "key": "e9fdfa8cd246ac762df866d155163ff1",
+      "history": {
+        "rbComposerTokens": {
+          "/t/30/reply": "af56646d95586ef49bd0b040833ea94d"
+        }
+      },
+      "pending": "[{\"key\":\"rb-draft:elladan:/t/30/reply\",\"context\":\"/t/30/reply\",\"user\":\"elladan\",\"submission\":\"af56646d95586ef49bd0b040833ea94d\",\"body\":\"Rapid rich draft after conflict resolution — café, 你好.\",\"content\":\"[\\\"Rapid rich draft after conflict resolution — café, 你好.\\\",[[\\\"page\\\",\\\"1\\\"]]]\",\"at\":1792705077934}]"
+    }
+  ]
+}

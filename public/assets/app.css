@@ -659,10 +659,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     background: var(--surface); color: var(--text); cursor: pointer;
 }
 .reaction:hover { background: var(--surface-3); }
-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
+.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: revert-layer; }
 .reaction-static { cursor: default; }
 .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
-.reaction-on .reaction-n { color: var(--gold-700); }
+.reaction-on .reaction-n { color: revert-layer; }
 .reaction-add { position: relative; display: inline-block; }
 .reaction-add > summary { list-style: none; }
 .reaction-add > summary::-webkit-details-marker { display: none; }
@@ -1926,6 +1926,7 @@ body[data-route="thread"] .thread-conversation {
 .thread-dock #reply.is-expanded .composer-input-wrap { flex: 1 1 auto; min-block-size: 0; overflow-y: auto; }
 .thread-dock #reply.is-expanded :is(.composer-format-slot, .composer-actions-bar, .composer-meta-row) { flex: 0 0 auto; }
 .thread-dock #reply.is-expanded [data-composer-after-box] { flex: 0 1 auto; min-block-size: 0; max-block-size: min(22dvh, 8rem); overflow-y: auto; }
+.composer [data-composer-after-box]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .thread-dock #reply.is-expanded .composer-upload-tray { min-block-size: 0; max-block-size: 5rem; overflow-y: auto; }
 .inbox-reading.is-open { overflow: hidden; }
 .inbox-reading.is-open [data-inbox-reading-content],
@@ -2071,7 +2072,7 @@ body[data-route="thread"] .thread-conversation {
     border: 1.5px solid var(--border-soft); border-radius: var(--radius-md); padding: 6px 13px;
 }
 .star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
-.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
+.star-btn.star-on { color: revert-layer; border-color: var(--gold-200); background: revert-layer; }
 
 /* — Thread breadcrumb reads as a back control (the figure's back chevron, §6) — */
 .breadcrumb-back-ic { width: 13px; height: 13px; vertical-align: -1px; margin-right: 3px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

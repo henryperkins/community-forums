@@ -1,0 +1,29 @@
+
+Running 9 tests using 1 worker
+
+(node:23172) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 1 [mobile] › thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (7.7s)
+
+  ok 2 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot (7.0s)
+
+  ok 3 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing (7.4s)
+(node:33328) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 4 [mobile] › thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (7.5s)
+
+  ok 5 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot (7.2s)
+
+  ok 6 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing (6.8s)
+(node:20988) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 7 [mobile] › thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (6.4s)
+
+  ok 8 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot (6.6s)
+
+  ok 9 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing (6.9s)
+
+  9 passed (1.1m)

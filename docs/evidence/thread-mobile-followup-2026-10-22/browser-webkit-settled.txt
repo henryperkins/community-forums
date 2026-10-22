@@ -1,0 +1,39 @@
+
+Running 5 tests using 1 worker
+
+(node:22564) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 1 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:136:5 › landscape preview leaves Minimize and Reply reachable below the header (3.6s)
+
+  ok 2 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light (3.3s)
+
+  x  3 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark (30.4s)
+(node:22112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 4 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:351:5 › keyboard reaches and scrolls the complete plain reply preview (3.6s)
+
+  ok 5 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:402:5 › saving a rich conflict uses the latest local edits (6.4s)
+
+
+  1) [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.evaluateAll: Test timeout of 30000ms exceeded.
+
+      317 |     await openThread(page);
+      318 |     await page.evaluate(value => document.documentElement.setAttribute('data-theme', value), theme);
+    > 319 |     const themeTransition = await page.locator('.star-btn.star-on, .reaction-on').evaluateAll(async elements => {
+          |                                                                                   ^
+      320 |       const snapshot = () => elements.map(element => ({
+      321 |         control: element.className,
+      322 |         background: getComputedStyle(element).backgroundColor,
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:319:83
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\verified-webkit-settled\.artifacts\thread-mobile-recovery-act-d7e68-ormal-text-contrast-in-dark-webkit\error-context.md
+
+  1 failed
+    [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark 
+  4 passed (48.9s)

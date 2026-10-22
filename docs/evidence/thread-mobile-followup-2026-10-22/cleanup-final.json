@@ -1,0 +1,13 @@
+{
+  "php_pid": 30952,
+  "php_command": "\"C:\\Users\\htper\\AppData\\Local\\Microsoft\\WinGet\\Packages\\PHP.PHP.8.3_Microsoft.Winget.Source_8wekyb3d8bbwe\\php.exe\" -S 127.0.0.1:18037 -t public public/index.php",
+  "php_stopped": true,
+  "container_identity": "9d611b115a7e616946ff4004248133b14c436a1c570e951d8ccd9db413147c53 mobile-fix-61589551",
+  "removed_container": "rb-mobile-fix-61589551",
+  "removed_junctions": [
+    "asset-validation/node_modules",
+    "asset-validation-final/node_modules"
+  ],
+  "original_toolchain_preserved": true,
+  "timestamp_utc": "2026-10-22T21:58:53.7773652Z"
+}

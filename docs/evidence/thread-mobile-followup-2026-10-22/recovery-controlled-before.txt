@@ -1,0 +1,55 @@
+
+Running 2 tests using 1 worker
+
+(node:11272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  1 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot (7.2s)
+(node:17568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  2 [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing (30.2s)
+
+
+  1) [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "The latest submitted rich draft — café, 你好."
+    Received: "Local text when the conflict appeared."
+
+      458 |     }
+      459 |     await editor.waitFor();
+    > 460 |     expect(await editor.innerText()).toBe(editWhileLoading ? newer : latest);
+          |                                      ^
+      461 |     await expect(page.locator('#reply .composer-send')).toBeEnabled();
+      462 |     if (editWhileLoading) await expect(page.locator('#reply [name=idempotency_key]')).not.toHaveValue(key);
+      463 |     else await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(key);
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:460:38
+
+    Error Context: ..\..\output\mobile-ux-fixes-2026-10-22\recovery-controlled-before\.artifacts\thread-mobile-recovery-del-c1c2d-ces-a-stale-native-snapshot-mobile\error-context.md
+
+  2) [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing ──
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.waitFor: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('#reply .ProseMirror') to be visible
+        47 × locator resolved to hidden <div translate="no" role="textbox" aria-multiline="true" contenteditable="true" class="ProseMirror editor" aria-label="Composer body">…</div>
+
+
+      457 |       release();
+      458 |     }
+    > 459 |     await editor.waitFor();
+          |                  ^
+      460 |     expect(await editor.innerText()).toBe(editWhileLoading ? newer : latest);
+      461 |     await expect(page.locator('#reply .composer-send')).toBeEnabled();
+      462 |     if (editWhileLoading) await expect(page.locator('#reply [name=idempotency_key]')).not.toHaveValue(key);
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:459:18
+
+    Error Context: ..\..\output\mobile-ux-fixes-2026-10-22\recovery-controlled-before\.artifacts\thread-mobile-recovery-del-ec189-covery-preserves-new-typing-mobile\error-context.md
+
+  2 failed
+    [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery replaces a stale native snapshot 
+    [mobile] › thread-mobile-recovery.spec.ts:427:7 › delayed rich recovery preserves new typing ───

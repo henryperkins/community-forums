@@ -1,0 +1,56 @@
+
+Running 2 tests using 1 worker
+
+(node:20208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  1 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview (3.7s)
+(node:21460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  2 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (30.1s)
+
+
+  1) [webkit] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview 
+
+    Error: Tab must enter the overflow region without requiring an incidental link or conflict button
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      345 |     if (await box.evaluate(e => e === document.activeElement)) { reached = true; break; }
+      346 |   }
+    > 347 |   expect(reached, 'Tab must enter the overflow region without requiring an incidental link or conflict button').toBe(true);
+          |                                                                                                                 ^
+      348 |   await expect(box).toHaveAccessibleName(/preview/i);
+      349 |   const before = await box.evaluate(e => e.scrollTop);
+      350 |   await page.keyboard.press('PageDown');
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:347:113
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\baseline-webkit\.artifacts\thread-mobile-recovery-key-6a7ac-omplete-plain-reply-preview-webkit\error-context.md
+
+  2) [webkit] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.waitFor: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('#reply .ProseMirror') to be visible
+
+
+      408 |   await context.setOffline(false);
+      409 |   await page.goBack();
+    > 410 |   await editor.waitFor();
+          |                ^
+      411 |   const immediate = await page.locator('#reply').evaluate((form: HTMLFormElement) => ({
+      412 |     rich: (form.querySelector('.ProseMirror') as HTMLElement)?.innerText.trim(),
+      413 |     textarea: (form.querySelector('textarea') as HTMLTextAreaElement)?.value,
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:410:16
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\baseline-webkit\.artifacts\thread-mobile-recovery-rap-ff266-flict-survives-offline-Back-webkit\error-context.md
+
+  2 failed
+    [webkit] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview 
+    [webkit] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back 
