@@ -1,0 +1,120 @@
+Running 58 tests using 1 worker
+
+(node:24076) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok  1 [desktop] › tests\browser\conversation-reactions.spec.ts:79:5 › surviving reaction counts tick locally, describe current reactors and retain the button node (2.2s)
+
+  ok  2 [desktop] › tests\browser\conversation-reactions.spec.ts:108:5 › same post and emoji cannot submit twice while the toggle is outstanding (1.8s)
+
+  ok  3 [desktop] › tests\browser\conversation-reactions.spec.ts:130:5 › completing a delayed toggle respects a deliberate focus move (2.2s)
+  ok  4 [desktop] › tests\browser\conversation-reactions.spec.ts:147:5 › an ambiguous lost response offers Reload and never automatically reposts the toggle (2.9s)
+
+  ok  5 [desktop] › tests\browser\conversation-reactions.spec.ts:179:5 › a stalled reaction response is bounded, unlocks every chip copy and offers Reload (2.6s)
+
+  ok  6 [desktop] › tests\browser\conversation-reactions.spec.ts:210:5 › reaction failures speak through a status region that exists before they happen (2.1s)
+
+  ok  7 [desktop] › tests\browser\conversation-reactions.spec.ts:235:5 › reaction refusals show the kernel reason without claiming an uncertain toggle (2.8s)
+  ok  8 [desktop] › tests\browser\conversation-reactions.spec.ts:262:5 › reaction recovery after a failed reply uses a readable GET topic destination (2.6s)
+
+  ok  9 [desktop] › tests\browser\conversation-reactions.spec.ts:283:5 › hidden reactor tips cannot widen the page before interaction (2.0s)
+
+  ok 10 [desktop] › tests\browser\conversation-reactions.spec.ts:296:5 › removing a keyboard-focused chip on a narrow fine-pointer viewport focuses the visible menu without scrolling (2.3s)
+
+  ok 11 [desktop] › tests\browser\conversation-reactions.spec.ts:311:5 › unknown reactor metadata falls back to one native title without a stale description (2.2s)
+
+  -  12 [desktop] › tests\browser\conversation-reactions.spec.ts:327:5 › touch reaction addition enters the tray and removing it updates every menu instance
+
+  ok 13 [desktop] › tests\browser\conversation-reactions.spec.ts:348:5 › reactor tips remain inside either viewport edge (2.0s)
+
+  ok 14 [desktop] › tests\browser\conversation-reactions.spec.ts:372:5 › twilight reaction tips support keyboard focus and have no serious accessibility violations (3.0s)
+
+  ok 15 [desktop] › tests\browser\conversation-reactions.spec.ts:387:7 › operating system reduced motion suppresses reaction count animation (2.0s)
+
+  ok 16 [desktop] › tests\browser\conversation-reactions.spec.ts:387:7 › account reduced motion suppresses reaction count animation (2.2s)
+
+  ok 17 [desktop] › tests\browser\conversation-reactions.spec.ts:399:5 › without JavaScript a reaction remains a native POST and refreshed pressed state (1.8s)
+(node:14048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  18 [desktop] › tests\browser\mobile-controls.spec.ts:112:5 › mobile board drawer leaves room beside every member surface
+
+  ok 19 [desktop] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (Markdown) (3.2s)
+
+  ok 20 [desktop] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (rich) (3.8s)
+  -  21 [desktop] › tests\browser\mobile-controls.spec.ts:186:5 › mobile reaction choices show distinct icons and visible names in labelled rows
+
+  ok 22 [desktop] › tests\browser\mobile-controls.spec.ts:258:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission (15.5s)
+
+  ok 23 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › guest reaction counts keep visible names without reactor identities (2.4s)
+
+  ok 24 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › suspended reaction counts keep visible names without reactor identities (3.8s)
+
+  ok 25 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › banned reaction counts keep visible names without reactor identities (3.8s)
+
+  ok 26 [desktop] › tests\browser\mobile-controls.spec.ts:258:9 › native reactions › responsive reaction pickers stay inside the viewport and retain native submission (13.0s)
+
+  ok 27 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › guest reaction counts keep visible names without reactor identities (2.2s)
+
+  ok 28 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › suspended reaction counts keep visible names without reactor identities (3.8s)
+
+  ok 29 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › banned reaction counts keep visible names without reactor identities (3.1s)
+(node:27748) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 30 [mobile] › tests\browser\conversation-reactions.spec.ts:79:5 › surviving reaction counts tick locally, describe current reactors and retain the button node (2.3s)
+
+  ok 31 [mobile] › tests\browser\conversation-reactions.spec.ts:108:5 › same post and emoji cannot submit twice while the toggle is outstanding (2.0s)
+
+  ok 32 [mobile] › tests\browser\conversation-reactions.spec.ts:130:5 › completing a delayed toggle respects a deliberate focus move (2.0s)
+  ok 33 [mobile] › tests\browser\conversation-reactions.spec.ts:147:5 › an ambiguous lost response offers Reload and never automatically reposts the toggle (2.7s)
+
+  ok 34 [mobile] › tests\browser\conversation-reactions.spec.ts:179:5 › a stalled reaction response is bounded, unlocks every chip copy and offers Reload (2.1s)
+
+  ok 35 [mobile] › tests\browser\conversation-reactions.spec.ts:210:5 › reaction failures speak through a status region that exists before they happen (2.0s)
+
+  ok 36 [mobile] › tests\browser\conversation-reactions.spec.ts:235:5 › reaction refusals show the kernel reason without claiming an uncertain toggle (2.7s)
+  ok 37 [mobile] › tests\browser\conversation-reactions.spec.ts:262:5 › reaction recovery after a failed reply uses a readable GET topic destination (2.3s)
+
+  ok 38 [mobile] › tests\browser\conversation-reactions.spec.ts:283:5 › hidden reactor tips cannot widen the page before interaction (1.9s)
+
+  ok 39 [mobile] › tests\browser\conversation-reactions.spec.ts:296:5 › removing a keyboard-focused chip on a narrow fine-pointer viewport focuses the visible menu without scrolling (2.1s)
+
+  ok 40 [mobile] › tests\browser\conversation-reactions.spec.ts:311:5 › unknown reactor metadata falls back to one native title without a stale description (2.1s)
+
+  ok 41 [mobile] › tests\browser\conversation-reactions.spec.ts:327:5 › touch reaction addition enters the tray and removing it updates every menu instance (2.4s)
+
+  ok 42 [mobile] › tests\browser\conversation-reactions.spec.ts:348:5 › reactor tips remain inside either viewport edge (2.2s)
+
+  ok 43 [mobile] › tests\browser\conversation-reactions.spec.ts:372:5 › twilight reaction tips support keyboard focus and have no serious accessibility violations (2.5s)
+
+  ok 44 [mobile] › tests\browser\conversation-reactions.spec.ts:387:7 › operating system reduced motion suppresses reaction count animation (1.8s)
+
+  ok 45 [mobile] › tests\browser\conversation-reactions.spec.ts:387:7 › account reduced motion suppresses reaction count animation (2.0s)
+
+  ok 46 [mobile] › tests\browser\conversation-reactions.spec.ts:399:5 › without JavaScript a reaction remains a native POST and refreshed pressed state (1.7s)
+(node:8420) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 47 [mobile] › tests\browser\mobile-controls.spec.ts:112:5 › mobile board drawer leaves room beside every member surface (14.1s)
+
+  ok 48 [mobile] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (Markdown) (4.0s)
+
+  ok 49 [mobile] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (rich) (3.9s)
+
+  ok 50 [mobile] › tests\browser\mobile-controls.spec.ts:186:5 › mobile reaction choices show distinct icons and visible names in labelled rows (2.7s)
+  -  51 [mobile] › tests\browser\mobile-controls.spec.ts:258:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
+
+  ok 52 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › guest reaction counts keep visible names without reactor identities (3.9s)
+
+  ok 53 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › suspended reaction counts keep visible names without reactor identities (5.5s)
+
+  ok 54 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › banned reaction counts keep visible names without reactor identities (5.5s)
+  -  55 [mobile] › tests\browser\mobile-controls.spec.ts:258:9 › native reactions › responsive reaction pickers stay inside the viewport and retain native submission
+
+  ok 56 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › guest reaction counts keep visible names without reactor identities (3.5s)
+
+  ok 57 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › suspended reaction counts keep visible names without reactor identities (9.2s)
+
+  ok 58 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › banned reaction counts keep visible names without reactor identities (4.7s)
+
+  5 skipped
+  53 passed (3.2m)

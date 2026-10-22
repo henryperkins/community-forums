@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-10-22T19:50:10.204957+00:00",
+  "source_commit": "b42710f72b318611d99c11d23256a2a7715cb07e",
+  "worktree_head": "468dd5b44a37bfcafacf2649223ef2c548ed9bd5",
+  "scopes": [
+    "src",
+    "templates",
+    "public",
+    "config",
+    "database/migrations",
+    "resources/imladris",
+    "composer.json",
+    "composer.lock",
+    "package.json",
+    "package-lock.json",
+    "tests/browser/seed.php",
+    "tests/browser/playwright.config.ts"
+  ],
+  "paths_checked": 788,
+  "exact_matches": 75,
+  "checkout_crlf_only": 711,
+  "source_spec_sha256": "e549d078a5acc303496c340092dc815560ca14f9a1a67462e3b969077086703a",
+  "original_spec_sha256": "ff2770a326aa375f24037e938134d29f694dde6d512672925b4242e01364fcd6",
+  "development_metadata_differences": [
+    "config/imladris-runtime-baseline.json",
+    "resources/imladris/manifest.json"
+  ],
+  "development_metadata_note": "Two earlier local presentation-builder checksum metadata files differ from b427; they are build/check inputs to ImladrisAssetBuilder and are not consumed by the HTTP renderer. They were preserved in the task worktree and not copied to the primary checkout. The other 786 inspected application, asset, migration, dependency and harness paths match b427 after checkout LF normalization.",
+  "runtime_mismatches": [],
+  "source_scope_paths_matched": 786
+}

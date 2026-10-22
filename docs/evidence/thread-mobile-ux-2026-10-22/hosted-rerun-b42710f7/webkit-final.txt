@@ -1,0 +1,50 @@
+Running 24 tests using 1 worker
+
+(node:15980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   1 [desktop] › tests\browser\mobile-controls.spec.ts:112:5 › mobile board drawer leaves room beside every member surface
+
+  ok  2 [desktop] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (Markdown) (4.9s)
+
+  ok  3 [desktop] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (rich) (4.6s)
+  -   4 [desktop] › tests\browser\mobile-controls.spec.ts:186:5 › mobile reaction choices show distinct icons and visible names in labelled rows
+  ok  5 [desktop] › tests\browser\mobile-controls.spec.ts:258:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission (21.3s)
+
+  ok  6 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › guest reaction counts keep visible names without reactor identities (3.3s)
+
+  ok  7 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › suspended reaction counts keep visible names without reactor identities (5.0s)
+
+  ok  8 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › banned reaction counts keep visible names without reactor identities (4.7s)
+
+  ok  9 [desktop] › tests\browser\mobile-controls.spec.ts:258:9 › native reactions › responsive reaction pickers stay inside the viewport and retain native submission (17.9s)
+
+  ok 10 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › guest reaction counts keep visible names without reactor identities (2.9s)
+
+  ok 11 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › suspended reaction counts keep visible names without reactor identities (4.5s)
+
+  ok 12 [desktop] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › banned reaction counts keep visible names without reactor identities (4.8s)
+(node:19240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 13 [mobile] › tests\browser\mobile-controls.spec.ts:112:5 › mobile board drawer leaves room beside every member surface (17.4s)
+  ok 14 [mobile] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (Markdown) (5.1s)
+
+  ok 15 [mobile] › tests\browser\mobile-controls.spec.ts:139:7 › reply stays inside its frame and preserves a minimized draft (rich) (5.6s)
+
+  ok 16 [mobile] › tests\browser\mobile-controls.spec.ts:186:5 › mobile reaction choices show distinct icons and visible names in labelled rows (4.5s)
+  -  17 [mobile] › tests\browser\mobile-controls.spec.ts:258:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
+
+  ok 18 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › guest reaction counts keep visible names without reactor identities (3.5s)
+
+  ok 19 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › suspended reaction counts keep visible names without reactor identities (5.0s)
+
+  ok 20 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › enhanced reactions › banned reaction counts keep visible names without reactor identities (5.2s)
+  -  21 [mobile] › tests\browser\mobile-controls.spec.ts:258:9 › native reactions › responsive reaction pickers stay inside the viewport and retain native submission
+
+  ok 22 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › guest reaction counts keep visible names without reactor identities (3.0s)
+
+  ok 23 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › suspended reaction counts keep visible names without reactor identities (4.3s)
+
+  ok 24 [mobile] › tests\browser\mobile-controls.spec.ts:312:11 › native reactions › banned reaction counts keep visible names without reactor identities (4.5s)
+
+  4 skipped
+  20 passed (2.2m)

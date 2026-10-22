@@ -1,0 +1,252 @@
+[
+  {
+    "name": "enhanced-820",
+    "width": 820,
+    "js": true,
+    "before": {
+      "point": {
+        "x": 695,
+        "y": 195.46875
+      },
+      "hit": true,
+      "hitTag": "circle",
+      "hitClass": null,
+      "scrollY": 180,
+      "focused": "BODY"
+    },
+    "oldToolbarTriggerVisible": false,
+    "geometry": [
+      {
+        "name": "Commend",
+        "labelWidth": 66.640625,
+        "row": 235,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Heart",
+        "labelWidth": 36.21875,
+        "row": 283,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Laugh",
+        "labelWidth": 38.046875,
+        "row": 331,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Celebrate",
+        "labelWidth": 62.3125,
+        "row": 379,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Kindled",
+        "labelWidth": 48.78125,
+        "row": 427,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Seconded",
+        "labelWidth": 62.3125,
+        "row": 475,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Surprise",
+        "labelWidth": 50.171875,
+        "row": 523,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Sorrow",
+        "labelWidth": 45.0625,
+        "row": 571,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Illuminating",
+        "labelWidth": 75.375,
+        "row": 619,
+        "width": 168,
+        "height": 44
+      }
+    ],
+    "scrollYAfter": 180
+  },
+  {
+    "name": "native-861",
+    "width": 861,
+    "js": false,
+    "before": {
+      "point": {
+        "x": 767,
+        "y": 165.671875
+      },
+      "hit": true,
+      "hitTag": "path",
+      "hitClass": null,
+      "scrollY": 787,
+      "focused": "BODY"
+    },
+    "oldToolbarTriggerVisible": true,
+    "geometry": [
+      {
+        "name": "Commend",
+        "labelWidth": 66.640625,
+        "row": 193,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Heart",
+        "labelWidth": 36.21875,
+        "row": 241,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Laugh",
+        "labelWidth": 38.046875,
+        "row": 289,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Celebrate",
+        "labelWidth": 62.3125,
+        "row": 337,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Kindled",
+        "labelWidth": 48.78125,
+        "row": 385,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Seconded",
+        "labelWidth": 62.3125,
+        "row": 433,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Surprise",
+        "labelWidth": 50.171875,
+        "row": 481,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Sorrow",
+        "labelWidth": 45.0625,
+        "row": 529,
+        "width": 140,
+        "height": 44
+      },
+      {
+        "name": "Illuminating",
+        "labelWidth": 75.375,
+        "row": 577,
+        "width": 140,
+        "height": 44
+      }
+    ],
+    "scrollYAfter": 787
+  },
+  {
+    "name": "touch-390",
+    "width": 390,
+    "js": true,
+    "touch": true,
+    "before": {
+      "point": {
+        "x": 343,
+        "y": 195.21875
+      },
+      "hit": true,
+      "hitTag": "circle",
+      "hitClass": null,
+      "scrollY": 285,
+      "focused": "BODY"
+    },
+    "oldToolbarTriggerVisible": false,
+    "geometry": [
+      {
+        "name": "Commend",
+        "labelWidth": 66.640625,
+        "row": 235,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Heart",
+        "labelWidth": 36.21875,
+        "row": 283,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Laugh",
+        "labelWidth": 38.046875,
+        "row": 331,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Celebrate",
+        "labelWidth": 62.3125,
+        "row": 379,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Kindled",
+        "labelWidth": 48.78125,
+        "row": 427,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Seconded",
+        "labelWidth": 62.3125,
+        "row": 475,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Surprise",
+        "labelWidth": 50.171875,
+        "row": 523,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Sorrow",
+        "labelWidth": 45.0625,
+        "row": 571,
+        "width": 168,
+        "height": 44
+      },
+      {
+        "name": "Illuminating",
+        "labelWidth": 75.375,
+        "row": 619,
+        "width": 168,
+        "height": 44
+      }
+    ],
+    "scrollYAfter": 285
+  }
+]

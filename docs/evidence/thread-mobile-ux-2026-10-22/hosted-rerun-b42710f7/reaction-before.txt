@@ -1,0 +1,234 @@
+Running 6 tests using 1 worker
+
+(node:25996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  1 [desktop] › tests\browser\mobile-controls.spec.ts:182:5 › mobile reaction choices are distinct named icons in a compact touch grid
+
+  x  2 [desktop] › tests\browser\mobile-controls.spec.ts:245:9 › enhanced reactions › desktop reaction picker stays inside the viewport and retains native submission (30.2s)
+(node:24860) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  3 [desktop] › tests\browser\mobile-controls.spec.ts:245:9 › native reactions › desktop reaction picker stays inside the viewport and retains native submission (30.2s)
+(node:31176) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  4 [mobile] › tests\browser\mobile-controls.spec.ts:182:5 › mobile reaction choices are distinct named icons in a compact touch grid (2.6s)
+(node:21044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  5 [mobile] › tests\browser\mobile-controls.spec.ts:245:9 › enhanced reactions › desktop reaction picker stays inside the viewport and retains native submission
+  -  6 [mobile] › tests\browser\mobile-controls.spec.ts:245:9 › native reactions › desktop reaction picker stays inside the viewport and retains native submission
+
+
+  1) [desktop] › tests\browser\mobile-controls.spec.ts:245:9 › enhanced reactions › desktop reaction picker stays inside the viewport and retains native submission
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('#p3').locator('.reaction-add > summary')
+        - locator resolved to <summary class="post-toolbar-button" aria-label="Add a reaction">…</summary>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting 100ms
+        49 × waiting for element to be visible, enabled and stable
+           - element is not visible
+         - retrying click action
+           - waiting 500ms
+
+
+      260 |             const post = page.locator(`#p${fixture.post}`);
+      261 |             await post.hover({ position: { x: 80, y: 80 } });
+    > 262 |             await post.locator('.reaction-add > summary').click();
+          |                                                           ^
+      263 |             const menu = post.locator('.reaction-menu');
+      264 |             await expect(menu).toBeVisible();
+      265 |             const box = (await menu.boundingBox())!;
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:262:59
+
+    Error Context: output\thread-b427-followup\evidence\.artifacts\mobile-controls-enhanced-r-8ba97-d-retains-native-submission-desktop\error-context.md
+
+  2) [desktop] › tests\browser\mobile-controls.spec.ts:245:9 › native reactions › desktop reaction picker stays inside the viewport and retains native submission
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('#p3').locator('.reaction-add > summary')
+        2 × locator resolved to <summary class="post-toolbar-button" aria-label="Add a reaction">…</summary>
+        - attempting click action
+          - waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting 20ms
+        - element was detached from the DOM, retrying
+
+
+      260 |             const post = page.locator(`#p${fixture.post}`);
+      261 |             await post.hover({ position: { x: 80, y: 80 } });
+    > 262 |             await post.locator('.reaction-add > summary').click();
+          |                                                           ^
+      263 |             const menu = post.locator('.reaction-menu');
+      264 |             await expect(menu).toBeVisible();
+      265 |             const box = (await menu.boundingBox())!;
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:262:59
+
+    Error Context: output\thread-b427-followup\evidence\.artifacts\mobile-controls-native-rea-c2274-d-retains-native-submission-desktop\error-context.md
+
+  3) [mobile] › tests\browser\mobile-controls.spec.ts:182:5 › mobile reaction choices are distinct named icons in a compact touch grid
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    66.640625
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    36.21875
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    38.046875
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    62.3125
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    48.78125
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    62.3125
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    50.171875
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    45.0625
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1
+    Received:    75.375
+
+      214 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      215 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 216 |       expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+          |                                                                                  ^
+      217 |       rows.add(Math.round(box.y));
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:216:82
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 3
+    Received:    9
+
+      218 |       shapes.add(await button.locator('svg').innerHTML());
+      219 |     }
+    > 220 |     expect.soft(rows.size).toBeLessThanOrEqual(3);
+          |                            ^
+      221 |     expect.soft(shapes.size).toBe(9);
+      222 |     await screenshot(page, 'reaction-menu-' + info.project.name);
+      223 |     const response = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:220:28
+
+    Error Context: output\thread-b427-followup\evidence\.artifacts\mobile-controls-mobile-rea-f76a8-ons-in-a-compact-touch-grid-mobile\error-context.md
+
+  3 failed
+    [desktop] › tests\browser\mobile-controls.spec.ts:245:9 › enhanced reactions › desktop reaction picker stays inside the viewport and retains native submission
+    [desktop] › tests\browser\mobile-controls.spec.ts:245:9 › native reactions › desktop reaction picker stays inside the viewport and retains native submission
+    [mobile] › tests\browser\mobile-controls.spec.ts:182:5 › mobile reaction choices are distinct named icons in a compact touch grid
+  3 skipped

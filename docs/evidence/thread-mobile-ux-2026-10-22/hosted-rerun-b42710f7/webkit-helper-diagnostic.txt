@@ -1,0 +1,1122 @@
+Running 1 test using 1 worker
+
+(node:12884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+animation-before reaction-picker-compact-light-enhanced []
+animation-after reaction-picker-compact-light-enhanced []
+animation-before reaction-picker-light-enhanced [
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 633,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 633,
+      progress: null
+    }
+  }
+]
+animation-after reaction-picker-light-enhanced [
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'btn btn-small',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  },
+  {
+    kind: 'CSSTransition',
+    playState: 'finished',
+    pending: false,
+    currentTime: 1656,
+    target: 'reaction',
+    timing: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1
+    },
+    computed: {
+      delay: 0,
+      direction: 'normal',
+      duration: 140,
+      easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      endDelay: 0,
+      fill: 'backwards',
+      iterationStart: 0,
+      iterations: 1,
+      activeDuration: 140,
+      currentIteration: null,
+      endTime: 140,
+      localTime: 1656,
+      progress: null
+    }
+  }
+]
+
+  x  1 [desktop] › tests\browser\reaction-webkit-diagnostic.spec.ts:265:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission (1.0m)
+
+
+  1) [desktop] › tests\browser\reaction-webkit-diagnostic.spec.ts:265:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.evaluate: Test timeout of 60000ms exceeded.
+
+      77 |     timing: a.effect?.getTiming(), computed: a.effect?.getComputedTiming(),
+      78 |   }))));
+    > 79 |   await page.evaluate(async () => {
+         |              ^
+      80 |     await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
+      81 |   });
+      82 |   const before = errors.length;
+        at screenshot (C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-webkit-diagnostic.spec.ts:79:14)
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-webkit-diagnostic.spec.ts:305:32
+
+    Error Context: output\thread-b427-followup\webkit-diagnostic\.artifacts\reaction-webkit-diagnostic-107b6-nd-retain-native-submission-desktop\error-context.md
+
+  1 failed
+    [desktop] › tests\browser\reaction-webkit-diagnostic.spec.ts:265:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
