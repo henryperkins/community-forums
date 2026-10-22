@@ -1,0 +1,139 @@
+{
+  "checked_at": "2026-10-22T17:59:52.870633+00:00",
+  "verified_published_source_commit": "0f333934df211aa21252e3e449471d91211b942b",
+  "canonical_live_asset_version": "cd261fb5782f8107",
+  "worker": {
+    "build": {
+      "id": "9f6d7521-2a1e-42d3-93e2-6fabb5ca2f07",
+      "status": "stopped",
+      "outcome": "success",
+      "created_at": "2026-10-22T17:53:59.149Z",
+      "finished_at": "2026-10-22T17:54:59.321Z",
+      "commit": "0f333934df211aa21252e3e449471d91211b942b"
+    },
+    "latest_deployment": {
+      "id": "096f1e50-8598-44ac-8302-dd3f2763aa7e",
+      "versions": [
+        {
+          "version_id": "d5fe3350-6c2f-47ca-a15e-1b522672d9d8",
+          "percentage": 100
+        }
+      ],
+      "created_at": "2026-10-22T17:54:55.894365Z"
+    }
+  },
+  "cloud_run": {
+    "build": {
+      "id": "5cada65e-d3e0-4c24-be62-0bb486f23c3f",
+      "status": "SUCCESS",
+      "finished_at": "2026-10-22T17:57:06.881971Z",
+      "steps": [
+        {
+          "id": "source",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "build",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "push",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "deploy-service",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "update-jobs",
+          "status": "SUCCESS"
+        }
+      ]
+    },
+    "service": {
+      "name": "retroboards",
+      "revision": "retroboards-00044-kvp",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:0f333934df211aa21252e3e449471d91211b942b",
+      "traffic": [
+        {
+          "latestRevision": true,
+          "percent": 100,
+          "revisionName": "retroboards-00044-kvp"
+        }
+      ],
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-22T17:56:47.692521Z",
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T17:56:34.103157Z",
+          "status": "True",
+          "type": "ConfigurationsReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T17:56:47.653361Z",
+          "status": "True",
+          "type": "RoutesReady"
+        }
+      ]
+    },
+    "cron_jobs": [
+      {
+        "name": "retroboards-cron-5m",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:0f333934df211aa21252e3e449471d91211b942b",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-6h",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:0f333934df211aa21252e3e449471d91211b942b",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-0310",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:0f333934df211aa21252e3e449471d91211b942b",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-0700",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:0f333934df211aa21252e3e449471d91211b942b",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      }
+    ]
+  },
+  "verification": {
+    "exact_live_asset_hashes_passed": 56,
+    "immutable_get_head_conditional_cache_checks_passed": 29,
+    "matching_committed_git_blobs": 56,
+    "asset_reproducibility": "pass",
+    "asset_tests_passed": 35,
+    "imladris_runtime": "pass"
+  },
+  "scope": "Correct the metadata identity of the same live delivery set from Windows CRLF hashes to canonical Git LF; retain both real predecessor releases. No application source content or fingerprinted bundle change, and no production write test.",
+  "remaining_limits": [
+    "Physical-device checks remain unprovisioned and unrun.",
+    "Full native Windows PHPUnit retains the 12 independently reproduced baseline failures, 2 warnings and 1 skip.",
+    "Independent hosted browser acceptance is not claimed."
+  ]
+}

@@ -4,4 +4,6 @@
 bin/console text eol=lf
 public/assets/dist/** -text
 public/assets/app.css text eol=lf
+public/assets/app.js text eol=lf
+public/assets/fonts/imladris/LICENSES/*.txt text eol=lf
 docs/design-system/imladris/components.css text eol=lf

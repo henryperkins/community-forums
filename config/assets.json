@@ -1,5 +1,5 @@
 {
-  "version": "035b6defb6d21565",
+  "version": "cd261fb5782f8107",
   "urls": {
     "app.css": "/assets/dist/app-style-R3j3Xoat.css",
     "imladris.css": "/assets/dist/imladris-style-bT2GVmLw.css",
@@ -32,7 +32,7 @@
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "98ee17839729d6006c39e60aaeee9559b622f50fe06eaa553f3de9874204592d",
+      "sha256": "6a4648e206482895c7bad551aa36fafac2a5f2d70e47c64453354c745d07d004",
       "immutable": false
     },
     "/assets/composer.js": {
@@ -220,19 +220,19 @@
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-cormorant-garamond.txt": {
-      "sha256": "2d18818d1e2044bda96e663840ef64c32d1e6aa53a11d05cc8b70e4aa0dffef8",
+      "sha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-eb-garamond.txt": {
-      "sha256": "282923c4c3f825975a6619095175836afd50201c7e65bb326ef745a4a28ce1d3",
+      "sha256": "af751618923413517f388a73a903ff4334622ea4aa62dfe13a5861c6034fa2f2",
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-jetbrains-mono.txt": {
-      "sha256": "0572ebbc28a24069b2bb23aa27767664162d819f7ccaca48d4b2e99cdc4ae192",
+      "sha256": "60d55f23c6ce05a81099a762cb67ca2c9b6ea251c7912720998b4c89ebfd4faa",
       "immutable": false
     },
     "/assets/fonts/imladris/LICENSES/OFL-marcellus.txt": {
-      "sha256": "8a72cfb68afaed118f889cb5a401a3a423c78afe86365a527b718efa611ade21",
+      "sha256": "c77ba70be4679b87b26960538cdce281b8d61dcc837a40aad5afa8132ef22497",
       "immutable": false
     },
     "/assets/fonts/imladris/marcellus-latin-400-normal.woff2": {
@@ -254,7 +254,7 @@
   },
   "releases": [
     {
-      "version": "035b6defb6d21565",
+      "version": "cd261fb5782f8107",
       "files": [
         "/assets/dist/app-f5e64357204190eb.js",
         "/assets/dist/app-style-R3j3Xoat.css",
@@ -346,7 +346,7 @@
   ],
   "deployedReleases": [
     {
-      "version": "035b6defb6d21565",
+      "version": "cd261fb5782f8107",
       "files": [
         "/assets/dist/app-f5e64357204190eb.js",
         "/assets/dist/app-style-R3j3Xoat.css",
