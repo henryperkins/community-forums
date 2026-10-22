@@ -155,9 +155,11 @@ for (const mode of ['rich', 'source']) {
   });
 }
 
-test('a held pointer publishes a ready DM image without moving Send before release', async ({ page }, info) => {
+test('a held pointer publishes a ready DM image without moving Send before release', async ({ page }) => {
   test.setTimeout(90_000);
-  if (info.project.name === 'desktop') await page.setViewportSize({ width: 390, height: 844 });
+  // Force the conversation past its readable height floor; the full form can fit
+  // in the standard 844px fixture without exercising deferred dock scrolling.
+  await page.setViewportSize({ width: 390, height: 640 });
   fixture('rich');
   await login(page);
   await page.goto('/messages/new');
@@ -176,7 +178,12 @@ test('a held pointer publishes a ready DM image without moving Send before relea
   await expect(form.locator('.composer-upload-card.is-complete')).toBeVisible();
   const send = form.locator('.composer-send');
   await expect(send).toBeEnabled();
-  await send.scrollIntoViewIfNeeded();
+  // Keep Send visible with the form's trailing rows below the fold. The default
+  // locator scroll can reveal the whole form and skip the scrolling regression.
+  await send.evaluate(button => {
+    button.scrollIntoView({ block: 'end', inline: 'nearest' });
+    window.scrollBy(0, 2); // Keep fractional mobile pixels inside the viewport.
+  });
   const before = await form.evaluate(node => {
     const button = node.querySelector('.composer-send')!.getBoundingClientRect();
     return { formBottom: node.getBoundingClientRect().bottom, height: window.innerHeight,
