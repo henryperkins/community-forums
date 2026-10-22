@@ -13,6 +13,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Use a compact mobile byline with full-width prose and visible reaction names.
   Local browser evidence and outstanding physical-device checks are recorded in
   `docs/evidence/thread-mobile-ux-2026-10-22/`.
+- Deploy the fixes to production and pin verified asset version
+  `035b6defb6d21565`; Worker, Cloud Run, cron-image and public-read receipts
+  are recorded in that evidence folder's `production/` directory.
 
 ## [Unreleased] - Guarded feature-flag toggles
 
