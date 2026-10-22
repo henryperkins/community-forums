@@ -1,0 +1,18 @@
+{
+  "source_commit": "de967b3001aca20051fa88efdf392156863debb3",
+  "verified_asset_version": "1c24a3765cdd43f9",
+  "recorded_deployed_versions": [
+    "1c24a3765cdd43f9",
+    "cd261fb5782f8107",
+    "adc1494dbfa0cd3d"
+  ],
+  "retired_exclusive_files": [
+    "public/assets/dist/app-style-DkLhYoyf.css"
+  ],
+  "current_delivery_unchanged": true,
+  "checks": {
+    "assets": 35,
+    "asset_integrity": "pass",
+    "imladris": "pass"
+  }
+}

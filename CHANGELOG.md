@@ -11,6 +11,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   restores an older native textarea, while preserving typing during loading.
 - Local regression results, retained failures and outstanding physical checks
   are recorded in `docs/evidence/thread-mobile-followup-2026-10-22/`.
+- Publish the fixes with verified asset version `1c24a3765cdd43f9`; automatic
+  Worker/Cloud Run deployment, workload images and public-byte receipts are in
+  that evidence folder's `production/` directory.
 
 ## [Unreleased] - Thread mobile recovery and reading
 
