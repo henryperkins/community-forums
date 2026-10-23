@@ -222,7 +222,7 @@ final class AppUserModerationTest extends TestCase
             'until' => 'not-a-timestamp',
         ]);
         $this->assertStatus(422, $r);
-        $this->assertSeeText($r, 'Use a valid UTC timestamp');
+        $this->assertSeeText($r, 'Use a valid UTC date and time');
         $this->assertSeeText($r, 'Repeated harassment third strike');
         self::assertSame('active', $this->userStatus((int) $this->bad['id']));
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Support\UtcDateTimeInput;
 use DateTimeImmutable;
 use DateTimeZone;
 use App\Core\Database;
@@ -297,11 +298,11 @@ final class UserModerationService
         );
     }
 
-    public function suspend(User $actor, int $subjectId, ?string $until, string $reason): void
+    public function suspend(User $actor, int $subjectId, ?string $until, string $reason, string $duration = 'custom'): void
     {
         $this->assertAdmin($actor);
         $reason = $this->requireReason($reason);
-        $until = $this->validateSuspendUntil($until);
+        $until = $this->validateSuspendUntil($until, $duration);
         $this->db->transaction(function () use ($actor, $subjectId, $until, $reason): void {
             $subject = $this->requireGovernable($actor, $subjectId, true);
             [$pending, $restrictions] = $this->lockModerationState($subjectId);
@@ -350,24 +351,25 @@ final class UserModerationService
         ];
     }
 
-    private function validateSuspendUntil(?string $until): ?string
+    private function validateSuspendUntil(?string $until, string $duration = 'custom'): ?string
     {
+        $seconds = ['day' => 86400, 'week' => 7 * 86400, 'month' => 30 * 86400];
+        if (isset($seconds[$duration])) {
+            return gmdate('Y-m-d H:i:s', time() + $seconds[$duration]);
+        }
+        if ($duration !== 'custom') {
+            throw new ValidationException(['duration' => 'Choose a listed suspension duration.']);
+        }
         $until = trim((string) $until);
         if ($until === '') {
             return null;
         }
 
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $until, new DateTimeZone('UTC'));
-        $errors = DateTimeImmutable::getLastErrors();
-        if (
-            $date === false
-            || (is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))
-            || $date->format('Y-m-d H:i:s') !== $until
-        ) {
-            throw new ValidationException(['until' => 'Use a valid UTC timestamp in YYYY-MM-DD HH:MM:SS format.']);
+        $date = UtcDateTimeInput::parse($until);
+        if ($date === null) {
+            throw new ValidationException(['until' => 'Use a valid UTC date and time (YYYY-MM-DD HH:MM:SS or YYYY-MM-DDTHH:MM).']);
         }
-
-        return $until;
+        return $date->format('Y-m-d H:i:s');
     }
 
     public function ban(User $actor, int $subjectId, string $reason): void
@@ -751,14 +753,14 @@ final class UserModerationService
      * @param list<int> $ids
      * @return array{done:int, skipped:list<string>}
      */
-    public function bulkApply(User $admin, string $action, array $ids, string $reason, ?string $until): array
+    public function bulkApply(User $admin, string $action, array $ids, string $reason, ?string $until, string $duration = 'custom'): array
     {
         $this->assertAdmin($admin);
         $ids = $this->normalizeBulkCommand($action, $ids);
         // Shared input is validated before eligibility skips or per-member
         // writes, including a batch containing only ineligible targets.
         $reason = $this->requireReason($reason);
-        $until = $action === 'suspend' ? $this->validateSuspendUntil($until) : null;
+        $until = $action === 'suspend' ? $this->validateSuspendUntil($until, $duration) : null;
         $done = 0;
         $skipped = [];
         foreach ($ids as $id) {

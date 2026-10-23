@@ -46,7 +46,7 @@ final class AppFieldErrorA11yTest extends TestCase
         $this->assertStatus(422, $res);
         $body = $res->body();
         self::assertStringContainsString('id="err-suspend-until"', $body);
-        self::assertMatchesRegularExpression('/name="until"[^>]*aria-describedby="err-suspend-until"/', $body);
+        self::assertMatchesRegularExpression('/name="until"[^>]*aria-describedby="suspend-expiry-help err-suspend-until"/', $body);
         self::assertMatchesRegularExpression('/name="until"[^>]*aria-invalid="true"/', $body);
     }
 

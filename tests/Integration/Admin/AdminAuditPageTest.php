@@ -254,10 +254,10 @@ final class AdminAuditPageTest extends TestCase
             $body,
         );
         self::assertMatchesRegularExpression(
-            '~<a class="audit-target-link" href="/admin/users/' . (int) $target['id'] . '">user #' . (int) $target['id'] . '</a>~',
+            '~<a class="audit-target-link" href="/admin/users/' . (int) $target['id'] . '">@overviewtarget \(#' . (int) $target['id'] . '\)</a>~',
             $body,
         );
-        self::assertStringContainsString('<span class="audit-target">board #42</span>', $body);
+        self::assertStringContainsString('<span class="audit-target">Board #42</span>', $body);
         self::assertStringContainsString('<details class="audit-change">', $body);
         self::assertStringContainsString('Before: <code>{&quot;status&quot;:&quot;active&quot;}</code>', $body);
         self::assertStringNotContainsString('aria-label="Pagination"', $body);

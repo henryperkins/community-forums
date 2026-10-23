@@ -398,3 +398,39 @@ P2 findings are deferred, not declined: high-impact saves carry little ceremony 
 mode and registration `closed` each save in one click, and restriction dates are typed as free text
 in `YYYY-MM-DD HH:MM:SS`), and the audit table shows machine syntax (`user #123`, raw before/after
 JSON). The critique report itself is kept out of the repository.
+
+
+## Deferred P2 safeguards and audit readability (`feature-changed`, 2026-10-23)
+
+The owner approved implementation of both P2s recorded above. This append closes those implementation
+carryovers without changing the preceding historical record or the console information architecture.
+
+- **Restrictive settings.** `block` saves and `closed` registration saves now return a server-rendered
+  impact review before mutation. The final explicit Confirm POST retains all existing authorization,
+  WriteGate, feature and CSRF checks. Review and Back to editing carry the exact submitted phrase
+  draft; Cancel returns to persisted settings. Block reviews also cover phrase edits while already in
+  block mode. Settings and their audit entry still commit together. This is a confirmation affordance,
+  not a new authentication factor or an expiring approval grant.
+- **Restriction expiry.** The admin member record and bulk confirmation share native UTC date/time
+  input plus 24-hour, 7-day and 30-day presets. Presets resolve once per submitted batch. Custom blank
+  remains indefinite; native minute/second values and the old space-separated second format are
+  accepted only when they round-trip as real UTC dates in the database's supported year range.
+  Invalid and legacy draft text remains visible through a text-input fallback on 422. No local-zone
+  conversion or browser-only validation replaces server checks; stronger stored restrictions keep
+  precedence.
+- **Audit presentation.** The admin-only page enriches user targets in the same batched name lookup as
+  actors, with no email/IP reads or masked-author lookup. Names are explicitly current. Unknown
+  users remain labelled with their IDs; null actors say “System or deleted actor”, reflecting the
+  existing foreign key's ambiguous null. Known action/field labels and readable changes precede a
+  native escaped raw disclosure. Summaries and raw values are bounded and truncation is stated;
+  unrecognized actions, non-object JSON and malformed/deep payloads remain inspectable without
+  invented interpretation. Snapshot board/category names are used when recorded. The log is not
+  rewritten, and moderator trail enrichment is unchanged.
+
+The implementation uses existing card, confirmation, form and table classes. No CSS, JavaScript,
+area tier, page-heading ownership, database schema or feature default changes were needed.
+`ADMIN.md` §§3.4, 3.6, 3.8 and post-setup guidance record the behavior. The scoped plan is
+[`2026-10-23-admin-safeguards-and-audit.md`](../superpowers/plans/2026-10-23-admin-safeguards-and-audit.md).
+Local PHPUnit and desktop/390px Chromium evidence, including no-JavaScript flows, is indexed in
+[`admin-safeguards-2026-10-23`](../evidence/admin-safeguards-2026-10-23/README.md).
+This evidence does not claim publication, deployment or physical-device validation.

@@ -1,0 +1,12 @@
+Running 10 tests using 1 worker
+  ✓   1 [desktop] › tests/browser/admin-safeguards.spec.ts:29:5 › block review preserves phrases through editing and cancel before a confirmed save (1.5s)
+  ✓   2 [desktop] › tests/browser/admin-safeguards.spec.ts:58:5 › member expiry uses UTC native controls and a server-evaluated preset (1.3s)
+  ✓   3 [desktop] › tests/browser/admin-safeguards.spec.ts:86:5 › audit names readable changes and safely discloses unknown payloads (2.0s)
+  ✓   4 [desktop] › tests/browser/admin-safeguards.spec.ts:112:7 › without JavaScript › registration and block confirmations remain native forms (1.3s)
+  ✓   5 [desktop] › tests/browser/admin-safeguards.spec.ts:138:7 › without JavaScript › bulk expiry and a rejected invalid date keep the selected members and draft (1.1s)
+  ✓   6 [mobile] › tests/browser/admin-safeguards.spec.ts:29:5 › block review preserves phrases through editing and cancel before a confirmed save (1.5s)
+  ✓   7 [mobile] › tests/browser/admin-safeguards.spec.ts:58:5 › member expiry uses UTC native controls and a server-evaluated preset (1.4s)
+  ✓   8 [mobile] › tests/browser/admin-safeguards.spec.ts:86:5 › audit names readable changes and safely discloses unknown payloads (2.6s)
+  ✓   9 [mobile] › tests/browser/admin-safeguards.spec.ts:112:7 › without JavaScript › registration and block confirmations remain native forms (1.4s)
+  ✓  10 [mobile] › tests/browser/admin-safeguards.spec.ts:138:7 › without JavaScript › bulk expiry and a rejected invalid date keep the selected members and draft (1.1s)
+  10 passed (16.8s)

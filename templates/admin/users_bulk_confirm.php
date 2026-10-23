@@ -71,11 +71,12 @@ $this->section('title', $verb . ' members');
             <?= field_error($errors, 'reason') ?>
 
             <?php if ($isSuspend): ?>
-                <label class="field">
-                    <span>Until (UTC, optional — blank is indefinite)</span>
-                    <input type="text" name="until" class="input member-bulk-until" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e((string) ($old['until'] ?? '')) ?>"<?= field_attrs($errors, 'until') ?>>
-                </label>
-                <?= field_error($errors, 'until') ?>
+                <?= $this->partial('admin/_restriction_expiry', [
+                    'expiry_value' => (string) ($old['until'] ?? ''),
+                    'duration' => (string) ($old['duration'] ?? 'custom'),
+                    'expiry_errors' => $errors,
+                    'expiry_label' => 'Until (UTC, optional — blank is indefinite)',
+                ]) ?>
             <?php endif; ?>
 
             <div class="form-actions member-bulk-actions">

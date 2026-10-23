@@ -72,6 +72,7 @@ final class AppAdminModerationTest extends TestCase
 
         $res = $this->post('/admin/moderation', [
             'antiabuse_mode' => 'block',
+            'review_action' => 'confirm',
             'antiabuse_blocked_words' => "spammyword\nBadWord, evil",
         ]);
         $this->assertRedirect($res, '/admin/moderation');
@@ -132,7 +133,7 @@ final class AppAdminModerationTest extends TestCase
         // Admin closes registration.
         $this->actingAs($this->admin);
         $this->get('/admin/settings');
-        $this->post('/admin/settings/registration', ['registration_mode' => 'closed']);
+        $this->post('/admin/settings/registration', ['registration_mode' => 'closed', 'review_action' => 'confirm']);
         self::assertSame('closed', $this->settings()->getString('registration_mode'));
         $this->logoutClient();
 

@@ -2,6 +2,13 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Admin safeguards and readable audit
+
+- Review Block mode and Closed registration before their audited save, with draft-preserving editing and no-JavaScript confirmation forms.
+- Offer native UTC suspension dates and 24-hour, 7-day and 30-day presets; reject impossible dates while preserving invalid drafts and the legacy timestamp request format.
+- Show current member identities and readable audit changes with escaped, bounded raw disclosures and explicit unavailable/deleted-actor fallbacks.
+- Local implementation evidence is recorded in `docs/evidence/admin-safeguards-2026-10-23/`; publication and production verification are separate.
+
 ## [Unreleased] - Project setup examples
 
 - Add an optional Neon Functions hello endpoint and project configuration with

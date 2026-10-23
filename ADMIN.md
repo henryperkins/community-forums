@@ -1,6 +1,6 @@
 # RetroBoards — Admin & Moderation Design
 
-**Status:** v0.18 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
+**Status:** v0.19 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-10-23
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, PRODUCT_DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; InnoDB / `utf8mb4`).
 
 > Older phase assignments in this design are scope history, not a live status ledger. Current shipped capability is in `PRODUCT.md`, `FeatureFlags::DEFAULTS`, and the relevant runbook; open operator carryovers are ADRs (notably 0021). Where a passage below describes unbuilt behaviour, it says so and names the owning ADR.
@@ -228,6 +228,8 @@ Escalating ladder, each recorded and visible on the user's admin record:
 | **Reveal anon author** | `mod.anon.reveal` | Board/Site | Unmasks an Anonymous post's author; the reveal is itself audited. |
 | **Add mod note** | `mod.user.warn` | — | Private staff note on the account (not user-visible). *2026-07-18: notes are **admin-only** in the shipped implementation — `user_notes` is globally scoped, so the any-board-moderator mapping over-disclosed; see ADR 0021 (post-review decisions).* |
 
+**Suspension input (ADR 0024, 2026-10-23).** The admin member record and bulk confirmation offer 24-hour, 7-day, and 30-day presets, evaluated once at submission in UTC, plus a native custom date/time field explicitly labelled UTC. A blank custom expiry is indefinite. Presets take precedence over the custom field; the existing `YYYY-MM-DD HH:MM:SS` request format remains valid alongside native `YYYY-MM-DDTHH:MM[:SS]`. Impossible dates, timezone suffixes, and malformed values are rejected server-side. A rejected draft retains its exact date text, reason, duration and bulk selection; malformed/legacy date text uses a text-input fallback so the browser cannot erase it. Existing stronger restrictions and account-lifecycle holds retain precedence.
+
 **Ban evasion** is flagged (not auto-enforced) using soft signals — matching email/IP/device on a new account linked to a banned one — surfaced to Admins with privacy caveats (§5.5). No automated collateral bans.
 
 ### 3.5 Moderation lifecycle (state machine)
@@ -249,6 +251,8 @@ Auto-flags (spam filters, word lists, throttles — §3.8) enter the **same queu
 
 Every moderation and admin action appends an immutable record (`moderation_log`, PRODUCT_DESIGN.md §8 + extensions §10): **who, what action, on what target, in what scope, why (reason), when**, plus a before/after snapshot for edits. Append-only (no edit/delete). Visible to Admins site-wide and to Moderators for their boards (`mod.log.view`). *(Shipped: `/admin/audit` is Admin-only; the board-scoped moderator view is deferred — ADR 0021 #5.)* The log is the backbone of accountability and appeals.
 
+The admin audit table resolves current actor and user-target names in a batched lookup, retaining the stable numeric ID. It does not fetch email addresses or IPs, reveal masked authors, or broaden moderator access. A missing user is labelled unavailable; a null actor is shown as “System or deleted actor” because the existing `ON DELETE SET NULL` relation cannot distinguish those cases. Known actions and fields have readable labels and changed-value lists. Unknown actions and raw before/after payloads remain available in a native **Raw details** disclosure, escaped and bounded (12 summary fields, 200 characters per value, 8,192 characters per raw payload; truncation is stated). Large, malformed or deeply nested payloads fall back to raw detail rather than guessed semantics. Board/category names come from recorded snapshots when present; other targets retain their type and ID. Audit rows themselves remain immutable.
+
 ### 3.7 Appeals (Phase 3)
 
 A user who is actioned (post removed, suspended, banned) can submit **one** appeal with a message. Appeals form their own lightweight queue; resolution (uphold / overturn) is recorded and linked to the original action. Kept deliberately minimal for v1+1.
@@ -263,6 +267,8 @@ Configurable, layered, and **reviewable by default**:
 - **Flood / duplicate detection:** repeated identical posts or rapid-fire posting auto-flags.
 - **Spam scoring:** delegated to an integration (Akismet-style) via the plugin/hook system (§8); high score → queue or hold.
 - **Necro-lock (optional):** auto-lock threads inactive for N months.
+
+**Block confirmation (ADR 0024, 2026-10-23).** Saving `block` from `/admin/moderation` first renders an impact review with the submitted phrase list. Only **Confirm Block mode** saves the mode and list and writes the audit entry. Every block-mode save is reviewed, including phrase changes while already blocking. **Back to editing** retains the draft; **Cancel** returns to persisted settings. The same native POST flow works without JavaScript, with the existing admin, account-state, feature-flag and CSRF checks.
 
 Each automated decision writes an audit entry tagged `actor = system` so automated moderation is as accountable as human moderation.
 
@@ -632,6 +638,8 @@ with JavaScript disabled.
 
 **Phase 1 setup scope (delivered):** on a fresh migrated install, normal routes redirect to `/setup` until the operator creates the first **Admin**, sets the community name, and picks starter categories/boards. The wizard uses the auth/session/CSRF services and writes to `users`, `settings`, `categories`, and `boards`. Everything it sets is editable later in the Console.
 
+**Closing registration (ADR 0024, 2026-10-23):** saving `closed` first explains that password registration, invitations and new social sign-ins stop, while existing members can still sign in. **Confirm closing registration** performs the audited save. Back to editing and Cancel do not change the setting; reopening is an ordinary save. The review and final POST work without JavaScript and retain the existing authorization and CSRF gates.
+
 **Post-setup configuration:** general, registration, moderation, and email operations are managed on their owning Console pages. Registration currently supports `open`, `closed`, and `invite`; approval-based registration is not implemented. Email transport/domain readiness is described in the email operations runbook.
 
 ## 10. Data-Model Additions (delta to PRODUCT_DESIGN.md §8)
@@ -834,6 +842,7 @@ This surface specification has no separate decision backlog.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.19 | 2026-10-23 | ADR 0024 deferred P2s: restrictive settings review, native UTC suspension input and presets, readable bounded audit presentation with current names and raw detail fallback. |
 | v0.18 | 2026-09-25 | Status-truth pass against shipped code. §3.4 and related passages: suspend and ban are Admin/site-only, and mute, board bans and moderator board-suspension are carryovers (ADR 0021 #4), so the v0.12 suspend-scope resolution is a design decision that is not built. The §3.6 moderator audit view is deferred (ADR 0021 #5). §2.4/§4.3 private boards are member-gated since Phase 2. §4.4 delete is hard-delete-with-forced-move (ADR 0021 #10). §8.6 API is read-only. The §7.2–§7.5 staff matrix, staff inbox and template editing are carryovers (ADR 0021 #1–#2), domain send-blocking is opt-in (ADR 0008), and the §9.3 registration/security settings beyond open/closed/invite are ADR 0021 #3. Status pointers name the `docs/history/` archive. |
 | v0.17 | 2026-09-23 | Replaced the obsolete phase roadmap and original-question register with links to the phase, ADR, and runbook records that now own status and decisions. Updated first-run setup and post-setup registration language to the delivered Console behavior. |
 | v0.16 | 2026-08-09 | Link previews completed and enabled (ADR 0025): §4.2 gains the **Unfurl link previews** per-board setting (`boards.link_previews_enabled`, DECISIONS §6 #5, default off; storable on any board but inert unless the board is public); §9.2 adds **Link previews** as a fourth tab in the Features area; §9.3 describes the `/admin/link-previews` console (queue tiles, host allowlist, kill switch, per-board opt-in, per-row refresh/purge, all audited — refresh deliberately unavailable on an author-removed row). Operator runbook: `docs/runbooks/link_previews.md`. |

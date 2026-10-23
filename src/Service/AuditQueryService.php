@@ -103,7 +103,7 @@ final class AuditQueryService
         $total = $this->log->searchCount($repoFilters);
 
         return [
-            'rows' => $this->enrich($this->log->search($repoFilters, $perPage, $page * $perPage)),
+            'rows' => $this->enrich($this->log->search($repoFilters, $perPage, $page * $perPage), true),
             'filters' => $filters,
             'total' => $total,
             'page' => $page,
@@ -120,12 +120,17 @@ final class AuditQueryService
      * @param array<int,array<string,mixed>> $rows
      * @return array<int,array<string,mixed>>
      */
-    public function enrich(array $rows): array
+    public function enrich(array $rows, bool $includeUserTargets = false): array
     {
         $ids = [];
         foreach ($rows as $row) {
             if (($row['actor_id'] ?? null) !== null) {
                 $ids[] = (int) $row['actor_id'];
+            }
+            // Only the admin-only full audit page resolves target identities.
+            // Moderator trails keep their existing visibility contract.
+            if ($includeUserTargets && ($row['target_type'] ?? '') === 'user') {
+                $ids[] = (int) $row['target_id'];
             }
         }
         $handles = $this->users->handlesForIds($ids);
@@ -133,6 +138,11 @@ final class AuditQueryService
             $actor = ($row['actor_id'] ?? null) !== null ? ($handles[(int) $row['actor_id']] ?? null) : null;
             $row['actor_username'] = $actor['username'] ?? null;
             $row['actor_display_name'] = $actor['display_name'] ?? null;
+            if ($includeUserTargets && ($row['target_type'] ?? '') === 'user') {
+                $target = $handles[(int) $row['target_id']] ?? null;
+                $row['target_username'] = $target['username'] ?? null;
+                $row['target_display_name'] = $target['display_name'] ?? null;
+            }
         }
         unset($row);
         return $rows;

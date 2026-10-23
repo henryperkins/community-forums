@@ -81,7 +81,8 @@ final class AdminSettingsService
         });
     }
 
-    public function updateRegistration(User $admin, string $mode): void
+    /** Returns false when the restrictive save needs its explicit review step. */
+    public function updateRegistration(User $admin, string $mode, bool $confirmed = false): bool
     {
         $this->assertAdmin($admin);
         if (!in_array($mode, self::REGISTRATION_MODES, true)) {
@@ -89,6 +90,10 @@ final class AdminSettingsService
                 ['registration_mode' => 'Unknown registration mode.'],
                 ['registration_mode' => $mode],
             );
+        }
+
+        if ($mode === 'closed' && !$confirmed) {
+            return false;
         }
 
         $before = $this->settings->getString('registration_mode', 'open');
@@ -101,19 +106,29 @@ final class AdminSettingsService
                 ['registration_mode' => $mode],
             );
         });
+        return true;
     }
 
-    /** @param array<string,mixed> $input */
-    public function updateAntiAbuse(User $admin, array $input): void
+    /**
+     * Returns false when block mode needs review.
+     * @param array<string,mixed> $input
+     */
+    public function updateAntiAbuse(User $admin, array $input, bool $confirmed = false): bool
     {
         $this->assertAdmin($admin);
 
-        $mode = (string) ($input['antiabuse_mode'] ?? '');
+        $mode = is_string($input['antiabuse_mode'] ?? null) ? $input['antiabuse_mode'] : '';
         if (!in_array($mode, self::ANTI_ABUSE_MODES, true)) {
             throw new ValidationException(
                 ['antiabuse_mode' => 'Unknown anti-abuse mode.'],
                 $input,
             );
+        }
+
+        // Review every block-mode save: new phrases can reject content even
+        // when the mode was already block. Nothing (including the audit) writes.
+        if ($mode === 'block' && !$confirmed) {
+            return false;
         }
 
         $raw = is_string($input['antiabuse_blocked_words'] ?? null)
@@ -143,6 +158,7 @@ final class AdminSettingsService
             $this->settings->set('antiabuse_blocked_words', $words);
             $this->audit($admin, 'anti_abuse_settings', $before, $after);
         });
+        return true;
     }
 
     /** @param array<string,mixed> $before @param array<string,mixed> $after */
