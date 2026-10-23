@@ -1,0 +1,37 @@
+{
+  "service_account": "retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "project_roles": [
+    "roles/logging.logWriter"
+  ],
+  "bucket": "rising-woods-449718-v6-retroboards-browser-evidence",
+  "bucket_role": "roles/storage.objectCreator",
+  "artifact_expiry_days": 14,
+  "public_access_prevention": "enforced",
+  "trigger": "retroboards-browser-evidence",
+  "control_sha": "adab5335680c5a8599a6a4a4ecec83500d19e1fd",
+  "scope": "manual exact SHA only; no automatic browser builds",
+  "parent": {
+    "service_account": "retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "project_roles": [
+      "roles/logging.logWriter",
+      "projects/rising-woods-449718-v6/roles/retroboardsBrowserVerifier"
+    ],
+    "custom_role_permissions": [
+      "cloudbuild.builds.get"
+    ],
+    "act_as_service_account": null,
+    "child_bucket": "rising-woods-449718-v6-retroboards-browser-evidence",
+    "child_bucket_role": "roles/storage.objectViewer",
+    "verification_bucket": "rising-woods-449718-v6-retroboards-browser-verification",
+    "verification_bucket_role": "roles/storage.objectCreator",
+    "branch_source_execution": false,
+    "orchestration_limit": "Verifier reads a completed build; it cannot create builds or act as the child account"
+  },
+  "github_status_publication": "unavailable; Cloud Build and private GCS are authoritative",
+  "trigger_id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+  "automatic_trigger_disabled": true,
+  "disabled_github_hooks": [
+    694573802
+  ],
+  "applied": true
+}

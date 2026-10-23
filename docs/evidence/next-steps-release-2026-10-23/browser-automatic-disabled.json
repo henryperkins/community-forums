@@ -1,0 +1,10 @@
+{
+  "browserTrigger": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+  "browserHooks": [
+    694573802
+  ],
+  "productionHook": 694510717,
+  "productionHookActive": true,
+  "previousBrowserTriggerDisabled": false,
+  "automaticBrowserDisabled": true
+}

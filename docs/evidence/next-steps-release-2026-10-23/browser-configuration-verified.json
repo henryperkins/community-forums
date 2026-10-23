@@ -1,0 +1,11 @@
+{
+  "browserTriggerDisabled": true,
+  "browserHookDisabled": true,
+  "productionTriggerEnabled": true,
+  "productionHookEnabled": true,
+  "verifierPermissions": [
+    "cloudbuild.builds.get"
+  ],
+  "verifierChildActAsRemoved": true,
+  "controlSha": "adab5335680c5a8599a6a4a4ecec83500d19e1fd"
+}
