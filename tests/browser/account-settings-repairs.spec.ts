@@ -72,7 +72,7 @@ test.describe('account settings repairs without JavaScript', () => {
       await suspend.locator('[name="reason"]').fill('Indefinite site hold');
       await suspend.getByRole('button', { name: 'Suspend', exact: true }).click();
       await suspend.locator('[name="reason"]').fill('Shorter follow-up');
-      await suspend.locator('[name="until"]').fill('2020-01-01 00:00:00');
+      await suspend.locator('[name="until"]').fill('2020-01-01T00:00:00');
       await suspend.getByRole('button', { name: 'Suspend', exact: true }).click();
 
       expect((await post(page, '/settings/account', { display_name: 'Forbidden after overlap' })).status()).toBe(403);
@@ -123,7 +123,7 @@ test.describe('account settings repairs without JavaScript', () => {
         await expect(restrict).toHaveAttribute('open', '');
         const suspend = admin.locator(`form[action="/admin/users/${data.id}/suspend"]`);
         await suspend.locator('[name="reason"]').fill('Temporary browser evidence suspension');
-        await suspend.locator('[name="until"]').fill('2030-01-01 00:00:00');
+        await suspend.locator('[name="until"]').fill('2030-01-01T00:00:00');
         await suspend.getByRole('button', { name: 'Suspend', exact: true }).click();
         expect(fixture('inspect').status).toBe(hold);
         await page.reload();

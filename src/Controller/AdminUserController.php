@@ -84,12 +84,13 @@ final class AdminUserController extends Controller
             return $this->directoryView($request, 'The bulk selection is no longer valid — start again.', 422, $ids);
         }
 
-        $reason = $request->str('reason');
-        $until = trim($request->str('until'));
+        $reason = is_string($request->post('reason')) ? $request->post('reason') : '';
+        $until = is_string($request->post('until', '')) ? $request->post('until', '') : '[Invalid date input]';
+        $duration = is_string($request->post('duration', 'custom')) ? $request->post('duration', 'custom') : '[Invalid duration]';
 
         try {
             $result = $this->container->get(UserModerationService::class)
-                ->bulkApply($admin, $action, $ids, $reason, $until !== '' ? $until : null);
+                ->bulkApply($admin, $action, $ids, $reason, $until !== '' ? $until : null, $duration);
         } catch (ValidationException $e) {
             // Shared-input failure (reason/until) aborted before any member
             // was written — re-render the confirmation with the typed input.
@@ -102,7 +103,7 @@ final class AdminUserController extends Controller
                 $ids,
                 $admin->id(),
                 $errors,
-                ['reason' => $reason, 'until' => $until],
+                ['reason' => $reason, 'until' => $until, 'duration' => $duration],
                 422,
             );
         }
@@ -282,12 +283,14 @@ final class AdminUserController extends Controller
         $admin = $this->requireAdmin();
         $id = (int) ($params['id'] ?? 0);
         $this->requireSubject($id); // 404 before any write
-        $until = trim($request->str('until'));
+        $reason = is_string($request->post('reason')) ? $request->post('reason') : '';
+        $until = is_string($request->post('until', '')) ? $request->post('until', '') : '[Invalid date input]';
+        $duration = is_string($request->post('duration', 'custom')) ? $request->post('duration', 'custom') : '[Invalid duration]';
         try {
             $this->container->get(UserModerationService::class)
-                ->suspend($admin, $id, $until !== '' ? $until : null, $request->str('reason'));
+                ->suspend($admin, $id, $until !== '' ? $until : null, $reason, $duration);
         } catch (ValidationException $e) {
-            return $this->record($id, $e, 422, 'suspend', ['reason' => $request->str('reason'), 'until' => $until]);
+            return $this->record($id, $e, 422, 'suspend', ['reason' => $reason, 'until' => $until, 'duration' => $duration]);
         }
         return $this->redirectWithFlash('/admin/users/' . $id, 'User suspended.');
     }

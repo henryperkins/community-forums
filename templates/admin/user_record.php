@@ -343,11 +343,12 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                                     <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('suspend', 'reason')) ?>"<?= $fattr('suspend', 'reason') ?> required>
                                 </label>
                                 <?= $ferr('suspend', 'reason') ?>
-                                <label class="field">
-                                    <span>Until (UTC, optional)</span>
-                                    <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($oldv('suspend', 'until')) ?>"<?= $fattr('suspend', 'until') ?>>
-                                </label>
-                                <?= $ferr('suspend', 'until') ?>
+                                <?= $this->partial('admin/_restriction_expiry', [
+                                    'expiry_value' => $oldv('suspend', 'until'),
+                                    'duration' => $oldv('suspend', 'duration') ?: 'custom',
+                                    'expiry_errors' => $ctx === 'suspend' ? $errs : [],
+                                    'expiry_context' => 'suspend',
+                                ]) ?>
                                 <div class="form-actions"><button class="btn btn-small danger" type="submit">Suspend</button></div>
                             </form>
                         </div>

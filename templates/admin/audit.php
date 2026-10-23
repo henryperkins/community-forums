@@ -10,7 +10,7 @@ $perPage = max(1, (int) ($per_page ?? 50));
 $pageCount = max(1, (int) ($page_count ?? (int) ceil(((int) ($total ?? 0)) / $perPage)));
 ?>
 <?= $this->partial('admin/_console', ['area' => 'overview', 'tab' => 'audit', 'pane_class' => 'admin-overview-audit']) ?>
-        <p class="pane-intro">Every moderation and admin action, append-only. Filter it, page through it, and follow a target's whole trail from its own record.</p>
+        <p class="pane-intro">Every moderation and admin action, append-only. Filter it, page through it, and follow a target's whole trail from its own record. Member names are current; a deleted actor may no longer be identifiable.</p>
 
     <section class="card audit-filter-card">
         <form method="get" action="/admin/audit" class="filter-form">
@@ -74,34 +74,40 @@ $pageCount = max(1, (int) ($page_count ?? (int) ceil(((int) ($total ?? 0)) / $pe
                 <tbody>
                 <?php foreach ($rows as $row): ?>
                     <?php
+                    $entry = \App\Support\AuditEntryPresenter::present($row);
                     $createdAt = (string) $row['created_at'];
                     $createdAtTs = strtotime($createdAt . ' UTC');
                     $createdAtIso = $createdAtTs === false ? '' : gmdate('Y-m-d\TH:i:s\Z', $createdAtTs);
                     ?>
                     <tr>
                         <td class="audit-time nowrap"><time datetime="<?= $e($createdAtIso) ?>"><?= $e(human_datetime($createdAt)) ?></time></td>
-                        <td><?= $e($row['actor_username'] ?? 'system') ?></td>
-                        <td class="action-cell"><code><?= $e((string) $row['action']) ?></code></td>
+                        <td><?= $e($entry['actor']) ?></td>
+                        <td class="action-cell"><?= $e($entry['action']) ?></td>
                         <td>
-                            <?php $targetType = (string) $row['target_type']; $targetId = (int) $row['target_id']; ?>
-                            <?php if ($targetType === 'user' && $targetId > 0): ?>
-                                <a class="audit-target-link" href="/admin/users/<?= $targetId ?>">user #<?= $targetId ?></a>
+                            <?php if ($entry['target_link'] !== null): ?>
+                                <a class="audit-target-link" href="<?= $e($entry['target_link']) ?>"><?= $e($entry['target']) ?></a>
                             <?php else: ?>
-                                <span class="audit-target"><?= $e($targetType) ?> #<?= $targetId ?></span>
+                                <span class="audit-target"><?= $e($entry['target']) ?></span>
                             <?php endif; ?>
                         </td>
-                        <td class="audit-reason"><?= $e((string) ($row['reason'] ?? '')) ?></td>
+                        <td class="audit-reason"><?= $e($entry['reason']) ?></td>
                         <td>
-                            <?php $before = (string) ($row['before_json'] ?? ''); $after = (string) ($row['after_json'] ?? ''); ?>
-                            <?php if ($before !== '' || $after !== ''): ?>
-                                <details class="audit-change">
-                                    <summary>Details</summary>
-                                    <?php if ($before !== ''): ?><p>Before: <code><?= $e($before) ?></code></p><?php endif; ?>
-                                    <?php if ($after !== ''): ?><p>After: <code><?= $e($after) ?></code></p><?php endif; ?>
-                                </details>
-                            <?php else: ?>
-                                <span class="muted">—</span>
+                            <?php if ($entry['changes'] !== []): ?>
+                                <ul>
+                                    <?php foreach ($entry['changes'] as $change): ?>
+                                        <li><strong><?= $e($change['label']) ?>:</strong> <?= $e($change['before']) ?> → <?= $e($change['after']) ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                                <?php if ($entry['omitted']): ?><p class="muted">More changes in raw details.</p><?php endif; ?>
                             <?php endif; ?>
+                            <details class="audit-change">
+                                <summary>Raw details</summary>
+                                <p>Action: <code><?= $e($entry['action_code']) ?></code></p>
+                                <p>Target: <code><?= $e((string) $row['target_type']) ?> #<?= (int) $row['target_id'] ?></code></p>
+                                <?php if ($entry['reason_raw'] !== ''): ?><p>Reason: <code><?= $e($entry['reason_raw']) ?></code></p><?php endif; ?>
+                                <?php if ($entry['before_raw'] !== ''): ?><p>Before: <code><?= $e($entry['before_raw']) ?></code></p><?php endif; ?>
+                                <?php if ($entry['after_raw'] !== ''): ?><p>After: <code><?= $e($entry['after_raw']) ?></code></p><?php endif; ?>
+                            </details>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -41,9 +41,18 @@ final class AdminSettingsController extends Controller
     public function updateRegistration(Request $request, array $params): Response
     {
         $admin = $this->requireAdmin();
+        if ($request->post('review_action') === 'edit') {
+            return $this->generalView(['settings_old' => ['registration_mode' => $request->str('registration_mode')]]);
+        }
         try {
-            $this->container->get(AdminSettingsService::class)
-                ->updateRegistration($admin, $request->str('registration_mode'));
+            $saved = $this->container->get(AdminSettingsService::class)
+                ->updateRegistration($admin, $request->str('registration_mode'), $request->post('review_action') === 'confirm');
+            if (!$saved) {
+                return $this->generalView([
+                    'settings_review' => true,
+                    'settings_old' => ['registration_mode' => $request->str('registration_mode')],
+                ]);
+            }
         } catch (ValidationException $e) {
             return $this->generalView([
                 'settings_errors' => $e->errors,
@@ -77,9 +86,15 @@ final class AdminSettingsController extends Controller
     public function updateAntiAbuse(Request $request, array $params): Response
     {
         $admin = $this->requireAntiAbuseAdmin();
+        if ($request->post('review_action') === 'edit') {
+            return $this->moderationView(['settings_old' => $request->allInput()]);
+        }
         try {
-            $this->container->get(AdminSettingsService::class)
-                ->updateAntiAbuse($admin, $request->allInput());
+            $saved = $this->container->get(AdminSettingsService::class)
+                ->updateAntiAbuse($admin, $request->allInput(), $request->post('review_action') === 'confirm');
+            if (!$saved) {
+                return $this->moderationView(['settings_review' => true, 'settings_old' => $request->allInput()]);
+            }
         } catch (ValidationException $e) {
             return $this->moderationView([
                 'settings_errors' => $e->errors,

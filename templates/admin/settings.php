@@ -3,6 +3,7 @@
 $this->layout('layout');
 $this->section('title', 'General & registration');
 $this->section('variant', 'admin');
+$review = !empty($settings_review);
 $errors = $settings_errors ?? [];
 $old = $settings_old ?? [];
 $siteValue = (string) ($old['site_name'] ?? $site_name ?? '');
@@ -27,10 +28,17 @@ $modes = $registration_modes ?? \App\Security\RegistrationPolicy::MODES;
             </section>
 
             <section class="card settings-card settings-general-card" aria-labelledby="registration-heading">
-                <h2 id="registration-heading">Registration</h2>
+                <h2 id="registration-heading"><?= $review ? 'Review closing registration' : 'Registration' ?></h2>
                 <p class="muted settings-card-intro">Choose whether new members can join directly, need an invitation, or cannot register.</p>
                 <form method="post" action="/admin/settings/registration" class="stacked">
                     <?= $this->csrfField() ?>
+                    <?php if ($review): ?>
+                        <div class="card confirm-card">
+                            <p><strong>No new members will be able to register, including by invitation or a new social sign-in.</strong> Existing members can continue signing in.</p>
+                            <p>You can reopen registration from this page at any time.</p>
+                            <input type="hidden" name="registration_mode" value="closed">
+                        </div>
+                    <?php else: ?>
                     <label class="field" for="admin-registration-mode">
                         <span class="settings-field-label">Registration mode</span>
                         <select id="admin-registration-mode" name="registration_mode" class="input"<?= field_attrs($errors, 'registration_mode', null, 'registration-help') ?>>
@@ -48,7 +56,16 @@ $modes = $registration_modes ?? \App\Security\RegistrationPolicy::MODES;
                         <p class="settings-invite-conflict" role="alert">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</p>
                     <?php endif; ?>
                     <?= field_error($errors, 'registration_mode') ?>
-                    <div class="form-actions settings-actions"><button class="btn" type="submit">Save registration mode</button></div>
+                    <?php endif; ?>
+                    <div class="form-actions<?= $review ? '' : ' settings-actions' ?>">
+                        <?php if ($review): ?>
+                            <button class="btn danger" type="submit" name="review_action" value="confirm">Confirm closing registration</button>
+                            <button class="btn btn-secondary" type="submit" name="review_action" value="edit">Back to editing</button>
+                            <a class="linkbtn" href="/admin/settings">Cancel</a>
+                        <?php else: ?>
+                            <button class="btn" type="submit">Save registration mode</button>
+                        <?php endif; ?>
+                    </div>
                 </form>
             </section>
         </div>
