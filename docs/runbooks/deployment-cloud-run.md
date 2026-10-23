@@ -55,7 +55,7 @@ Service accounts, each holding only what it uses:
 | `retroboards-deploy` | Cloud Build: push images, `run.developer`, act as `retroboards-app` and `retroboards-monitor`, write build logs |
 | `retroboards-monitor` | Read database aggregates through the connector with the existing app DB credential; view cron executions and Cloud SQL backup metadata (§8). No app key, mail token or data bucket access |
 | `retroboards-browser-ci` | Write browser build logs and create synthetic artifacts in its private CI bucket (§5a). No production secrets, database, deployment or invocation rights |
-| `retroboards-browser-verifier` | Trusted browser controller: create/get builds, act as `retroboards-browser-ci`, read its artifact bucket and create receipts in a separate private verification bucket (§5a). Build creation carries indirect orchestration capability; only pinned reviewed controls execute here |
+| `retroboards-browser-verifier` | Trusted browser verifier: read completed build metadata and its artifact bucket, then create receipts in a separate private verification bucket (§5a). No build creation or service-account impersonation; only pinned reviewed controls execute here |
 
 ## 2. The request path and the visitor's IP
 
@@ -204,13 +204,21 @@ when the change already has sufficient completed local evidence. Deliberately
 canceled runs must be documented as canceled, never as a full hosted pass.
 
 The independent Cloud Build lane uses
-`deploy/cloudrun/browser-ci/{configure.py,cloudbuild.json,launcher.py,child-cloudbuild.json,Dockerfile,run.sh,package.py,upload.py,enforce.py}`.
+`deploy/cloudrun/browser-ci/{submit.py,configure.py,cloudbuild.json,launcher.py,child-cloudbuild.json,Dockerfile,run.sh,package.py,upload.py,enforce.py}`.
 It is the independent hosted browser evidence source; inspect its actual build
 result and parent receipt before claiming full hosted acceptance.
 
-The parent build fetches only the separately pinned reviewed control SHA.
-Its controller submits an exact source SHA to a child build on a separate VM,
-using the fixed `retroboards-browser-ci` identity. The child runs the existing
+The full hosted matrix is **explicit-only**. The former owner-repository push
+webhook and browser trigger are disabled; production pushes remain automatic.
+`submit.py` runs on the operator's host, pins both recipes to the reviewed control
+commit, and submits the exact source SHA using the fixed `retroboards-browser-ci`
+identity. It waits outside Cloud Build, saving child/verifier IDs in a private
+state file. Only after the test build is terminal does it submit the separate
+trusted verifier. A verifier given an active child fails immediately; it never
+creates or waits for another build. This avoids the 2026-10-23 capacity deadlock
+where waiting controllers occupied the slots their children required.
+
+The verifier fetches only the separately pinned reviewed control SHA. The child runs the existing
 capture, unified notification/settings and production Docker upload suites,
 and uploads sanitized synthetic PNG/JSON evidence to a private bucket with
 14-day expiry. Capture and unified settings use a disposable
@@ -247,18 +255,12 @@ Parent verification therefore proves isolated acceptance of the reported
 artifacts and provider build status; it does not attest the semantics of
 arbitrary branch-authored tests.
 
-The parent `retroboards-browser-verifier` has a custom project role containing
-only `cloudbuild.builds.create` and `cloudbuild.builds.get`, log writing,
-ActAs on the child account alone, object viewing on the child evidence bucket
-and object creation on the verification bucket. It never checks out or executes
-branch source. These are trusted orchestration privileges:
-[Google documents](https://docs.cloud.google.com/build/docs/iam-roles-permissions)
-that build creation also covers trigger mutation/execution and can launch
-builds as the legacy build account. The project's existing default Compute
-account has `roles/editor`, and its legacy build account has
-`roles/cloudbuild.builds.builder`; neither was changed for this lane. The
-controller hardcodes the restricted child identity. It has no direct app
-Secret Manager, Cloud SQL, Cloud Run or deployment roles.
+The verifier `retroboards-browser-verifier` has a custom project role containing
+only `cloudbuild.builds.get`, log writing, object viewing on the child evidence
+bucket and object creation on the verification bucket. Its former build-creation
+and child-account ActAs permissions are removed. The authenticated operator
+submits the two builds; the verifier never checks out or executes branch source.
+The dedicated child account still has no production or orchestration access.
 
 Neither GitHub credentials nor a production `.env` enter the runner. Published
 artifacts omit environment variables, cookies, headers, traces and raw logs.
@@ -276,21 +278,19 @@ python3 deploy/cloudrun/browser-ci/configure.py --control-sha=<REVIEWED_CONTROL_
 ```
 
 The first command previews the exact plan without API calls. The apply command
-converges the two accounts, narrow bindings, private expiring buckets, inline webhook
-trigger and owner-repository GitHub push hook. It uses the existing protected
-Cloud Build webhook configuration; private callback URLs remain out of its
-output. Existing hook selection requires the exact HTTPS host, project, region
-and trigger path. Owner-repository branch pushes include PR branches and `main`. Fork
-PRs require a deliberate manual run; there is no public unauthenticated
-arbitrary-build endpoint.
+converges the two accounts, narrow bindings and private expiring buckets, removes
+the verifier's obsolete build-creation/ActAs rights, and disables only the existing
+browser webhook and trigger. It never changes the production webhook. Hook
+selection requires the exact HTTPS host, project, region and trigger path; private
+callback URLs remain out of output. No automatic full-matrix runs occur on PR or
+main pushes. Forks also require an explicitly authorized exact-commit run.
 
-Run a pushed commit manually with the same lane:
+Run a pushed commit and resume it with the same command/state file:
 
 ```sh
-gcloud builds submit --no-source --project=rising-woods-449718-v6 --region=us-east4 \
-  --config=deploy/cloudrun/browser-ci/cloudbuild.json \
-  --substitutions=_SHA=<EXACT_SOURCE_SHA>,_CONTROL_SHA=<REVIEWED_CONTROL_SHA>
-gcloud builds describe <PARENT_BUILD_ID> --project=rising-woods-449718-v6 --region=us-east4
+python3 deploy/cloudrun/browser-ci/submit.py \
+  --source-sha=<EXACT_SOURCE_SHA> --control-sha=<REVIEWED_CONTROL_SHA> \
+  --state-file=/private/browser-run.json
 # For an authorized operator, download the parent receipt first:
 gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-verification/<SOURCE_SHA>/<PARENT_BUILD_ID>/verification.json /private/verification.json
 # Use its child_build_id to inspect the corresponding synthetic artifacts:
@@ -302,7 +302,19 @@ python3 deploy/cloudrun/browser-ci/enforce.py --results=/private \
   --control-sha=<REVIEWED_CONTROL_SHA>
 ```
 
-Both SHAs must be full lowercase 40-character commit IDs. A successful parent
+Both SHAs must be full lowercase 40-character commit IDs, available locally and
+pushed. The coordinator uses a per-source/control lock on its host and reuses
+matching active or successful builds found in the latest 100 regional records.
+Cross-host simultaneous requests are not a distributed exactly-once guarantee;
+operate one coordinator per release. An interrupted coordinator can resume from
+its state file without submitting new builds. Failed runs remain failed when
+resumed; use `--fresh` with a new state file to explicitly retry failed verification
+or replace completed builds whose private artifacts have expired. Fresh runs
+still reuse matching active work, and their state remembers the choice on resume.
+The state file has mode 0600 and contains IDs/statuses, never credentials.
+The coordinator waits up to 150 minutes per build, outside Cloud Build. Its
+success requires both builds to succeed and a matching trusted receipt with all
+acceptance flags true. Verifier timeout is ten minutes. A successful parent
 Cloud Build result and its separately published `verification.json` establish
 this lane's acceptance; check matching parent/child/source/control IDs,
 `metadata_verified`, `provider_steps_verified`, `enforcement_passed`, `passed` and the artifact SHA-256
@@ -690,7 +702,7 @@ Monthly estimates at us-east4 list prices (Cloud Billing Catalog, 2026-10-09):
 | Cloud SQL `db-f1-micro` ($0.0112/h), 10 GB SSD, backups and binlog | ≈ $10–11. `db-g1-small` ($0.0375/h) was ≈ $30 |
 | Monitoring collector | ≈ $3.30 gross before shared free-tier credits: 2,880 monthly ticks, 1 vCPU / 512 MiB with the one-minute minimum |
 | Cloud Storage, Artifact Registry, Logging | Usage dependent; synthetic CI artifacts expire after 14 days |
-| Browser Cloud Build lane | Separate usage-based build cost; each owner-repository push runs the complete browser lane |
+| Browser Cloud Build lane | Separate usage-based build cost; explicit exact-commit runs only; automatic browser hook/trigger disabled |
 | Workers Paid plan | $5, shared with the account's other Workers |
 
 Versus about $63–73 for the Cloudflare `standard-1` container that kept itself

@@ -22,7 +22,37 @@ final class CloudRunBrowserCiLauncherContractTest extends TestCase
         fclose($pipes[2]);
         self::assertSame(0, proc_close($process), $stderr);
         self::assertSame('', $stdout);
-        self::assertStringContainsString('Ran 12 tests', $stderr);
+        self::assertStringContainsString('Ran 14 tests', $stderr);
+        self::assertStringContainsString('OK', $stderr);
+    }
+
+    public function test_explicit_operator_coordination_contracts(): void
+    {
+        $process = proc_open(['python3', '-B', __DIR__ . '/cloud_run_browser_ci_submit_contracts.py'],
+            [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes, self::ROOT);
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        self::assertSame(0, proc_close($process), $stderr);
+        self::assertSame('', $stdout);
+        self::assertStringContainsString('OK', $stderr);
+    }
+
+    public function test_configuration_preserves_production_routing_contracts(): void
+    {
+        $process = proc_open(['python3', '-B', __DIR__ . '/cloud_run_browser_ci_configure_contracts.py'],
+            [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes, self::ROOT);
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        self::assertSame(0, proc_close($process), $stderr);
+        self::assertSame('', $stdout);
         self::assertStringContainsString('OK', $stderr);
     }
 
@@ -31,7 +61,7 @@ final class CloudRunBrowserCiLauncherContractTest extends TestCase
         $build = json_decode((string) file_get_contents(self::ROOT . '/deploy/cloudrun/browser-ci/cloudbuild.json'),
             true, flags: JSON_THROW_ON_ERROR);
         self::assertStringContainsString('/retroboards-browser-verifier@', $build['serviceAccount']);
-        self::assertSame('6300s', $build['timeout']);
+        self::assertSame('600s', $build['timeout']);
         self::assertSame('rising-woods-449718-v6-retroboards-browser-verification', $build['substitutions']['_VERIFY_BUCKET']);
         self::assertCount(2, $build['steps']);
         $source = $build['steps'][0]['args'][1];

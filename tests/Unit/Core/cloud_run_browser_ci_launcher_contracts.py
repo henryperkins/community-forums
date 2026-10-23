@@ -67,12 +67,32 @@ class LauncherContracts(unittest.TestCase):
                 (SOURCE, CONTROL, 'invalid', u.BUCKET, u.VERIFY_BUCKET),
                 (SOURCE, CONTROL, PARENT, 'wrong', u.VERIFY_BUCKET),
                 (SOURCE, CONTROL, PARENT, u.BUCKET, 'wrong')]:
-                record = u.verify(source, control, parent, bucket, verifier)
+                record = u.verify(source, control, parent, bucket, verifier, child_id=CHILD)
                 self.assertFalse(record['passed'])
                 self.assertEqual('input-validation', record['stage'])
                 self.assertNotIn('private-invalid-input', json.dumps(record))
             create.assert_not_called()
             publish.assert_not_called()
+
+    def test_active_child_is_rejected_without_creating_or_waiting_for_a_build(self):
+        with tempfile.TemporaryDirectory() as scratch, patch.object(u, 'create_child') as create, \
+                patch.object(u, 'child_metadata', return_value=metadata('WORKING')) as read, \
+                patch.object(u, 'download_artifact') as download, patch.object(u, 'publish_receipt'):
+            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification', child_id=CHILD)
+        self.assertFalse(result['passed'])
+        self.assertEqual('child-not-complete', result['stage'])
+        create.assert_not_called()
+        read.assert_called_once_with(CHILD, SOURCE, CONTROL)
+        download.assert_not_called()
+
+    def test_child_id_is_required_before_cloud_access(self):
+        with patch.object(u, 'create_child') as create, patch.object(u, 'child_metadata') as read:
+            for child in [None, 'main', '../../private', '$(echo private)']:
+                result = u.verify(SOURCE, CONTROL, PARENT, child_id=child)
+                self.assertFalse(result['passed'])
+                self.assertEqual('input-validation', result['stage'])
+            create.assert_not_called()
+            read.assert_not_called()
 
     def test_recipe_overrides_identity_and_exact_substitutions(self):
         with tempfile.TemporaryDirectory() as scratch:
@@ -103,10 +123,10 @@ class LauncherContracts(unittest.TestCase):
 
     def test_provider_failure_cannot_be_overridden_by_child_artifacts(self):
         with tempfile.TemporaryDirectory() as scratch, patch.object(u, 'create_child', return_value=CHILD), \
-                patch.object(u, 'await_child', return_value=metadata('FAILURE')), \
+                patch.object(u, 'child_metadata', return_value=metadata('FAILURE')), \
                 patch.object(u, 'download_artifact') as download, patch.object(u, 'enforce') as enforce, \
                 patch.object(u, 'publish_receipt') as publish:
-            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification')
+            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification', child_id=CHILD)
             self.assertFalse(result['passed'])
             self.assertTrue(result['metadata_verified'])
             self.assertEqual('FAILURE', result['child_provider_status'])
@@ -117,10 +137,10 @@ class LauncherContracts(unittest.TestCase):
         build = metadata()
         build['steps'][1].update({'status': 'FAILURE', 'exitCode': 7, 'allowFailure': True})
         with tempfile.TemporaryDirectory() as scratch, patch.object(u, 'create_child', return_value=CHILD), \
-                patch.object(u, 'await_child', return_value=build), \
+                patch.object(u, 'child_metadata', return_value=build), \
                 patch.object(u, 'download_artifact') as download, patch.object(u, 'enforce') as enforce, \
                 patch.object(u, 'publish_receipt') as publish:
-            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification')
+            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification', child_id=CHILD)
         self.assertFalse(result['passed'])
         self.assertEqual('SUCCESS', result['child_provider_status'])
         self.assertFalse(result['provider_steps_verified'])
@@ -161,10 +181,10 @@ class LauncherContracts(unittest.TestCase):
             Path(destination).write_bytes(data)
             return {'name': name, 'bytes': len(data), 'sha256': 'synthetic'}
         with tempfile.TemporaryDirectory() as scratch, patch.object(u, 'create_child', return_value=CHILD), \
-                patch.object(u, 'await_child', return_value=metadata()), \
+                patch.object(u, 'child_metadata', return_value=metadata()), \
                 patch.object(u, 'download_artifact', side_effect=download), \
                 patch.object(u, 'publish_receipt'):
-            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification')
+            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification', child_id=CHILD)
         self.assertFalse(result['passed'])
         self.assertFalse(result['enforcement_passed'])
         self.assertEqual('enforcement-failed', result['stage'])
@@ -172,10 +192,10 @@ class LauncherContracts(unittest.TestCase):
 
     def test_success_requires_all_named_bounded_artifacts_and_parent_enforcement(self):
         with tempfile.TemporaryDirectory() as scratch, patch.object(u, 'create_child', return_value=CHILD), \
-                patch.object(u, 'await_child', return_value=metadata()), \
+                patch.object(u, 'child_metadata', return_value=metadata()), \
                 patch.object(u, 'download_artifact', return_value={'bytes': 1}) as download, \
                 patch.object(u, 'enforce', return_value=True) as enforce, patch.object(u, 'publish_receipt'):
-            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification')
+            result = u.verify(SOURCE, CONTROL, PARENT, directory=Path(scratch)/'verification', child_id=CHILD)
         self.assertTrue(result['passed'])
         self.assertTrue(result['metadata_verified'])
         self.assertTrue(result['provider_steps_verified'])
@@ -228,17 +248,13 @@ class LauncherContracts(unittest.TestCase):
         self.assertEqual('build-api',str(error.exception));self.assertEqual([],response.reads)
         self.assertTrue(factory.call_args.kwargs['context'].check_hostname)
 
-    def test_creation_requires_real_provider_child_id_and_terminal_polling(self):
+    def test_creation_requires_real_provider_child_id(self):
         with patch.object(u,'api_json',return_value={'metadata':{'build':{'id':CHILD}}}) as api:
             self.assertEqual(CHILD,u.create_child({'serviceAccount':u.CHILD_SA}))
             self.assertEqual('POST',api.call_args.args[0]);self.assertIn('projectId=',api.call_args.args[1])
         for operation in [{},{'metadata':{'build':{'id':'invalid'}}}]:
             with patch.object(u,'api_json',return_value=operation):
                 with self.assertRaises(u.VerificationError):u.create_child({})
-        with patch.object(u,'child_metadata',side_effect=[metadata('WORKING'),metadata('SUCCESS')]) as get, \
-                patch.object(u.time,'sleep') as sleep:
-            self.assertEqual('SUCCESS',u.await_child(CHILD,SOURCE,CONTROL)['status'])
-            self.assertEqual(2,get.call_count);sleep.assert_called_once_with(10)
 
     def test_only_absolute_reviewed_enforcer_executes_with_isolated_python_and_timeout(self):
         with patch.object(u.subprocess,'run',return_value=subprocess.CompletedProcess([],0)) as run:
@@ -248,9 +264,9 @@ class LauncherContracts(unittest.TestCase):
         self.assertEqual(180,run.call_args.kwargs['timeout'])
         self.assertTrue(run.call_args.kwargs['capture_output'])
         self.assertNotIn('evidence.tar.gz',argv)
-        with tempfile.TemporaryDirectory() as scratch, patch.object(u,'create_child',side_effect=RuntimeError('private-api-token-error')), \
+        with tempfile.TemporaryDirectory() as scratch, patch.object(u,'child_metadata',side_effect=RuntimeError('private-api-token-error')), \
                 patch.object(u,'publish_receipt') as publish:
-            receipt=u.verify(SOURCE,CONTROL,PARENT,directory=Path(scratch)/'verification')
+            receipt=u.verify(SOURCE,CONTROL,PARENT,directory=Path(scratch)/'verification', child_id=CHILD)
         self.assertFalse(receipt['passed']);self.assertEqual('verification-error',receipt['stage'])
         self.assertNotIn('private-api-token-error',json.dumps(receipt));publish.assert_called_once()
 

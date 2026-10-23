@@ -17,7 +17,7 @@ VERIFIER_SA = f'retroboards-browser-verifier@{PROJECT}.iam.gserviceaccount.com'
 VERIFY_BUCKET = f'{PROJECT}-retroboards-browser-verification'
 VERIFIER_ROLE_ID = 'retroboardsBrowserVerifier'
 VERIFIER_ROLE = f'projects/{PROJECT}/roles/{VERIFIER_ROLE_ID}'
-VERIFIER_PERMISSIONS = ['cloudbuild.builds.create', 'cloudbuild.builds.get']
+VERIFIER_PERMISSIONS = ['cloudbuild.builds.get']
 TRIGGER = 'retroboards-browser-evidence'
 HERE = Path(__file__).resolve().parent
 
@@ -88,16 +88,16 @@ def configure(control_sha, apply=False):
             'bucket': BUCKET, 'bucket_role': 'roles/storage.objectCreator',
             'artifact_expiry_days': 14, 'public_access_prevention': 'enforced',
             'trigger': TRIGGER, 'control_sha': control_sha,
-            'scope': 'Owner-repository branch pushes and manual exact SHA; child has no production permissions',
+            'scope': 'manual exact SHA only; no automatic browser builds',
             'parent': {'service_account': VERIFIER_SA,
                        'project_roles': ['roles/logging.logWriter', VERIFIER_ROLE],
                        'custom_role_permissions': VERIFIER_PERMISSIONS,
-                       'act_as_service_account': SA,
+                       'act_as_service_account': None,
                        'child_bucket': BUCKET, 'child_bucket_role': 'roles/storage.objectViewer',
                        'verification_bucket': VERIFY_BUCKET,
                        'verification_bucket_role': 'roles/storage.objectCreator',
                        'branch_source_execution': False,
-                       'orchestration_limit': 'Build creation includes indirect trigger and legacy-build-account capability; only reviewed controller code executes here'},
+                       'orchestration_limit': 'Verifier reads a completed build; it cannot create builds or act as the child account'},
             'github_status_publication': 'unavailable; Cloud Build and private GCS are authoritative'}
     if not apply:
         return {'plan': plan, 'build': config}
@@ -118,8 +118,12 @@ def configure(control_sha, apply=False):
        f'--permissions={",".join(VERIFIER_PERMISSIONS)}')
     gc('projects', 'add-iam-policy-binding', PROJECT,
        f'--member=serviceAccount:{VERIFIER_SA}', f'--role={VERIFIER_ROLE}')
-    gc('iam', 'service-accounts', 'add-iam-policy-binding', SA,
-       f'--member=serviceAccount:{VERIFIER_SA}', '--role=roles/iam.serviceAccountUser')
+    child_policy = json.loads(gc('iam', 'service-accounts', 'get-iam-policy', SA, '--format=json'))
+    if any(binding.get('role') == 'roles/iam.serviceAccountUser' and not binding.get('condition')
+           and f'serviceAccount:{VERIFIER_SA}' in binding.get('members', [])
+           for binding in child_policy.get('bindings', [])):
+        gc('iam', 'service-accounts', 'remove-iam-policy-binding', SA,
+           f'--member=serviceAccount:{VERIFIER_SA}', '--role=roles/iam.serviceAccountUser', '--condition=None')
     with tempfile.TemporaryDirectory(prefix='retroboards-browser-ci-config-') as scratch:
         scratch = Path(scratch)
         lifecycle = scratch / 'lifecycle.json'
@@ -137,29 +141,30 @@ def configure(control_sha, apply=False):
            f'--member=serviceAccount:{VERIFIER_SA}', '--role=roles/storage.objectViewer')
         gc('storage', 'buckets', 'add-iam-policy-binding', f'gs://{VERIFY_BUCKET}',
            f'--member=serviceAccount:{VERIFIER_SA}', '--role=roles/storage.objectCreator')
-        trigger = {'name': TRIGGER, 'description': 'Restricted synthetic browser CI for owner-repository branch pushes',
-                   'webhookConfig': {'secret': deploy['webhookConfig']['secret']},
-                   'substitutions': {'_SHA': '$(body.after)', '_REF': '$(body.ref)',
-                                     '_REPO': '$(body.repository.full_name)', '_CONTROL_SHA': control_sha},
-                   'filter': f'_REPO == "{REPO}" && _REF.matches("^refs/heads/.*") && _SHA != "{"0" * 40}"',
-                   'serviceAccount': config['serviceAccount'], 'build': config}
-        path = scratch / 'trigger.json'
-        path.write_text(json.dumps(trigger))
-        gc('builds', 'triggers', 'import', f'--source={path}', f'--region={REGION}')
-        current = json.loads(gc('builds', 'triggers', 'describe', TRIGGER, f'--region={REGION}', '--format=json'))
-        # Webhook receive routing needs the NAME in both path/query. UUIDs
-        # returned HTTP 200 without creating a build in the hosted diagnostic.
-        target = hook_target(deploy_hooks[0]['config']['url'], deploy['id'], TRIGGER)
-        matches = [h for h in hooks if hook_matches(h.get('config', {}).get('url', ''), (current['id'], TRIGGER))]
-        if len(matches) > 1:
-            raise RuntimeError('Duplicate browser CI webhooks; inspect privately before changing them')
-        payload = {'name': 'web', 'active': True, 'events': ['push'], 'config': {'url': target, 'content_type': 'json', 'insecure_ssl': '0'}}
-        private_payload = scratch / 'hook.json'
-        private_payload.write_text(json.dumps(payload))
-        private_payload.chmod(0o600)
-        endpoint = f'repos/{REPO}/hooks' + (f"/{matches[0]['id']}" if matches else '')
-        result = json.loads(invoke(['gh', 'api', endpoint, '--method', 'PATCH' if matches else 'POST', '--input', str(private_payload)]))
-        plan.update({'trigger_id': current['id'], 'github_hook_id': result['id'], 'applied': True})
+        raw_trigger = gc('builds', 'triggers', 'describe', TRIGGER, f'--region={REGION}', '--format=json', optional=True)
+        current = json.loads(raw_trigger) if raw_trigger else None
+        identifiers = [TRIGGER]
+        if current:
+            identifiers.append(current['id'])
+            # Preserve routing and callback secrets, but disable this obsolete entry point.
+            current['disabled'] = True
+            current['description'] = 'Disabled: use explicit submit.py exact-commit browser evidence'
+            current['build'] = config
+            current.setdefault('substitutions', {})['_CONTROL_SHA'] = control_sha
+            path = scratch / 'trigger.json'
+            path.write_text(json.dumps(current))
+            path.chmod(0o600)
+            gc('builds', 'triggers', 'import', f'--source={path}', f'--region={REGION}')
+        matches = [h for h in hooks if hook_matches(h.get('config', {}).get('url', ''), identifiers)]
+        disabled_hooks = []
+        payload = scratch / 'hook.json'
+        payload.write_text(json.dumps({'active': False}))
+        payload.chmod(0o600)
+        for hook in matches:
+            invoke(['gh', 'api', f"repos/{REPO}/hooks/{hook['id']}", '--method', 'PATCH', '--input', str(payload)])
+            disabled_hooks.append(hook['id'])
+        plan.update({'trigger_id': current['id'] if current else None,
+                     'automatic_trigger_disabled': True, 'disabled_github_hooks': disabled_hooks, 'applied': True})
     return plan
 
 

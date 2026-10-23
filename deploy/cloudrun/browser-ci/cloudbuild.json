@@ -3,14 +3,15 @@
     "_SHA": "",
     "_CONTROL_SHA": "",
     "_BUCKET": "rising-woods-449718-v6-retroboards-browser-evidence",
-    "_VERIFY_BUCKET": "rising-woods-449718-v6-retroboards-browser-verification"
+    "_VERIFY_BUCKET": "rising-woods-449718-v6-retroboards-browser-verification",
+    "_CHILD_BUILD_ID": ""
   },
   "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
   "options": {
     "logging": "CLOUD_LOGGING_ONLY",
     "substitutionOption": "ALLOW_LOOSE"
   },
-  "timeout": "6300s",
+  "timeout": "600s",
   "tags": [
     "retroboards-browser-evidence"
   ],
@@ -28,7 +29,7 @@
       ]
     },
     {
-      "id": "isolated-child-and-parent-verification",
+      "id": "verify-completed-child",
       "name": "gcr.io/google.com/cloudsdktool/cloud-sdk:slim",
       "entrypoint": "python3",
       "args": [
@@ -43,7 +44,9 @@
         "--bucket",
         "${_BUCKET}",
         "--verify-bucket",
-        "${_VERIFY_BUCKET}"
+        "${_VERIFY_BUCKET}",
+        "--child-build-id",
+        "${_CHILD_BUILD_ID}"
       ]
     }
   ]

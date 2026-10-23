@@ -10,7 +10,6 @@ import re
 import ssl
 import subprocess
 import sys
-import time
 from urllib.parse import quote, urlencode
 
 PROJECT = 'rising-woods-449718-v6'
@@ -24,7 +23,6 @@ API_ROOT = f'/v1/projects/{PROJECT}/locations/{REGION}/builds'
 JSON_LIMIT = 1024 * 1024
 ARCHIVE_LIMIT = 256 * 1024 * 1024
 CHUNK_BYTES = 1024 * 1024
-CHILD_WAIT_SECONDS = 5600
 TERMINAL = {'SUCCESS', 'FAILURE', 'INTERNAL_ERROR', 'TIMEOUT', 'CANCELLED', 'EXPIRED'}
 ACTIVE = {'PENDING', 'QUEUED', 'WORKING'}
 ID_PATTERN = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
@@ -89,16 +87,6 @@ def child_metadata(child_id, source_sha, control_sha):
     if build.get('status') not in TERMINAL | ACTIVE:
         raise VerificationError('child-status')
     return build
-
-
-def await_child(child_id, source_sha, control_sha):
-    deadline = time.monotonic() + CHILD_WAIT_SECONDS
-    while time.monotonic() < deadline:
-        build = child_metadata(child_id, source_sha, control_sha)
-        if build['status'] in TERMINAL:
-            return build
-        time.sleep(10)
-    raise VerificationError('child-wait-timeout')
 
 
 def verify_child_steps(build, recipe):
@@ -166,7 +154,7 @@ def publish_receipt(receipt, directory):
 
 
 def verify(source_sha, control_sha, parent_id, bucket=BUCKET, verify_bucket=VERIFY_BUCKET,
-           directory=Path('/workspace/verification')):
+           directory=Path('/workspace/verification'), *, child_id=None):
     receipt = {'event': 'browser_ci_parent_verification', 'passed': False,
                'parent_build_id': None, 'child_build_id': None, 'source_sha': None, 'control_sha': None,
                'parent_service_account': PARENT_SA, 'child_service_account': CHILD_SA,
@@ -177,6 +165,7 @@ def verify(source_sha, control_sha, parent_id, bucket=BUCKET, verify_bucket=VERI
     valid_inputs = (isinstance(source_sha, str) and re.fullmatch('[0-9a-f]{40}', source_sha)
                     and isinstance(control_sha, str) and re.fullmatch('[0-9a-f]{40}', control_sha)
                     and isinstance(parent_id, str) and re.fullmatch(ID_PATTERN, parent_id)
+                    and isinstance(child_id, str) and re.fullmatch(ID_PATTERN, child_id)
                     and bucket == BUCKET and verify_bucket == VERIFY_BUCKET)
     if not valid_inputs:
         return receipt
@@ -186,12 +175,12 @@ def verify(source_sha, control_sha, parent_id, bucket=BUCKET, verify_bucket=VERI
         directory.mkdir(parents=True, exist_ok=False)
         results = directory / 'results'
         results.mkdir()
-        receipt['stage'] = 'child-create'
+        receipt['stage'] = 'child-read'
         recipe = child_recipe(source_sha, control_sha)
-        child_id = create_child(recipe)
         receipt['child_build_id'] = child_id
-        receipt['stage'] = 'child-await'
-        child = await_child(child_id, source_sha, control_sha)
+        child = child_metadata(child_id, source_sha, control_sha)
+        if child['status'] not in TERMINAL:
+            raise VerificationError('child-not-complete')
         receipt.update({'child_provider_status': child['status'], 'metadata_verified': True})
         if child['status'] != 'SUCCESS':
             raise VerificationError('child-provider-failure')
@@ -228,10 +217,11 @@ def main():
     parser.add_argument('--source-sha', required=True)
     parser.add_argument('--control-sha', required=True)
     parser.add_argument('--parent-build-id', required=True)
+    parser.add_argument('--child-build-id', required=True)
     parser.add_argument('--bucket', default=BUCKET)
     parser.add_argument('--verify-bucket', default=VERIFY_BUCKET)
     args = parser.parse_args()
-    receipt = verify(args.source_sha, args.control_sha, args.parent_build_id, args.bucket, args.verify_bucket)
+    receipt = verify(args.source_sha, args.control_sha, args.parent_build_id, args.bucket, args.verify_bucket, child_id=args.child_build_id)
     print(json.dumps(receipt, sort_keys=True))
     return 0 if receipt['passed'] else 1
 
