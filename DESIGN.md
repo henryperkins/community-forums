@@ -116,7 +116,7 @@ typography:
   avatar-label:
     fontFamily: "Marcellus, Optima, Palatino Linotype, Palatino, Cormorant Garamond, serif"
     fontSize: "0.8rem"
-    fontWeight: 500
+    fontWeight: 400
 rounded:
   sm: "4px"
   md: "7px"
@@ -202,16 +202,16 @@ components:
     rounded: "{rounded.lg}"
     padding: "14px 16px"
   post:
-    backgroundColor: "{colors.parchment-50}"
+    backgroundColor: "transparent"
     textColor: "{colors.ink-700}"
     typography: "{typography.body}"
     rounded: "{rounded.lg}"
-    padding: "18px 20px"
+    padding: "18px 14px"
   post-accepted:
     backgroundColor: "{colors.green-050}"
     textColor: "{colors.ink-700}"
     rounded: "{rounded.lg}"
-    padding: "18px 20px"
+    padding: "18px 14px"
   monogram:
     backgroundColor: "{colors.green-100}"
     textColor: "{colors.green-800}"
@@ -225,7 +225,7 @@ components:
 
 > **This file is the visual system only.** Product and technical truth lives in `PRODUCT_DESIGN.md` (renamed from `DESIGN.md` on 2026-08-27); durable product context lives in `PRODUCT.md`; `DECISIONS.md` wins on any conflict. Machine-readable extensions — tonal ramps, shadows, motion, breakpoints, component snippets — live in `.impeccable/design.json`.
 >
-> **Authoritative sources.** Foundations: `resources/imladris/tokens/{colors,typography,spacing,fonts}.css` and `resources/imladris/components.css`, generated into the low-priority layers of `public/assets/imladris.css`. The final application register is the unlayered `public/assets/app.css`; it wins wherever it overrides those layers. The authoring token copies in `docs/design-system/imladris/tokens/` were verified byte-identical on 2026-10-06. Application-owned semantic tokens (`--field-rule`, `--stage-*`) and the system-dark register live in `app.css` (ADR 0039).
+> **Authoritative sources.** Foundations: `resources/imladris/tokens/{colors,typography,spacing,fonts}.css` and `resources/imladris/components.css`, generated into the low-priority layers of `public/assets/imladris.css`. The final application register is the unlayered `public/assets/app.css`; it wins wherever it overrides those layers. The authoring token copies in `docs/design-system/imladris/tokens/` were verified byte-identical on 2026-10-23. Application-owned semantic tokens (`--field-rule`, `--stage-*`) and the system-dark register live in `app.css` (ADR 0039).
 >
 > **Reading the tokens.** Frontmatter follows the [portable DESIGN.md format](https://raw.githubusercontent.com/google-labs-code/design.md/main/docs/spec.md). Colours are the stock primitives; component entries capture stock day defaults and specific variants, not every preference or surface override. Paint through the semantic aliases below. The sidecar's snippets carry the final application treatments and inherit live CSS variables. Ramps reuse the authored scales; Amber and Rust receive generated OKLCH preview ramps, not additional application tokens.
 
@@ -315,7 +315,7 @@ Status hues are named, not numbered, and each pairs a hue with a wash and an ink
 
 All four are self-hosted WOFF2 under OFL 1.1, latin subset — the product runs a same-origin CSP, so there is no font CDN. Every family variable keeps a system-serif fallback so the register reads before the webfonts arrive.
 
-**Character:** A book, not an app. Cormorant's high-contrast display serif gives headings and thread titles the air of a title page; EB Garamond sets prose at a genuinely readable 17px/1.62; Marcellus supplies lapidary roman capitals for the small structural furniture — eyebrows, button labels, chips, meta lines — and JetBrains Mono handles anything countable. The serifs are set **medium (500), not bold**: restraint reads as quality.
+**Character:** A book, not an app. Cormorant's high-contrast display serif gives headings and thread titles the air of a title page; EB Garamond sets prose at a genuinely readable 17px/1.62; Marcellus supplies lapidary roman capitals for the small structural furniture — eyebrows, button labels, chips, meta lines — and JetBrains Mono handles anything countable. The serifs are set **medium (500), not bold**: restraint reads as quality. Ask each family only for a weight it actually ships — Marcellus carries a single 400, so new and reconciled labels use 400.
 
 ### Hierarchy
 
@@ -327,6 +327,8 @@ All four are self-hosted WOFF2 under OFL 1.1, latin subset — the product runs 
 - **Mono** (400, 0.72rem, tabular numerals): timestamps, counts, routes, breadcrumbs, regard figures.
 - **Small / Fine / Meta / Chip** (0.95 / 0.86 / 0.78 / 0.7rem): the named small-text scale for supporting prose, helper lines, structural metadata and the smallest new labels. The scale's `--text-chip` floor is 0.7rem. Older chip, tag, tier and row selectors still contain smaller values; `chip-label` records the existing 0.62rem default, not a new scale step to copy.
 
+Every step is a token (`--text-display-lg`, `--text-display-sm`, `--text-title`, `--text-thread`, `--text-size-body`, `--text-sm`, `--text-fine`, `--text-meta`, `--text-eyebrow`, `--text-chip`); new type reads the token, not the number. `--text-body` is the semantic ink colour, never a size.
+
 **Reading measures** are separate from the shell rails: `--measure-prose` (64ch), `--measure-narrow` (56ch), `--measure-wide` (72ch), and `--measure-column` (646px). The last is a reading-column alignment contract, not a character measure. Existing application overrides still include 66ch on `.post-body`; use the named measures for new reading surfaces without claiming every older selector already consumes them.
 
 ### Named Rules
@@ -337,15 +339,17 @@ All four are self-hosted WOFF2 under OFL 1.1, latin subset — the product runs 
 
 **The Tabular Rule.** Anything countable — reply counts, regard, timestamps, member totals — is set in JetBrains Mono with `font-variant-numeric: tabular-nums`, so columns of numbers align and a changing count does not reflow its row.
 
+**The Delivered-Weight Rule.** Ask only for a weight the family ships. Marcellus delivers one 400 face: use 400 for its chips, eyebrows, tab labels, monograms and button labels; a heavier request asks the browser to approximate an unavailable weight. The two Garamonds ship normal weights 400, 500 and 600, Cormorant also carries 700, and JetBrains Mono ships 400, 500 and 600. Neither Garamond ships a 650 face; their italic faces are limited to 400 and 500. Existing selectors that request unavailable weights remain audit debt. *Audit test: `font-weight: 650`, 500+ on a Marcellus selector, or an undelivered italic weight needs correction.*
+
 ## Layout
 
 A full-height application shell of three columns plus a top bar. The rails are fixed tokens: top bar **62px** on desktop and **108px** at the mobile drawer breakpoint, sidebar **272px**, topic list **410px**, and a **1280px** content maximum for centred pages. The mobile top bar gives Boards, Inbox, and Messages their own row; a bar with a single route (a guest's) keeps one 62px row, and drawer and scroll offsets follow whichever height the bar takes.
 
 The three panes map to real URLs rather than to client state: `/` is the forum index, `/inbox` the personalised topic inbox, `/c/{slug}` a board's fixed-order list, `/t/{id}-{slug}` the conversation. Navigation is server-rendered; JavaScript decorates.
 
-**Density is a first-class axis, not a preference toggle bolted on.** A topic list in a page reads at two densities from the same markup: *comfortable* (a flat ruled row with avatar, byline, chips, two-line snippet and meta) and *compact* (one scannable line, snippet hidden, author folded into the meta). The foundation's card-shaped topic row is overridden by the application's ruled register. The board and the inbox are **presentations**, not densities, and keep their own geometry at either density: the *board* uses six tracks — gutter, avatar, copy, status, activity, star — on a 64px minimum floor, or 56px when avatars are hidden. Its status owns a column, so this presentation has no status left-rule; a board does not label itself. The *queue* is a ruled triage row that leads with the reason a topic is there. A long title wraps and the row grows — these heights are minimums, never crops.
+**Density is a first-class axis, not a preference toggle bolted on.** A topic list in a page reads at two densities from the same markup: *comfortable* (a flat ruled row with the unread dot, monogram, status chips, the title and the full meta line) and *compact* (a single scannable line — a 26px monogram, an ellipsised title and a meta held to one line; the queue's one-line excerpt hides). The foundation's card-shaped topic row is overridden by the application's ruled register. The board and the inbox are **presentations**, not densities, and keep their own geometry at either density: the *board* uses six tracks — gutter, avatar, copy, status, activity, star — on a 64px minimum floor, or 56px when avatars are hidden. Its status owns a column, so this presentation has no status left-rule; a board does not label itself. The *queue* is a ruled triage row that leads with the reason a topic is there. A long title wraps and the row grows — these heights are minimums, never crops.
 
-**Spacing** runs on a 4px base: 4, 8, 12, 16, 24, 32, 48, 112px. Cards are padded 18px, default thread rows 14/16px, and posts 18/20px. The application topic list uses zero row gap and a separating hairline; the foundation's 10px card gap is not the final list treatment.
+**Spacing** runs on a 4px base: 4, 8, 12, 16, 24, 32, 48, 112px. Cards are padded 18px, default thread rows 14/16px, and posts 18px 14px on the flat Study stream (an accepted or deleted post keeps its own card). The application topic list uses zero row gap and a separating hairline; the foundation's 10px card gap is not the final list treatment.
 
 **Responsive.** The architectural breakpoint is **860px**: three panes collapse to one column, the sidebar becomes a slide-in drawer, and a conversation grows a back link to the list it came from. Secondary breakpoints at 900px (the chrome compacts: the admin bar wraps and its tier scrolls, the member top bar and board rail tighten, and Messages drops to one pane) and 760px (in-pane density) carry most of the rest.
 
@@ -414,8 +418,8 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 
 - **Chips and badges** (status and role) are Marcellus caps at 0.62rem with 0.1em tracking, `3px 9px`, pill-shaped, and always bordered — a wash plus a 1px border in the matching hue, so they read on any surface. Icons inside are 11px stroked at 2.
 - **Pills** are the larger, quieter status token: `2px 10px`, 0.72rem, sunken parchment.
-- **Tags** are the smallest: `2px 8px`, 0.6rem, 0.08em tracking, for board and meta labels.
-- **Tier markers** (`Member · Veteran · Loremaster · Legend`) are 0.58rem caps at 0.11em, each tier taking its own hue: gold for Legend, evergreen for Loremaster, river for Veteran, neutral for Member.
+- **Tags** are the compact label token: `2px 8px`, 0.7rem (`--text-chip`), 0.08em tracking, on the sunken surface, for board and meta labels.
+- **Tier markers** are the cosmetic rank a profile carries (e.g. "Loremaster of Imladris"): one gold treatment — Marcellus caps at 0.68rem and 0.1em tracking, `3px 10px`, `gold-800` on `gold-100` with a `gold-200` border. The tier lexicon (Member · Veteran · Loremaster · Legend) is product vocabulary, not four separate colours.
 - **The console status pill** is `.state`: `1px 9px`, Marcellus at 0.66rem, sentence or token case as written. A lifecycle word keys its tone (`state-active`, `state-revoked`), and any other label names one (`state-done`, `state-review`, `state-danger`, `state-muted`, `state-staff`). Outside the console the same class is a dot and a word. A new status is a tone on `.state`, never a new `*-pill` class (ADR 0037).
 
 ### Cards and containers
@@ -424,7 +428,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Background:** the foundation reads `--surface-raised`; the generic application card reads the older `--surface` alias. Both are parchment by day and resolve to different twilight surfaces.
 - **Border:** 1px `--border-hair` in the foundation, the legacy `--border` alias on the generic application card.
 - **Shadow:** the foundation's shallow `--shadow-xs` carries through to the generic application card; ruled lists override it to no shadow. See Elevation.
-- **Internal padding:** 18px, or `14px 16px` for a thread row and `18px 20px` for a post.
+- **Internal padding:** 18px, or `14px 16px` for a thread row, and `18px 14px` for a post on the flat Study stream.
 
 ### Inputs and fields
 
@@ -432,7 +436,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Focus:** the gold halo — border shifts to `gold-400`, a 2px action-colour outline at 1px offset, and a layered `0 0 0 3px` `--focus-ring` over the inset. The outline follows evergreen by day, gold in twilight, and the operator's action colour under branding. Engraved fields have their own border and focus overrides.
 - **Engraved frames** (the lapidary fields on the auth screens, account settings, appeals and the Messages compose form) draw their edge in `--field-rule`: `gold-700` by day and `gold-600` in twilight. That holds 3:1 against the card and against the field's own fill in both registers, as WCAG 1.4.11 asks of a field's boundary. The layer's `--gold-200` measured 1.30:1 by day and drew a near-white line by night (ADR 0039).
 - **Labels:** Marcellus at 0.82rem, muted ink, 5px above the control.
-- **Errors:** rust text at 0.85rem directly beneath the field, with underlined inline links.
+- **Errors:** rust text at 0.85rem directly beneath the field, with underlined inline links. An invalid field's frame takes `--danger` — the Messages recipient field is the shipped example.
 - **Switches:** a 42×24 pill track, sunken parchment with a strong border and inset shadow, carrying an 18px round knob ringed in `gold-200`; checked fills the track evergreen and gilds the knob to `gold-200` with a `gold-500` ring. Transitions run `--dur-base` on `--ease-calm`.
 
 Account settings keep the switch track inside a minimum 44px labelled target.
@@ -494,17 +498,17 @@ recorded in ADR 0048.
 
 ### Signature: the thread row
 
-The system's most-repeated object and the place its character is clearest. The default application presentation is a flat, ruled entry with a 3px status left-rule, a 44px avatar or monogram, a Cormorant byline, status chips, a Cormorant title at 1.2rem, a two-line clamped snippet in muted ink, and a Marcellus meta line with a gold-ink board reference. Unread state carries a **gold dot with a 2px translucent gold halo** and a semibold title. Selected state uses `--brand-subtle`; hover uses a tonal wash without lifting the row. The foundation's card border and hover shadow are overridden by the application layer.
+The system's most-repeated object and the place its character is clearest. The default application presentation is a flat, ruled entry with a 3px status left-rule, a 44px monogram, status chips above a Cormorant title at 1.2rem, and a Marcellus meta line carrying the author, a gold-ink board reference, the reply count and the relative time. The board presentation gives status and activity their own columns; the queue adds a one-line clamped excerpt between title and meta. Unread state carries a **gold dot with a 2px translucent gold halo** and a semibold title. Hover is a tonal wash without lifting the row; in the queue the open row takes `--brand-subtle` behind a gold leading rule, and the keyboard cursor an inset gold ring. The foundation's card border and hover shadow are overridden by the application layer, and its byline rule is unused by the shipped row.
 
-It is **one partial** (`templates/partials/thread_row.php`) with a `presentation` axis — `default` for a list inside a page, `board` for the canonical index, `inbox` for the personal queue — and never a second row object (ADR 0036). Topic facts read identically in every presentation: the status word from the ledger, last activity as elapsed time on a `<time>` carrying the exact instant, personal Inbox hiding as a deadline or until restored (ADR 0044). Viewer facts render everywhere too, loud in the queue and quiet on the index. The queue's selection box, star toggle and row menu are slots on the row, each with a 44px target. Queue dividers are straight; phone star/menu actions sit below the topic text. Each presentation is styled under its own modifier, and restates what it keeps against the generic row and compact rules, which belong to the default list.
+It is **one partial** (`templates/partials/thread_row.php`) with a `presentation` axis — `default` for a list inside a page, `board` for the canonical index, `inbox` for the personal queue — and never a second row object (ADR 0036). Topic facts read identically in every presentation: the status word from the ledger, last activity as elapsed time on a `<time>` carrying the exact instant, personal Inbox hiding as a deadline or until restored (ADR 0044). Viewer facts render everywhere too, loud in the queue and quiet on the index. The queue's selection box, star toggle and row menu are slots on the row, each a 44px target. Queue dividers are straight; phone star/menu actions sit below the topic text. Each presentation is styled under its own modifier, and restates what it keeps against the generic row and compact rules, which belong to the default list.
 
 ### The star
 
-A topic star is a personal bookmark, and its word is **Star** / **Starred** — not Commend, which is the reaction. It has one glyph, the four-point **commend star** (`partials/icon`, `commend-star`), and one control in two sizes (`templates/partials/star_toggle.php`): the labelled pill in a topic's head, and a 44px icon toggle in a queue row whose accessible name carries the topic's title and whose state is `aria-pressed`. The toggle draws the star in outline until it is set and filled once it is, because `--text-faint` and `--gold-ink` are too close in lightness for ink alone to carry the state. Where the star is a marker rather than a control, as on the board index, it is the same glyph in `--star` with `role="img"` and the name "Starred". A board favourite uses the same outline/filled grammar.
+A topic star is a personal bookmark, and its word is **Star** / **Starred** — not Commend, which is the reaction. It has one glyph, the four-point **commend star** (`partials/icon`, `commend-star`), and one control in two forms (`templates/partials/star_toggle.php`): the labelled pill in a topic's head, and a 44px icon toggle in a queue row whose accessible name carries the topic's title and whose state is `aria-pressed`. The toggle draws the star in outline until it is set and filled once it is, because `--text-faint` and `--gold-ink` are too close in lightness for ink alone to carry the state. Where the star is a marker rather than a control, as on the board index, it is the same glyph in `--star` with `role="img"` and the name "Starred". A board favourite uses the same outline/filled grammar.
 
 ### Signature: the monogram
 
-A tinted ground with legible dark ink, rotating through ten variants across evergreen, river, gold, mist and parchment — so a list of members is quietly varied without anyone being assigned a "colour". 36px default, 26–64px by context, always a circle, always Marcellus. The `--gilt` inner ring marks the precious ones.
+A tinted ground with legible dark ink, rotating through ten variants across evergreen, river, gold, mist and parchment — so a list of members is quietly varied without anyone being assigned a "colour". 36px default, 21–84px by context (21 in a compact presence list, 26 compact rows, 32 on the board row, 44 in a default row or a post, 84 on a profile), always a circle, always Marcellus at its delivered 400. The `--gilt` inner ring marks the precious ones.
 
 An uploaded avatar replaces that fallback wherever the member is drawn. `partials/monogram.php` retains the circular `.monogram` frame and optional gilt ring, with `object-fit: cover` for the image. The adjacent identity supplies its name, so the image and fallback are decorative. Anonymous authors keep the masked fallback (USER §5.2).
 
@@ -522,6 +526,9 @@ When a job already has a shared component, use it. A variant is a parameter or a
 - **Empty state** — `partials/empty_state.php`: a heading, a sentence, and at most one action.
 - **Back link** — `partials/back_link.php`, with one 13px chevron.
 - **Alert plate** — `.callout`, in info, `callout-review` or `callout-danger`, on member and operator surfaces alike. A field's own error is `.field-error` beneath it.
+- **Confirm step** — `partials/dm_confirm.php`: a native `<details>` whose summary names the action and whose open step says what follows before the real submit ("Leave group", "Remove", "Make owner", "Block"). It works without JavaScript; the summary keeps the host control's look, the note is linked by `aria-describedby`, and an irreversible commit wears the danger button. The profile's Block control is the same grammar and predates it — one pattern, not yet one class.
+- **Disclosure row** — the operator console's one disclosure anatomy: a hairline row ending in a `+`/`−` glyph drawn as generated content and kept out of the accessible name (`content: "+" / ""`), with a 44px summary target on the phone. "More filters" on Members and "Suspend or ban" on a record are its two instances.
+- **Guarded toggle** — `templates/admin/_feature_flag_toggle.php` (ADR 0049): one write affordance per flag row, a native disclosure that opens an inline step naming the effect, the side effect and the exact write before the commit. No modal, no JavaScript. A blocked flag renders as a dashed neutral chip with the reason in words, never a dead switch.
 - **Status token** — `.chip` for topic status, and `.state` for console status (above).
 - **Glyphs and identity** — `partials/icon.php` and `partials/monogram.php`.
 
@@ -551,6 +558,7 @@ Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-en
 - **Do** pair every status colour with a status word, in the taxonomy already established (Solved, Needs answer, Decision, Pinned, Locked, Archived).
 - **Do** set button labels in Marcellus, sentence case, at 0.9rem/0.03em — tracked capitals are for chips, eyebrows, and meta lines only.
 - **Do** put anything countable in JetBrains Mono with tabular numerals.
+- **Do** ask each family only for a weight it ships — Marcellus is 400, the Garamonds step 400–600, and 650 exists nowhere (The Delivered-Weight Rule).
 - **Do** keep prose at 17px/1.62 with a measure near 64ch, and topic titles near 28ch.
 - **Do** reach for a hairline before a shadow, and for `--shadow-xs` before anything heavier.
 - **Do** honour `prefers-reduced-motion: reduce` — the stylesheet already collapses every duration to 0.001ms, and new motion must inherit that.
@@ -559,6 +567,7 @@ Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-en
 ### Don't:
 
 - **Don't** introduce a sans-serif, a fifth family, or a webfont from a CDN. The CSP is same-origin and the fonts are self-hosted under OFL.
+- **Don't** synthesise a weight or a style: no `font-weight: 650`, no 500+ on Marcellus, no faux italic. A browser's fake bold is a different typeface.
 - **Don't** write an inline `<style>` block, an inline `<script>`, or a `style="…"` attribute. The same-origin `style-src` and `script-src` policies block those forms. This constraint applies to application templates; the sidecar's CSS strings are tooling specimens, not styles to paste inline into PHP.
 - **Don't** use gold as a background for anything larger than a chip outside the DM Own-Letter Gold-Wash Exception, and don't use two accents — the palette has exactly one.
 - **Don't** put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)

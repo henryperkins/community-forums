@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-22T23:30:54+00:00",
+  "generatedAt": "2026-10-23T22:15:05Z",
   "title": "Design System: RetroBoards — Imladris",
   "extensions": {
     "navigationChrome": {
@@ -202,7 +202,7 @@
       },
       "avatar-label": {
         "displayName": "Avatar Label",
-        "purpose": "The default monogram fallback; frame size varies by context."
+        "purpose": "The monogram fallback at its delivered 400 — Marcellus ships one weight — in a frame that runs from 21px to 84px by context."
       }
     },
     "shadows": [
@@ -355,7 +355,7 @@
       "refersTo": "input",
       "description": "The ordinary field frame, preserving the application border-box sizing and inset under keyboard focus. Engraved fields are a separate override.",
       "html": "<input class=\"ds-input\" type=\"text\" aria-label=\"Topic title\" placeholder=\"Topic title\">",
-      "css": ".ds-input { box-sizing: border-box; width: 100%; padding: 9px 11px; border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: var(--text-size-body, 1.0625rem); line-height: 1.6; color: var(--text, #1B231D); background: var(--surface-raised, #FAF6EC); box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)); } .ds-input::placeholder { color: var(--text-faint, #5C685D); } .ds-input:focus { border-color: var(--gold-400, #D2B062); outline: 2px solid var(--accent, #2E4A3A); outline-offset: 1px; box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)), 0 0 0 3px var(--focus-ring, rgba(194,154,68,.7)); }"
+      "css": ".ds-input { box-sizing: border-box; width: 100%; padding: 9px 11px; border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: var(--text-size-body, 1.0625rem); line-height: 1.6; color: var(--text, #1B231D); background: var(--surface-raised, #FAF6EC); box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)); } .ds-input::placeholder { color: var(--text-faint, #5C685D); } .ds-input:focus { border-color: var(--gold-400, #D2B062); outline: 2px solid var(--accent, #2E4A3A); outline-offset: 1px; box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)), 0 0 0 3px var(--focus-ring, rgba(194,154,68,.7)); } .ds-input[aria-invalid=\"true\"] { border-color: var(--danger, #9C4A33); }"
     },
     {
       "name": "Ruled Section Navigation",
@@ -377,9 +377,16 @@
       "name": "Application Topic Row",
       "kind": "custom",
       "refersTo": "thread-row",
-      "description": "The comfortable default presentation: a flat ruled row, status rule, unread marker, and tonal hover. Board and inbox have separate presentations.",
-      "html": "<article class=\"ds-row\"><span class=\"ds-row-avatar\" aria-hidden=\"true\">GA</span><div class=\"ds-row-main\"><div class=\"ds-row-byline\"><a class=\"ds-row-author\" href=\"#member\">Gandalf</a><span class=\"ds-row-chip\">Solved</span></div><a class=\"ds-row-title\" href=\"#topic\">A road worth keeping</a><p class=\"ds-row-snippet\">A conversation the council can return to.</p><div class=\"ds-row-meta\"><a class=\"ds-row-board\" href=\"#board\">General Discussion</a> <span>6 replies</span> <time datetime=\"2026-10-06T09:00:00Z\">3h ago</time></div></div><span class=\"ds-row-unread\" role=\"img\" aria-label=\"Unread\"></span></article>",
-      "css": ".ds-row { position: relative; display: flex; gap: 13px; align-items: flex-start; padding: 14px 16px; border: 0; border-radius: var(--radius-lg, 12px); background: none; box-shadow: none; overflow: hidden; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-row::before { content: \"\"; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--leaf, #4E7459); } .ds-row:hover { background: var(--surface-sunken, #ECE4D2); transform: none; } .ds-row-main { min-width: 0; flex: 1; } .ds-row-avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .92rem; font-weight: 500; background: var(--green-100, #DCE8DD); color: var(--green-800, #24402F); } .ds-row-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; } .ds-row-author { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: 1.02rem; font-weight: 600; line-height: 1.05; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-row-author:hover { color: var(--brand, #2E4A3A); } .ds-row-chip { font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .62rem; line-height: 1; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--radius-pill, 999px); border: 1px solid var(--green-200, #BCD0BF); background: var(--surface-done, #EDF3ED); color: var(--on-done, #24402F); } .ds-row-title { display: block; font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: 1.2rem; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-row-title:hover { color: var(--brand, #2E4A3A); } .ds-row-snippet { font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: .98rem; line-height: 1.5; color: var(--text-muted, #515C52); margin: 5px 0 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } .ds-row-meta { display: block; margin-top: 6px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint, #5C685D); } .ds-row-board { color: var(--gold-ink, #7E5F22); text-decoration: underline; text-underline-offset: 2px; } .ds-row-unread { flex: 0 0 auto; align-self: center; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2, #C29A44); box-shadow: 0 0 0 2px rgba(194,154,68,.22); } .ds-row a:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-row { transition-duration: .001ms !important; } }"
+      "description": "The default presentation: a flat ruled row with a 3px status rule, the unread dot, a 44px monogram, status chips, the 1.2rem title and the Marcellus meta line. The board presentation gives status and activity their own columns; the queue adds a one-line excerpt.",
+      "html": "<article class=\"ds-row ds-row--unread\"><span class=\"ds-row-unread-dot\" role=\"img\" aria-label=\"Unread\"></span><span class=\"ds-row-avatar\" aria-hidden=\"true\">GA</span><div class=\"ds-row-main\"><div class=\"ds-row-chips\"><span class=\"ds-row-chip\">Solved</span></div><a class=\"ds-row-title\" href=\"#topic\">A road worth keeping</a><span class=\"ds-row-meta\"><span>by Gandalf</span><a class=\"ds-row-board\" href=\"#board\"># General Discussion</a><span>6 replies</span><time datetime=\"2026-10-19T18:00:00Z\">3h ago</time></span></div></article>",
+      "css": ".ds-row { position: relative; display: flex; gap: 13px; align-items: flex-start; padding: 14px 16px; border: 0; border-radius: var(--radius-lg, 12px); background: none; box-shadow: none; overflow: hidden; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-row::before { content: \"\"; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--leaf, #4E7459); } .ds-row:hover { background: var(--surface-sunken, #ECE4D2); } .ds-row-unread-dot { display: inline-block; flex: 0 0 auto; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--accent-2, #C29A44); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-2, #C29A44) 22%, transparent); } .ds-row-avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .92rem; font-weight: 400; letter-spacing: .02em; background: var(--green-100, #DCE8DD); color: var(--green-800, #24402F); } .ds-row-main { min-width: 0; flex: 1; } .ds-row-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; } .ds-row-chips:empty { display: none; } .ds-row-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .62rem; line-height: 1; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--radius-pill, 999px); border: 1px solid var(--green-200, #BCD0BF); background: var(--surface-done, #EDF3ED); color: var(--on-done, #24402F); } .ds-row-title { display: block; font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: var(--text-thread, 1.2rem); font-weight: var(--weight-medium, 500); line-height: 1.2; letter-spacing: -.01em; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-row--unread .ds-row-title { font-weight: var(--weight-semibold, 600); } .ds-row-title:hover { color: var(--brand, #2E4A3A); } .ds-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint, #5C685D); } .ds-row-board { color: var(--gold-ink, #7E5F22); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; } .ds-row a:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-row { transition-duration: .001ms !important; } }"
+    },
+    {
+      "name": "Confirm Step",
+      "kind": "custom",
+      "description": "A two-step confirmation for an action one click should not take: a native details summary names the action, and the open step says what follows before the real submit. No modal, no JavaScript; the note is linked to the commit by aria-describedby and an irreversible commit wears the danger button.",
+      "html": "<details class=\"ds-confirm\" open><summary>Leave group</summary><form class=\"ds-confirm-step\" method=\"post\"><p class=\"ds-confirm-note\" id=\"ds-confirm-note\">You will stop receiving this group’s letters. The owner can add you again.</p><button class=\"ds-confirm-commit\" type=\"submit\" aria-describedby=\"ds-confirm-note\">Leave group</button></form></details>",
+      "css": ".ds-confirm { display: inline-block; max-width: 34ch; } .ds-confirm > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; list-style: none; cursor: pointer; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; letter-spacing: .03em; color: var(--text-body, #313B33); } .ds-confirm > summary::-webkit-details-marker { display: none; } .ds-confirm > summary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; border-radius: var(--radius-sm, 4px); } .ds-confirm[open] > summary { color: var(--text-faint, #5C685D); } .ds-confirm-step { display: grid; gap: var(--space-2, 8px); justify-items: start; padding: var(--space-2, 8px); } .ds-confirm-note { margin: 0; font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: .86rem; line-height: 1.45; color: var(--text-body, #313B33); text-wrap: pretty; } .ds-confirm-commit { display: inline-block; background: var(--rust, #9C4A33); color: #FFFFFF; border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; letter-spacing: .03em; cursor: pointer; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); } .ds-confirm-commit:hover { background: color-mix(in srgb, var(--rust, #9C4A33) 82%, #000); } .ds-confirm-commit:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; }"
     }
   ],
   "narrative": {
@@ -430,6 +437,11 @@
         "section": "typography"
       },
       {
+        "name": "The Delivered-Weight Rule",
+        "body": "Ask only for a weight the family ships. Marcellus delivers one 400 face: use 400 for its chips, eyebrows, tab labels, monograms and button labels; a heavier request asks the browser to approximate an unavailable weight. The two Garamonds ship normal weights 400, 500 and 600, Cormorant also carries 700, and JetBrains Mono ships 400, 500 and 600. Neither Garamond ships a 650 face; their italic faces are limited to 400 and 500. Existing selectors that request unavailable weights remain audit debt. *Audit test: `font-weight: 650`, 500+ on a Marcellus selector, or an undelivered italic weight needs correction.*",
+        "section": "typography"
+      },
+      {
         "name": "The Real-URL Rule",
         "body": "Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view. *Audit test: load it with JavaScript disabled; if the content is gone, the layout is wrong.*",
         "section": "layout"
@@ -450,6 +462,11 @@
         "section": "elevation"
       },
       {
+        "name": "The Chrome-On-Top Rule",
+        "body": "Page content stacks at `z-index` 30 or below. The member bar sits above it at `--z-chrome` (40), so nothing on the page paints over the bar or its account menu. The phone drawer's scrim (`--z-scrim`, 55) and rail (`--z-drawer`, 60) come next. Popovers anchored to page content, sheets and dialogs already start at 42. A page control that must cover the bar is an overlay and takes an overlay's tier. These are application tokens (ADR 0039's block in `app.css`), because the layer's own bar sits at 20. *Audit test: on a phone, scroll content under the bar and tap its lower edge; the tap must land on the bar.*",
+        "section": "elevation"
+      },
+      {
         "name": "The Twelve-Max Rule",
         "body": "Nothing that holds content is rounder than 12px. 20px exists for a handful of large containers and should be justified; pills are for tokens only. *Audit test: a `border-radius` above 12px on anything that is not a token or a large container is wrong.*",
         "section": "shapes"
@@ -465,6 +482,7 @@
       "Do pair every status colour with a status word, in the taxonomy already established (Solved, Needs answer, Decision, Pinned, Locked, Archived).",
       "Do set button labels in Marcellus, sentence case, at 0.9rem/0.03em — tracked capitals are for chips, eyebrows, and meta lines only.",
       "Do put anything countable in JetBrains Mono with tabular numerals.",
+      "Do ask each family only for a weight it ships — Marcellus is 400, the Garamonds step 400–600, and 650 exists nowhere (The Delivered-Weight Rule).",
       "Do keep prose at 17px/1.62 with a measure near 64ch, and topic titles near 28ch.",
       "Do reach for a hairline before a shadow, and for `--shadow-xs` before anything heavier.",
       "Do honour `prefers-reduced-motion: reduce` — the stylesheet already collapses every duration to 0.001ms, and new motion must inherit that.",
@@ -472,6 +490,7 @@
     ],
     "donts": [
       "Don't introduce a sans-serif, a fifth family, or a webfont from a CDN. The CSP is same-origin and the fonts are self-hosted under OFL.",
+      "Don't synthesise a weight or a style: no `font-weight: 650`, no 500+ on Marcellus, no faux italic. A browser's fake bold is a different typeface.",
       "Don't write an inline `<style>` block, an inline `<script>`, or a `style=\"…\"` attribute. The same-origin `style-src` and `script-src` policies block those forms. This constraint applies to application templates; the sidecar's CSS strings are tooling specimens, not styles to paste inline into PHP.",
       "Don't use gold as a background for anything larger than a chip outside the DM Own-Letter Gold-Wash Exception, and don't use two accents — the palette has exactly one.",
       "Don't put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)",
