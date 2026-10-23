@@ -66,7 +66,11 @@ $db->transaction(function() use($db,$s) {
 async function screenshot(page: Page, name: string) {
   mkdirSync(out, { recursive: true });
   await page.evaluate(async () => {
-    await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
+    // WebKit can retain completed transitions with unsettled finished promises.
+    // Their final frame is visible; only live finite effects need settling.
+    const animations = document.getAnimations().filter(a =>
+      a.playState !== 'finished' && a.effect?.getTiming().iterations !== Infinity);
+    await Promise.all(animations.map(a => a.finished.catch(() => {})));
   });
   const before = errors.length;
   // WebKit's Playwright screenshot preparation injects `body {}` to sync
@@ -179,7 +183,7 @@ $db->run('DELETE FROM server_drafts WHERE user_id=(SELECT id FROM users WHERE em
   });
 }
 
-test('mobile reaction choices are distinct named icons in a compact touch grid', async ({ page }, info) => {
+test('mobile reaction choices show distinct icons and visible names in labelled rows', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile post menu');
   // This contract covers the nine built-in icons. Gate A's earlier journeys
   // leave custom reactions in the shared DB; preserve their catalogue and
@@ -210,15 +214,24 @@ $settings->set('features', $features);`);
     for (const button of await buttons.all()) {
       const label = await button.getAttribute('data-label');
       await expect(button).toHaveAccessibleName(label!);
+      const name = button.locator('.reaction-name');
+      await expect(name).toBeVisible();
+      await expect(name).toHaveText(label!);
       const box = (await button.boundingBox())!;
+      const nameBox = (await name.boundingBox())!;
       expect.soft(box.width).toBeGreaterThanOrEqual(44);
       expect.soft(box.height).toBeGreaterThanOrEqual(44);
-      expect.soft((await button.locator('.reaction-name').boundingBox())!.width).toBeLessThanOrEqual(1);
+      expect.soft(nameBox.width).toBeGreaterThan(1);
+      expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
       rows.add(Math.round(box.y));
       shapes.add(await button.locator('svg').innerHTML());
     }
-    expect.soft(rows.size).toBeLessThanOrEqual(3);
+    expect.soft(rows.size).toBe(9);
     expect.soft(shapes.size).toBe(9);
+    expect.soft(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      await page.evaluate(() => document.documentElement.clientWidth),
+    );
     await screenshot(page, 'reaction-menu-' + info.project.name);
     const response = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/react'));
     await heartButton.click();
@@ -242,14 +255,14 @@ for (const javaScriptEnabled of [true, false]) {
   test.describe(javaScriptEnabled ? 'enhanced reactions' : 'native reactions', () => {
     test.use({ javaScriptEnabled });
 
-    test('desktop reaction picker stays inside the viewport and retains native submission', async ({ page }, info) => {
+    test('responsive reaction pickers stay inside the viewport and retain native submission', async ({ page }, info) => {
       test.skip(info.project.name !== 'desktop', 'fine-pointer picker');
       const fixture = reactionFixture();
       try {
         await login(page);
         for (const theme of ['light', 'dark']) {
           php(`(new \\App\\Repository\\UserPreferenceRepository($db))->merge((int)$db->fetchValue('SELECT id FROM users WHERE email=?', ['alice@retro.test']), ['theme'=>'${theme}']);`);
-          for (const width of [769, 820, 861, 900, 1024, 1280]) {
+          for (const width of [769, 820, 860, 861, 900, 1024, 1280]) {
             // Each sample is a fresh responsive page, not a resize of the old
             // header while the next navigation is already tearing it down.
             await page.goto('about:blank');
@@ -258,9 +271,16 @@ for (const javaScriptEnabled of [true, false]) {
             await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
             await page.evaluate(() => document.fonts.ready);
             const post = page.locator(`#p${fixture.post}`);
-            await post.hover({ position: { x: 80, y: 80 } });
-            await post.locator('.reaction-add > summary').click();
-            const menu = post.locator('.reaction-menu');
+            // The compact shell exposes reactions through More even for a mouse.
+            // Above 860px the fine-pointer toolbar owns the picker instead.
+            if (width <= 860) {
+              await expect(post.locator('.reaction-add > summary')).toBeHidden();
+              await post.locator('[data-post-menu] > summary').click();
+            } else {
+              await post.hover({ position: { x: 80, y: 80 } });
+              await post.locator('.reaction-add > summary').click();
+            }
+            const menu = post.locator(width <= 860 ? '.post-menu-reactions' : '.reaction-menu');
             await expect(menu).toBeVisible();
             const box = (await menu.boundingBox())!;
             const viewport = await page.evaluate(() => document.documentElement.clientWidth);
@@ -274,6 +294,7 @@ for (const javaScriptEnabled of [true, false]) {
               expect.soft(target.width).toBeGreaterThanOrEqual(44);
               expect.soft(target.height).toBeGreaterThanOrEqual(44);
             }
+            if (width === 860) await screenshot(page, `reaction-picker-compact-${theme}-${javaScriptEnabled ? 'enhanced' : 'native'}`);
             if (width === 861) await screenshot(page, `reaction-picker-${theme}-${javaScriptEnabled ? 'enhanced' : 'native'}`);
           }
         }

@@ -1,0 +1,18 @@
+{
+  "verified_asset_version": "1c24a3765cdd43f9",
+  "previous_pins": [
+    "cd261fb5782f8107",
+    "adc1494dbfa0cd3d",
+    "ef40d97306cc2167"
+  ],
+  "recorded_pins": [
+    "1c24a3765cdd43f9",
+    "cd261fb5782f8107",
+    "adc1494dbfa0cd3d"
+  ],
+  "retired_exclusive_assets": [
+    "/assets/dist/app-style-DkLhYoyf.css"
+  ],
+  "current_urls_unchanged": true,
+  "retained_and_current_bytes_unchanged": true
+}

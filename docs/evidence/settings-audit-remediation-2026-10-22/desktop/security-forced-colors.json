@@ -1,0 +1,46 @@
+[
+  {
+    "name": "current_password",
+    "value": "",
+    "focused": false,
+    "border": "rgb(0, 0, 0)",
+    "borderWidth": 1,
+    "borderStyle": "solid",
+    "fill": "rgb(255, 255, 255)",
+    "insideContrast": 21,
+    "outsideContrast": 21
+  },
+  {
+    "name": "new_password",
+    "value": "",
+    "focused": false,
+    "border": "rgb(0, 0, 0)",
+    "borderWidth": 1,
+    "borderStyle": "solid",
+    "fill": "rgb(255, 255, 255)",
+    "insideContrast": 21,
+    "outsideContrast": 21
+  },
+  {
+    "name": "new_password_confirm",
+    "value": "",
+    "focused": false,
+    "border": "rgb(0, 0, 0)",
+    "borderWidth": 1,
+    "borderStyle": "solid",
+    "fill": "rgb(255, 255, 255)",
+    "insideContrast": 21,
+    "outsideContrast": 21
+  },
+  {
+    "name": "current_password",
+    "value": "",
+    "focused": false,
+    "border": "rgb(0, 0, 0)",
+    "borderWidth": 1,
+    "borderStyle": "solid",
+    "fill": "rgb(255, 255, 255)",
+    "insideContrast": 21,
+    "outsideContrast": 21
+  }
+]

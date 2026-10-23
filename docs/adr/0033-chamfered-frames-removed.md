@@ -207,3 +207,37 @@ likewise pre-existing; the axe one is `aria-controls="sidebar-nav"` on
 standalone `npm run evidence:chamfer`), so CI runs it. That script also picks up
 `field-error-a11y.spec.ts`, which no npm script had reached before — which is how
 it stayed red without anyone noticing.
+
+## Amendment — 2026-10-23: `.field-row` retired from the account settings surface
+
+`36f7da40` rebuilt the custom-profile pairs on `/settings/account` as a two-up
+`.field-grid.custom-profile-pair` of `.field` cells holding `.input-engraved`
+inputs. That replaced the `div.field-row` + `.row-input` pairs decision 5 said
+would keep their class names, and no template emits `.field-row` any more
+(`git grep field-row -- templates` is empty). The hosted browser lane caught the
+drift: the ADR 0033 test still looked for `.field-row` and failed in both
+registers.
+
+The test is retargeted at the element that now paints the frame. It keeps the
+same contract — a real edge at rest, a gold rule on focus, no width change, and a
+halo — but reads it from the engraved inputs inside the first
+`.custom-profile-pair`, and asserts the pair renders two of them. The guard
+message stays so a future layout change cannot pass by silently skipping the
+assertion.
+
+The `.field-row` rules remain in `resources/imladris/components.css` (they are
+inert, with no template consumers). Deleting them would change the generated
+`imladris.css` and its release identity, which is a separate design-system
+change; the decision 1 table row and the `.row-bullet` note in decision 6 stand
+as history.
+
+Verified 2026-10-23 against a private seeded database
+(`retroboards_e2e_chamfer_20261023`): 30 passed on desktop and 30 on mobile with
+`npx playwright test chamfer-removal.spec.ts --project=<name>`. The local runs
+used `E2E_BASE_URL=http://127.0.0.1:<port>`: on this Windows host the PHP server
+binds `::1`, and runs addressed as `localhost` intermittently logged one
+`ERR_CONNECTION_REFUSED` for a background request, which the spec's console-error
+guard reports against whichever test happened to be running. The assertions in
+this test passed in every run, including the ones that tripped that guard.
+
+

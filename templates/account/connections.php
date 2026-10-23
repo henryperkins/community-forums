@@ -7,7 +7,7 @@ $errors = $errors ?? [];
 <div class="settings-screen">
     <header class="settings-head">
         <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
-        <p>Everything this community knows about you, and everything it does on your behalf.</p>
+        <?= $this->partial('partials/settings_intro') ?>
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav', ['active' => 'connections']) ?>
@@ -15,7 +15,13 @@ $errors = $errors ?? [];
         <div class="settings-pane">
     <section class="scribe-panel is-list">
         <h2 class="scribe-panel-head">Connected accounts</h2>
-        <p class="muted">Link a provider to sign in faster. Email and password always stay available.</p>
+        <p class="muted">Link a provider to sign in faster.
+            <?php if (!empty($has_password)): ?>
+                You can also sign in with your email and password.
+            <?php else: ?>
+                Set a password below to add email and password sign-in.
+            <?php endif; ?>
+        </p>
         <ul class="account-ruled-list">
             <?php foreach ($providers as $p): ?>
                 <?php
@@ -51,7 +57,7 @@ $errors = $errors ?? [];
     <?php if (empty($has_password)): ?>
         <?= $this->partial('partials/set_password_form', ['action' => '/settings/connections/set-password', 'errors' => $errors]) ?>
     <?php elseif ($errors !== []): ?>
-        <div class="scribe-panel error-list" role="alert">
+        <div class="callout callout-danger" role="alert" tabindex="-1" autofocus>
             <?php foreach ($errors as $message): ?>
                 <p><?= $e($message) ?></p>
             <?php endforeach; ?>

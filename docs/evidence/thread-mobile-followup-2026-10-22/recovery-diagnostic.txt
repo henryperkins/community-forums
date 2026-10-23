@@ -1,0 +1,38 @@
+
+Running 3 tests using 1 worker
+
+(node:11868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 1 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (7.1s)
+(node:33136) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  2 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (7.3s)
+(node:19428) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 3 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (7.2s)
+
+
+  1) [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Rapid rich draft after conflict resolution — café, 你好."
+    Received: "Local text when the conflict appeared."
+
+      443 |   mkdirSync(captures, { recursive: true });
+      444 |   writeFileSync(path.join(captures, 'rich-recovery-trace-' + info.project.name + '-' + info.repeatEachIndex + '.json'), JSON.stringify({ expected: latest, key, immediate, trace: await page.evaluate(() => JSON.parse(sessionStorage.getItem('f9-probe') || '[]')) }, null, 2));
+    > 445 |   expect(immediate.rich).toBe(latest);
+          |                          ^
+      446 |   await expect(page.locator('#reply .composer-send')).toBeEnabled();
+      447 |   await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(key);
+      448 |   await expect(editor).toHaveText(latest);
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:445:26
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\recovery-diagnostic\.artifacts\thread-mobile-recovery-rap-ff266-flict-survives-offline-Back-mobile-repeat1\error-context.md
+
+  1 failed
+    [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back 
+  2 passed (25.5s)

@@ -1,0 +1,82 @@
+
+Running 30 tests using 1 worker
+
+(node:2980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › account-console.spec.ts:159:5 › desktop grouped rail and common heading match the account shell contract (1.8s)
+
+  ok  2 [desktop] › account-console.spec.ts:216:5 › feature-dark entries vanish and Replay remains subordinate when enabled (4.3s)
+  ok  3 [desktop] › account-console.spec.ts:257:5 › representative Profile Security and Lifecycle 422 responses preserve explicit active state (3.0s)
+  -   4 [desktop] › account-console.spec.ts:289:5 › mobile account rail records light and twilight responsive states
+  -   5 [desktop] › account-console.spec.ts:301:5 › mobile no-JavaScript account navigation follows every available ordinary href
+
+  ok  6 [desktop] › account-console.spec.ts:371:5 › full account shell is axe-clean in light twilight and system-dark registers (9.7s)
+
+  ok  7 [desktop] › account-console.spec.ts:439:5 › slice 16 panes are axe-clean in light twilight and system-dark registers (22.9s)
+
+  ok  8 [desktop] › account-console.spec.ts:472:5 › slice 16 panes keep one boolean idiom and fit their width (7.0s)
+
+  ok  9 [desktop] › account-console.spec.ts:503:5 › refused set-password re-renders inline on the connections pane (2.4s)
+
+  ok 10 [desktop] › account-console.spec.ts:531:5 › slice 17 panes are axe-clean in light twilight and system-dark registers (9.4s)
+
+  ok 11 [desktop] › account-console.spec.ts:560:5 › slice 17 panes fit their width and keep the drafts hooks (3.6s)
+  ok 12 [desktop] › account-console.spec.ts:588:5 › slice 17 lifecycle scopes a refused deletion to its own form (1.8s)
+  -  13 [desktop] › account-console.spec.ts:604:5 › A5 mobile initial controls stay in view without JavaScript
+  -  14 [desktop] › account-console.spec.ts:631:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable
+
+  ok 15 [desktop] › account-console.spec.ts:690:5 › A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript (7.6s)
+(node:28476) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  16 [mobile] › account-console.spec.ts:159:5 › desktop grouped rail and common heading match the account shell contract
+  -  17 [mobile] › account-console.spec.ts:216:5 › feature-dark entries vanish and Replay remains subordinate when enabled
+  -  18 [mobile] › account-console.spec.ts:257:5 › representative Profile Security and Lifecycle 422 responses preserve explicit active state
+  ok 19 [mobile] › account-console.spec.ts:289:5 › mobile account rail records light and twilight responsive states (1.8s)
+
+  x  20 [mobile] › account-console.spec.ts:301:5 › mobile no-JavaScript account navigation follows every available ordinary href (2.1s)
+(node:37796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  21 [mobile] › account-console.spec.ts:371:5 › full account shell is axe-clean in light twilight and system-dark registers
+  -  22 [mobile] › account-console.spec.ts:439:5 › slice 16 panes are axe-clean in light twilight and system-dark registers
+
+  ok 23 [mobile] › account-console.spec.ts:472:5 › slice 16 panes keep one boolean idiom and fit their width (8.1s)
+  -  24 [mobile] › account-console.spec.ts:503:5 › refused set-password re-renders inline on the connections pane
+  -  25 [mobile] › account-console.spec.ts:531:5 › slice 17 panes are axe-clean in light twilight and system-dark registers
+
+  ok 26 [mobile] › account-console.spec.ts:560:5 › slice 17 panes fit their width and keep the drafts hooks (4.0s)
+  -  27 [mobile] › account-console.spec.ts:588:5 › slice 17 lifecycle scopes a refused deletion to its own form
+Security light { firstControlBottom: 654.703125 }
+Profile light { firstControlBottom: 755.265625 }
+Notifications light { firstControlBottom: 736.703125 }
+Security dark { firstControlBottom: 654.703125 }
+Profile dark { firstControlBottom: 755.265625 }
+Notifications dark { firstControlBottom: 736.703125 }
+  ok 28 [mobile] › account-console.spec.ts:604:5 › A5 mobile initial controls stay in view without JavaScript (17.6s)
+
+  ok 29 [mobile] › account-console.spec.ts:631:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable (47.7s)
+
+  ok 30 [mobile] › account-console.spec.ts:690:5 › A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript (7.5s)
+
+
+  1) [mobile] › account-console.spec.ts:301:5 › mobile no-JavaScript account navigation follows every available ordinary href 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      356 |         expect(metrics.position).toBe('static');
+      357 |         expect(metrics.paneTop).toBeGreaterThanOrEqual(metrics.railBottom);
+    > 358 |         expect(metrics.controls.every((height) => height >= 44)).toBe(true);
+          |                                                                  ^
+      359 |         expect(metrics.overflow).toBeLessThanOrEqual(0);
+      360 |       }
+      361 |     }
+        at C:\Users\htper\community-forums\tests\browser\account-console.spec.ts:358:66
+
+    Error Context: ..\..\docs\evidence\settings-audit-remediation-2026-10-22\console-regression\.artifacts\account-console-mobile-no--0b30b-ery-available-ordinary-href-mobile\error-context.md
+
+  1 failed
+    [mobile] › account-console.spec.ts:301:5 › mobile no-JavaScript account navigation follows every available ordinary href 
+  12 skipped
+  17 passed (2.8m)

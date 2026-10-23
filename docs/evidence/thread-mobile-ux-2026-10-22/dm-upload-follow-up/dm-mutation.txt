@@ -1,0 +1,30 @@
+
+Running 1 test using 1 worker
+
+(node:20868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+before-press {"formBottom":726.65625,"height":640,"button":{"x":323,"y":593.65625,"width":36,"height":44}}
+held-press {"x":323.028564453125,"y":506.8497314453125,"width":35.94287109375,"height":43.93023681640625}
+  x  1 [desktop] › tests\browser\upload-http.spec.ts:158:5 › a held pointer publishes a ready DM image without moving Send before release (2.1s)
+
+
+  1) [desktop] › tests\browser\upload-http.spec.ts:158:5 › a held pointer publishes a ready DM image without moving Send before release
+
+    Error: expect(received).toBeLessThan(expected)
+
+    Expected: < 1
+    Received:   86.8065185546875
+
+      209 |   console.log('held-press', JSON.stringify(held));
+      210 |   expect(held).not.toBeNull();
+    > 211 |   expect(Math.abs(held!.y - before.button.y)).toBeLessThan(1);
+          |                                               ^
+      212 |   const sent = page.waitForResponse(res => res.request().method() === 'POST'
+      213 |     && new URL(res.url()).pathname === conversationPath);
+      214 |   await page.mouse.up();
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\upload-http.spec.ts:211:47
+
+    Error Context: output\thread-hosted-rerun\dm-upload\.artifacts\upload-http-a-held-pointer-ac92e--moving-Send-before-release-desktop\error-context.md
+
+  1 failed
+    [desktop] › tests\browser\upload-http.spec.ts:158:5 › a held pointer publishes a ready DM image without moving Send before release

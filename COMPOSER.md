@@ -48,7 +48,7 @@ The composer is the most-used surface in the product — every thread, reply, an
 1. **One surface, learned once.** Whatever you can do in a reply, you can do when starting a thread or DMing someone. No "this box is different."
 2. **Rich for the eye, Markdown for the record.** Formatting appears live as you type; what's stored is portable Markdown (PRODUCT_DESIGN.md §9.5 render/sanitise pipeline).
 3. **Fast for keyboards, discoverable for mice.** Every action has a shortcut *and* a visible control; the toolbar shows active state.
-4. **Never lose work.** Drafts autosave continuously and survive reloads, navigation, and crashes.
+4. **Never lose work.** Drafts autosave continuously and survive reloads, navigation, and crashes. Clear a submitted local draft only after a session-bound server completion confirms its submission identity and its saved content still matches. An unrelated page load is not confirmation. History restore makes Send usable again; unchanged retries retain their identity, while editing an unconfirmed attempt starts a new identity (ADR 0050).
 5. **Safe by construction.** Stored Markdown is rendered through an allowlist sanitiser; no raw HTML or scripts; new-user and per-board limits curb spam.
 6. **Resilient / progressively enhanced.** Without JS it degrades to a plain `<textarea>` that accepts Markdown and renders server-side; with JS it upgrades to the rich surface.
 7. **Accessible.** Fully keyboard-operable, screen-reader labelled, motion-respecting.
@@ -235,7 +235,7 @@ The file picker, paste, and drop are JavaScript enhancements. Without JavaScript
   - New thread → `rb-draft:{username}:/threads` (one new-topic draft shared by board forms and `/compose`; locally the body only — the title is kept in the server draft)
   - DM → `rb-draft:{username}:/messages` (new conversation) · `rb-draft:{username}:/messages/{conversationId}` (reply)
   - Edit → no local draft: post and wiki edit forms opt out with `data-no-draft`, since they are pre-filled from the stored body
-- **Restored on mount.** A submitted draft is cleared on the next successfully loaded page, not at submit, so a dropped connection cannot lose it. Survives reload, navigation, and crashes. A subtle "Draft saved" indicator confirms.
+- **Restored on mount.** A submitted draft clears only when the server confirms that submission and the saved version still matches. Failed navigation, an unrelated page load, or a newer edit cannot discard it. Back restores a usable Send control; unchanged retries retain their submission identity, while edits start a fresh one. Survives reload, navigation, and crashes. A subtle "Draft saved" indicator confirms (ADR 0050).
 - The **Drafts** page (`/drafts`, under Account settings and the identity menu) lists server and browser-local drafts with their context + a preview; click to resume in the right composer.
 - **Signed-out** users' drafts still save locally; after sign-in they are moved to the member's key automatically and restore into the composer.
 - **Server-side draft sync** complements local recovery for authenticated members through the `server_drafts` table and is default-on. A revision conflict presents both copies for an explicit choice; disabling `server_drafts` leaves local recovery available. See `docs/runbooks/server_drafts.md`.

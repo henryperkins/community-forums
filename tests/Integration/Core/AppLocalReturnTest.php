@@ -241,15 +241,28 @@ final class AppLocalReturnTest extends TestCase
     {
         $this->actingAs($user);
         $start = $this->post('/settings/security/totp/enroll', ['current_password' => 'password123']);
-        preg_match('/Authenticator secret.*?<input class="input" value="([A-Z2-7]+)"/s', $start->body(), $secret);
-        self::assertArrayHasKey(1, $secret);
+        $secret = $this->extractAuthenticatorSecret($start);
         $confirm = $this->post('/settings/security/totp/confirm', [
             'current_password' => 'password123',
-            'totp_code' => (new Totp())->code($secret[1]),
+            'totp_code' => (new Totp())->code($secret),
         ]);
         preg_match_all('/<code>([A-F0-9-]+)<\/code>/', $confirm->body(), $codes);
         self::assertCount(10, $codes[1]);
         return $codes[1];
+    }
+
+    private function extractAuthenticatorSecret(Response $response): string
+    {
+        $document = new \DOMDocument();
+        @$document->loadHTML($response->body());
+        $dom = new \DOMXPath($document);
+        $inputs = $dom->query('//label[span[normalize-space(.) = "Authenticator secret"]]/input[@readonly]');
+        self::assertSame(1, $inputs->length);
+        $input = $inputs->item(0);
+        self::assertInstanceOf(\DOMElement::class, $input);
+        $secret = $input->getAttribute('value');
+        self::assertMatchesRegularExpression('/\A[A-Z2-7]+\z/', $secret);
+        return $secret;
     }
 
     /** @return array<string,mixed> */

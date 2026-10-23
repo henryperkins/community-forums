@@ -1,0 +1,20 @@
+{
+  "desktop": {
+    "php": "8.2.35",
+    "file_bytes": 8388608,
+    "post_bytes": 10485760,
+    "application_bytes": 5242880
+  },
+  "mobile": {
+    "php": "8.2.35",
+    "file_bytes": 8388608,
+    "post_bytes": 10485760,
+    "application_bytes": 5242880
+  },
+  "webkit-mobile": {
+    "php": "8.2.35",
+    "file_bytes": 8388608,
+    "post_bytes": 10485760,
+    "application_bytes": 5242880
+  }
+}

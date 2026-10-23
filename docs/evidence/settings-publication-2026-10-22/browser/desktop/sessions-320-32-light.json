@@ -1,0 +1,33 @@
+[
+  {
+    "rowWidth": 184,
+    "mainWidth": 184,
+    "mainBottom": 1004.671875,
+    "name": "Samsung Internet on Android",
+    "textBottom": 44.1875,
+    "nestedChipTop": null,
+    "trailingTops": [
+      1014.671875
+    ]
+  },
+  {
+    "rowWidth": 184,
+    "mainWidth": 184,
+    "mainBottom": 2239.71875,
+    "name": "Unknown device",
+    "textBottom": 1191.203125,
+    "nestedChipTop": null,
+    "trailingTops": [
+      2249.71875
+    ]
+  },
+  {
+    "rowWidth": 184,
+    "mainWidth": 184,
+    "mainBottom": 3245.125,
+    "name": "Unknown browser on Windows",
+    "textBottom": 2475.390625,
+    "nestedChipTop": 2489.53125,
+    "trailingTops": []
+  }
+]

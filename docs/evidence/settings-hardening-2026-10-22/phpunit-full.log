@@ -1,0 +1,540 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.35
+Configuration: C:\Users\htper\community-forums\phpunit.xml
+
+.............................................................   61 / 3343 (  1%)
+.............................................................  122 / 3343 (  3%)
+.....................FFFFF.F....FF.F.F.F.F..................F  183 / 3343 (  5%)
+............................F................................  244 / 3343 (  7%)
+.............................................................  305 / 3343 (  9%)
+.............................................................  366 / 3343 ( 10%)
+.............................................................  427 / 3343 ( 12%)
+.............................................................  488 / 3343 ( 14%)
+.............................................................  549 / 3343 ( 16%)
+.............................................................  610 / 3343 ( 18%)
+.............................................................  671 / 3343 ( 20%)
+.............................................................  732 / 3343 ( 21%)
+.............................................................  793 / 3343 ( 23%)
+.............................................................  854 / 3343 ( 25%)
+............................................The system cannot find the path specified.
+.The system cannot find the path specified.
+.The system cannot find the path specified.
+............[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+...  915 / 3343 ( 27%)
+.............[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+...........................................  976 / 3343 ( 29%)
+............................................................. 1037 / 3343 ( 31%)
+............................................................. 1098 / 3343 ( 32%)
+.........................F................................... 1159 / 3343 ( 34%)
+............................................................. 1220 / 3343 ( 36%)
+............................................................. 1281 / 3343 ( 38%)
+............................................................. 1342 / 3343 ( 40%)
+............................................................. 1403 / 3343 ( 41%)
+............................................................. 1464 / 3343 ( 43%)
+.........................................................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.... 1525 / 3343 ( 45%)
+............................................................. 1586 / 3343 ( 47%)
+............................................................. 1647 / 3343 ( 49%)
+............................................................. 1708 / 3343 ( 51%)
+............................................................. 1769 / 3343 ( 52%)
+............................................................. 1830 / 3343 ( 54%)
+............................................................. 1891 / 3343 ( 56%)
+............................................................. 1952 / 3343 ( 58%)
+............................................................. 2013 / 3343 ( 60%)
+............................................................. 2074 / 3343 ( 62%)
+............................................................. 2135 / 3343 ( 63%)
+............................................................. 2196 / 3343 ( 65%)
+............................................................. 2257 / 3343 ( 67%)
+............................................................. 2318 / 3343 ( 69%)
+............................................................. 2379 / 3343 ( 71%)
+..................................................S.......... 2440 / 3343 ( 72%)
+.........................................................[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+..[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+.. 2501 / 3343 ( 74%)
+............................................................. 2562 / 3343 ( 76%)
+............................................................. 2623 / 3343 ( 78%)
+............................................................. 2684 / 3343 ( 80%)
+............................................................. 2745 / 3343 ( 82%)
+............................................................. 2806 / 3343 ( 83%)
+............................................................. 2867 / 3343 ( 85%)
+............................................................. 2928 / 3343 ( 87%)
+............................................................. 2989 / 3343 ( 89%)
+............................................................. 3050 / 3343 ( 91%)
+............................................................. 3111 / 3343 ( 93%)
+............................................................. 3172 / 3343 ( 94%)
+............................................................. 3233 / 3343 ( 96%)
+............................................................. 3294 / 3343 ( 98%)
+.................................................             3343 / 3343 (100%)
+
+Time: 05:27.917, Memory: 102.00 MB
+
+There were 15 failures:
+
+1) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_child_final_step_requires_outer_success_and_a_complete_matching_archive
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:336
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:49
+
+2) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_outer_command_records_actual_docker_failure_after_it_returns
+ERROR: failed to build: unable to prepare context: path "/workspace/source/tests/browser" not found
+Unable to find image 'retroboards-browser-ci:latest' locally
+docker: Error response from daemon: pull access denied for retroboards-browser-ci, repository does not exist or may require 'docker login'
+
+Run 'docker run --help' for more information
+/bin/bash: line 9: C:UsershtperAppDataLocalTemp/rb-browser-ci-contract-4b11a2bfe87e/runner-exit.json: No such file or directory
+/bin/bash: line 10: exit: : numeric argument required
+
+Failed asserting that 2 is identical to 7.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:79
+
+3) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_archive_creation_failure_cannot_leave_a_success_record_or_old_archive
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:336
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:88
+
+4) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_runner_attempts_every_independent_suite_and_retains_the_first_failure
+/bin/bash: C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/run.sh: No such file or directory
+
+Failed asserting that 127 is identical to 7.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:170
+
+5) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+ Array &0 [
+-    0 => 'browser/synthetic.json',
+-    1 => 'browser/synthetic.png',
++    0 => 'browser\synthetic.json',
++    1 => 'browser\synthetic.png',
+ ]
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:209
+
+6) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_completed_run_requires_capture_unified_and_every_upload_project_artifact
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:268
+
+7) Tests\Unit\Core\CloudRunBrowserCiPackageContractTest::test_non_object_unified_results_fail_completion_and_preserve_the_diagnostic_archive
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+ Array &0 [
+-    0 => 'unified-notifications-and-settings: completed=true',
++    0 => 'unified-notifications-and-settings/browser-results.json',
++    1 => 'image-upload-reliability/runtime-limits.json',
++    2 => 'image-upload-reliability/desktop-published.png',
++    3 => 'image-upload-reliability/mobile-published.png',
++    4 => 'image-upload-reliability/webkit-mobile-published.png',
++    5 => 'browser/*.png',
++    6 => 'unified-notifications-and-settings: completed=true',
+ ]
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiPackageContractTest.php:67
+
+8) Tests\Unit\Core\CloudRunBrowserCiUploaderContractTest::test_streaming_create_only_transport_and_credential_privacy_contracts
+E.E.E..
+======================================================================
+ERROR: test_existing_object_denial_redirect_and_server_errors_never_read_bodies_or_retry (__main__.UploadContracts.test_existing_object_denial_redirect_and_server_errors_never_read_bodies_or_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/test_upload.py", line 96, in test_existing_object_denial_redirect_and_server_errors_never_read_bodies_or_retry
+    UPLOAD.upload_file(self.file, 'private-bucket', 'sha/build/result.json', 'synthetic-token')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\htper\community-forums\tests\Unit\Core\..\..\..\deploy\cloudrun\browser-ci\upload.py", line 38, in upload_file
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                                             ^^^^^^^^^^^^^
+AttributeError: module 'os' has no attribute 'O_NOFOLLOW'
+
+======================================================================
+ERROR: test_https_create_only_encoded_name_streaming_and_receipt_without_get (__main__.UploadContracts.test_https_create_only_encoded_name_streaming_and_receipt_without_get)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/test_upload.py", line 74, in test_https_create_only_encoded_name_streaming_and_receipt_without_get
+    UPLOAD.upload_file(self.file, 'private-bucket', 'sha/build id/result.json', 'synthetic-token')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\htper\community-forums\tests\Unit\Core\..\..\..\deploy\cloudrun\browser-ci\upload.py", line 38, in upload_file
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                                             ^^^^^^^^^^^^^
+AttributeError: module 'os' has no attribute 'O_NOFOLLOW'
+
+======================================================================
+ERROR: test_receipt_checksum_mismatch_fails_without_metadata_get (__main__.UploadContracts.test_receipt_checksum_mismatch_fails_without_metadata_get)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/test_upload.py", line 106, in test_receipt_checksum_mismatch_fails_without_metadata_get
+    UPLOAD.upload_file(self.file, 'private-bucket', 'sha/build/result.json', 'synthetic-token')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\htper\community-forums\tests\Unit\Core\..\..\..\deploy\cloudrun\browser-ci\upload.py", line 38, in upload_file
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                                             ^^^^^^^^^^^^^
+AttributeError: module 'os' has no attribute 'O_NOFOLLOW'
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.040s
+
+FAILED (errors=3)
+
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiUploaderContractTest.php:23
+
+9) Tests\Unit\Core\CloudRunDeploymentContractTest::test_service_is_one_private_instance_on_the_cloud_sql_connector_and_the_data_bucket
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'/data/media'
++'/data/media'
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:36
+
+10) Tests\Unit\Core\CloudRunDeploymentContractTest::test_production_mail_configuration_selects_the_configured_rest_transport
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'cf2024-1'
++'cf2024-1'
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:70
+
+11) Tests\Unit\Core\CloudRunDeploymentContractTest::test_cron_jobs_keep_the_former_worker_schedule_and_never_migrate
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'true'
++'true"'
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:138
+
+12) Tests\Unit\Core\CloudRunDeploymentContractTest::test_console_batch_runs_every_command_in_order_and_reports_any_failure
+Failed asserting that false is of type resource.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:222
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:170
+
+13) Tests\Unit\Core\ImladrisRuntimeAssetTest::test_checked_in_runtime_asset_matches_the_allowlisted_design_system_sources
+Production presentation changed after Imladris reconciliation. Review the design-system contract before updating config/imladris-runtime-baseline.json. Current digest: 7ea302bc516a491c78e6405ba8a7aef5206a36b9d021a46b23b80e2f81d800bb
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\ImladrisRuntimeAssetTest.php:23
+
+14) Tests\Unit\Core\MessagesStylesContractTest::test_touch_targets_reach_44px_and_small_labels_meet_the_type_floor
+Failed asserting that '\n
+    .settings-pane .btn, .settings-pane .linkbtn, .settings-rail-link { min-height: 44px; }' matches PCRE pattern "/\.dm-back, \.dm-iconbtn \{ width: 44px; height: 44px; \}/".
+
+C:\Users\htper\community-forums\tests\Unit\Core\MessagesStylesContractTest.php:150
+
+15) Tests\Integration\Core\AppAccountLifecycleTest::test_a_scoped_lifecycle_error_falls_back_when_its_form_is_not_rendered
+the message falls back to the alert card
+Failed asserting that '<!doctype html>\r\n
+<html lang="en"\r\n
+      data-theme="system"\r\n
+      data-density="comfortable"\r\n
+      data-font-size="medium"\r\n
+      >\r\n
+<head>\r\n
+    <meta charset="utf-8">\r\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\r\n
+            <title>Account lifecycle</title>\r\n
+    <meta name="description" content="RetroBoards — a community forum.">\r\n
+            <meta property="og:site_name" content="RetroBoards">\r\n
+    <meta property="og:title" content="Account lifecycle">\r\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\r\n
+    <meta property="og:type" content="website">\r\n
+                    <link rel="icon" href="data:,">\r\n
+        <link rel="stylesheet" href="/assets/dist/imladris-style-CRsa_HRN.css">\r\n
+    <link rel="stylesheet" href="/assets/dist/app-style-B4XnVS5i.css">\r\n
+    <link rel="stylesheet" href="/assets/dist/wysiwyg-composer-BRAFF38E.css">        </head>\r\n
+<body data-account-settings="1" class="variant-app is-rail-open is-reading-open" data-route="" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-wysiwyg-src="/assets/dist/wysiwyg-composer-fsiRxgms.js" data-user="stale_lifecycle" data-enter-to-send="1" data-show-preview="1" data-smart-lists="1" data-tour="1">\r\n
+<a class="skip-link" href="#main">Skip to content</a>\r\n
+<header class="forum-bar">\r\n
+            <a class="nav-toggle" data-nav-fallback href="#sidebar-nav" aria-label="Open board rail">\r\n
+        <svg class="icon icon-menu nav-toggle-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\r\n
+    </a>\r\n
+    <button class="nav-toggle" type="button" data-nav-toggle hidden aria-label="Open board rail" aria-expanded="false" aria-controls="sidebar-nav">\r\n
+        <svg class="icon icon-menu nav-toggle-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\r\n
+    </button>\r\n
+    \r\n
+        <span class="forum-bar-lockup">\r\n
+        <a class="forum-bar-brand" href="/" aria-label="RetroBoards">\r\n
+                                            <svg class="forum-bar-mark" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\r\n
+                <span class="forum-bar-wordmark">RetroBoards</span>\r\n
+                    </a>\r\n
+    </span>\r\n
+\r\n
+        <nav class="forum-bar-surfaces" aria-label="Primary">\r\n
+                    <a data-primary-route="boards" class="forum-bar-surface" href="/">Boards</a>\r\n
+                                                                            <a data-primary-route="inbox" class="forum-bar-surface" href="/inbox" data-count-name="Inbox">Inbox</a>\r\n
+                                                                    <a data-primary-route="messages" class="forum-bar-surface" href="/messages" data-count-name="Messages">Messages<span class="forum-bar-count" data-dm-unread-count aria-hidden="true" hidden>0</span></a>\r\n
+                        </nav>\r\n
+\r\n
+                    <span class="forum-bar-searchwrap">\r\n
+            <a class="forum-bar-search" href="/search" aria-label="Search the council" data-shortcut="k">\r\n
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>\r\n
+                <span class="forum-bar-search-label">Search the council…</span>\r\n
+                <span class="forum-bar-kbd" data-shortcut-hint aria-hidden="true" hidden></span>\r\n
+            </a>\r\n
+        </span>\r\n
+    \r\n
+    <span class="forum-bar-right">\r\n
+                                            <form class="inline forum-bar-panel-form" method="post" action="/settings/member-surfaces" data-panel-form="rail">\r\n
+                <input type="hidden" name="_token" value="5ad0cc9d932264a529e15c66ddc5646cc3b6f44839dba34ab0503d165351423d">                <input type="hidden" name="rail_open" value="0">\r\n
+                <input type="hidden" name="return" value="/settings/account/delete/request">\r\n
+                <button class="forum-bar-railtoggle is-on" type="submit" aria-controls="sidebar-nav" aria-pressed="true" aria-label="Board rail" title="Board rail" data-shortcut="b">\r\n
+                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><rect class="forum-bar-toggle-band" x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"/></svg>\r\n
+                </button>\r\n
+            </form>\r\n
+            \r\n
+            \r\n
+                                        <span class="forum-bar-divider" aria-hidden="true"></span>\r\n
+            \r\n
+                                        <a class="forum-bar-bell bell" href="/notifications" data-bell data-notification-link aria-label="Notifications" title="Notifications">\r\n
+                    <svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\r\n
+                    <span class="bell-count" data-notification-count aria-hidden="true" hidden>0</span>\r\n
+                </a>\r\n
+                        <details class="identity-menu">\r\n
+                <summary class="forum-bar-user" aria-label="Account menu for stale_lifecycle">\r\n
+                    <span class="avatar-wrap">\r\n
+                            <span class="monogram mono-4" aria-hidden="true">SL</span>\r\n
+                                                                            <span class="presence-dot" aria-hidden="true"></span>\r\n
+                                            </span>\r\n
+                    <span class="forum-bar-username">stale_lifecycle</span>\r\n
+                    <svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\r\n
+                </summary>\r\n
+                                <div class="identity-menu-panel">\r\n
+                    <a href="/u/stale_lifecycle"><svg class="icon icon-user" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\r\n
+<span>Profile</span></a>\r\n
+                                            <a href="/notifications" data-notification-link aria-label="Notifications"><svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\r\n
+<span>Notifications</span><span class="notification-count" data-notification-count aria-hidden="true" hidden>0</span></a>\r\n
+                                        <a href="/drafts"><svg class="icon icon-file" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>\r\n
+<span>Drafts</span></a>                                            <a href="/feed"><svg class="icon icon-users" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>\r\n
+<span>Following</span></a>\r\n
+                        <a href="/leaderboard"><svg class="icon icon-commend-star" viewBox="0 0 100 100" width="16" height="16" fill="currentColor" stroke="none" aria-hidden="true"><path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/></svg>\r\n
+<span>Top contributors</span></a>\r\n
+                                        <a class="identity-menu-break" href="/settings/account"><svg class="icon icon-settings" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>\r\n
+<span>Settings</span></a>\r\n
+                                        <form class="identity-menu-break" method="post" action="/logout">\r\n
+                        <input type="hidden" name="_token" value="5ad0cc9d932264a529e15c66ddc5646cc3b6f44839dba34ab0503d165351423d">                        <button type="submit"><svg class="icon icon-log-out" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>\r\n
+<span>Log out</span></button>\r\n
+                    </form>\r\n
+                </div>\r\n
+            </details>\r\n
+            </span>\r\n
+</header>\r\n
+    <div class="app-shell">\r\n
+        <div class="nav-scrim" data-nav-scrim hidden></div>\r\n
+        <nav class="board-rail" id="sidebar-nav" data-sidebar aria-label="Boards" tabindex="0">\r\n
+    <a class="nav-close" data-nav-close href="#main" aria-label="Close board rail"><svg class="icon icon-x" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>\r\n
+</a>\r\n
+    <div class="board-rail-directory" data-directory-nav>\r\n
+        <span class="board-rail-cat">Explore</span>\r\n
+                    <a class="board-rail-item" data-directory-link="boards" href="/?pane=boards"><span class="board-rail-name">Boards</span></a>\r\n
+                    <a class="board-rail-item" data-directory-link="tags" href="/?pane=tags"><span class="board-rail-name">Tags</span></a>\r\n
+                    <a class="board-rail-item" data-directory-link="connections" href="/?pane=connections"><span class="board-rail-name">Connections</span></a>\r\n
+            </div>\r\n
+                        <p class="muted board-rail-empty">No boards yet.</p>\r\n
+    \r\n
+            <div class="board-rail-foot">\r\n
+                                    <section class="presence-widget" data-presence data-presence-limit="5" data-presence-avatars="1" data-presence-poll>\r\n
+                <h2 class="presence-title">\r\n
+                    <a href="/users-online">Online</a>\r\n
+                    <span class="presence-count" data-presence-count>1</span>\r\n
+                </h2>\r\n
+                                <p class="sr-only" aria-live="polite" data-presence-summary>1 member here now.</p>\r\n
+                <ul class="presence-list" data-presence-list>\r\n
+                                            <li class="presence-row" data-presence-row="stale_lifecycle" data-presence-sig="stale_lifecycle:online:-:y">\r\n
+    <a class="presence-person" href="/u/stale_lifecycle" data-presence-state="online" data-presence-self="1">\r\n
+                            <span class="avatar-wrap">\r\n
+                    <span class="monogram mono-4" aria-hidden="true">SL</span>\r\n
+                <span class="presence-dot" aria-hidden="true"></span>\r\n
+            </span>\r\n
+                <span class="presence-person-id">\r\n
+            <span class="presence-name">stale_lifecycle<span class="presence-you">you</span></span>\r\n
+            <span class="presence-sub">@stale_lifecycle · Here now</span>\r\n
+        </span>\r\n
+    </a>\r\n
+</li>\r\n
+                                    </ul>\r\n
+                                                    <p class="presence-empty" data-presence-empty hidden>No one is showing as online.</p>\r\n
+                                <p class="presence-more" data-presence-more hidden></p>\r\n
+                <p class="presence-foot"><a class="presence-all" href="/users-online">See everyone online</a></p>\r\n
+            </section>\r\n
+        </div>\r\n
+    </nav>\r\n
+        <main class="main" id="main">\r\n
+            <div class="forum-subheader" data-subheader>\r\n
+    <div class="forum-subheader-leading">    <h1 class="forum-page-title">Account settings</h1>\r\n
+    </div>\r\n
+                        <details class="create-menu" name="inbox-controls" data-create-menu data-inbox-menu-align="end">\r\n
+                <summary class="create-trigger" data-create-trigger aria-label="New topic or message">\r\n
+                    <svg class="icon icon-plus" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>\r\n
+<span class="create-label">New</span><svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\r\n
+                </summary>\r\n
+                <div class="create-menu-panel">\r\n
+                    <a href="/compose">New topic</a>\r\n
+                    <a href="/messages/new" data-new-message>New message</a>\r\n
+                </div>\r\n
+            </details>\r\n
+            </div>\r\n
+                <div class="flash" role="status">Account deletion requested. You can cancel during the 30-day grace period.</div>\r\n
+            <div class="settings-screen">\r\n
+    <header class="settings-head">\r\n
+                    <p>Everything this community knows about you, and everything it does on your behalf.</p>\r\n
+    </header>\r\n
+    <div class="settings">\r\n
+        <nav class="settings-rail settings-rail-desktop" aria-label="Settings sections">\r\n
+                <div class="settings-rail-group">\r\n
+            <span class="settings-rail-title">Account</span>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="profile" href="/settings/account"><svg class="icon icon-settings-profile" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\r\n
+<span>Profile</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="security" href="/settings/security"><svg class="icon icon-shield" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>\r\n
+<span>Security</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="privacy" href="/settings/privacy"><svg class="icon icon-eye" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12c3-5 6-7 10-7s7 2 10 7c-3 5-6 7-10 7s-7-2-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>\r\n
+<span>Privacy</span></a>\r\n
+                    </div>\r\n
+            <div class="settings-rail-group">\r\n
+            <span class="settings-rail-title">Reading &amp; writing</span>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="appearance" href="/settings/appearance"><svg class="icon icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>\r\n
+<span>Appearance</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="reading" href="/settings/preferences"><svg class="icon icon-book" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>\r\n
+<span>Reading</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="composing" href="/settings/composing"><svg class="icon icon-edit-3" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>\r\n
+<span>Composing</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="drafts" href="/drafts"><svg class="icon icon-file" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>\r\n
+<span>Drafts</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="boards" href="/settings/boards"><svg class="icon icon-menu" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\r\n
+<span>Boards</span></a>\r\n
+                    </div>\r\n
+            <div class="settings-rail-group">\r\n
+            <span class="settings-rail-title">Community</span>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="notifications" href="/settings/notifications"><svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\r\n
+<span>Notifications</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="connections" href="/settings/connections"><svg class="icon icon-link" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>\r\n
+<span>Connections</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="blocks" href="/settings/blocks"><svg class="icon icon-ban" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>\r\n
+<span>Blocks</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="sessions" href="/settings/sessions"><svg class="icon icon-monitor" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M8 21h8M12 17v4"/></svg>\r\n
+<span>Sessions</span></a>\r\n
+                                                            <a class="settings-rail-link is-active" data-settings-key="account" href="/settings/account/lifecycle" aria-current="page"><svg class="icon icon-archive" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>\r\n
+<span>Account</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="appeals" href="/appeals"><svg class="icon icon-flag" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>\r\n
+<span>Appeals</span></a>\r\n
+                    </div>\r\n
+                <button class="linkbtn subnav-action" type="button" data-tour-replay>Replay tour</button>\r\n
+    </nav>\r\n
+<details class="settings-mobile-nav" data-settings-mobile-nav>\r\n
+    <summary>Settings: Account</summary>\r\n
+    <nav class="settings-rail" aria-label="Settings sections">\r\n
+                    <div class="settings-rail-group">\r\n
+            <span class="settings-rail-title">Account</span>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="profile" href="/settings/account"><svg class="icon icon-settings-profile" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\r\n
+<span>Profile</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="security" href="/settings/security"><svg class="icon icon-shield" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>\r\n
+<span>Security</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="privacy" href="/settings/privacy"><svg class="icon icon-eye" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12c3-5 6-7 10-7s7 2 10 7c-3 5-6 7-10 7s-7-2-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>\r\n
+<span>Privacy</span></a>\r\n
+                    </div>\r\n
+            <div class="settings-rail-group">\r\n
+            <span class="settings-rail-title">Reading &amp; writing</span>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="appearance" href="/settings/appearance"><svg class="icon icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>\r\n
+<span>Appearance</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="reading" href="/settings/preferences"><svg class="icon icon-book" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>\r\n
+<span>Reading</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="composing" href="/settings/composing"><svg class="icon icon-edit-3" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>\r\n
+<span>Composing</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="drafts" href="/drafts"><svg class="icon icon-file" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>\r\n
+<span>Drafts</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="boards" href="/settings/boards"><svg class="icon icon-menu" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>\r\n
+<span>Boards</span></a>\r\n
+                    </div>\r\n
+            <div class="settings-rail-group">\r\n
+            <span class="settings-rail-title">Community</span>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="notifications" href="/settings/notifications"><svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\r\n
+<span>Notifications</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="connections" href="/settings/connections"><svg class="icon icon-link" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>\r\n
+<span>Connections</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="blocks" href="/settings/blocks"><svg class="icon icon-ban" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>\r\n
+<span>Blocks</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="sessions" href="/settings/sessions"><svg class="icon icon-monitor" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M8 21h8M12 17v4"/></svg>\r\n
+<span>Sessions</span></a>\r\n
+                                                            <a class="settings-rail-link is-active" data-settings-key="account" href="/settings/account/lifecycle" aria-current="page"><svg class="icon icon-archive" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>\r\n
+<span>Account</span></a>\r\n
+                                                            <a class="settings-rail-link" data-settings-key="appeals" href="/appeals"><svg class="icon icon-flag" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>\r\n
+<span>Appeals</span></a>\r\n
+                    </div>\r\n
+                <button class="linkbtn subnav-action" type="button" data-tour-replay>Replay tour</button>\r\n
+        </nav>\r\n
+</details>\r\n
+\r\n
+        <div class="settings-pane">\r\n
+            <div class="callout callout-danger" role="alert" tabindex="-1" autofocus>\n
+                            <p>Your current password is incorrect.</p>\r\n
+                    </div>\r\n
+    \r\n
+    <section class="scribe-panel">\r\n
+        <h2 class="scribe-panel-head">Export account data</h2>\r\n
+        <p class="lifecycle-note">A JSON archive of your profile, preferences, sessions metadata, subscriptions, notifications, reports, posts, direct messages, and the audit rows attached to them.</p>\r\n
+        <form method="post" action="/settings/account/export" class="inline-form">\r\n
+            <input type="hidden" name="_token" value="5ad0cc9d932264a529e15c66ddc5646cc3b6f44839dba34ab0503d165351423d">            <button class="btn btn-secondary" type="submit">Download account export</button>\r\n
+        </form>\r\n
+    </section>\r\n
+\r\n
+    <section class="scribe-panel">\r\n
+        <h2 class="scribe-panel-head">Deactivate account</h2>\r\n
+                    <p class="lifecycle-note">Deactivation and reactivation are unavailable while your account has a pending deletion or site restriction.</p>\r\n
+            </section>\r\n
+\r\n
+    <section class="scribe-panel danger-zone">\r\n
+        <h2 class="scribe-panel-head">Delete account</h2>\r\n
+                    <p class="lifecycle-note">Deletion is scheduled after the grace period on Nov 22, 2026 at 01:02 UTC. Your posts stay readable under a deleted-member identity; everything that identifies you is purged.</p>\r\n
+            <form method="post" action="/settings/account/delete/cancel" class="inline-form">\r\n
+                <input type="hidden" name="_token" value="5ad0cc9d932264a529e15c66ddc5646cc3b6f44839dba34ab0503d165351423d">                <button class="btn btn-secondary" type="submit">Cancel deletion request</button>\r\n
+            </form>\r\n
+            </section>\r\n
+        </div>\r\n
+    </div>\r\n
+</div>\r\n
+        </main>\r\n
+    </div>\r\n
+<script src="/assets/dist/app-f849a2ee98a4672f.js" defer></script>\r\n
+<script src="/assets/dist/composer-692ed48b0da96053.js" defer></script><script src="/assets/dist/passkeys-27f8b05555555872.js" defer></script><script src="/assets/dist/tour-2cb01893b54a8644.js" defer></script></body>\r\n
+</html>\r\n
+' [UTF-8](length: 31092) contains "error-list" [ASCII](length: 10).
+
+C:\Users\htper\community-forums\tests\Integration\Core\AppAccountLifecycleTest.php:377
+
+--
+
+2 tests triggered 2 PHP warnings:
+
+1) C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:199
+symlink(): Permission denied
+
+2) C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:215
+proc_open(): CreateProcess failed, error code: 2
+
+FAILURES!
+Tests: 3343, Assertions: 29481, Failures: 15, Warnings: 2, Skipped: 1.

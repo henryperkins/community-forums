@@ -1,0 +1,22 @@
+
+Running 10 tests using 1 worker
+
+
+
+(node:28380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/10] [desktop] › tests\browser\server-drafts.spec.ts:110:5 › server drafts expose conflict choices and save local as next revision
+[2/10] [desktop] › tests\browser\server-drafts.spec.ts:146:5 › server draft validation errors replace stale success status
+[3/10] [desktop] › tests\browser\server-drafts.spec.ts:171:5 › drafts page keeps browser-local drafts visible while server drafts are enabled
+[4/10] [desktop] › tests\browser\server-drafts.spec.ts:191:5 › failed submits keep server drafts and successful submits clear them after navigation
+[5/10] [desktop] › tests\browser\server-drafts.spec.ts:235:5 › composer discard button immediately removes the matching server draft
+(node:7116) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[6/10] [mobile] › tests\browser\server-drafts.spec.ts:110:5 › server drafts expose conflict choices and save local as next revision
+[7/10] [mobile] › tests\browser\server-drafts.spec.ts:146:5 › server draft validation errors replace stale success status
+[8/10] [mobile] › tests\browser\server-drafts.spec.ts:171:5 › drafts page keeps browser-local drafts visible while server drafts are enabled
+[9/10] [mobile] › tests\browser\server-drafts.spec.ts:191:5 › failed submits keep server drafts and successful submits clear them after navigation
+[10/10] [mobile] › tests\browser\server-drafts.spec.ts:235:5 › composer discard button immediately removes the matching server draft
+  10 passed (56.7s)

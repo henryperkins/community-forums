@@ -1,0 +1,17 @@
+{
+  "artifact_receipts": [],
+  "child_build_id": "4d8e31e8-7571-473a-91bb-557b7d5c3360",
+  "child_provider_status": "FAILURE",
+  "child_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+  "enforcement_passed": false,
+  "event": "browser_ci_parent_verification",
+  "metadata_verified": true,
+  "parent_build_id": "d8ceee7e-80bf-4f32-89b8-6ad5858c5ada",
+  "parent_service_account": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "passed": false,
+  "provider_steps_verified": false,
+  "source_sha": "b42710f72b318611d99c11d23256a2a7715cb07e",
+  "stage": "child-provider-failure",
+  "trust_limit": "Child test receipts are branch-reported; parent enforcement is isolated"
+}

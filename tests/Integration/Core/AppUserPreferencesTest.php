@@ -151,7 +151,7 @@ final class AppUserPreferencesTest extends TestCase
         self::assertSame(8, (int) $row['digest_hour']);
     }
 
-    public function test_digest_hour_label_names_effective_timezone(): void
+    public function test_digest_time_has_a_short_label_and_associated_timezone_help(): void
     {
         $user = $this->makeUser(['username' => 'digest_label']);
         $this->actingAs($user);
@@ -159,7 +159,9 @@ final class AppUserPreferencesTest extends TestCase
         $res = $this->get('/settings/notifications');
 
         $this->assertStatus(200, $res);
-        self::assertStringContainsString('Digest hour (selected timezone; UTC if unset)', $res->body());
+        self::assertStringContainsString('Daily digest time', $res->body());
+        self::assertStringContainsString('aria-describedby="digest-time-hint"', $res->body());
+        self::assertStringContainsString('id="digest-time-hint">Uses the selected timezone, or UTC if none is set.', $res->body());
     }
 
     public function test_pause_all_email_preference_persists_and_renders(): void

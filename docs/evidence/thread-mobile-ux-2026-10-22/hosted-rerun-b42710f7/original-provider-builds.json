@@ -1,0 +1,58 @@
+[
+  {
+    "id": "d8ceee7e-80bf-4f32-89b8-6ad5858c5ada",
+    "status": "FAILURE",
+    "start_time": "2026-10-22T19:08:56.675140922Z",
+    "finish_time": "2026-10-22T20:03:49.490027Z",
+    "source_sha": "b42710f72b318611d99c11d23256a2a7715cb07e",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "steps": [
+      {
+        "id": "trusted-parent-controls",
+        "status": "SUCCESS",
+        "exitCode": null,
+        "allowFailure": null
+      },
+      {
+        "id": "isolated-child-and-parent-verification",
+        "status": "FAILURE",
+        "exitCode": 1,
+        "allowFailure": null
+      }
+    ]
+  },
+  {
+    "id": "4d8e31e8-7571-473a-91bb-557b7d5c3360",
+    "status": "FAILURE",
+    "start_time": "2026-10-22T19:11:29.124668100Z",
+    "finish_time": "2026-10-22T20:03:36.074166Z",
+    "source_sha": "b42710f72b318611d99c11d23256a2a7715cb07e",
+    "control_sha": "03690ff92e26b5c3413c2d4d799b402599179676",
+    "steps": [
+      {
+        "id": "source",
+        "status": "SUCCESS",
+        "exitCode": null,
+        "allowFailure": null
+      },
+      {
+        "id": "browser-suites",
+        "status": "FAILURE",
+        "exitCode": 1,
+        "allowFailure": true
+      },
+      {
+        "id": "publish-evidence",
+        "status": "SUCCESS",
+        "exitCode": null,
+        "allowFailure": null
+      },
+      {
+        "id": "enforce-result",
+        "status": "FAILURE",
+        "exitCode": 1,
+        "allowFailure": null
+      }
+    ]
+  }
+]

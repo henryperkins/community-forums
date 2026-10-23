@@ -1,0 +1,178 @@
+[
+  {
+    "route": "account",
+    "theme": "light",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": 16,
+    "organizationGap": null,
+    "gridRows": "49.1875px 1869.3px",
+    "switches": [],
+    "boardActionOffsets": []
+  },
+  {
+    "route": "account",
+    "theme": "dark",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": 16,
+    "organizationGap": null,
+    "gridRows": "49.1875px 1869.3px",
+    "switches": [],
+    "boardActionOffsets": []
+  },
+  {
+    "route": "boards",
+    "theme": "light",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": null,
+    "organizationGap": 32,
+    "gridRows": "49.1875px 1985.14px",
+    "switches": [
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      }
+    ],
+    "boardActionOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "route": "boards",
+    "theme": "dark",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": null,
+    "organizationGap": 32,
+    "gridRows": "49.1875px 1985.14px",
+    "switches": [
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      }
+    ],
+    "boardActionOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "route": "notifications",
+    "theme": "light",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": 16,
+    "organizationGap": null,
+    "gridRows": "49.1875px 933.172px",
+    "switches": [
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      }
+    ],
+    "boardActionOffsets": []
+  },
+  {
+    "route": "notifications",
+    "theme": "dark",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": 16,
+    "organizationGap": null,
+    "gridRows": "49.1875px 933.172px",
+    "switches": [
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      }
+    ],
+    "boardActionOffsets": []
+  },
+  {
+    "route": "privacy",
+    "theme": "light",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": 16,
+    "organizationGap": null,
+    "gridRows": "49.1875px 549.031px",
+    "switches": [
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      }
+    ],
+    "boardActionOffsets": []
+  },
+  {
+    "route": "privacy",
+    "theme": "dark",
+    "rootSize": 16,
+    "taskGap": 24,
+    "fieldGap": 16,
+    "organizationGap": null,
+    "gridRows": "49.1875px 549.031px",
+    "switches": [
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      },
+      {
+        "display": "flex",
+        "height": 44,
+        "separation": 11
+      }
+    ],
+    "boardActionOffsets": []
+  }
+]

@@ -1,0 +1,231 @@
+{
+  "verified_at": "2026-10-22T23:08:08.453259+00:00",
+  "source_commit": "de967b3001aca20051fa88efdf392156863debb3",
+  "asset_version": "1c24a3765cdd43f9",
+  "worker": {
+    "checked_at": "2026-10-22T23:05:30.240Z",
+    "build": {
+      "id": "6ca769ed-6bd1-4a80-bb24-242447b607e5",
+      "status": "stopped",
+      "outcome": "success",
+      "commit": "de967b3001aca20051fa88efdf392156863debb3",
+      "created_at": "2026-10-22T23:03:24.779Z",
+      "finished_at": "2026-10-22T23:05:12.773Z"
+    },
+    "deployment": {
+      "id": "262733ed-158a-493e-9275-4921726bafc9",
+      "source": "wrangler",
+      "strategy": "percentage",
+      "author_email": "htperkins@gmail.com",
+      "annotations": {
+        "workers/triggered_by": "deployment"
+      },
+      "versions": [
+        {
+          "version_id": "2df38fbc-1991-489b-aff0-7de20f9af2fb",
+          "percentage": 100
+        }
+      ],
+      "created_on": "2026-10-22T23:05:01.999998Z"
+    }
+  },
+  "cloud_build": {
+    "checked_at": "2026-10-22T23:07:13.706889+00:00",
+    "id": "1690ab5f-9631-4b48-a9c5-278609c06d87",
+    "status": "SUCCESS",
+    "created_at": "2026-10-22T23:03:24.715500Z",
+    "finished_at": "2026-10-22T23:06:13.872137Z",
+    "commit": "de967b3001aca20051fa88efdf392156863debb3",
+    "trigger": "1fa53b11-780b-495c-be33-fb666b70277e",
+    "steps": [
+      {
+        "id": "source",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "build",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "push",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "deploy-service",
+        "status": "SUCCESS",
+        "exit_code": null
+      },
+      {
+        "id": "update-jobs",
+        "status": "SUCCESS",
+        "exit_code": null
+      }
+    ],
+    "log_url": "https://console.cloud.google.com/cloud-build/builds;region=us-east4/1690ab5f-9631-4b48-a9c5-278609c06d87?project=616731728350"
+  },
+  "cloud_run": {
+    "checked_at": "2026-10-22T23:06:42.226628+00:00",
+    "service": {
+      "name": "retroboards",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:de967b3001aca20051fa88efdf392156863debb3",
+      "latest_created": "retroboards-00049-jx4",
+      "latest_ready": "retroboards-00049-jx4",
+      "traffic": [
+        {
+          "latestRevision": true,
+          "percent": 100,
+          "revisionName": "retroboards-00049-jx4"
+        }
+      ],
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-22T23:05:55.083963Z",
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T23:05:40.339399Z",
+          "status": "True",
+          "type": "ConfigurationsReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T23:05:55.056093Z",
+          "status": "True",
+          "type": "RoutesReady"
+        }
+      ]
+    },
+    "jobs": [
+      {
+        "name": "retroboards-cron-0310",
+        "role": "cron",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:de967b3001aca20051fa88efdf392156863debb3",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-0700",
+        "role": "cron",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:de967b3001aca20051fa88efdf392156863debb3",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-5m",
+        "role": "cron",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:de967b3001aca20051fa88efdf392156863debb3",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-6h",
+        "role": "cron",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:de967b3001aca20051fa88efdf392156863debb3",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-monitor",
+        "role": "monitor",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:de967b3001aca20051fa88efdf392156863debb3",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      }
+    ]
+  },
+  "live_summary": {
+    "asset_count": 59,
+    "asset_passed": 59,
+    "immutable_protocol_passed": 32,
+    "pages": [
+      {
+        "path": "/healthz",
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json; charset=UTF-8",
+          "CF-Ray": "a4ec273f6d016184-ORD",
+          "Server": "cloudflare"
+        },
+        "body_sha256": "68fd26fd028c249fb77980d91904c5713a103acb2f179ad7dfcd5164b708ae39",
+        "asset_urls": [],
+        "health": {
+          "status": "ok",
+          "database": "ok"
+        },
+        "pass": true
+      },
+      {
+        "path": "/",
+        "status": 200,
+        "headers": {
+          "Content-Type": "text/html; charset=UTF-8",
+          "CF-Ray": "a4ec2740bdec10dc-ORD",
+          "Server": "cloudflare"
+        },
+        "body_sha256": "523cb309132f44670a595ec0af5bb8c2b949dab7836f078681744f8ce38f6b3f",
+        "asset_urls": [
+          "/assets/dist/app-f5e64357204190eb.js",
+          "/assets/dist/app-style-DDK8a-0C.css",
+          "/assets/dist/imladris-style-CRsa_HRN.css"
+        ],
+        "pass": true,
+        "all_asset_references_in_manifest": true
+      },
+      {
+        "path": "/t/1-first-post",
+        "status": 200,
+        "headers": {
+          "Content-Type": "text/html; charset=UTF-8",
+          "CF-Ray": "a4ec2744bc4f8158-ORD",
+          "Server": "cloudflare"
+        },
+        "body_sha256": "039e1cb058ad2055f81270b09189e67b105a5f34f361304c657a5c2bb80c1c97",
+        "asset_urls": [
+          "/assets/dist/app-f5e64357204190eb.js",
+          "/assets/dist/app-style-DDK8a-0C.css",
+          "/assets/dist/composer-5e088bd27ea38363.js",
+          "/assets/dist/imladris-style-CRsa_HRN.css",
+          "/assets/dist/passkeys-16e7134417f0d6af.js",
+          "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+          "/assets/dist/wysiwyg-composer-Br17XC-G.js"
+        ],
+        "pass": true,
+        "all_asset_references_in_manifest": true
+      }
+    ],
+    "scope": "Public GET, HEAD and conditional GET only; no authenticated actions or production write test."
+  },
+  "preservation": {
+    "at_utc": "2026-10-22T23:03:25.843725+00:00",
+    "commit": "de967b3001aca20051fa88efdf392156863debb3",
+    "unrelated_tracked_compared": 7001,
+    "unrelated_tracked_mismatches": [],
+    "unrelated_untracked_compared": 13,
+    "unrelated_untracked_mismatches": [],
+    "manifest_version": "1c24a3765cdd43f9"
+  },
+  "scope": "Automatic push deployments and public read-only verification; no physical-device, authenticated-write or independent full hosted browser claim."
+}

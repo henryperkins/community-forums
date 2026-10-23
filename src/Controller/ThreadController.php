@@ -308,6 +308,16 @@ final class ThreadController extends Controller
         // the owner half of this dual-path capability.
         $community = (bool) $this->container->get(FeatureFlags::class)->enabled('community');
         $acceptedPostId = $thread['accepted_answer_post_id'] !== null ? (int) $thread['accepted_answer_post_id'] : null;
+        $acceptedAnswerUrl = null;
+        if ($acceptedPostId !== null) {
+            $answer = $postRepo->find($acceptedPostId);
+            if ($answer !== null && (int) $answer['thread_id'] === (int) $thread['id']
+                && !(int) $answer['is_pending'] && ($includeDeleted || !(int) $answer['is_deleted'])) {
+                $answerPage = $postRepo->pageOfPost((int) $thread['id'], $acceptedPostId, $perPage, $includeDeleted);
+                $acceptedAnswerUrl = '/t/' . $thread['id'] . '-' . $thread['slug']
+                    . ($answerPage > 1 ? '?page=' . $answerPage : '') . '#p' . $acceptedPostId;
+            }
+        }
         $canMarkSolved = $community && $user !== null
             && $canWriteUser
             && (
@@ -506,6 +516,7 @@ final class ThreadController extends Controller
             'is_starred' => $isStarred,
             'community' => $community,
             'accepted_post_id' => $acceptedPostId,
+            'accepted_answer_url' => $acceptedAnswerUrl,
             'can_mark_solved' => $canMarkSolved,
             'can_reveal_anon' => $canRevealAnon,
             'notifications_on' => $notificationsOn,

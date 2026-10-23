@@ -1,0 +1,41 @@
+Running 6 tests using 1 worker
+
+(node:28168) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  1 [desktop] › tests\browser\mobile-controls.spec.ts:182:5 › mobile reaction choices show distinct icons and visible names in labelled rows
+
+  x  2 [desktop] › tests\browser\mobile-controls.spec.ts:254:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission (30.3s)
+(node:3424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 3 [desktop] › tests\browser\mobile-controls.spec.ts:254:9 › native reactions › responsive reaction pickers stay inside the viewport and retain native submission (17.4s)
+(node:31600) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 4 [mobile] › tests\browser\mobile-controls.spec.ts:182:5 › mobile reaction choices show distinct icons and visible names in labelled rows (3.5s)
+  -  5 [mobile] › tests\browser\mobile-controls.spec.ts:254:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
+  -  6 [mobile] › tests\browser\mobile-controls.spec.ts:254:9 › native reactions › responsive reaction pickers stay inside the viewport and retain native submission
+
+
+  1) [desktop] › tests\browser\mobile-controls.spec.ts:254:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.evaluate: Test timeout of 30000ms exceeded.
+
+      66 | async function screenshot(page: Page, name: string) {
+      67 |   mkdirSync(out, { recursive: true });
+    > 68 |   await page.evaluate(async () => {
+         |              ^
+      69 |     await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
+      70 |   });
+      71 |   const before = errors.length;
+        at screenshot (C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:68:14)
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\mobile-controls.spec.ts:293:38
+
+    Error Context: output\thread-b427-followup\webkit-evidence\.artifacts\mobile-controls-enhanced-r-1d186-nd-retain-native-submission-desktop\error-context.md
+
+  1 failed
+    [desktop] › tests\browser\mobile-controls.spec.ts:254:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
+  3 skipped
+  2 passed (53.7s)

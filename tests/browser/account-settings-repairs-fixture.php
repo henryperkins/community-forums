@@ -40,7 +40,7 @@ if ($command === 'reset') {
         email_verified_at = UTC_TIMESTAMP(), onboarded_at = UTC_TIMESTAMP(), created_at = '2020-01-01 00:00:00',
         timezone = 'UTC', digest_hour = NULL, last_daily_digest_at = NULL WHERE id = ?", [$hash, $uid]);
     foreach (['account_deletion_requests', 'bans', 'user_totp_credentials', 'user_recovery_codes',
-        'mfa_login_challenges', 'board_folders', 'saved_feed_filters', 'user_profile_fields', 'sessions', 'subscriptions', 'email_deliveries'] as $table) {
+        'mfa_login_challenges', 'board_folders', 'saved_feed_filters', 'user_profile_fields', 'user_board_prefs', 'sessions', 'subscriptions', 'email_deliveries'] as $table) {
         $db->run('DELETE FROM ' . $table . ' WHERE user_id = ?', [$uid]);
     }
     (new UserPreferenceRepository($db))->merge($uid, ['theme' => 'light', 'pause_all_email' => false]);

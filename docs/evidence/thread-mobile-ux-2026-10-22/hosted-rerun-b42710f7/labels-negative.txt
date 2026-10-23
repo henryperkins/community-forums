@@ -1,0 +1,140 @@
+Running 1 test using 1 worker
+
+(node:22604) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  x  1 [mobile] › tests\browser\reaction-label-mutation.spec.ts:182:5 › mobile reaction choices show distinct icons and visible names in labelled rows (2.8s)
+
+
+  1) [mobile] › tests\browser\reaction-label-mutation.spec.ts:182:5 › mobile reaction choices show distinct icons and visible names in labelled rows
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      223 |       expect.soft(box.width).toBeGreaterThanOrEqual(44);
+      224 |       expect.soft(box.height).toBeGreaterThanOrEqual(44);
+    > 225 |       expect.soft(nameBox.width).toBeGreaterThan(1);
+          |                                  ^
+      226 |       expect.soft(nameBox.x).toBeGreaterThanOrEqual(box.x);
+      227 |       expect.soft(nameBox.x + nameBox.width).toBeLessThanOrEqual(box.x + box.width);
+      228 |       rows.add(Math.round(box.y));
+        at C:\Users\htper\.codex\worktrees\thread-mobile-fixes\community-forums\tests\browser\reaction-label-mutation.spec.ts:225:34
+
+    Error Context: output\thread-b427-followup\evidence\.artifacts\reaction-label-mutation-mo-8cc53-ible-names-in-labelled-rows-mobile\error-context.md
+
+  1 failed
+    [mobile] › tests\browser\reaction-label-mutation.spec.ts:182:5 › mobile reaction choices show distinct icons and visible names in labelled rows

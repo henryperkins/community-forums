@@ -1,0 +1,125 @@
+{
+  "recorded_at": "2026-10-22T19:05:32.145829+00:00",
+  "test_base_commit": "a72d233162d4299c3fc5e70f910159ca820fe711",
+  "original_requested_source_commit": "4062e8c159a3bb85efa9bf76be6859b961e875ee",
+  "changed_browser_spec": "tests/browser/upload-http.spec.ts",
+  "application_files_changed": [],
+  "before_spec_sha256": "e989e677776a4daa5091d75e2b5728ce8384573cdde81f254980d19c595c537a",
+  "after_spec_sha256": "a3e067f362a80dcac88691615e0c70e62c3c9ce7ef0d369e3179b5583c89c663",
+  "production_image_source": "a72d233162d4299c3fc5e70f910159ca820fe711",
+  "production_image_inspect_id": "sha256:a88c1f0d07abc0e64351d1cf8db941b895babb667093792a8700b49493b76003",
+  "asset_version": "cd261fb5782f8107",
+  "local_complete_upload_projects": {
+    "desktop": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mobile": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0
+    },
+    "webkit-mobile": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "focused_geometry_projects": {
+    "before": {
+      "desktop": {
+        "formBottom": 726.65625,
+        "height": 640,
+        "button": {
+          "x": 323,
+          "y": 593.65625,
+          "width": 36,
+          "height": 44
+        }
+      },
+      "mobile": {
+        "formBottom": 727.078125,
+        "height": 640,
+        "button": {
+          "x": 333,
+          "y": 594.078125,
+          "width": 36,
+          "height": 44
+        }
+      },
+      "webkit-mobile": {
+        "formBottom": 727,
+        "height": 640,
+        "button": {
+          "x": 333,
+          "y": 594,
+          "width": 36,
+          "height": 44
+        }
+      }
+    },
+    "held": {
+      "desktop": {
+        "x": 323.0287170410156,
+        "y": 593.850830078125,
+        "width": 35.94256591796875,
+        "height": 43.9298095703125
+      },
+      "mobile": {
+        "x": 333.028564453125,
+        "y": 594.2718505859375,
+        "width": 35.94287109375,
+        "height": 43.93011474609375
+      },
+      "webkit-mobile": {
+        "x": 333.0596008300781,
+        "y": 594.4039306640625,
+        "width": 35.88079833984375,
+        "height": 43.85430908203125
+      }
+    }
+  },
+  "negative_diagnostic": {
+    "expected_failed": 1,
+    "movement_px": 86.8065185546875,
+    "substitution": "Only the local browser response removes the existing DM pointer scroll guard"
+  },
+  "original_setup_failure": {
+    "form_bottom": 844,
+    "viewport_height": 844,
+    "failed_before_pointer_checks": true
+  },
+  "hosted_thread_at_a72": {
+    "parent": "6179cdbe-8615-43e5-9117-157beffa9156",
+    "child": "2bc4f321-b33a-4462-9610-0870475cccb8",
+    "passed": 34,
+    "skipped": 14,
+    "full_parent_pending": true
+  },
+  "preservation": {
+    "preexisting_paths": 76,
+    "all_hashes_or_links_unchanged": true
+  },
+  "limits": [
+    "No physical-device or real-keyboard claim",
+    "No new PHPUnit run",
+    "No full hosted acceptance from scoped logs"
+  ],
+  "artifact_sha256": {
+    "a72-hosted-thread-checks.json": "35b7bc1514af3c473aa633982df7fd27b7476e42e8b3528137abafad968f0b74",
+    "dm-before.txt": "420e1140a6f0c67b6b1c758e5b457ab135d742246627281b606b4a091d112a9c",
+    "dm-desktop-full.txt": "209de1bba84d826d9fbebf0e353cca9ed99a78938ec18c4b7c49f8cd62952905",
+    "dm-geometry-final.txt": "5b43effa514e768a3a374dc7118a0240d18165c4f03f424441315d328350f87c",
+    "dm-mobile-before.png": "19867b3e2484b5b82174abd608158b2e6aabddb279a03afdce1bab9f19583220",
+    "dm-mobile-full.txt": "a48cbfdedcb64eb0f1ba2e8d7c986b282135865164b33fde8d61c6b882e05873",
+    "dm-mutation.txt": "94a7fac2699d7cc7865f6678fcec4e4def03c367c811935dd008ebc840d7bce1",
+    "dm-webkit-mobile-before.png": "8515bf1e140d1575334f933ed39c032daa1484df00fb61dff953aa9ac41af81e",
+    "dm-webkit-mobile-full.txt": "bc7fca4b8878459ae3b7c9d86a01384bb5e06e24eeb8ece0cdd626636376b4a5",
+    "original-hosted-verification.json": "4202506de995f6ad60afcc41cc5d17db0e1c2e58b0bbc7383a66b9f81d4b57cf",
+    "README.md": "8097812d8bb727562859d0eb469b0197c9eae7fd5d81a96e5b6029c094268bbd",
+    "review.md": "e538e1952e04f0c9845d1af778bc299accde54e068ffc16be35b9c559bf680d3",
+    "runtime-limits.json": "8998fcd77e2e8f032e8717f04da83a9b805ad3cf3331b5624e05232ad6153c80",
+    "toolchain.json": "9998244ca8dc926db7720a086762a60e22527141366f7b1daddf21a035f25a90"
+  }
+}

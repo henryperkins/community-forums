@@ -1,0 +1,18 @@
+{
+  "tracked_paths_compared": 1222,
+  "owned_changed_paths": [
+    "config/assets.json",
+    "config/imladris-runtime-baseline.json",
+    "public/assets/app.css",
+    "public/assets/composer.js",
+    "public/assets/imladris.css",
+    "resources/imladris/components.css",
+    "resources/imladris/manifest.json",
+    "tests/browser/thread-mobile-recovery.spec.ts"
+  ],
+  "unexpected_changed_paths": [],
+  "asset_validation_copy_mismatches": [],
+  "package_json_preserved": true,
+  "package_lock_preserved": true,
+  "head_unchanged": true
+}

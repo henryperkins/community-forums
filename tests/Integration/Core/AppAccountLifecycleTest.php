@@ -374,7 +374,7 @@ final class AppAccountLifecycleTest extends TestCase
         $body = $stale->body();
         self::assertStringNotContainsString('id="err-delete-current_password"', $body, 'the scoped slot is not on this branch');
         $this->assertSeeText($stale, 'Your current password is incorrect.');
-        self::assertStringContainsString('error-list', $body, 'the message falls back to the alert card');
+        self::assertStringContainsString('<div class="callout callout-danger" role="alert" tabindex="-1" autofocus>', $body, 'the message falls back to the focusable error summary');
     }
 
     public function test_final_active_admin_cannot_deactivate_or_request_deletion(): void

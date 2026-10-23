@@ -1,0 +1,45 @@
+
+> check:assets
+> node bin/build-assets.mjs --check
+
+vite v8.1.3 building client environment for production...
+[2K
+transforming...✓ 865 modules transformed.
+rendering chunks...
+computing gzip size...
+../AppData/Local/Temp/retroboards-assets-HNR8MF/.vite/manifest.json                                   5.13 kB │ gzip:   0.72 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/marcellus-latin-400-normal-86dSXJnk.woff2            14.55 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/jetbrains-mono-latin-400-normal-V6pRDFza.woff2       21.16 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/eb-garamond-latin-400-normal-DSJrtJSV.woff2          21.70 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2       21.83 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2       21.86 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/eb-garamond-latin-400-italic-KGnr19QW.woff2          22.17 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/cormorant-garamond-latin-700-normal-DajfzrDU.woff2   22.34 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2   22.87 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/eb-garamond-latin-500-normal-LNvnJ-zC.woff2          23.01 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/eb-garamond-latin-600-normal-CdfBH7_K.woff2          23.11 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2   23.31 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/cormorant-garamond-latin-600-normal-Co1r35X9.woff2   23.39 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/eb-garamond-latin-500-italic-DW_HNewX.woff2          23.61 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2   23.66 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2   23.92 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/wysiwyg-composer-BRAFF38E.css                         1.12 kB │ gzip:   0.49 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/imladris-style-bT2GVmLw.css                         107.21 kB │ gzip:  18.44 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/app-style-Cccoax6v.css                              446.49 kB │ gzip:  68.22 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/wysiwyg-composer-fsiRxgms.js                          1.39 kB │ gzip:   0.79 kB
+../AppData/Local/Temp/retroboards-assets-HNR8MF/milkdown-adapter-CgcQwMpm.js                        467.64 kB │ gzip: 140.17 kB
+
+[PLUGIN_TIMINGS] Your build spent significant time in plugins. Here is a breakdown:
+  - vite:css (54%)
+  - rolldown:vite-resolve (31%)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+
+✓ built in 3.46s
+file:///C:/Users/htper/community-forums/bin/build-assets.mjs:202
+        throw new Error(`Retained asset digest mismatch: ${url}`);
+              ^
+
+Error: Retained asset digest mismatch: /assets/dist/app-c89b55420ad2231f.js
+    at file:///C:/Users/htper/community-forums/bin/build-assets.mjs:202:15
+
+Node.js v24.15.0

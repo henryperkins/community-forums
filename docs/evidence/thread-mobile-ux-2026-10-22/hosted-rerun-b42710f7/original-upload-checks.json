@@ -1,0 +1,26 @@
+[
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   ?  45 [desktop] ? tests/browser/upload-http.spec.ts:158:5 ? a held pointer publishes a ready DM image without moving Send before release (2.3s)",
+    "timestamp": "2026-10-22T19:55:57.484724517Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   48 passed (2.2m)",
+    "timestamp": "2026-10-22T19:56:15.396093369Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   ?  45 [mobile] ? tests/browser/upload-http.spec.ts:158:5 ? a held pointer publishes a ready DM image without moving Send before release (2.7s)",
+    "timestamp": "2026-10-22T19:58:14.364598530Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   48 passed (2.2m)",
+    "timestamp": "2026-10-22T19:58:33.447664771Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   ?  45 [webkit-mobile] ? tests/browser/upload-http.spec.ts:158:5 ? a held pointer publishes a ready DM image without moving Send before release (5.1s)",
+    "timestamp": "2026-10-22T20:02:10.794258969Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   48 passed (3.9m)",
+    "timestamp": "2026-10-22T20:02:37.270195049Z"
+  }
+]

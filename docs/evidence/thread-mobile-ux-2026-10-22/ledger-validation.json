@@ -1,0 +1,132 @@
+{
+  "errors": [],
+  "gaps": [
+    "F-01: confirmed finding is implemented",
+    "F-01/DR-F-01-SAFARI-BOTTOM: device regression target verification not_run",
+    "F-01/DR-F-01-SAFARI-TOP: device regression target verification not_run",
+    "F-01/DR-F-01-SAFARI-COMPACT: device regression target verification not_run",
+    "F-01/DR-F-01-ANDROID: device regression target verification not_run",
+    "F-02: confirmed finding is implemented",
+    "F-03: confirmed finding is implemented",
+    "F-04: confirmed finding is implemented",
+    "F-04/DR-F-04-SAFARI-BOTTOM: device regression target verification not_run",
+    "F-04/DR-F-04-SAFARI-TOP: device regression target verification not_run",
+    "F-04/DR-F-04-SAFARI-COMPACT: device regression target verification not_run",
+    "F-04/DR-F-04-ANDROID: device regression target verification not_run",
+    "area 8: not tested",
+    "Required checks remain unrun or no required checks were recorded",
+    "C-FIX-PHONE-SAFARI-BOTTOM: required verification incomplete",
+    "C-FIX-PHONE-SAFARI-TOP: required verification incomplete",
+    "C-FIX-PHONE-SAFARI-COMPACT: required verification incomplete",
+    "C-FIX-PHONE-ANDROID: required verification incomplete"
+  ],
+  "coverage": "incomplete",
+  "assessment_complete": false,
+  "verification": "incomplete",
+  "verification_ceiling": "proxy",
+  "impeccable": "executed",
+  "open_p0_p1": [
+    "F-01"
+  ],
+  "applied_device_entries": [
+    "C-FIX-PHONE-ANDROID",
+    "C-FIX-PHONE-SAFARI-BOTTOM",
+    "C-FIX-PHONE-SAFARI-COMPACT",
+    "C-FIX-PHONE-SAFARI-TOP"
+  ],
+  "device_regressions": [
+    {
+      "finding_id": "F-01",
+      "regression_id": "DR-F-01-SAFARI-BOTTOM",
+      "source_scope_ids": [
+        "F-01-ORIGIN"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-SAFARI-BOTTOM"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-01",
+      "regression_id": "DR-F-01-SAFARI-TOP",
+      "source_scope_ids": [
+        "F-01-ORIGIN"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-SAFARI-TOP"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-01",
+      "regression_id": "DR-F-01-SAFARI-COMPACT",
+      "source_scope_ids": [
+        "F-01-ORIGIN"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-SAFARI-COMPACT"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-01",
+      "regression_id": "DR-F-01-ANDROID",
+      "source_scope_ids": [
+        "F-01-ORIGIN"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-ANDROID"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-04",
+      "regression_id": "DR-F-04-SAFARI-BOTTOM",
+      "source_scope_ids": [
+        "F-04-ORIGIN",
+        "F-04-EDGE"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-SAFARI-BOTTOM"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-04",
+      "regression_id": "DR-F-04-SAFARI-TOP",
+      "source_scope_ids": [
+        "F-04-ORIGIN",
+        "F-04-EDGE"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-SAFARI-TOP"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-04",
+      "regression_id": "DR-F-04-SAFARI-COMPACT",
+      "source_scope_ids": [
+        "F-04-ORIGIN",
+        "F-04-EDGE"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-SAFARI-COMPACT"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-04",
+      "regression_id": "DR-F-04-ANDROID",
+      "source_scope_ids": [
+        "F-04-ORIGIN",
+        "F-04-EDGE"
+      ],
+      "check_ids": [
+        "C-FIX-PHONE-ANDROID"
+      ],
+      "status": "not_run"
+    }
+  ],
+  "claimable_complete": false
+}

@@ -1,0 +1,112 @@
+{
+  "source_commit": "0f333934df211aa21252e3e449471d91211b942b",
+  "confirmed_mechanism": "Five locally CRLF-converted unversioned inputs were hashed verbatim by build-assets.mjs; production rebuilds their committed LF form. All generated immutable bundle hashes already match.",
+  "inputs": [
+    {
+      "path": "public/assets/app.js",
+      "git_lf_sha256": "6a4648e206482895c7bad551aa36fafac2a5f2d70e47c64453354c745d07d004",
+      "windows_crlf_sha256": "98ee17839729d6006c39e60aaeee9559b622f50fe06eaa553f3de9874204592d",
+      "live_matches_git": true
+    },
+    {
+      "path": "public/assets/fonts/imladris/LICENSES/OFL-cormorant-garamond.txt",
+      "git_lf_sha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
+      "windows_crlf_sha256": "2d18818d1e2044bda96e663840ef64c32d1e6aa53a11d05cc8b70e4aa0dffef8",
+      "live_matches_git": true
+    },
+    {
+      "path": "public/assets/fonts/imladris/LICENSES/OFL-eb-garamond.txt",
+      "git_lf_sha256": "af751618923413517f388a73a903ff4334622ea4aa62dfe13a5861c6034fa2f2",
+      "windows_crlf_sha256": "282923c4c3f825975a6619095175836afd50201c7e65bb326ef745a4a28ce1d3",
+      "live_matches_git": true
+    },
+    {
+      "path": "public/assets/fonts/imladris/LICENSES/OFL-jetbrains-mono.txt",
+      "git_lf_sha256": "60d55f23c6ce05a81099a762cb67ca2c9b6ea251c7912720998b4c89ebfd4faa",
+      "windows_crlf_sha256": "0572ebbc28a24069b2bb23aa27767664162d819f7ccaca48d4b2e99cdc4ae192",
+      "live_matches_git": true
+    },
+    {
+      "path": "public/assets/fonts/imladris/LICENSES/OFL-marcellus.txt",
+      "git_lf_sha256": "c77ba70be4679b87b26960538cdce281b8d61dcc837a40aad5afa8132ef22497",
+      "windows_crlf_sha256": "8a72cfb68afaed118f889cb5a401a3a423c78afe86365a527b718efa611ade21",
+      "live_matches_git": true
+    }
+  ],
+  "original_probe": {
+    "total": 56,
+    "passed": 51,
+    "immutable_passed": 29,
+    "failed": [
+      {
+        "path": "/assets/app.js",
+        "status": 200,
+        "expected_sha256": "98ee17839729d6006c39e60aaeee9559b622f50fe06eaa553f3de9874204592d",
+        "actual_sha256": "6a4648e206482895c7bad551aa36fafac2a5f2d70e47c64453354c745d07d004",
+        "matches": false,
+        "immutable": false,
+        "cache_control": "public, max-age=0, must-revalidate",
+        "asset_cache": "STATIC",
+        "pass": false
+      },
+      {
+        "path": "/assets/fonts/imladris/LICENSES/OFL-cormorant-garamond.txt",
+        "status": 200,
+        "expected_sha256": "2d18818d1e2044bda96e663840ef64c32d1e6aa53a11d05cc8b70e4aa0dffef8",
+        "actual_sha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
+        "matches": false,
+        "immutable": false,
+        "cache_control": "public, max-age=0, must-revalidate",
+        "asset_cache": "STATIC",
+        "pass": false
+      },
+      {
+        "path": "/assets/fonts/imladris/LICENSES/OFL-eb-garamond.txt",
+        "status": 200,
+        "expected_sha256": "282923c4c3f825975a6619095175836afd50201c7e65bb326ef745a4a28ce1d3",
+        "actual_sha256": "af751618923413517f388a73a903ff4334622ea4aa62dfe13a5861c6034fa2f2",
+        "matches": false,
+        "immutable": false,
+        "cache_control": "public, max-age=0, must-revalidate",
+        "asset_cache": "STATIC",
+        "pass": false
+      },
+      {
+        "path": "/assets/fonts/imladris/LICENSES/OFL-jetbrains-mono.txt",
+        "status": 200,
+        "expected_sha256": "0572ebbc28a24069b2bb23aa27767664162d819f7ccaca48d4b2e99cdc4ae192",
+        "actual_sha256": "60d55f23c6ce05a81099a762cb67ca2c9b6ea251c7912720998b4c89ebfd4faa",
+        "matches": false,
+        "immutable": false,
+        "cache_control": "public, max-age=0, must-revalidate",
+        "asset_cache": "STATIC",
+        "pass": false
+      },
+      {
+        "path": "/assets/fonts/imladris/LICENSES/OFL-marcellus.txt",
+        "status": 200,
+        "expected_sha256": "8a72cfb68afaed118f889cb5a401a3a423c78afe86365a527b718efa611ade21",
+        "actual_sha256": "c77ba70be4679b87b26960538cdce281b8d61dcc837a40aad5afa8132ef22497",
+        "matches": false,
+        "immutable": false,
+        "cache_control": "public, max-age=0, must-revalidate",
+        "asset_cache": "STATIC",
+        "pass": false
+      }
+    ]
+  },
+  "correction": {
+    "canonical_release_version": "cd261fb5782f8107",
+    "all_56_live_files_match_canonical_manifest_and_committed_git_blobs": true,
+    "current_fingerprinted_files_unchanged": true,
+    "retained_predecessor_versions": [
+      "adc1494dbfa0cd3d",
+      "ef40d97306cc2167"
+    ],
+    "source_byte_changes_in_git": false,
+    "line_ending_guards": [
+      "public/assets/app.js",
+      "public/assets/fonts/imladris/LICENSES/*.txt"
+    ]
+  }
+}

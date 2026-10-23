@@ -1221,3 +1221,19 @@ keystroke into it re-ran page-wide style matching, and typing cost returns to
 its pre-handoff level. Because the exact width follows a resize one frame late,
 `max-width: 100%` keeps a stale mirror inside its wrap so it never widens the
 page (the Messages phone check caught a 624px mirror at 390px).
+
+### Settings publication review — 2026-10-22
+
+The settings hardening, layout, copy/type and six-finding audit follow-ups are
+reviewed together on `main`. Native forms, CSRF, permission gates, retained
+validation input and private subscription masking keep their existing owners.
+The changes use the current Imladris tokens, improve pane-width reflow and
+field boundaries, and expose Replay tour only after its enhancement is ready.
+The authoring mirror and design baseline have no substantive changes.
+
+Following the locked-dependency asset build, the merger refreshes the runtime
+application digest in the immediately following reconciliation commit, per
+ADR 0024. This records the reviewed application surface; it does not certify
+the unrelated Windows-only deployment test contracts. Local checks and the
+publication scope are recorded in
+[the publication evidence](../../evidence/settings-publication-2026-10-22/README.md).

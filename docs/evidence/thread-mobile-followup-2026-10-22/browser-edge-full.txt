@@ -1,0 +1,62 @@
+
+Running 17 tests using 1 worker
+
+(node:7916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok  1 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:57:5 › failed navigation keeps the draft and restores a usable submit button (4.5s)
+
+  ok  2 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:79:5 › confirmation clears only the submitted version and Back permits a new reply (5.2s)
+
+  ok  3 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:100:5 › a later edit in another tab survives confirmation of the older draft (5.2s)
+
+  ok  4 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:112:5 › enlarged header labels reflow and mobile prose spans beneath the byline (2.7s)
+
+  ok  5 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:136:5 › landscape preview leaves Minimize and Reply reachable below the header (3.1s)
+
+  ok  6 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:168:5 › reaction choices have visible names before activation (2.0s)
+
+  ok  7 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:182:5 › rich editor recovers a failed send and submits the retained draft exactly once (4.7s)
+
+  ok  8 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:206:5 › a later draft may deliberately repeat a confirmed reply (3.8s)
+
+  ok  9 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:220:5 › editing after a committed response is lost uses a fresh submission key (3.6s)
+
+  ok 10 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:250:5 › rich history cleanup preserves a newer draft in another tab after settling (7.4s)
+
+  ok 11 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:271:5 › multiple completed history entries cannot reuse an older consumed key (9.0s)
+
+  ok 12 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:294:5 › a late multiline autosave from the confirmed submission is not restored (5.3s)
+
+  ok 13 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light (3.8s)
+
+  ok 14 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark (3.5s)
+
+  ok 15 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview (3.6s)
+
+  ok 16 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:384:5 › saving a rich conflict uses the latest local edits (5.9s)
+
+  x  17 [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back (8.1s)
+
+
+  1) [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Rapid rich draft after conflict resolution — café, 你好."
+    Received: "Local text when the conflict appeared."
+
+      417 |   }));
+      418 |   await info.attach('immediate-back-state', { body: JSON.stringify({ expected: latest, expectedKey: key, immediate }), contentType: 'application/json' });
+    > 419 |   expect(immediate.rich).toBe(latest);
+          |                          ^
+      420 |   await expect(page.locator('#reply .composer-send')).toBeEnabled();
+      421 |   await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(key);
+      422 |   await expect(editor).toHaveText(latest);
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:419:26
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\final-edge\.artifacts\thread-mobile-recovery-rap-ff266-flict-survives-offline-Back-mobile\error-context.md
+
+  1 failed
+    [mobile] › tests\browser\thread-mobile-recovery.spec.ts:397:5 › rapid rich edit after resolving a conflict survives offline Back 
+  16 passed (1.4m)

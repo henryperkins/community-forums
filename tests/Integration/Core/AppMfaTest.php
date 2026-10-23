@@ -345,9 +345,16 @@ final class AppMfaTest extends TestCase
 
     private function extractAuthenticatorSecret(Response $response): string
     {
-        self::assertMatchesRegularExpression('/Authenticator secret.*?<input class="input" value="([A-Z2-7]+)"/s', $response->body());
-        preg_match('/Authenticator secret.*?<input class="input" value="([A-Z2-7]+)"/s', $response->body(), $m);
-        return $m[1];
+        $document = new \DOMDocument();
+        @$document->loadHTML($response->body());
+        $dom = new \DOMXPath($document);
+        $inputs = $dom->query('//label[span[normalize-space(.) = "Authenticator secret"]]/input[@readonly]');
+        self::assertSame(1, $inputs->length);
+        $input = $inputs->item(0);
+        self::assertInstanceOf(\DOMElement::class, $input);
+        $secret = $input->getAttribute('value');
+        self::assertMatchesRegularExpression('/\A[A-Z2-7]+\z/', $secret);
+        return $secret;
     }
 
     /** @return list<string> */

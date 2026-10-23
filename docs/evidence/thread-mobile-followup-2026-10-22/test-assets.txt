@@ -1,0 +1,118 @@
+
+> test:assets
+> node --test tests/worker/*.test.mjs
+
+✔ confirmed releases keep recent pages and lazy imports working, then retire the oldest release (7164.5806ms)
+✔ repeated local builds and source reverts preserve the deployed baseline (6689.2663ms)
+✔ recording a release requires the exact previously built version and never happens during checks (4094.6266ms)
+✔ a write failure preserves published assets and permits a normal retry (3390.0827ms)
+✔ a static-install failure preserves published assets and permits a normal retry (4826.7169ms)
+✔ a manifest-install failure preserves published assets and permits a normal retry (4963.8818ms)
+✔ a overlay-static-install failure preserves published assets and permits a normal retry (5292.3138ms)
+✔ overlayfs directory backups permit publication without losing deployed files (2941.6063ms)
+✖ the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses (153.7552ms)
+✔ fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable (95.1511ms)
+✔ only the genuine current version makes source asset URLs immutable (2.0841ms)
+✔ conditional requests retain 304 and validators, and HEAD retains its empty body (1.2885ms)
+✔ range responses and their status survive without exposing Set-Cookie (0.8699ms)
+✔ missing/private assets and unsupported methods never fall through to PHP or an SPA (0.9646ms)
+✔ branding, package themes and application routes retain dynamic response semantics (1.5956ms)
+✔ published manifest names only verified asset bytes and font preload matches emitted CSS (145.6114ms)
+✔ requests on the canonical origin pass through untouched (52.1726ms)
+✔ any other hostname is redirected to the same path and query on the canonical origin (2.4884ms)
+✔ plain http on the canonical host is upgraded to the canonical scheme (0.5732ms)
+✔ unsafe methods keep their method and body through a 308 (19.1305ms)
+✔ a stray request port is dropped and a non-default canonical port is carried over (0.8476ms)
+✔ loopback hosts (wrangler dev) and an unusable APP_URL fail open (0.7482ms)
+✔ certificate-validation paths on a non-canonical host go to the origin instead of redirecting (2.257ms)
+✔ production deploy leaves the independently provisioned SaaS zone route untouched (12.6627ms)
+✔ production retires the container without losing its migration history or active edge bindings (1.6554ms)
+✔ the assertion is an RS256 JWT signed by the service account, asking for an ID token for the service (57.1726ms)
+✔ a token is reused until five minutes before it expires, then renewed (6.1937ms)
+✔ a burst of requests shares one token exchange (4.8333ms)
+✔ a failed exchange rejects and is not cached (8.1133ms)
+✔ a missing or malformed key fails before any network call (0.8204ms)
+✔ dynamic requests reach the service on the same path and query, carrying body, visitor IP and token (7.9865ms)
+✔ paths that look like another authority stay on the service, with the token never leaving it (6.076ms)
+✔ /healthz, which Cloud Run reserves, reaches the app as /healthz/; other paths are untouched (4.3184ms)
+✔ without CF-Connecting-IP a client-sent X-Forwarded-For is dropped, not passed on (5.3214ms)
+✔ the app's redirects and cookies go back to the browser unchanged (3.7505ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 34
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 39525.8891
+
+✖ failing tests:
+
+test at tests\worker\assets-runtime.test.mjs:13:1
+✖ the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses (153.7552ms)
+  MiniflareCoreError [ERR_VALIDATION]: Unexpected options passed to `new Miniflare()` constructor:
+  {
+    workers: [
+      /* [0] */ {
+        ...,
+        modules: undefined,
+                 ^1 Invalid input: expected array, received undefined *or*
+        script: undefined,
+                ^1 Invalid input: expected string, received undefined *or*
+        scriptPath: undefined,
+                    ^1 Invalid input: expected string, received undefined
+      },
+    ],
+  }
+      at validateOptions (C:\Users\htper\community-forums\node_modules\miniflare\dist\src\index.js:112760:24)
+      at new _Miniflare (C:\Users\htper\community-forums\node_modules\miniflare\dist\src\index.js:113213:38)
+      ... 3 lines matching cause stack trace ...
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'ERR_VALIDATION',
+    cause: ZodError: [
+      {
+        "code": "invalid_union",
+        "errors": [
+          [
+            {
+              "expected": "array",
+              "code": "invalid_type",
+              "path": [
+                "modules"
+              ],
+              "message": "Invalid input: expected array, received undefined"
+            }
+          ],
+          [
+            {
+              "expected": "string",
+              "code": "invalid_type",
+              "path": [
+                "script"
+              ],
+              "message": "Invalid input: expected string, received undefined"
+            }
+          ],
+          [
+            {
+              "expected": "string",
+              "code": "invalid_type",
+              "path": [
+                "scriptPath"
+              ],
+              "message": "Invalid input: expected string, received undefined"
+            }
+          ]
+        ],
+        "path": [],
+        "message": "Invalid input"
+      }
+    ]
+        at parseWithRootPath (C:\Users\htper\community-forums\node_modules\miniflare\dist\src\index.js:83291:19)
+        at validateOptions (C:\Users\htper\community-forums\node_modules\miniflare\dist\src\index.js:112715:37)
+        at new _Miniflare (C:\Users\htper\community-forums\node_modules\miniflare\dist\src\index.js:113213:38)
+        at TestContext.<anonymous> (file:///C:/Users/htper/community-forums/tests/worker/assets-runtime.test.mjs:37:15)
+        at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at async Test.run (node:internal/test_runner/test:1208:7)
+        at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+  }

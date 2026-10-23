@@ -1,0 +1,99 @@
+{
+  "themeState": [
+    {
+      "control": "linkbtn star-btn star-on",
+      "background": "rgba(194, 154, 68, 0.16)",
+      "color": "rgb(210, 176, 98)"
+    },
+    {
+      "control": "reaction reaction-on",
+      "background": "rgba(194, 154, 68, 0.16)",
+      "color": "rgb(210, 176, 98)"
+    },
+    {
+      "control": "reaction reaction-on",
+      "background": "rgba(194, 154, 68, 0.16)",
+      "color": "rgb(210, 176, 98)"
+    },
+    {
+      "control": "reaction reaction-on",
+      "background": "rgba(194, 154, 68, 0.16)",
+      "color": "rgb(210, 176, 98)"
+    }
+  ],
+  "violations": [],
+  "incomplete": [],
+  "passes": [
+    {
+      "id": "color-contrast",
+      "impact": null,
+      "tags": [
+        "cat.color",
+        "wcag2aa",
+        "wcag143",
+        "TTv5",
+        "TT13.c",
+        "EN-301-549",
+        "EN-9.1.4.3",
+        "ACT",
+        "RGAAv4",
+        "RGAA-3.2.1"
+      ],
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+      "nodes": [
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#d2b062",
+                "bgColor": "#323129",
+                "contrastRatio": 6.3,
+                "fontSize": "9.4pt (12.48px)",
+                "fontWeight": "normal",
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [],
+              "impact": "serious",
+              "message": "Element has sufficient color contrast of 6.3"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": null,
+          "html": "<span>Starred</span>",
+          "target": [
+            ".star-btn > span"
+          ]
+        },
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#d2b062",
+                "bgColor": "#3b4032",
+                "contrastRatio": 5.15,
+                "fontSize": "10.2pt (13.6px)",
+                "fontWeight": "normal",
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [],
+              "impact": "serious",
+              "message": "Element has sufficient color contrast of 5.15"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": null,
+          "html": "<span class=\"reaction-n-val\">13</span>",
+          "target": [
+            "button[aria-describedby=\"reaction-tip-126-0\"] > .reaction-n > .reaction-n-val"
+          ]
+        }
+      ]
+    }
+  ]
+}

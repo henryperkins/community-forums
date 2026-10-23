@@ -931,6 +931,7 @@ final class App
             'site_name' => $siteName,
             'app_name' => $appName,
             'current_user' => $session->user(),
+            'composer_completion' => $session->consumeComposerCompletion(),
             'csrf_token' => static fn (): string => $container->get(Csrf::class)->token(),
             'flash' => $flash->current(),
             'request_path' => $request->path(),

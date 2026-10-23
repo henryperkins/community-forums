@@ -1,0 +1,14 @@
+{
+  "worker": "retroboards",
+  "deploymentId": "b6b78c9e-59e0-4f47-a9c7-54d14a659b31",
+  "created": "2026-10-23T03:57:23.069672Z",
+  "versions": [
+    {
+      "version_id": "7c9cbb00-5305-45d9-a597-f15a6dac9e89",
+      "percentage": 100
+    }
+  ],
+  "buildId": "47b97a80-fb1f-4e9b-a57d-2fbf8eb893f2",
+  "buildOutcome": "success",
+  "sourceSha": "83f8be6d5425afa176f2e73a9945beb897af02d0"
+}

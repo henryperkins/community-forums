@@ -1,0 +1,76 @@
+{
+  "head": "85094d1f8f2c93cad4ea926ed92de6fedb6b20f1",
+  "branch": "main",
+  "php": "8.3.35",
+  "node": "v24.15.0",
+  "playwright": "Version 1.61.1",
+  "browserDatabase": "retroboards_unified_e2e_auditfix_20261022",
+  "phpunitDatabase": "retroboards_test_auditfix_20261022",
+  "browserOrigin": "http://localhost:8052",
+  "files": [
+    {
+      "path": "public/assets/app.css",
+      "sha256": "6AA8B86A6AA89348820D0C36FFD5C49A75C0C7697F29C69124F99AEA86F4B4B4"
+    },
+    {
+      "path": "public/assets/tour.js",
+      "sha256": "558C6D05C0254588D54710EF31FDD953D31DB91447CD14C4D9C1B72A7E5A92B6"
+    },
+    {
+      "path": "templates/account/security.php",
+      "sha256": "AC36A08BDE3DF783E8448BE351150A974C4F45F6758DDFB4C61E27AFF9D34A55"
+    },
+    {
+      "path": "templates/account/connections.php",
+      "sha256": "562C71A807A545473DC8BA3367814018812A0B84E8DB3BF9E2B367485F7F374D"
+    },
+    {
+      "path": "templates/partials/set_password_form.php",
+      "sha256": "FD8A707C7EBE0B2DE39EDEAACC55A8A32771F1C9A6B1612310C6B8CC8A10D5E5"
+    },
+    {
+      "path": "templates/partials/settings_nav_links.php",
+      "sha256": "67EA02EDA2F0F73DE64A16A93C19ECEB1E8D17F3B2BCE6415BE7A2DECD7E2256"
+    },
+    {
+      "path": "tests/browser/account-console.spec.ts",
+      "sha256": "314740F0F38EF1E29AC627DAD698BD229D3C1CE0EC3F278D586195D903037D48"
+    },
+    {
+      "path": "tests/browser/settings-audit-remediation.spec.ts",
+      "sha256": "8E2482C6AAA6F85B1010B26B9EBFB297089E365D8CAF651582E98B170EFF4AD9"
+    },
+    {
+      "path": "tests/browser/settings-audit-remediation-fixture.php",
+      "sha256": "DBE77B69878C55E3AA7B84D905F062BDDEE33A2BFE48B1D37FD50F7E0BB61B9E"
+    },
+    {
+      "path": "tests/Integration/Core/AppSettingsEnhancementTest.php",
+      "sha256": "FBD3DB604DFDE42EB449B26B9A6089855BC6AB9E9FBA55A8DABE632924D7962B"
+    },
+    {
+      "path": "config/assets.json",
+      "sha256": "61A80C88E174520ACAE0FB9A7AD312EBD26BA0A257757306F628B4972271A157"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "B8BEA36AA789A4D2F35D06F708C0A970224A88968787CD3365456B97F98E2264"
+    },
+    {
+      "path": "tests/Integration/Core/AppLocalReturnTest.php",
+      "sha256": "1D67D635B1FF1C8CC452E141C045C816DE6AF232E842DDE5299402C78E37B563"
+    },
+    {
+      "path": "tests/Integration/Core/AppMfaTest.php",
+      "sha256": "EFEED4F9653A4A1C81345AC0145C4BFE76AB63FAF079CCCE1D13566A627115D2"
+    },
+    {
+      "path": "tests/Integration/Core/AppPasskeyLoginTest.php",
+      "sha256": "F4AADF80D35115678213114B90C55F9C0E8DA1D062DCBCCC89CCDE60D61A30B1"
+    },
+    {
+      "path": "tests/Integration/Core/AppPasskeyRecoveryTest.php",
+      "sha256": "CF748F78D92753340770DD42B621EF6B80A1BDF6B57EE475B21242D1B98A9355"
+    }
+  ]
+}

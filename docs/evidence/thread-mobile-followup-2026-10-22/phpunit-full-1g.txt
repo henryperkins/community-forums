@@ -1,0 +1,253 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.35
+Configuration: C:\Users\htper\community-forums\phpunit.xml
+
+.............................................................   61 / 3337 (  1%)
+.............................................................  122 / 3337 (  3%)
+.....................FFFFF.F....FF.F.F.F.F...................  183 / 3337 (  5%)
+.............................................................  244 / 3337 (  7%)
+.............................................................  305 / 3337 (  9%)
+.............................................................  366 / 3337 ( 10%)
+.............................................................  427 / 3337 ( 12%)
+.............................................................  488 / 3337 ( 14%)
+.............................................................  549 / 3337 ( 16%)
+.............................................................  610 / 3337 ( 18%)
+.............................................................  671 / 3337 ( 20%)
+.............................................................  732 / 3337 ( 21%)
+.............................................................  793 / 3337 ( 23%)
+.............................................................  854 / 3337 ( 25%)
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.............................................................  915 / 3337 ( 27%)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.............................................................  976 / 3337 ( 29%)
+............................................................. 1037 / 3337 ( 31%)
+............................................................. 1098 / 3337 ( 32%)
+............................................................. 1159 / 3337 ( 34%)
+............................................................. 1220 / 3337 ( 36%)
+............................................................. 1281 / 3337 ( 38%)
+............................................................. 1342 / 3337 ( 40%)
+............................................................. 1403 / 3337 ( 42%)
+............................................................. 1464 / 3337 ( 43%)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+............................................................. 1525 / 3337 ( 45%)
+............................................................. 1586 / 3337 ( 47%)
+............................................................. 1647 / 3337 ( 49%)
+............................................................. 1708 / 3337 ( 51%)
+............................................................. 1769 / 3337 ( 53%)
+............................................................. 1830 / 3337 ( 54%)
+............................................................. 1891 / 3337 ( 56%)
+............................................................. 1952 / 3337 ( 58%)
+............................................................. 2013 / 3337 ( 60%)
+............................................................. 2074 / 3337 ( 62%)
+............................................................. 2135 / 3337 ( 63%)
+............................................................. 2196 / 3337 ( 65%)
+............................................................. 2257 / 3337 ( 67%)
+............................................................. 2318 / 3337 ( 69%)
+............................................................. 2379 / 3337 ( 71%)
+............................................S................ 2440 / 3337 ( 73%)
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+............................................................. 2501 / 3337 ( 74%)
+............................................................. 2562 / 3337 ( 76%)
+............................................................. 2623 / 3337 ( 78%)
+............................................................. 2684 / 3337 ( 80%)
+............................................................. 2745 / 3337 ( 82%)
+............................................................. 2806 / 3337 ( 84%)
+............................................................. 2867 / 3337 ( 85%)
+............................................................. 2928 / 3337 ( 87%)
+............................................................. 2989 / 3337 ( 89%)
+............................................................. 3050 / 3337 ( 91%)
+............................................................. 3111 / 3337 ( 93%)
+..................................S.......................... 3172 / 3337 ( 95%)
+............................................................. 3233 / 3337 ( 96%)
+............................................................. 3294 / 3337 ( 98%)
+...........................................                   3337 / 3337 (100%)
+
+Time: 04:48.762, Memory: 100.00 MB
+
+There were 12 failures:
+
+1) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_child_final_step_requires_outer_success_and_a_complete_matching_archive
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:336
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:49
+
+2) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_outer_command_records_actual_docker_failure_after_it_returns
+ERROR: failed to build: unable to prepare context: path "/workspace/source/tests/browser" not found
+Unable to find image 'retroboards-browser-ci:latest' locally
+docker: Error response from daemon: pull access denied for retroboards-browser-ci, repository does not exist or may require 'docker login'
+
+Run 'docker run --help' for more information
+/bin/bash: line 9: C:UsershtperAppDataLocalTemp/rb-browser-ci-contract-bd311be17ec5/runner-exit.json: No such file or directory
+/bin/bash: line 10: exit: : numeric argument required
+
+Failed asserting that 2 is identical to 7.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:79
+
+3) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_archive_creation_failure_cannot_leave_a_success_record_or_old_archive
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:336
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:88
+
+4) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_runner_attempts_every_independent_suite_and_retains_the_first_failure
+/bin/bash: C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/run.sh: No such file or directory
+
+Failed asserting that 127 is identical to 7.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:170
+
+5) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+ Array &0 [
+-    0 => 'browser/synthetic.json',
+-    1 => 'browser/synthetic.png',
++    0 => 'browser\synthetic.json',
++    1 => 'browser\synthetic.png',
+ ]
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:209
+
+6) Tests\Unit\Core\CloudRunBrowserCiContractTest::test_completed_run_requires_capture_unified_and_every_upload_project_artifact
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:268
+
+7) Tests\Unit\Core\CloudRunBrowserCiPackageContractTest::test_non_object_unified_results_fail_completion_and_preserve_the_diagnostic_archive
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+ Array &0 [
+-    0 => 'unified-notifications-and-settings: completed=true',
++    0 => 'unified-notifications-and-settings/browser-results.json',
++    1 => 'image-upload-reliability/runtime-limits.json',
++    2 => 'image-upload-reliability/desktop-published.png',
++    3 => 'image-upload-reliability/mobile-published.png',
++    4 => 'image-upload-reliability/webkit-mobile-published.png',
++    5 => 'browser/*.png',
++    6 => 'unified-notifications-and-settings: completed=true',
+ ]
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiPackageContractTest.php:67
+
+8) Tests\Unit\Core\CloudRunBrowserCiUploaderContractTest::test_streaming_create_only_transport_and_credential_privacy_contracts
+E.E.E..
+======================================================================
+ERROR: test_existing_object_denial_redirect_and_server_errors_never_read_bodies_or_retry (__main__.UploadContracts.test_existing_object_denial_redirect_and_server_errors_never_read_bodies_or_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/test_upload.py", line 96, in test_existing_object_denial_redirect_and_server_errors_never_read_bodies_or_retry
+    UPLOAD.upload_file(self.file, 'private-bucket', 'sha/build/result.json', 'synthetic-token')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\htper\community-forums\tests\Unit\Core\..\..\..\deploy\cloudrun\browser-ci\upload.py", line 38, in upload_file
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                                             ^^^^^^^^^^^^^
+AttributeError: module 'os' has no attribute 'O_NOFOLLOW'
+
+======================================================================
+ERROR: test_https_create_only_encoded_name_streaming_and_receipt_without_get (__main__.UploadContracts.test_https_create_only_encoded_name_streaming_and_receipt_without_get)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/test_upload.py", line 74, in test_https_create_only_encoded_name_streaming_and_receipt_without_get
+    UPLOAD.upload_file(self.file, 'private-bucket', 'sha/build id/result.json', 'synthetic-token')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\htper\community-forums\tests\Unit\Core\..\..\..\deploy\cloudrun\browser-ci\upload.py", line 38, in upload_file
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                                             ^^^^^^^^^^^^^
+AttributeError: module 'os' has no attribute 'O_NOFOLLOW'
+
+======================================================================
+ERROR: test_receipt_checksum_mismatch_fails_without_metadata_get (__main__.UploadContracts.test_receipt_checksum_mismatch_fails_without_metadata_get)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\htper\community-forums\tests\Unit\Core/../../../deploy/cloudrun/browser-ci/test_upload.py", line 106, in test_receipt_checksum_mismatch_fails_without_metadata_get
+    UPLOAD.upload_file(self.file, 'private-bucket', 'sha/build/result.json', 'synthetic-token')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\htper\community-forums\tests\Unit\Core\..\..\..\deploy\cloudrun\browser-ci\upload.py", line 38, in upload_file
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                                             ^^^^^^^^^^^^^
+AttributeError: module 'os' has no attribute 'O_NOFOLLOW'
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.035s
+
+FAILED (errors=3)
+
+Failed asserting that 1 is identical to 0.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiUploaderContractTest.php:23
+
+9) Tests\Unit\Core\CloudRunDeploymentContractTest::test_service_is_one_private_instance_on_the_cloud_sql_connector_and_the_data_bucket
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'/data/media'
++'/data/media
+'
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:36
+
+10) Tests\Unit\Core\CloudRunDeploymentContractTest::test_production_mail_configuration_selects_the_configured_rest_transport
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'cf2024-1'
++'cf2024-1
+'
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:70
+
+11) Tests\Unit\Core\CloudRunDeploymentContractTest::test_cron_jobs_keep_the_former_worker_schedule_and_never_migrate
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'true'
++'true"
+'
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:138
+
+12) Tests\Unit\Core\CloudRunDeploymentContractTest::test_console_batch_runs_every_command_in_order_and_reports_any_failure
+Failed asserting that false is of type resource.
+
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:222
+C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:170
+
+--
+
+2 tests triggered 2 PHP warnings:
+
+1) C:\Users\htper\community-forums\tests\Unit\Core\CloudRunBrowserCiContractTest.php:199
+symlink(): Permission denied
+
+2) C:\Users\htper\community-forums\tests\Unit\Core\CloudRunDeploymentContractTest.php:215
+proc_open(): CreateProcess failed, error code: 2
+
+FAILURES!
+Tests: 3337, Assertions: 29465, Failures: 12, Warnings: 2, Skipped: 2.
+Script phpunit handling the test event returned with error code 1

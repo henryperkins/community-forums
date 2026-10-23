@@ -1,0 +1,100 @@
+
+Running 5 tests using 1 worker
+
+(node:24264) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 1 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:136:5 › landscape preview leaves Minimize and Reply reachable below the header (4.1s)
+
+  ok 2 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in light (3.3s)
+
+  x  3 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark (3.7s)
+(node:23868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 4 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:333:5 › keyboard reaches and scrolls the complete plain reply preview (3.5s)
+
+  ok 5 [webkit] › tests\browser\thread-mobile-recovery.spec.ts:384:5 › saving a rich conflict uses the latest local edits (5.9s)
+
+
+  1) [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 58
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    +     "help": "Elements must meet minimum color contrast ratio thresholds",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=playwright",
+    +     "id": "color-contrast",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#f4ebcf",
+    +               "contrastRatio": 1.74,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#d2b062",
+    +               "fontSize": "10.2pt (13.6px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 1.74 (foreground color: #d2b062, background color: #f4ebcf, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button type=\"submit\" class=\"reaction reaction-on\" aria-pressed=\"true\" data-label=\"Commend\" aria-describedby=\"reaction-tip-126-0\">",
+    +                 "target": Array [
+    +                   "button[aria-describedby=\"reaction-tip-126-0\"]",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 1.74 (foreground color: #d2b062, background color: #f4ebcf, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<span class=\"reaction-n-val\">13</span>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[aria-describedby=\"reaction-tip-126-0\"] > .reaction-n > .reaction-n-val",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.color",
+    +       "wcag2aa",
+    +       "wcag143",
+    +       "TTv5",
+    +       "TT13.c",
+    +       "EN-301-549",
+    +       "EN-9.1.4.3",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-3.2.1",
+    +     ],
+    +   },
+    + ]
+
+      326 |     await info.attach('contrast-' + theme, { body: JSON.stringify(results), contentType: 'application/json' });
+      327 |     await capture(page, 'active-labels-' + theme + '-' + info.project.name);
+    > 328 |     expect(results.violations).toEqual([]);
+          |                                ^
+      329 |     expect(results.incomplete).toEqual([]);
+      330 |   });
+      331 | }
+        at C:\Users\htper\community-forums\tests\browser\thread-mobile-recovery.spec.ts:328:32
+
+    Error Context: output\mobile-ux-fixes-2026-10-22\verified-webkit\.artifacts\thread-mobile-recovery-act-d7e68-ormal-text-contrast-in-dark-webkit\error-context.md
+
+  1 failed
+    [webkit] › tests\browser\thread-mobile-recovery.spec.ts:316:7 › active thread labels meet normal-text contrast in dark 
+  4 passed (21.9s)

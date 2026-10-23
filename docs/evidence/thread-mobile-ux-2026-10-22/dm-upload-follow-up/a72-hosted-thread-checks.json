@@ -1,0 +1,26 @@
+[
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   -  13 [desktop] ? thread-view-study.spec.ts:586:5 ? coarse pointers keep post actions in the byline across the mobile shell breakpoint",
+    "timestamp": "2026-10-22T18:53:20.230990164Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   2 skipped",
+    "timestamp": "2026-10-22T18:53:45.396615472Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   22 passed (1.1m)",
+    "timestamp": "2026-10-22T18:53:45.396636671Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   ?  13 [mobile] ? thread-view-study.spec.ts:586:5 ? coarse pointers keep post actions in the byline across the mobile shell breakpoint (5.8s)",
+    "timestamp": "2026-10-22T18:54:33.387896955Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   12 skipped",
+    "timestamp": "2026-10-22T18:54:44.085983695Z"
+  },
+  {
+    "textPayload": "Step #1 - \"browser-suites\":   12 passed (42.0s)",
+    "timestamp": "2026-10-22T18:54:44.085994323Z"
+  }
+]

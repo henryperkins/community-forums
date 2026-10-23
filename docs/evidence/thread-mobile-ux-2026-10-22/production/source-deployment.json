@@ -1,0 +1,239 @@
+{
+  "checked_at": "2026-10-22T17:53:27.720514+00:00",
+  "source_commit": "e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+  "branch": "main",
+  "remote_synchronization": {
+    "local": "e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+    "tracking": "e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+    "remote": "e5dd37c52bd211c0ac6e7c2650bee43d950e672d"
+  },
+  "asset_version": "035b6defb6d21565",
+  "worker": {
+    "id": "0712cf24-5cfb-47d7-be14-bebf610abc0b",
+    "status": "stopped",
+    "outcome": "success",
+    "created_at": "2026-10-22T17:43:43.428Z",
+    "finished_at": "2026-10-22T17:45:16.656Z",
+    "commit": "e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+    "branch": "main",
+    "deployment": {
+      "id": "bbce6837-d8a4-4a1b-9eff-0f80ed9d1a45",
+      "version": "6c080f58-a0e6-4227-94c9-d05955ab70ce",
+      "percentage": 100,
+      "created_at": "2026-10-22T17:45:07.10222Z"
+    }
+  },
+  "cloud_run": {
+    "build": {
+      "id": "8459155f-5af9-410b-8e36-c716a0bf22fd",
+      "status": "SUCCESS",
+      "finished_at": "2026-10-22T17:49:40.817707Z",
+      "steps": [
+        {
+          "id": "source",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "build",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "push",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "deploy-service",
+          "status": "SUCCESS"
+        },
+        {
+          "id": "update-jobs",
+          "status": "SUCCESS"
+        }
+      ],
+      "images": []
+    },
+    "service": {
+      "name": "retroboards",
+      "revision": "retroboards-00043-j9f",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+      "traffic": [
+        {
+          "latestRevision": true,
+          "percent": 100,
+          "revisionName": "retroboards-00043-j9f"
+        }
+      ],
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-22T17:49:17.524977Z",
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T17:49:03.724768Z",
+          "status": "True",
+          "type": "ConfigurationsReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T17:49:17.47162Z",
+          "status": "True",
+          "type": "RoutesReady"
+        }
+      ]
+    },
+    "cron_jobs": [
+      {
+        "name": "retroboards-cron-5m",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-6h",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-0310",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "retroboards-cron-0700",
+        "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+        "conditions": [
+          {
+            "status": "True",
+            "type": "Ready"
+          }
+        ]
+      }
+    ]
+  },
+  "public_reads": {
+    "guest": {
+      "checked_at": "2026-10-22T17:50:28.904312+00:00",
+      "source_commit": "e5dd37c52bd211c0ac6e7c2650bee43d950e672d",
+      "requests": [
+        {
+          "path": "/healthz",
+          "status": 200,
+          "body_sha256": "68fd26fd028c249fb77980d91904c5713a103acb2f179ad7dfcd5164b708ae39",
+          "headers": {
+            "Content-Type": "application/json; charset=UTF-8",
+            "CF-Ray": "a4ea58275926cba1-ATL",
+            "Server": "cloudflare"
+          },
+          "asset_urls": [],
+          "health_body": "{\"status\":\"ok\",\"database\":\"ok\"}",
+          "error_body": null
+        },
+        {
+          "path": "/",
+          "status": 200,
+          "body_sha256": "f4240cfa9fd7ee38de6a855a31a8bd458e47221766f212dc4e7c314dd13b06da",
+          "headers": {
+            "Content-Type": "text/html; charset=UTF-8",
+            "CF-Ray": "a4ea5828ea67529d-ATL",
+            "Server": "cloudflare"
+          },
+          "asset_urls": [
+            "/assets/dist/app-f5e64357204190eb.js",
+            "/assets/dist/app-style-R3j3Xoat.css",
+            "/assets/dist/imladris-style-bT2GVmLw.css"
+          ],
+          "health_body": null,
+          "error_body": null
+        },
+        {
+          "path": "/assets/dist/app-f5e64357204190eb.js",
+          "status": 200,
+          "body_sha256": "f5e64357204190ebc5ec13a10837a4ccc9388e06bd20987efe6f7050d2f8e758",
+          "headers": {
+            "Content-Type": "text/javascript",
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "X-RetroBoards-Cache": "STATIC",
+            "Server": "cloudflare",
+            "CF-RAY": "a4ea582ccde5bf93-ATL"
+          },
+          "asset_urls": [],
+          "health_body": null,
+          "error_body": null
+        }
+      ],
+      "scope": "unauthenticated production GET only"
+    },
+    "thread": {
+      "checked_at": "2026-10-22T17:52:58.733608+00:00",
+      "path": "/t/1-first-post",
+      "status": 200,
+      "body_sha256": "1306f2fdd242c02a1a85820c4de2292203d3565b27b8cc16b845c52b7557bc3a",
+      "asset_urls": [
+        "/assets/dist/app-f5e64357204190eb.js",
+        "/assets/dist/app-style-R3j3Xoat.css",
+        "/assets/dist/composer-4ebc8d0c1f6dd474.js",
+        "/assets/dist/imladris-style-bT2GVmLw.css",
+        "/assets/dist/passkeys-16e7134417f0d6af.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
+      ],
+      "scope": "read-only public thread HTML; no authenticated actions or production writes"
+    }
+  },
+  "static_verification": {
+    "current_release_files": 25,
+    "all_sha256_match": true,
+    "all_immutable_headers": true,
+    "receipt": "live-assets-source.json"
+  },
+  "release_record": {
+    "version": "035b6defb6d21565",
+    "deployed_versions": [
+      "035b6defb6d21565",
+      "adc1494dbfa0cd3d",
+      "ef40d97306cc2167"
+    ],
+    "retired_exclusive_files": [
+      "public/assets/dist/app-6d007c03ee2fa15b.js",
+      "public/assets/dist/app-style-lm9W6BEA.css"
+    ],
+    "current_release_bytes_unchanged": true,
+    "main_application_digest": "fc4865c2d523f57c4a3cbad1482828c6459cbfeb55b77ff4a5c19b5199dc0bba",
+    "checks": {
+      "asset_reproducibility": "pass",
+      "asset_tests": {
+        "passed": 35,
+        "failed": 0
+      },
+      "imladris_runtime": "pass"
+    }
+  },
+  "preservation": {
+    "unrelated_original_paths": 72,
+    "all_original_hashes_unchanged": true
+  },
+  "independent_hosted_browser_lane": {
+    "id": "8ef68ca0-848d-4ba7-a946-1f87129e2372",
+    "status": "WORKING"
+  },
+  "limits": [
+    "Production probes were read-only; no authenticated write or phone claim.",
+    "An initial default urllib health probe received HTTP 403; a browser User-Agent repeated health, homepage and thread reads successfully. No cause is asserted.",
+    "The full hosted browser parent was running; no matrix pass is asserted.",
+    "Physical-device provisioning and target checks remain pending."
+  ]
+}

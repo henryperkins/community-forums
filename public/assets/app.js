@@ -1055,10 +1055,21 @@
     if (threadDock) {
         var syncThreadDockHeight = function () {
             document.documentElement.style.setProperty('--thread-dock-height', Math.ceil(threadDock.getBoundingClientRect().height) + 'px');
+            var viewport = window.visualViewport;
+            var bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+            var bar = document.querySelector('.forum-bar');
+            var top = Math.max(viewport ? viewport.offsetTop : 0, bar ? bar.getBoundingClientRect().bottom : 0);
+            document.documentElement.style.setProperty('--thread-dock-available-height', Math.max(0, Math.floor(bottom - top - 8)) + 'px');
         };
         syncThreadDockHeight();
         window.addEventListener('resize', syncThreadDockHeight);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', syncThreadDockHeight);
+            window.visualViewport.addEventListener('scroll', syncThreadDockHeight);
+        }
         if (window.ResizeObserver) { new ResizeObserver(syncThreadDockHeight).observe(threadDock, { box: 'border-box' }); }
+        var threadHeaderBar = document.querySelector('.forum-bar');
+        if (window.ResizeObserver && threadHeaderBar) { new ResizeObserver(syncThreadDockHeight).observe(threadHeaderBar); }
     }
 
     // Member-surface panels. The POST forms remain canonical; JavaScript applies

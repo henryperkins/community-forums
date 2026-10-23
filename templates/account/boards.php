@@ -13,7 +13,7 @@ foreach (($groups ?? []) as $group) {
 <div class="settings-screen">
     <header class="settings-head">
         <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
-        <p>Everything this community knows about you, and everything it does on your behalf.</p>
+        <?= $this->partial('partials/settings_intro') ?>
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav', ['active' => 'boards']) ?>
@@ -36,18 +36,20 @@ foreach (($groups ?? []) as $group) {
                         ?>
                         <li class="board-pref-row">
                             <span class="board-pref-name"><span class="board-hash" aria-hidden="true">#</span><?= $e($b['name']) ?></span>
+                            <div class="board-pref-actions">
                             <form class="inline" method="post" action="/settings/boards/toggle">
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="board_id" value="<?= (int) $b['id'] ?>">
                                 <input type="hidden" name="pref" value="favorite">
-                                <button class="linkbtn<?= $isFav ? ' btn-on' : '' ?>" type="submit"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'board-pref-star' . ($isFav ? '' : ' is-outline')]) ?> <?= $isFav ? 'Favorited' : 'Favorite' ?></button>
+                                <button class="linkbtn<?= $isFav ? ' btn-on' : '' ?>" type="submit" aria-label="Favorite <?= $e($b['name']) ?>" aria-pressed="<?= $isFav ? 'true' : 'false' ?>"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'board-pref-star' . ($isFav ? '' : ' is-outline')]) ?> <?= $isFav ? 'Favorited' : 'Favorite' ?></button>
                             </form>
                             <form class="inline" method="post" action="/settings/boards/toggle">
                                 <?= $this->csrfField() ?>
                                 <input type="hidden" name="board_id" value="<?= (int) $b['id'] ?>">
                                 <input type="hidden" name="pref" value="mute">
-                                <button class="board-mute-toggle<?= $isMuted ? ' is-on' : '' ?>" type="submit"><?= $isMuted ? 'Muted' : 'Mute' ?></button>
+                                <button class="board-mute-toggle<?= $isMuted ? ' is-on' : '' ?>" type="submit" aria-label="Mute <?= $e($b['name']) ?>" aria-pressed="<?= $isMuted ? 'true' : 'false' ?>"><?= $isMuted ? 'Muted' : 'Mute' ?></button>
                             </form>
+                            </div>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -60,11 +62,8 @@ foreach (($groups ?? []) as $group) {
             <?php if (!empty($features['board_folders'])): ?>
                 <div class="org-card board-folder-card">
                     <div class="org-card-head">
-                        <span class="org-icon" aria-hidden="true">#</span>
-                        <div>
-                            <h2>Board folders</h2>
-                            <p class="muted">Gather boards into private rails for the way you read.</p>
-                        </div>
+                        <h2>Board folders</h2>
+                        <p class="muted">Group boards into private folders in your board rail.</p>
                     </div>
                     <?php if (empty($board_folders)): ?>
                         <p class="org-empty">No board folders yet.</p>
@@ -75,26 +74,37 @@ foreach (($groups ?? []) as $group) {
                                     <span class="org-folder-name"><?= $e($folder['name']) ?></span>
                                     <span class="org-count"><?= count($folder['boards'] ?? []) ?> board<?= count($folder['boards'] ?? []) === 1 ? '' : 's' ?></span>
                                     <?php $folderOld = $oldFor('folder-' . $folder['id']); ?>
-                                    <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'folder-' . $folder['id']]) ?>
-                                    <form method="post" action="/settings/board-folders/<?= (int) $folder['id'] ?>/rename" class="org-form">
-                                        <?= $this->csrfField() ?>
-                                        <label for="folder-name-<?= (int) $folder['id'] ?>">Folder name</label>
-                                        <input class="input input-small" id="folder-name-<?= (int) $folder['id'] ?>" name="name"<?php if ($invalidFor('folder-' . $folder['id'], 'name')): ?> aria-invalid="true" aria-describedby="folder-<?= (int) $folder['id'] ?>-name-error"<?php endif; ?> value="<?= $e($folderOld['name'] ?? $folder['name']) ?>" maxlength="80" required>
-                                        <button class="btn btn-small" type="submit">Rename folder</button>
-                                    </form>
-                                    <form method="post" action="/settings/board-folders/<?= (int) $folder['id'] ?>/delete" class="org-form">
-                                        <?= $this->csrfField() ?><button class="linkbtn" type="submit">Delete folder</button>
-                                    </form>
                                     <?php if (!empty($folder['boards'])): ?>
                                         <span class="org-items">
                                             <?php foreach ($folder['boards'] as $board): ?>
                                                 <a href="/c/<?= $e($board['slug']) ?>">#<?= $e($board['name']) ?></a>
-                                                <form method="post" action="/settings/board-folders/<?= (int) $folder['id'] ?>/boards/<?= (int) $board['id'] ?>/remove">
-                                                    <?= $this->csrfField() ?><button class="linkbtn" type="submit" aria-label="Remove <?= $e($board['name']) ?> from <?= $e($folder['name']) ?>">Remove board</button>
-                                                </form>
                                             <?php endforeach; ?>
                                         </span>
                                     <?php endif; ?>
+                                    <details class="org-manage"<?= ($org_form ?? '') === 'folder-' . $folder['id'] ? ' open' : '' ?>>
+                                        <summary aria-label="Manage folder <?= $e($folder['name']) ?>">Manage folder</summary>
+                                        <div class="org-manage-body">
+                                            <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'folder-' . $folder['id']]) ?>
+                                            <form method="post" action="/settings/board-folders/<?= (int) $folder['id'] ?>/rename" class="org-form">
+                                                <?= $this->csrfField() ?>
+                                                <label for="folder-name-<?= (int) $folder['id'] ?>">Folder name</label>
+                                                <input class="input input-small" id="folder-name-<?= (int) $folder['id'] ?>" name="name"<?php if ($invalidFor('folder-' . $folder['id'], 'name')): ?> aria-invalid="true" aria-describedby="folder-<?= (int) $folder['id'] ?>-name-error"<?php endif; ?> value="<?= $e($folderOld['name'] ?? $folder['name']) ?>" maxlength="80" required>
+                                                <button class="btn btn-small" type="submit">Rename folder</button>
+                                            </form>
+                                            <?php if (!empty($folder['boards'])): ?>
+                                                <div class="org-items">
+                                                    <?php foreach ($folder['boards'] as $board): ?>
+                                                        <form method="post" action="/settings/board-folders/<?= (int) $folder['id'] ?>/boards/<?= (int) $board['id'] ?>/remove">
+                                                            <?= $this->csrfField() ?><button class="linkbtn" type="submit" aria-label="Remove #<?= $e($board['name']) ?> from <?= $e($folder['name']) ?>">Remove #<?= $e($board['name']) ?></button>
+                                                        </form>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                            <form method="post" action="/settings/board-folders/<?= (int) $folder['id'] ?>/delete" class="org-form">
+                                                <?= $this->csrfField() ?><button class="linkbtn danger" type="submit">Delete folder</button>
+                                            </form>
+                                        </div>
+                                    </details>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -103,7 +113,7 @@ foreach (($groups ?? []) as $group) {
                     <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'folder-create']) ?>
                     <form method="post" action="/settings/board-folders" class="inline-form org-form">
                         <?= $this->csrfField() ?>
-                        <input type="text" name="name" class="input input-small" maxlength="80" placeholder="Morning read" aria-label="Name"<?php if ($invalidFor('folder-create', 'name')): ?> aria-invalid="true" aria-describedby="folder-create-name-error"<?php endif; ?> value="<?= $e($createOld['name'] ?? '') ?>" required>
+                        <label class="field"><span>Board folder name</span><input type="text" name="name" class="input input-small" maxlength="80" placeholder="Morning read"<?php if ($invalidFor('folder-create', 'name')): ?> aria-invalid="true" aria-describedby="folder-create-name-error"<?php endif; ?> value="<?= $e($createOld['name'] ?? '') ?>" required></label>
                         <button class="btn btn-small" type="submit">New folder</button>
                     </form>
                     <?php if (!empty($board_folders) && !empty($boardChoices)): ?>
@@ -125,8 +135,6 @@ foreach (($groups ?? []) as $group) {
                             </select>
                             <button class="linkbtn" type="submit">Add board</button>
                         </form>
-                    <?php elseif (!empty($boardChoices)): ?>
-                        <p class="org-empty">Create a folder, then add boards to it.</p>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -134,11 +142,8 @@ foreach (($groups ?? []) as $group) {
             <?php if (!empty($features['saved_feeds'])): ?>
                 <div class="org-card saved-feed-card">
                     <div class="org-card-head">
-                        <span class="org-icon" aria-hidden="true">~</span>
-                        <div>
-                            <h2>Saved feeds</h2>
-                            <p class="muted">Keep a filter as a named feed in your rail.</p>
-                        </div>
+                        <h2>Saved feeds</h2>
+                        <p class="muted">Save a board filter for later reading.</p>
                     </div>
                     <?php if (empty($saved_feeds)): ?>
                         <p class="org-empty">No saved feeds yet.</p>
@@ -159,7 +164,10 @@ foreach (($groups ?? []) as $group) {
                                     <span class="org-count"><?= !empty($feed['digest_enabled']) ? (!empty($digest_active) ? 'Digest on' : 'Daily digest is off') : 'Digest off' ?></span>
                                     <?php if (!empty($feed['digest_enabled']) && empty($digest_active)): ?><a href="/settings/notifications">Set daily digest schedule</a><?php endif; ?>
                                     <span class="org-items"><span><?= (int) $feed['readable_board_count'] ?> board filter<?= (int) $feed['readable_board_count'] === 1 ? '' : 's' ?> · latest first</span></span>
-                                    <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'feed-' . $feed['id']]) ?>
+                                    <details class="org-manage"<?= ($org_form ?? '') === 'feed-' . $feed['id'] ? ' open' : '' ?>>
+                                        <summary aria-label="Manage feed <?= $e($feed['name']) ?>">Manage feed</summary>
+                                        <div class="org-manage-body">
+                                     <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'feed-' . $feed['id']]) ?>
                                     <form method="post" action="/settings/saved-feeds/<?= (int) $feed['id'] ?>" class="org-form">
                                         <?= $this->csrfField() ?>
                                         <input type="hidden" name="board_filter_present" value="1">
@@ -175,17 +183,19 @@ foreach (($groups ?? []) as $group) {
                                                 <option value="<?= (int) $board['id'] ?>"<?= in_array((int) $board['id'], $selectedIds, true) ? ' selected' : '' ?>>#<?= $e($board['name']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <label class="checkline"><input type="checkbox" name="digest_enabled" value="1"<?= $feedDigest ? ' checked' : '' ?>> Digest</label>
+                                        <label class="switchline"><input class="switch" type="checkbox" role="switch" name="digest_enabled" value="1"<?= $feedDigest ? ' checked' : '' ?>><span class="switch-text">Digest</span></label>
                                         <button class="btn btn-small" type="submit">Update feed</button>
                                     </form>
+                                    <form method="post" action="/settings/saved-feeds/<?= (int) $feed['id'] ?>/delete" class="org-form">
+                                        <?= $this->csrfField() ?><button class="linkbtn danger" type="submit">Delete feed</button>
+                                    </form>
+                                        </div>
+                                    </details>
                                     <?php if (!empty($feed['digest_enabled'])): ?>
                                         <form method="post" action="/settings/saved-feeds/<?= (int) $feed['id'] ?>" class="org-form">
                                             <?= $this->csrfField() ?><input type="hidden" name="digest_enabled" value="0"><button class="linkbtn" type="submit">Turn off digest</button>
                                         </form>
                                     <?php endif; ?>
-                                    <form method="post" action="/settings/saved-feeds/<?= (int) $feed['id'] ?>/delete" class="org-form">
-                                        <?= $this->csrfField() ?><button class="linkbtn" type="submit">Delete feed</button>
-                                    </form>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -194,15 +204,16 @@ foreach (($groups ?? []) as $group) {
                     <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'feed-create']) ?>
                     <form method="post" action="/settings/saved-feeds" class="inline-form org-form">
                         <?= $this->csrfField() ?>
-                        <input type="text" name="name" class="input input-small" maxlength="80" placeholder="Unanswered in evaluations" aria-label="Name"<?php if ($invalidFor('feed-create', 'name')): ?> aria-invalid="true" aria-describedby="feed-create-name-error"<?php endif; ?> value="<?= $e($createOld['name'] ?? '') ?>" required>
-                        <label class="sr-only" for="saved-feed-board-id">Board filter</label>
+                        <label class="field"><span>Feed name</span><input type="text" name="name" class="input input-small" maxlength="80" placeholder="Morning reading"<?php if ($invalidFor('feed-create', 'name')): ?> aria-invalid="true" aria-describedby="feed-create-name-error"<?php endif; ?> value="<?= $e($createOld['name'] ?? '') ?>" required></label>
+                        <label class="field"><span>Board filter</span>
                         <select id="saved-feed-board-id"<?php if ($invalidFor('feed-create', 'board_id')): ?> aria-invalid="true" aria-describedby="feed-create-board_id-error"<?php endif; ?> name="board_id" class="input input-small">
                             <option value="">All boards</option>
                             <?php foreach ($boardChoices as $board): ?>
                                 <option value="<?= (int) $board['id'] ?>"<?= (int) ($createOld['board_id'] ?? 0) === (int) $board['id'] ? ' selected' : '' ?>>#<?= $e($board['name']) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <label class="checkline"><input type="checkbox" name="digest_enabled" value="1"<?php if ($invalidFor('feed-create', 'digest_enabled')): ?> aria-invalid="true" aria-describedby="feed-create-digest_enabled-error"<?php endif; ?><?= !empty($createOld['digest_enabled']) ? ' checked' : '' ?>> Digest</label>
+                        </label>
+                        <label class="switchline"><input class="switch" type="checkbox" role="switch" name="digest_enabled" value="1"<?php if ($invalidFor('feed-create', 'digest_enabled')): ?> aria-invalid="true" aria-describedby="feed-create-digest_enabled-error"<?php endif; ?><?= !empty($createOld['digest_enabled']) ? ' checked' : '' ?>><span class="switch-text">Digest</span></label>
                         <button class="btn btn-small" type="submit">Save feed</button>
                     </form>
                 </div>
@@ -211,11 +222,8 @@ foreach (($groups ?? []) as $group) {
             <?php if (!empty($features['bookmark_folders'])): ?>
                 <div class="org-card bookmark-folder-card">
                     <div class="org-card-head">
-                        <span class="org-icon org-star" aria-hidden="true">✦</span>
-                        <div>
-                            <h2>Bookmark folders</h2>
-                            <p class="muted">File starred threads where you will find them.</p>
-                        </div>
+                        <h2>Bookmark folders</h2>
+                        <p class="muted">Group your starred topics into folders.</p>
                     </div>
                     <?php if (empty($bookmark_folders)): ?>
                         <p class="org-empty">No bookmark folders yet.</p>
@@ -240,7 +248,7 @@ foreach (($groups ?? []) as $group) {
                     <?= $this->partial('partials/organization_error', ['org_form' => $org_form ?? '', 'org_errors' => $org_errors ?? [], 'form_key' => 'bookmark-create']) ?>
                     <form method="post" action="/settings/bookmark-folders" class="inline-form org-form">
                         <?= $this->csrfField() ?>
-                        <input type="text" name="name" class="input input-small" maxlength="80" placeholder="Read later" aria-label="Name"<?php if ($invalidFor('bookmark-create', 'name')): ?> aria-invalid="true" aria-describedby="bookmark-create-name-error"<?php endif; ?> value="<?= $e($createOld['name'] ?? '') ?>" required>
+                        <label class="field"><span>Bookmark folder name</span><input type="text" name="name" class="input input-small" maxlength="80" placeholder="Read later"<?php if ($invalidFor('bookmark-create', 'name')): ?> aria-invalid="true" aria-describedby="bookmark-create-name-error"<?php endif; ?> value="<?= $e($createOld['name'] ?? '') ?>" required></label>
                         <button class="btn btn-small" type="submit">New folder</button>
                     </form>
                     <?php if (!empty($bookmark_folders) && (!empty($starred_threads) || ($org_form ?? '') === 'bookmark-add')): ?>

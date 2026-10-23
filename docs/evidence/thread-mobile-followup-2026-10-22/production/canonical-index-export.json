@@ -1,0 +1,32 @@
+[
+  {
+    "path": "public/assets/composer.js",
+    "matches_stored_index": true,
+    "sha256": "ce073e11882cfc7a89cac10873bcee19c1da10946424d576aaaabd2f7c989cb6"
+  },
+  {
+    "path": "public/assets/app.css",
+    "matches_stored_index": true,
+    "sha256": "c27b9cb3e524da85ad09e338d4cd6096d820b96d27a53acbefb35b031aec46d5"
+  },
+  {
+    "path": "public/assets/imladris.css",
+    "matches_stored_index": true,
+    "sha256": "0ffe926bec55a63c187d76beb5dae15409dcdaf8b6f5beefb0a777db2f5b5191"
+  },
+  {
+    "path": "public/assets/passkeys.js",
+    "matches_stored_index": true,
+    "sha256": "daab2ddf725491d45d3cbd9b3da46189c51723b16e904d54b3cb38e7b939d73f"
+  },
+  {
+    "path": "public/assets/app.js",
+    "matches_stored_index": true,
+    "sha256": "6a4648e206482895c7bad551aa36fafac2a5f2d70e47c64453354c745d07d004"
+  },
+  {
+    "path": "docs/design-system/imladris/components.css",
+    "matches_stored_index": true,
+    "sha256": "cbc489eae2844bdcda5ab6686aec7b97ca9a591ea985c251444e96c93f587b4f"
+  }
+]

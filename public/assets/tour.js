@@ -118,7 +118,7 @@
         show();
     }
 
-    // Replay links anywhere: <a data-tour-replay> resets + restarts.
+    // Replay controls reset + restart the tour after enhancement is ready.
     document.addEventListener('click', function (e) {
         var t = e.target.closest ? e.target.closest('[data-tour-replay]') : null;
         if (!t) { return; }
@@ -127,6 +127,12 @@
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Both the desktop rail and native mobile chooser render this optional
+        // control hidden. Reveal it only after its click handler is installed.
+        document.querySelectorAll('[data-tour-replay]').forEach(function (button) {
+            button.hidden = false;
+        });
+
         // Operator surfaces are not part of the member onboarding journey: the
         // auto-start tour must never float over the admin console or the
         // moderation queues. Manual replay (data-tour-replay) still works

@@ -1,0 +1,95 @@
+{
+  "fields": [
+    {
+      "name": "current_password",
+      "value": "",
+      "focused": false,
+      "border": "rgb(154, 117, 48)",
+      "borderWidth": 1,
+      "borderStyle": "solid",
+      "fill": "rgb(245, 239, 225)",
+      "insideContrast": 3.6919175805468014,
+      "outsideContrast": 3.92210106985329
+    },
+    {
+      "name": "new_password",
+      "value": "",
+      "focused": false,
+      "border": "rgb(154, 117, 48)",
+      "borderWidth": 1,
+      "borderStyle": "solid",
+      "fill": "rgb(245, 239, 225)",
+      "insideContrast": 3.6919175805468014,
+      "outsideContrast": 3.92210106985329
+    },
+    {
+      "name": "new_password_confirm",
+      "value": "",
+      "focused": false,
+      "border": "rgb(154, 117, 48)",
+      "borderWidth": 1,
+      "borderStyle": "solid",
+      "fill": "rgb(245, 239, 225)",
+      "insideContrast": 3.6919175805468014,
+      "outsideContrast": 3.92210106985329
+    },
+    {
+      "name": "current_password",
+      "value": "",
+      "focused": false,
+      "border": "rgb(154, 117, 48)",
+      "borderWidth": 1,
+      "borderStyle": "solid",
+      "fill": "rgb(245, 239, 225)",
+      "insideContrast": 3.6919175805468014,
+      "outsideContrast": 3.92210106985329
+    }
+  ],
+  "headings": [
+    {
+      "text": "Password",
+      "panelLeft": 30,
+      "panelRight": 280,
+      "fragments": [
+        {
+          "left": 63,
+          "right": 219.90625
+        }
+      ]
+    },
+    {
+      "text": "Two-factor authentication",
+      "panelLeft": 30,
+      "panelRight": 280,
+      "fragments": [
+        {
+          "left": 63,
+          "right": 147.5625
+        },
+        {
+          "left": 63,
+          "right": 176.953125
+        },
+        {
+          "left": 63,
+          "right": 231.25
+        },
+        {
+          "left": 63,
+          "right": 156.25
+        }
+      ]
+    },
+    {
+      "text": "Passkeys",
+      "panelLeft": 30,
+      "panelRight": 280,
+      "fragments": [
+        {
+          "left": 63,
+          "right": 197.125
+        }
+      ]
+    }
+  ]
+}

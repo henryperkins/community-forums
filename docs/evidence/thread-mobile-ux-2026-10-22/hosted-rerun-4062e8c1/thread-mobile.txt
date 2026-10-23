@@ -1,0 +1,34 @@
+
+Running 24 tests using 1 worker
+
+(node:23604) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok  1 [mobile] › rich-content.spec.ts:70:5 › rich post semantics stay faithful, accessible, and contained (3.0s)
+  -   2 [mobile] › rich-content.spec.ts:164:5 › rich content remains server-rendered with JavaScript disabled
+  ok  3 [mobile] › rich-content.spec.ts:183:5 › overflowing code fences are keyboard-operable scroll regions (1.9s)
+
+  ok  4 [mobile] › thread-content-presentation.spec.ts:57:5 › grouped and removed replies keep their final presentation at every viewport (2.6s)
+  -   5 [mobile] › thread-view-study.spec.ts:200:5 › desktop Topic tools accords, traps focus, and restores each opener
+  ok  6 [mobile] › thread-view-study.spec.ts:243:5 › split or merge closes by every dismissal path and restores focus (2.6s)
+  ok  7 [mobile] › thread-view-study.spec.ts:282:5 › post menus are exclusive, dismiss outside, and open real disclosures safely (3.7s)
+  -   8 [mobile] › thread-view-study.spec.ts:347:5 › copy link keeps anchor navigation when Clipboard is absent or rejects
+  -   9 [mobile] › thread-view-study.spec.ts:380:5 › quote controls stay hidden when the rendered topic has no reply composer target
+  -  10 [mobile] › thread-view-study.spec.ts:396:5 › quote inserts through the active WYSIWYG adapter and survives submit synchronization
+  -  11 [mobile] › thread-view-study.spec.ts:434:5 › quote inserts exactly once through the source adapter
+  ok 12 [mobile] › thread-view-study.spec.ts:475:5 › Study layout matches desktop and mobile geometry (2.6s)
+  ok 13 [mobile] › thread-view-study.spec.ts:586:5 › coarse pointers keep post actions in the byline across the mobile shell breakpoint (4.9s)
+  ok 14 [mobile] › thread-view-study.spec.ts:652:5 › post menu rows stack full-width with no user-agent chrome (1.7s)
+  ok 15 [mobile] › thread-view-study.spec.ts:726:5 › reduced motion removes Study animations (1.7s)
+  ok 16 [mobile] › thread-view-study.spec.ts:735:5 › light and dark Study surfaces retain readable semantic colors (1.8s)
+  ok 17 [mobile] › thread-view-study.spec.ts:789:5 › mobile composer honors a representative keyboard inset (1.7s)
+  ok 18 [mobile] › thread-view-study.spec.ts:805:5 › the staff badge flips register and clears AA in both (1.7s)
+  -  19 [mobile] › thread-view-study.spec.ts:862:5 › standing chips sit above the title and state status as a word alone
+  -  20 [mobile] › thread-view-study.spec.ts:913:5 › the star pill uses the commend star and never wraps the facts row
+  -  21 [mobile] › thread-view-study.spec.ts:959:5 › a reaction chip names the gesture and separates the count
+  -  22 [mobile] › thread-view-study.spec.ts:996:5 › server-invalid engraved controls receive the effective danger frame
+  -  23 [mobile] › thread-view-study.spec.ts:1029:5 › the Study reads and replies with JavaScript disabled
+  -  24 [mobile] › thread-view-study.spec.ts:1084:5 › post actions are reachable by keyboard alone
+
+  12 skipped
+  12 passed (32.2s)

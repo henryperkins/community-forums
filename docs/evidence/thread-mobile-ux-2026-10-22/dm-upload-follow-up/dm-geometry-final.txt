@@ -1,0 +1,20 @@
+
+Running 3 tests using 1 worker
+
+(node:30068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+before-press desktop {"formBottom":726.65625,"height":640,"button":{"x":323,"y":593.65625,"width":36,"height":44}}
+held-press desktop {"x":323.0287170410156,"y":593.850830078125,"width":35.94256591796875,"height":43.9298095703125}
+  ok 1 [desktop] › tests\browser\upload-http.spec.ts:158:5 › a held pointer publishes a ready DM image without moving Send before release (1.9s)
+(node:8968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+before-press mobile {"formBottom":727.078125,"height":640,"button":{"x":333,"y":594.078125,"width":36,"height":44}}
+held-press mobile {"x":333.028564453125,"y":594.2718505859375,"width":35.94287109375,"height":43.93011474609375}
+  ok 2 [mobile] › tests\browser\upload-http.spec.ts:158:5 › a held pointer publishes a ready DM image without moving Send before release (1.8s)
+(node:32332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+before-press webkit-mobile {"formBottom":727,"height":640,"button":{"x":333,"y":594,"width":36,"height":44}}
+held-press webkit-mobile {"x":333.0596008300781,"y":594.4039306640625,"width":35.88079833984375,"height":43.85430908203125}
+  ok 3 [webkit-mobile] › tests\browser\upload-http.spec.ts:158:5 › a held pointer publishes a ready DM image without moving Send before release (2.4s)
+
+  3 passed (8.3s)

@@ -1,0 +1,27 @@
+{
+  "checked_at": "2026-10-22T23:05:30.240Z",
+  "build": {
+    "id": "6ca769ed-6bd1-4a80-bb24-242447b607e5",
+    "status": "stopped",
+    "outcome": "success",
+    "commit": "de967b3001aca20051fa88efdf392156863debb3",
+    "created_at": "2026-10-22T23:03:24.779Z",
+    "finished_at": "2026-10-22T23:05:12.773Z"
+  },
+  "deployment": {
+    "id": "262733ed-158a-493e-9275-4921726bafc9",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "htperkins@gmail.com",
+    "annotations": {
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "2df38fbc-1991-489b-aff0-7de20f9af2fb",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-22T23:05:01.999998Z"
+  }
+}

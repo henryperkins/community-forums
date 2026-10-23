@@ -1,0 +1,52 @@
+{
+  "prepared_at": "2026-10-22T20:06:49.132970+00:00",
+  "original_hosted_source": "b42710f72b318611d99c11d23256a2a7715cb07e",
+  "original_parent_build": "d8ceee7e-80bf-4f32-89b8-6ad5858c5ada",
+  "original_child_build": "4d8e31e8-7571-473a-91bb-557b7d5c3360",
+  "original_hosted_acceptance": false,
+  "original_completed_groups": {
+    "thread": {
+      "passed": 34,
+      "skipped": 14,
+      "failed": 0
+    },
+    "capture": {
+      "passed": 207,
+      "skipped": 42,
+      "failed": 3
+    },
+    "notifications_settings": {
+      "passed": 248,
+      "skipped": 18,
+      "failed": 0
+    },
+    "uploads": {
+      "passed": 144,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  "local_final_source_sha256": "e549d078a5acc303496c340092dc815560ca14f9a1a67462e3b969077086703a",
+  "local_chromium": {
+    "passed": 53,
+    "skipped": 5,
+    "failed": 0
+  },
+  "local_webkit_controls": {
+    "passed": 20,
+    "skipped": 4,
+    "failed": 0
+  },
+  "asset_tests": {
+    "passed": 35,
+    "failed": 0
+  },
+  "asset_check": "passed",
+  "preserved_paths": 76,
+  "application_changes": [],
+  "limits": [
+    "Original hosted run remains failed; corrected tests have completed local evidence only at this snapshot.",
+    "Child artifact manifest is branch reported; parent did not accept or hash-validate the archive.",
+    "Windows browser proxies and synthetic disposable fixtures; no physical-device, software-keyboard, production-media or fresh PHPUnit claim."
+  ]
+}

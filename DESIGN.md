@@ -355,7 +355,7 @@ The three panes map to real URLs rather than to client state: `/` is the forum i
 
 **The Real-URL Rule.** Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view. *Audit test: load it with JavaScript disabled; if the content is gone, the layout is wrong.*
 
-**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it.
+**The Two-Breakpoint Rule.** 860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it. The profile's two recorded thresholds — 700px, where the list and connection tool rows wrap, and 560px, where the cover, the commends grid and the connection cards compact — are implementation facts of the same kind, chosen where the content breaks.
 
 ## Elevation & Depth
 
@@ -368,7 +368,7 @@ Shadows are cast in **warm ink** (`rgba(27,35,29,…)`), never neutral black. Th
 - **`--shadow-xs`** (`0 1px 2px rgba(27,35,29,.06)`): the foundation's low resting elevation, retained by ordinary cards, buttons and posts. Ruled application topic rows override it to no shadow.
 - **`--shadow-sm`** (`0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)`): the selected row, the accepted answer, a switch knob.
 - **`--shadow-md`** (`0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)`): available hover elevation in the foundation; the final application topic row responds with a tonal wash instead.
-- **`--shadow-lg`** (`0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)`): popovers and menus.
+- **`--shadow-lg`** (`0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)`): popovers and menus, and the member profile's identity cover — the one resting surface that wears it, a hero plate (§5.4).
 - **`--shadow-xl`** (`0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08)`): modal dialogs only.
 - **`--shadow-inset`** (`inset 0 1px 2px rgba(27,35,29,.07)`): fields and tracks — the impression of something pressed into the page.
 - **`--gilt`** (`inset 0 0 0 1px rgba(194,154,68,.38)`): not a shadow but a thin gold inner ring, marking a "precious" avatar — the OP, an accepted answer, a profile, a top-three leaderboard place.
@@ -377,7 +377,7 @@ Shadows are cast in **warm ink** (`rgba(27,35,29,…)`), never neutral black. Th
 
 **The Warm-Shadow Rule.** No pure-black drop shadows anywhere. Every shadow is mixed from ink or twilight so it reads as candlelight on parchment rather than as a UI kit default. *Audit test: any `rgba(0,0,0,…)` in a shadow is wrong.*
 
-**The Lift-On-State Rule.** Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded.
+**The Lift-On-State Rule.** Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded. The profile identity cover is the documented exception; nothing else rests above `--shadow-xs`.
 
 **The Chrome-On-Top Rule.** Page content stacks at `z-index` 30 or below. The member bar sits above it at `--z-chrome` (40), so nothing on the page paints over the bar or its account menu. The phone drawer's scrim (`--z-scrim`, 55) and rail (`--z-drawer`, 60) come next. Popovers anchored to page content, sheets and dialogs already start at 42. A page control that must cover the bar is an overlay and takes an overlay's tier. These are application tokens (ADR 0039's block in `app.css`), because the layer's own bar sits at 20. *Audit test: on a phone, scroll content under the bar and tap its lower edge; the tap must land on the bar.*
 
@@ -435,6 +435,37 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Errors:** rust text at 0.85rem directly beneath the field, with underlined inline links.
 - **Switches:** a 42×24 pill track, sunken parchment with a strong border and inset shadow, carrying an 18px round knob ringed in `gold-200`; checked fills the track evergreen and gilds the knob to `gold-200` with a `gold-500` ring. Transitions run `--dur-base` on `--ease-calm`.
 
+Account settings keep the switch track inside a minimum 44px labelled target.
+Their native select arrows follow the field ink, including forced colours;
+the operator console retains its separate select treatment. Custom profile
+pairs have persistent, numbered labels and individually engraved inputs, not
+an extra frame or decorative markers around each pair. Errors use the shared
+danger callout or a wired field error.
+The account chooser takes over below 50rem of available settings width; form,
+organisation and recovery-code columns respond to the pane's own width, not
+just the viewport. This prevents the board rail and settings rail from squeezing
+tablet forms into narrow tracks.
+
+The settings rail and content occupy one grid row; spanning empty rows must not
+manufacture a long page beneath short forms. Related fields use `--space-4`,
+panels `--space-5`, and organization sections `--space-6`. Board folders, saved
+feeds and bookmarks are linear, hairline-separated sections, not another set
+of icon cards. Names, counts and shortcuts lead; existing folder/feed editors
+live in native **Manage** disclosures. A rejected editor opens server-side so
+its focused error and retained values are visible. Creation/filing forms and
+digest opt-out remain outside those disclosures. Labelled switches keep track
+and text on the same flex row, including inside generic stacked forms.
+Member settings use the delivered regular Marcellus face for Fine-sized field
+labels and Meta-sized panel captions, Title for organization headings, and the
+narrow measure for supporting help. Operator labels keep their separate
+register. Settings action buttons have a 44px target with mouse as well as
+touch. Examples supplement persistent creation labels; timezone caveats belong
+to associated helper text rather than an oversized control label.
+Subscription rows lead with the topic/board name, then delivery controls and
+context-named Save/opt-out actions. Wide panes align the actions on the closing
+row; narrow panes stack them in DOM order. Unavailable content stays masked in
+accessible names as well as visible text.
+
 ### Navigation
 
 The phone board drawer is capped at 240px and 70% of the viewport, leaving a visible strip of the active surface beside it. This width applies to the shared member shell.
@@ -479,7 +510,9 @@ An uploaded avatar replaces that fallback wherever the member is drawn. `partial
 
 ### Shared components
 
-Reaction choices use distinct SVG icons for the nine built-in gestures, with their existing names retained for assistive technology and hover hints. Pickers arrange them in three columns with 44px targets; the desktop picker aligns to its trigger's trailing edge so the grid stays inside the viewport. Reaction counts keep the same icons, and static counts for guests and read-only members retain visible gesture names without identifying reactors. Custom gestures retain visible names until they have distinct artwork. The resting reply and mobile Messages composers use the ordinary 12px frame, a 4px inset, and a contained 44px submit control.
+At the 860px mobile shell breakpoint, thread posts use a compact avatar/byline row with full-width prose, references, signatures and reactions beneath it. Grouped continuations omit the empty avatar rail; removed-post stubs retain their stacked layout. Topic actions wrap when text is enlarged, and View answer stays available after catch-up. The complete expanded reply dock fits below the member header; input and preview scroll within its budget while Minimize and Send remain reachable (ADR 0050).
+
+Reaction choices use distinct SVG icons for the nine built-in gestures, with their existing names visible beside the icons before activation, as well as in assistive technology and hover hints. Pickers use labelled rows with 44px targets; the desktop picker aligns to its trigger's trailing edge so the grid stays inside the viewport. Reaction counts keep the same icons, and static counts for guests and read-only members retain visible gesture names without identifying reactors. Custom gestures retain visible names until they have distinct artwork. The resting reply and mobile Messages composers use the ordinary 12px frame, a 4px inset, and a contained 44px submit control.
 
 When a job already has a shared component, use it. A variant is a parameter or a tone, not a new class (ADR 0036, ADR 0037).
 
@@ -500,9 +533,13 @@ The ornamented treatment that dresses the account templates and five of the six 
 
 The auth screens sit on a **stage** that is twilight in both registers, while the seal card on it flips with the theme. The stage paints from tokens that do not flip: `--stage-ground`, `--stage-raised` (the skip link's plate), `--stage-ink` and `--stage-accent`, the one gold of the brand star, the card's rule, and focus on the stage. Focus there cannot use the page's `--accent`: it is evergreen by day, drawn for parchment, and measured 1.75:1 on the stage (ADR 0039).
 
+The member profile's identity cover is the second surface whose ground is constant twilight (approved, §5.4), and it paints its state colours from the same non-flipping family: `--cover-accent` for the focus ring and `--presence-on-cover` for the presence dot. The register's own tokens are drawn for the page and fail WCAG 1.4.11 on the cover by day — the focus ring measured 1.55:1, the online dot 2.86:1 — while `--cover-accent` (gold-400) holds 7.30:1 and `--presence-on-cover` (green-400) 4.45:1 in either register. **The Constant-Ground Rule.** A surface whose ground does not flip takes its state colours from constant tokens in this family, never from the register's. *Audit test: on an always-twilight surface, grep the rule for `--accent` or `--presence`; a register token there fails by day.*
+
 It was not always. Until **2026-09-13** these frames cut their corners at 45°, an octagon made from a `clip-path` plus eight background-gradient layers standing in for a border, with a second inset octagon on `.scribe-panel` and `.auth-card` as a doubled rule. That chamfer is removed (**ADR 0033**). It was expensive — every state restated all eight layers — and it was actively harmful: a `clip-path` cuts everything outside the octagon, so the outer focus ring on an engraved field, a choice card and a search well had *never rendered*, and the octagon on `/compose` flooded the title field solid gold on focus.
 
 Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-engraved`, `.scribe-panel`, `.field-row`, `.choice-card`, and the `.search-query-well` trio. Each keeps its ink and its padding, and the corner becomes `--radius-md` or `--radius-lg`. Five of the six now draw their edge as a real 1–1.5px border; the trio is the exception and always was — it draws its edge as `inset 0 0 0 1.5px` over `border: 0`, which is fine, because an inset ring follows a radius where it could not follow a chamfer.
+
+`.field-row` no longer has a template consumer. On 2026-10-23 the account settings custom-profile pairs became a two-up `.field-grid` of `.input-engraved` fields, so the frame now lives on the input (ADR 0033 amendment). The `.field-row` rule stays in the design system, inert; deleting it would change the generated stylesheet's release identity and is a separate change.
 
 **Do not reintroduce a cut corner, or a rotated square.** A frame is a border and a radius; a marker is a dot. The same pass turned the diamond `.row-bullet` and the `.choice-card` selected-marker into dots and deleted the orphaned set-gem toggles from the application stylesheet, so the register now carries no angular geometry at all — `clip-path: polygon` and `rotate(45deg)` both appear zero times in `app.css`, and a test holds them there. The treatment is still legacy in the sense that it should not spread to new surfaces, but it no longer makes two surfaces of one product a different shape.
 

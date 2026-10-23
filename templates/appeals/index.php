@@ -3,11 +3,11 @@
 <div class="settings-screen">
     <?= $this->partial('partials/page_heading', ['heading' => 'Appeals']) ?>
     <div class="settings">
-        <?= $this->partial('partials/settings_nav') ?>
+        <?= $this->partial('partials/settings_nav', ['active' => 'appeals']) ?>
         <div class="settings-pane">
 
     <?php if (!empty($errors)): ?>
-        <div class="card error-list" role="alert">
+        <div class="callout callout-danger" role="alert" tabindex="-1" autofocus>
             <?php foreach ($errors as $message): ?>
                 <p><?= $e($message) ?></p>
             <?php endforeach; ?>
@@ -67,8 +67,8 @@
 
     <?php if (!$oldReasonRendered && (string) ($old['reason'] ?? '') !== ''): ?>
         <section class="card">
-            <h2>Unsubmitted appeal text</h2>
-            <textarea class="input textarea-engraved" rows="3" readonly><?= $e((string) $old['reason']) ?></textarea>
+            <h2 id="unsubmitted-appeal-heading">Unsubmitted appeal text</h2>
+            <textarea class="input textarea-engraved" rows="3" readonly aria-labelledby="unsubmitted-appeal-heading"><?= $e((string) $old['reason']) ?></textarea>
         </section>
     <?php endif; ?>
 

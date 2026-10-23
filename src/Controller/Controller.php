@@ -134,11 +134,20 @@ abstract class Controller
 
     protected function discardServerDraftFor(User $user, string $contextKey): void
     {
+        $this->container->get(Session::class)->completeComposerSubmission(
+            $contextKey, $this->request()->str('idempotency_key'),
+        );
         if (!$this->container->get(FeatureFlags::class)->enabled('server_drafts')) {
             return;
         }
         try {
-            $this->container->get(ServerDraftRepository::class)->discardByContext($user->id(), $contextKey);
+            $body = $this->request()->input('body');
+            $title = $this->request()->input('title');
+            if (is_string($body)) {
+                $this->container->get(ServerDraftRepository::class)->discardSubmitted(
+                    $user->id(), str_replace('%', '~', rawurlencode($contextKey)), $body, is_string($title) ? $title : null,
+                );
+            }
         } catch (ValidationException) {
             // Best-effort cleanup only. Successful writes should not fail if the
             // draft surface cannot be trimmed.

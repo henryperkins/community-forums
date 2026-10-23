@@ -2,6 +2,91 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Project setup examples
+
+- Add an optional Neon Functions hello endpoint and project configuration with
+  its locked dependencies. The PHP application and automatic deployment path
+  are unchanged; the example has been type-checked locally, not deployed.
+- Keep the Cloud Run service snapshot explicitly dated as historical. Normal
+  releases continue to use `deploy/cloudrun/cloudbuild.yaml`.
+- Publication checks for the combined settings changes below are recorded in
+  `docs/evidence/settings-publication-2026-10-22/`.
+
+## [Unreleased] - Settings audit remediation
+
+- Keep subscription controls full-width in narrow panes and move account-row
+  state/actions below readable provider and session details, including enlarged text.
+- Reuse engraved boundaries for Security and password-creation inputs and wrap
+  long settings headings inside their panels.
+- Reveal Replay tour only after its JavaScript handler is ready; describe email
+  and password sign-in only when the account has a password.
+- Local verification and retained suite limitations are recorded in
+  `docs/evidence/settings-audit-remediation-2026-10-22/`; no deployment is claimed.
+
+## [Unreleased] - Settings clarity, typography and polish
+
+- Use a concise shared settings introduction, explicit creation labels and
+  notification opt-out names, and a short digest-time label with associated
+  timezone help. Keep privacy masking, validation and native form behavior.
+- Use the existing type-role scale and delivered label weight; align settings
+  actions on 44px targets and correct the organization text-size token.
+- Update the two stale lifecycle/stylesheet test assumptions without changing
+  the behavior they protect. Local results and retained limitations are in
+  `docs/evidence/settings-copy-type-2026-10-22/`; no deployment is claimed.
+
+## [Unreleased] - Settings layout and distillation
+
+- Remove phantom grid rows below the settings rail, nested profile-field
+  frames, decorative organization tiles and boxed empty states.
+- Group profile fields and settings tasks with the existing spacing scale;
+  keep switch tracks aligned with their labels in stacked forms.
+- Present organization tools as linear ruled sections. Native folder/feed
+  management disclosures preserve existing actions and reopen on validation
+  errors; shortcuts, creation and digest opt-out remain directly available.
+- Local verification and retained failures are recorded in
+  `docs/evidence/settings-layout-2026-10-22/`; no deployment is claimed.
+
+## [Unreleased] - Settings hardening, theme contrast and narrow-pane adaptation
+
+- Give custom profile pairs persistent labels and individual keyboard focus;
+  expose board preference state and named passkey actions, and identify Appeals
+  as the current settings section on desktop and in the native chooser.
+- Reuse semantic danger/review callouts for account and organisation errors,
+  wire digest validation to its controls, and preserve existing draft handling.
+- Use native member select arrows, theme-aware field boundaries and board hashes,
+  the correct Twilight preview accent, and 44px labelled settings toggles.
+- Adapt account navigation and form columns to their available pane width,
+  including enlarged text and long names. Local evidence is in
+  `docs/evidence/settings-hardening-2026-10-22/`; no deployment is claimed.
+
+## [Unreleased] - Thread contrast, preview access and rich-draft follow-up
+
+- Use theme-aware gold text for active Starred and reaction counts, and make
+  the open reply preview a named keyboard-scrollable region with visible focus.
+- Save the latest local edits when resolving a server-draft conflict. Recover
+  the matching unconfirmed draft before rich-editor initialization when Back
+  restores an older native textarea, while preserving typing during loading.
+- Local regression results, retained failures and outstanding physical checks
+  are recorded in `docs/evidence/thread-mobile-followup-2026-10-22/`.
+- Publish the fixes with verified asset version `1c24a3765cdd43f9`; automatic
+  Worker/Cloud Run deployment, workload images and public-byte receipts are in
+  that evidence folder's `production/` directory.
+
+## [Unreleased] - Thread mobile recovery and reading
+
+- Preserve unconfirmed replies through failed navigation, Back and reload;
+  confirm draft cleanup from a signed successful submission and preserve newer
+  local/remote edits. Restore Send and submission identity safely in Markdown
+  and rich-editor history entries (ADR 0050).
+- Keep View answer available with reader-specific pagination, wrap enlarged
+  topic controls, and bound the expanded reply dock below the member header.
+- Use a compact mobile byline with full-width prose and visible reaction names.
+  Local browser evidence and outstanding physical-device checks are recorded in
+  `docs/evidence/thread-mobile-ux-2026-10-22/`.
+- Deploy the fixes to production and pin canonical verified asset version
+  `cd261fb5782f8107`; Worker, Cloud Run, cron-image and public-read receipts
+  are recorded in that evidence folder's `production/` directory.
+
 ## [Unreleased] - Guarded feature-flag toggles
 
 - Turn a feature flag off or back on from its row on `/admin/features`. An

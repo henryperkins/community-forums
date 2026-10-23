@@ -1,0 +1,204 @@
+[
+  {
+    "route": "account",
+    "register": "light",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "account",
+    "register": "dark",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "boards",
+    "register": "light",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "boards",
+    "register": "dark",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "notifications",
+    "register": "light",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "notifications",
+    "register": "dark",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "appearance",
+    "register": "light",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "appearance",
+    "register": "dark",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "preferences",
+    "register": "light",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "preferences",
+    "register": "dark",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44,
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "privacy",
+    "register": "light",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44
+    ],
+    "labelFontReady": true
+  },
+  {
+    "route": "privacy",
+    "register": "dark",
+    "rootSize": 16,
+    "labelSize": 13.76,
+    "labelWeight": "400",
+    "labelFamily": "Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif",
+    "captionSize": 12.48,
+    "captionWeight": "400",
+    "buttons": [
+      44
+    ],
+    "labelFontReady": true
+  }
+]

@@ -1,0 +1,277 @@
+[
+  {
+    "width": 390,
+    "coarse": true,
+    "position": "relative",
+    "head": {
+      "x": 81,
+      "y": 467.859375,
+      "width": 284,
+      "height": 53.296875,
+      "top": 467.859375,
+      "bottom": 521.15625,
+      "left": 81,
+      "right": 365
+    },
+    "avatar": {
+      "x": 25,
+      "y": 458.21875,
+      "width": 48,
+      "height": 72.59375,
+      "top": 458.21875,
+      "bottom": 530.8125,
+      "left": 25,
+      "right": 73
+    },
+    "bar": {
+      "x": 321,
+      "y": 458.21875,
+      "width": 44,
+      "height": 44,
+      "top": 458.21875,
+      "bottom": 502.21875,
+      "left": 321,
+      "right": 365
+    },
+    "body": {
+      "x": 25,
+      "y": 538.8125,
+      "width": 340,
+      "height": 57.78125,
+      "top": 538.8125,
+      "bottom": 596.59375,
+      "left": 25,
+      "right": 365
+    },
+    "bodyOverlap": false,
+    "withinHead": false,
+    "withinByline": true,
+    "point": {
+      "x": 343,
+      "y": 480.21875
+    },
+    "summaryHit": true,
+    "horizontalOverflow": 0,
+    "visibleMenuActions": true
+  },
+  {
+    "width": 820,
+    "coarse": true,
+    "position": "relative",
+    "head": {
+      "x": 154,
+      "y": 367.765625,
+      "width": 568,
+      "height": 44,
+      "top": 367.765625,
+      "bottom": 411.765625,
+      "left": 154,
+      "right": 722
+    },
+    "avatar": {
+      "x": 98,
+      "y": 353.46875,
+      "width": 48,
+      "height": 72.59375,
+      "top": 353.46875,
+      "bottom": 426.0625,
+      "left": 98,
+      "right": 146
+    },
+    "bar": {
+      "x": 678,
+      "y": 353.46875,
+      "width": 44,
+      "height": 44,
+      "top": 353.46875,
+      "bottom": 397.46875,
+      "left": 678,
+      "right": 722
+    },
+    "body": {
+      "x": 98,
+      "y": 434.0625,
+      "width": 538.546875,
+      "height": 28.890625,
+      "top": 434.0625,
+      "bottom": 462.953125,
+      "left": 98,
+      "right": 636.546875
+    },
+    "bodyOverlap": false,
+    "withinHead": false,
+    "withinByline": true,
+    "point": {
+      "x": 700,
+      "y": 375.46875
+    },
+    "summaryHit": true,
+    "horizontalOverflow": 0,
+    "visibleMenuActions": true
+  },
+  {
+    "width": 860,
+    "coarse": true,
+    "position": "relative",
+    "head": {
+      "x": 174,
+      "y": 367.765625,
+      "width": 568,
+      "height": 44,
+      "top": 367.765625,
+      "bottom": 411.765625,
+      "left": 174,
+      "right": 742
+    },
+    "avatar": {
+      "x": 118,
+      "y": 353.46875,
+      "width": 48,
+      "height": 72.59375,
+      "top": 353.46875,
+      "bottom": 426.0625,
+      "left": 118,
+      "right": 166
+    },
+    "bar": {
+      "x": 698,
+      "y": 353.46875,
+      "width": 44,
+      "height": 44,
+      "top": 353.46875,
+      "bottom": 397.46875,
+      "left": 698,
+      "right": 742
+    },
+    "body": {
+      "x": 118,
+      "y": 434.0625,
+      "width": 538.546875,
+      "height": 28.890625,
+      "top": 434.0625,
+      "bottom": 462.953125,
+      "left": 118,
+      "right": 656.546875
+    },
+    "bodyOverlap": false,
+    "withinHead": false,
+    "withinByline": true,
+    "point": {
+      "x": 720,
+      "y": 375.46875
+    },
+    "summaryHit": true,
+    "horizontalOverflow": 0,
+    "visibleMenuActions": true
+  },
+  {
+    "width": 861,
+    "coarse": true,
+    "position": "absolute",
+    "head": {
+      "x": 365,
+      "y": 396.5,
+      "width": 461,
+      "height": 44,
+      "top": 396.5,
+      "bottom": 440.5,
+      "left": 365,
+      "right": 826
+    },
+    "avatar": {
+      "x": 307,
+      "y": 396.5,
+      "width": 48,
+      "height": 267.625,
+      "top": 396.5,
+      "bottom": 664.125,
+      "left": 307,
+      "right": 355
+    },
+    "bar": {
+      "x": 782,
+      "y": 396.5,
+      "width": 44,
+      "height": 44,
+      "top": 396.5,
+      "bottom": 440.5,
+      "left": 782,
+      "right": 826
+    },
+    "body": {
+      "x": 365,
+      "y": 446.5,
+      "width": 461,
+      "height": 57.78125,
+      "top": 446.5,
+      "bottom": 504.28125,
+      "left": 365,
+      "right": 826
+    },
+    "bodyOverlap": false,
+    "withinHead": true,
+    "withinByline": true,
+    "point": {
+      "x": 804,
+      "y": 418.5
+    },
+    "summaryHit": true,
+    "horizontalOverflow": 0,
+    "visibleMenuActions": true
+  },
+  {
+    "width": 900,
+    "coarse": true,
+    "position": "absolute",
+    "head": {
+      "x": 365,
+      "y": 355.46875,
+      "width": 500,
+      "height": 44,
+      "top": 355.46875,
+      "bottom": 399.46875,
+      "left": 365,
+      "right": 865
+    },
+    "avatar": {
+      "x": 307,
+      "y": 355.46875,
+      "width": 48,
+      "height": 238.734375,
+      "top": 355.46875,
+      "bottom": 594.203125,
+      "left": 307,
+      "right": 355
+    },
+    "bar": {
+      "x": 821,
+      "y": 355.46875,
+      "width": 44,
+      "height": 44,
+      "top": 355.46875,
+      "bottom": 399.46875,
+      "left": 821,
+      "right": 865
+    },
+    "body": {
+      "x": 365,
+      "y": 405.46875,
+      "width": 500,
+      "height": 28.890625,
+      "top": 405.46875,
+      "bottom": 434.359375,
+      "left": 365,
+      "right": 865
+    },
+    "bodyOverlap": false,
+    "withinHead": true,
+    "withinByline": true,
+    "point": {
+      "x": 843,
+      "y": 377.46875
+    },
+    "summaryHit": true,
+    "horizontalOverflow": 0,
+    "visibleMenuActions": true
+  }
+]
