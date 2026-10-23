@@ -1,0 +1,15 @@
+{
+  "version": "432ce95c7cdbe032",
+  "deployedReleases": [
+    "432ce95c7cdbe032",
+    "d558418fe08d412c",
+    "1c24a3765cdd43f9"
+  ],
+  "verifiedFiles": 55,
+  "retiredOldestExclusiveFiles": [
+    "/assets/dist/app-style-R3j3Xoat.css",
+    "/assets/dist/composer-4ebc8d0c1f6dd474.js",
+    "/assets/dist/imladris-style-bT2GVmLw.css"
+  ],
+  "verifiedBeforePinningSource": "fd76f5102c1fcbf32a5d53be47744e3d9ce9d927"
+}

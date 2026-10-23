@@ -1,0 +1,33 @@
+{
+  "id": "9e5f56e0-bb30-48db-b684-4fc37718f9e7",
+  "status": "SUCCESS",
+  "createTime": "2026-10-23T22:25:53.870340Z",
+  "startTime": "2026-10-23T22:25:54.446213057Z",
+  "finishTime": "2026-10-23T22:31:29.099560Z",
+  "logUrl": "https://console.cloud.google.com/cloud-build/builds;region=us-east4/9e5f56e0-bb30-48db-b684-4fc37718f9e7?project=616731728350",
+  "commit": "fd76f5102c1fcbf32a5d53be47744e3d9ce9d927",
+  "trigger": "1fa53b11-780b-495c-be33-fb666b70277e",
+  "steps": [
+    {
+      "id": "source",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "build",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "push",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "deploy-service",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "update-jobs",
+      "status": "SUCCESS"
+    }
+  ],
+  "images": []
+}

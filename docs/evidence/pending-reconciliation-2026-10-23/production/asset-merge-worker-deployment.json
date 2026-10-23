@@ -1,0 +1,16 @@
+{
+  "id": "1cb6b37d-6e81-4af1-a6b3-a9dab948a5fc",
+  "source": "wrangler",
+  "strategy": "percentage",
+  "author_email": "htperkins@gmail.com",
+  "annotations": {
+    "workers/triggered_by": "deployment"
+  },
+  "versions": [
+    {
+      "version_id": "3929131e-81e8-4d3f-900b-3488dc2f56db",
+      "percentage": 100
+    }
+  ],
+  "created_on": "2026-10-23T22:27:32.278373Z"
+}
