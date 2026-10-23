@@ -171,7 +171,7 @@ for (const theme of ['light', 'dark'] as const) {
       await shot(page, 'engraved-field-invalid');
     });
 
-    test('the account panels, rows and fields are all bordered', async ({ page }) => {
+    test('the account panels and field pairs are all bordered', async ({ page }) => {
       await login(page);
       await visit(page, '/settings/account');
 
@@ -183,15 +183,20 @@ for (const theme of ['light', 'dark'] as const) {
       expect(panel.width).toBeGreaterThan(0);
       expect(panel.shadow, 'a panel at rest is not elevated').toBe('none');
 
-      const row = page.locator('.field-row').first();
-      await expect(row, '.field-row must render here — a silent skip would hide a regression')
+      // The custom-profile pairs became a two-up .field-grid in 36f7da40; the
+      // frame now lives on each engraved input, so assert the pair through them.
+      const pair = page.locator('.custom-profile-pair').first();
+      await expect(pair, '.custom-profile-pair must render here — a silent skip would hide a regression')
         .toBeVisible();
-      await expectPlainFrame(page, '.field-row', '.field-row');
-      const rest = await row.evaluate(FRAME);
-      expect(rest.width, 'the row has a real edge').toBeGreaterThan(0);
-      await row.locator('.row-input').first().focus();
-      const focused = await row.evaluate(FRAME);
-      expect(focused.color, 'the row gilds on focus').not.toBe(rest.color);
+      await expect(pair.locator('.input-engraved')).toHaveCount(2);
+
+      const field = pair.locator('.input-engraved').first();
+      await field.evaluate((el: HTMLElement) => el.blur());
+      const rest = await field.evaluate(FRAME);
+      expect(rest.width, 'the pair field has a real edge').toBeGreaterThan(0);
+      await field.focus();
+      const focused = await field.evaluate(FRAME);
+      expect(focused.color, 'the pair field gilds on focus').not.toBe(rest.color);
       expect(focused.width, 'and does not thicken, which would reflow it').toBe(rest.width);
       expect(focused.shadow, 'and takes the halo').not.toBe(rest.shadow);
 

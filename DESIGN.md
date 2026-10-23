@@ -539,6 +539,8 @@ It was not always. Until **2026-09-13** these frames cut their corners at 45°, 
 
 Six frames changed and none moved: `.auth-card`, `.input-engraved`/`.textarea-engraved`, `.scribe-panel`, `.field-row`, `.choice-card`, and the `.search-query-well` trio. Each keeps its ink and its padding, and the corner becomes `--radius-md` or `--radius-lg`. Five of the six now draw their edge as a real 1–1.5px border; the trio is the exception and always was — it draws its edge as `inset 0 0 0 1.5px` over `border: 0`, which is fine, because an inset ring follows a radius where it could not follow a chamfer.
 
+`.field-row` no longer has a template consumer. On 2026-10-23 the account settings custom-profile pairs became a two-up `.field-grid` of `.input-engraved` fields, so the frame now lives on the input (ADR 0033 amendment). The `.field-row` rule stays in the design system, inert; deleting it would change the generated stylesheet's release identity and is a separate change.
+
 **Do not reintroduce a cut corner, or a rotated square.** A frame is a border and a radius; a marker is a dot. The same pass turned the diamond `.row-bullet` and the `.choice-card` selected-marker into dots and deleted the orphaned set-gem toggles from the application stylesheet, so the register now carries no angular geometry at all — `clip-path: polygon` and `rotate(45deg)` both appear zero times in `app.css`, and a test holds them there. The treatment is still legacy in the sense that it should not spread to new surfaces, but it no longer makes two surfaces of one product a different shape.
 
 ## Do's and Don'ts

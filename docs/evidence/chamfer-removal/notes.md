@@ -58,7 +58,7 @@ makes it fail with `Expected "rgb(234, 217, 168)" / Received "rgb(220, 227, 221)
 | capture | frame |
 |---|---|
 | `auth-card.png` | `.variant-auth .auth-card`, and `::before` proven free of gradient layers |
-| `account-settings.png` | `.scribe-panel` (hairline, `box-shadow: none`), `.input-engraved`, `.field-row` |
+| `account-settings.png` | `.scribe-panel` (hairline, `box-shadow: none`), `.input-engraved`, `.custom-profile-pair` (two engraved fields; `.field-row` before 36f7da40) |
 | `appearance-choice-cards.png` | `.choice-card` |
 | `search-well.png` | `.search-query-well`, inset ring intact on the new radius |
 | `compose-fields.png` | `.compose-title-input`, `.compose-board-select` |
