@@ -1,0 +1,16 @@
+
+Running 9 tests using 1 worker
+
+(node:27812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › settings-audit-remediation.spec.ts:99:7 › settings audit native rendering › subscription controls retain readable widths and stacked actions at 320px with doubled text (2.6s)
+  ok 2 [desktop] › settings-audit-remediation.spec.ts:149:7 › settings audit native rendering › connected providers and long sessions keep text columns readable as chips and actions wrap (3.8s)
+  ok 3 [desktop] › settings-audit-remediation.spec.ts:192:7 › settings audit native rendering › empty security fields have visible boundaries in both themes and forced colors without heading overflow (2.5s)
+  ok 4 [desktop] › settings-audit-remediation.spec.ts:235:7 › settings audit native rendering › native settings chooser omits the unavailable replay button (1.9s)
+  ok 5 [desktop] › settings-audit-remediation.spec.ts:249:7 › settings audit native rendering › passwordless shared password fields keep visible boundaries on security and connections (2.9s)
+  ok 6 [desktop] › settings-audit-remediation.spec.ts:272:7 › settings audit native rendering › connections copy reflects password availability before and after setting one (2.9s)
+  ok 7 [desktop] › settings-audit-remediation.spec.ts:295:5 › a blocked tour script leaves replay unavailable while native settings navigation works (2.1s)
+  ok 8 [desktop] › settings-audit-remediation.spec.ts:309:5 › an unavailable fetch API leaves replay hidden even when the tour script loads (1.6s)
+  ok 9 [desktop] › settings-audit-remediation.spec.ts:326:5 › successful tour enhancement reveals an operable replay control and restores focus (1.7s)
+
+  9 passed (23.1s)

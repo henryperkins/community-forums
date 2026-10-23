@@ -1,0 +1,140 @@
+# Historical RetroBoards Cloud Run snapshot from 2026-10-11, revision retroboards-00011-rhf.
+# The automatic main deployment uses deploy/cloudrun/cloudbuild.yaml instead.
+# Validate from the repository root (does not deploy):
+# gcloud run services replace deploy/cloudrun-service.yaml --region=us-east4 --project=rising-woods-449718-v6 --dry-run
+# Apply after validation:
+# gcloud run services replace deploy/cloudrun-service.yaml --region=us-east4 --project=rising-woods-449718-v6
+#
+# This is a full service specification: refresh it against the live service before
+# each release, including the image digest and verified numeric secret versions.
+# Service IAM is managed separately; ingress=all does not grant public invocation.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: retroboards
+  namespace: '616731728350'
+  labels:
+    app: retroboards
+    role: web
+    cloud.googleapis.com/location: us-east4
+  annotations:
+    run.googleapis.com/ingress: all
+    # Preserve the existing service-wide ceiling as well as the revision limit.
+    run.googleapis.com/maxScale: '20'
+spec:
+  template:
+    metadata:
+      labels:
+        app: retroboards
+        role: web
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+        run.googleapis.com/cloudsql-instances: rising-woods-449718-v6:us-east4:imladris-boards
+        # A revision limit is not a distributed lock: instances can overlap.
+        # Serialize migrations and audit shared-file writes before scaling out.
+        autoscaling.knative.dev/maxScale: '1'
+    spec:
+      serviceAccountName: retroboards-app@rising-woods-449718-v6.iam.gserviceaccount.com
+      containerConcurrency: 16
+      timeoutSeconds: 300
+      containers:
+        # Historical image digest (tag 92ccb2a33972a3fd4235b0ee8b07b32590c65979); refresh before applying.
+        - image: us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app@sha256:1b97985f9ba8f773336decab61c92c62d977d8dd2526a0631d6f469fcabe7c39
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+          env:
+            - name: APP_ENV
+              value: production
+            - name: APP_DEBUG
+              value: 'false'
+            - name: APP_URL
+              value: https://forum.candidary.online
+            - name: SESSION_SECURE
+              value: 'true'
+            - name: SECURITY_HSTS
+              value: 'true'
+            - name: MAIL_DRIVER
+              value: cloudflare
+            - name: MAIL_CLOUDFLARE_ACCOUNT_ID
+              value: a77e479f6736120eadd99973dbeb705e
+            - name: MAIL_FROM
+              value: noreply@candidary.online
+            - name: MAIL_TIMEOUT_SECONDS
+              value: '30'
+            - name: DB_SOCKET
+              value: /cloudsql/rising-woods-449718-v6:us-east4:imladris-boards
+            - name: DB_DATABASE
+              value: retroboards
+            - name: DB_USERNAME
+              value: retroboards_app
+            - name: DB_EMULATE_PREPARES
+              value: 'true'
+            - name: UPLOADS_PATH
+              value: /data/media
+            - name: PACKAGES_STORAGE_PATH
+              value: /data/packages
+            - name: RATELIMIT_PATH
+              value: /var/www/html/storage/ratelimit
+            - name: TRUSTED_PROXIES
+              value: 169.254.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32
+            # Existing boot behavior. Move migrations to a serialized release
+            # step before introducing concurrent deployments or more instances.
+            - name: RUN_MIGRATIONS
+              value: 'true'
+            # Version metadata verified enabled on 2026-10-11; no secret values
+            # belong in this file. Rotate by explicitly deploying new versions.
+            - name: APP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: retroboards-app-key
+                  key: '1'
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: imladris-boards-app-password
+                  key: '1'
+            - name: MAIL_CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: retroboards-cloudflare-email-token
+                  key: '1'
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          # Exercise PHP and the DB using the verified origin route. Retain
+          # the 240-second startup budget while checking every 10 seconds.
+          startupProbe:
+            httpGet:
+              path: /healthz/
+              port: 8080
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 24
+          # Apache-only liveness: public/ping.txt is served without PHP or DB
+          # access. This does not detect PHP-only failures; monitor /healthz
+          # separately. A DB outage must not directly trigger a restart loop.
+          livenessProbe:
+            httpGet:
+              path: /ping.txt
+              port: 8080
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: data
+          csi:
+            driver: gcsfuse.run.googleapis.com
+            volumeAttributes:
+              bucketName: rising-woods-449718-v6-retroboards-data
+              mountOptions: uid=33,gid=33,file-mode=644,dir-mode=755,implicit-dirs
+  traffic:
+    - latestRevision: true
+      percent: 100

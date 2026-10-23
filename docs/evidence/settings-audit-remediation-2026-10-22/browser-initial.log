@@ -1,0 +1,745 @@
+[WebServer] [Thu Oct 22 22:03:26 2026] PHP 8.3.35 Development Server (http://localhost:8052) started
+[WebServer] [Thu Oct 22 22:03:26 2026] [::1]:49323 Accepted
+[WebServer] [Thu Oct 22 22:03:26 2026] [::1]:49323 Closing
+
+Running 7 tests using 1 worker
+
+(node:22056) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:61615 Accepted
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:61615 Closing
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:53624 Accepted
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:53624 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:50504 Accepted
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:53624 Closing
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:59098 Accepted
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:50504 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:59098 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:59098 Closing
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:50504 Closing
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:59049 Accepted
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:59049 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:59049 Closing
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:64463 Accepted
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:64463 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:64463 Closing
+[WebServer] [Thu Oct 22 22:03:28 2026] [::1]:59113 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:59113 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:50676 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:50676 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:49348 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:49348 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:50386 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:50386 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:55127 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:49348 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:50386 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:55127 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:55127 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:61288 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:55853 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:58083 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:51432 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:61288 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:58735 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:61288 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:55853 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:58083 [200]: GET /assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:51432 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:58735 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:55853 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:58083 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:51432 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:58735 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:57525 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:57525 Closing
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:61288 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:61288 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:59899 Accepted
+[WebServer] [Thu Oct 22 22:03:29 2026] [::1]:61288 Closing
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:63317 Accepted
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:59899 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:63317 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:63317 Closing
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:59899 Closing
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:57758 Accepted
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:57758 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:53745 Accepted
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:57758 Closing
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:59611 Accepted
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:51880 Accepted
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:53745 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:59611 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:51880 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:53745 Closing
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:59611 Closing
+[WebServer] [Thu Oct 22 22:03:30 2026] [::1]:51880 Closing
+  x  1 [desktop] › settings-audit-remediation.spec.ts:99:7 › settings audit native rendering › subscription controls retain readable widths and stacked actions at 320px with doubled text (3.1s)
+(node:16368) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:50679 Accepted
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:50679 Closing
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:50923 Accepted
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:50923 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:55090 Accepted
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:50923 Closing
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:62380 Accepted
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:55090 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:62380 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:62380 Closing
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:55090 Closing
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:59611 Accepted
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:59611 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:59611 Closing
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:56677 Accepted
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:56677 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:56677 Closing
+[WebServer] [Thu Oct 22 22:03:32 2026] [::1]:55108 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:55108 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:56870 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:56870 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54750 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54750 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:56232 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54750 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:62276 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:56232 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:62276 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:62276 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:56232 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54894 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54882 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:57127 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:57654 Accepted
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54894 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54882 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:57127 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:57654 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54894 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:54882 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:57127 Closing
+[WebServer] [Thu Oct 22 22:03:33 2026] [::1]:57654 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:65142 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:65142 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:62841 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:62841 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:64552 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:62841 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:55430 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:64552 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:55430 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:55430 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:64552 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:52197 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:57486 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:62633 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:52197 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:52197 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:50529 Accepted
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:57486 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:62633 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:50529 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:57486 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:62633 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:50529 Closing
+[WebServer] [Thu Oct 22 22:03:34 2026] [::1]:63365 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:63365 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64172 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64172 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:57833 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64172 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:55232 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:57833 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:55232 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:55232 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:57833 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64796 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64796 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:52413 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64796 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:59769 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64190 Accepted
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:52413 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:59769 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64190 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:52413 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:59769 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:64190 Closing
+[WebServer] [Thu Oct 22 22:03:35 2026] [::1]:51977 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:51977 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:57366 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:57366 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:50775 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:50775 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:59084 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:57366 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:50775 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:59084 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:59084 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:52571 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:50246 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53353 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:59383 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:52571 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:50246 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53353 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:59383 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:52571 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:50246 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53353 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:59383 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:54294 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:54294 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:65041 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:65041 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:65041 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:51474 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53734 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:51474 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53734 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53734 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:51474 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:52689 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:51132 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:55248 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53473 Accepted
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:52689 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:51132 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:55248 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53473 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:52689 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:51132 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:55248 Closing
+[WebServer] [Thu Oct 22 22:03:36 2026] [::1]:53473 Closing
+  ok 2 [desktop] › settings-audit-remediation.spec.ts:131:7 › settings audit native rendering › connected providers and long sessions keep text columns readable as chips and actions wrap (6.0s)
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:54171 Accepted
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:54171 Closing
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:56374 Accepted
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:62067 Accepted
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:52152 Accepted
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:56374 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:62067 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:52152 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:56374 Closing
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:52152 Closing
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:62067 Closing
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:64913 Accepted
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:64913 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:64913 Closing
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:54274 Accepted
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:54274 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:54274 Closing
+[WebServer] [Thu Oct 22 22:03:38 2026] [::1]:59608 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:59608 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:57249 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:57249 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:63758 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:63758 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50445 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50445 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62852 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:63758 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50445 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62852 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62852 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50250 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62380 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50250 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51145 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50250 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62559 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62380 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51145 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62559 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62380 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51145 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:62559 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51132 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51132 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:64802 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:64802 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50179 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:64802 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:58377 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50179 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:58377 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:58377 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:50179 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:60180 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:60180 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:60180 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:61288 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51753 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:64579 Accepted
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:61288 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51753 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:64579 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:61288 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:51753 Closing
+[WebServer] [Thu Oct 22 22:03:39 2026] [::1]:64579 Closing
+  ok 3 [desktop] › settings-audit-remediation.spec.ts:174:7 › settings audit native rendering › empty security fields have visible boundaries in both themes and forced colors without heading overflow (2.7s)
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:52396 Accepted
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:52396 Closing
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:54761 Accepted
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:59680 Accepted
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:57921 Accepted
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:54761 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:59680 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:57921 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:54761 Closing
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:57921 Closing
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:59680 Closing
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:52898 Accepted
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:52898 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:52898 Closing
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:60345 Accepted
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:60345 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:60345 Closing
+[WebServer] [Thu Oct 22 22:03:41 2026] [::1]:58020 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:58020 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49683 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49683 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:50161 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:50161 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:50848 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:59637 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:50161 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:50848 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:59637 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:59637 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:50848 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:64609 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62330 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:64609 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:64609 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57463 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:55690 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62330 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57463 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:55690 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62330 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57463 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:55690 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:65459 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:65459 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:63662 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:63662 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49951 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:63662 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:61506 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49951 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:61506 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:61506 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49951 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:55477 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49951 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:64664 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52989 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:55477 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49951 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:64664 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52989 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:55477 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:49951 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:64664 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52989 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52640 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52640 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57505 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57505 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62406 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57505 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:51873 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62406 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:51873 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:51873 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62406 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62283 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62283 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52531 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:62283 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57099 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:63265 Accepted
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52531 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57099 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:63265 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:52531 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:57099 Closing
+[WebServer] [Thu Oct 22 22:03:42 2026] [::1]:63265 Closing
+  ok 4 [desktop] › settings-audit-remediation.spec.ts:217:7 › settings audit native rendering › native settings chooser omits the unavailable replay button (2.4s)
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:55111 Accepted
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:55111 Closing
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:65388 Accepted
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:65388 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:61440 Accepted
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:65388 Closing
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:64247 Accepted
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:61440 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:64247 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:64247 Closing
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:61440 Closing
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:51615 Accepted
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:51615 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:51615 Closing
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:58955 Accepted
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:58955 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:58955 Closing
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:55220 Accepted
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:55220 Closing
+[WebServer] [Thu Oct 22 22:03:43 2026] [::1]:52166 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:52166 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50467 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50467 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:64379 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:51780 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50467 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:64379 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:51780 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:51780 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:64379 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:57355 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:58695 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:57355 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:54570 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:57355 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:54522 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:58695 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:58695 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:54570 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:54522 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:54570 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:54522 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50231 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50231 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50537 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50537 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:63471 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50537 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50691 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:63471 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50691 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:50691 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:63471 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:59516 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:59516 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:64026 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:59516 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:52061 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60707 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:64026 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:52061 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60707 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:64026 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:52061 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60707 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:53324 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:53324 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60935 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60935 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:51624 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60935 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:51624 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60528 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:51624 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60528 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60528 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60391 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60391 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:63141 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:60391 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:65070 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:49365 Accepted
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:63141 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:65070 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:49365 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:63141 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:65070 Closing
+[WebServer] [Thu Oct 22 22:03:44 2026] [::1]:49365 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:53818 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:53818 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:63294 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:63294 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:49240 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:49240 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:64885 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:49240 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:59143 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:64885 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:59143 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:59143 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:64885 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:54098 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:54098 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:53843 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:54098 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:51132 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:58350 Accepted
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:53843 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:51132 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:58350 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:53843 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:51132 Closing
+[WebServer] [Thu Oct 22 22:03:45 2026] [::1]:58350 Closing
+  ok 5 [desktop] › settings-audit-remediation.spec.ts:231:7 › settings audit native rendering › connections copy reflects password availability before and after setting one (2.9s)
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:57846 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:57846 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:62858 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:62858 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:62184 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:62858 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:62184 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:62184 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51432 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:52528 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51432 [200]: GET /assets/dist/app-f849a2ee98a4672f.js
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:52528 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51432 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:52528 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50904 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51441 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50904 [200]: GET /assets/dist/composer-692ed48b0da96053.js
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51441 [200]: GET /assets/dist/passkeys-27f8b05555555872.js
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50904 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51441 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:65014 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:65014 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:65014 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:49379 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:49379 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:49379 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51479 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:51479 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50577 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50577 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:55919 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50094 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:55919 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50094 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:55919 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:53152 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50118 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:58529 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50094 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50325 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:53152 [200]: GET /assets/dist/app-f849a2ee98a4672f.js
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50118 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:58529 [200]: GET /assets/dist/composer-692ed48b0da96053.js
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50325 [200]: GET /assets/dist/passkeys-27f8b05555555872.js
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:55052 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:55052 [200]: GET /assets/dist/tour-fe3808f0f605f1e7.js
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:53152 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50118 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:58529 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:50325 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:55052 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:63385 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:63385 Closing
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:64240 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:61329 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:64240 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:55928 Accepted
+[WebServer] [Thu Oct 22 22:03:46 2026] [::1]:61329 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:63500 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:55928 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:57407 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:63500 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:64240 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60709 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:57407 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:61329 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:52163 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60709 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:55928 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:63500 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:51980 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:52163 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60756 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:51980 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:54614 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60756 [200]: GET /assets/dist/app-f849a2ee98a4672f.js
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:59390 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:54614 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:52163 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60204 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:59390 [200]: GET /assets/dist/composer-692ed48b0da96053.js
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60204 [200]: GET /assets/dist/passkeys-27f8b05555555872.js
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60756 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:53347 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:54614 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:51980 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:59390 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60204 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:53347 [200]: GET /assets/dist/tour-fe3808f0f605f1e7.js
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:53347 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:55531 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:56629 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:55531 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60783 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:55531 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:56629 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:51784 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60783 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:52206 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:56629 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:60783 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:59125 Accepted
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:51784 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:52206 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:59125 Closing
+[WebServer] [Thu Oct 22 22:03:47 2026] [::1]:51784 Closing
+  x  6 [desktop] › settings-audit-remediation.spec.ts:254:5 › a blocked tour script leaves replay unavailable while native settings navigation works (1.6s)
+(node:28548) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:64462 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:64462 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:51899 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:51899 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:53307 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:51899 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:54667 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:55666 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:61562 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:53636 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:53307 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:54667 [200]: GET /assets/dist/app-f849a2ee98a4672f.js
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:55666 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:61562 [200]: GET /assets/dist/composer-692ed48b0da96053.js
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:53636 [200]: GET /assets/dist/passkeys-27f8b05555555872.js
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:54667 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:55666 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:61562 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:53636 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:53307 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:56988 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:62511 Accepted
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:56988 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:62511 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:56988 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:62511 Closing
+[WebServer] [Thu Oct 22 22:03:48 2026] [::1]:52121 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52121 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:53313 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:53313 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50453 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50453 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55147 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55147 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57378 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50453 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55867 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55147 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54319 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52774 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50177 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57378 [200]: GET /assets/dist/app-f849a2ee98a4672f.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55867 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54319 [200]: GET /assets/dist/composer-692ed48b0da96053.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52774 [200]: GET /assets/dist/passkeys-27f8b05555555872.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50177 [200]: GET /assets/dist/tour-fe3808f0f605f1e7.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57378 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55867 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54319 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52774 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50177 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54581 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65510 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54581 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:63856 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65510 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:58480 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:63856 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52092 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:58480 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:64617 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52092 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54036 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:64617 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:63856 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54036 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:58480 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52092 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:64617 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65453 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65453 [200]: GET /assets/dist/imladris-style-CRsa_HRN.css
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57390 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65453 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57390 [200]: GET /assets/dist/app-style-Cfb-WHlX.css
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54924 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:51456 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57390 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50848 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57966 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:63336 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54924 [200]: GET /assets/dist/app-f849a2ee98a4672f.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:51456 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50848 [200]: GET /assets/dist/composer-692ed48b0da96053.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57966 [200]: GET /assets/dist/passkeys-27f8b05555555872.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:63336 [200]: GET /assets/dist/tour-fe3808f0f605f1e7.js
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:54924 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:51456 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:50848 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57966 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:63336 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:56232 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:51973 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:56232 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65385 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:51973 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55733 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65385 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:64574 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55733 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65075 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:64574 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65075 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65385 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:55733 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:64574 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:65075 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52922 Accepted
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:52922 Closing
+[WebServer] [Thu Oct 22 22:03:49 2026] [::1]:57524 Accepted
+  ok 7 [desktop] › settings-audit-remediation.spec.ts:268:5 › successful tour enhancement reveals an operable replay control and restores focus (1.9s)
+[WebServer] [Thu Oct 22 22:03:50 2026] [::1]:57524 Closing
+
+
+  1) [desktop] › settings-audit-remediation.spec.ts:99:7 › settings audit native rendering › subscription controls retain readable widths and stacked actions at 320px with doubled text 
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= NaN
+    Received:    128
+
+      119 |       expect(measurements.select.width).toBeGreaterThan(120);
+      120 |       expect(measurements.save.width).toBeGreaterThanOrEqual(measurements.form.width * 0.9);
+    > 121 |       expect(measurements.save.height).toBeLessThanOrEqual(measurements.saveLineHeight * 3 + 32);
+          |                                        ^
+      122 |       expect(measurements.off.top).toBeGreaterThanOrEqual(measurements.form.bottom - 1);
+      123 |     }
+      124 |     const form = page.locator('.account-subscription-row > form').first();
+        at C:\Users\htper\community-forums\tests\browser\settings-audit-remediation.spec.ts:121:40
+
+    Error Context: ..\..\docs\evidence\settings-audit-remediation-2026-10-22\.artifacts\settings-audit-remediation-17ca1--at-320px-with-doubled-text-desktop\error-context.md
+
+  2) [desktop] › settings-audit-remediation.spec.ts:254:5 › a blocked tour script leaves replay unavailable while native settings navigation works 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      259 |   await page.goto('/settings/account');
+      260 |   await page.locator('[data-settings-mobile-nav] > summary').click();
+    > 261 |   expect(blocked).toBeGreaterThan(0);
+          |                   ^
+      262 |   await expect(page.locator('[data-tour-replay]:visible')).toHaveCount(0);
+      263 |   await capture(page, info, 'tour-script-blocked-hidden');
+      264 |   await page.locator('[data-settings-mobile-nav]').getByRole('link', { name: 'Security', exact: true }).click();
+        at C:\Users\htper\community-forums\tests\browser\settings-audit-remediation.spec.ts:261:19
+
+    Error Context: ..\..\docs\evidence\settings-audit-remediation-2026-10-22\.artifacts\settings-audit-remediation-60164-e-settings-navigation-works-desktop\error-context.md
+
+  2 failed
+    [desktop] › settings-audit-remediation.spec.ts:99:7 › settings audit native rendering › subscription controls retain readable widths and stacked actions at 320px with doubled text 
+    [desktop] › settings-audit-remediation.spec.ts:254:5 › a blocked tour script leaves replay unavailable while native settings navigation works 
+  5 passed (24.8s)

@@ -11,5 +11,5 @@ $email = $draft !== [] ? ($draft['email'] ?? '') === '1' : !empty($subscription[
         <option value="<?= $value ?>"<?= $frequency === $value ? ' selected' : '' ?>><?= $label ?></option>
     <?php endforeach; ?>
 </select></label>
-<label><input type="checkbox" name="in_app" value="1"<?= $inApp ? ' checked' : '' ?>> In-app notifications</label>
-<label><input type="checkbox" name="email" value="1"<?= $email ? ' checked' : '' ?>> Email notifications</label>
+<label class="switchline"><input class="switch" type="checkbox" role="switch" name="in_app" value="1"<?= $inApp ? ' checked' : '' ?>><span class="switch-text">In-app notifications</span></label>
+<label class="switchline"><input class="switch" type="checkbox" role="switch" name="email" value="1"<?= $email ? ' checked' : '' ?>><span class="switch-text">Email notifications</span></label>

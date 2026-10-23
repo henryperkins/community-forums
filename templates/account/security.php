@@ -46,14 +46,14 @@ $secPanelFocus = $secOrphaned === [];
 <div class="settings-screen">
     <header class="settings-head">
         <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
-        <p>Everything this community knows about you, and everything it does on your behalf.</p>
+        <?= $this->partial('partials/settings_intro') ?>
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav', ['active' => 'security']) ?>
 
         <div class="settings-pane">
     <?php if ($secOrphaned !== []): ?>
-        <div class="card notice" role="alert" tabindex="-1" autofocus>
+        <div class="callout callout-danger" role="alert" tabindex="-1" autofocus>
             <?php foreach ($secOrphaned as $secMessage): ?>
                 <p class="field-error"><?= $e($secMessage) ?></p>
             <?php endforeach; ?>
@@ -70,7 +70,7 @@ $secPanelFocus = $secOrphaned === [];
               // sibling would claim its own grid cell, hence the .field-cell wrap. ?>
         <label class="field">
             <span>Current password</span>
-            <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('password', 'current_password') ?> required>
+            <input type="password" name="current_password" class="input input-engraved" autocomplete="current-password"<?= $sfattr('password', 'current_password') ?> required>
         </label>
         <?= $sferr('password', 'current_password') ?>
         <?php // copy: the design pairs the new and confirm fields on one row. The
@@ -80,14 +80,14 @@ $secPanelFocus = $secOrphaned === [];
             <div class="field-cell">
                 <label class="field">
                     <span>New password</span>
-                    <input type="password" name="new_password" class="input" autocomplete="new-password"<?= $sfattr('password', 'new_password') ?> required>
+                    <input type="password" name="new_password" class="input input-engraved" autocomplete="new-password"<?= $sfattr('password', 'new_password') ?> required>
                 </label>
                 <?= $sferr('password', 'new_password') ?>
             </div>
             <div class="field-cell">
                 <label class="field">
                     <span>Confirm new password</span>
-                    <input type="password" name="new_password_confirm" class="input" autocomplete="new-password"<?= $sfattr('password', 'new_password_confirm') ?> required>
+                    <input type="password" name="new_password_confirm" class="input input-engraved" autocomplete="new-password"<?= $sfattr('password', 'new_password_confirm') ?> required>
                 </label>
                 <?= $sferr('password', 'new_password_confirm') ?>
             </div>
@@ -121,7 +121,7 @@ $secPanelFocus = $secOrphaned === [];
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_enroll', 'current_password') ?> required>
+                    <input type="password" name="current_password" class="input input-engraved" autocomplete="current-password"<?= $sfattr('totp_enroll', 'current_password') ?> required>
                 </label>
                 <?= $sferr('totp_enroll', 'current_password') ?>
                 <button class="btn" type="submit"><?= !empty($totp['pending']) ? 'Restart setup' : 'Start setup' ?></button>
@@ -132,11 +132,11 @@ $secPanelFocus = $secOrphaned === [];
             <div class="stacked">
                 <label class="field">
                     <span>Authenticator secret</span>
-                    <input class="input" value="<?= $e((string) $setup['secret']) ?>" readonly>
+                    <input class="input input-engraved" value="<?= $e((string) $setup['secret']) ?>" readonly>
                 </label>
                 <label class="field">
                     <span>Authenticator URI</span>
-                    <input class="input" value="<?= $e((string) $setup['uri']) ?>" readonly>
+                    <input class="input input-engraved" value="<?= $e((string) $setup['uri']) ?>" readonly>
                 </label>
             </div>
         <?php endif; ?>
@@ -146,12 +146,12 @@ $secPanelFocus = $secOrphaned === [];
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_confirm', 'current_password') ?> required>
+                    <input type="password" name="current_password" class="input input-engraved" autocomplete="current-password"<?= $sfattr('totp_confirm', 'current_password') ?> required>
                 </label>
                 <?= $sferr('totp_confirm', 'current_password') ?>
                 <label class="field">
                     <span>6-digit code</span>
-                    <input name="totp_code" class="input" inputmode="numeric" autocomplete="one-time-code"<?= field_attrs($secErrs, 'totp_code') ?> required>
+                    <input name="totp_code" class="input input-engraved" inputmode="numeric" autocomplete="one-time-code"<?= field_attrs($secErrs, 'totp_code') ?> required>
                 </label>
                 <?= field_error($secErrs, 'totp_code') ?>
                 <button class="btn" type="submit">Verify and enable</button>
@@ -178,7 +178,7 @@ $secPanelFocus = $secOrphaned === [];
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_rotate', 'current_password') ?> required>
+                    <input type="password" name="current_password" class="input input-engraved" autocomplete="current-password"<?= $sfattr('totp_rotate', 'current_password') ?> required>
                 </label>
                 <?= $sferr('totp_rotate', 'current_password') ?>
                 <button class="btn btn-secondary" type="submit">Rotate recovery codes</button>
@@ -188,12 +188,12 @@ $secPanelFocus = $secOrphaned === [];
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password"<?= $sfattr('totp_disable', 'current_password') ?> required>
+                    <input type="password" name="current_password" class="input input-engraved" autocomplete="current-password"<?= $sfattr('totp_disable', 'current_password') ?> required>
                 </label>
                 <?= $sferr('totp_disable', 'current_password') ?>
                 <label class="field">
                     <span>Authenticator or recovery code</span>
-                    <input name="disable_code" class="input" autocomplete="one-time-code"<?= field_attrs($secErrs, 'disable_code') ?> required>
+                    <input name="disable_code" class="input input-engraved" autocomplete="one-time-code"<?= field_attrs($secErrs, 'disable_code') ?> required>
                 </label>
                 <?= field_error($secErrs, 'disable_code') ?>
                 <button class="btn danger" type="submit">Disable two-factor authentication</button>
@@ -205,7 +205,7 @@ $secPanelFocus = $secOrphaned === [];
     <section class="stacked scribe-panel" data-passkey-panel>
         <h2 class="scribe-panel-head">Passkeys</h2>
         <?php if (!empty($passkey_errors)): ?>
-            <p class="field-error"><?= $e(implode(' ', $passkey_errors)) ?></p>
+            <p class="callout callout-danger" tabindex="-1" autofocus><?= $e(implode(' ', $passkey_errors)) ?></p>
         <?php endif; ?>
         <?php if ($passkeys['credentials'] === []): ?>
             <p class="muted">No passkeys yet. A passkey signs you in with your device's screen lock instead of your password.</p>
@@ -221,9 +221,9 @@ $secPanelFocus = $secOrphaned === [];
                             <?= $this->csrfField() ?>
                             <label class="field">
                                 <span>Passkey name</span>
-                                <input type="text" name="nickname" class="input" value="<?= $e($pk['nickname']) ?>" maxlength="120">
+                                <input type="text" name="nickname" class="input input-engraved" value="<?= $e($pk['nickname']) ?>" maxlength="120">
                             </label>
-                            <button type="submit" class="btn btn-secondary">Rename</button>
+                            <button type="submit" class="btn btn-secondary" aria-label="Rename passkey <?= $e($pk['nickname'] !== '' ? $pk['nickname'] : 'Unnamed passkey') ?>">Rename</button>
                         </form>
                         <form method="post" action="/settings/security/passkeys/<?= (int) $pk['id'] ?>/revoke" class="stacked" data-passkey-revoke-form>
                             <?= $this->csrfField() ?>
@@ -231,12 +231,12 @@ $secPanelFocus = $secOrphaned === [];
                             <?php if ($passkeys['has_password']): ?>
                                 <label class="field">
                                     <span>Current password</span>
-                                    <input type="password" name="current_password" class="input" autocomplete="current-password">
+                                    <input type="password" name="current_password" class="input input-engraved" autocomplete="current-password">
                                 </label>
                             <?php else: ?>
                                 <button type="button" class="btn btn-secondary" data-passkey-stepup-btn hidden>Confirm with a passkey</button>
                             <?php endif; ?>
-                            <button type="submit" class="btn danger"<?= !$passkeys['has_password'] ? ' data-passkey-needs-stepup' : '' ?>>Remove</button>
+                            <button type="submit" class="btn danger" aria-label="Remove passkey <?= $e($pk['nickname'] !== '' ? $pk['nickname'] : 'Unnamed passkey') ?>"<?= !$passkeys['has_password'] ? ' data-passkey-needs-stepup' : '' ?>>Remove</button>
                             <p class="field-error" data-passkey-revoke-error role="alert" hidden></p>
                         </form>
                     </li>
@@ -254,12 +254,12 @@ $secPanelFocus = $secOrphaned === [];
             <?php if ($passkeys['has_password']): ?>
                 <label class="field">
                     <span>Current password</span>
-                    <input type="password" name="current_password" class="input" autocomplete="current-password">
+                    <input type="password" name="current_password" class="input input-engraved" autocomplete="current-password">
                 </label>
             <?php endif; ?>
             <label class="field">
                 <span>Name this passkey (optional)</span>
-                <input type="text" name="nickname" class="input" maxlength="120">
+                <input type="text" name="nickname" class="input input-engraved" maxlength="120">
             </label>
             <button type="button" class="btn" data-passkey-add-btn>Add a passkey</button>
             <p class="field-error" data-passkey-add-error role="alert" hidden></p>

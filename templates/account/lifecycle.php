@@ -26,14 +26,14 @@ $unscoped = ($deactivateErrors === [] && $deleteErrors === [])
 <div class="settings-screen">
     <header class="settings-head">
         <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
-        <p>Everything this community knows about you, and everything it does on your behalf.</p>
+        <?= $this->partial('partials/settings_intro') ?>
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav', ['active' => 'account']) ?>
 
         <div class="settings-pane">
     <?php if (!empty($unscoped)): ?>
-        <div class="scribe-panel error-list" role="alert">
+        <div class="callout callout-danger" role="alert" tabindex="-1" autofocus>
             <?php foreach ($unscoped as $message): ?>
                 <p><?= $e($message) ?></p>
             <?php endforeach; ?>

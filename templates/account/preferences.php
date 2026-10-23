@@ -15,7 +15,7 @@ $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
 <div class="settings-screen">
     <header class="settings-head">
         <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
-        <p>Everything this community knows about you, and everything it does on your behalf.</p>
+        <?= $this->partial('partials/settings_intro') ?>
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav', ['active' => 'reading']) ?>
@@ -52,8 +52,8 @@ $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
         <button class="btn" type="submit">Save reading preferences</button>
     </form>
     <form method="post" action="/settings/member-surfaces" class="stacked scribe-panel member-surface-settings">
-        <h2 class="scribe-panel-head">Member surface panes</h2>
-        <p class="muted">These choices are rendered by the server before the page appears, so your board rail and Inbox reading pane do not flash between states.</p>
+        <h2 class="scribe-panel-head">Forum panes</h2>
+        <p class="muted">Choose which panes are open when you visit the forum.</p>
         <?= $this->csrfField() ?>
         <input type="hidden" name="return" value="/settings/preferences">
         <div class="switch-stack switch-stack-tight">

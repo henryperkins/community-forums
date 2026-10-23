@@ -146,15 +146,17 @@ final class MessagesStylesContractTest extends TestCase
     {
         $css = self::css();
 
-        self::assertSame(1, preg_match('/@media \(pointer: coarse\) \{(?<block>.*?)\n\}/s', $css, $touch));
-        self::assertMatchesRegularExpression('/\.dm-back, \.dm-iconbtn \{ width: 44px; height: 44px; \}/', $touch['block']);
-        self::assertMatchesRegularExpression('/\.dm-dialog-close \{ width: 44px; height: 44px; \}/', $touch['block']);
-        self::assertMatchesRegularExpression('/\.dm-earlier, \.dm-latest \{ min-height: 44px; \}/', $touch['block']);
-        self::assertStringContainsString('inset: min(0px, calc((100% - 44px) / 2));', $touch['block']);
+        preg_match_all('/@media \(pointer: coarse\) \{(?<block>.*?)\n\}/s', $css, $media);
+        $touch = array_values(array_filter($media['block'], static fn (string $block): bool => str_contains($block, '.dm-back, .dm-iconbtn')));
+        self::assertCount(1, $touch, 'Select the Messages block, not another surface\'s coarse-pointer rules.');
+        self::assertMatchesRegularExpression('/\.dm-back, \.dm-iconbtn \{ width: 44px; height: 44px; \}/', $touch[0]);
+        self::assertMatchesRegularExpression('/\.dm-dialog-close \{ width: 44px; height: 44px; \}/', $touch[0]);
+        self::assertMatchesRegularExpression('/\.dm-earlier, \.dm-latest \{ min-height: 44px; \}/', $touch[0]);
+        self::assertStringContainsString('inset: min(0px, calc((100% - 44px) / 2));', $touch[0]);
         foreach (['.dm-listpane-filters .pill::after', '.dm-dotbtn::after', '.dm-chip-x::after'] as $hit) {
-            self::assertStringContainsString($hit, $touch['block']);
+            self::assertStringContainsString($hit, $touch[0]);
         }
-        self::assertMatchesRegularExpression('/\.dm-linkbtn \{[^}]*min-height: 44px/', $touch['block']);
+        self::assertMatchesRegularExpression('/\.dm-linkbtn \{[^}]*min-height: 44px/', $touch[0]);
         self::assertMatchesRegularExpression('/padding:\s*var\(--space-1\)\s+var\(--space-2\)/', self::rule($css, '.dm-chip'));
         self::assertMatchesRegularExpression('/display:\s*none/', self::rule($css, '.main:has(> .dm-shell.reading) > .forum-subheader .dm-lock-eyebrow'));
         self::assertMatchesRegularExpression('/display:\s*none/', self::rule($css, '.main:has(> .dm-shell.reading) > .forum-subheader :is(.dm-listpane-filters, .dm-search-menu)'));

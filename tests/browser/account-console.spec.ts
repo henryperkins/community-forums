@@ -6,7 +6,7 @@ import path from 'node:path';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/imladris-admin-account-slice-4');
-const INTRO = 'Everything this community knows about you, and everything it does on your behalf.';
+const INTRO = 'Manage your profile, preferences, and account security.';
 const CONDITIONAL_FLAGS = ['drafts', 'oauth', 'account_lifecycle', 'appeals', 'product_tour'] as const;
 const DESTINATION_LABELS = [
   'Profile', 'Security', 'Privacy', 'Appearance', 'Reading', 'Composing', 'Drafts', 'Boards',
@@ -26,7 +26,7 @@ const DESTINATIONS = [
   ['/settings/blocks', 'blocks'],
   ['/settings/sessions', 'sessions'],
   ['/settings/account/lifecycle', 'account'],
-  ['/appeals', ''],
+  ['/appeals', 'appeals'],
 ] as const;
 const GROUP_KEYS = [
   ['profile', 'security', 'privacy'],
@@ -320,11 +320,12 @@ test('mobile no-JavaScript account navigation follows every available ordinary h
     await expect(initialNav.locator('.settings-rail-title')).toHaveText(['Account', 'Reading & writing', 'Community']);
     expect(await initialNav.locator('a').evaluateAll((links) => links.map((link) => link.getAttribute('href'))))
       .toEqual(DESTINATIONS.map(([href]) => href));
-    const tabOrder = await initialNav.locator('a, button').evaluateAll((controls) => controls.map((control) => ({
+    const tabOrder = await initialNav.locator('a:visible, button:visible').evaluateAll((controls) => controls.map((control) => ({
       label: control.textContent?.trim(),
       tabIndex: (control as HTMLElement).tabIndex,
     })));
-    expect(tabOrder.map(({ label }) => label)).toEqual([...DESTINATION_LABELS, 'Replay tour']);
+    expect(tabOrder.map(({ label }) => label)).toEqual([...DESTINATION_LABELS]);
+    await expect(initialNav.locator('[data-tour-replay]')).toBeHidden();
     expect(tabOrder.every(({ tabIndex }) => tabIndex >= 0)).toBe(true);
     const wrap = await initialNav.locator('.settings-rail-group').evaluateAll((groups) => groups.map((group) => getComputedStyle(group).flexWrap));
     expect(wrap).toEqual(['wrap', 'wrap', 'wrap']);
@@ -343,7 +344,11 @@ test('mobile no-JavaScript account navigation follows every available ordinary h
         const metrics = await currentNav.evaluate((rail) => {
           const pane = document.querySelector('.settings-pane');
           if (!(rail instanceof HTMLElement) || !(pane instanceof HTMLElement)) throw new Error('Account shell missing');
-          const controls = Array.from(rail.querySelectorAll('a, button')).map((control) => Math.round(control.getBoundingClientRect().height));
+          // The unavailable tour control is hidden until enhanced; only
+          // rendered controls participate in the native touch-target check.
+          const controls = Array.from(rail.querySelectorAll('a, button'))
+            .filter((control) => control.getClientRects().length > 0)
+            .map((control) => Math.round(control.getBoundingClientRect().height));
           return {
             railBottom: Math.round(rail.getBoundingClientRect().bottom),
             paneTop: Math.round(pane.getBoundingClientRect().top),

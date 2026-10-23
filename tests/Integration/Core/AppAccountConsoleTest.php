@@ -13,7 +13,7 @@ use Tests\Support\TestCase;
 
 final class AppAccountConsoleTest extends TestCase
 {
-    private const INTRO = 'Everything this community knows about you, and everything it does on your behalf.';
+    private const INTRO = 'Manage your profile, preferences, and account security.';
 
     protected function setUp(): void
     {
@@ -305,7 +305,7 @@ final class AppAccountConsoleTest extends TestCase
         }
     }
 
-    public function test_appeals_is_only_a_working_unowned_destination_in_this_slice(): void
+    public function test_appeals_keeps_its_own_heading_and_current_settings_destination(): void
     {
         $this->actingAs($this->makeUser());
 
@@ -315,7 +315,8 @@ final class AppAccountConsoleTest extends TestCase
         $appeals = $this->get('/appeals');
         $this->assertStatus(200, $appeals);
         self::assertStringContainsString('aria-label="Settings sections"', $appeals->body());
-        self::assertStringNotContainsString('aria-current="page"', $this->settingsNav($appeals));
+        $this->assertActiveRail($appeals, 'appeals');
+        self::assertStringContainsString('Settings: Appeals', $appeals->body());
         self::assertStringNotContainsString('<h1>Account settings</h1>', $appeals->body());
     }
 

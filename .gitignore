@@ -73,3 +73,4 @@ __pycache__/
 # Raw design-tool uploads may contain authenticated DOM/session data.
 # Existing reviewed assets stay tracked; add future reviewed assets explicitly.
 /docs/design-system/imladris/uploads/
+.neon

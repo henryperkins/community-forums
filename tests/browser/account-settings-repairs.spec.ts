@@ -335,7 +335,7 @@ test.describe('account settings repairs without JavaScript', () => {
       fixture(`restrict-${state}`);
       await page.goto('/settings/notifications');
       expect((await page.content()).includes('Settings evidence topic')).toBe(false);
-      const off = page.locator(`form[action="/settings/notifications/subscriptions/${enabled.id}"]`).getByRole('button', { name: 'Turn off', exact: true });
+      const off = page.locator(`form[action="/settings/notifications/subscriptions/${enabled.id}"]`).getByRole('button', { name: /^Turn off notifications for / });
       await expect(off).toBeVisible();
       await off.click();
       const disabled = fixture('inspect').subscription!;
@@ -415,6 +415,7 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(destination).toHaveAttribute('aria-pressed', 'true');
     await page.goto('/settings/boards');
     const edit = page.locator(`form[action="/settings/saved-feeds/${id}"]`).filter({ has: page.locator('input[name="name"]') });
+    await page.locator(`.org-manage:has(form[action="/settings/saved-feeds/${id}/delete"]) > summary`).click();
     await edit.locator('[name="name"]').fill('Focused reading');
     await edit.locator('button[type="submit"]').click();
     await expect(page.locator(`.saved-feed-card a[href="${url}"]`)).toHaveText('Focused reading');
@@ -425,6 +426,7 @@ test.describe('account settings repairs without JavaScript', () => {
     // A revoked selected board must not turn into the all-boards feed.
     await capture(page, info, '11-saved-feed-revoked');
     await page.goto('/settings/boards');
+    await page.locator(`.org-manage:has(form[action="/settings/saved-feeds/${id}/delete"]) > summary`).click();
     await page.locator(`form[action="/settings/saved-feeds/${id}/delete"] button`).click();
     await expect(page.locator(`a[href="${url}"]`)).toHaveCount(0);
     expect((await page.request.get(url)).status()).toBe(404);
@@ -435,6 +437,7 @@ test.describe('account settings repairs without JavaScript', () => {
     const original = fixture('legacy-multi-feed').saved_feeds[0];
     await page.goto('/settings/boards');
     const form = page.locator(`form[action="/settings/saved-feeds/${original.id}"]`).filter({ has: page.locator('input[name="name"]') });
+    await page.locator(`.org-manage:has(form[action="/settings/saved-feeds/${original.id}/delete"]) > summary`).click();
     const selection = form.locator('select[name="board_ids[]"]');
     await expect(selection.locator('option:checked')).toHaveCount(2);
     await selection.selectOption([]);
@@ -446,6 +449,7 @@ test.describe('account settings repairs without JavaScript', () => {
     await form.locator('[name="name"]').fill('All visible reading');
     await form.locator('button[type="submit"]').click();
     expect(JSON.parse(fixture('inspect').saved_feeds[0].filter_json).board_ids).toEqual([]);
+    await page.locator(`.org-manage:has(form[action="/settings/saved-feeds/${original.id}/delete"]) > summary`).click();
     await expect(form.locator('select[name="board_id"]')).toHaveValue('');
     await capture(page, info, '11-legacy-selection-cleared');
   });
@@ -474,6 +478,7 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(page.locator('#sidebar-nav')).toContainText('Work reading');
     await expect(page.locator('#sidebar-nav a[href="/c/settings-repair-board"]')).toHaveCount(2);
     const rename = page.locator(`form[action="/settings/board-folders/${id}/rename"]`);
+    await page.locator(`.org-manage:has(form[action="/settings/board-folders/${id}/rename"]) > summary`).click();
     await rename.locator('[name="name"]').fill('Reference reading');
     await rename.locator('button[type="submit"]').click();
     await expect(page.locator('#sidebar-nav')).toContainText('Reference reading');
@@ -483,8 +488,10 @@ test.describe('account settings repairs without JavaScript', () => {
     await expect(page.locator('[data-compose-board-picker="settings-repair-board"]')).toHaveCount(1);
     await expect(page.locator('#sidebar-nav .board-rail-foot')).toBeVisible();
     await page.goto('/settings/boards');
+    await page.locator(`.org-manage:has(form[action="/settings/board-folders/${id}/rename"]) > summary`).click();
     await page.locator(`form[action="/settings/board-folders/${id}/boards/${data.board_id}/remove"] button`).click();
     await expect(page.locator('#sidebar-nav a[href="/c/settings-repair-board"]')).toHaveCount(1);
+    await page.locator(`.org-manage:has(form[action="/settings/board-folders/${id}/rename"]) > summary`).click();
     await page.locator(`form[action="/settings/board-folders/${id}/delete"] button`).click();
     await expect(page.locator('#sidebar-nav')).not.toContainText('Reference reading');
     expect((await page.request.get('/c/settings-repair-board')).status()).toBe(200);
@@ -545,7 +552,12 @@ test.describe('notification delivery operations without JavaScript', () => {
     await requeue.click();
     expect(fixture('inspect').deliveries.find((delivery) => delivery.id === retry.id)?.status).toBe('queued');
     // Pin the capture transport on this CLI process too, not only on the browser server.
-    const output = execFileSync('flock', ['/tmp/retroboards-unified-phpunit.lock', 'php', 'bin/console', 'worker:email', '100'], {
+    // Native Windows has no flock; the fixture already requires a disposable
+    // database and Playwright runs one worker. Keep the Linux lane's lock.
+    const worker = process.platform === 'win32'
+      ? { command: 'php', args: ['bin/console', 'worker:email', '100'] }
+      : { command: 'flock', args: ['/tmp/retroboards-unified-phpunit.lock', 'php', 'bin/console', 'worker:email', '100'] };
+    const output = execFileSync(worker.command, worker.args, {
       cwd: root, env: { ...process.env, APP_ENV: 'test', MAIL_DRIVER: 'array', MAIL_FROM: 'notification-evidence@example.test' }, encoding: 'utf8',
     });
     expect(output).not.toMatch(/fatal|uncaught/i);

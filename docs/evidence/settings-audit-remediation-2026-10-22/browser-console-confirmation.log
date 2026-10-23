@@ -1,0 +1,9 @@
+
+Running 1 test using 1 worker
+
+(node:42200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ok 1 [mobile] › account-console.spec.ts:301:5 › mobile no-JavaScript account navigation follows every available ordinary href (9.3s)
+
+  1 passed (10.6s)

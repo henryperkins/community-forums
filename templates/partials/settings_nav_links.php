@@ -12,5 +12,5 @@
         </div>
     <?php endforeach; ?>
     <?php if (!empty($features['product_tour'])): ?>
-        <button class="linkbtn subnav-action" type="button" data-tour-replay>Replay tour</button>
+        <button class="linkbtn subnav-action" type="button" data-tour-replay hidden>Replay tour</button>
     <?php endif; ?>

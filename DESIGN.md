@@ -435,6 +435,37 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 - **Errors:** rust text at 0.85rem directly beneath the field, with underlined inline links.
 - **Switches:** a 42×24 pill track, sunken parchment with a strong border and inset shadow, carrying an 18px round knob ringed in `gold-200`; checked fills the track evergreen and gilds the knob to `gold-200` with a `gold-500` ring. Transitions run `--dur-base` on `--ease-calm`.
 
+Account settings keep the switch track inside a minimum 44px labelled target.
+Their native select arrows follow the field ink, including forced colours;
+the operator console retains its separate select treatment. Custom profile
+pairs have persistent, numbered labels and individually engraved inputs, not
+an extra frame or decorative markers around each pair. Errors use the shared
+danger callout or a wired field error.
+The account chooser takes over below 50rem of available settings width; form,
+organisation and recovery-code columns respond to the pane's own width, not
+just the viewport. This prevents the board rail and settings rail from squeezing
+tablet forms into narrow tracks.
+
+The settings rail and content occupy one grid row; spanning empty rows must not
+manufacture a long page beneath short forms. Related fields use `--space-4`,
+panels `--space-5`, and organization sections `--space-6`. Board folders, saved
+feeds and bookmarks are linear, hairline-separated sections, not another set
+of icon cards. Names, counts and shortcuts lead; existing folder/feed editors
+live in native **Manage** disclosures. A rejected editor opens server-side so
+its focused error and retained values are visible. Creation/filing forms and
+digest opt-out remain outside those disclosures. Labelled switches keep track
+and text on the same flex row, including inside generic stacked forms.
+Member settings use the delivered regular Marcellus face for Fine-sized field
+labels and Meta-sized panel captions, Title for organization headings, and the
+narrow measure for supporting help. Operator labels keep their separate
+register. Settings action buttons have a 44px target with mouse as well as
+touch. Examples supplement persistent creation labels; timezone caveats belong
+to associated helper text rather than an oversized control label.
+Subscription rows lead with the topic/board name, then delivery controls and
+context-named Save/opt-out actions. Wide panes align the actions on the closing
+row; narrow panes stack them in DOM order. Unavailable content stays masked in
+accessible names as well as visible text.
+
 ### Navigation
 
 The phone board drawer is capped at 240px and 70% of the viewport, leaving a visible strip of the active surface beside it. This width applies to the shared member shell.

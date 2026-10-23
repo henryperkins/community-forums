@@ -8,14 +8,14 @@
             <div class="field-cell">
                 <label class="field">
                     <span>New password</span>
-                    <input type="password" name="new_password" class="input" autocomplete="new-password" required<?= field_attrs($errors, 'new_password') ?>>
+                    <input type="password" name="new_password" class="input input-engraved" autocomplete="new-password" required<?= field_attrs($errors, 'new_password') ?>>
                 </label>
                 <?= field_error($errors, 'new_password') ?>
             </div>
             <div class="field-cell">
                 <label class="field">
                     <span>Confirm new password</span>
-                    <input type="password" name="new_password_confirm" class="input" autocomplete="new-password" required<?= field_attrs($errors, 'new_password_confirm') ?>>
+                    <input type="password" name="new_password_confirm" class="input input-engraved" autocomplete="new-password" required<?= field_attrs($errors, 'new_password_confirm') ?>>
                 </label>
                 <?= field_error($errors, 'new_password_confirm') ?>
             </div>

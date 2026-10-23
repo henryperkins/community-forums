@@ -1,0 +1,134 @@
+{
+  "scope": "Six supplied settings audit findings",
+  "browser": {
+    "focusedPassed": 9,
+    "consoleInitialPassed": 17,
+    "consoleInitialFailed": 1,
+    "consoleSkipped": 12,
+    "consoleCorrectedCasePassed": 1,
+    "totpPassed": 2,
+    "uniquePassingCases": 29
+  },
+  "phpunit": {
+    "fullTests": 3353,
+    "fullAssertions": 29427,
+    "fullFailures": 25,
+    "fullWarnings": 2,
+    "fullSkipped": 1,
+    "focusedTests": 39,
+    "focusedAssertions": 492,
+    "focusedFailures": 0,
+    "resolvedFullFailures": 12,
+    "remainingFullFailures": 13,
+    "fullSuiteRerunAfterTestParserRepairs": false,
+    "failures": [
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_child_final_step_requires_outer_success_and_a_complete_matching_archive",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_outer_command_records_actual_docker_failure_after_it_returns",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_archive_creation_failure_cannot_leave_a_success_record_or_old_archive",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_runner_attempts_every_independent_suite_and_retains_the_first_failure",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_packager_redacts_private_fields_excludes_symlinks_and_preserves_failure",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiContractTest::test_completed_run_requires_capture_unified_and_every_upload_project_artifact",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiPackageContractTest::test_non_object_unified_results_fail_completion_and_preserve_the_diagnostic_archive",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunBrowserCiUploaderContractTest::test_streaming_create_only_transport_and_credential_privacy_contracts",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_service_is_one_private_instance_on_the_cloud_sql_connector_and_the_data_bucket",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_production_mail_configuration_selects_the_configured_rest_transport",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_cron_jobs_keep_the_former_worker_schedule_and_never_migrate",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\CloudRunDeploymentContractTest::test_console_batch_runs_every_command_in_order_and_reports_any_failure",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Unit\\Core\\ImladrisRuntimeAssetTest::test_checked_in_runtime_asset_matches_the_allowlisted_design_system_sources",
+        "resolvedByFocusedRun": false
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppLocalReturnTest::test_the_second_factor_keeps_only_a_local_next",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppLocalReturnTest::test_the_second_factor_does_not_follow_a_stored_off_site_next",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_pending_enrollment_survives_invalid_code_password_and_reload",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_pending_enrollment_restarts_only_after_explicit_password_confirmation",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_disabled_enrollment_cannot_be_confirmed_again",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_user_enrolls_totp_uses_recovery_code_and_disables_without_javascript",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_totp_mfa_code_guessing_is_throttled_per_account_across_fresh_login_tokens",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_failed_totp_login_is_audited_not_silent",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_enabling_totp_revokes_other_sessions",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppMfaTest::test_disabling_totp_revokes_other_sessions",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppPasskeyLoginTest::test_totp_enrolled_account_requires_a_uv_assertion",
+        "resolvedByFocusedRun": true
+      },
+      {
+        "test": "Tests\\Integration\\Core\\AppPasskeyRecoveryTest::test_password_totp_and_recovery_paths_survive_passkey_enrollment",
+        "resolvedByFocusedRun": true
+      }
+    ]
+  },
+  "assets": {
+    "build": "pass after retained transient EPERM",
+    "freshnessCheck": "pass",
+    "runtimePassed": 34,
+    "runtimeFailed": 1
+  },
+  "publication": "No commit, push, or deployment"
+}

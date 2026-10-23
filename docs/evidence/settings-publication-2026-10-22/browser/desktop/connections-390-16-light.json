@@ -1,0 +1,36 @@
+[
+  {
+    "rowWidth": 286,
+    "mainWidth": 242,
+    "mainBottom": 735.0625,
+    "name": "Google",
+    "textBottom": 691.625,
+    "nestedChipTop": null,
+    "trailingTops": [
+      745.0625,
+      776.984375
+    ]
+  },
+  {
+    "rowWidth": 286,
+    "mainWidth": 242,
+    "mainBottom": 874.546875,
+    "name": "GitHub",
+    "textBottom": 870.984375,
+    "nestedChipTop": null,
+    "trailingTops": [
+      893.984375
+    ]
+  },
+  {
+    "rowWidth": 286,
+    "mainWidth": 242,
+    "mainBottom": 974.734375,
+    "name": "Apple",
+    "textBottom": 971.171875,
+    "nestedChipTop": null,
+    "trailingTops": [
+      994.171875
+    ]
+  }
+]

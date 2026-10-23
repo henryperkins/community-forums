@@ -4,14 +4,14 @@
 <div class="settings-screen">
     <header class="settings-head">
         <?= $this->partial('partials/page_heading', ['heading' => 'Account settings']) ?>
-        <p>Everything this community knows about you, and everything it does on your behalf.</p>
+        <?= $this->partial('partials/settings_intro') ?>
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav', ['active' => 'profile']) ?>
         <div class="settings-pane">
 
     <?php if (isset($email_verified) && !$email_verified): ?>
-        <div class="card notice" role="status">
+        <div class="callout callout-review" role="status">
             <p><strong>Verify your email address.</strong> We've sent a confirmation link to your inbox. Verifying keeps your account recoverable and unlocks your welcome badge.</p>
             <form method="post" action="/verify/resend" class="inline">
                 <?= $this->csrfField() ?>
@@ -20,7 +20,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="post" action="/settings/account" enctype="multipart/form-data" class="settings-pane">
+    <form method="post" action="/settings/account" enctype="multipart/form-data" class="account-profile-form">
         <?= $this->csrfField() ?>
         <?php // Keep native Enter submission on the profile save path. ?>
         <button type="submit" formaction="/settings/account" hidden tabindex="-1" aria-hidden="true">Save profile</button>
@@ -53,7 +53,7 @@
         <section class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Identity</h2>
         <label class="field">
-            <span>Email <span class="muted">(not editable in this version)</span></span>
+            <span>Email <span class="muted">(read-only)</span></span>
             <input type="email" class="input input-engraved" value="<?= $e($email ?? '') ?>" disabled>
         </label>
         <?php // field_error() emits a <p>, which cannot legally nest inside <label>.
@@ -102,15 +102,13 @@
         <?php if (!empty($custom_profile_fields)): ?>
             <?php // A group error with no single input to blame: the fieldset carries
                   // the wiring, matching admin/role_edit.php's capability grid. ?>
-            <fieldset class="field custom-profile-fields"<?= !empty($errors['custom_profile_fields']) ? ' aria-invalid="true" aria-describedby="err-custom_profile_fields"' : '' ?>>
+            <fieldset class="custom-profile-fields"<?= !empty($errors['custom_profile_fields']) ? ' aria-invalid="true" aria-describedby="err-custom_profile_fields"' : '' ?>>
                 <legend class="scribe-panel-head">Custom profile fields</legend>
                 <p class="muted">Add up to three public profile facts. Labels are limited to 40 characters; values to 160.</p>
                 <?php for ($i = 1; $i <= 3; $i++): ?>
-                    <div class="field-row">
-                        <span class="row-bullet" aria-hidden="true"></span>
-                        <input type="text" name="custom_label_<?= $i ?>" class="row-input" maxlength="40" placeholder="Label" value="<?= $e($old['custom_label_' . $i] ?? '') ?>">
-                        <span class="row-mark" aria-hidden="true">·</span>
-                        <input type="text" name="custom_value_<?= $i ?>" class="row-input" maxlength="160" placeholder="Value" value="<?= $e($old['custom_value_' . $i] ?? '') ?>">
+                    <div class="field-grid custom-profile-pair">
+                        <label class="field custom-profile-field"><span>Label <?= $i ?></span><input type="text" name="custom_label_<?= $i ?>" class="input input-engraved" maxlength="40" value="<?= $e($old['custom_label_' . $i] ?? '') ?>"<?= $i === 1 && array_key_first($errors) === 'custom_profile_fields' ? ' autofocus' : '' ?>></label>
+                        <label class="field custom-profile-field"><span>Value <?= $i ?></span><input type="text" name="custom_value_<?= $i ?>" class="input input-engraved" maxlength="160" value="<?= $e($old['custom_value_' . $i] ?? '') ?>"></label>
                     </div>
                 <?php endfor; ?>
                 <?= field_error($errors, 'custom_profile_fields') ?>

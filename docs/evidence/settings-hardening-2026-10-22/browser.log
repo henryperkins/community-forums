@@ -1,0 +1,193 @@
+
+Running 50 tests using 1 worker
+
+  ok  1 [desktop] › account-console.spec.ts:159:5 › desktop grouped rail and common heading match the account shell contract (1.8s)
+
+  ok  2 [desktop] › account-console.spec.ts:216:5 › feature-dark entries vanish and Replay remains subordinate when enabled (4.2s)
+  ok  3 [desktop] › account-console.spec.ts:257:5 › representative Profile Security and Lifecycle 422 responses preserve explicit active state (2.9s)
+  -   4 [desktop] › account-console.spec.ts:289:5 › mobile account rail records light and twilight responsive states
+  -   5 [desktop] › account-console.spec.ts:301:5 › mobile no-JavaScript account navigation follows every available ordinary href
+
+  ok  6 [desktop] › account-console.spec.ts:370:5 › full account shell is axe-clean in light twilight and system-dark registers (9.6s)
+
+  ok  7 [desktop] › account-console.spec.ts:438:5 › slice 16 panes are axe-clean in light twilight and system-dark registers (27.3s)
+
+  ok  8 [desktop] › account-console.spec.ts:471:5 › slice 16 panes keep one boolean idiom and fit their width (10.4s)
+
+  ok  9 [desktop] › account-console.spec.ts:502:5 › refused set-password re-renders inline on the connections pane (2.2s)
+
+  ok 10 [desktop] › account-console.spec.ts:530:5 › slice 17 panes are axe-clean in light twilight and system-dark registers (13.9s)
+
+  ok 11 [desktop] › account-console.spec.ts:559:5 › slice 17 panes fit their width and keep the drafts hooks (10.6s)
+  ok 12 [desktop] › account-console.spec.ts:587:5 › slice 17 lifecycle scopes a refused deletion to its own form (5.3s)
+  -  13 [desktop] › account-console.spec.ts:603:5 › A5 mobile initial controls stay in view without JavaScript
+  -  14 [desktop] › account-console.spec.ts:630:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable
+
+  ok 15 [desktop] › account-console.spec.ts:689:5 › A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript (5.0s)
+  ok 16 [desktop] › field-error-a11y.spec.ts:49:7 › member field errors › a 422 re-render focuses the first errored field and links it to its message (3.2s)
+  ok 17 [desktop] › field-error-a11y.spec.ts:94:7 › member field errors › :user-invalid paints an engraved field before any round-trip (2.0s)
+  ok 18 [desktop] › field-error-a11y.spec.ts:135:7 › member field errors › the shell reserves scroll padding for the sticky topbar and a stable gutter (1.2s)
+  x  19 [desktop] › settings-hardening.spec.ts:59:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear (2.1s)
+  x  20 [desktop] › settings-hardening.spec.ts:82:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices (3.0s)
+  x  21 [desktop] › settings-hardening.spec.ts:117:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets (5.0s)
+  ok 22 [desktop] › settings-hardening.spec.ts:142:7 › settings resilience with native forms › digest errors focus the invalid control and native navigation names Appeals (2.2s)
+  ok 23 [desktop] › settings-hardening.spec.ts:168:5 › tablet widths and enlarged text adapt to pane width in both registers (20.9s)
+  ok 24 [desktop] › settings-hardening.spec.ts:187:5 › dark-system and forced-colour fields retain native affordances and keyboard focus (3.0s)
+
+  ok 25 [desktop] › totp.spec.ts:78:5 › TOTP enroll, second-factor login, and disable all work without JavaScript (20.1s)
+  -  26 [mobile] › account-console.spec.ts:159:5 › desktop grouped rail and common heading match the account shell contract
+  -  27 [mobile] › account-console.spec.ts:216:5 › feature-dark entries vanish and Replay remains subordinate when enabled
+  -  28 [mobile] › account-console.spec.ts:257:5 › representative Profile Security and Lifecycle 422 responses preserve explicit active state
+  ok 29 [mobile] › account-console.spec.ts:289:5 › mobile account rail records light and twilight responsive states (3.0s)
+
+  ok 30 [mobile] › account-console.spec.ts:301:5 › mobile no-JavaScript account navigation follows every available ordinary href (11.5s)
+  -  31 [mobile] › account-console.spec.ts:370:5 › full account shell is axe-clean in light twilight and system-dark registers
+  -  32 [mobile] › account-console.spec.ts:438:5 › slice 16 panes are axe-clean in light twilight and system-dark registers
+
+  ok 33 [mobile] › account-console.spec.ts:471:5 › slice 16 panes keep one boolean idiom and fit their width (8.3s)
+  -  34 [mobile] › account-console.spec.ts:502:5 › refused set-password re-renders inline on the connections pane
+  -  35 [mobile] › account-console.spec.ts:530:5 › slice 17 panes are axe-clean in light twilight and system-dark registers
+
+  ok 36 [mobile] › account-console.spec.ts:559:5 › slice 17 panes fit their width and keep the drafts hooks (4.8s)
+  -  37 [mobile] › account-console.spec.ts:587:5 › slice 17 lifecycle scopes a refused deletion to its own form
+Security light { firstControlBottom: 652.203125 }
+Profile light { firstControlBottom: 752.765625 }
+Notifications light { firstControlBottom: 728.203125 }
+Security dark { firstControlBottom: 652.203125 }
+Profile dark { firstControlBottom: 752.765625 }
+Notifications dark { firstControlBottom: 728.203125 }
+  ok 38 [mobile] › account-console.spec.ts:603:5 › A5 mobile initial controls stay in view without JavaScript (17.9s)
+
+  ok 39 [mobile] › account-console.spec.ts:630:5 › A5 chooser supports keyboard, narrow and 200 percent reflow with every link reachable (44.1s)
+
+  ok 40 [mobile] › account-console.spec.ts:689:5 › A5 readable sessions expose escaped raw details and revoke only other devices without JavaScript (7.4s)
+  ok 41 [mobile] › field-error-a11y.spec.ts:49:7 › member field errors › a 422 re-render focuses the first errored field and links it to its message (1.8s)
+  ok 42 [mobile] › field-error-a11y.spec.ts:94:7 › member field errors › :user-invalid paints an engraved field before any round-trip (1.9s)
+  ok 43 [mobile] › field-error-a11y.spec.ts:135:7 › member field errors › the shell reserves scroll padding for the sticky topbar and a stable gutter (1.4s)
+  x  44 [mobile] › settings-hardening.spec.ts:59:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear (2.2s)
+  x  45 [mobile] › settings-hardening.spec.ts:82:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices (2.5s)
+  x  46 [mobile] › settings-hardening.spec.ts:117:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets (2.8s)
+  ok 47 [mobile] › settings-hardening.spec.ts:142:7 › settings resilience with native forms › digest errors focus the invalid control and native navigation names Appeals (1.6s)
+  -  48 [mobile] › settings-hardening.spec.ts:168:5 › tablet widths and enlarged text adapt to pane width in both registers
+  ok 49 [mobile] › settings-hardening.spec.ts:187:5 › dark-system and forced-colour fields retain native affordances and keyboard focus (2.3s)
+
+  ok 50 [mobile] › totp.spec.ts:78:5 › TOTP enroll, second-factor login, and disable all work without JavaScript (31.3s)
+
+
+  1) [desktop] › settings-hardening.spec.ts:59:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear 
+
+    Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
+
+      48 |   // Settings contain no embedded frames. The single-document runner also works
+      49 |   // with scripting disabled and a native POST response in the history entry.
+    > 50 |   const result = await new AxeBuilder({ page }).setLegacyMode().include('.settings-screen')
+         |                  ^
+      51 |     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      52 |   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+      53 | }
+        at AxeBuilder.runLegacy (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:292:40)
+        at AxeBuilder.analyze (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:242:17)
+        at accessible (C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:50:18)
+        at C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:74:7
+
+    Error Context: ..\..\docs\evidence\settings-hardening-2026-10-22\.artifacts\settings-hardening-setting-05f4e-and-keyboard-focus-is-clear-desktop\error-context.md
+
+  2) [desktop] › settings-hardening.spec.ts:82:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices 
+
+    Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
+
+      48 |   // Settings contain no embedded frames. The single-document runner also works
+      49 |   // with scripting disabled and a native POST response in the history entry.
+    > 50 |   const result = await new AxeBuilder({ page }).setLegacyMode().include('.settings-screen')
+         |                  ^
+      51 |     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      52 |   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+      53 | }
+        at AxeBuilder.runLegacy (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:292:40)
+        at AxeBuilder.analyze (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:242:17)
+        at accessible (C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:50:18)
+        at C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:106:7
+
+    Error Context: ..\..\docs\evidence\settings-hardening-2026-10-22\.artifacts\settings-hardening-setting-3331b-g-values-and-digest-choices-desktop\error-context.md
+
+  3) [desktop] › settings-hardening.spec.ts:117:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets 
+
+    Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
+
+      48 |   // Settings contain no embedded frames. The single-document runner also works
+      49 |   // with scripting disabled and a native POST response in the history entry.
+    > 50 |   const result = await new AxeBuilder({ page }).setLegacyMode().include('.settings-screen')
+         |                  ^
+      51 |     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      52 |   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+      53 | }
+        at AxeBuilder.runLegacy (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:292:40)
+        at AxeBuilder.analyze (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:242:17)
+        at accessible (C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:50:18)
+        at C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:137:7
+
+    Error Context: ..\..\docs\evidence\settings-hardening-2026-10-22\.artifacts\settings-hardening-setting-c5c95--with-44px-labelled-targets-desktop\error-context.md
+
+  4) [mobile] › settings-hardening.spec.ts:59:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear 
+
+    Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
+
+      48 |   // Settings contain no embedded frames. The single-document runner also works
+      49 |   // with scripting disabled and a native POST response in the history entry.
+    > 50 |   const result = await new AxeBuilder({ page }).setLegacyMode().include('.settings-screen')
+         |                  ^
+      51 |     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      52 |   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+      53 | }
+        at AxeBuilder.runLegacy (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:292:40)
+        at AxeBuilder.analyze (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:242:17)
+        at accessible (C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:50:18)
+        at C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:74:7
+
+    Error Context: ..\..\docs\evidence\settings-hardening-2026-10-22\.artifacts\settings-hardening-setting-05f4e-and-keyboard-focus-is-clear-mobile\error-context.md
+
+  5) [mobile] › settings-hardening.spec.ts:82:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices 
+
+    Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
+
+      48 |   // Settings contain no embedded frames. The single-document runner also works
+      49 |   // with scripting disabled and a native POST response in the history entry.
+    > 50 |   const result = await new AxeBuilder({ page }).setLegacyMode().include('.settings-screen')
+         |                  ^
+      51 |     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      52 |   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+      53 | }
+        at AxeBuilder.runLegacy (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:292:40)
+        at AxeBuilder.analyze (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:242:17)
+        at accessible (C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:50:18)
+        at C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:106:7
+
+    Error Context: ..\..\docs\evidence\settings-hardening-2026-10-22\.artifacts\settings-hardening-setting-3331b-g-values-and-digest-choices-mobile\error-context.md
+
+  6) [mobile] › settings-hardening.spec.ts:117:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets 
+
+    Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
+
+      48 |   // Settings contain no embedded frames. The single-document runner also works
+      49 |   // with scripting disabled and a native POST response in the history entry.
+    > 50 |   const result = await new AxeBuilder({ page }).setLegacyMode().include('.settings-screen')
+         |                  ^
+      51 |     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      52 |   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+      53 | }
+        at AxeBuilder.runLegacy (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:292:40)
+        at AxeBuilder.analyze (C:\Users\htper\community-forums\tests\browser\node_modules\@axe-core\playwright\dist\index.js:242:17)
+        at accessible (C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:50:18)
+        at C:\Users\htper\community-forums\tests\browser\settings-hardening.spec.ts:137:7
+
+    Error Context: ..\..\docs\evidence\settings-hardening-2026-10-22\.artifacts\settings-hardening-setting-c5c95--with-44px-labelled-targets-mobile\error-context.md
+
+  6 failed
+    [desktop] › settings-hardening.spec.ts:59:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear 
+    [desktop] › settings-hardening.spec.ts:82:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices 
+    [desktop] › settings-hardening.spec.ts:117:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets 
+    [mobile] › settings-hardening.spec.ts:59:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear 
+    [mobile] › settings-hardening.spec.ts:82:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices 
+    [mobile] › settings-hardening.spec.ts:117:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets 
+  13 skipped
+  31 passed (5.2m)
