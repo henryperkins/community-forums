@@ -1,0 +1,32 @@
+{
+  "latestReadyRevisionName": "retroboards-00055-fdq",
+  "latestCreatedRevisionName": "retroboards-00055-fdq",
+  "traffic": [
+    {
+      "latestRevision": true,
+      "percent": 100,
+      "revisionName": "retroboards-00055-fdq"
+    }
+  ],
+  "conditions": [
+    {
+      "lastTransitionTime": "2026-10-23T22:31:08.694580Z",
+      "status": "True",
+      "type": "Ready"
+    },
+    {
+      "lastTransitionTime": "2026-10-23T22:30:54.664937Z",
+      "status": "True",
+      "type": "ConfigurationsReady"
+    },
+    {
+      "lastTransitionTime": "2026-10-23T22:31:08.658362Z",
+      "status": "True",
+      "type": "RoutesReady"
+    }
+  ],
+  "url": "https://retroboards-3h5icvhrwq-uk.a.run.app",
+  "images": [
+    "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:fd76f5102c1fcbf32a5d53be47744e3d9ce9d927"
+  ]
+}
