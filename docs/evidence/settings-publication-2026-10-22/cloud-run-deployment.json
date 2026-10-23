@@ -1,0 +1,64 @@
+{
+  "checkedAt": "2026-10-23T04:03:41.4253764Z",
+  "sourceSha": "83f8be6d5425afa176f2e73a9945beb897af02d0",
+  "buildId": "59ebc02a-5b25-4fdc-9794-20a8b14e090a",
+  "buildStatus": "SUCCESS",
+  "steps": [
+    {
+      "id": "source",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "build",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "push",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "deploy-service",
+      "status": "SUCCESS"
+    },
+    {
+      "id": "update-jobs",
+      "status": "SUCCESS"
+    }
+  ],
+  "revision": "retroboards-00052-x6q",
+  "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:83f8be6d5425afa176f2e73a9945beb897af02d0",
+  "traffic": [
+    {
+      "latestRevision": true,
+      "percent": 100,
+      "revisionName": "retroboards-00052-x6q"
+    }
+  ],
+  "jobs": [
+    {
+      "name": "retroboards-cron-0310",
+      "role": "cron",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:83f8be6d5425afa176f2e73a9945beb897af02d0"
+    },
+    {
+      "name": "retroboards-cron-0700",
+      "role": "cron",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:83f8be6d5425afa176f2e73a9945beb897af02d0"
+    },
+    {
+      "name": "retroboards-cron-5m",
+      "role": "cron",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:83f8be6d5425afa176f2e73a9945beb897af02d0"
+    },
+    {
+      "name": "retroboards-cron-6h",
+      "role": "cron",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:83f8be6d5425afa176f2e73a9945beb897af02d0"
+    },
+    {
+      "name": "retroboards-monitor",
+      "role": "monitor",
+      "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:83f8be6d5425afa176f2e73a9945beb897af02d0"
+    }
+  ]
+}

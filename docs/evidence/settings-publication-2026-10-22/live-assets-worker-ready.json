@@ -1,0 +1,613 @@
+{
+  "checkedAt": "2026-10-23T03:59:22.759Z",
+  "version": "d558418fe08d412c",
+  "origin": "https://forum.candidary.online",
+  "passed": false,
+  "pages": {
+    "health": 200,
+    "login": 200,
+    "currentStylesheet": false
+  },
+  "assets": [
+    {
+      "url": "/assets/app.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "6aa8b86a6aa89348820d0c36ffd5c49a75c0c7697f29c69124f99aea86f4b4b4",
+      "expectedSha256": "6aa8b86a6aa89348820d0c36ffd5c49a75c0c7697f29c69124f99aea86f4b4b4",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/app.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "6a4648e206482895c7bad551aa36fafac2a5f2d70e47c64453354c745d07d004",
+      "expectedSha256": "6a4648e206482895c7bad551aa36fafac2a5f2d70e47c64453354c745d07d004",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/composer.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "ce073e11882cfc7a89cac10873bcee19c1da10946424d576aaaabd2f7c989cb6",
+      "expectedSha256": "ce073e11882cfc7a89cac10873bcee19c1da10946424d576aaaabd2f7c989cb6",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/conversation-entry.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "b39c8c96a2625f6a5e5dd9d6507062a08967a1fa59bdd206e7f729eb00f81407",
+      "expectedSha256": "b39c8c96a2625f6a5e5dd9d6507062a08967a1fa59bdd206e7f729eb00f81407",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/app-c89b55420ad2231f.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "c89b55420ad2231f22ff82ad6f19d34751cd3ebfbe1935e82fa944c150c8c2a3",
+      "expectedSha256": "c89b55420ad2231f22ff82ad6f19d34751cd3ebfbe1935e82fa944c150c8c2a3",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/app-f5e64357204190eb.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "f5e64357204190ebc5ec13a10837a4ccc9388e06bd20987efe6f7050d2f8e758",
+      "expectedSha256": "f5e64357204190ebc5ec13a10837a4ccc9388e06bd20987efe6f7050d2f8e758",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/app-style-BaLoyX9O.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "7b53239121925ba3015f87a574b66f1f2eda6e132b151decbc92da2ae5d908c5",
+      "expectedSha256": "7b53239121925ba3015f87a574b66f1f2eda6e132b151decbc92da2ae5d908c5",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/app-style-Cccoax6v.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "11ffb8ad6bd43abdc401f7d81a47a829ad27bc5c7d14246266a4ba6546a56a1f",
+      "expectedSha256": "11ffb8ad6bd43abdc401f7d81a47a829ad27bc5c7d14246266a4ba6546a56a1f",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/app-style-DDK8a-0C.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "66575bf762bd7da615cffbd1d5f7210a25b54142f008359496ab40d35b828c4a",
+      "expectedSha256": "66575bf762bd7da615cffbd1d5f7210a25b54142f008359496ab40d35b828c4a",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/app-style-R3j3Xoat.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "52e5fc781e1d24c2fd489387a51b4cd27050f00aca06cb00c5e49fd56b765343",
+      "expectedSha256": "52e5fc781e1d24c2fd489387a51b4cd27050f00aca06cb00c5e49fd56b765343",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/composer-4ebc8d0c1f6dd474.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "4ebc8d0c1f6dd474dd5955313ddaee5a03eb9e7b489788572f53f34325f13d7c",
+      "expectedSha256": "4ebc8d0c1f6dd474dd5955313ddaee5a03eb9e7b489788572f53f34325f13d7c",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/composer-5aeaedfd8f662ec5.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "5aeaedfd8f662ec5e181af7d84d52a4f52797ed0616b540fbf7997b539fc9234",
+      "expectedSha256": "5aeaedfd8f662ec5e181af7d84d52a4f52797ed0616b540fbf7997b539fc9234",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/composer-5e088bd27ea38363.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "5e088bd27ea3836339d00270931c47b6336f21ad744c9b1b7541686886f37b44",
+      "expectedSha256": "5e088bd27ea3836339d00270931c47b6336f21ad744c9b1b7541686886f37b44",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
+      "expectedSha256": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "e48e58027030df56869b795ca6f19b7012158275f7ad7cde1900b4a0b68d02e2",
+      "expectedSha256": "e48e58027030df56869b795ca6f19b7012158275f7ad7cde1900b4a0b68d02e2",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "8048ac209bec741e1c29cd0cfac5aac1c0c2ba8c3ddbd4a58fa9bd92ef5c63c2",
+      "expectedSha256": "8048ac209bec741e1c29cd0cfac5aac1c0c2ba8c3ddbd4a58fa9bd92ef5c63c2",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "4fb55a7a6d564d428061fe12c82c896264bcc8b7f0b52840bf88e0db5b91256f",
+      "expectedSha256": "4fb55a7a6d564d428061fe12c82c896264bcc8b7f0b52840bf88e0db5b91256f",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8",
+      "expectedSha256": "8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "ae062b6d5ae308e7edf61b28b07b9984bbb6e961b1f34d9b2c2f4389c33f21ea",
+      "expectedSha256": "ae062b6d5ae308e7edf61b28b07b9984bbb6e961b1f34d9b2c2f4389c33f21ea",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "21a0fc1c5c22708cf4aa0c147fd32982e25bf9e21efec0ca31a4495ba41753eb",
+      "expectedSha256": "21a0fc1c5c22708cf4aa0c147fd32982e25bf9e21efec0ca31a4495ba41753eb",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "1bd1b20fd55986b334ba42dbcb0d9bed7e2d08fd7a713000e8041bfafa37e8ec",
+      "expectedSha256": "1bd1b20fd55986b334ba42dbcb0d9bed7e2d08fd7a713000e8041bfafa37e8ec",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "b63448e2680a0dbde70ebb2f3de78f6c515122835491f938e8a8595b46f29210",
+      "expectedSha256": "b63448e2680a0dbde70ebb2f3de78f6c515122835491f938e8a8595b46f29210",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "7ad04da7123cee81dbb004e25bb63a59b1022796bb03d789df1406b514d0ac5c",
+      "expectedSha256": "7ad04da7123cee81dbb004e25bb63a59b1022796bb03d789df1406b514d0ac5c",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "d2bb3f624516d0233ef8a03bd7b2be47489c36809a02e83ac1bc859e85f4874a",
+      "expectedSha256": "d2bb3f624516d0233ef8a03bd7b2be47489c36809a02e83ac1bc859e85f4874a",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
+      "expectedSha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/imladris-style-bT2GVmLw.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "da673a340f594e229dc5f45363b3b7c48851fa4938a6775c0087b32e0de840e4",
+      "expectedSha256": "da673a340f594e229dc5f45363b3b7c48851fa4938a6775c0087b32e0de840e4",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/imladris-style-CRsa_HRN.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "2930fb188aae30a2ef3a0a5ab1eb8f35d97e65ff6ba4f330d6b9789b9ad0a2a9",
+      "expectedSha256": "2930fb188aae30a2ef3a0a5ab1eb8f35d97e65ff6ba4f330d6b9789b9ad0a2a9",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
+      "expectedSha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "cb182feeed4d798ff6961d3c79f7026279448fca0676438aaecb21f3fc39553a",
+      "expectedSha256": "cb182feeed4d798ff6961d3c79f7026279448fca0676438aaecb21f3fc39553a",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "400c6bfda18d5d14acad1c15d6dcb9f8e13c015e7286317e0b9a482539bef147",
+      "expectedSha256": "400c6bfda18d5d14acad1c15d6dcb9f8e13c015e7286317e0b9a482539bef147",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
+      "expectedSha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/milkdown-adapter-zC8kMFUx.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "d5a851673f814abd0f9765a676dcd2b7df428a8b3a709fa319c6c6fef05a8160",
+      "expectedSha256": "d5a851673f814abd0f9765a676dcd2b7df428a8b3a709fa319c6c6fef05a8160",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/passkeys-16e7134417f0d6af.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "16e7134417f0d6afbb447174957b81a9cc6c1625ec28a0d0db05209d6542bd81",
+      "expectedSha256": "16e7134417f0d6afbb447174957b81a9cc6c1625ec28a0d0db05209d6542bd81",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/tour-1801eafe66889a28.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "1801eafe66889a28d883d9e4c8f6867892699750ce0a97c0636f67400196f068",
+      "expectedSha256": "1801eafe66889a28d883d9e4c8f6867892699750ce0a97c0636f67400196f068",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/tour-a0a3ebe176eeb878.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "a0a3ebe176eeb8785a8d56b80a80c5bab829855115468794053cba632972f8e2",
+      "expectedSha256": "a0a3ebe176eeb8785a8d56b80a80c5bab829855115468794053cba632972f8e2",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-Br17XC-G.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "9fc890c5c085d6f743428c39621ae162e8cb58cac505a4d8da6851f08fc0efbc",
+      "expectedSha256": "9fc890c5c085d6f743428c39621ae162e8cb58cac505a4d8da6851f08fc0efbc",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+      "expectedSha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "passed": true
+    },
+    {
+      "url": "/assets/elven-star.svg",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "fefa6488e09008ee676c3ec1a6fdb2531eef297be22cc7e195cd71e660ff03b3",
+      "expectedSha256": "fefa6488e09008ee676c3ec1a6fdb2531eef297be22cc7e195cd71e660ff03b3",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/cormorant-garamond-latin-400-italic.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "e48e58027030df56869b795ca6f19b7012158275f7ad7cde1900b4a0b68d02e2",
+      "expectedSha256": "e48e58027030df56869b795ca6f19b7012158275f7ad7cde1900b4a0b68d02e2",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/cormorant-garamond-latin-400-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "8048ac209bec741e1c29cd0cfac5aac1c0c2ba8c3ddbd4a58fa9bd92ef5c63c2",
+      "expectedSha256": "8048ac209bec741e1c29cd0cfac5aac1c0c2ba8c3ddbd4a58fa9bd92ef5c63c2",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/cormorant-garamond-latin-500-italic.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "4fb55a7a6d564d428061fe12c82c896264bcc8b7f0b52840bf88e0db5b91256f",
+      "expectedSha256": "4fb55a7a6d564d428061fe12c82c896264bcc8b7f0b52840bf88e0db5b91256f",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8",
+      "expectedSha256": "8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/cormorant-garamond-latin-600-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "ae062b6d5ae308e7edf61b28b07b9984bbb6e961b1f34d9b2c2f4389c33f21ea",
+      "expectedSha256": "ae062b6d5ae308e7edf61b28b07b9984bbb6e961b1f34d9b2c2f4389c33f21ea",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/cormorant-garamond-latin-700-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "21a0fc1c5c22708cf4aa0c147fd32982e25bf9e21efec0ca31a4495ba41753eb",
+      "expectedSha256": "21a0fc1c5c22708cf4aa0c147fd32982e25bf9e21efec0ca31a4495ba41753eb",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/eb-garamond-latin-400-italic.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "1bd1b20fd55986b334ba42dbcb0d9bed7e2d08fd7a713000e8041bfafa37e8ec",
+      "expectedSha256": "1bd1b20fd55986b334ba42dbcb0d9bed7e2d08fd7a713000e8041bfafa37e8ec",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/eb-garamond-latin-400-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "b63448e2680a0dbde70ebb2f3de78f6c515122835491f938e8a8595b46f29210",
+      "expectedSha256": "b63448e2680a0dbde70ebb2f3de78f6c515122835491f938e8a8595b46f29210",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/eb-garamond-latin-500-italic.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "7ad04da7123cee81dbb004e25bb63a59b1022796bb03d789df1406b514d0ac5c",
+      "expectedSha256": "7ad04da7123cee81dbb004e25bb63a59b1022796bb03d789df1406b514d0ac5c",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/eb-garamond-latin-500-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "d2bb3f624516d0233ef8a03bd7b2be47489c36809a02e83ac1bc859e85f4874a",
+      "expectedSha256": "d2bb3f624516d0233ef8a03bd7b2be47489c36809a02e83ac1bc859e85f4874a",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/eb-garamond-latin-600-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
+      "expectedSha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
+      "expectedSha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "cb182feeed4d798ff6961d3c79f7026279448fca0676438aaecb21f3fc39553a",
+      "expectedSha256": "cb182feeed4d798ff6961d3c79f7026279448fca0676438aaecb21f3fc39553a",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/jetbrains-mono-latin-600-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "400c6bfda18d5d14acad1c15d6dcb9f8e13c015e7286317e0b9a482539bef147",
+      "expectedSha256": "400c6bfda18d5d14acad1c15d6dcb9f8e13c015e7286317e0b9a482539bef147",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/LICENSES/OFL-cormorant-garamond.txt",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
+      "expectedSha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/LICENSES/OFL-eb-garamond.txt",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "af751618923413517f388a73a903ff4334622ea4aa62dfe13a5861c6034fa2f2",
+      "expectedSha256": "af751618923413517f388a73a903ff4334622ea4aa62dfe13a5861c6034fa2f2",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/LICENSES/OFL-jetbrains-mono.txt",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "60d55f23c6ce05a81099a762cb67ca2c9b6ea251c7912720998b4c89ebfd4faa",
+      "expectedSha256": "60d55f23c6ce05a81099a762cb67ca2c9b6ea251c7912720998b4c89ebfd4faa",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/LICENSES/OFL-marcellus.txt",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "c77ba70be4679b87b26960538cdce281b8d61dcc837a40aad5afa8132ef22497",
+      "expectedSha256": "c77ba70be4679b87b26960538cdce281b8d61dcc837a40aad5afa8132ef22497",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/fonts/imladris/marcellus-latin-400-normal.woff2",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
+      "expectedSha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/imladris.css",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "0ffe926bec55a63c187d76beb5dae15409dcdaf8b6f5beefb0a777db2f5b5191",
+      "expectedSha256": "0ffe926bec55a63c187d76beb5dae15409dcdaf8b6f5beefb0a777db2f5b5191",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/passkeys.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "daab2ddf725491d45d3cbd9b3da46189c51723b16e904d54b3cb38e7b939d73f",
+      "expectedSha256": "daab2ddf725491d45d3cbd9b3da46189c51723b16e904d54b3cb38e7b939d73f",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "url": "/assets/tour.js",
+      "get": 200,
+      "head": 200,
+      "conditional": 304,
+      "sha256": "558c6d05c0254588d54710ef31fdd953d31db91447cd14c4d9c1b72a7e5a92b6",
+      "expectedSha256": "558c6d05c0254588d54710ef31fdd953d31db91447cd14c4d9c1b72a7e5a92b6",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "passed": true
+    }
+  ]
+}
