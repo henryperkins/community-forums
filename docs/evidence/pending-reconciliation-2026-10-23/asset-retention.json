@@ -1,0 +1,11 @@
+{
+  "priorVersion": "d558418fe08d412c",
+  "candidateVersion": "432ce95c7cdbe032",
+  "deployedReleases": [
+    "d558418fe08d412c",
+    "1c24a3765cdd43f9",
+    "cd261fb5782f8107"
+  ],
+  "pinnedAssetsVerified": 30,
+  "deployedPinsUnchanged": true
+}
