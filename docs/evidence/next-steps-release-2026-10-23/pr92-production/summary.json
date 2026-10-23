@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-23T23:18:08.916450+00:00",
+  "commit": "4ef324bfebe16d1901e6fecaeeceefef7294d416",
+  "cloudBuild": "SUCCESS",
+  "workerBuild": [
+    [
+      "completed",
+      "success"
+    ]
+  ],
+  "workerVersion": [
+    {
+      "version_id": "557c444d-6c41-4b81-8b32-468eccdf50c4",
+      "percentage": 100
+    }
+  ],
+  "revision": "retroboards-00057-qpx",
+  "traffic": [
+    {
+      "latestRevision": true,
+      "percent": 100,
+      "revisionName": "retroboards-00057-qpx"
+    }
+  ],
+  "serviceImages": [
+    "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:4ef324bfebe16d1901e6fecaeeceefef7294d416"
+  ],
+  "deploymentsReady": true,
+  "liveHealth": {
+    "status": "ok",
+    "database": "ok"
+  },
+  "liveAssetVersion": "3aa554af4ef3f85a",
+  "verifiedAssets": 60,
+  "verifiedJobs": 5
+}

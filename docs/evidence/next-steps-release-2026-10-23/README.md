@@ -49,3 +49,26 @@ separate exact-commit receipts after execution.
 The root npm audit's Zod 4.6.5 advisory through `@neon/config`/`@neon/env`
 exists on the starting main and is unchanged by PR92; it remains separate
 follow-up work. No production setting or member state is changed by these tests.
+
+## PR92 production proof and retention
+
+Both automatic production lanes completed on the exact PR92 merge SHA.
+Cloud Build `d41ae944-51f7-4992-b07f-1a68e2e1f9a5` succeeded; Cloud Run revision
+`retroboards-00057-qpx` is Ready with 100% traffic, and all four cron jobs plus
+the monitoring job use that merge image. The Workers Build succeeded on the
+same SHA; active Worker version `557c444d-6c41-4b81-8b32-468eccdf50c4` serves 100%.
+Public health/login return 200, health reports application/database `ok`, and
+all 60 manifest assets matched their SHA-256 hashes. Sanitized receipts are in
+`pr92-production/`.
+
+Only after that live proof, asset release `3aa554af4ef3f85a` was recorded. The
+retention window is now `3aa554af4ef3f85a`, `432ce95c7cdbe032`, and
+`d558418fe08d412c`. Two files exclusive to the retired oldest release were
+removed; all 58 remaining files were hash-verified. `retention.json` records
+the exact removals. No current asset bytes or application behavior changed.
+Post-retention asset reproducibility and all 35 asset tests pass, as does
+`composer verify:imladris` (24 tests, 305 assertions). Application digest:
+`31df86217edb7484ae88a56009fd123127b170f577b43f8c8006f21e3253268a`.
+
+The new admin journeys are included in the hosted capture command, alongside
+existing admin-remediation and dashboard coverage.

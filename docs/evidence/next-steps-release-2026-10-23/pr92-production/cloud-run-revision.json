@@ -1,0 +1,40 @@
+{
+  "name": "retroboards-00057-qpx",
+  "creationTimestamp": "2026-10-23T23:17:17.617297Z",
+  "images": [
+    "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app@sha256:b07f02052c13cae597fbdab38828f7d95ac8c9d8830ebee5915819ab12600084"
+  ],
+  "imageDigest": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app@sha256:b07f02052c13cae597fbdab38828f7d95ac8c9d8830ebee5915819ab12600084",
+  "conditions": [
+    {
+      "lastTransitionTime": "2026-10-23T23:17:36.522043Z",
+      "message": "Deploying revision succeeded in 18.9s.",
+      "status": "True",
+      "type": "Ready"
+    },
+    {
+      "lastTransitionTime": "2026-10-23T23:17:36.643575Z",
+      "severity": "Info",
+      "status": "True",
+      "type": "Active"
+    },
+    {
+      "lastTransitionTime": "2026-10-23T23:17:36.467111Z",
+      "message": "Containers became healthy in 10.12s.",
+      "status": "True",
+      "type": "ContainerHealthy"
+    },
+    {
+      "lastTransitionTime": "2026-10-23T23:17:23.835248Z",
+      "message": "Container image import completed in 5.48s.",
+      "status": "True",
+      "type": "ContainerReady"
+    },
+    {
+      "lastTransitionTime": "2026-10-23T23:17:25.675406Z",
+      "message": "Provisioning imported containers completed in 1.84s. Checking container health. This will wait for up to 4m for the configured startup probe, including an initial delay of 0s.",
+      "status": "True",
+      "type": "ResourcesAvailable"
+    }
+  ]
+}
