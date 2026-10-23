@@ -47,6 +47,7 @@ class ConfigurationContracts(unittest.TestCase):
         self.assertEqual({'active':False},mutations[0][1])
         self.assertTrue(any(args[:3]==('iam','service-accounts','remove-iam-policy-binding') for args in commands))
         self.assertFalse(any('--permissions=cloudbuild.builds.create' in ' '.join(args) for args in commands))
+        self.assertTrue(all('--condition=None' in args for args in commands if args[:2] == ('projects','add-iam-policy-binding')))
         self.assertNotIn('private-',json.dumps(result))
         self.assertEqual(['cloudbuild.builds.get'],result['parent']['custom_role_permissions'])
 

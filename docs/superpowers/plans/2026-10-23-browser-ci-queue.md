@@ -59,3 +59,4 @@
 - Independent review identified premature success persistence and expired successful-build reuse. Success is now stored only after the trusted receipt passes; `--fresh` replaces completed runs while reusing active work.
 - Focused PHP boundary suite passes; it invokes verifier, coordinator and configuration Python behavioral contracts as well as artifact enforcement tests.
 - Live configuration, full integrated qualification and hosted/production evidence remain pending.
+- Live convergence found an existing conditional project IAM binding. Explicit `--condition=None` now preserves the browser accounts' existing unconditional bindings without an interactive gcloud condition prompt; the configuration contract pins this.

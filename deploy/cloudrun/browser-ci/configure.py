@@ -108,16 +108,16 @@ def configure(control_sha, apply=False):
         raise RuntimeError('Exactly one existing main deployment webhook is required')
     if gc('iam', 'service-accounts', 'describe', SA, '--format=json', optional=True) is None:
         gc('iam', 'service-accounts', 'create', 'retroboards-browser-ci', '--display-name=RetroBoards synthetic browser CI')
-    gc('projects', 'add-iam-policy-binding', PROJECT, f'--member=serviceAccount:{SA}', '--role=roles/logging.logWriter')
+    gc('projects', 'add-iam-policy-binding', PROJECT, f'--member=serviceAccount:{SA}', '--role=roles/logging.logWriter', '--condition=None')
     if gc('iam', 'service-accounts', 'describe', VERIFIER_SA, '--format=json', optional=True) is None:
         gc('iam', 'service-accounts', 'create', 'retroboards-browser-verifier', '--display-name=RetroBoards trusted browser verifier')
-    gc('projects', 'add-iam-policy-binding', PROJECT, f'--member=serviceAccount:{VERIFIER_SA}', '--role=roles/logging.logWriter')
+    gc('projects', 'add-iam-policy-binding', PROJECT, f'--member=serviceAccount:{VERIFIER_SA}', '--role=roles/logging.logWriter', '--condition=None')
     role_exists = gc('iam', 'roles', 'describe', VERIFIER_ROLE_ID, '--format=json', optional=True) is not None
     gc('iam', 'roles', 'update' if role_exists else 'create', VERIFIER_ROLE_ID,
        '--title=RetroBoards trusted browser orchestration', '--stage=GA',
        f'--permissions={",".join(VERIFIER_PERMISSIONS)}')
     gc('projects', 'add-iam-policy-binding', PROJECT,
-       f'--member=serviceAccount:{VERIFIER_SA}', f'--role={VERIFIER_ROLE}')
+       f'--member=serviceAccount:{VERIFIER_SA}', f'--role={VERIFIER_ROLE}', '--condition=None')
     child_policy = json.loads(gc('iam', 'service-accounts', 'get-iam-policy', SA, '--format=json'))
     if any(binding.get('role') == 'roles/iam.serviceAccountUser' and not binding.get('condition')
            and f'serviceAccount:{VERIFIER_SA}' in binding.get('members', [])
