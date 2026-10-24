@@ -1,0 +1,7 @@
+{
+  "comparedWith": "7c0305c53754c9cdc10a666d8477cd760d4cfd93",
+  "memberAdminRuntimeOrAssetChanges": [],
+  "assetVersion": "3aa554af4ef3f85a",
+  "localAssetFilesVerified": 58,
+  "note": "Release tooling/design builder changed; application controllers/services/templates, Worker and asset bytes retain their completed local qualification."
+}

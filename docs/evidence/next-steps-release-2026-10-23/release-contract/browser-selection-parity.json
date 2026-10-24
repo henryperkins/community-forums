@@ -1,0 +1,13 @@
+{
+  "discoveryOnly": true,
+  "scope": "Capture and notifications/settings; unchanged Docker upload projects excluded",
+  "oldNotificationProjectBatches": 20,
+  "newNotificationProjectBatches": 14,
+  "oldScheduledCases": 708,
+  "newScheduledCases": 608,
+  "uniqueCasesPreserved": 608,
+  "duplicateCasesRemoved": 100,
+  "allRegisteredCasesPreserved": true,
+  "newPlanHasNoDuplicateCases": true,
+  "note": "Registered cases include declared skips; this is test selection proof, not a browser execution pass."
+}

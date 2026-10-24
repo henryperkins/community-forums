@@ -51,7 +51,9 @@ cd tests/browser && npm install && npx playwright install --with-deps chromium &
 tests/backup/rehearse.sh
 ```
 
-There is **no PHPUnit CI**. GitHub Actions is **permanently unavailable** by owner decision (2026-10-11); never propose or wait for billing recovery. `.github/workflows/browser-evidence.yml` is a manual-only reference. Run `composer test` locally before claiming a change is green, plus asset checks and focused browser evidence for the affected surface. The independent full Cloud Build browser lane is available for explicit regression coverage; it is not an automatic merge gate for a change already supported by completed local evidence. Verify the exact automatic production deployments after publishing `main` (Cloud Run runbook §3, §5a).
+There is **no PHPUnit CI**. GitHub Actions is **permanently unavailable** by owner decision (2026-10-11); never propose or wait for billing recovery. `.github/workflows/browser-evidence.yml` is a manual-only reference.
+
+**Ordinary release contract (ADR 0051):** preserve unrelated work and review the final diff; run `composer test` once for the final application candidate; run generated-asset/Worker checks when their inputs change; and obtain focused browser evidence for UI changes at the affected viewports and browser modes. An unchanged passing full suite already covers its focused PHP/Imladris/CI subsets. Docs-only changes need appropriate document review. Repeat checks only for changed inputs, failures or unresolved concerns. The optional broad Cloud Build browser run is explicit regression coverage, not a merge/publication hold. Prototype builds, upload-container tests and recovery rehearsals apply when their inputs or risks change. No application-wide Imladris digest or per-merge baseline commit is required. Publish once, then verify the exact automatic Worker and Cloud Run deployments, readiness/job parity, health and affected behavior; verify live asset bytes when assets changed. Keep deployment receipts as linked run/release artifacts so recording proof does not itself require another publication. See the Cloud Run runbook §3, §5a.
 
 ## Architecture
 

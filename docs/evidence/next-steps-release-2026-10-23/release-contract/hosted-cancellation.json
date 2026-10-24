@@ -1,0 +1,28 @@
+{
+  "builds": [
+    {
+      "id": "4449b322-3184-4e0a-ae29-9bc4aa0fd6bc",
+      "status": "FAILURE",
+      "startTime": "2026-10-23T23:20:00.212219243Z",
+      "finishTime": "2026-10-24T00:12:42.953948Z"
+    },
+    {
+      "id": "15f4e26f-af53-4664-9948-ae87a842b359",
+      "status": "FAILURE",
+      "startTime": "2026-10-24T00:13:04.550785194Z",
+      "finishTime": "2026-10-24T00:14:33.644053Z"
+    }
+  ],
+  "requestedCancellation": true,
+  "coordinatorStopped": true,
+  "note": "Both cloud builds were terminal FAILURE before cancellation could take effect; the API rejected cancellation of the finished verifier. The task-owned coordinator was stopped. No active hosted work or hosted acceptance remains.",
+  "reportedSuiteResult": {
+    "passed": false,
+    "exit_code": 1,
+    "last_stage": "notifications-settings",
+    "artifact_count": 409,
+    "missing_required_artifacts": [
+      "unified-notifications-and-settings: completed=true"
+    ]
+  }
+}

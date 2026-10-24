@@ -1,5 +1,8 @@
 # ADR 0027: Imladris board page — adoption, conflicts, and new write surface
 
+> Release-policy update, 2026-10-23: [ADR 0051](0051-simpler-release-contract.md) retires the blanket application digest and per-merge baseline/follow-up commit. References below describe the historical adoption workflow; deterministic generation and focused behavioral/browser evidence remain required.
+
+
 **Date:** 2026-08-27
 **Status:** Accepted and implemented on branch `feat/imladris-board-page`
 (baseline `c98d0d0d`).

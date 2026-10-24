@@ -55,6 +55,7 @@ Plans in this index are frozen design/implementation records, not a live task bo
 | 2026-09-20 | [`2026-09-20-unified-notifications.md`](plans/2026-09-20-unified-notifications.md) | Unified Notifications and Account Settings Implementation Plan | spec in [`specs/`](specs/2026-09-20-unified-notifications-and-account-settings-design.md) |
 | 2026-09-21 | [`2026-09-21-messages-poll-focus-fixes.md`](plans/2026-09-21-messages-poll-focus-fixes.md) | Messages Poll And Focus Fixes Implementation Plan | — |
 | 2026-09-23 | [`2026-09-23-image-upload-reliability.md`](plans/2026-09-23-image-upload-reliability.md) | Image Upload Reliability Implementation Plan | — |
+| 2026-10-23 | [`ADR 0051`](../adr/0051-simpler-release-contract.md) | Simpler release contract — owner-approved gate review and implementation | ✓ |
 | 2026-10-23 | [`2026-10-23-admin-safeguards-and-audit.md`](plans/2026-10-23-admin-safeguards-and-audit.md) | Admin safeguards and readable audit | ✓ |
 
 **Stage-1 working suite:** [`plans/imladris-admin-account-stage1/`](plans/imladris-admin-account-stage1/) — the Stage 1 admin/account inventory's full working set (F findings · R reconciliation · D deviation ledgers · S synthesis · V verification per surface, plus `README.md`). Cited as the rationale record by ADR 0024 and the slice evidence under `docs/evidence/imladris-admin-account-slice-*/`.

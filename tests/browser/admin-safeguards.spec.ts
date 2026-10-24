@@ -5,7 +5,7 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(__dirname, '../..');
-const evidence = path.resolve(root, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/admin-safeguards-2026-10-23');
+const evidence = path.resolve(root, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser/admin-safeguards');
 function fixture(action = 'state') {
   return JSON.parse(execFileSync(process.env.PHP_BINARY ?? 'php', [path.join(__dirname, 'admin-safeguards-fixture.php'), action], { cwd: root, env: process.env, encoding: 'utf8' }));
 }

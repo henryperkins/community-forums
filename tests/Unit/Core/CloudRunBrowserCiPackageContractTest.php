@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 final class CloudRunBrowserCiPackageContractTest extends TestCase
 {
-    public function test_non_object_unified_results_fail_completion_and_preserve_the_diagnostic_archive(): void
+    public function test_non_object_unified_results_mark_incomplete_diagnostics_and_preserve_the_test_outcome(): void
     {
         $root = dirname(__DIR__, 3);
         $script = <<<'PY'
@@ -41,6 +41,7 @@ with tempfile.TemporaryDirectory(prefix='rb-package-shape-') as directory:
             archive_record = json.load(archive.extractfile('result.json'))
         records.append({
             'passed': record['passed'],
+            'artifacts_complete': record['artifacts_complete'],
             'missing': record['missing_required_artifacts'],
             'packaging_failed': record.get('packaging_failed', False),
             'artifact_count': record['artifact_count'],
@@ -62,7 +63,8 @@ PY;
         $records = json_decode($stdout, true, flags: JSON_THROW_ON_ERROR);
         self::assertCount(2, $records);
         foreach ($records as $record) {
-            self::assertFalse($record['passed']);
+            self::assertTrue($record['passed']);
+            self::assertFalse($record['artifacts_complete']);
             self::assertFalse($record['packaging_failed']);
             self::assertSame(['unified-notifications-and-settings: completed=true'], $record['missing']);
             self::assertSame(6, $record['artifact_count']);

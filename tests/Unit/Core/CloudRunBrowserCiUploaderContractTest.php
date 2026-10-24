@@ -26,16 +26,17 @@ final class CloudRunBrowserCiUploaderContractTest extends TestCase
         self::assertStringContainsString('OK', $stderr);
     }
 
-    public function test_publish_uses_trusted_uploader_and_retains_fallback_receipt_and_final_enforcement(): void
+    public function test_diagnostic_publication_preserves_test_status(): void
     {
-        $build = json_decode((string) file_get_contents(self::ROOT . '/deploy/cloudrun/browser-ci/child-cloudbuild.json'),
+        $build = json_decode((string) file_get_contents(self::ROOT . '/deploy/cloudrun/browser-ci/cloudbuild.json'),
             true, flags: JSON_THROW_ON_ERROR);
-        self::assertStringContainsString('enforce.py upload.py', $build['steps'][0]['args'][1]);
+        self::assertStringContainsString('package.py upload.py', $build['steps'][0]['args'][1]);
         $publish = $build['steps'][2]['args'][1];
-        self::assertStringContainsString('"passed":false', $publish);
+        self::assertStringContainsString('"test_status":"see_provider_result"', $publish);
         self::assertStringContainsString('python3 /workspace/control/upload.py', $publish);
         self::assertStringContainsString('--outer-result /workspace/runner-exit.json', $publish);
         self::assertStringNotContainsString('gcloud storage', $publish);
-        self::assertSame('/workspace/control/enforce.py', $build['steps'][3]['args'][0]);
+        self::assertTrue($build['steps'][2]['allowFailure']);
+        self::assertSame('test-result', $build['steps'][3]['id']);
     }
 }

@@ -1,0 +1,8 @@
+Running 6 tests using 1 worker
+  ✓  1 [desktop] › tests/browser/account-settings-repairs.spec.ts:59:7 › account settings repairs without JavaScript › overlapping site suspensions keep the member write gate closed (1.8s)
+  ✓  2 [desktop] › tests/browser/account-settings-repairs.spec.ts:106:9 › account settings repairs without JavaScript › suspension expiry retains the deactivated hold until explicit recovery (2.5s)
+  ✓  3 [desktop] › tests/browser/account-settings-repairs.spec.ts:106:9 › account settings repairs without JavaScript › suspension expiry retains the pending_deletion hold until explicit recovery (2.4s)
+  ✓  4 [mobile] › tests/browser/account-settings-repairs.spec.ts:59:7 › account settings repairs without JavaScript › overlapping site suspensions keep the member write gate closed (1.7s)
+  ✓  5 [mobile] › tests/browser/account-settings-repairs.spec.ts:106:9 › account settings repairs without JavaScript › suspension expiry retains the deactivated hold until explicit recovery (2.5s)
+  ✓  6 [mobile] › tests/browser/account-settings-repairs.spec.ts:106:9 › account settings repairs without JavaScript › suspension expiry retains the pending_deletion hold until explicit recovery (2.5s)
+  6 passed (15.1s)

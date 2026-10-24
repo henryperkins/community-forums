@@ -1,12 +1,12 @@
 # Next-step release qualification — 2026-10-23
 
-This candidate combines the explicit hosted-browser coordinator, qualified PR92
+This release combines the simpler release contract and optional single hosted build, qualified PR92
 Vite updates, and the two deferred admin UX findings. Application Vite is 8.3.5;
 the runnable archived Imladris prototype uses 6.4.5. Missing JavaScript outputs
 were regenerated with the deployed-release pins preserved. The new asset
 version is `3aa554af4ef3f85a`.
 
-## Local qualification
+## Initial local qualification (before ADR 0051)
 
 - Full `composer test`: 3,364 tests, 29,805 assertions, one skip; exit 0.
 - Asset reproducibility and all 35 asset/Worker tests pass.
@@ -30,7 +30,7 @@ admin implementations. The CI review's two findings were fixed before live
 configuration. The admin reviewer additionally passed 19 UTC parser cases
 under a non-UTC process timezone.
 
-## Live CI configuration
+## Initial CI configuration (historical; superseded below)
 
 The browser trigger and its GitHub push hook are disabled; the production
 trigger and hook remain enabled. The trusted verifier now has only
@@ -42,9 +42,10 @@ No browser builds appeared after publishing the control and PR92 branches.
 ## Publication boundary
 
 PR92 merged as `4ef324bfebe16d1901e6fecaeeceefef7294d416`.
-This record establishes local qualification and live CI configuration. The
-complete hosted matrix and final automatic production deployments require
-separate exact-commit receipts after execution.
+ADR 0051 replaces the intermediate two-build acceptance protocol. Final local
+qualification is below. The earlier hosted run failed and has no acceptance
+claim. Exact final production receipts are stored as linked release artifacts
+after publication, without another proof-only main commit.
 
 The root npm audit's Zod 4.6.5 advisory through `@neon/config`/`@neon/env`
 exists on the starting main and is unchanged by PR92; it remains separate
@@ -72,3 +73,41 @@ Post-retention asset reproducibility and all 35 asset tests pass, as does
 
 The new admin journeys are included in the hosted capture command, alongside
 existing admin-remediation and dashboard coverage.
+
+## Final simpler-contract qualification
+
+Owner-approved ADR 0051 removes the application-wide Imladris digest, its baseline
+file and follow-up-commit rule. Generated CSS/font reproducibility and concrete
+behavioral checks remain. Optional broad CI is one restricted build; the separate
+verifier/coordinator/enforcer and their obsolete contracts are removed. Test exit
+status is independent of diagnostic packaging and upload.
+
+- Final full PHP suite: **3,361 tests, 29,761 assertions, one skip**, exit 0,
+  1m35.605s. A final diagnostic-fallback metadata adjustment was additionally
+  verified by the focused CI contracts; member/admin application code is unchanged.
+- CI contracts: **13 tests, 110 assertions**, including real Docker-status
+  propagation and successful tests with missing diagnostics.
+- Asset reproducibility and **all 35 asset/Worker tests pass**. All 58 manifest
+  files match locally; version `3aa554af4ef3f85a` and deployed pins are preserved.
+- Playwright discovery proves **708 → 608 scheduled capture/account cases**, with
+  **all 608 unique cases preserved** and no duplicates. The secondary matrix
+  drops **20 → 14 project batches**. This is selection proof, not a broad run.
+- The old hosted test run failed on `datetime-local` fill normalization of zero
+  seconds in an existing account test. Both provider builds were already terminal
+  FAILURE when cancellation was requested; the local coordinator was stopped.
+  The test uses native minute format now; **six focused account/suspension
+  journeys pass** on desktop/mobile. No production validation changed for this fix.
+- One final independent read-only review found no P1/P2 or meaningful P3.
+
+Sanitized logs and receipts are in `release-contract/`. The old verifier account
+is disabled, its custom role deleted and project/artifact-bucket grants removed.
+Historical receipt objects retain their existing lifecycle. Independent reads
+confirm the browser trigger disabled with `filter=false`, its webhook inactive,
+and production trigger/webhook active. The new build uses only the restricted
+test identity. No new hosted run was launched for this release.
+
+The earlier focused admin/composer render evidence remains applicable: their
+controllers, services, templates, Worker and public asset bytes have no changes
+from qualified candidate `7c0305c5`. Final publication receipts are stored at
+`/home/ubuntu/.local/state/community-forums/next-steps-20261023T225540Z/final/`
+and indexed by the external `FINAL.md`; this directory is outside the repository.

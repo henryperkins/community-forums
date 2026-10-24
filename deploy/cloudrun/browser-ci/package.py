@@ -81,9 +81,9 @@ def build_package(source, output, exit_code, stage):
                 missing.append('unified-notifications-and-settings: completed=true')
         result = {'completed_at': datetime.now(timezone.utc).isoformat(),
                   'source_sha': os.environ.get('CI_SOURCE_SHA', ''),
-                  'control_sha': os.environ.get('CI_CONTROL_SHA', ''),
                   'exit_code': exit_code, 'last_stage': stage,
-                  'passed': exit_code == 0 and stage == 'complete' and not missing and invalid_json == 0,
+                  'passed': exit_code == 0 and stage == 'complete',
+                  'artifacts_complete': not missing and invalid_json == 0,
                   'omitted_invalid_json_count': invalid_json,
                   'missing_required_artifacts': missing,
                   'artifact_count': len(included), 'artifacts': included,
@@ -115,10 +115,10 @@ def package(source, output, exit_code, stage):
         # Preserve the actual suite stage, never exception text or private values.
         for name in ('evidence.tar.gz', '.result.json.tmp', '.evidence.tar.gz.tmp'):
             (output / name).unlink(missing_ok=True)
-        result = {'passed': False, 'exit_code': exit_code, 'last_stage': stage,
+        result = {'passed': exit_code == 0 and stage == 'complete',
+                  'artifacts_complete': False, 'exit_code': exit_code, 'last_stage': stage,
                   'packaging_failed': True, 'artifact_count': 0, 'artifacts': [],
-                  'source_sha': os.environ.get('CI_SOURCE_SHA', ''),
-                  'control_sha': os.environ.get('CI_CONTROL_SHA', '')}
+                  'source_sha': os.environ.get('CI_SOURCE_SHA', '')}
         temporary = output / '.result.json.tmp'
         temporary.write_text(json.dumps(result, indent=2) + '\n')
         os.replace(temporary, output / 'result.json')
@@ -133,4 +133,4 @@ if __name__ == '__main__':
     parser.add_argument('--stage', required=True)
     args = parser.parse_args()
     result = package(args.source, args.output, args.exit_code, args.stage)
-    raise SystemExit(1 if args.stage == 'complete' and not result['passed'] else 0)
+    raise SystemExit(0)

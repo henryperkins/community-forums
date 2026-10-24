@@ -117,39 +117,60 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertStringContainsString('must not ship', strtolower($readme));
     }
 
-    public function test_reviewed_application_baseline_covers_forum_presentation_and_composer_contracts(): void
+    public function test_application_changes_do_not_require_a_design_baseline_refresh(): void
     {
-        $path = self::ROOT . '/config/imladris-runtime-baseline.json';
-        self::assertFileExists($path);
+        $root = $this->makeAssetBuilderFixture();
 
-        $baseline = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame('6d81da590a12bd09bb8d0e282c042aa03d755a94', $baseline['reconciled_through_commit'] ?? null);
-        self::assertSame('COMPOSER.md v0.8', $baseline['composer_contract'] ?? null);
-        self::assertContains('templates', $baseline['application_surface']['roots'] ?? []);
-        self::assertContains('public/assets', $baseline['application_surface']['roots'] ?? []);
-        self::assertContains('USER.md', $baseline['application_surface']['files'] ?? []);
-        self::assertContains('ADMIN.md', $baseline['application_surface']['files'] ?? []);
-        self::assertContains('COMMUNITY.md', $baseline['application_surface']['files'] ?? []);
-        self::assertContains('COMPOSER.md', $baseline['application_surface']['files'] ?? []);
-        self::assertContains('src/Core/FeatureFlags.php', $baseline['application_surface']['files'] ?? []);
-        self::assertContains('public/assets/imladris.css', $baseline['application_surface']['excluded'] ?? []);
-        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $baseline['application_surface']['sha256'] ?? '');
+        try {
+            mkdir($root . '/templates');
+            mkdir($root . '/public/assets/dist', recursive: true);
+            file_put_contents($root . '/templates/example.php', '<h1>Original</h1>');
+            file_put_contents($root . '/public/assets/dist/retired.js', 'old bundle');
+            $builder = new ImladrisAssetBuilder($root);
+            $error = null;
+            try {
+                $builder->build();
+            } catch (\RuntimeException $exception) {
+                $error = $exception->getMessage();
+            }
+            self::assertNull($error, 'Application changes must not require a manual baseline: ' . $error);
+            $css = file_get_contents($root . '/public/assets/imladris.css');
 
-        $contractPath = self::ROOT . '/docs/design-system/imladris/production-contract.json';
-        $contract = json_decode((string) file_get_contents($contractPath), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame($baseline['reconciled_through_commit'], $contract['reconciled_through_commit'] ?? null);
-        self::assertSame($baseline['composer_contract'], $contract['composer']['spec'] ?? null);
-        self::assertSame(
-            ['USER.md', 'ADMIN.md', 'COMMUNITY.md', 'COMPOSER.md'],
-            $contract['surface_specs'] ?? null,
+            file_put_contents($root . '/templates/example.php', '<h1>Updated</h1>');
+            unlink($root . '/public/assets/dist/retired.js');
+
+            self::assertSame([], $builder->check());
+            $builder->build();
+            self::assertSame($css, file_get_contents($root . '/public/assets/imladris.css'));
+        } finally {
+            $this->removeFixtureDirectory($root);
+        }
+    }
+
+    public function test_removed_application_digest_option_fails_without_rebuilding(): void
+    {
+        $manifest = self::ROOT . '/resources/imladris/manifest.json';
+        $before = file_get_contents($manifest);
+        exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(self::ROOT . '/bin/build-imladris-assets.php')
+            . ' --print-application-digest 2>&1', $output, $status);
+        self::assertSame(2, $status, implode("\n", $output));
+        self::assertSame($before, file_get_contents($manifest));
+    }
+
+    public function test_generated_manifest_preserves_the_imported_design_contract(): void
+    {
+        $contract = json_decode(
+            (string) file_get_contents(self::ROOT . '/docs/design-system/imladris/production-contract.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
         );
-
+        self::assertSame(['USER.md', 'ADMIN.md', 'COMMUNITY.md', 'COMPOSER.md'], $contract['surface_specs']);
         $runtime = json_decode(
             (string) file_get_contents(self::ROOT . '/resources/imladris/manifest.json'),
             true,
             flags: JSON_THROW_ON_ERROR,
         );
-        self::assertSame('docs/design-system/imladris/production-contract.json', $runtime['design_contract']['source'] ?? null);
+        self::assertSame('docs/design-system/imladris/production-contract.json', $runtime['design_contract']['source']);
     }
 
     public function test_application_css_does_not_redeclare_design_system_foundations(): void
@@ -869,17 +890,6 @@ final class ImladrisRuntimeAssetTest extends TestCase
                 'reconciled_through_commit' => 'fixture',
                 'composer' => ['spec' => 'fixture'],
                 'surface_specs' => [],
-            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",
-            'config/imladris-runtime-baseline.json' => json_encode([
-                'reconciled_through_commit' => 'fixture',
-                'composer_contract' => 'fixture',
-                'application_surface' => [
-                    'roots' => [],
-                    'files' => [],
-                    'extensions' => [],
-                    'excluded' => [],
-                    'sha256' => hash('sha256', "\n"),
-                ],
             ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",
             'config/imladris-design-baseline.json' => json_encode([
                 'design_surface' => [

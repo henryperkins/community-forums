@@ -1,0 +1,21 @@
+{
+  "browserTrigger": {
+    "id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+    "disabled": true,
+    "filter": "false",
+    "serviceAccount": "projects/rising-woods-449718-v6/serviceAccounts/retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+    "stepIds": [
+      "source",
+      "browser-suites",
+      "publish-evidence",
+      "test-result"
+    ]
+  },
+  "productionTrigger": {
+    "id": "1fa53b11-780b-495c-be33-fb666b70277e",
+    "disabled": false
+  },
+  "productionHookActive": true,
+  "browserHookActive": false,
+  "verifierDisabled": true
+}

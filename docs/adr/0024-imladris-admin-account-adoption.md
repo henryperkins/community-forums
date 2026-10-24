@@ -1,5 +1,8 @@
 # ADR 0024 — Imladris adoption for the admin console and account surface
 
+> Release-policy update, 2026-10-23: [ADR 0051](0051-simpler-release-contract.md) retires the blanket application digest and per-merge baseline/follow-up commit. References below describe the historical adoption workflow; deterministic generation and focused behavioral/browser evidence remain required.
+
+
 - **Status:** Accepted, 2026-08-03
 - **Supersedes, in part:** ADR 0023 §"Console IA per ADMIN §9.2" (the grouped-rail clause only)
 - **Amends:** `ADMIN.md` §9.2, §9.4

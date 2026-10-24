@@ -1,0 +1,4 @@
+Running 2 tests using 1 worker
+  ✓  1 [desktop] › tests/browser/admin-safeguards.spec.ts:29:5 › block review preserves phrases through editing and cancel before a confirmed save (1.5s)
+  ✓  2 [mobile] › tests/browser/admin-safeguards.spec.ts:29:5 › block review preserves phrases through editing and cancel before a confirmed save (1.5s)
+  2 passed (4.7s)

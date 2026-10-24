@@ -12,7 +12,7 @@ SPEC.loader.exec_module(u)
 
 
 class ConfigurationContracts(unittest.TestCase):
-    def test_apply_disables_only_browser_routing_and_removes_obsolete_privileges(self):
+    def test_apply_disables_only_browser_routing_and_keeps_permissions_restricted(self):
         project, region = u.PROJECT, u.REGION
         url = f'https://cloudbuild.googleapis.com/v1/projects/{project}/locations/{region}/triggers/'
         hooks = [
@@ -30,26 +30,24 @@ class ConfigurationContracts(unittest.TestCase):
                                    'webhookConfig':{'secret':'private-secret'}})
             if args[:3] == ('builds','triggers','import'):
                 imports.append(json.loads(Path(next(x.split('=',1)[1] for x in args if x.startswith('--source='))).read_text()))
-            if args[:3] == ('iam','service-accounts','get-iam-policy'):
-                return json.dumps({'bindings':[{'role':'roles/iam.serviceAccountUser',
-                                               'members':['serviceAccount:'+u.VERIFIER_SA]}]})
             return '{}'
         def invoke(args, optional=False):
             if args[-1] == '--paginate': return json.dumps(hooks)
             mutations.append((args, json.loads(Path(args[-1]).read_text())))
             return '{}'
         with patch.object(u,'gc',side_effect=gc),patch.object(u,'invoke',side_effect=invoke):
-            result=u.configure('a'*40,True)
+            result=u.configure(True)
         self.assertEqual(1,len(imports));self.assertTrue(imports[0]['disabled'])
+        self.assertEqual('false', imports[0]['filter'])
         self.assertEqual(u.TRIGGER,imports[0]['name'])
         self.assertEqual([20],result['disabled_github_hooks'])
         self.assertEqual('repos/'+u.REPO+'/hooks/20',mutations[0][0][2])
         self.assertEqual({'active':False},mutations[0][1])
-        self.assertTrue(any(args[:3]==('iam','service-accounts','remove-iam-policy-binding') for args in commands))
         self.assertFalse(any('--permissions=cloudbuild.builds.create' in ' '.join(args) for args in commands))
         self.assertTrue(all('--condition=None' in args for args in commands if args[:2] == ('projects','add-iam-policy-binding')))
         self.assertNotIn('private-',json.dumps(result))
-        self.assertEqual(['cloudbuild.builds.get'],result['parent']['custom_role_permissions'])
+        self.assertNotIn('parent', result)
+        self.assertFalse(any(args[:2] == ('iam','roles') for args in commands))
 
 
 if __name__ == '__main__':

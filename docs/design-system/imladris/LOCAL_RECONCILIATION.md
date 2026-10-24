@@ -1,5 +1,8 @@
 # RetroBoards runtime reconciliation
 
+> Release-policy update, 2026-10-23: [ADR 0051](../../adr/0051-simpler-release-contract.md) retires the blanket application digest and per-merge baseline/follow-up commit. References below describe the historical adoption workflow; deterministic generation and focused behavioral/browser evidence remain required.
+
+
 ## 2026-10-12 — verified Boards Worker assets
 
 All 55 live Worker hashes match asset version 326ae04cd673029a. Recording that

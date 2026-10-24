@@ -55,7 +55,6 @@ Service accounts, each holding only what it uses:
 | `retroboards-deploy` | Cloud Build: push images, `run.developer`, act as `retroboards-app` and `retroboards-monitor`, write build logs |
 | `retroboards-monitor` | Read database aggregates through the connector with the existing app DB credential; view cron executions and Cloud SQL backup metadata (§8). No app key, mail token or data bucket access |
 | `retroboards-browser-ci` | Write browser build logs and create synthetic artifacts in its private CI bucket (§5a). No production secrets, database, deployment or invocation rights |
-| `retroboards-browser-verifier` | Trusted browser verifier: read completed build metadata and its artifact bucket, then create receipts in a separate private verification bucket (§5a). No build creation or service-account impersonation; only pinned reviewed controls execute here |
 
 ## 2. The request path and the visitor's IP
 
@@ -187,143 +186,78 @@ file, run `configure.sh`, which refreshes the copy. GitHub's delivery log for
 the hook (repository Settings → Webhooks) shows each push and Cloud Build's
 reply.
 
-## 5a. Local release checks and independent hosted browser evidence
+## 5a. Ordinary releases and optional broad browser regression
 
-**GitHub Actions is permanently unavailable.** The owner confirmed on
-2026-10-11 that the billing lock will not be repaired. Do not propose or wait
-for billing recovery. `.github/workflows/browser-evidence.yml` is a manual-only
-reference; automatic push triggers are removed. The earlier checked main run
-(`37888488447`) failed with zero job steps, and there is no CircleCI configuration.
+GitHub Actions is permanently unavailable by owner decision (2026-10-11).
+The manual-only workflow is a reference. Local evidence is the normal release
+qualification; the broad hosted matrix is optional (ADR 0051).
 
-The normal release path is completed local `composer test`, generated-asset and
-Worker checks, focused browser evidence for the changed surface, then the exact
-automatic production deployment and live-byte verification (§3). Required
-browser evidence still applies. The independent full hosted browser matrix is
-available for explicit regression coverage and is not a mandatory merge hold
-when the change already has sufficient completed local evidence. Deliberately
-canceled runs must be documented as canceled, never as a full hosted pass.
+1. Review the final diff and preserve unrelated work. Inspect changed migrations
+   and relevant dependency risks.
+2. Run `composer test` once on the final application candidate. Run
+   `npm run check:assets` and `npm run test:assets` when asset sources,
+   build dependencies, Worker routing, manifests or retention changed. The full
+   PHP suite includes Imladris generation and CI contracts; unchanged subsets do
+   not need another pass. Docs-only changes need appropriate document review.
+3. For UI changes, run focused browser journeys for the affected surface and
+   viewport/browser modes, including no-JS or accessibility where relevant.
+   Add prototype, production-container upload, migration or recovery checks
+   when those inputs or risks change. Repeat only for changed inputs, a failure
+   or an unresolved concern.
+4. Publish once. Verify the exact Worker version/build and Cloud Run revision,
+   Ready/traffic, service/job image parity, public health and changed behavior.
+   Compare live asset hashes when assets changed. Record deployment receipts as
+   linked run/release artifacts; avoid a proof-only commit that triggers another
+   deployment. Advance deployed asset pins only after confirming the new version
+   is live, grouping necessary retention bookkeeping with planned changes.
 
-The independent Cloud Build lane uses
-`deploy/cloudrun/browser-ci/{submit.py,configure.py,cloudbuild.json,launcher.py,child-cloudbuild.json,Dockerfile,run.sh,package.py,upload.py,enforce.py}`.
-It is the independent hosted browser evidence source; inspect its actual build
-result and parent receipt before claiming full hosted acceptance.
+### Optional hosted run
 
-The full hosted matrix is **explicit-only**. The former owner-repository push
-webhook and browser trigger are disabled; production pushes remain automatic.
-`submit.py` runs on the operator's host, pins both recipes to the reviewed control
-commit, and submits the exact source SHA using the fixed `retroboards-browser-ci`
-identity. It waits outside Cloud Build, saving child/verifier IDs in a private
-state file. Only after the test build is terminal does it submit the separate
-trusted verifier. A verifier given an active child fails immediately; it never
-creates or waits for another build. This avoids the 2026-10-23 capacity deadlock
-where waiting controllers occupied the slots their children required.
-
-The verifier fetches only the separately pinned reviewed control SHA. The child runs the existing
-capture, unified notification/settings and production Docker upload suites,
-and uploads sanitized synthetic PNG/JSON evidence to a private bucket with
-14-day expiry. Capture and unified settings use a disposable
-MariaDB; uploads use their own Compose project and ports. The suites run
-sequentially in the child build. Chromium and
-WebKit are installed in the runner. Dependency initialization fails immediately.
-After a suite fails, the other independent groups still run to collect evidence;
-the first nonzero status and failed stage remain the final result.
-The child build step records the Docker exit after the runner returns.
-The packager publishes its candidate success JSON atomically after the complete
-archive; failure artifacts publish before the child validator enforces success.
-The parent checks Cloud Build's child status, account, exact substitutions and
-every provider-reported step against the pinned recipe: matching ordered IDs,
-`SUCCESS` and no nonzero exit code. Overall build success cannot excuse a
-failed `allowFailure` step. It then downloads the three artifacts as bounded
-data without extracting or executing them. Its separately pinned validator
-requires the child-reported Docker exit 0,
-matching source/control IDs and a readable archive matching the required
-manifest, including outputs from all three suite groups and every upload
-browser project. Among the two CI accounts, only the parent can create `verification.json` in
-`rising-woods-449718-v6-retroboards-browser-verification`.
-Artifact downloads are capped at 1 MiB per JSON receipt and 256 MiB for the
-compressed archive. Validation separately caps the entire inflated gzip
-stream, including tar/PAX headers, at 256 MiB; accepts at most 1,024 regular
-members; and caps each member at 20 MiB.
-
-The dedicated `retroboards-browser-ci` service account can write build logs
-and create objects in the child evidence bucket. It cannot read production secrets,
-connect to Cloud SQL, deploy services, invoke production jobs, create builds or
-act as another service account. Branch scripts have Docker daemon access only
-on that child's VM, where they can alter child controls or forge their own test
-reports. They cannot alter the parent's controls, identity or receipt bucket.
-Parent verification therefore proves isolated acceptance of the reported
-artifacts and provider build status; it does not attest the semantics of
-arbitrary branch-authored tests.
-
-The verifier `retroboards-browser-verifier` has a custom project role containing
-only `cloudbuild.builds.get`, log writing, object viewing on the child evidence
-bucket and object creation on the verification bucket. Its former build-creation
-and child-account ActAs permissions are removed. The authenticated operator
-submits the two builds; the verifier never checks out or executes branch source.
-The dedicated child account still has no production or orchestration access.
-
-Neither GitHub credentials nor a production `.env` enter the runner. Published
-artifacts omit environment variables, cookies, headers, traces and raw logs.
-The uploader uses authenticated HTTPS object creation with `ifGenerationMatch=0`
-and checks the creation response's size/checksum. It needs no object read/list/delete
-permission and refuses overwriting an existing artifact. Both private buckets
-have uniform access, enforced public access prevention, a 14-day deletion
-lifecycle and soft delete disabled.
-
-Setup or refresh after pushing a reviewed control commit:
+The former browser webhook and trigger remain disabled. Production automation
+remains enabled. A deliberate run is one restricted Cloud Build, with no parent,
+separate verifier, second control SHA or acceptance-receipt protocol:
 
 ```sh
-python3 deploy/cloudrun/browser-ci/configure.py --control-sha=<REVIEWED_CONTROL_SHA>
-python3 deploy/cloudrun/browser-ci/configure.py --control-sha=<REVIEWED_CONTROL_SHA> --apply
+gcloud builds submit --no-source --async --region=us-east4 \
+  --config=deploy/cloudrun/browser-ci/cloudbuild.json \
+  --substitutions=_SHA=<EXACT_PUSHED_COMMIT_SHA>
+gcloud builds describe <BUILD_ID> --region=us-east4 --format='value(status)'
+gcloud builds log <BUILD_ID> --region=us-east4
 ```
 
-The first command previews the exact plan without API calls. The apply command
-converges the two accounts, narrow bindings and private expiring buckets, removes
-the verifier's obsolete build-creation/ActAs rights, and disables only the existing
-browser webhook and trigger. It never changes the production webhook. Hook
-selection requires the exact HTTPS host, project, region and trigger path; private
-callback URLs remain out of output. No automatic full-matrix runs occur on PR or
-main pushes. Forks also require an explicitly authorized exact-commit run.
+The recipe fetches that exact commit, runs its capture, additional account/settings
+and production-Docker upload groups sequentially, and preserves the actual Docker
+test exit code as the final provider result. Independent groups still collect
+useful diagnostics after an earlier failure. The additional account/settings
+selection excludes chamfer, shared-chrome and Gate A cases already in capture.
+This is a broad configured regression matrix, not every browser spec in the repo.
+Its configured timeout is 90 minutes; agree on scope and budget before launching.
 
-Run a pushed commit and resume it with the same command/state file:
+Test code uses only `retroboards-browser-ci`, disposable databases and synthetic
+credentials. The account has log writing and object creation in its private
+14-day evidence bucket, with no production secrets, database, invocation,
+deployment, build-creation or impersonation rights. Source is owner-reviewed CI
+code; provider success does not attest arbitrary test semantics.
+
+`package.py` publishes allowlisted PNG/JSON and strips private fields; `upload.py`
+uses create-only streaming uploads. `result.json` reports test outcome separately
+from `artifacts_complete` and missing output diagnostics. Packaging/upload failure
+is visible in logs and metadata without replacing a successful test exit. A
+specific artifact is required only for a claim that depends on it. Do not report
+a failed, timed-out or canceled run as passing; explain the actual boundary.
+
+One-time restricted-runner configuration:
 
 ```sh
-python3 deploy/cloudrun/browser-ci/submit.py \
-  --source-sha=<EXACT_SOURCE_SHA> --control-sha=<REVIEWED_CONTROL_SHA> \
-  --state-file=/private/browser-run.json
-# For an authorized operator, download the parent receipt first:
-gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-verification/<SOURCE_SHA>/<PARENT_BUILD_ID>/verification.json /private/verification.json
-# Use its child_build_id to inspect the corresponding synthetic artifacts:
-gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<CHILD_BUILD_ID>/result.json /private/result.json
-gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<CHILD_BUILD_ID>/runner-exit.json /private/runner-exit.json
-gcloud storage cp gs://rising-woods-449718-v6-retroboards-browser-evidence/<SOURCE_SHA>/<CHILD_BUILD_ID>/evidence.tar.gz /private/evidence.tar.gz
-python3 deploy/cloudrun/browser-ci/enforce.py --results=/private \
-  --outer-result=/private/runner-exit.json --source-sha=<EXACT_SOURCE_SHA> \
-  --control-sha=<REVIEWED_CONTROL_SHA>
+python3 deploy/cloudrun/browser-ci/configure.py
+python3 deploy/cloudrun/browser-ci/configure.py --apply
 ```
 
-Both SHAs must be full lowercase 40-character commit IDs, available locally and
-pushed. The coordinator uses a per-source/control lock on its host and reuses
-matching active or successful builds found in the latest 100 regional records.
-Cross-host simultaneous requests are not a distributed exactly-once guarantee;
-operate one coordinator per release. An interrupted coordinator can resume from
-its state file without submitting new builds. Failed runs remain failed when
-resumed; use `--fresh` with a new state file to explicitly retry failed verification
-or replace completed builds whose private artifacts have expired. Fresh runs
-still reuse matching active work, and their state remembers the choice on resume.
-The state file has mode 0600 and contains IDs/statuses, never credentials.
-The coordinator waits up to 150 minutes per build, outside Cloud Build. Its
-success requires both builds to succeed and a matching trusted receipt with all
-acceptance flags true. Verifier timeout is ten minutes. A successful parent
-Cloud Build result and its separately published `verification.json` establish
-this lane's acceptance; check matching parent/child/source/control IDs,
-`metadata_verified`, `provider_steps_verified`, `enforcement_passed`, `passed` and the artifact SHA-256
-receipts. The child `result.json` and `runner-exit.json` are reported evidence
-and cannot establish a pass by themselves. GitHub check/status
-publication is unavailable with the current webhook integration; a Cloud Build
-pass is not a recovered GitHub Actions check. PHPUnit remains a separate local
-verification lane. Current setup receipts and coverage limits are recorded in
-[the operations evidence](../evidence/cloud-run-operations-2026-10-09/README.md).
+The preview makes no API calls. Apply converges the restricted account/private
+bucket and disables only the legacy browser hook/trigger. It preserves production
+routing and never prints callback secrets. The retired verifier identity/role
+is disabled and removed from active bindings; its old receipt bucket is retained
+under its existing expiry policy to preserve historical review records.
 
 ## 6. The Worker's key (`GCP_INVOKER_KEY`)
 

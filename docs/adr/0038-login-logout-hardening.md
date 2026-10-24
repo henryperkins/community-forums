@@ -1,5 +1,8 @@
 # ADR 0038: Login and logout hardening — what a signed-in page leaves behind
 
+> Release-policy update, 2026-10-23: [ADR 0051](0051-simpler-release-contract.md) retires the blanket application digest and per-merge baseline/follow-up commit. References below describe the historical adoption workflow; deterministic generation and focused behavioral/browser evidence remain required.
+
+
 **Date:** 2026-09-24
 **Status:** Implemented on `harden/auth-login-logout`; verification below and in
 `docs/evidence/auth-login-logout-hardening/notes.md`.

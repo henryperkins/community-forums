@@ -1,0 +1,19 @@
+{
+  "service_account": "retroboards-browser-ci@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "project_roles": [
+    "roles/logging.logWriter"
+  ],
+  "bucket": "rising-woods-449718-v6-retroboards-browser-evidence",
+  "bucket_role": "roles/storage.objectCreator",
+  "artifact_expiry_days": 14,
+  "public_access_prevention": "enforced",
+  "trigger": "retroboards-browser-evidence",
+  "scope": "manual exact SHA only; no automatic browser builds",
+  "github_status_publication": "unavailable; Cloud Build and private GCS are authoritative",
+  "trigger_id": "ba3fce53-93e6-42bb-a4eb-cd3839574a60",
+  "automatic_trigger_disabled": true,
+  "disabled_github_hooks": [
+    694573802
+  ],
+  "applied": true
+}

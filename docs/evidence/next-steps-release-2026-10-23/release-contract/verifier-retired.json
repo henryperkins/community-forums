@@ -1,0 +1,25 @@
+{
+  "verifierAccount": "retroboards-browser-verifier@rising-woods-449718-v6.iam.gserviceaccount.com",
+  "disabled": true,
+  "customRoleDeleted": true,
+  "removedBindings": [
+    {
+      "resource": "project",
+      "role": "projects/rising-woods-449718-v6/roles/retroboardsBrowserVerifier"
+    },
+    {
+      "resource": "project",
+      "role": "roles/logging.logWriter"
+    },
+    {
+      "resource": "rising-woods-449718-v6-retroboards-browser-evidence",
+      "role": "roles/storage.objectViewer"
+    },
+    {
+      "resource": "rising-woods-449718-v6-retroboards-browser-verification",
+      "role": "roles/storage.objectCreator"
+    }
+  ],
+  "noRemainingProjectOrArtifactBucketBindings": true,
+  "historicalReceiptObjectsPreserved": true
+}

@@ -29,7 +29,7 @@ cleanup() {
   local status=$?
   trap - EXIT
   if ((ci_db_created)); then docker rm -f "$ci_db_name" >/dev/null 2>&1 || true; fi
-  python3 "$ci_control/package.py" --source "$PWD" --output "$ci_results" --exit-code "$status" --stage "$ci_stage" || status=1
+  python3 "$ci_control/package.py" --source "$PWD" --output "$ci_results" --exit-code "$status" --stage "$ci_stage" || echo 'Diagnostic packaging failed; test exit status is preserved.' >&2
   exit "$status"
 }
 trap cleanup EXIT

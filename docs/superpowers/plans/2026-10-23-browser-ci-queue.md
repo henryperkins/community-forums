@@ -1,5 +1,8 @@
 # Browser CI Queue Implementation Plan
 
+> Superseded by owner-approved ADR 0051. The intermediate two-build coordinator was replaced by a single optional restricted build; no hosted pass was obtained. This file preserves the earlier implementation history.
+
+
 > **For agentic workers:** Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox syntax for tracking.
 
 **Goal:** Complete exact-commit hosted browser evidence without a Cloud Build controller holding a build slot while waiting for another build.
@@ -46,8 +49,8 @@
 
 ### Task 3: Publish and prove
 
-- [ ] Run local focused contracts, required integrated PHPUnit/assets/browser gates and independent review.
-- [ ] Publish reviewed controls, apply the narrowly scoped configuration and verify browser automation is disabled while production remains enabled.
+- [x] Run local focused contracts, required integrated PHPUnit/assets/browser gates and independent review.
+- [x] Publish reviewed controls, apply the narrowly scoped configuration and verify browser automation is disabled while production remains enabled.
 - [ ] Run one complete hosted matrix against the final integrated candidate; inspect the trusted receipt and exact identities.
 - [ ] Publish final changes, verify both production lanes and live assets, then reconcile deployed asset retention if needed.
 
@@ -58,5 +61,11 @@
 - The active-child regression failed with `child-wait-timeout` before the fix and passes with immediate `child-not-complete` rejection after it.
 - Independent review identified premature success persistence and expired successful-build reuse. Success is now stored only after the trusted receipt passes; `--fresh` replaces completed runs while reusing active work.
 - Focused PHP boundary suite passes; it invokes verifier, coordinator and configuration Python behavioral contracts as well as artifact enforcement tests.
-- Live configuration, full integrated qualification and hosted/production evidence remain pending.
+- Integrated qualification passed: 3,364 PHPUnit tests, 29,805 assertions, one skip;
+  35 asset tests, reproducibility and Imladris checks; focused composer and admin
+  browser journeys. See `docs/evidence/next-steps-release-2026-10-23/`.
+- Reviewed controls `adab5335680c5a8599a6a4a4ecec83500d19e1fd` are published.
+  Applied configuration and independent provider reads confirm that only browser
+  automation is disabled, production automation remains enabled, and the verifier
+  no longer has build-create or child-account ActAs permission.
 - Live convergence found an existing conditional project IAM binding. Explicit `--condition=None` now preserves the browser accounts' existing unconditional bindings without an interactive gcloud condition prompt; the configuration contract pins this.

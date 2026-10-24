@@ -1,0 +1,19 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.local/share/codex/worktrees/community-forums-pr91-20261023/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.076, Memory: 6.00 MB
+
+There was 1 failure:
+
+1) Tests\Unit\Core\ImladrisRuntimeAssetTest::test_removed_application_digest_option_fails_without_rebuilding
+Built Imladris runtime assets (45 files).
+Failed asserting that 0 is identical to 2.
+
+/home/ubuntu/.local/share/codex/worktrees/community-forums-pr91-20261023/tests/Unit/Core/ImladrisRuntimeAssetTest.php:156
+
+FAILURES!
+Tests: 1, Assertions: 1, Failures: 1.

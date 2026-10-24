@@ -6,16 +6,16 @@ use App\Support\ImladrisAssetBuilder;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+if (!in_array(array_slice($argv, 1), [[], ['--check'], ['--print-design-digest']], true)) {
+    fwrite(STDERR, "Usage: php bin/build-imladris-assets.php [--check | --print-design-digest]\n");
+    exit(2);
+}
+
 $builder = new ImladrisAssetBuilder(dirname(__DIR__));
 $check = in_array('--check', $argv, true);
-$printApplicationDigest = in_array('--print-application-digest', $argv, true);
 $printDesignDigest = in_array('--print-design-digest', $argv, true);
 
 try {
-    if ($printApplicationDigest) {
-        fwrite(STDOUT, $builder->applicationSurfaceDigest() . PHP_EOL);
-        exit(0);
-    }
     if ($printDesignDigest) {
         // Refresh path for whoever syncs the design mirror: paste this into
         // config/imladris-design-baseline.json in the same commit as the sync.

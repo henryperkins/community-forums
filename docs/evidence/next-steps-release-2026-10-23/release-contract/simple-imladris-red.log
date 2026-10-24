@@ -1,0 +1,19 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.local/share/codex/worktrees/community-forums-pr91-20261023/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.017, Memory: 6.00 MB
+
+There was 1 failure:
+
+1) Tests\Unit\Core\ImladrisRuntimeAssetTest::test_application_changes_do_not_require_a_design_baseline_refresh
+Application changes must not require a manual baseline: Missing Imladris source: /tmp/rb-imladris-eol-738e1c5059d5/config/imladris-runtime-baseline.json
+Failed asserting that 'Missing Imladris source: /tmp/rb-imladris-eol-738e1c5059d5/config/imladris-runtime-baseline.json' is null.
+
+/home/ubuntu/.local/share/codex/worktrees/community-forums-pr91-20261023/tests/Unit/Core/ImladrisRuntimeAssetTest.php:137
+
+FAILURES!
+Tests: 1, Assertions: 1, Failures: 1.

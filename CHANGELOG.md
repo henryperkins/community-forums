@@ -4,6 +4,8 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] - Admin safeguards and readable audit
 
+- Simplified release qualification (ADR 0051): removed the blanket Imladris application digest and separate hosted verifier, deduplicated browser scheduling, and separated test outcome from diagnostic delivery. Ordinary releases use one final PHP suite, affected asset checks, focused UI evidence and exact production verification.
+
 - Review Block mode and Closed registration before their audited save, with draft-preserving editing and no-JavaScript confirmation forms.
 - Offer native UTC suspension dates and 24-hour, 7-day and 30-day presets; reject impossible dates while preserving invalid drafts and the legacy timestamp request format.
 - Show current member identities and readable audit changes with escaped, bounded raw disclosures and explicit unavailable/deleted-actor fallbacks.

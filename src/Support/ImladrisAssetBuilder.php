@@ -65,11 +65,9 @@ final class ImladrisAssetBuilder
         $errors = [];
 
         // Run before the generated-asset comparison, and independently of it.
-        // expectedFiles() throws when the application surface has drifted, which
-        // is the normal state of every slice branch; if the design gate lived
-        // after that call it would be unreachable exactly when it matters.
+        // Keep an imported-design change visible even when generated output is stale.
         $designScope = $this->designSurfaceScope();
-        $designDigest = $this->digestApplicationSurface($designScope);
+        $designDigest = $this->digestSurface($designScope);
         if (!hash_equals((string) $designScope['sha256'], $designDigest)) {
             $errors[] = 'The Imladris design screens changed after the last adoption. '
                 . 'Re-review the adopted surfaces against the new design before refreshing '
@@ -80,7 +78,7 @@ final class ImladrisAssetBuilder
             $expected = $this->expectedFiles();
         } catch (RuntimeException $exception) {
             // Reported rather than thrown so a design change is never masked by a
-            // production-surface change. build() still throws.
+            // generated-output error. build() still throws.
             $errors[] = $exception->getMessage();
             sort($errors);
 
@@ -113,17 +111,6 @@ final class ImladrisAssetBuilder
         return $errors;
     }
 
-    public function applicationSurfaceDigest(): string
-    {
-        $baseline = $this->jsonFile($this->path('config/imladris-runtime-baseline.json'));
-        $scope = $baseline['application_surface'] ?? null;
-        if (!is_array($scope)) {
-            throw new RuntimeException('The Imladris application baseline is missing application_surface.');
-        }
-
-        return $this->digestApplicationSurface($scope);
-    }
-
     /**
      * The design screens and primitives are NOT builder inputs — only five CSS
      * files are (CSS_SOURCES). That left the largest drift path unguarded: the
@@ -132,15 +119,11 @@ final class ImladrisAssetBuilder
      *
      * This digest closes that. It proves nothing about fidelity — it says only
      * "the design you adopted against has changed, go and look". It lives in its
-     * own baseline file on purpose: config/imladris-runtime-baseline.json is
-     * refreshed once per merge on main by the merger (ADR 0024 obligation 4), and
-     * a slice branch containing a change to it is a merge blocker. The design
-     * surface moves on a different cadence — only when the mirror is synced — and
-     * whoever syncs it is the right person to re-baseline it, in the same commit.
+     * own baseline file and is reviewed only when the imported mirror changes.
      */
     public function designSurfaceDigest(): string
     {
-        return $this->digestApplicationSurface($this->designSurfaceScope());
+        return $this->digestSurface($this->designSurfaceScope());
     }
 
     /** @return array<string,mixed> */
@@ -170,37 +153,6 @@ final class ImladrisAssetBuilder
         $productionContract = json_decode($contractContent, true, flags: JSON_THROW_ON_ERROR);
         if (!is_array($productionContract) || ($productionContract['unresolved_gaps'] ?? null) !== []) {
             throw new RuntimeException('The imported Imladris production contract has unresolved parity gaps.');
-        }
-
-        $applicationBaseline = $this->jsonFile($this->path('config/imladris-runtime-baseline.json'));
-        $surface = $applicationBaseline['application_surface'] ?? null;
-        if (!is_array($surface) || !is_string($surface['sha256'] ?? null)) {
-            throw new RuntimeException('The Imladris application baseline is incomplete.');
-        }
-        $applicationDigest = $this->digestApplicationSurface($surface);
-        if (!hash_equals($surface['sha256'], $applicationDigest)) {
-            throw new RuntimeException(
-                'Production presentation changed after Imladris reconciliation. '
-                . 'Review the design-system contract before updating config/imladris-runtime-baseline.json. '
-                . 'Current digest: ' . $applicationDigest,
-            );
-        }
-        if (($productionContract['reconciled_through_commit'] ?? null)
-            !== ($applicationBaseline['reconciled_through_commit'] ?? null)) {
-            throw new RuntimeException('The Imladris production contract and application baseline audit commits differ.');
-        }
-        if (($productionContract['composer']['spec'] ?? null) !== ($applicationBaseline['composer_contract'] ?? null)) {
-            throw new RuntimeException('The Imladris production contract and application baseline composer versions differ.');
-        }
-        $contractSurfaceSpecs = $productionContract['surface_specs'] ?? null;
-        $baselineFiles = $surface['files'] ?? null;
-        if (!is_array($contractSurfaceSpecs) || !is_array($baselineFiles)) {
-            throw new RuntimeException('The Imladris production surface-spec contract is incomplete.');
-        }
-        foreach ($contractSurfaceSpecs as $surfaceSpec) {
-            if (!is_string($surfaceSpec) || !in_array($surfaceSpec, $baselineFiles, true)) {
-                throw new RuntimeException('The application baseline does not cover design-system surface spec: ' . (string) $surfaceSpec);
-            }
         }
 
         $expected = [];
@@ -255,11 +207,6 @@ final class ImladrisAssetBuilder
         $runtimeManifest = [
             'source' => 'docs/design-system/imladris',
             'inspected_commit' => $manifest['inspected_commit'] ?? null,
-            'application_baseline' => [
-                'reconciled_through_commit' => $applicationBaseline['reconciled_through_commit'] ?? null,
-                'composer_contract' => $applicationBaseline['composer_contract'] ?? null,
-                'surface_sha256' => $applicationDigest,
-            ],
             'design_contract' => [
                 'source' => $contractRelative,
                 'sha256' => hash('sha256', $contractContent),
@@ -366,20 +313,18 @@ CSS);
     }
 
     /** @param array<string,mixed> $scope */
-    private function digestApplicationSurface(array $scope): string
+    private function digestSurface(array $scope): string
     {
         $extensions = $scope['extensions'] ?? null;
         $roots = $scope['roots'] ?? null;
         $individualFiles = $scope['files'] ?? null;
         $excluded = $scope['excluded'] ?? null;
         if (!is_array($extensions) || !is_array($roots) || !is_array($individualFiles) || !is_array($excluded)) {
-            throw new RuntimeException('The Imladris application baseline scope is invalid.');
+            throw new RuntimeException('The Imladris design baseline scope is invalid.');
         }
 
         // An empty extension list means "every file under these roots". The
-        // application surface names its three extensions because templates/ and
-        // public/assets/ hold unrelated binaries; the design surface cannot, or a
-        // new upstream file type would slip in unhashed.
+        // imported design scope uses this to include new source file types.
         $allowedExtensions = array_fill_keys(array_map(
             static fn (mixed $value): string => strtolower((string) $value),
             $extensions,
@@ -410,7 +355,7 @@ CSS);
             $this->assertSafeRelativePath($relativeRoot);
             $directory = $this->path($relativeRoot);
             if (!is_dir($directory)) {
-                throw new RuntimeException('Missing application baseline root: ' . $relativeRoot);
+                throw new RuntimeException('Missing design baseline root: ' . $relativeRoot);
             }
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
@@ -447,7 +392,7 @@ CSS);
     private function assertSafeRelativePath(string $relative): void
     {
         if ($relative === '' || str_starts_with($relative, '/') || preg_match('#(^|/)\.\.(/|$)#', $relative) === 1) {
-            throw new RuntimeException('Unsafe application baseline path: ' . $relative);
+            throw new RuntimeException('Unsafe design baseline path: ' . $relative);
         }
     }
 

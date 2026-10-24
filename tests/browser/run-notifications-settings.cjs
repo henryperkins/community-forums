@@ -15,11 +15,11 @@ if (baseURL.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].include
 }
 const suites = [
   'notifications-unified', 'account-settings-repairs', 'account-console', 'totp',
-  'profile-surface', 'chamfer-removal', 'unified-chrome', 'board-index-remediation',
+  'profile-surface', 'board-index-remediation',
 ].map((name) => ({ name, spec: name }));
-// Keep the existing CI journeys honest after profile forms and settings navigation change.
+// Capture already runs chamfer-removal, unified-chrome and all gate-a cases.
+// Keep only additional account/profile accessibility coverage in this matrix.
 suites.push(
-  { name: 'gate-a-account-notifications', spec: 'gate-a', grep: 'phase 4 profile media|phase 4 custom profile fields|phase 4 account lifecycle|admin email delivery|admin notifications keep' },
   { name: 'profile-media-accessibility', spec: 'a11y', grep: 'phase 4 profile media panels|phase 4 custom profile fields settings panel' },
 );
 for (const suite of suites) {
