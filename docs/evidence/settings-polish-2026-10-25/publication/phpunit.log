@@ -1,0 +1,18 @@
+﻿PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Error in bootstrap script: PDOException:
+SQLSTATE[HY000] [1044] Access denied for user 'retro'@'%' to database 'retroboards_test_settings_publish_20261025_7e31'
+#0 C:\Users\htper\community-forums\src\Core\Database.php(44): PDO->__construct('mysql:host=127....', 'retro', Object(SensitiveParameterValue), Array)
+#1 C:\Users\htper\community-forums\tests\bootstrap.php(23): App\Core\Database->pdo()
+#2 C:\Users\htper\community-forums\vendor\phpunit\phpunit\src\TextUI\Application.php(352): include_once('C:\\Users\\htper\\...')
+#3 C:\Users\htper\community-forums\vendor\phpunit\phpunit\src\TextUI\Application.php(122): PHPUnit\TextUI\Application->loadBootstrapScript('C:\\Users\\htper\\...')
+#4 C:\Users\htper\community-forums\vendor\phpunit\phpunit\phpunit(104): PHPUnit\TextUI\Application->run(Array)
+#5 C:\Users\htper\community-forums\vendor\bin\phpunit(122): include('C:\\Users\\htper\\...')
+#6 {main}
+composer.cmd : Script phpunit handling the test event returned with error code 2
+At line:4 char:1
++ & composer test -- --log-junit (Join-Path $evidence 'phpunit.xml') 2> ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Script phpunit ...th error code 2:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

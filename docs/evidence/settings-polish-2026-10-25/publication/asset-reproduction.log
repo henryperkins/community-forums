@@ -1,0 +1,33 @@
+﻿
+> build
+> node bin/build-assets.mjs
+
+[36mvite v8.3.5 [32mbuilding client environment for production...[36m[39m
+transforming...
+Γ£ô 865 modules transformed.
+rendering chunks...
+computing gzip size...
+../AppData/Local/Temp/retroboards-assets-sWtGws/.vite/manifest.json                                   5.13 kB Γöé gzip:   0.72 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/marcellus-latin-400-normal-86dSXJnk.woff2            14.55 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/jetbrains-mono-latin-400-normal-V6pRDFza.woff2       21.16 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/eb-garamond-latin-400-normal-DSJrtJSV.woff2          21.70 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2       21.83 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2       21.86 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/eb-garamond-latin-400-italic-KGnr19QW.woff2          22.17 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/cormorant-garamond-latin-700-normal-DajfzrDU.woff2   22.34 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2   22.87 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/eb-garamond-latin-500-normal-LNvnJ-zC.woff2          23.01 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/eb-garamond-latin-600-normal-CdfBH7_K.woff2          23.11 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2   23.31 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/cormorant-garamond-latin-600-normal-Co1r35X9.woff2   23.39 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/eb-garamond-latin-500-italic-DW_HNewX.woff2          23.61 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2   23.66 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2   23.92 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/wysiwyg-composer-BRAFF38E.css                         1.12 kB Γöé gzip:   0.49 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/imladris-style-CRsa_HRN.css                         107.21 kB Γöé gzip:  18.43 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/app-style-BaLoyX9O.css                              453.59 kB Γöé gzip:  69.59 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/wysiwyg-composer-XlKwRXnh.js                          1.66 kB Γöé gzip:   0.88 kB
+../AppData/Local/Temp/retroboards-assets-sWtGws/milkdown-adapter-DXUybFX0.js                        467.21 kB Γöé gzip: 140.26 kB
+
+[32mΓ£ô built in 473ms[39m
+Built 31 delivery files; staged 58 public assets for Workers.

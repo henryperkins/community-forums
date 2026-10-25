@@ -1,0 +1,22 @@
+﻿PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.35
+Configuration: C:\Users\htper\community-forums\phpunit.xml
+
+.............................................................   61 / 3361 (  1%)
+.............................................................  122 / 3361 (  3%)
+....................FF.FF..F.FF.F.F.F.F......................  183 / 3361 (  5%)
+.............................................................  244 / 3361 (  7%)
+.............................................................  305 / 3361 (  9%)
+.............................................................  366 / 3361 ( 10%)
+.............................................................  427 / 3361 ( 12%)
+.............................................................  488 / 3361 ( 14%)
+.................................................
+Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 12288 bytes) in C:\Users\htper\community-forums\tests\Unit\Service\Packages\ThemeAssetScannerTest.php on line 18
+composer.cmd : Script phpunit handling the test event returned with error code 255
+At line:4 char:1
++ & composer test -- --log-junit (Join-Path $evidence 'phpunit-final.xm ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Script phpunit ... error code 255:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

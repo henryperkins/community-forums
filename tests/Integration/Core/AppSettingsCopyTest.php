@@ -54,13 +54,18 @@ final class AppSettingsCopyTest extends TestCase
         $board = $this->makeBoard($this->makeCategory());
         $thread = $this->makeThread($board, $this->member, 'Private reading title', 'Body');
         (new SubscriptionRepository($this->db))->set((int) $this->member['id'], 'thread', (int) $thread['thread_id'], true, true, 'daily');
+
+        $available = $this->get('/settings/notifications');
+        $this->assertStatus(200, $available);
+        self::assertSame(1, $this->dom($available->body())->query('//button[@aria-label="Save subscription for Private reading title" and normalize-space(.)="Save"]')->length);
+
         $this->db->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [(int) $board['id']]);
 
         $response = $this->get('/settings/notifications');
         $this->assertStatus(200, $response);
         $dom = $this->dom($response->body());
         self::assertStringNotContainsString('Private reading title', $response->body());
-        self::assertSame(1, $dom->query('//button[@aria-label="Save subscription for Unavailable subscription"]')->length);
+        self::assertSame(1, $dom->query('//button[@aria-label="Save subscription for Unavailable subscription" and normalize-space(.)="Save"]')->length);
         self::assertSame(1, $dom->query('//button[@aria-label="Turn off notifications for Unavailable subscription" and normalize-space(.)="Turn off notifications"]')->length);
     }
 

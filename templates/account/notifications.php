@@ -95,7 +95,7 @@ if ($old !== []) { $pause_all_email = ($old['pause_all_email'] ?? '') === '1'; }
                         <form class="stacked" method="post" action="<?= $action ?>">
                             <?= $this->csrfField() ?>
                             <?= $this->partial('partials/subscription_controls', ['subscription' => $s, 'subscription_old' => $draft]) ?>
-                            <button class="btn" type="submit" aria-label="Save subscription for <?= $e($controlLabel) ?>">Save subscription</button>
+                            <button class="btn" type="submit" aria-label="Save subscription for <?= $e($controlLabel) ?>">Save</button>
                         </form>
                         <form method="post" action="<?= $action ?>">
                             <?= $this->csrfField() ?>

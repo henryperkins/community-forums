@@ -97,6 +97,7 @@ test.describe('settings audit native rendering', () => {
   test.use({ javaScriptEnabled: false });
 
   test('subscription controls retain readable widths and stacked actions at 320px with doubled text', async ({ page }, info) => {
+    test.setTimeout(60_000);
     fixture('delivery-on');
     await login(page);
     await page.setViewportSize({ width: 320, height: 900 });
@@ -115,8 +116,10 @@ test.describe('settings audit native rendering', () => {
         const box = (node: Element) => { const r = node.getBoundingClientRect(); return { width: r.width, height: r.height, top: r.top, bottom: r.bottom }; };
         return {
           row: box(row), form: box(form), select: box(form.querySelector('select')!), save: box(save),
-          off: box(row.querySelector('form:last-child')!), saveTextLines: new Set(lineTops).size,
-          saveTextHeight: textBounds.height, saveFontSize: parseFloat(saveStyle.fontSize),
+          off: box(row.querySelector('form:last-child')!), saveText: save.textContent!.trim(), saveTextLines: new Set(lineTops).size,
+          saveTextWidth: textBounds.width, saveTextHeight: textBounds.height, saveFontSize: parseFloat(saveStyle.fontSize),
+          saveHorizontalEdges: ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth']
+            .reduce((sum, property) => sum + parseFloat(saveStyle[property as keyof CSSStyleDeclaration] as string), 0),
           saveVerticalEdges: ['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth']
             .reduce((sum, property) => sum + parseFloat(saveStyle[property as keyof CSSStyleDeclaration] as string), 0),
         };
@@ -126,20 +129,40 @@ test.describe('settings audit native rendering', () => {
       expect(measurements.form.width).toBeGreaterThanOrEqual(measurements.row.width * 0.9);
       expect(measurements.select.width).toBeGreaterThanOrEqual(measurements.form.width * 0.9);
       expect(measurements.select.width).toBeGreaterThan(120);
-      expect(measurements.save.width).toBeGreaterThanOrEqual(measurements.form.width * 0.9);
+      expect(measurements.save.width).toBeGreaterThanOrEqual(44);
+      expect(measurements.save.height).toBeGreaterThanOrEqual(44);
+      expect(measurements.save.width + 1).toBeGreaterThanOrEqual(measurements.saveTextWidth + measurements.saveHorizontalEdges);
       for (const control of [measurements.form, measurements.select, measurements.save]) {
         expect(control.width).toBeLessThanOrEqual(measurements.row.width + 1);
       }
-      // Computed line-height can legitimately be "normal". Count the actual
-      // rendered text fragments so a tall, one-letter-per-line button fails.
-      expect(measurements.saveTextLines).toBeGreaterThan(0);
-      expect(measurements.saveTextLines).toBeLessThanOrEqual(3);
+      // A short visible label avoids orphaned letters without shrinking type.
+      // The accessible name still supplies the subscription's target context.
+      expect(measurements.saveText).toBe('Save');
+      expect(measurements.saveTextLines).toBe(1);
       expect(measurements.save.height).toBeLessThanOrEqual(
         measurements.saveTextHeight + measurements.saveVerticalEdges + measurements.saveFontSize,
       );
       expect(measurements.off.top).toBeGreaterThanOrEqual(measurements.form.bottom - 1);
     }
     const form = page.locator('.account-subscription-row > form').first();
+    const save = form.getByRole('button', { name: 'Save subscription for Settings evidence topic', exact: true });
+    for (const [width, height, name] of [[1440, 900, 'desktop'], [390, 844, 'phone'], [640, 360, 'landscape']] as const) {
+      await page.setViewportSize({ width, height });
+      for (const theme of ['light', 'dark']) {
+        await render(page, theme);
+        await expect(save).toHaveText('Save');
+        await expect(save).toHaveAccessibleName('Save subscription for Settings evidence topic');
+        const lines = await save.evaluate(button => {
+          const text = document.createRange();
+          text.selectNodeContents(button);
+          return new Set(Array.from(text.getClientRects()).filter(rect => rect.width > 0).map(rect => Math.round(rect.top))).size;
+        });
+        expect(lines).toBe(1);
+        expect((await save.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+        await fits(page);
+        await capture(page, info, `subscription-${name}-${theme}`, { saveText: await save.textContent(), textLines: lines });
+      }
+    }
     await form.locator('select[name="frequency"]').selectOption('instant');
     await form.getByRole('button', { name: /^Save subscription for / }).click();
     await expect(form.locator('select[name="frequency"]')).toHaveValue('instant');

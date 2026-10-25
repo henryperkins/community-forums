@@ -2,6 +2,13 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Subscription action polish
+
+- Keep subscription Save labels on one line at enlarged text sizes while
+  retaining target-specific accessible names, native forms and privacy masking.
+- Focused browser evidence and full-suite Windows limitations are recorded in
+  `docs/evidence/settings-polish-2026-10-25/`.
+
 ## [Unreleased] - Admin safeguards and readable audit
 
 - Simplified release qualification (ADR 0051): removed the blanket Imladris application digest and separate hosted verifier, deduplicated browser scheduling, and separated test outcome from diagnostic delivery. Ordinary releases use one final PHP suite, affected asset checks, focused UI evidence and exact production verification.

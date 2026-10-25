@@ -1,0 +1,39 @@
+{
+  "row": {
+    "width": 184,
+    "height": 670.921875,
+    "top": 2416.703125,
+    "bottom": 3087.625
+  },
+  "form": {
+    "width": 184,
+    "height": 382.765625,
+    "top": 2557.078125,
+    "bottom": 2939.84375
+  },
+  "select": {
+    "width": 184,
+    "height": 66,
+    "top": 2600.59375,
+    "bottom": 2666.59375
+  },
+  "save": {
+    "width": 96.78125,
+    "height": 56,
+    "top": 2883.84375,
+    "bottom": 2939.84375
+  },
+  "off": {
+    "width": 184,
+    "height": 108.78125,
+    "top": 2963.84375,
+    "bottom": 3072.625
+  },
+  "saveText": "Save",
+  "saveTextLines": 1,
+  "saveTextWidth": 60.78125,
+  "saveTextHeight": 36,
+  "saveFontSize": 28.8,
+  "saveHorizontalEdges": 36,
+  "saveVerticalEdges": 20
+}
