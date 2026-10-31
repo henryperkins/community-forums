@@ -35,7 +35,7 @@ These are delivery increments, not P0–P3 priority tiers (DECISIONS §2).
    (below).*
 4. **Curated visual controls** — complete surface/sidebar presets, approved
    self-hosted typography pairings and bounded shape options, each exposed only
-   after its component coverage is verified.
+   after its component coverage is verified. *Shipped 2026-10-31 (below).*
 5. **Secondary surfaces, by demonstrated use** — social imagery, touch/app
    icons, branded email wrappers, board icons/tints and reusable profiles with
    validated import into the draft workflow. Each is an independent decision.
@@ -84,7 +84,11 @@ remain application-controlled in every increment.
 | `brand_color_primary_light`, `brand_color_primary_dark` | None | The shared primary, then package, then preset roles | That mode's actions, links, focus, selected navigation; derived state pairs | Cleared (colours) |
 | `brand_color_accent_light`, `brand_color_accent_dark` | None | The shared accent, then package, then preset roles | That mode's highlights, unread counts, selection rules, accent ink | Cleared (colours) |
 | `brand_theme_default` | `system` | Invalid values read as System | Signed-out visitors' mode | Cleared |
-| `brand_theme_preset` | `classic` | Suspended while a package is served | Base palette | Cleared |
+| `brand_theme_preset` | `classic` | Style preset: `classic`, `retro`, `ledger` or `vellum`; suspended while a package is served | Base palette for both modes, plus the preset's sidebar, type and corners | Cleared (appearance) |
+| `brand_sidebar_style` | None (the preset's) | `sunken`, `flush` or `raised`; applies over a package | Board rail ground and row hover | Cleared (appearance) |
+| `brand_type_pairing` | None (the preset's) | `imladris`, `book` or `lapidary`; applies over a package | Display (heading) face; text stays EB Garamond | Cleared (appearance) |
+| `brand_corners` | None (the preset's) | `crisp`, `imladris` or `soft`; applies over a package | The `--radius-sm/md/lg/xl` scale and compact cards | Cleared (appearance) |
+| `brand_density_default` | `comfortable` | `compact`; a member's stored density always wins | Visitors and members who have not chosen | Cleared (appearance) |
 | `brand_custom_css_enabled`, `brand_custom_css` | Off | Console-blocked flag | None while blocked | Cleared |
 | `brand_version` | — | Rotated on every save and reset | `/brand.css` cache identity | Rotated |
 
@@ -268,3 +272,67 @@ Evidence: `tests/Integration/Core/AppBrandingDraftTest.php` and
 Evidence: `tests/Integration/Core/AppBrandingPaletteTest.php`,
 `tests/Unit/Support/BrandPaletteTest.php`, the package-theme suite and
 `docs/evidence/branding-palettes-2026-10-31/README.md`.
+
+## Increment 4 delivery: curated style presets (2026-10-31)
+
+- **Presets are complete combinations.** `App\Support\BrandStyle::PRESETS`
+  defines each preset's surfaces (a full light and dark palette in
+  `BrandPalette::presets()`), sidebar treatment, heading/body pairing and corner
+  scale. Classic and Retro keep exactly their previous palettes with the
+  built-in sidebar, type and corners, so existing installations are unchanged.
+  Ledger (cool mist and slate, a sidebar flush with the page, EB Garamond
+  headings, crisp corners) and Vellum (bright vellum and warm charcoal, a raised
+  sidebar, Marcellus headings, soft corners) are new.
+- **Fixed vocabularies, not values.** The shell stamps the effective parts on
+  `<html>` as `data-rail`, `data-type-pairing` and `data-corners`, and
+  `app.css` maps each value to tokens; the branding sample carries the same
+  attributes. No operator text reaches CSS. A non-Classic preset's palette is
+  published whole by `/brand.css`, as Retro's always was.
+- **Bounded by the design system.** Pairings use only the four self-hosted
+  families and change the heading face (text stays EB Garamond, labels
+  Marcellus, data JetBrains Mono); Marcellus ships one weight, so its pairing
+  disables weight synthesis. Corner scales keep content containers at or under
+  12px. Status meanings, focus rings, responsive structure and member
+  accessibility preferences are untouched.
+- **Overrides, then package, then preset.** Sidebar, Headings and text, and
+  Corners can each be overridden. While a package is served it owns the base:
+  only overridden parts are stamped over it (even one restating a built-in
+  value), and the preset resumes with safe mode or without the package.
+- **Coverage verified before exposure.** `BrandStyleContractTest` pins a token
+  rule for every vocabulary value, the rail hooks and their layer fallbacks,
+  the self-hosted families, the Twelve-Max Rule, and that components read type
+  and radius tokens (no literal families; only hairline and pill literal
+  radii). `BrandPaletteTest` checks every text role on every ground and sidebar
+  treatment of every preset in both modes. Browser evidence walks navigation,
+  reading, forms and messaging under each new preset and finds no surface still
+  painted with Classic's grounds and no text left in the replaced face.
+- **Density default.** `brand_density_default` applies to visitors and to
+  members without a stored density; a member's own choice always wins. The
+  member appearance page shows the effective choice.
+- **Recovery and reset.** The branding pages and history keep the built-in
+  style for their own controls, as they keep the built-in colours. The
+  appearance reset clears the preset, its overrides and the density default.
+  The full reset now clears every group — including the per-mode colours from
+  increment 3, which it previously left behind.
+
+Evidence: `tests/Integration/Core/AppBrandingStyleTest.php`,
+`tests/Unit/Core/BrandStyleContractTest.php`, `tests/Unit/Support/BrandStyleTest.php`,
+`tests/Unit/Support/BrandPaletteTest.php`, the package-theme suite and
+`docs/evidence/branding-styles-2026-10-31/README.md`.
+
+## Increment 5: secondary surfaces wait for demonstrated use (2026-10-31)
+
+Nothing is built in this increment, by decision. Each candidate is an
+independent addition that ships only when an operator need is identified, and
+then through the same document, draft, preview, history and recovery model:
+
+| Candidate | Becomes worthwhile when |
+|---|---|
+| Default social-sharing image and touch/app icons | Community discovery and recognition on other sites and home screens matter |
+| Branded email header and footer | Transactional and digest email is actively used; transactional content and status meaning stay unchanged |
+| Board icons or restrained tints | A community has many boards to tell apart |
+| Named brand profiles with validated import/export | Operators need reusable configurations; imports enter the draft workflow and preview before publication |
+
+Custom CSS stays deferred: `custom_css` remains console-blocked until theme safe
+mode suppresses it, and the curated controls above are now the measure of
+whether unrestricted CSS is needed at all.

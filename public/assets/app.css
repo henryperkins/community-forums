@@ -958,7 +958,9 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 [data-density="compact"] .post,
 [data-density="compact"] .thread-row,
 [data-density="compact"] .card { padding-top: 8px; padding-bottom: 8px; }
-[data-density="compact"] { --radius: 6px; }
+/* Compact cards sit one pixel inside the corner scale: 6px with the standard
+   corners, and following a curated corner choice (ADR 0054). */
+[data-density="compact"] { --radius: calc(var(--radius-md) - 1px); }
 
 [data-reduced-motion="1"] *,
 [data-reduced-motion="1"] *::before,
@@ -4187,7 +4189,8 @@ textarea.textarea-engraved {
     gap: 4px 12px;
     padding: 8px 12px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    /* 8px with the standard corners; follows a curated corner scale (ADR 0054). */
+    border-radius: calc(var(--radius-md) + 1px);
     background: var(--surface-2, var(--surface));
 }
 .record-list .record-when {
@@ -6917,6 +6920,19 @@ textarea.textarea-engraved {
 /* The fill-in button needs JavaScript, which unhides it; .btn's display would
    otherwise beat the hidden attribute and show a dead button. */
 .branding-colour-suggestion [data-brand-suggest][hidden] { display: none; }
+/* Style presets (ADR 0054 increment 4): what each combination sets, in the
+   help register, above the optional per-part overrides. */
+.branding-style-presets {
+    display: grid;
+    gap: 4px;
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+    font-size: .84rem;
+}
+.branding-style-presets strong { color: var(--text-body); font-weight: var(--weight-medium); }
+.branding-style-grid { margin-top: 12px; }
 /* Both palettes and their states, stacked. Each panel is a .brand-preview
    scoped to its mode, so it paints from that mode's resolved roles only. */
 .brand-mode-states {
@@ -18570,3 +18586,49 @@ body.directory-view-open[data-route="boards"] .main { overflow: hidden; }
     .admin-console .link-preview-board-table th,
     .admin-console .link-preview-board-table td { padding-inline: var(--space-1); }
 }
+
+/* ══ Curated style (ADR 0054 increment 4) ═══════════════════════════════════
+   The shell stamps a style preset's sidebar, type pairing and corners on
+   <html> as fixed vocabularies; the branding sample carries the same
+   attributes. Nothing here applies without an attribute, so an unstyled
+   install keeps the layer's own values. Responsive structure, status meanings,
+   focus and member accessibility preferences are untouched. */
+
+/* The rail's ground and row hover read hooks that fall back to the layer's
+   values. Active rows keep the layer's selected wash: unlayered rules would
+   otherwise beat it. */
+.board-rail { background: var(--rail-ground, var(--surface-sunken)); }
+.board-rail-item:not(.is-active):hover,
+.board-rail-route:not(.is-active):hover { background: var(--rail-hover, var(--surface-page)); }
+.brand-preview-rail {
+    padding: 4px;
+    border-radius: var(--radius-md);
+    background: var(--rail-ground, var(--surface-sunken));
+}
+
+/* Sidebar treatments: every hover stays a different ground from its rail. */
+:root[data-rail="sunken"], .brand-preview[data-rail="sunken"] { --rail-ground: var(--surface-sunken); --rail-hover: var(--surface-page); }
+:root[data-rail="flush"], .brand-preview[data-rail="flush"] { --rail-ground: var(--surface-page); --rail-hover: var(--surface-sunken); }
+:root[data-rail="raised"], .brand-preview[data-rail="raised"] { --rail-ground: var(--surface-raised); --rail-hover: var(--surface-sunken); }
+
+/* Heading/body pairings from the four self-hosted families: text stays EB
+   Garamond, labels Marcellus, data JetBrains Mono. Marcellus ships one 400
+   face, so its pairing never synthesizes a heavier one. */
+:root[data-type-pairing="imladris"], .brand-preview[data-type-pairing="imladris"] {
+    --font-display: "Cormorant Garamond", "Hoefler Text", Garamond, Georgia, "Times New Roman", serif;
+}
+:root[data-type-pairing="book"], .brand-preview[data-type-pairing="book"] {
+    --font-display: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+:root[data-type-pairing="lapidary"], .brand-preview[data-type-pairing="lapidary"] {
+    --font-display: "Marcellus", "Optima", "Palatino Linotype", Palatino, "Cormorant Garamond", serif;
+    font-synthesis-weight: none;
+}
+
+/* Corner scales. Content containers never exceed 12px (the Twelve-Max Rule);
+   pills stay pills. */
+:root[data-corners="crisp"], .brand-preview[data-corners="crisp"] { --radius-sm: 2px; --radius-md: 3px; --radius-lg: 6px; --radius-xl: 10px; }
+:root[data-corners="imladris"], .brand-preview[data-corners="imladris"] { --radius-sm: 4px; --radius-md: 7px; --radius-lg: 12px; --radius-xl: 20px; }
+:root[data-corners="soft"], .brand-preview[data-corners="soft"] { --radius-sm: 6px; --radius-md: 10px; --radius-lg: 12px; --radius-xl: 16px; }
+/* The sample resolves its own card radius from its own scale. */
+.brand-preview[data-corners] { --radius: var(--radius-md); }

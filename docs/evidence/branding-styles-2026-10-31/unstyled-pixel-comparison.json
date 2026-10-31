@@ -1,0 +1,169 @@
+{
+ "note": "Previous release 19bad808 (:8032) against this branch (:8033) on one seeded database; Classic (unstyled) and Retro; guest and member pages; Chromium and WebKit; light and dark; desktop 1280x800 and mobile 390x844 viewports. Live data (times, presence, counts) masked.",
+ "comparison": {
+  "compared": 144,
+  "identical": 139,
+  "differing": [
+   {
+    "configName": "unstyled",
+    "engineName": "chromium",
+    "scheme": "light",
+    "label": "desktop",
+    "who": "member",
+    "path": "/settings/appearance",
+    "count": 32,
+    "box": [
+     610,
+     261,
+     1192,
+     482
+    ]
+   },
+   {
+    "configName": "unstyled",
+    "engineName": "chromium",
+    "scheme": "dark",
+    "label": "mobile",
+    "who": "guest",
+    "path": "/",
+    "count": 26,
+    "box": [
+     210,
+     50,
+     226,
+     52
+    ]
+   },
+   {
+    "configName": "retro",
+    "engineName": "chromium",
+    "scheme": "dark",
+    "label": "desktop",
+    "who": "member",
+    "path": "/settings/appearance",
+    "count": 33,
+    "box": [
+     610,
+     261,
+     1192,
+     482
+    ]
+   },
+   {
+    "configName": "retro",
+    "engineName": "chromium",
+    "scheme": "dark",
+    "label": "mobile",
+    "who": "guest",
+    "path": "/c/general",
+    "count": 21,
+    "box": [
+     210,
+     50,
+     225,
+     52
+    ]
+   },
+   {
+    "configName": "retro",
+    "engineName": "chromium",
+    "scheme": "dark",
+    "label": "mobile",
+    "who": "guest",
+    "path": "/t/1-welcome-to-retroboards",
+    "count": 21,
+    "box": [
+     210,
+     50,
+     225,
+     52
+    ]
+   }
+  ]
+ },
+ "recheck": {
+  "note": "Three captures per side for each differing case: the same small differences appear between captures of the same server, and every case has pixel-identical previous/branch pairs.",
+  "cases": [
+   {
+    "case": "unstyled-light-desktop-member-_settings_appearance",
+    "baseVsBase": [
+     32,
+     0
+    ],
+    "branchVsBranch": [
+     0,
+     32
+    ],
+    "baseVsBranch": [
+     0,
+     32,
+     0
+    ]
+   },
+   {
+    "case": "unstyled-dark-mobile-guest-_",
+    "baseVsBase": [
+     26,
+     0
+    ],
+    "branchVsBranch": [
+     26,
+     0
+    ],
+    "baseVsBranch": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "case": "retro-dark-desktop-member-_settings_appearance",
+    "baseVsBase": [
+     0,
+     0
+    ],
+    "branchVsBranch": [
+     33,
+     0
+    ],
+    "baseVsBranch": [
+     33,
+     0,
+     0
+    ]
+   },
+   {
+    "case": "retro-dark-mobile-guest-_c_general",
+    "baseVsBase": [
+     0,
+     0
+    ],
+    "branchVsBranch": [
+     21,
+     0
+    ],
+    "baseVsBranch": [
+     21,
+     0,
+     0
+    ]
+   },
+   {
+    "case": "retro-dark-mobile-guest-_t_1_welcome_to_retroboards",
+    "baseVsBase": [
+     0,
+     0
+    ],
+    "branchVsBranch": [
+     0,
+     0
+    ],
+    "baseVsBranch": [
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ }
+}

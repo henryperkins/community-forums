@@ -1,0 +1,36 @@
+{
+  "captured_at": "2026-10-31T21:58:32.692788+00:00",
+  "release_sha": "19bad808a4eb808a367d3c7057f6920c86a343be",
+  "note": "Anonymous read-only checks. Per-mode colours did not exist before this release, so none are configured yet and the public palette is unchanged.",
+  "checks": [
+    {
+      "path": "/admin/branding",
+      "status": 302,
+      "location": "/login?next=%2Fadmin%2Fbranding"
+    },
+    {
+      "path": "/brand.css?v=3-release-check&scope=sample",
+      "status": 200,
+      "cache_control": "public, max-age=14400",
+      "scoped_only": true,
+      "has_dark_sample_rule": true,
+      "has_dark_thumbnail_rule": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "app_css": "/assets/dist/app-style-BXp0IwTO.css",
+      "manifest_app_css": "/assets/dist/app-style-BXp0IwTO.css"
+    },
+    {
+      "path": "/assets/dist/app-style-BXp0IwTO.css",
+      "has_state_strips": true,
+      "hides_inert_suggestion_button": true
+    },
+    {
+      "path": "/assets/dist/app-d441a991b5bf5a92.js",
+      "has_suggestion_hook": true,
+      "has_mode_colour_hook": true
+    }
+  ]
+}

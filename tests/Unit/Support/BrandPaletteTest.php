@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Support;
 
 use App\Security\Packages\ThemeTokenPolicy;
+use App\Support\BrandStyle;
 use App\Support\BrandPalette;
 use PHPUnit\Framework\TestCase;
 
@@ -154,6 +155,41 @@ final class BrandPaletteTest extends TestCase
             BrandPalette::modeWarnings($palettes, BrandPalette::sharedColours('#123456', '#abcdef')),
         );
         self::assertSame(BrandPalette::previewCss(BrandPalette::presets(), '#123456', '#abcdef'), BrandPalette::previewCss(BrandPalette::presets(), BrandPalette::sharedColours('#123456', '#abcdef')));
+    }
+
+    public function test_every_style_preset_reads_on_every_ground_and_sidebar(): void
+    {
+        // ADR 0054 increment 4: each complete preset keeps every text role
+        // readable on every ground a component paints, including the ground of
+        // each sidebar treatment and its hover, in both modes. Its own colours
+        // draw no contrast warning, and the package gate's pairs hold too.
+        $grounds = ['--surface-page', '--surface-raised', '--surface-sunken', '--surface', '--surface-2', '--surface-3'];
+        foreach (BrandPalette::presets() as $preset => $modes) {
+            foreach ($modes as $mode => $palette) {
+                foreach (['--text', '--text-strong', '--text-body', '--text-muted', '--text-faint', '--accent', '--gold-ink'] as $ink) {
+                    foreach ($grounds as $ground) {
+                        self::assertGreaterThanOrEqual(4.5, BrandPalette::contrastRatio($palette[$ink], $palette[$ground]), "$preset $mode $ink on $ground");
+                    }
+                }
+                foreach ([['--on-brand-subtle', '--brand-subtle'], ['--gold-ink', '--gold-soft'], ['--accent-contrast', '--accent']] as [$ink, $fill]) {
+                    if (BrandPalette::isHex($palette[$fill])) {
+                        self::assertGreaterThanOrEqual(4.5, BrandPalette::contrastRatio($palette[$ink], $palette[$fill]), "$preset $mode $ink on $fill");
+                    }
+                }
+                foreach (ThemeTokenPolicy::contrastPairs() as $pair) {
+                    if (BrandPalette::isHex($palette[$pair['fg']]) && BrandPalette::isHex($palette[$pair['bg']])) {
+                        self::assertGreaterThanOrEqual($pair['min'], BrandPalette::contrastRatio($palette[$pair['fg']], $palette[$pair['bg']]), "$preset $mode {$pair['fg']} on {$pair['bg']}");
+                    }
+                }
+                // Sidebar treatments (rail ground => row hover) stay distinguishable.
+                foreach (['sunken' => ['--surface-sunken', '--surface-page'], 'flush' => ['--surface-page', '--surface-sunken'], 'raised' => ['--surface-raised', '--surface-sunken']] as $rail => [$ground, $hover]) {
+                    self::assertGreaterThan(1.05, BrandPalette::contrastRatio($palette[$ground], $palette[$hover]), "$preset $mode $rail hover");
+                }
+                self::assertSame([], BrandPalette::warnings([$mode => $palette], '', ''), "$preset $mode");
+            }
+        }
+        // Every preset the style vocabulary offers has a palette.
+        self::assertSame(array_keys(BrandStyle::PRESETS), array_keys(BrandPalette::presets()));
     }
 
     public function test_accepting_a_suggestion_clears_that_modes_review(): void

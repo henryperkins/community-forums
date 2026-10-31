@@ -740,6 +740,34 @@
                 });
             });
         };
+        // Curated style (ADR 0054): the sample takes each override, else the
+        // preset's part; with a package in this session an axis without an
+        // override follows the package, as it does publicly.
+        var styleFieldset = brandForm.querySelector('[data-brand-style-presets]');
+        var parseJson = function (text) {
+            try { return JSON.parse(text || '{}') || {}; } catch (error) { return {}; }
+        };
+        var stylePresets = styleFieldset ? parseJson(styleFieldset.getAttribute('data-brand-style-presets')) : {};
+        var stylePackage = !!(styleFieldset && styleFieldset.hasAttribute('data-brand-package-active'));
+        var styleSelects = styleFieldset ? styleFieldset.querySelectorAll('[data-brand-style]') : [];
+        var styleAttributes = { rail: 'data-rail', type: 'data-type-pairing', corners: 'data-corners' };
+        var updateStylePreview = function (preset) {
+            var presetStyle = stylePresets[preset] || stylePresets.classic || {};
+            Array.prototype.forEach.call(styleSelects, function (select) {
+                var axis = select.getAttribute('data-brand-style');
+                var labels = parseJson(select.getAttribute('data-brand-style-labels'));
+                var presetOption = select.querySelector('[data-brand-style-preset-option]');
+                if (presetOption && labels[presetStyle[axis]]) {
+                    presetOption.textContent = 'Preset — ' + labels[presetStyle[axis]];
+                }
+                var value = select.value || (stylePackage ? '' : (presetStyle[axis] || ''));
+                if (value && styleAttributes[axis]) {
+                    brandPreview.setAttribute(styleAttributes[axis], value);
+                } else if (styleAttributes[axis]) {
+                    brandPreview.removeAttribute(styleAttributes[axis]);
+                }
+            });
+        };
         var updateBrandPreview = function () {
             var theme = brandTheme ? brandTheme.value : 'system';
             var mode = theme === 'system' ? (darkPreference.matches ? 'dark' : 'light') : theme;
@@ -751,6 +779,7 @@
             }
             brandPreview.setAttribute('data-brand-theme', theme);
             brandPreview.setAttribute('data-brand-preset', preset);
+            updateStylePreview(preset);
             appliedPreviewTokens.forEach(function (key) { brandPreview.style.removeProperty(key); });
             appliedPreviewTokens = [];
             var primary = colourFor('primary', mode);

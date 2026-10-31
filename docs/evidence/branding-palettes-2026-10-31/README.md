@@ -55,3 +55,19 @@ Found and fixed during qualification:
   for the role, so accepting one always clears its warning.
 - WebKit applies `:hover` a frame after the pointer moves; the comparison waits
   for the settled fill rather than reading the first frame.
+
+## Production (recorded after publication)
+
+`19bad808` was pushed to `main` at 21:52:38 UTC on 2026-10-31. Sanitized
+receipts are in `production/`:
+
+| Receipt | Result |
+|---|---|
+| `cloud-run-application-build.json` | Cloud Build `84681b37` SUCCESS for `19bad808` at 21:57:01 UTC |
+| `cloud-run-application-service.json` | Revision `retroboards-00068-w58` Ready, 100% traffic, image `app:19bad808…`; no migration in this release |
+| `cron-application-images.json` | All four cron jobs on the same image |
+| `worker-application-deployment.json` | Worker version `d1be4d50-ad9d-476a-a62a-db7bdb478301` at 100% (21:54:09 UTC), the first deployment after the push |
+| `live-assets-application.json` | 56/56 manifest files with matching SHA-256 (current `545bd84edf0dc37c` plus retained releases); `/healthz` ok with the database |
+| `live-palettes-verification.json` | `/admin/branding` requires sign-in; the sample-scoped stylesheet carries the dark sample and thumbnail rules; `/` uses the new stylesheet, which carries the state strips and keeps the suggestion button hidden without JavaScript; the new script carries the suggestion and per-mode hooks |
+
+The deployed asset release was pinned in the following increment's commit.

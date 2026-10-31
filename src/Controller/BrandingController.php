@@ -22,6 +22,7 @@ use App\Service\Packages\ThemeStateService;
 use App\Support\BrandIdentity;
 use App\Support\BrandingDocument;
 use App\Support\BrandPalette;
+use App\Support\BrandStyle;
 use App\Support\UploadLimits;
 
 /**
@@ -43,6 +44,14 @@ final class BrandingController extends Controller
         'logo_light' => ['setting' => 'brand_logo_light_path', 'purpose' => 'brand_logo', 'label' => 'light theme logo'],
         'logo_dark' => ['setting' => 'brand_logo_dark_path', 'purpose' => 'brand_logo', 'label' => 'dark theme logo'],
         'favicon' => ['setting' => 'brand_favicon_path', 'purpose' => 'brand_favicon', 'label' => 'favicon'],
+    ];
+
+    /** @var array<string,string> form field => setting key (ADR 0054 increment 4) */
+    private const STYLE_FIELDS = [
+        'sidebar_style' => 'brand_sidebar_style',
+        'type_pairing' => 'brand_type_pairing',
+        'corners' => 'brand_corners',
+        'density_default' => 'brand_density_default',
     ];
 
     /** @var array<string,array{0:string,1:string}> form field => [setting key, label] */
@@ -81,15 +90,18 @@ final class BrandingController extends Controller
 
         $packageTokens = $this->packageTokens($previewRequest);
         $presets = BrandPalette::presets($packageTokens);
-        $retro = $preset === 'retro' && $packageTokens === null;
+        // A non-Classic style preset publishes its whole palette while no
+        // package is served; Classic and packages publish only what differs.
+        $preset = $packageTokens === null ? BrandStyle::preset($preset) : 'classic';
+        $wholePalette = $preset !== 'classic';
         $modes = [];
         $serving = [];
-        foreach ($presets[$retro ? 'retro' : 'classic'] as $mode => $base) {
+        foreach ($presets[$preset] as $mode => $base) {
             $resolved = BrandPalette::withColours($base, $colours[$mode]['primary'], $colours[$mode]['accent']);
             $serving[$mode] = $resolved;
             // Derive against the serving palette without republishing its
             // surfaces/type over the package stylesheet.
-            $modes[$mode] = $retro ? $resolved : array_diff_assoc($resolved, $base);
+            $modes[$mode] = $wholePalette ? $resolved : array_diff_assoc($resolved, $base);
         }
         // A recovery page asks for the scoped rules only: the sample and the
         // thumbnails, never the global overrides or custom CSS (ADR 0054).
@@ -145,18 +157,13 @@ final class BrandingController extends Controller
             // Recorded as a revision like any other change, so a reset can be
             // undone from branding history (ADR 0054).
             $this->revisions()->commit($admin, 'reset', function () use ($settings): void {
-                foreach ([
-                    'brand_color_primary',
-                    'brand_color_accent',
-                    'brand_logo_path',
-                    'brand_logo_light_path',
-                    'brand_logo_dark_path',
-                    'brand_favicon_path',
-                    'brand_theme_default',
-                    'brand_theme_preset',
-                    'brand_custom_css_enabled',
-                    'brand_custom_css',
-                ] as $key) {
+                // Every resettable group — colours (shared and per mode), logos
+                // and favicon, appearance and style — plus stored custom CSS.
+                $keys = ['brand_custom_css_enabled', 'brand_custom_css'];
+                foreach (BrandingDocument::RESET_GROUPS as $group) {
+                    $keys = array_merge($keys, $group['keys']);
+                }
+                foreach ($keys as $key) {
                     $settings->set($key, '');
                 }
                 $this->bustBrandCache($settings);
@@ -216,9 +223,20 @@ final class BrandingController extends Controller
         if (!in_array($themeDefault, ['system', 'light', 'dark'], true)) {
             $themeDefault = 'system';
         }
-        $themePreset = $request->str('theme_preset', 'classic');
-        if (!in_array($themePreset, ['classic', 'retro'], true)) {
-            $themePreset = 'classic';
+        $themePreset = BrandStyle::preset($request->str('theme_preset', 'classic'));
+        // Style overrides and the density default (ADR 0054 increment 4). An
+        // absent field keeps the basis value; unknown values fall back to the
+        // preset (or Comfortable), like the other choice fields.
+        $style = [];
+        foreach (self::STYLE_FIELDS as $field => $key) {
+            $raw = $request->post($field);
+            if (!is_string($raw)) {
+                $style[$field] = (string) $basis[$key];
+            } elseif ($key === 'brand_density_default') {
+                $style[$field] = BrandStyle::density(trim($raw));
+            } else {
+                $style[$field] = BrandStyle::override($key, trim($raw));
+            }
         }
         ['warnings' => $contrastWarnings, 'hash' => $contrastReview] = $this->contrastReview([
             'brand_color_primary' => $primary,
@@ -259,7 +277,7 @@ final class BrandingController extends Controller
             // audited acknowledgement belong to publishing it.
             unset($errors['contrast_ack']);
         }
-        $view = $this->identityFormValues($identity) + $modeColours + [
+        $view = $this->identityFormValues($identity) + $modeColours + $style + [
             'site_name' => $name,
             'color_primary' => $primary,
             'color_accent' => $accent,
@@ -293,6 +311,9 @@ final class BrandingController extends Controller
         }
         $candidate['brand_theme_default'] = $themeDefault;
         $candidate['brand_theme_preset'] = $themePreset;
+        foreach (self::STYLE_FIELDS as $field => $key) {
+            $candidate[$key] = $style[$field];
+        }
         if ($customCssAvailable) {
             $candidate['brand_custom_css_enabled'] = $customCssEnabled;
             $candidate['brand_custom_css'] = $customCss;
@@ -675,7 +696,7 @@ final class BrandingController extends Controller
     /** @param array<string,mixed> $document the candidate's colour and preset settings */
     private function contrastReview(array $document): array
     {
-        $preset = in_array($document['brand_theme_preset'] ?? '', ['classic', 'retro'], true) ? (string) $document['brand_theme_preset'] : 'classic';
+        $preset = BrandStyle::preset($document['brand_theme_preset'] ?? null);
         $colours = BrandPalette::modeColours($document);
         $overridden = [];
         foreach (['primary', 'accent'] as $role) {
@@ -785,6 +806,10 @@ final class BrandingController extends Controller
             'remove_favicon' => false,
             'theme_default' => (string) $document['brand_theme_default'],
             'theme_preset' => (string) $document['brand_theme_preset'],
+            'sidebar_style' => (string) $document['brand_sidebar_style'],
+            'type_pairing' => (string) $document['brand_type_pairing'],
+            'corners' => (string) $document['brand_corners'],
+            'density_default' => (string) $document['brand_density_default'],
             'custom_css_available' => $this->container->get(FeatureFlags::class)->enabled('custom_css'),
             'custom_css_enabled' => $document['brand_custom_css_enabled'] === true,
             'custom_css' => (string) $document['brand_custom_css'],
@@ -822,10 +847,25 @@ final class BrandingController extends Controller
         if (!in_array($data['theme_default'], ['system', 'light', 'dark'], true)) {
             $data['theme_default'] = 'system';
         }
-        if (!in_array($data['theme_preset'], ['classic', 'retro'], true)) {
-            $data['theme_preset'] = 'classic';
+        $data['theme_preset'] = BrandStyle::preset($data['theme_preset']);
+        foreach (self::STYLE_FIELDS as $field => $key) {
+            $data[$field] = $key === 'brand_density_default'
+                ? BrandStyle::density($data[$field] ?? null)
+                : BrandStyle::override($key, $data[$field] ?? null);
         }
         $data['colour_suggestions'] = $this->colourSuggestions($data);
+        // The sample's style: each override, else the preset's choice; with a
+        // package in this session an axis without an override follows it.
+        $data['style_presets'] = BrandStyle::PRESETS;
+        $data['style_rails'] = BrandStyle::RAILS;
+        $data['style_types'] = BrandStyle::TYPES;
+        $data['style_corners'] = BrandStyle::CORNERS;
+        $data['sample_style'] = BrandStyle::effective([
+            'brand_theme_preset' => $data['theme_preset'],
+            'brand_sidebar_style' => $data['sidebar_style'],
+            'brand_type_pairing' => $data['type_pairing'],
+            'brand_corners' => $data['corners'],
+        ], !empty($data['brand_package_active']));
         return $data;
     }
 
@@ -879,6 +919,10 @@ final class BrandingController extends Controller
             'color_accent' => $request->str('color_accent', (string) $basis['brand_color_accent']),
             'theme_default' => $request->str('theme_default', (string) $basis['brand_theme_default']),
             'theme_preset' => $request->str('theme_preset', (string) $basis['brand_theme_preset']),
+            'sidebar_style' => $request->str('sidebar_style', (string) $basis['brand_sidebar_style']),
+            'type_pairing' => $request->str('type_pairing', (string) $basis['brand_type_pairing']),
+            'corners' => $request->str('corners', (string) $basis['brand_corners']),
+            'density_default' => $request->str('density_default', (string) $basis['brand_density_default']),
             'custom_css_enabled' => $customCssEnabled,
             'custom_css' => $customCssEnabled
                 ? trim((string) $request->post('custom_css', ''))

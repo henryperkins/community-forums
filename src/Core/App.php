@@ -682,6 +682,10 @@ final class App
             'brand_color_primary_dark' => '',
             'brand_color_accent_dark' => '',
             'brand_theme_preset' => 'classic',
+            'brand_sidebar_style' => '',
+            'brand_type_pairing' => '',
+            'brand_corners' => '',
+            'brand_density_default' => 'comfortable',
             'brand_version' => '',
             'brand_custom_css_enabled' => false,
             'brand_custom_css' => '',
@@ -816,10 +820,16 @@ final class App
         // Appearance prefs stamp the document root (no theme flash; no-JS themes).
         // Guests use the site default; a signed-in user's resolved prefs win.
         $appearance = ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'reduced_motion' => false];
+        // The community's default density (ADR 0054 increment 4) applies to
+        // visitors and to members who have never chosen one.
+        $densityDefault = !empty($features['branding'])
+            ? \App\Support\BrandStyle::density($siteSettings['brand_density_default'] ?? null)
+            : 'comfortable';
+        $appearance['density'] = $densityDefault;
         try {
             $user = $session->user();
             if ($user !== null) {
-                $appearance = $container->get(PreferenceService::class)->appearance($user->id());
+                $appearance = $container->get(PreferenceService::class)->appearance($user->id(), $densityDefault);
             } else {
                 $default = is_string($siteSettings['brand_theme_default'])
                     ? $siteSettings['brand_theme_default']
@@ -894,6 +904,18 @@ final class App
             }
         } catch (Throwable) {
             $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
+        }
+
+        // Curated style (ADR 0054 increment 4): the sidebar, type pairing and
+        // corners the shell stamps on <html>. A served package owns the base,
+        // so only operator overrides apply over it.
+        $branding['style_attributes'] = [];
+        if (!empty($features['branding'])) {
+            $packageServed = $packageTheme['active_css_digest'] !== null || $packageTheme['preview_css_digest'] !== null;
+            $branding['style_attributes'] = \App\Support\BrandStyle::attributes(
+                \App\Support\BrandStyle::effective($siteSettings, $packageServed),
+                $packageServed,
+            );
         }
 
         // Configured OAuth providers power the "Sign in with …" buttons. Only
@@ -1107,9 +1129,7 @@ final class App
             if (self::isHexColor($accent)) {
                 $brand['color_accent'] = $accent;
             }
-            if (in_array($preset, ['classic', 'retro'], true)) {
-                $brand['theme_preset'] = $preset;
-            }
+            $brand['theme_preset'] = \App\Support\BrandStyle::preset($preset);
             $hasCustomCss = $container->get(FeatureFlags::class)->enabled('custom_css')
                 && ($settings['brand_custom_css_enabled'] ?? false) === true
                 && is_string($settings['brand_custom_css'] ?? null)

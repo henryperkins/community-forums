@@ -4,7 +4,8 @@
 community name, community text (tagline, description, directory welcome),
 primary/accent colours (shared, and optionally per light/dark mode),
 base/light/dark logos, favicon, the signed-out
-visitor's default mode, and the Classic/Retro preset. Signed-in members retain
+visitor's default mode, the style preset (Classic, Retro, Ledger or Vellum)
+with optional sidebar, type and corner overrides, and the default density. Signed-in members retain
 their personal appearance preferences. Every setting's owner, default, fallback,
 surfaces and reset behaviour is listed in ADR 0054. Saves apply on the next
 page load; already-open pages keep their current appearance until navigation
@@ -133,6 +134,37 @@ usually needs a lighter tone on twilight surfaces.
 - The preview follows the package visible in the admin session. Public save
   review always uses the globally active package; a private preview does not
   become public through a branding save.
+
+## Style presets and density
+
+A **style preset** sets four parts together, for both light and dark mode:
+
+| Preset | Surfaces | Sidebar | Headings | Corners |
+|---|---|---|---|---|
+| Classic | Parchment / twilight | Sunken | Cormorant Garamond | Standard (4–12px) |
+| Retro | Amber / ember | Sunken | Cormorant Garamond | Standard |
+| Ledger | Cool mist / slate | Flush with the page | EB Garamond | Crisp (2–6px) |
+| Vellum | Bright vellum / warm charcoal | Raised panel | Marcellus | Soft (6–12px) |
+
+Text is always EB Garamond, labels Marcellus and data JetBrains Mono — all
+self-hosted, so nothing is fetched from a font service.
+
+- **Overrides.** *Sidebar*, *Headings and text* and *Corners* default to
+  *Preset*; choosing a value replaces that part only. Colours entered above
+  still override the preset's action and accent roles.
+- **Packages.** An active package theme owns the base: the preset's surfaces,
+  sidebar, type and corners are suspended and only parts you override apply
+  over the package. Theme safe mode (or deactivating the package) brings the
+  preset back in full.
+- **Default density.** Applies to signed-out visitors and to members who have
+  never saved a density. A member's own choice always wins, and saving the
+  appearance page records the density it shows as their choice.
+- **Where it shows.** Every member and visitor page, including sign-in screens.
+  The branding pages and history keep the built-in style for their own
+  controls; the sample beside the form shows the style you are editing, and a
+  draft preview shows a draft's style across the community.
+- **Reset.** *Reset appearance defaults…* returns the preset to Classic, clears
+  the three overrides and sets the density default back to Comfortable.
 
 ## Drafts and whole-site preview
 

@@ -35,6 +35,10 @@ final class BrandingDocument
         'brand_color_accent_dark' => 'colours',
         'brand_theme_default' => 'appearance',
         'brand_theme_preset' => 'appearance',
+        'brand_sidebar_style' => 'appearance',
+        'brand_type_pairing' => 'appearance',
+        'brand_corners' => 'appearance',
+        'brand_density_default' => 'appearance',
         'brand_custom_css_enabled' => 'custom_css',
         'brand_custom_css' => 'custom_css',
     ];
@@ -57,7 +61,11 @@ final class BrandingDocument
         'brand_color_primary_dark' => 'Dark mode primary',
         'brand_color_accent_dark' => 'Dark mode accent',
         'brand_theme_default' => 'Visitor mode',
-        'brand_theme_preset' => 'Theme preset',
+        'brand_theme_preset' => 'Style preset',
+        'brand_sidebar_style' => 'Sidebar',
+        'brand_type_pairing' => 'Headings and text',
+        'brand_corners' => 'Corners',
+        'brand_density_default' => 'Default density',
         'brand_custom_css_enabled' => 'Custom CSS enabled',
         'brand_custom_css' => 'Custom CSS',
     ];
@@ -82,8 +90,8 @@ final class BrandingDocument
         ],
         'appearance' => [
             'label' => 'appearance defaults',
-            'keys' => ['brand_theme_default', 'brand_theme_preset'],
-            'explain' => 'Returns signed-out visitors to System mode and the theme preset to Classic. Members keep their own appearance settings.',
+            'keys' => ['brand_theme_default', 'brand_theme_preset', 'brand_sidebar_style', 'brand_type_pairing', 'brand_corners', 'brand_density_default'],
+            'explain' => 'Returns signed-out visitors to System mode, the style preset to Classic without sidebar, type or corner overrides, and the default density to Comfortable. Members keep their own appearance settings.',
         ],
     ];
 
@@ -94,6 +102,7 @@ final class BrandingDocument
         $document['site_name'] = $siteName;
         $document['brand_theme_default'] = 'system';
         $document['brand_theme_preset'] = 'classic';
+        $document['brand_density_default'] = 'comfortable';
         $document['brand_custom_css_enabled'] = false;
         return $document;
     }
@@ -122,9 +131,11 @@ final class BrandingDocument
         if (!in_array($normalized['brand_theme_default'], ['system', 'light', 'dark'], true)) {
             $normalized['brand_theme_default'] = 'system';
         }
-        if (!in_array($normalized['brand_theme_preset'], ['classic', 'retro'], true)) {
-            $normalized['brand_theme_preset'] = 'classic';
+        $normalized['brand_theme_preset'] = BrandStyle::preset($normalized['brand_theme_preset']);
+        foreach (array_keys(BrandStyle::OVERRIDES) as $key) {
+            $normalized[$key] = BrandStyle::override($key, $normalized[$key]);
         }
+        $normalized['brand_density_default'] = BrandStyle::density($normalized['brand_density_default']);
         if (trim((string) $normalized['site_name']) === '') {
             $normalized['site_name'] = $defaultName;
         }
@@ -190,6 +201,10 @@ final class BrandingDocument
             return $value === true ? 'On' : 'Off';
         }
         $value = (string) $value;
+        // Style overrides read as their labels; an empty one follows the preset.
+        if (isset(BrandStyle::OVERRIDES[$key])) {
+            return $value === '' ? 'Preset' : (BrandStyle::OVERRIDES[$key][1][$value] ?? $value);
+        }
         if ($value === '') {
             return match (self::KEYS[$key] ?? '') {
                 'assets' => 'None',
@@ -198,7 +213,8 @@ final class BrandingDocument
             };
         }
         return match ($key) {
-            'brand_theme_default', 'brand_theme_preset' => ucfirst($value),
+            'brand_theme_preset' => BrandStyle::PRESETS[BrandStyle::preset($value)]['label'],
+            'brand_theme_default', 'brand_density_default' => ucfirst($value),
             'brand_custom_css' => mb_strlen($value) . ' characters',
             default => mb_strimwidth(str_replace("\n", ' ↵ ', $value), 0, 120, '…'),
         };

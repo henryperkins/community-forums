@@ -54,9 +54,9 @@ final class BrandPalette
                     }
                 }
             }
-            // An active package owns the preset; the stored Retro choice resumes
-            // only when the package is disabled or safe mode suppresses it.
-            return self::previewDefaults(['classic' => $classic, 'retro' => $classic]);
+            // An active package owns the preset; the stored style preset
+            // resumes only when the package is disabled or safe mode suppresses it.
+            return self::previewDefaults(array_fill_keys(array_keys(BrandStyle::PRESETS), $classic));
         }
 
         $retro = [
@@ -90,7 +90,50 @@ final class BrandPalette
                 '--gold-soft' => '#49331e', '--gold-ink' => '#f0c98c', '--rule-gold' => '#e6ad69',
             ]),
         ];
-        return self::previewDefaults(['classic' => $classic, 'retro' => $retro]);
+        // Curated style presets (ADR 0054 increment 4): complete surface
+        // palettes for both modes. Brand, accent, status and focus roles stay
+        // Classic's; BrandPaletteTest checks every text role on every ground,
+        // including each sidebar treatment.
+        $ledger = [
+            'light' => array_replace($classic['light'], [
+                '--surface' => '#f9fbf8', '--surface-2' => '#eef1ed', '--surface-3' => '#e2e8e3',
+                '--surface-page' => '#eef1ed', '--surface-raised' => '#f9fbf8',
+                '--surface-sunken' => '#e2e8e3', '--surface-soft' => '#f4f7f3',
+                '--surface-cool' => '#e6ece8', '--surface-inverse' => '#1c252b',
+                '--border' => '#cfd8d1', '--border-hair' => '#cfd8d1', '--border-soft' => '#dce3dd',
+                '--border-strong' => '#87958b',
+                '--brand-subtle' => '#dde9df', '--on-brand-subtle' => '#24402f', '--gold-soft' => '#f1e8cc',
+            ]),
+            'dark' => array_replace($classic['dark'], [
+                '--surface' => '#222d35', '--surface-2' => '#131a1f', '--surface-3' => '#1a232a',
+                '--surface-page' => '#131a1f', '--surface-raised' => '#1a232a',
+                '--surface-sunken' => '#222d35', '--surface-soft' => '#1e2830',
+                '--surface-inverse' => '#eef1ed',
+                '--border' => '#34424c', '--border-hair' => '#34424c', '--border-soft' => '#29353e',
+                '--border-strong' => '#506170',
+            ]),
+        ];
+        $vellum = [
+            'light' => array_replace($classic['light'], [
+                '--surface' => '#fffdf8', '--surface-2' => '#f3f0e9', '--surface-3' => '#e9e4d9',
+                '--surface-page' => '#f3f0e9', '--surface-raised' => '#fffdf8',
+                '--surface-sunken' => '#e9e4d9', '--surface-soft' => '#f9f7f1',
+                '--surface-cool' => '#edece6', '--surface-inverse' => '#23211d',
+                '--border' => '#dad3c4', '--border-hair' => '#dad3c4', '--border-soft' => '#e5e0d5',
+                '--border-strong' => '#958e80',
+            ]),
+            'dark' => array_replace($classic['dark'], [
+                '--surface' => '#2a2622', '--surface-2' => '#181614', '--surface-3' => '#211e1b',
+                '--surface-page' => '#181614', '--surface-raised' => '#211e1b',
+                '--surface-sunken' => '#2a2622', '--surface-soft' => '#25221e',
+                '--surface-inverse' => '#f3f0e9',
+                '--text' => '#f6f1e8', '--text-strong' => '#fbf8f2', '--text-body' => '#e4ded3',
+                '--text-muted' => '#c2baad', '--text-faint' => '#aaa295',
+                '--border' => '#3c3732', '--border-hair' => '#3c3732', '--border-soft' => '#322e29',
+                '--border-strong' => '#5e574f',
+            ]),
+        ];
+        return self::previewDefaults(['classic' => $classic, 'retro' => $retro, 'ledger' => $ledger, 'vellum' => $vellum]);
     }
 
     /** Local defaults stop a cleared preview inheriting saved overrides from html. */

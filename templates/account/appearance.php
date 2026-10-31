@@ -15,7 +15,9 @@ $thumb = static fn (string $mode): string => '<span class="theme-thumb-mode" dat
     . '<span class="theme-thumb-panel"><span class="theme-thumb-line"></span><span class="theme-thumb-line is-faint"></span>'
     . '<span class="theme-thumb-dot"></span><span class="theme-thumb-action"></span></span>'
     . '</span></span>';
-$density = (string) ($prefs['density'] ?? 'comfortable');
+// The shell's density already resolves the member's own choice, else the
+// community default (ADR 0054), so the selected card matches the page.
+$density = (string) ($appearance['density'] ?? $prefs['density'] ?? 'comfortable');
 $font = (string) ($prefs['font_size'] ?? 'medium');
 $motion = !empty($prefs['reduced_motion']);
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';

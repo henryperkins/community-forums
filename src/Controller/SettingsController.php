@@ -85,9 +85,10 @@ final class SettingsController extends Controller
                     return $name !== '' ? mb_strimwidth($name, 0, 40, '…') : 'Package theme';
                 }
             }
-            if ($flags->enabled('branding')
-                && $this->container->get(SettingRepository::class)->getString('brand_theme_preset', 'classic') === 'retro') {
-                return 'Retro';
+            if ($flags->enabled('branding')) {
+                // The style preset's name (ADR 0054): Classic, Retro, Ledger, Vellum.
+                $preset = \App\Support\BrandStyle::preset($this->container->get(SettingRepository::class)->getString('brand_theme_preset', 'classic'));
+                return \App\Support\BrandStyle::PRESETS[$preset]['label'];
             }
         } catch (\Throwable) {
             // Fall through to the built-in base.

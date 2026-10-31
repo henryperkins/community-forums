@@ -48,7 +48,11 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
       data-theme="<?= $e($appearance['theme']) ?>"
       data-density="<?= $e($appearance['density']) ?>"
       data-font-size="<?= $e($appearance['font_size']) ?>"
-      <?= !empty($appearance['reduced_motion']) ? 'data-reduced-motion="1"' : '' ?>>
+      <?= !empty($appearance['reduced_motion']) ? 'data-reduced-motion="1"' : '' ?><?php
+      // Curated style (ADR 0054): fixed vocabularies mapped to tokens by
+      // app.css. Recovery pages keep the built-in style, as they keep the
+      // built-in colours.
+      foreach ($recoverySurface ? [] : (array) ($brand['style_attributes'] ?? []) as $styleName => $styleValue): ?> <?= $e((string) $styleName) ?>="<?= $e((string) $styleValue) ?>"<?php endforeach; ?>>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

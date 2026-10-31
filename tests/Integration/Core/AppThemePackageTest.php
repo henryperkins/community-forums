@@ -227,6 +227,43 @@ final class AppThemePackageTest extends TestCase
         self::assertSame($suggestion[1], (new SettingRepository($this->db))->getString('brand_color_primary_dark'));
     }
 
+    public function test_a_served_package_owns_the_style_until_an_operator_overrides_a_part(): void
+    {
+        // ADR 0054 increment 4: precedence per part is override → package →
+        // preset. A stored Ledger preset is suspended while a package serves.
+        $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);
+        $settings = new SettingRepository($this->db);
+        $settings->set('brand_theme_preset', 'ledger');
+        $installed = $this->installedTheme(['theme' => ['tokens' => ['--radius-md' => '5px']]]);
+        $this->themeState()->activate($this->adminEntity(), 'password123', $installed);
+        $html = $this->htmlTag($this->get('/')->body());
+        self::assertStringNotContainsString('data-rail', $html);
+        self::assertStringNotContainsString('data-type-pairing', $html);
+        self::assertStringNotContainsString('data-corners', $html);
+        // The package's palette, not Ledger's, is the published base.
+        self::assertStringNotContainsString('--surface-page:#eef1ed', $this->get('/brand.css', ['v' => 'pkg'])->body());
+
+        // An override applies over the package, even one naming the standard scale.
+        $settings->set('brand_corners', 'imladris');
+        $settings->set('brand_version', 'pkg-override');
+        $html = $this->htmlTag($this->get('/')->body());
+        self::assertStringContainsString('data-corners="imladris"', $html);
+        self::assertStringNotContainsString('data-rail', $html);
+
+        // Safe mode suppresses the package: the preset resumes in full.
+        $this->themeState()->setSafeMode($this->adminEntity(), true);
+        $html = $this->htmlTag($this->get('/')->body());
+        self::assertStringContainsString('data-rail="flush"', $html);
+        self::assertStringContainsString('data-type-pairing="book"', $html);
+        self::assertStringNotContainsString('data-corners="crisp"', $html);
+    }
+
+    private function htmlTag(string $body): string
+    {
+        self::assertSame(1, preg_match('/<html\b[^>]*>/', $body, $match));
+        return $match[0];
+    }
+
     public function test_the_build_gate_checks_body_text_on_the_semantic_surfaces(): void
     {
         $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);

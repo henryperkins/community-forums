@@ -2,6 +2,31 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Curated style presets
+
+- Add style presets that set surfaces, sidebar treatment, heading type and
+  corners together for both modes: Classic and Retro unchanged, plus Ledger
+  (cool mist and slate, flush sidebar, EB Garamond headings, crisp corners) and
+  Vellum (bright vellum and warm charcoal, raised sidebar, Marcellus headings,
+  soft corners). Every face is self-hosted and every corner scale stays within
+  12px for content.
+- Let operators override the sidebar, the heading/body pairing or the corners
+  on their own. An active package owns the base; only overridden parts apply
+  over it, and the preset resumes in theme safe mode.
+- Add a default density for visitors and members who have not chosen one;
+  members' own density choices always win.
+- Verify coverage before exposure: stylesheet contracts for every value, contrast
+  for every text role on every ground and sidebar of every preset, and browser
+  checks across navigation, reading, forms and messaging.
+- Fix the full branding reset, which left the per-mode colours from the previous
+  release in place; it now clears every resettable group.
+- Record the verified light/dark colours release (`545bd84edf0dc37c`, Cloud Run
+  `retroboards-00068-w58`, Worker `d1be4d50`) as deployed; receipts are in
+  `docs/evidence/branding-palettes-2026-10-31/production/`. Evidence:
+  `docs/evidence/branding-styles-2026-10-31/README.md`. Secondary surfaces
+  (social imagery, icons, email wrappers, board identity, profiles) wait for
+  demonstrated need, and custom CSS stays blocked (ADR 0054).
+
 ## [2026-10-31] - Independent light and dark brand colours
 
 - Add optional light and dark primary/accent colours that override the shared

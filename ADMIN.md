@@ -413,7 +413,7 @@ The front-end is already fully **CSS-variable driven** — the entire look deriv
 | **Brand** | Community name, logo (light/dark), favicon, primary + accent color (shared, or separately for light and dark), sidebar style | P1 |
 | **Community text** | Tagline, community description, board-directory welcome heading and introduction | P1 |
 | **Theme / skin** | Pick a preset: **Default (Hybrid)**, **Retro 2002** (the preserved `styles.css` look as a skin), and **Light / Dark** | P1 (default+dark), P2 (retro skin) |
-| **Tokens** | Fine-tune individual variables (radius, density, fonts) with a live preview | P2 |
+| **Style** | Curated presets — complete combinations of surfaces, sidebar treatment, heading/body type from the self-hosted families and bounded corners — with optional overrides for the sidebar, type and corners, and a default density for visitors and members who have not chosen one (ADR 0054 increment 4). A free-form token editor remains out of scope. | P2 |
 | **Custom CSS** | Raw CSS for advanced admins, scoped & with a clear "you can break the layout" warning | P2 |
 
 ### 6.3 Application & safety
@@ -461,6 +461,12 @@ that mode only (blank inherits). Each mode is reviewed on its own surfaces; when
 a mode's colour falls short the form suggests the nearest tone that passes, and
 Light and Dark strips preview action, hover, pressed, focus, selected, unread
 and link states.
+**Style presets** (Classic, Retro, Ledger, Vellum) each set the page and panel
+colours for both modes, the sidebar treatment, the heading face and the corner
+scale together; Sidebar, Headings and text, and Corners can each be overridden
+on their own. An active package owns the base: only overridden parts apply over
+it, and the preset resumes in safe mode. A default density applies to visitors
+and members who have not chosen one; members' own choices always win.
 Every published branding change — including a community-name change in
 Settings, a reset or a restore — is a revision in **History**
 (`/admin/branding/history`), kept with its logos. A revision's review page

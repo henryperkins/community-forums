@@ -191,12 +191,55 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     </div>
 
                     <div class="branding-field">
-                        <label for="branding-theme-preset">Theme preset</label>
+                        <label for="branding-theme-preset">Style preset</label>
                         <select id="branding-theme-preset" name="theme_preset" class="input" aria-describedby="branding-preset-help" data-brand-preset>
-                            <option value="classic"<?= $sel('classic', $theme_preset) ?>>Classic</option>
-                            <option value="retro"<?= $sel('retro', $theme_preset) ?>>Retro</option>
+                            <?php foreach ($style_presets as $presetKey => $presetInfo): ?>
+                                <option value="<?= $e($presetKey) ?>"<?= $sel($presetKey, $theme_preset) ?>><?= $e($presetInfo['label']) ?></option>
+                            <?php endforeach; ?>
                         </select>
-                        <p id="branding-preset-help" class="branding-colour-help">An active package supplies the base theme; Classic or Retro resumes when that package is disabled or in safe mode. Colours entered above override either base.</p>
+                        <p id="branding-preset-help" class="branding-colour-help">Each preset sets the page and panel colours, the sidebar, the heading type and the corners together. An active package supplies the base theme instead; the preset resumes when that package is disabled or in safe mode. Colours entered above override any base.</p>
+                    </div>
+                </div>
+
+                <?php
+                // Curated style (ADR 0054 increment 4): the preset's own choices,
+                // and optional overrides for the sidebar, type and corners.
+                $presetStyle = $style_presets[$theme_preset] ?? $style_presets['classic'];
+                $styleFields = [
+                    'sidebar_style' => ['Sidebar', 'rail', $style_rails, $sidebar_style],
+                    'type_pairing' => ['Headings and text', 'type', $style_types, $type_pairing],
+                    'corners' => ['Corners', 'corners', $style_corners, $corners],
+                ];
+                ?>
+                <h3 class="branding-section-label" id="branding-style-title">Style</h3>
+                <div class="branding-style" role="group" aria-labelledby="branding-style-title" data-brand-style-presets="<?= $e(json_encode(array_map(static fn (array $p): array => ['rail' => $p['rail'], 'type' => $p['type'], 'corners' => $p['corners']], $style_presets), JSON_THROW_ON_ERROR)) ?>"<?= !empty($brand_package_active) ? ' data-brand-package-active' : '' ?>>
+                    <ul class="branding-style-presets" aria-label="Style presets">
+                        <?php foreach ($style_presets as $presetKey => $presetInfo): ?>
+                            <li><strong><?= $e($presetInfo['label']) ?></strong> — <?= $e($presetInfo['summary']) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <p class="branding-colour-help" id="branding-style-help">Override one part of the preset below, or leave it on “Preset”. Text is always EB Garamond. With an active package, a part you override applies over the package and the rest follows the package.</p>
+                    <div class="branding-field-grid branding-style-grid">
+                        <?php foreach ($styleFields as $field => [$styleLabel, $axis, $choices, $current]): ?>
+                            <?php $inputId = 'branding-' . str_replace('_', '-', $field); ?>
+                            <div class="branding-field">
+                                <label for="<?= $e($inputId) ?>"><?= $e($styleLabel) ?></label>
+                                <select id="<?= $e($inputId) ?>" name="<?= $e($field) ?>" class="input" aria-describedby="branding-style-help" data-brand-style="<?= $e($axis) ?>" data-brand-style-labels="<?= $e(json_encode($choices, JSON_THROW_ON_ERROR)) ?>">
+                                    <option value=""<?= $sel('', $current) ?> data-brand-style-preset-option>Preset — <?= $e($choices[$presetStyle[$axis]] ?? '') ?></option>
+                                    <?php foreach ($choices as $choice => $choiceLabel): ?>
+                                        <option value="<?= $e($choice) ?>"<?= $sel($choice, $current) ?>><?= $e($choiceLabel) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        <?php endforeach; ?>
+                        <div class="branding-field">
+                            <label for="branding-density-default">Default density</label>
+                            <select id="branding-density-default" name="density_default" class="input" aria-describedby="branding-density-help">
+                                <option value="comfortable"<?= $sel('comfortable', $density_default) ?>>Comfortable</option>
+                                <option value="compact"<?= $sel('compact', $density_default) ?>>Compact</option>
+                            </select>
+                            <p id="branding-density-help" class="branding-colour-help">For signed-out visitors and members who have not chosen a density. A member’s own choice always wins.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -360,7 +403,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
             <aside class="branding-preview-column">
                 <section class="brand-preview-panel branding-preview-target" id="branding-preview" tabindex="-1" aria-live="polite">
                     <p class="eyebrow">Live preview</p>
-                    <div class="brand-preview brand-preview-shell" data-brand-preview data-brand-theme="<?= $e($theme_default) ?>" data-brand-preset="<?= $e($theme_preset) ?>" data-brand-logos="<?= $e(json_encode($previewLogos, JSON_THROW_ON_ERROR)) ?>">
+                    <div class="brand-preview brand-preview-shell" data-brand-preview data-brand-theme="<?= $e($theme_default) ?>" data-brand-preset="<?= $e($theme_preset) ?>"<?php foreach (\App\Support\BrandStyle::attributes($sample_style, true) as $styleName => $styleValue): ?> <?= $e($styleName) ?>="<?= $e($styleValue) ?>"<?php endforeach; ?> data-brand-logos="<?= $e(json_encode($previewLogos, JSON_THROW_ON_ERROR)) ?>">
                         <div class="brand-preview-bar">
                             <span class="brand-preview-logo-slot" data-brand-preview-logo-slot><?= $this->partial('partials/brand_logo', ['plan' => $previewLogoPlan, 'class' => 'brand-preview-logo', 'alt' => '', 'fallback' => '', 'attrs' => ' data-brand-preview-logo']) ?></span>
                             <strong data-brand-preview-name><?= $e($site_name) ?></strong>

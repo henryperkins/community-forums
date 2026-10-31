@@ -48,15 +48,33 @@ final class PreferenceService
      *
      * @return array{theme:string,density:string,font_size:string,reduced_motion:bool}
      */
-    public function appearance(int $userId): array
+    public function appearance(int $userId, ?string $densityDefault = null): array
     {
         $r = $this->resolved($userId);
         return [
             'theme' => (string) $r['theme'],
-            'density' => (string) $r['density'],
+            'density' => $this->density($userId, $r, $densityDefault),
             'font_size' => (string) $r['font_size'],
             'reduced_motion' => (bool) $r['reduced_motion'],
         ];
+    }
+
+    /**
+     * A member's density: their own stored choice, else the community default
+     * (ADR 0054 increment 4), else the schema default. Only a stored value
+     * counts as a choice, so changing the community default never overrides a
+     * member who picked a density.
+     *
+     * @param array<string,mixed>|null $resolved
+     */
+    public function density(int $userId, ?array $resolved = null, ?string $densityDefault = null): string
+    {
+        $stored = PreferenceSchema::upgrade($this->prefs->get($userId));
+        $resolved ??= PreferenceSchema::resolve($stored);
+        if (array_key_exists('density', $stored) || $densityDefault === null) {
+            return (string) $resolved['density'];
+        }
+        return in_array($densityDefault, ['comfortable', 'compact'], true) ? $densityDefault : (string) $resolved['density'];
     }
 
     /**
