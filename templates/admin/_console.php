@@ -83,6 +83,7 @@ $areas = [
     ]],
     'appearance' => ['label' => 'Appearance', 'h1' => 'Branding & themes', 'aria' => 'Appearance sections', 'tabs' => [
         'branding' => ['label' => 'Branding', 'href' => '/admin/branding', 'flag' => 'branding'],
+        'branding_history' => ['label' => 'History', 'href' => '/admin/branding/history', 'flag' => 'branding'],
         'themes' => ['label' => 'Themes', 'href' => '/admin/themes', 'flag' => 'package_themes'],
     ]],
     'notifications' => ['label' => 'Notifications', 'h1' => 'Email & announcements', 'aria' => 'Notification sections', 'tabs' => [

@@ -5,6 +5,10 @@ $this->section('title', 'Branding');
 $this->section('robots', 'noindex, nofollow');
 $this->section('variant', 'admin');
 $this->section('branding_preview', '1');
+// The branding pages keep the built-in palette for their own chrome, so saved
+// colours can never make the recovery controls unreadable (ADR 0054); the
+// sample and thumbnails still show the saved or edited branding.
+$this->section('recovery_surface', '1');
 $previewLogos = ['base' => $logo_path, 'light' => $logo_light_path, 'dark' => $logo_dark_path];
 // The saved sample resolves logos exactly as the public chrome does for the
 // selected visitor mode; System lets the device preference choose (ADR 0054).
@@ -46,11 +50,30 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
             <?= $this->partial('partials/flash', ['flash' => $unplacedFlash]) ?>
         <?php endif; ?>
 
-        <p class="pane-intro">Set the community name, colours and appearance. Saved branding appears across the community on the next page load. The preview shows the visitor theme you select; signed-in members keep their own light/dark preference.</p>
+        <p class="pane-intro">Set the community name, colours and appearance. Saved branding appears across the community on the next page load. The preview shows the visitor theme you select; signed-in members keep their own light/dark preference. These branding pages always use the built-in colours, so their controls stay readable whatever is saved.</p>
 
         <div class="brand-cols">
+        <div class="branding-main-column">
         <form method="post" action="/admin/branding" class="branding-form-card" enctype="multipart/form-data" data-brand-form data-brand-package-active="<?= !empty($brand_package_active) ? '1' : '0' ?>" data-brand-upload-max-bytes="<?= $e($upload_max_bytes) ?>" data-brand-palettes="<?= $e(json_encode($brand_preview_palettes ?? [], JSON_THROW_ON_ERROR)) ?>">
             <?= $this->csrfField() ?>
+            <?php /* The revision this form was opened at: publishing over a newer one needs explicit confirmation (ADR 0054). */ ?>
+            <input type="hidden" name="base_revision" value="<?= (int) ($base_revision ?? 0) ?>">
+            <?php if (is_array($conflict ?? null)): ?>
+                <section class="callout callout-review branding-conflict" aria-labelledby="branding-conflict-title">
+                    <h3 id="branding-conflict-title">Branding changed while you were editing</h3>
+                    <p>These changes were published after you opened this page. Your edits below are unchanged and nothing was saved.</p>
+                    <ul>
+                        <?php foreach ($conflict['newer'] as $newer): ?>
+                            <li><a href="/admin/branding/history/<?= (int) $newer['id'] ?>">Revision <?= (int) $newer['id'] ?></a>, <?= $e(human_datetime((string) $newer['when'])) ?><?= $newer['actor'] !== '' ? ' by @' . $e($newer['actor']) : '' ?>: <?= $e($newer['changed'] !== [] ? implode(', ', $newer['changed']) : ucfirst((string) $newer['action'])) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <label class="branding-checkline" for="branding-overwrite">
+                        <input id="branding-overwrite" type="checkbox" name="overwrite_revision" value="<?= (int) $conflict['current'] ?>"<?= field_attrs($errors ?? [], 'overwrite_revision') ?>>
+                        <span>Publish this form’s branding and replace those changes. They stay in branding history.</span>
+                    </label>
+                    <?= field_error($errors ?? [], 'overwrite_revision') ?>
+                </section>
+            <?php endif; ?>
 
                 <div class="branding-field-grid branding-preview-target" id="branding-palette" tabindex="-1">
                     <div class="branding-field branding-field-wide">
@@ -215,6 +238,42 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                 </div>
         </form>
 
+            <section class="branding-recovery" id="branding-recovery" aria-labelledby="branding-recovery-title">
+                <h2 class="branding-section-label" id="branding-recovery-title">Undo and reset</h2>
+                <p class="brand-preview-note">Every published change is kept in <a href="/admin/branding/history">branding history</a> with its logos. Restoring publishes that configuration again, and the one it replaces stays in history. Each reset below changes only its own group.</p>
+                <div class="branding-reset-groups">
+                    <?php foreach (($reset_groups ?? []) as $group => $definition): ?>
+                        <?= $this->partial('partials/dm_confirm', [
+                            'summary_class' => 'btn btn-secondary btn-small branding-reset-group',
+                            'label' => 'Reset ' . $definition['label'] . '…',
+                            'note' => $definition['explain'] . ' The previous ' . $definition['label'] . ' can be restored from branding history.',
+                            'note_id' => 'branding-reset-' . $group . '-note',
+                            'action' => '/admin/branding/reset/' . $group,
+                            'fields' => [],
+                            'confirm' => 'Reset ' . $definition['label'],
+                            'group' => 'branding-reset-groups',
+                        ]) ?>
+                    <?php endforeach; ?>
+                </div>
+            <form method="post" action="/admin/branding" class="branding-reset-card" id="branding-reset">
+                <?= $this->csrfField() ?>
+                <input type="hidden" name="reset" value="1">
+                <h3>Reset branding</h3>
+                <p>Clears saved colours, logos, favicon, visitor appearance, theme preset, and custom CSS. Keeps the community name, community text and active package theme. Branding history keeps the configuration it replaces, logos included, so a reset can be restored.</p>
+                <?php if (!empty($features['package_themes'])): ?>
+                    <p>To pause package themes instead, use <a href="/admin/themes/safe-mode">theme safe mode</a>.</p>
+                <?php endif; ?>
+                <label for="branding-reset-confirm">Type RESET to confirm</label>
+                <input id="branding-reset-confirm" type="text" name="reset_confirm" class="input branding-reset-input" value="<?= $e($reset_confirm ?? '') ?>" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="RESET"<?= field_attrs($errors ?? [], 'reset_confirm') ?>>
+                <?= field_error($errors ?? [], 'reset_confirm') ?>
+                <button class="btn branding-reset-button" type="submit">Reset branding</button>
+                <?php if ($resetStatus !== ''): ?>
+                    <p class="branding-reset-status" role="status"><?= $e($resetStatus) ?></p>
+                <?php endif; ?>
+            </form>
+            </section>
+        </div>
+
             <aside class="branding-preview-column">
                 <section class="brand-preview-panel branding-preview-target" id="branding-preview" tabindex="-1" aria-live="polite">
                     <p class="eyebrow">Live preview</p>
@@ -259,22 +318,6 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     <a class="btn btn-secondary branding-preview-shortcut" href="#branding-palette">Back to appearance controls</a>
                 </section>
 
-                <form method="post" action="/admin/branding" class="branding-reset-card" id="branding-reset">
-                    <?= $this->csrfField() ?>
-                    <input type="hidden" name="reset" value="1">
-                    <h2>Reset branding</h2>
-                    <p>Clears saved colours, logos, favicon, visitor appearance, theme preset, and custom CSS. Keeps the community name, community text and active package theme. This cannot be undone.</p>
-                    <?php if (!empty($features['package_themes'])): ?>
-                        <p>To pause package themes instead, use <a href="/admin/themes/safe-mode">theme safe mode</a>.</p>
-                    <?php endif; ?>
-                    <label for="branding-reset-confirm">Type RESET to confirm</label>
-                    <input id="branding-reset-confirm" type="text" name="reset_confirm" class="input branding-reset-input" value="<?= $e($reset_confirm ?? '') ?>" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="RESET"<?= field_attrs($errors ?? [], 'reset_confirm') ?>>
-                    <?= field_error($errors ?? [], 'reset_confirm') ?>
-                    <button class="btn branding-reset-button" type="submit">Reset branding</button>
-                    <?php if ($resetStatus !== ''): ?>
-                        <p class="branding-reset-status" role="status"><?= $e($resetStatus) ?></p>
-                    <?php endif; ?>
-                </form>
             </aside>
         </div>
 <?= $this->partial('admin/_console_end') ?>

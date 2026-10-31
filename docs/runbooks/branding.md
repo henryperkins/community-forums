@@ -110,7 +110,40 @@ theirs.
   review always uses the globally active package; a private preview does not
   become public through a branding save.
 
+## History, restore and conflicts
+
+Every published change to the branding document is a revision under
+**Appearance → History** (`/admin/branding/history`): branding saves, the
+community name in Settings, restores and resets. The first recorded change also
+keeps the configuration it replaced. Each revision lists who made it, when and
+which settings changed; logos are kept with it.
+
+- **Review and restore.** A revision's page compares it with the live branding,
+  with logo thumbnails and colour swatches. Restoring publishes it again as a
+  new revision, so a restore is undone the same way. If an image a revision
+  used no longer exists, the page names it and restoring uses its fallback.
+  Colours that draw contrast warnings against the *current* active theme need
+  the same audited acknowledgement as a save.
+- **Scope.** A restore replaces the community name and text, logos and favicon,
+  colours, visitor mode, preset and stored custom CSS. It never changes package
+  activation, theme safe mode, feature flags or members' own appearance.
+- **Conflicts.** The branding form remembers the revision it was opened at. If
+  another administrator published since, saving returns the form unchanged
+  with a list of the newer revisions and saves nothing. Review them in History,
+  or tick **Publish this form's branding and replace those changes** and save
+  again; the replaced revision stays in History. A page opened before
+  versioning existed is treated the same way.
+
 ## Recovery and limitations
+
+**Undo and reset** under the form offers three independent resets — colours,
+logos and favicon, and appearance defaults (visitor mode and preset). Each opens
+a confirmation step that says what it clears, works without JavaScript, leaves
+every other group untouched, and is recorded as a revision that History can
+restore. The branding pages themselves never apply the saved colours, so these
+controls stay readable even when a saved palette is hard to read; package themes
+have their own recovery in theme safe mode.
+
 
 Each saved logo variant and favicon has its own removal checkbox. Select it and
 save branding to clear only that asset; the other submitted settings and assets
@@ -119,9 +152,10 @@ after a valid save. Choose either removal or a replacement file for each asset,
 not both. Removed paths fall back to the base logo or built-in chrome, and the
 change is audited; the stored media file is retained, as with a full reset.
 
-Reset requires typing `RESET`. It clears stored colours, all logo variants,
-favicon, guest mode, preset, and custom CSS; the community name, community text
-and package-theme state remain. Clear an individual text field and save to
+The full reset requires typing `RESET`. It clears stored colours, all logo
+variants, favicon, guest mode, preset, and custom CSS; the community name,
+community text and package-theme state remain. It is recorded as a revision, so
+History can restore the configuration it replaced. Clear an individual text field and save to
 restore its default. The form links to package safe mode when that subsystem is on.
 Reset has its own form: Enter in its confirmation field performs reset without
 saving pending branding edits or uploading selected files. Native confirmation

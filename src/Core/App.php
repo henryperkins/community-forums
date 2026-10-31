@@ -1294,6 +1294,16 @@ final class App
         $c->bind(VerificationRepository::class, fn (Container $c) => new VerificationRepository($c->get(Database::class)));
         $c->bind(IdempotencyRepository::class, fn (Container $c) => new IdempotencyRepository($c->get(Database::class)));
         $c->bind(AttachmentRepository::class, fn (Container $c) => new AttachmentRepository($c->get(Database::class)));
+        // Versioned branding (ADR 0054): every published branding change and
+        // its restorable revision commit through one service.
+        $c->bind(\App\Repository\BrandingRevisionRepository::class, fn (Container $c) => new \App\Repository\BrandingRevisionRepository($c->get(Database::class)));
+        $c->bind(\App\Service\BrandingRevisionService::class, fn (Container $c) => new \App\Service\BrandingRevisionService(
+            $c->get(Database::class),
+            $c->get(SettingRepository::class),
+            $c->get(\App\Repository\BrandingRevisionRepository::class),
+            $c->get(AttachmentRepository::class),
+            (string) $config->get('app.name', 'RetroBoards'),
+        ));
         $c->bind(AttachmentScanService::class, fn (Container $c) => new AttachmentScanService($c->get(AttachmentRepository::class)));
         $c->bind(MfaRepository::class, fn (Container $c) => new MfaRepository($c->get(Database::class)));
         $c->bind(WebAuthnCredentialRepository::class, fn (Container $c) => new WebAuthnCredentialRepository($c->get(Database::class)));
@@ -2356,6 +2366,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(FeatureFlags::class),
+            $c->get(\App\Service\BrandingRevisionService::class),
         ));
         $c->bind(FeatureFlagAdminService::class, fn (Container $c) => new FeatureFlagAdminService(
             $c->get(Database::class),
@@ -2553,6 +2564,10 @@ final class App
         $r->get('/theme/asset/{digest}', [ThemeController::class, 'asset']);
         $r->get('/admin/branding', [BrandingController::class, 'form']);
         $r->post('/admin/branding', [BrandingController::class, 'update']);
+        $r->post('/admin/branding/reset/{group}', [BrandingController::class, 'resetGroup']);
+        $r->get('/admin/branding/history', [BrandingController::class, 'history']);
+        $r->get('/admin/branding/history/{id}', [BrandingController::class, 'revision']);
+        $r->post('/admin/branding/history/{id}/restore', [BrandingController::class, 'restore']);
         $r->get('/admin/tags', [TagController::class, 'admin']);
         $r->post('/admin/tags', [TagController::class, 'create']);
         $r->post('/admin/tags/{id}', [TagController::class, 'update']);

@@ -46,9 +46,9 @@ final class AppBrandIdentityTest extends TestCase
         // A removed logo returns every surface to the house mark at once.
         $admin = $this->makeAdmin();
         $this->actingAs($admin);
-        $this->assertRedirect($this->post('/admin/branding', [
+        $this->assertRedirect($this->post('/admin/branding', $this->fresh([
             'site_name' => 'Harbor Commons', 'theme_default' => 'system', 'remove_logo' => '1',
-        ]), '/admin/branding');
+        ])), '/admin/branding');
         self::assertStringContainsString('class="admin-bar-star"', $this->get('/admin/branding')->body());
         $this->logoutClient();
         self::assertSame('', $settings->getString('brand_logo_path'));
@@ -134,14 +134,14 @@ final class AppBrandIdentityTest extends TestCase
         $category = $this->makeCategory();
         $this->makeBoard($category, ['slug' => 'harbor-board', 'name' => 'Harbor board', 'description' => 'Board-specific summary.']);
 
-        $this->assertRedirect($this->post('/admin/branding', [
+        $this->assertRedirect($this->post('/admin/branding', $this->fresh([
             'site_name' => 'Harbor Commons',
             'theme_default' => 'system',
             'site_tagline' => '  Boats,   tides and   people  ',
             'site_description' => "A friendly harbour forum\nfor sailors.",
             'directory_heading' => 'Welcome aboard',
             'directory_intro' => "Pick a board.\r\n\r\n\r\nSay hello in General.",
-        ]), '/admin/branding');
+        ])), '/admin/branding');
         $audit = json_decode((string) $this->db->fetchValue("SELECT after_json FROM moderation_log WHERE action = 'branding_update' ORDER BY id DESC LIMIT 1"), true, 512, JSON_THROW_ON_ERROR);
         self::assertSame(['brand_tagline', 'brand_description', 'brand_directory_heading', 'brand_directory_intro'], $audit['changed_text']);
         $this->logoutClient();
@@ -162,10 +162,10 @@ final class AppBrandIdentityTest extends TestCase
         $form = $this->get('/admin/branding')->body();
         self::assertStringContainsString('value="Boats, tides and people"', $form);
         self::assertStringContainsString(">Pick a board.\n\nSay hello in General.</textarea>", $form);
-        $this->assertRedirect($this->post('/admin/branding', [
+        $this->assertRedirect($this->post('/admin/branding', $this->fresh([
             'site_name' => 'Harbor Commons', 'theme_default' => 'system',
             'site_tagline' => '', 'site_description' => '', 'directory_heading' => '', 'directory_intro' => '',
-        ]), '/admin/branding');
+        ])), '/admin/branding');
         $this->logoutClient();
 
         $home = $this->get('/')->body();
@@ -219,7 +219,7 @@ final class AppBrandIdentityTest extends TestCase
         }
 
         // Structured text only: an array value is refused, not coerced.
-        $response = $this->post('/admin/branding', ['site_name' => 'Unsaved Commons', 'directory_heading' => ['x']]);
+        $response = $this->post('/admin/branding', $this->fresh(['site_name' => 'Unsaved Commons', 'directory_heading' => ['x']]));
         $this->assertStatus(422, $response);
         $this->assertSeeText($response, 'Welcome heading must be text.');
         self::assertSame('Saved heading', $settings->getString('brand_directory_heading'));
@@ -248,7 +248,7 @@ final class AppBrandIdentityTest extends TestCase
         $settings->set('brand_directory_heading', 'Saved heading');
 
         // A branding page opened before these fields existed posts none of them.
-        $this->assertRedirect($this->post('/admin/branding', ['site_name' => 'Older form', 'theme_default' => 'system']), '/admin/branding');
+        $this->assertRedirect($this->post('/admin/branding', $this->fresh(['site_name' => 'Older form', 'theme_default' => 'system'])), '/admin/branding');
 
         self::assertSame('Saved tagline', $settings->getString('brand_tagline'));
         self::assertSame('Saved heading', $settings->getString('brand_directory_heading'));
@@ -256,7 +256,7 @@ final class AppBrandIdentityTest extends TestCase
         self::assertSame([], $audit['changed_text']);
 
         // Present but empty is the deliberate clear.
-        $this->assertRedirect($this->post('/admin/branding', ['site_name' => 'Older form', 'theme_default' => 'system', 'site_tagline' => '']), '/admin/branding');
+        $this->assertRedirect($this->post('/admin/branding', $this->fresh(['site_name' => 'Older form', 'theme_default' => 'system', 'site_tagline' => ''])), '/admin/branding');
         self::assertSame('', $settings->getString('brand_tagline'));
         self::assertSame('Saved heading', $settings->getString('brand_directory_heading'));
     }
@@ -269,7 +269,7 @@ final class AppBrandIdentityTest extends TestCase
         $settings->set('brand_directory_intro', 'Kept introduction');
         $settings->set('brand_logo_path', '/media/9');
 
-        $this->assertRedirect($this->post('/admin/branding', ['reset' => '1', 'reset_confirm' => 'RESET']), '/admin/branding');
+        $this->assertRedirect($this->post('/admin/branding', $this->fresh(['reset' => '1', 'reset_confirm' => 'RESET'])), '/admin/branding');
 
         self::assertSame('Kept tagline', $settings->getString('brand_tagline'));
         self::assertSame('Kept introduction', $settings->getString('brand_directory_intro'));
@@ -322,5 +322,12 @@ final class AppBrandIdentityTest extends TestCase
         self::assertContains($response->status(), [200, 400], $path);
         self::assertStringContainsString('class="auth-stage"', $response->body(), $path);
         return $response->body();
+    }
+
+    /** A form opened now carries the live branding revision (ADR 0054). */
+    private function fresh(array $values): array
+    {
+        $revision = (new SettingRepository($this->db))->get('brand_revision', 0);
+        return $values + ['base_revision' => (string) (is_int($revision) ? $revision : 0)];
     }
 }

@@ -92,9 +92,9 @@ final class AppBrandingThemeTest extends TestCase
         $settings = new \App\Repository\SettingRepository($this->db);
         $uploaded = [];
         foreach (['logo', 'logo_light', 'logo_dark', 'favicon'] as $field) {
-            $response = $this->postFile('/admin/branding', $field, $this->fakeUpload($this->pngBytes(), $field . '.png'), [
+            $response = $this->postFile('/admin/branding', $field, $this->fakeUpload($this->pngBytes(), $field . '.png'), $this->fresh([
                 'site_name' => 'Uploaded marks', 'theme_default' => 'system',
-            ]);
+            ]));
             $this->assertRedirect($response, '/admin/branding');
             $uploaded[$field] = $settings->getString('brand_' . $field . '_path');
             self::assertSame(1, preg_match('#^/media/(\d+)$#', $uploaded[$field], $match));
@@ -198,7 +198,7 @@ final class AppBrandingThemeTest extends TestCase
         $settings->set('brand_logo_path', '/media/logo');
         $response = $this->postFile('/admin/branding', 'logo', [
             'name' => '', 'type' => '', 'tmp_name' => '', 'error' => UPLOAD_ERR_NO_FILE, 'size' => 0,
-        ], ['site_name' => 'No selected file', 'remove_logo' => '1']);
+        ], $this->fresh(['site_name' => 'No selected file', 'remove_logo' => '1']));
         $this->assertRedirect($response, '/admin/branding');
         self::assertSame('', $settings->getString('brand_logo_path'));
     }
@@ -683,9 +683,17 @@ final class AppBrandingThemeTest extends TestCase
     /** Exercise the same review-then-confirm flow as an operator selecting an unsafe colour. */
     private function saveAcknowledgedBranding(array $values): \App\Core\Response
     {
+        $values = $this->fresh($values);
         $review = $this->post('/admin/branding', $values);
         $this->assertStatus(422, $review);
         self::assertSame(1, preg_match('/name="contrast_review" value="([a-f0-9]{64})"/', $review->body(), $token));
         return $this->post('/admin/branding', $values + ['contrast_ack' => '1', 'contrast_review' => $token[1]]);
+    }
+
+    /** A form opened now carries the live branding revision (ADR 0054). */
+    private function fresh(array $values): array
+    {
+        $revision = (new \App\Repository\SettingRepository($this->db))->get('brand_revision', 0);
+        return $values + ['base_revision' => (string) (is_int($revision) ? $revision : 0)];
     }
 }

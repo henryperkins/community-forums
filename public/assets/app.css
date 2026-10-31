@@ -6912,7 +6912,8 @@ textarea.textarea-engraved {
     border-left: 3px solid var(--rust);
     border-radius: var(--radius-lg);
 }
-.branding-reset-card > h2 {
+.branding-reset-card > h2,
+.branding-reset-card > h3 {
     margin: 0 0 6px;
     font-size: 1.15rem;
 }
@@ -6941,6 +6942,128 @@ textarea.textarea-engraved {
     margin: 10px 0 0;
     color: var(--on-done);
     font-size: .87rem;
+}
+/* Branding recovery and history (ADR 0054). The undo-and-reset section sits
+   under the form, so the sticky preview column holds only the preview. Each
+   group reset is a native confirm step; an opened step takes the whole row. */
+.admin-console .admin-appearance-branding .branding-main-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.branding-recovery {
+    min-width: 0;
+}
+/* These sections' own h2s read as the form's other section labels, not as
+   the console's larger card headings. */
+.admin-console .branding-recovery > h2.branding-section-label {
+    margin: 22px 0 8px;
+    font-size: .68rem;
+    line-height: 1.4;
+}
+.admin-console .branding-revision-card > h2.branding-section-label,
+.admin-console .branding-restore-card > h2.branding-section-label {
+    margin: 0 0 10px;
+    font-size: .68rem;
+    line-height: 1.4;
+}
+.admin-console .branding-revision-card {
+    margin-bottom: 0;
+}
+.branding-reset-groups {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 14px 0 18px;
+}
+.branding-reset-groups .dm-confirm[open] {
+    flex: 1 1 100%;
+}
+.branding-reset-groups .dm-confirm-step {
+    max-width: 62ch;
+    padding: var(--space-2) 0 0;
+}
+.branding-conflict {
+    margin-block: 0 18px;
+}
+.branding-conflict h3 {
+    color: inherit;
+}
+.branding-conflict ul {
+    margin: 8px 0 12px;
+    padding-left: 1.2em;
+}
+.admin-console .table-scroll > .audit.branding-history-table {
+    min-width: 600px;
+}
+.admin-console .table-scroll > .audit.branding-revision-table {
+    min-width: 0;
+}
+.admin-console .audit.branding-history-table tbody th {
+    border-bottom: 1px solid var(--border-hair);
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .86rem;
+    letter-spacing: 0;
+    text-transform: none;
+    vertical-align: top;
+}
+.admin-console .audit.branding-revision-table tbody th {
+    border-bottom: 1px solid var(--border-hair);
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: .88rem;
+    letter-spacing: 0;
+    text-transform: none;
+    vertical-align: top;
+    white-space: normal;
+}
+.branding-history-action {
+    display: block;
+}
+.branding-history-changed {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: .84rem;
+}
+.branding-revision-value {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.branding-revision-thumb {
+    display: block;
+    height: 32px;
+    width: auto;
+    max-width: 160px;
+    padding: 3px;
+    object-fit: contain;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-sm);
+    background: var(--surface-page);
+}
+.branding-revision-swatch {
+    flex: 0 0 12px;
+    width: 12px;
+    height: 12px;
+}
+.branding-revision-swatch rect {
+    stroke: var(--border-strong);
+    stroke-width: 1;
+}
+.admin-console .branding-restore-card {
+    margin-top: 18px;
+}
+.branding-restore-card .branding-save-row {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
 }
 .code-area {
     font-family: var(--font-mono);

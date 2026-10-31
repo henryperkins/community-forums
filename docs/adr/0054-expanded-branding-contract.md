@@ -25,6 +25,8 @@ These are delivery increments, not P0–P3 priority tiers (DECISIONS §2).
    history and restore (retaining every asset a revision needs), then private
    drafts, whole-site preview and explicit publishing with conflict detection.
    Package activation stays a separate action with its own rollback.
+   *Versioning, history, restore and group resets shipped 2026-10-31 (2a,
+   below); drafts and whole-site preview follow (2b).*
 3. **Independent light/dark palettes** — one shared token definition across
    `BrandPalette`, `ThemeTokenPolicy`, preview, validation and public CSS, then
    per-mode primary/accent overrides with automatic suggestions and both
@@ -132,3 +134,49 @@ Runtime instructions are in `docs/runbooks/branding.md`. Regression tests are
 `tests/Integration/Core/AppBrandIdentityTest.php` plus the branding and package
 suites; rendered evidence is linked from
 `docs/evidence/branding-identity-2026-10-31/README.md`.
+
+## Increment 2a delivery: versioned branding, history and restore (2026-10-31)
+
+- **One versioned document.** `App\Support\BrandingDocument` names every setting
+  the branding console publishes (the table above, including stored custom CSS).
+  `branding_revisions` (migration `0084`) is append-only: each row is the whole
+  normalized document after one change, its changed keys, actor and action
+  (`baseline`, `publish`, `restore`, `reset`). `settings.brand_revision` points
+  at the live row. The first recorded change also records, as `baseline`, the
+  configuration it replaced, so an existing installation can return to where
+  it started. A save that changes nothing records no revision.
+- **Every writer commits through `BrandingRevisionService`:** the branding form,
+  the community name in Settings, restore, the full reset and group resets.
+  One transaction locks the pointer, applies the change, records the revision
+  and writes its audit entry (`branding_update`, `branding_reset`,
+  `branding_reset_group`, `branding_restore`, with revision ids; contrast
+  acknowledgements stay `branding_contrast_override`).
+- **Stale editors are refused, not overwritten.** The form carries the revision
+  it was opened at; a form without one counts as revision 0. A mismatch returns
+  409 with the whole draft, names each newer revision (who, when, which
+  settings) and nothing is written. Publishing over them requires confirming
+  that exact newer revision; anything older is still a conflict. A restore
+  whose review went stale is rebuilt against the new live branding.
+- **Restore scope.** Restoring republishes every document setting — community
+  name and text, logos and favicon, colours, visitor mode, preset and stored
+  custom CSS — as a new revision, so it can be undone the same way. Package
+  activation, theme safe mode, feature flags and member preferences are never
+  part of it. The review page compares the revision with the live branding,
+  shows logos and colours, names any image whose media no longer exists (that
+  setting restores to its fallback), and repeats the contrast review against
+  the active theme with the same audited, candidate-bound acknowledgement.
+- **Assets are retained.** Brand media is finalized without a parent post, so
+  the orphan sweep never reclaims it; removals and resets only disconnect a
+  path. History is the reason to keep it.
+- **Group resets** — colours, logos and favicon, appearance defaults — each
+  return one group to its defaults as a recorded, restorable revision and leave
+  every other group untouched. The full reset is recorded the same way.
+- **Recovery surface.** The branding page and its history never take the saved
+  global overrides themselves: they load only the scoped sample and thumbnail
+  rules (`/brand.css?…&scope=sample`), so colours an operator acknowledged as
+  hard to read cannot make the recovery controls unreadable. Package problems
+  keep their own recovery, theme safe mode, linked from the reset card.
+- Private drafts, whole-site preview and explicit publishing follow in 2b.
+
+Evidence: `tests/Integration/Core/AppBrandingRevisionTest.php` and
+`docs/evidence/branding-revisions-2026-10-31/README.md`.

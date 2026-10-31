@@ -43,4 +43,21 @@ seeded database in Chromium and WebKit, at desktop (1280×800) and mobile
 | Generated assets and Worker | `check:assets`: generated assets and manifest current; `test:assets`: 35 passed |
 | Existing journeys on this candidate (Chromium) | `theming-remediation` 20, `admin-appearance-followup` 22, `branding-public-theme` 22, `auth-polish` 19, `header-hardening` 6, and the two `gate-a` branding/theme-package journeys at both sizes — all passed, each group on a freshly prepared database |
 
-Physical-device qualification and production behaviour are outside this record.
+Physical-device qualification is outside this record.
+
+## Production (recorded after publication)
+
+`4107d65d` was pushed to `main` at 20:19:21 UTC on 2026-10-31. Sanitized receipts
+are in `production/`:
+
+| Receipt | Result |
+|---|---|
+| `cloud-run-application-build.json` | Cloud Build `df06b3ce` SUCCESS for `4107d65d` at 20:22:18 UTC |
+| `cloud-run-application-service.json` | Revision `retroboards-00065-p5f` Ready, 100% traffic, image `app:4107d65d…` |
+| `cron-application-images.json` | All four cron jobs on the same image |
+| `worker-application-deployment.json` | Worker version `892e06da-155a-475b-aeb9-8f47eb2c88dc` at 100% (20:20:35 UTC) |
+| `live-assets-application.json` | 59/59 manifest files served with matching SHA-256 (current `46a2224ad48df63e` plus three retained releases); `/healthz` ok |
+| `live-identity-verification.json` | Anonymous checks: `/login` and `/register` render the identity block with the house mark (no logo configured), the directory keeps its defaults, `/brand.css` carries the thumbnail rules, `/settings/appearance` requires sign-in |
+
+The deployed asset release was recorded as pinned in the following increment's
+commit, without a proof-only publication.

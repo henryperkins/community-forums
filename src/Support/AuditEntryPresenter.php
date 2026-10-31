@@ -23,6 +23,9 @@ final class AuditEntryPresenter
         'feature_flag.enable' => 'Enabled feature', 'feature_flag.disable' => 'Disabled feature',
         'auto_allow' => 'Automatically allowed content', 'auto_flag' => 'Automatically flagged content',
         'auto_hold' => 'Automatically held content', 'auto_block' => 'Automatically blocked content',
+        'branding_update' => 'Published branding', 'branding_reset' => 'Reset branding',
+        'branding_reset_group' => 'Reset branding group', 'branding_restore' => 'Restored branding revision',
+        'branding_contrast_override' => 'Accepted branding contrast warnings',
     ];
     private const FIELDS = [
         'site_name' => 'Community name', 'registration_mode' => 'Registration',
@@ -36,6 +39,9 @@ final class AuditEntryPresenter
         'override' => 'Override', 'flag' => 'Feature', 'suspended_until' => 'Suspended until (UTC)',
         'expires_at' => 'Expires (UTC)', 'user_id' => 'Member ID', 'board_id' => 'Board ID',
         'category_id' => 'Category ID', 'threads_moved' => 'Threads moved',
+        'revision' => 'Branding revision', 'restored_from' => 'Restored from revision',
+        'changed_keys' => 'Changed settings', 'changed_text' => 'Changed community text',
+        'removed_assets' => 'Removed images', 'missing_assets' => 'Missing images', 'group' => 'Reset group',
     ];
     private const SWITCHES = ['allow_anonymous', 'require_approval', 'tags_enabled', 'wiki_enabled', 'link_previews_enabled', 'is_archived', 'effective', 'override'];
     private const ENUMS = [

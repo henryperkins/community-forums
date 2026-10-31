@@ -29,6 +29,7 @@ final class AdminSettingsService
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
         private FeatureFlags $features,
+        private ?BrandingRevisionService $branding = null,
     ) {
     }
 
@@ -75,10 +76,18 @@ final class AdminSettingsService
         }
 
         $before = $this->settings->getString('site_name', '');
-        $this->db->transaction(function () use ($admin, $name, $before): void {
+        $write = function () use ($admin, $name, $before): void {
             $this->settings->set('site_name', $name);
             $this->audit($admin, 'site_name', ['site_name' => $before], ['site_name' => $name]);
-        });
+        };
+        // The community name is part of the versioned branding document
+        // (ADR 0054): this second editor records a revision too, so branding
+        // history, restore and stale-editor detection see the change.
+        if ($this->branding !== null) {
+            $this->branding->commit($admin, 'publish', $write);
+            return;
+        }
+        $this->db->transaction($write);
     }
 
     /** Returns false when the restrictive save needs its explicit review step. */

@@ -455,7 +455,18 @@ screens and above the directory heading, a description (300) for search and
 link previews, and the board directory's welcome heading (80) and introduction
 (600, one paragraph per line, always followed by the inbox pointer). Clearing a
 field restores its default; an invalid value returns the whole draft unsaved.
-Members' Light/Dark/System choices show thumbnails of the resolved theme. Each saved logo variant
+Members' Light/Dark/System choices show thumbnails of the resolved theme.
+Every published branding change — including a community-name change in
+Settings, a reset or a restore — is a revision in **History**
+(`/admin/branding/history`), kept with its logos. A revision's review page
+compares it with the live branding and restores it as a new revision, after the
+same contrast review; restoring never touches package themes, safe mode,
+feature flags or member preferences. A branding form opened before someone
+else published is refused with its draft intact and names the newer change;
+replacing it takes an explicit confirmation. Colours, logos and favicon, and
+appearance defaults each have their own reset, and the full reset is
+restorable too. The branding pages never apply the saved colours to themselves,
+so their recovery controls stay readable whatever is saved. Each saved logo variant
 and the favicon can be removed independently when saving the form, with pending
 choices preserved on validation errors. Native file controls show selected
 filenames without JavaScript; saved thumbnails, configured upload requirements,

@@ -2,6 +2,24 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Versioned branding, history and restore
+
+- Record every published branding change — branding saves, the community name
+  in Settings, restores and resets — as an append-only revision with its logos,
+  starting with the configuration the first change replaced (migration `0084`).
+- Add Appearance → History: review any revision against the live branding and
+  restore it as a new, undoable revision, with missing images named and the
+  contrast review repeated against the active theme.
+- Refuse a stale branding form with its draft intact, naming the newer changes;
+  publishing over them takes an explicit confirmation.
+- Add independent resets for colours, logos and favicon, and appearance
+  defaults, and make the full reset restorable. Branding pages no longer apply
+  the saved colours to themselves, so their recovery controls stay readable.
+- Record the verified identity release (`46a2224ad48df63e`, Cloud Run
+  `retroboards-00065-p5f`, Worker `892e06da`) as deployed; receipts are in
+  `docs/evidence/branding-identity-2026-10-31/production/`. Evidence:
+  `docs/evidence/branding-revisions-2026-10-31/README.md`.
+
 ## [2026-10-31] - Complete community identity
 
 - Show the community logo on every sign-in screen — log in, registration and

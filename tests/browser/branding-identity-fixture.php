@@ -43,6 +43,9 @@ if ($action === 'reset') {
     foreach (IDENTITY_KEYS as $key) {
         $settings->set($key, '');
     }
+    // Branding history (ADR 0054 increment 2) starts empty for every journey.
+    $db->run('DELETE FROM branding_revisions');
+    $settings->set('brand_revision', 0);
     $settings->set('site_name', 'RetroBoards');
     $settings->set('brand_theme_default', 'system');
     $settings->set('brand_theme_preset', 'classic');
@@ -117,4 +120,6 @@ $state = [];
 foreach (IDENTITY_KEYS as $key) {
     $state[$key] = $settings->getString($key, '');
 }
+$state['brand_revision'] = (string) $settings->get('brand_revision', 0);
+$state['revisions'] = (string) $db->fetchValue('SELECT COUNT(*) FROM branding_revisions');
 echo json_encode($state, JSON_THROW_ON_ERROR);

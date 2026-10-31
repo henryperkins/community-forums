@@ -10,12 +10,16 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\AttachmentRepository;
+use App\Repository\BrandingRevisionRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Security\WriteGate;
 use App\Service\AttachmentService;
+use App\Service\BrandingConflictException;
+use App\Service\BrandingRevisionService;
 use App\Service\Packages\ThemeStateService;
 use App\Support\BrandIdentity;
+use App\Support\BrandingDocument;
 use App\Support\BrandPalette;
 use App\Support\UploadLimits;
 
@@ -75,12 +79,15 @@ final class BrandingController extends Controller
             // surfaces/type over the package stylesheet.
             $modes[$mode] = $retro ? $resolved : array_diff_assoc($resolved, $base);
         }
-        $css = BrandPalette::css($modes);
+        // A recovery page asks for the scoped rules only: the sample and the
+        // thumbnails, never the global overrides or custom CSS (ADR 0054).
+        $sampleOnly = $request->query('scope') === 'sample';
+        $css = $sampleOnly ? ':root{}' : BrandPalette::css($modes);
         $css .= BrandPalette::previewCss($presets, $primary, $accent);
         // Member appearance thumbnails show what each mode really resolves to.
         $css .= BrandPalette::thumbnailCss($serving);
 
-        if ($flags->enabled('custom_css')
+        if (!$sampleOnly && $flags->enabled('custom_css')
             && $settings->get('brand_custom_css_enabled', false) === true
             && $settings->getString('brand_custom_css', '') !== ''
         ) {
@@ -122,22 +129,27 @@ final class BrandingController extends Controller
                     ],
                 )), 422);
             }
-            foreach ([
-                'brand_color_primary',
-                'brand_color_accent',
-                'brand_logo_path',
-                'brand_logo_light_path',
-                'brand_logo_dark_path',
-                'brand_favicon_path',
-                'brand_theme_default',
-                'brand_theme_preset',
-                'brand_custom_css_enabled',
-                'brand_custom_css',
-            ] as $key) {
-                $settings->set($key, '');
-            }
-            $this->bustBrandCache($settings);
-            $this->audit($admin->id(), 'reset');
+            // Recorded as a revision like any other change, so a reset can be
+            // undone from branding history (ADR 0054).
+            $this->revisions()->commit($admin, 'reset', function () use ($settings): void {
+                foreach ([
+                    'brand_color_primary',
+                    'brand_color_accent',
+                    'brand_logo_path',
+                    'brand_logo_light_path',
+                    'brand_logo_dark_path',
+                    'brand_favicon_path',
+                    'brand_theme_default',
+                    'brand_theme_preset',
+                    'brand_custom_css_enabled',
+                    'brand_custom_css',
+                ] as $key) {
+                    $settings->set($key, '');
+                }
+                $this->bustBrandCache($settings);
+            }, recorded: function (int $revision, array $changed) use ($admin): void {
+                $this->audit($admin->id(), 'reset', ['revision' => $revision, 'changed_keys' => $changed]);
+            });
             return $this->redirectWithFlash('/admin/branding', 'Branding reset. The community name, community text and package theme were kept.');
         }
 
@@ -184,18 +196,7 @@ final class BrandingController extends Controller
         if (!in_array($themePreset, ['classic', 'retro'], true)) {
             $themePreset = 'classic';
         }
-        // Saving changes public branding even when this operator has a session
-        // theme preview: measure the globally active theme, not that preview.
-        $palettes = BrandPalette::presets($this->packageTokens());
-        $contrastWarnings = BrandPalette::warnings($palettes[$themePreset], $primary, $accent);
-        // Bind acknowledgement to the exact reviewed candidate and resolved
-        // palette. This also rejects stale no-JS edits or an intervening package
-        // activation. The hash is a review identity, not an authorization token:
-        // requireAdmin + CSRF enforce who may deliberately override a warning.
-        $contrastReview = hash('sha256', json_encode([
-            strtolower($primary), strtolower($accent), $themePreset,
-            $palettes[$themePreset], $contrastWarnings,
-        ], JSON_THROW_ON_ERROR));
+        ['warnings' => $contrastWarnings, 'hash' => $contrastReview] = $this->contrastReview($primary, $accent, $themePreset);
         $contrastAck = $request->str('contrast_ack') === '1'
             && hash_equals($contrastReview, $request->str('contrast_review'));
         if ($contrastWarnings !== [] && !$contrastAck) {
@@ -220,79 +221,102 @@ final class BrandingController extends Controller
             }
         }
 
+        // The revision this form was opened at. An absent value is a form from
+        // before versioning, which can only be as old as revision 0.
+        $baseRevision = self::postedRevision($request, 'base_revision') ?? 0;
+        $overwrite = self::postedRevision($request, 'overwrite_revision');
+        $draft = $this->identityFormValues($identity) + [
+            'site_name' => $name,
+            'color_primary' => $primary,
+            'color_accent' => $accent,
+            'theme_default' => $themeDefault,
+            'theme_preset' => $themePreset,
+            'custom_css_enabled' => $customCssEnabled,
+            'custom_css' => $customCss,
+            'custom_css_ack' => $customCssAck,
+            'contrast_warnings' => $contrastWarnings,
+            'contrast_ack' => $contrastAck,
+            'contrast_review' => $contrastReview,
+            'uploads_need_reselect' => $this->hasSubmittedAssets($request),
+            'base_revision' => $baseRevision,
+        ] + $removals;
         if ($errors !== []) {
-            return $this->view('admin/branding', $this->formData($settings, $this->identityFormValues($identity) + [
-                'site_name' => $name,
-                'color_primary' => $primary,
-                'color_accent' => $accent,
-                'theme_default' => $themeDefault,
-                'theme_preset' => $themePreset,
-                'custom_css_enabled' => $customCssEnabled,
-                'custom_css' => $customCss,
-                'custom_css_ack' => $customCssAck,
-                'contrast_warnings' => $contrastWarnings,
-                'contrast_ack' => $contrastAck,
-                'contrast_review' => $contrastReview,
-                'uploads_need_reselect' => $this->hasSubmittedAssets($request),
-                'errors' => $errors,
-            ] + $removals), 422);
+            return $this->view('admin/branding', $this->formData($settings, $draft + ['errors' => $errors]), 422);
         }
 
-        $assetErrors = $this->container->get(Database::class)->transaction(function () use (
-            $settings, $name, $primary, $accent, $themeDefault, $themePreset, $identity,
-            $customCssAvailable, $customCssEnabled, $customCss, $contrastWarnings, $admin, $request, $removals,
-        ): array {
-            $changedText = [];
-            foreach ($identity as $key => $value) {
-                if ($settings->getString($key, '') !== $value) {
-                    $changedText[] = $key;
-                }
-                // '' is stored rather than deleting the row: it means "use the
-                // built-in default", exactly like a cleared colour.
-                $settings->set($key, $value);
-            }
-            $settings->set('site_name', $name);
-            $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
-            $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
-            $settings->set('brand_theme_default', $themeDefault);
-            $settings->set('brand_theme_preset', $themePreset);
-
-            if ($customCssAvailable) {
-                $settings->set('brand_custom_css_enabled', $customCssEnabled);
-                if ($customCssEnabled) {
-                    $settings->set('brand_custom_css', $customCss);
-                }
-            }
-            // An override and its audit record commit together. Recalculate the
-            // warnings for the posted colours rather than trusting a client list.
-            if ($contrastWarnings !== []) {
-                $this->audit($admin->id(), 'contrast_override', [
-                    'color_primary' => strtolower($primary),
-                    'color_accent' => strtolower($accent),
-                    'theme_preset' => $themePreset,
-                    'warnings' => $contrastWarnings,
-                ]);
-            }
-            // Rejected uploads retain the old asset and produce a visible
-            // partial-success notice rather than hiding behind a success flash.
-            $assetErrors = [];
-            $removedAssets = [];
-            foreach (self::ASSETS as $field => $asset) {
-                if ($removals['remove_' . $field]) {
-                    if ($settings->getString($asset['setting'], '') !== '') {
-                        // Match Reset semantics: disconnect the saved mark but
-                        // retain its stored media; unrelated branding stays intact.
-                        $settings->set($asset['setting'], '');
-                        $removedAssets[] = $field;
+        $audit = [];
+        try {
+            $commit = $this->revisions()->commit($admin, 'publish', function () use (
+                $settings, $name, $primary, $accent, $themeDefault, $themePreset, $identity,
+                $customCssAvailable, $customCssEnabled, $customCss, $contrastWarnings, $admin, $request, $removals, &$audit,
+            ): array {
+                $changedText = [];
+                foreach ($identity as $key => $value) {
+                    if ($settings->getString($key, '') !== $value) {
+                        $changedText[] = $key;
                     }
-                } else {
-                    $this->storeAsset($admin->id(), $request->file($field), $asset['purpose'], $asset['setting'], ucfirst($asset['label']), $assetErrors);
+                    // '' is stored rather than deleting the row: it means "use the
+                    // built-in default", exactly like a cleared colour.
+                    $settings->set($key, $value);
                 }
-            }
-            $this->bustBrandCache($settings);
-            $this->audit($admin->id(), 'update', ['removed_assets' => $removedAssets, 'changed_text' => $changedText]);
-            return $assetErrors;
-        });
+                $settings->set('site_name', $name);
+                $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
+                $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
+                $settings->set('brand_theme_default', $themeDefault);
+                $settings->set('brand_theme_preset', $themePreset);
+
+                if ($customCssAvailable) {
+                    $settings->set('brand_custom_css_enabled', $customCssEnabled);
+                    if ($customCssEnabled) {
+                        $settings->set('brand_custom_css', $customCss);
+                    }
+                }
+                // An override and its audit record commit together. Recalculate the
+                // warnings for the posted colours rather than trusting a client list.
+                if ($contrastWarnings !== []) {
+                    $this->audit($admin->id(), 'contrast_override', [
+                        'color_primary' => strtolower($primary),
+                        'color_accent' => strtolower($accent),
+                        'theme_preset' => $themePreset,
+                        'warnings' => $contrastWarnings,
+                    ]);
+                }
+                // Rejected uploads retain the old asset and produce a visible
+                // partial-success notice rather than hiding behind a success flash.
+                $assetErrors = [];
+                $removedAssets = [];
+                foreach (self::ASSETS as $field => $asset) {
+                    if ($removals['remove_' . $field]) {
+                        if ($settings->getString($asset['setting'], '') !== '') {
+                            // Match Reset semantics: disconnect the saved mark but
+                            // retain its stored media; unrelated branding stays intact.
+                            $settings->set($asset['setting'], '');
+                            $removedAssets[] = $field;
+                        }
+                    } else {
+                        $this->storeAsset($admin->id(), $request->file($field), $asset['purpose'], $asset['setting'], ucfirst($asset['label']), $assetErrors);
+                    }
+                }
+                $this->bustBrandCache($settings);
+                $audit = ['removed_assets' => $removedAssets, 'changed_text' => $changedText];
+                return $assetErrors;
+            }, $baseRevision, $overwrite, recorded: function (int $revision, array $changed) use ($admin, &$audit): void {
+                $this->audit($admin->id(), 'update', $audit + ['revision' => $revision, 'changed_keys' => $changed]);
+            });
+        } catch (BrandingConflictException $conflict) {
+            // Nothing was written. Return the whole draft and name the newer
+            // changes; publishing over them takes an explicit confirmation.
+            return $this->view('admin/branding', $this->formData($settings, $draft + [
+                'uploads_need_reselect' => $this->hasSubmittedAssets($request),
+                'conflict' => $this->conflictSummary($conflict),
+                'errors' => ['overwrite_revision' => 'Branding changed after you opened this page. Review the newer changes, then confirm replacing them to publish your version.'],
+            ]), 409);
+        }
+        $assetErrors = (array) $commit['result'];
+        if ($commit['changed'] === []) {
+            // An unchanged save still writes an audit entry, as before.
+            $this->audit($admin->id(), 'update', $audit + ['revision' => $commit['revision'], 'changed_keys' => []]);
+        }
         if ($assetErrors !== []) {
             return $this->redirectWithFlash(
                 '/admin/branding',
@@ -300,6 +324,206 @@ final class BrandingController extends Controller
             );
         }
         return $this->redirectWithFlash('/admin/branding', 'Saved. Branding appears on the next page load.');
+    }
+
+    /** Recovery (ADR 0054): return one group to its defaults as a recorded, restorable revision. */
+    public function resetGroup(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $this->container->get(WriteGate::class)->assertCanWrite($admin);
+        $this->requireBrandingEnabled();
+        $group = (string) ($params['group'] ?? '');
+        $definition = BrandingDocument::RESET_GROUPS[$group] ?? null;
+        if ($definition === null) {
+            throw new NotFoundException();
+        }
+        $settings = $this->container->get(SettingRepository::class);
+        $defaults = BrandingDocument::defaults($this->defaultName());
+        $commit = $this->revisions()->commit($admin, 'reset', function () use ($settings, $definition, $defaults): void {
+            foreach ($definition['keys'] as $key) {
+                $settings->set($key, $defaults[$key]);
+            }
+        }, recorded: function (int $revision, array $changed) use ($admin, $group): void {
+            $this->audit($admin->id(), 'reset_group', ['group' => $group, 'revision' => $revision, 'changed_keys' => $changed]);
+        });
+        return $this->redirectWithFlash('/admin/branding', $commit['changed'] === []
+            ? 'The ' . $definition['label'] . ' already use their defaults; nothing changed.'
+            : 'Reset the ' . $definition['label'] . '. Everything else was kept. Branding history can restore the previous ' . $definition['label'] . '.');
+    }
+
+    /** Published branding revisions, newest first (ADR 0054). */
+    public function history(Request $request): Response
+    {
+        $this->requireAdmin();
+        $this->requireBrandingEnabled();
+        $repository = $this->container->get(BrandingRevisionRepository::class);
+        $perPage = 25;
+        $total = $repository->count();
+        $pages = max(1, (int) ceil($total / $perPage));
+        $page = min($pages, max(1, (int) $request->query('page', 1)));
+        return $this->view('admin/branding_history', [
+            'revisions' => $repository->page($perPage, ($page - 1) * $perPage),
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
+            'current_revision' => $this->revisions()->currentRevision(),
+        ]);
+    }
+
+    /** One revision compared with the published branding, ready to restore. */
+    public function revision(Request $request, array $params): Response
+    {
+        $this->requireAdmin();
+        $this->requireBrandingEnabled();
+        return $this->view('admin/branding_revision', $this->revisionData((int) ($params['id'] ?? 0)));
+    }
+
+    /**
+     * Publish a past revision again (ADR 0054). Scope: every setting in the
+     * branding document — community name and text, logos and favicon,
+     * colours, appearance defaults and stored custom CSS. Package activation,
+     * theme safe mode, feature flags and member preferences are untouched. The
+     * restore is itself a new revision, so it can be undone the same way.
+     */
+    public function restore(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $this->container->get(WriteGate::class)->assertCanWrite($admin);
+        $this->requireBrandingEnabled();
+        $id = (int) ($params['id'] ?? 0);
+        $data = $this->revisionData($id);
+        $candidate = $data['candidate'];
+        $warnings = $data['contrast_warnings'];
+        $acknowledged = $request->str('contrast_ack') === '1'
+            && hash_equals((string) $data['contrast_review'], $request->str('contrast_review'));
+        if ($warnings !== [] && !$acknowledged) {
+            return $this->view('admin/branding_revision', array_replace($data, [
+                'errors' => ['contrast_ack' => 'Review the contrast warnings and acknowledge them before restoring.'],
+            ]), 422);
+        }
+        $settings = $this->container->get(SettingRepository::class);
+        $baseRevision = self::postedRevision($request, 'base_revision') ?? 0;
+        $overwrite = self::postedRevision($request, 'overwrite_revision');
+        try {
+            $commit = $this->revisions()->commit($admin, 'restore', function () use ($settings, $candidate, $warnings, $admin): void {
+                BrandingDocument::write($settings, $candidate);
+                if ($warnings !== []) {
+                    $this->audit($admin->id(), 'contrast_override', [
+                        'color_primary' => (string) $candidate['brand_color_primary'],
+                        'color_accent' => (string) $candidate['brand_color_accent'],
+                        'theme_preset' => (string) $candidate['brand_theme_preset'],
+                        'warnings' => $warnings,
+                    ]);
+                }
+                $this->bustBrandCache($settings);
+            }, $baseRevision, $overwrite, $id, function (int $revision, array $changed) use ($admin, $id, $data): void {
+                $this->audit($admin->id(), 'restore', [
+                    'revision' => $revision,
+                    'restored_from' => $id,
+                    'changed_keys' => $changed,
+                    'missing_assets' => $data['missing'],
+                ]);
+            });
+        } catch (BrandingConflictException $conflict) {
+            // The comparison is rebuilt against the newer live branding, with a
+            // fresh base revision: reviewing it again is the confirmation.
+            return $this->view('admin/branding_revision', array_replace($this->revisionData($id), [
+                'conflict' => $this->conflictSummary($conflict),
+            ]), 409);
+        }
+        return $this->redirectWithFlash('/admin/branding', $commit['changed'] === []
+            ? 'Revision ' . $id . ' already matches the published branding; nothing changed.'
+            : 'Restored revision ' . $id . ' as revision ' . $commit['revision'] . '. The configuration it replaced remains in branding history.');
+    }
+
+    /** @return array<string,mixed> */
+    private function revisionData(int $id): array
+    {
+        $repository = $this->container->get(BrandingRevisionRepository::class);
+        $revision = $repository->find($id);
+        $restorable = $this->revisions()->restorable($id);
+        if ($revision === null || $restorable === null) {
+            throw new NotFoundException();
+        }
+        $candidate = $restorable['document'];
+        $published = $this->revisions()->published();
+        $review = $this->contrastReview(
+            (string) $candidate['brand_color_primary'],
+            (string) $candidate['brand_color_accent'],
+            (string) $candidate['brand_theme_preset'],
+        );
+        return [
+            'revision' => $revision,
+            'candidate' => $candidate,
+            'published' => $published,
+            'differences' => BrandingDocument::changedKeys($published, $candidate),
+            'missing' => $restorable['missing'],
+            'current_revision' => $this->revisions()->currentRevision(),
+            'contrast_warnings' => $review['warnings'],
+            'contrast_review' => $review['hash'],
+            'conflict' => null,
+            'errors' => [],
+        ];
+    }
+
+    /**
+     * Contrast review of a candidate against the globally active theme, never
+     * an admin's private package preview: publishing changes public branding.
+     * The hash binds an acknowledgement to the exact candidate and resolved
+     * palette, so a changed candidate or intervening package activation needs
+     * another review. It is a review identity, not an authorization token.
+     *
+     * @return array{warnings:list<string>,hash:string}
+     */
+    private function contrastReview(string $primary, string $accent, string $preset): array
+    {
+        $preset = in_array($preset, ['classic', 'retro'], true) ? $preset : 'classic';
+        $palettes = BrandPalette::presets($this->packageTokens());
+        $warnings = BrandPalette::warnings($palettes[$preset], $primary, $accent);
+        return ['warnings' => $warnings, 'hash' => hash('sha256', json_encode([
+            strtolower($primary), strtolower($accent), $preset, $palettes[$preset], $warnings,
+        ], JSON_THROW_ON_ERROR))];
+    }
+
+    /** @return array{current:int,newer:list<array{id:int,when:string,actor:string,action:string,changed:list<string>}>} */
+    private function conflictSummary(BrandingConflictException $conflict): array
+    {
+        $newer = [];
+        foreach ($conflict->newer as $revision) {
+            // A baseline only records what the first change replaced; it is not
+            // a change anyone published.
+            if ((string) $revision['action'] === 'baseline') {
+                continue;
+            }
+            $newer[] = [
+                'id' => (int) $revision['id'],
+                'when' => (string) $revision['created_at'],
+                'actor' => (string) ($revision['actor_username'] ?? ''),
+                'action' => (string) $revision['action'],
+                'changed' => array_values(array_map(
+                    static fn (string $key): string => BrandingDocument::LABELS[$key] ?? $key,
+                    $revision['changed_keys'],
+                )),
+            ];
+        }
+        return ['current' => $conflict->currentRevision, 'newer' => $newer];
+    }
+
+    private function revisions(): BrandingRevisionService
+    {
+        return $this->container->get(BrandingRevisionService::class);
+    }
+
+    private function defaultName(): string
+    {
+        return (string) $this->config()->get('app.name', 'RetroBoards');
+    }
+
+    /** A posted revision number, or null when absent or malformed. */
+    private static function postedRevision(Request $request, string $field): ?int
+    {
+        $value = $request->post($field);
+        return is_string($value) && preg_match('/^(0|[1-9][0-9]{0,18})$/D', $value) === 1 ? (int) $value : null;
     }
 
     /** @param array<string,mixed> $overrides */
@@ -337,6 +561,11 @@ final class BrandingController extends Controller
             'custom_css_ack' => false,
             'brand_preview_palettes' => BrandPalette::presets($packageTokens),
             'brand_package_active' => $packageTokens !== null,
+            // Versioning (ADR 0054): the revision this form was opened at, the
+            // recovery groups, and any stale-editor conflict to explain.
+            'base_revision' => $this->revisions()->currentRevision(),
+            'reset_groups' => BrandingDocument::RESET_GROUPS,
+            'conflict' => null,
             'contrast_warnings' => [],
             'contrast_ack' => false,
             'contrast_review' => '',
