@@ -706,6 +706,31 @@ final class App
             $features = [];
         }
 
+        // A private whole-site preview of a branding draft (ADR 0054): only for
+        // the administrator who owns the draft, only in a session that asked for
+        // it, and only while the draft exists. Pages rendered for a signed-in
+        // member are already `private, no-store`, so no shared cache sees it.
+        $brandingDraftPreview = false;
+        try {
+            $viewer = $session->user();
+            if ($session->get('branding_draft_preview') === '1') {
+                $draft = $viewer !== null && $viewer->isAdmin() && !empty($features['branding'])
+                    ? $container->get(\App\Repository\BrandingDraftRepository::class)->find($viewer->id())
+                    : null;
+                if ($draft === null) {
+                    $session->forget('branding_draft_preview');
+                } else {
+                    $document = \App\Support\BrandingDocument::normalize($draft['document'], $appName);
+                    $siteSettings = array_replace($siteSettings, $document);
+                    $siteSettings['brand_version'] = 'draft-' . substr(hash('sha256', $draft['updated_at'] . json_encode($document)), 0, 16);
+                    $siteName = (string) $document['site_name'];
+                    $brandingDraftPreview = true;
+                }
+            }
+        } catch (Throwable) {
+            $brandingDraftPreview = false;
+        }
+
         $nav = [];
         $inboxUnreadCount = 0;
         $unreadCounts = [];
@@ -989,6 +1014,7 @@ final class App
             'composing' => $composing,
             'member_surfaces' => $memberSurfaces,
             'branding' => $branding,
+            'branding_draft_preview' => $brandingDraftPreview,
             'package_theme' => $packageTheme,
             'asset_version' => $this->assets()->version(),
             'asset_urls' => $this->assets()->urls(),
@@ -1297,6 +1323,7 @@ final class App
         // Versioned branding (ADR 0054): every published branding change and
         // its restorable revision commit through one service.
         $c->bind(\App\Repository\BrandingRevisionRepository::class, fn (Container $c) => new \App\Repository\BrandingRevisionRepository($c->get(Database::class)));
+        $c->bind(\App\Repository\BrandingDraftRepository::class, fn (Container $c) => new \App\Repository\BrandingDraftRepository($c->get(Database::class)));
         $c->bind(\App\Service\BrandingRevisionService::class, fn (Container $c) => new \App\Service\BrandingRevisionService(
             $c->get(Database::class),
             $c->get(SettingRepository::class),
@@ -2565,6 +2592,9 @@ final class App
         $r->get('/admin/branding', [BrandingController::class, 'form']);
         $r->post('/admin/branding', [BrandingController::class, 'update']);
         $r->post('/admin/branding/reset/{group}', [BrandingController::class, 'resetGroup']);
+        $r->post('/admin/branding/preview', [BrandingController::class, 'preview']);
+        $r->get('/admin/branding/preview/sign-in', [BrandingController::class, 'previewSignIn']);
+        $r->post('/admin/branding/draft/discard', [BrandingController::class, 'discardDraft']);
         $r->get('/admin/branding/history', [BrandingController::class, 'history']);
         $r->get('/admin/branding/history/{id}', [BrandingController::class, 'revision']);
         $r->post('/admin/branding/history/{id}/restore', [BrandingController::class, 'restore']);

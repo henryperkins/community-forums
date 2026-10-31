@@ -10,6 +10,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\AttachmentRepository;
+use App\Repository\BrandingDraftRepository;
 use App\Repository\BrandingRevisionRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
@@ -48,7 +49,10 @@ final class BrandingController extends Controller
     public function css(Request $request): Response
     {
         $previewRequest = $request->query('preview') === '1';
-        $cacheControl = $previewRequest ? 'private, no-store' : 'public, max-age=300';
+        // A draft variant is private whoever asks: only its previewing owner
+        // gets the draft, everyone else the published palette, never cached.
+        $draftRequest = $request->query('draft') === '1';
+        $cacheControl = $previewRequest || $draftRequest ? 'private, no-store' : 'public, max-age=300';
         // When branding is disabled the UI falls back to the built-in chrome, so
         // emit an empty rule set rather than the stored brand colours.
         $flags = $this->container->get(FeatureFlags::class);
@@ -62,10 +66,10 @@ final class BrandingController extends Controller
                 'Cache-Control' => $cacheControl,
             ]);
         }
-        $settings = $this->container->get(SettingRepository::class);
-        $primary = $settings->getString('brand_color_primary', '');
-        $accent = $settings->getString('brand_color_accent', '');
-        $preset = $settings->getString('brand_theme_preset', 'classic');
+        $document = ($draftRequest ? $this->previewedDraft() : null) ?? $this->revisions()->published();
+        $primary = (string) $document['brand_color_primary'];
+        $accent = (string) $document['brand_color_accent'];
+        $preset = (string) $document['brand_theme_preset'];
 
         $packageTokens = $this->packageTokens($previewRequest);
         $presets = BrandPalette::presets($packageTokens);
@@ -88,10 +92,10 @@ final class BrandingController extends Controller
         $css .= BrandPalette::thumbnailCss($serving);
 
         if (!$sampleOnly && $flags->enabled('custom_css')
-            && $settings->get('brand_custom_css_enabled', false) === true
-            && $settings->getString('brand_custom_css', '') !== ''
+            && $document['brand_custom_css_enabled'] === true
+            && (string) $document['brand_custom_css'] !== ''
         ) {
-            $css .= "\n" . $settings->getString('brand_custom_css', '');
+            $css .= "\n" . (string) $document['brand_custom_css'];
         }
 
         return (new Response($css, 200, [
@@ -104,10 +108,7 @@ final class BrandingController extends Controller
     {
         $this->requireAdmin();
         $this->requireBrandingEnabled();
-        $settings = $this->container->get(SettingRepository::class);
-        return $this->view('admin/branding', $this->formData($settings, [
-            'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
-        ]));
+        return $this->view('admin/branding', $this->formData($this->container->get(SettingRepository::class)));
     }
 
     public function update(Request $request): Response
@@ -116,6 +117,10 @@ final class BrandingController extends Controller
         $this->container->get(WriteGate::class)->assertCanWrite($admin);
         $this->requireBrandingEnabled();
         $settings = $this->container->get(SettingRepository::class);
+        // What this form edits: the administrator's private draft when there
+        // is one, else the live branding (ADR 0054).
+        $existingDraft = $this->drafts()->find($admin->id());
+        $basis = $this->basisDocument($existingDraft);
 
         if ($request->str('reset') === '1') {
             // Destructive posture parity with structure deletes: reset clears
@@ -178,7 +183,7 @@ final class BrandingController extends Controller
         if ($name === '' || mb_strlen($name) > 80) {
             $errors['site_name'] = 'Site name must be 1–80 characters.';
         }
-        [$identity, $identityErrors] = $this->submittedIdentity($request, $settings);
+        [$identity, $identityErrors] = $this->submittedIdentity($request, $basis);
         $errors += $identityErrors;
         $primary = trim($request->str('color_primary'));
         $accent = trim($request->str('color_accent'));
@@ -212,7 +217,7 @@ final class BrandingController extends Controller
         // checkbox is off, ignore that posted value and preserve the saved CSS.
         $customCss = $customCssEnabled
             ? trim((string) $request->post('custom_css', ''))
-            : $settings->getString('brand_custom_css', '');
+            : (string) $basis['brand_custom_css'];
         if ($customCssEnabled) {
             if (!$customCssAck) {
                 $errors['custom_css'] = 'Acknowledge that custom CSS applies site-wide before saving it.';
@@ -225,7 +230,13 @@ final class BrandingController extends Controller
         // before versioning, which can only be as old as revision 0.
         $baseRevision = self::postedRevision($request, 'base_revision') ?? 0;
         $overwrite = self::postedRevision($request, 'overwrite_revision');
-        $draft = $this->identityFormValues($identity) + [
+        $intent = $request->str('intent') === 'draft' ? 'draft' : 'publish';
+        if ($intent === 'draft') {
+            // A private draft is never refused for contrast: the review and its
+            // audited acknowledgement belong to publishing it.
+            unset($errors['contrast_ack']);
+        }
+        $view = $this->identityFormValues($identity) + [
             'site_name' => $name,
             'color_primary' => $primary,
             'color_accent' => $accent,
@@ -241,36 +252,52 @@ final class BrandingController extends Controller
             'base_revision' => $baseRevision,
         ] + $removals;
         if ($errors !== []) {
-            return $this->view('admin/branding', $this->formData($settings, $draft + ['errors' => $errors]), 422);
+            return $this->view('admin/branding', $this->formData($settings, $view + ['errors' => $errors]), 422);
+        }
+
+        // The candidate document: the basis with this submission's edits.
+        // Publishing writes all of it, so a draft publishes exactly as it was
+        // previewed, images included.
+        $candidate = $basis;
+        foreach ($identity as $key => $value) {
+            $candidate[$key] = $value;
+        }
+        $candidate['site_name'] = $name;
+        $candidate['brand_color_primary'] = self::isHex($primary) ? strtolower($primary) : '';
+        $candidate['brand_color_accent'] = self::isHex($accent) ? strtolower($accent) : '';
+        $candidate['brand_theme_default'] = $themeDefault;
+        $candidate['brand_theme_preset'] = $themePreset;
+        if ($customCssAvailable) {
+            $candidate['brand_custom_css_enabled'] = $customCssEnabled;
+            $candidate['brand_custom_css'] = $customCss;
+        }
+        $removedAssets = [];
+        foreach (self::ASSETS as $field => $asset) {
+            if ($removals['remove_' . $field] && $candidate[$asset['setting']] !== '') {
+                // Disconnect the mark but retain its stored media for history.
+                $candidate[$asset['setting']] = '';
+                $removedAssets[] = $field;
+            }
+        }
+
+        if ($intent === 'draft') {
+            return $this->saveDraft($admin, $request, $candidate, $existingDraft, $baseRevision, $removals);
         }
 
         $audit = [];
         try {
             $commit = $this->revisions()->commit($admin, 'publish', function () use (
-                $settings, $name, $primary, $accent, $themeDefault, $themePreset, $identity,
-                $customCssAvailable, $customCssEnabled, $customCss, $contrastWarnings, $admin, $request, $removals, &$audit,
+                $settings, $candidate, $contrastWarnings, $primary, $accent, $themePreset,
+                $admin, $request, $removals, $removedAssets, $existingDraft, &$audit,
             ): array {
-                $changedText = [];
-                foreach ($identity as $key => $value) {
-                    if ($settings->getString($key, '') !== $value) {
-                        $changedText[] = $key;
-                    }
-                    // '' is stored rather than deleting the row: it means "use the
-                    // built-in default", exactly like a cleared colour.
-                    $settings->set($key, $value);
-                }
-                $settings->set('site_name', $name);
-                $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
-                $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
-                $settings->set('brand_theme_default', $themeDefault);
-                $settings->set('brand_theme_preset', $themePreset);
-
-                if ($customCssAvailable) {
-                    $settings->set('brand_custom_css_enabled', $customCssEnabled);
-                    if ($customCssEnabled) {
-                        $settings->set('brand_custom_css', $customCss);
-                    }
-                }
+                $live = $this->revisions()->published();
+                $changedText = array_values(array_filter(
+                    array_keys(BrandIdentity::FIELDS),
+                    static fn (string $key): bool => ($live[$key] ?? '') !== $candidate[$key],
+                ));
+                // '' is stored rather than deleting a row: it means "use the
+                // built-in default", exactly like a cleared colour.
+                BrandingDocument::write($settings, $candidate);
                 // An override and its audit record commit together. Recalculate the
                 // warnings for the posted colours rather than trusting a client list.
                 if ($contrastWarnings !== []) {
@@ -281,24 +308,24 @@ final class BrandingController extends Controller
                         'warnings' => $contrastWarnings,
                     ]);
                 }
-                // Rejected uploads retain the old asset and produce a visible
+                // Rejected uploads retain the previous asset and produce a visible
                 // partial-success notice rather than hiding behind a success flash.
                 $assetErrors = [];
-                $removedAssets = [];
                 foreach (self::ASSETS as $field => $asset) {
-                    if ($removals['remove_' . $field]) {
-                        if ($settings->getString($asset['setting'], '') !== '') {
-                            // Match Reset semantics: disconnect the saved mark but
-                            // retain its stored media; unrelated branding stays intact.
-                            $settings->set($asset['setting'], '');
-                            $removedAssets[] = $field;
-                        }
-                    } else {
+                    if (!$removals['remove_' . $field]) {
                         $this->storeAsset($admin->id(), $request->file($field), $asset['purpose'], $asset['setting'], ucfirst($asset['label']), $assetErrors);
                     }
                 }
+                // A draft's private images become public with its publication,
+                // and the published draft is gone.
+                foreach (BrandingDocument::mediaIds($this->revisions()->published()) as $id) {
+                    $this->container->get(AttachmentRepository::class)->publishBrandAsset($id, $admin->id());
+                }
+                if ($existingDraft !== null) {
+                    $this->drafts()->delete($admin->id());
+                }
                 $this->bustBrandCache($settings);
-                $audit = ['removed_assets' => $removedAssets, 'changed_text' => $changedText];
+                $audit = ['removed_assets' => $removedAssets, 'changed_text' => $changedText, 'from_draft' => $existingDraft !== null];
                 return $assetErrors;
             }, $baseRevision, $overwrite, recorded: function (int $revision, array $changed) use ($admin, &$audit): void {
                 $this->audit($admin->id(), 'update', $audit + ['revision' => $revision, 'changed_keys' => $changed]);
@@ -306,11 +333,13 @@ final class BrandingController extends Controller
         } catch (BrandingConflictException $conflict) {
             // Nothing was written. Return the whole draft and name the newer
             // changes; publishing over them takes an explicit confirmation.
-            return $this->view('admin/branding', $this->formData($settings, $draft + [
-                'uploads_need_reselect' => $this->hasSubmittedAssets($request),
+            return $this->view('admin/branding', $this->formData($settings, $view + [
                 'conflict' => $this->conflictSummary($conflict),
                 'errors' => ['overwrite_revision' => 'Branding changed after you opened this page. Review the newer changes, then confirm replacing them to publish your version.'],
             ]), 409);
+        }
+        if ($existingDraft !== null) {
+            $this->session()->forget('branding_draft_preview');
         }
         $assetErrors = (array) $commit['result'];
         if ($commit['changed'] === []) {
@@ -323,7 +352,152 @@ final class BrandingController extends Controller
                 'Branding updated, but ' . implode(' ', $assetErrors) . ' The previous asset was kept.',
             );
         }
-        return $this->redirectWithFlash('/admin/branding', 'Saved. Branding appears on the next page load.');
+        return $this->redirectWithFlash('/admin/branding', 'Published. Branding appears on the next page load.');
+    }
+
+    /** Start or stop this administrator's private whole-site preview of their draft. */
+    public function preview(Request $request): Response
+    {
+        $admin = $this->requireAdmin();
+        $this->requireBrandingEnabled();
+        if ($request->str('preview') !== '1') {
+            $this->session()->forget('branding_draft_preview');
+            return $this->redirectWithFlash(
+                Controller::localPath($request->str('return'), '/admin/branding'),
+                'Draft preview ended. You are seeing the published branding.',
+            );
+        }
+        if ($this->drafts()->find($admin->id()) === null) {
+            return $this->redirectWithFlash('/admin/branding', 'Save a draft before previewing it.');
+        }
+        $this->session()->set('branding_draft_preview', '1');
+        return $this->redirectWithFlash(
+            Controller::localPath($request->str('return'), '/'),
+            'Draft preview started.',
+        );
+    }
+
+    /** The sign-in screen as visitors would see it, for previewing a draft while signed in. */
+    public function previewSignIn(Request $request): Response
+    {
+        $this->requireAdmin();
+        $this->requireBrandingEnabled();
+        $response = $this->view('auth/login', ['errors' => [], 'old' => [], 'next' => '/']);
+        $response->header('X-Robots-Tag', 'noindex, nofollow');
+        return $response;
+    }
+
+    /** Throw away this administrator's draft and the private images only it used. */
+    public function discardDraft(Request $request): Response
+    {
+        $admin = $this->requireAdmin();
+        $this->container->get(WriteGate::class)->assertCanWrite($admin);
+        $this->requireBrandingEnabled();
+        $draft = $this->drafts()->find($admin->id());
+        if ($draft !== null) {
+            $this->container->get(Database::class)->transaction(function () use ($admin, $draft): void {
+                $this->drafts()->delete($admin->id());
+                $this->releaseDraftAssets($admin->id(), $draft['document'], []);
+            });
+        }
+        $this->session()->forget('branding_draft_preview');
+        return $this->redirectWithFlash('/admin/branding', $draft === null
+            ? 'There was no draft to discard.'
+            : 'Draft discarded. The published branding is unchanged.');
+    }
+
+    /**
+     * Store a private draft (ADR 0054): new uploads become private brand media
+     * only this administrator can load, and the draft keeps the revision its
+     * form started from, so publishing it later is checked against newer work.
+     *
+     * @param array<string,mixed> $candidate
+     * @param array<string,mixed>|null $existing
+     * @param array<string,bool> $removals
+     */
+    private function saveDraft(\App\Domain\User $admin, Request $request, array $candidate, ?array $existing, int $baseRevision, array $removals): Response
+    {
+        $assetErrors = [];
+        $this->container->get(Database::class)->transaction(function () use ($admin, $request, &$candidate, $existing, $baseRevision, $removals, &$assetErrors): void {
+            foreach (self::ASSETS as $field => $asset) {
+                if ($removals['remove_' . $field]) {
+                    continue;
+                }
+                $path = $this->storePrivateAsset($admin->id(), $request->file($field), $asset['purpose'], ucfirst($asset['label']), $assetErrors);
+                if ($path !== null) {
+                    $candidate[$asset['setting']] = $path;
+                }
+            }
+            $this->drafts()->save($admin->id(), $candidate, $baseRevision);
+            if ($existing !== null) {
+                $this->releaseDraftAssets($admin->id(), $existing['document'], $candidate);
+            }
+        });
+        return $this->redirectWithFlash('/admin/branding', $assetErrors === []
+            ? 'Draft saved. Only you can see it; the published branding is unchanged.'
+            : 'Draft saved, but ' . implode(' ', $assetErrors) . ' The draft kept its previous image.');
+    }
+
+    /**
+     * Purge private draft images a draft no longer uses. Published images are
+     * public and always retained for history, so they are never touched.
+     *
+     * @param array<string,mixed> $old
+     * @param array<string,mixed> $new
+     */
+    private function releaseDraftAssets(int $adminId, array $old, array $new): void
+    {
+        $kept = array_values(BrandingDocument::mediaIds($new));
+        $attachments = $this->container->get(AttachmentRepository::class);
+        foreach (BrandingDocument::mediaIds($old) as $id) {
+            if (in_array($id, $kept, true)) {
+                continue;
+            }
+            $asset = $attachments->find($id);
+            if ($asset !== null && (string) $asset['visibility'] === 'private' && (int) $asset['user_id'] === $adminId
+                && in_array((string) $asset['purpose'], ['brand_logo', 'brand_favicon'], true)
+                && $asset['post_id'] === null && $asset['dm_message_id'] === null) {
+                $this->container->get(AttachmentService::class)->purge($asset);
+            }
+        }
+    }
+
+    /**
+     * @param array{name:string,type:string,tmp_name:string,error:int,size:int}|null $file
+     * @param array<int,string> $assetErrors
+     */
+    private function storePrivateAsset(int $adminId, ?array $file, string $purpose, string $label, array &$assetErrors): ?string
+    {
+        if ($file === null) {
+            return null;
+        }
+        try {
+            $row = $this->container->get(AttachmentService::class)->storeUpload($adminId, $file, $purpose);
+        } catch (\App\Core\ValidationException $e) {
+            $assetErrors[] = $label . ' upload was rejected: ' . $e->first();
+            return null;
+        }
+        $this->container->get(AttachmentRepository::class)->finalizeDraftBrandAsset((int) $row['id'], $adminId);
+        return '/media/' . (int) $row['id'];
+    }
+
+    /**
+     * The document a form edits: this administrator's draft, else the live
+     * branding.
+     *
+     * @param array<string,mixed>|null $draft
+     * @return array<string,mixed>
+     */
+    private function basisDocument(?array $draft): array
+    {
+        return $draft !== null
+            ? BrandingDocument::normalize($draft['document'], $this->defaultName())
+            : $this->revisions()->published();
+    }
+
+    private function drafts(): BrandingDraftRepository
+    {
+        return $this->container->get(BrandingDraftRepository::class);
     }
 
     /** Recovery (ADR 0054): return one group to its defaults as a recorded, restorable revision. */
@@ -509,6 +683,21 @@ final class BrandingController extends Controller
         return ['current' => $conflict->currentRevision, 'newer' => $newer];
     }
 
+    /**
+     * The draft this session is previewing, only for its owner.
+     *
+     * @return array<string,mixed>|null
+     */
+    private function previewedDraft(): ?array
+    {
+        $viewer = $this->currentUser();
+        if ($viewer === null || !$viewer->isAdmin() || $this->session()->get('branding_draft_preview') !== '1') {
+            return null;
+        }
+        $draft = $this->drafts()->find($viewer->id());
+        return $draft !== null ? BrandingDocument::normalize($draft['document'], $this->defaultName()) : null;
+    }
+
     private function revisions(): BrandingRevisionService
     {
         return $this->container->get(BrandingRevisionService::class);
@@ -537,33 +726,44 @@ final class BrandingController extends Controller
         $mimeNames = array_intersect_key([
             'image/jpeg' => 'JPEG', 'image/png' => 'PNG', 'image/gif' => 'GIF', 'image/webp' => 'WebP',
         ], array_flip((array) $this->config()->get('uploads.allowed_mime', [])));
+        // The form edits this administrator's private draft when there is one
+        // (ADR 0054), else the live branding; a draft keeps the revision it was
+        // started from, so publishing it is checked against newer work.
+        $admin = $this->currentUser();
+        $draft = $admin !== null ? $this->drafts()->find($admin->id()) : null;
+        $document = $this->basisDocument($draft);
+        $currentRevision = $this->revisions()->currentRevision();
         $data = [
-            'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
-        ] + $this->identityFormValues(BrandIdentity::storedValues(
-            $settings->getMany(array_fill_keys(array_keys(BrandIdentity::FIELDS), '')),
-        )) + [
+            'site_name' => (string) $document['site_name'],
+        ] + $this->identityFormValues(BrandIdentity::storedValues($document)) + [
             'identity_limits' => array_column(BrandIdentity::FIELDS, 'max', 'field'),
-            'color_primary' => $settings->getString('brand_color_primary', ''),
-            'color_accent' => $settings->getString('brand_color_accent', ''),
-            'logo_path' => $settings->getString('brand_logo_path', ''),
-            'logo_light_path' => $settings->getString('brand_logo_light_path', ''),
-            'logo_dark_path' => $settings->getString('brand_logo_dark_path', ''),
-            'favicon_path' => $settings->getString('brand_favicon_path', ''),
+            'color_primary' => (string) $document['brand_color_primary'],
+            'color_accent' => (string) $document['brand_color_accent'],
+            'logo_path' => (string) $document['brand_logo_path'],
+            'logo_light_path' => (string) $document['brand_logo_light_path'],
+            'logo_dark_path' => (string) $document['brand_logo_dark_path'],
+            'favicon_path' => (string) $document['brand_favicon_path'],
             'remove_logo' => false,
             'remove_logo_light' => false,
             'remove_logo_dark' => false,
             'remove_favicon' => false,
-            'theme_default' => $settings->getString('brand_theme_default', 'system'),
-            'theme_preset' => $settings->getString('brand_theme_preset', 'classic'),
+            'theme_default' => (string) $document['brand_theme_default'],
+            'theme_preset' => (string) $document['brand_theme_preset'],
             'custom_css_available' => $this->container->get(FeatureFlags::class)->enabled('custom_css'),
-            'custom_css_enabled' => $settings->get('brand_custom_css_enabled', false) === true,
-            'custom_css' => $settings->getString('brand_custom_css', ''),
+            'custom_css_enabled' => $document['brand_custom_css_enabled'] === true,
+            'custom_css' => (string) $document['brand_custom_css'],
             'custom_css_ack' => false,
             'brand_preview_palettes' => BrandPalette::presets($packageTokens),
             'brand_package_active' => $packageTokens !== null,
+            'branding_draft' => $draft === null ? null : [
+                'updated_at' => $draft['updated_at'],
+                'base_revision' => $draft['base_revision_id'],
+                'stale' => $draft['base_revision_id'] !== $currentRevision,
+                'previewing' => $this->session()->get('branding_draft_preview') === '1',
+            ],
             // Versioning (ADR 0054): the revision this form was opened at, the
             // recovery groups, and any stale-editor conflict to explain.
-            'base_revision' => $this->revisions()->currentRevision(),
+            'base_revision' => $draft !== null ? $draft['base_revision_id'] : $currentRevision,
             'reset_groups' => BrandingDocument::RESET_GROUPS,
             'conflict' => null,
             'contrast_warnings' => [],
@@ -598,19 +798,18 @@ final class BrandingController extends Controller
         $customCssAvailable = $this->container->get(FeatureFlags::class)->enabled('custom_css');
         $customCssEnabled = $customCssAvailable && $request->str('custom_css_enabled') === '1';
 
-        return $this->identityFormValues($this->submittedIdentity($request, $settings)[0]) + [
-            'site_name' => $request->str(
-                'site_name',
-                $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
-            ),
-            'color_primary' => $request->str('color_primary', $settings->getString('brand_color_primary', '')),
-            'color_accent' => $request->str('color_accent', $settings->getString('brand_color_accent', '')),
-            'theme_default' => $request->str('theme_default', $settings->getString('brand_theme_default', 'system')),
-            'theme_preset' => $request->str('theme_preset', $settings->getString('brand_theme_preset', 'classic')),
+        $admin = $this->currentUser();
+        $basis = $this->basisDocument($admin !== null ? $this->drafts()->find($admin->id()) : null);
+        return $this->identityFormValues($this->submittedIdentity($request, $basis)[0]) + [
+            'site_name' => $request->str('site_name', (string) $basis['site_name']),
+            'color_primary' => $request->str('color_primary', (string) $basis['brand_color_primary']),
+            'color_accent' => $request->str('color_accent', (string) $basis['brand_color_accent']),
+            'theme_default' => $request->str('theme_default', (string) $basis['brand_theme_default']),
+            'theme_preset' => $request->str('theme_preset', (string) $basis['brand_theme_preset']),
             'custom_css_enabled' => $customCssEnabled,
             'custom_css' => $customCssEnabled
                 ? trim((string) $request->post('custom_css', ''))
-                : $settings->getString('brand_custom_css', ''),
+                : (string) $basis['brand_custom_css'],
             'custom_css_ack' => $customCssEnabled && $request->str('custom_css_ack') === '1',
             'reset_confirm' => $request->str('reset_confirm'),
             'uploads_need_reselect' => $this->hasSubmittedAssets($request),
@@ -625,11 +824,11 @@ final class BrandingController extends Controller
      *
      * @return array{0:array<string,string>,1:array<string,string>} values by setting key, errors by form field
      */
-    private function submittedIdentity(Request $request, SettingRepository $settings): array
+    private function submittedIdentity(Request $request, array $basis): array
     {
         $values = [];
         $errors = [];
-        $saved = BrandIdentity::storedValues($settings->getMany(array_fill_keys(array_keys(BrandIdentity::FIELDS), '')));
+        $saved = BrandIdentity::storedValues($basis);
         foreach (BrandIdentity::FIELDS as $key => $field) {
             $raw = $request->post($field['field']);
             if ($raw === null) {

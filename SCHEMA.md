@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.47 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-10-31
+**Status:** v1.48 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-10-31
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -137,6 +137,7 @@ This file is hand-maintained and can lag `database/migrations/`, which is what t
 | 115 | `thread_intelligence_generations` | Knowledge / AI | 4 | ADR 0019 Thread Intelligence / migration 0077 |
 | 116 | `submission_idempotency` | Composer / submissions | 3 | PHASE_3_PLAN §8.5 / P3-03 (migration 0044; DDL in §4) |
 | 117 | `branding_revisions` | Admin / branding | — | ADR 0054 increment 2 / migration 0084 (DDL in §3) |
+| 118 | `branding_drafts` | Admin / branding | — | ADR 0054 increment 2b / migration 0085 (DDL in §3) |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7, now archived in `docs/history/`), which subdivides the PRODUCT_DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to PRODUCT_DESIGN §13.
 >
@@ -615,6 +616,20 @@ CREATE TABLE branding_revisions (
   PRIMARY KEY (id),
   KEY idx_branding_revision_actor (actor_id),
   CONSTRAINT fk_branding_revision_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Private unpublished branding drafts (ADR 0054, migration 0085): at most one per
+-- administrator, never served to anyone else. base_revision_id is the revision
+-- the draft started from, so publishing it is checked against newer work. A
+-- draft's own uploads are attachments with visibility 'private' until published.
+CREATE TABLE branding_drafts (
+  admin_id         BIGINT UNSIGNED NOT NULL,
+  document_json    MEDIUMTEXT      NOT NULL,                   -- normalized BrandingDocument
+  base_revision_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at       DATETIME        NOT NULL,
+  updated_at       DATETIME        NOT NULL,
+  PRIMARY KEY (admin_id),
+  CONSTRAINT fk_branding_draft_admin FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bans & board-bans (source of truth + history; users.status is a denormalised cache)
@@ -1346,6 +1361,7 @@ The following candidates remain unspecced/uncommitted as of 2026-09-23. A mentio
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.48 | 2026-10-31 | Added migration `0085`'s `branding_drafts` (table #118, §3): one private unpublished branding document per administrator with its base revision (ADR 0054 increment 2b). Draft uploads reuse `attachments` with `visibility = 'private'` until published; no attachment schema change. |
 | v1.47 | 2026-10-31 | Added migration `0084`'s append-only `branding_revisions` (table #117, §3) for versioned branding, history and restore (ADR 0054). The live pointer is the existing `settings.brand_revision` key; brand media stays referenced by `/media/{id}` paths and is never purged. |
 | v1.46 | 2026-10-07 | Added migration `0083`'s explicit `thread_user.snoozed_indefinitely` state for hiding until manually restored. Folded the existing `0048` deadline, note and snooze index into the table definition and removed their stale foreshadowing comment. |
 | v1.45 | 2026-09-25 | Reconciled drift against the migrations: `users.status` shows the six-state `0059` ENUM; `oauth_identities` shows `0052`'s `VARCHAR(64)` provider plus `provider_config_id`, its index and FK; `email_deliveries` shows `0061`'s `payload`, with the idempotency-key comments corrected for digest and announcement keys; `posts.deleted_at` (`0047`), `idx_posts_pending`/`idx_threads_pending` (`0045`), and `idx_users_reputation` (`0041`) are folded in. `submission_idempotency` joins the table index as #116; `plugins` (#29) is marked planned-but-never-built. `appeals` and `custom_profile_fields` are recorded as graduated default-on (2026-07-02/03), and the `submission_idempotency` context comments list `mod_warn`/`api_token_mint`. Phase-plan and status pointers now name the `docs/history/` archive. |

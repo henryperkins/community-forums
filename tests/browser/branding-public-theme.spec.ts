@@ -25,7 +25,7 @@ async function save(page: Page) {
   const submit = async () => {
     const [response] = await Promise.all([
       page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === '/admin/branding'),
-      page.getByRole('button', { name: 'Save branding', exact: true }).click(),
+      page.getByRole('button', { name: 'Publish branding', exact: true }).click(),
     ]);
     await page.waitForLoadState('networkidle');
     return response.status();

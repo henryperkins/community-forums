@@ -488,7 +488,7 @@ final class AppBrandingThemeTest extends TestCase
             'site_name' => 'Status Forum',
             'theme_default' => 'system',
         ]), '/admin/branding');
-        $this->assertSeeText($this->get('/admin/branding'), 'Saved. Branding appears on the next page load.');
+        $this->assertSeeText($this->get('/admin/branding'), 'Published. Branding appears on the next page load.');
 
         $this->assertRedirect($this->post('/admin/branding', [
             'reset' => '1',

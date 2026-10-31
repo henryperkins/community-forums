@@ -466,7 +466,14 @@ else published is refused with its draft intact and names the newer change;
 replacing it takes an explicit confirmation. Colours, logos and favicon, and
 appearance defaults each have their own reset, and the full reset is
 restorable too. The branding pages never apply the saved colours to themselves,
-so their recovery controls stay readable whatever is saved. Each saved logo variant
+so their recovery controls stay readable whatever is saved.
+**Save draft** keeps a private, per-administrator draft (images included) that
+reopens in the form; **Publish branding** is the only action that changes the
+live community. The draft's author can preview it across the whole community —
+including a sign-in preview — under a preview bar only they see; visitors stay
+on the published branding, and nothing about a draft reaches shared caches.
+Publishing a draft goes through the same contrast review, conflict check,
+revision and audit as any save; discarding it removes its private images. Each saved logo variant
 and the favicon can be removed independently when saving the form, with pending
 choices preserved on validation errors. Native file controls show selected
 filenames without JavaScript; saved thumbnails, configured upload requirements,

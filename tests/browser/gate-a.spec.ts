@@ -1050,7 +1050,7 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
   await expect(page.locator('.branding-marks input[type="file"]')).toHaveCount(4);
   await expect(page.locator('[data-brand-asset-status]')).toHaveText(['No image saved.', 'No image saved.', 'No image saved.', 'No image saved.']);
   await page.locator('[data-brand-primary]').fill('not-hex');
-  await page.getByRole('button', { name: 'Save branding' }).click();
+  await page.getByRole('button', { name: 'Publish branding' }).click();
   await expect(page.locator('.branding-save-row').getByRole('alert')).toHaveText('Primary colour must be a hex value, e.g. #2e4a3a.');
   await page.locator('[data-brand-name]').fill('Lakeside Forum');
   await page.locator('[data-brand-primary]').fill('#005fcc');
@@ -1069,12 +1069,12 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
     .analyze();
   expect(accentA11y.violations).toEqual([]);
   await expect(page.locator('input[name="reset_confirm"]')).toHaveValue('');
-  await page.getByRole('button', { name: 'Save branding' }).click();
+  await page.getByRole('button', { name: 'Publish branding' }).click();
   // Fixed operator colours must be reviewed for both member modes before save.
   await expect(page.locator('.branding-contrast-warning')).toBeVisible();
   await page.locator('[name="contrast_ack"]').check();
-  await page.getByRole('button', { name: 'Save branding' }).click();
-  await expect(page.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. Branding appears on the next page load.');
+  await page.getByRole('button', { name: 'Publish branding' }).click();
+  await expect(page.locator('.branding-save-row').getByRole('status')).toHaveText('Published. Branding appears on the next page load.');
   await shot(page, info, '18-branding-preview');
 
   await page.locator('input[name="favicon"]').setInputFiles({
@@ -1082,14 +1082,14 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
     mimeType: 'image/png',
     buffer: Buffer.from('not an image'),
   });
-  await page.getByRole('button', { name: 'Save branding' }).click();
+  await page.getByRole('button', { name: 'Publish branding' }).click();
   await expect(page.locator('.branding-contrast-warning')).toBeVisible();
   await page.locator('[name="contrast_ack"]').check();
   // Validation cannot restore a file selection; reselect it after review.
   await page.locator('input[name="favicon"]').setInputFiles({
     name: 'invalid-favicon.png', mimeType: 'image/png', buffer: Buffer.from('not an image'),
   });
-  await page.getByRole('button', { name: 'Save branding' }).click();
+  await page.getByRole('button', { name: 'Publish branding' }).click();
   const uploadRejection = page.locator('.branding-save-row .callout-review[role="status"]');
   await expect(uploadRejection).toContainText('Branding updated, but Favicon upload was rejected:');
   await expect(uploadRejection).toContainText('The previous asset was kept.');
@@ -1112,14 +1112,14 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
       mimeType: 'image/png',
       buffer: Buffer.from(PNG_1X1, 'base64'),
     });
-    await noJsPage.getByRole('button', { name: 'Save branding' }).click();
+    await noJsPage.getByRole('button', { name: 'Publish branding' }).click();
     await expect(noJsPage.locator('.branding-contrast-warning')).toBeVisible();
     await noJsPage.locator('[name="contrast_ack"]').check();
     await noJsPage.locator('input[name="logo"]').setInputFiles({
       name: 'brand-logo.png', mimeType: 'image/png', buffer: Buffer.from(PNG_1X1, 'base64'),
     });
-    await noJsPage.getByRole('button', { name: 'Save branding' }).click();
-    await expect(noJsPage.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. Branding appears on the next page load.');
+    await noJsPage.getByRole('button', { name: 'Publish branding' }).click();
+    await expect(noJsPage.locator('.branding-save-row').getByRole('status')).toHaveText('Published. Branding appears on the next page load.');
     await expect(noJsPage.locator('.branding-marks input[type="file"]')).toHaveCount(4);
     await expect(noJsPage.locator('[data-brand-asset-status]')).toHaveText(['Saved image', 'No image saved.', 'No image saved.', 'No image saved.']);
     await expect(noJsPage.locator('input[name="logo"]')).toHaveAccessibleName('Logo');

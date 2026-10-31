@@ -110,6 +110,28 @@ theirs.
   review always uses the globally active package; a private preview does not
   become public through a branding save.
 
+## Drafts and whole-site preview
+
+**Save draft** stores the whole form as your private draft; **Publish branding**
+is the only action that changes what visitors see. Each administrator has at
+most one draft, and the branding form shows it (with an *Unpublished draft*
+panel) until it is published or discarded. Drafts survive signing out.
+
+- **Private.** Nobody else sees a draft. Images uploaded into a draft are
+  private: other people get 404 for them until the draft is published.
+- **Preview.** *Preview the community with this draft* shows the draft on every
+  page you open in this session, under a dark preview bar: the directory,
+  boards, your appearance settings and, through the bar's *Sign-in page* link,
+  the sign-in screen. *Exit preview* returns to the published branding. Your
+  own light/dark preference still applies; the draft's visitor mode only
+  affects signed-out visitors once published.
+- **Publish.** Open *Review and publish* (or the branding page) and choose
+  **Publish branding**. Contrast warnings need the usual acknowledgement. If
+  someone published after your draft was started, the page says so and
+  publishing asks you to review and confirm replacing their change.
+- **Discard.** *Discard draft…* asks for confirmation, deletes the draft and its
+  private images, and leaves the published branding and history untouched.
+
 ## History, restore and conflicts
 
 Every published change to the branding document is a revision under

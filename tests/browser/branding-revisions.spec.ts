@@ -57,7 +57,7 @@ async function submit(page: Page, button: Locator, pathname: string) {
   await page.waitForLoadState('load');
   return response.status();
 }
-const saveBranding = (page: Page) => submit(page, page.getByRole('button', { name: 'Save branding', exact: true }), '/admin/branding');
+const saveBranding = (page: Page) => submit(page, page.getByRole('button', { name: 'Publish branding', exact: true }), '/admin/branding');
 async function contrastOf(locator: Locator) {
   return locator.evaluate(element => {
     // Normalize any computed colour form (rgb(), color(srgb …), …) to bytes.
@@ -219,7 +219,7 @@ test('recovery controls stay readable when the saved palette is not', async ({ p
     page.getByRole('link', { name: 'branding history' }),
     page.locator('.branding-reset-groups summary').first(),
     page.getByRole('button', { name: 'Reset branding', exact: true }),
-    page.getByRole('button', { name: 'Save branding', exact: true }),
+    page.getByRole('button', { name: 'Publish branding', exact: true }),
   ]) {
     expect(await contrastOf(locator)).toBeGreaterThanOrEqual(4.5);
   }

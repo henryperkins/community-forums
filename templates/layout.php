@@ -14,8 +14,11 @@ $brandStylesVersion = \App\Support\BrandPalette::CSS_VERSION . '-' . ($brand['ve
 // branding overrides: whatever colours are saved, their controls stay in the
 // built-in palette (ADR 0054). They still load the scoped sample/thumbnail rules.
 $recoverySurface = $this->block('recovery_surface', '') === '1';
+// An admin previewing their branding draft gets the private draft variant.
+$draftPreview = !empty($branding_draft_preview);
 $brandStylesUrl = '/brand.css?v=' . rawurlencode($brandStylesVersion)
     . (!empty($themePackage['preview_css_digest']) ? '&preview=1' : '')
+    . ($draftPreview ? '&draft=1' : '')
     . ($recoverySurface ? '&scope=sample' : '');
 $linkBrandStyles = $recoverySurface
     ? $this->block('branding_preview', '') === '1'
@@ -78,6 +81,9 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
 </head>
 <body<?= $this->block('account_settings', '') === '1' ? ' data-account-settings="1"' : '' ?> class="variant-<?= $e($variant) ?> <?= !empty($memberSurfaces['rail_open']) ? 'is-rail-open' : 'is-rail-closed' ?> <?= !empty($memberSurfaces['inbox_reading_open']) ? 'is-reading-open' : 'is-reading-closed' ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>" data-rail-open="<?= !empty($memberSurfaces['rail_open']) ? '1' : '0' ?>" data-inbox-reading-open="<?= !empty($memberSurfaces['inbox_reading_open']) ? '1' : '0' ?>"<?php if ($wysiwygComposerOn): ?> data-wysiwyg-composer="1" data-wysiwyg-src="<?= $e($assetUrl('wysiwyg-composer.js')) ?>"<?php endif; ?><?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>
+<?php if ($draftPreview): ?>
+<?= $this->partial('partials/branding_draft_bar') ?>
+<?php endif; ?>
 <?php if (!empty($composer_completion)): ?><span hidden data-composer-completion="<?= $e(json_encode($composer_completion, JSON_THROW_ON_ERROR)) ?>"></span><?php endif; ?>
 <?php if ($showChrome): ?>
 <?php

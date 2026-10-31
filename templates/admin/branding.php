@@ -16,7 +16,8 @@ $previewLogoPlan = \App\Support\BrandLogo::plan($logo_path, $logo_light_path, $l
 $identityLimit = static fn (string $field): int => (int) ($identity_limits[$field] ?? 0);
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';
 $flashMessage = trim((string) ($flash ?? ''));
-$saveStatus = $flashMessage === 'Saved. Branding appears on the next page load.'
+$saveStatus = $flashMessage === 'Published. Branding appears on the next page load.'
+    || str_starts_with($flashMessage, 'Draft saved')
     || str_starts_with($flashMessage, 'Branding updated, but ')
     ? $flashMessage
     : '';
@@ -50,10 +51,47 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
             <?= $this->partial('partials/flash', ['flash' => $unplacedFlash]) ?>
         <?php endif; ?>
 
-        <p class="pane-intro">Set the community name, colours and appearance. Saved branding appears across the community on the next page load. The preview shows the visitor theme you select; signed-in members keep their own light/dark preference. These branding pages always use the built-in colours, so their controls stay readable whatever is saved.</p>
+        <p class="pane-intro">Set the community name, colours and appearance. Published branding appears across the community on the next page load; a saved draft stays private until you publish it, and you can preview it across the community first. The preview shows the visitor theme you select; signed-in members keep their own light/dark preference. These branding pages always use the built-in colours, so their controls stay readable whatever is saved.</p>
 
         <div class="brand-cols">
         <div class="branding-main-column">
+        <?php if (is_array($branding_draft ?? null)): ?>
+            <?php /* The draft's own actions are separate forms, so this panel sits outside the branding form. */ ?>
+            <section class="callout branding-draft-panel" aria-labelledby="branding-draft-title">
+                <h2 class="branding-section-label" id="branding-draft-title">Unpublished draft</h2>
+                <p>The form below shows the draft you saved <?= $e(human_datetime((string) $branding_draft['updated_at'])) ?>. Only you can see it and its images; visitors still see the published branding until you publish.</p>
+                <?php if (!empty($branding_draft['stale'])): ?>
+                    <p class="branding-draft-stale">Branding was published after this draft was started. Publishing it will ask you to review those changes first.</p>
+                <?php endif; ?>
+                <?php if (!empty($branding_draft['previewing'])): ?>
+                    <p>This session shows the draft across the community. Check the <a href="/">board directory</a>, the <a href="/admin/branding/preview/sign-in">sign-in page</a> and <a href="/settings/appearance">appearance settings</a>.</p>
+                <?php endif; ?>
+                <div class="branding-draft-actions">
+                    <form method="post" action="/admin/branding/preview">
+                        <?= $this->csrfField() ?>
+                        <?php if (!empty($branding_draft['previewing'])): ?>
+                            <input type="hidden" name="preview" value="0">
+                            <input type="hidden" name="return" value="/admin/branding">
+                            <button class="btn btn-secondary btn-small" type="submit">Exit preview</button>
+                        <?php else: ?>
+                            <input type="hidden" name="preview" value="1">
+                            <input type="hidden" name="return" value="/">
+                            <button class="btn btn-secondary btn-small" type="submit">Preview the community with this draft</button>
+                        <?php endif; ?>
+                    </form>
+                    <?= $this->partial('partials/dm_confirm', [
+                        'summary_class' => 'btn btn-ghost btn-small branding-draft-discard',
+                        'label' => 'Discard draft…',
+                        'note' => 'Deletes this unpublished draft and any images only it used. The published branding and its history are unchanged.',
+                        'note_id' => 'branding-draft-discard-note',
+                        'action' => '/admin/branding/draft/discard',
+                        'fields' => [],
+                        'confirm' => 'Discard draft',
+                        'danger' => true,
+                    ]) ?>
+                </div>
+            </section>
+        <?php endif; ?>
         <form method="post" action="/admin/branding" class="branding-form-card" enctype="multipart/form-data" data-brand-form data-brand-package-active="<?= !empty($brand_package_active) ? '1' : '0' ?>" data-brand-upload-max-bytes="<?= $e($upload_max_bytes) ?>" data-brand-palettes="<?= $e(json_encode($brand_preview_palettes ?? [], JSON_THROW_ON_ERROR)) ?>">
             <?= $this->csrfField() ?>
             <?php /* The revision this form was opened at: publishing over a newer one needs explicit confirmation (ADR 0054). */ ?>
@@ -135,7 +173,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                             <span>I understand these readability risks and want to save these colours. This acknowledgement will be recorded in the audit log.</span>
                         </label>
                         <?= field_error($errors ?? [], 'contrast_ack') ?>
-                        <p data-brand-contrast-changed hidden>Colours changed. Save branding again to review the updated contrast warnings.</p>
+                        <p data-brand-contrast-changed hidden>Colours changed. Publish again to review the updated contrast warnings.</p>
                     </section>
                 <?php endif; ?>
 
@@ -224,7 +262,8 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                 <?php endif; ?>
 
                 <div class="branding-save-row">
-                    <button class="btn branding-primary-button" type="submit">Save branding</button>
+                    <button class="btn branding-primary-button" type="submit" name="intent" value="publish">Publish branding</button>
+                    <button class="btn btn-secondary branding-draft-button" type="submit" name="intent" value="draft">Save draft</button>
                     <?php if ($saveStatus !== ''): ?>
                         <?php if (str_starts_with($saveStatus, 'Branding updated, but ')): ?>
                             <p class="branding-status callout callout-review" role="status"><?= $e($saveStatus) ?></p>

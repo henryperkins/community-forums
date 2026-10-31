@@ -23,7 +23,7 @@ async function login(page: Page) {
 }
 async function save(page: Page) {
   const response = page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === '/admin/branding');
-  await page.getByRole('button', { name: 'Save branding', exact: true }).click();
+  await page.getByRole('button', { name: 'Publish branding', exact: true }).click();
   const status = (await response).status();
   await page.waitForLoadState('networkidle');
   return status;

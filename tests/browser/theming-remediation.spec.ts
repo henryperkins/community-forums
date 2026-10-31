@@ -39,7 +39,7 @@ async function post(page: Page, button: Locator, pathname: string) {
   return response.status();
 }
 async function saveBranding(page: Page) {
-  return post(page, page.getByRole('button', { name: 'Save branding', exact: true }), '/admin/branding');
+  return post(page, page.getByRole('button', { name: 'Publish branding', exact: true }), '/admin/branding');
 }
 const brandAssetFields = ['logo', 'logo_light', 'logo_dark', 'favicon'] as const;
 const brandAssetPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC', 'base64');

@@ -1,0 +1,34 @@
+{
+  "captured_at": "2026-10-31T21:02:19.923848+00:00",
+  "release_sha": "3478be72a0ae0f66286e23c12fdf3d9b8b14beda",
+  "note": "Anonymous read-only checks. The new admin routes exist and require sign-in; the recovery stylesheet scope serves only scoped rules; /healthz proves migration 0084 left the database reachable.",
+  "checks": [
+    {
+      "path": "/admin/branding/history",
+      "status": 302,
+      "location": "/login?next=%2Fadmin%2Fbranding%2Fhistory"
+    },
+    {
+      "path": "/admin/branding/history/1",
+      "status": 302,
+      "location": "/login?next=%2Fadmin%2Fbranding%2Fhistory%2F1"
+    },
+    {
+      "path": "/admin/branding/reset/colours",
+      "status": 405,
+      "location": null
+    },
+    {
+      "path": "/brand.css?v=3-release-check&scope=sample",
+      "status": 200,
+      "starts_with_empty_root": true,
+      "has_sample_rules": true,
+      "has_thumbnail_rules": true
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "app_css": "/assets/dist/app-style-CoBWrBhZ.css"
+    }
+  ]
+}

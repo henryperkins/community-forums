@@ -2,6 +2,23 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Private branding drafts and whole-site preview
+
+- Add **Save draft**: one private draft per administrator (migration `0085`),
+  shown in the branding form until published or discarded. Draft images stay
+  private media until the draft is published.
+- Preview a draft across the whole community, including the sign-in screen,
+  under a preview bar only its author sees. The draft stylesheet and pages are
+  never shared-cacheable; visitors stay on the published branding.
+- Rename the save action **Publish branding**. Publishing a draft runs the same
+  contrast review, stale-revision conflict, revision and audit as any save, and
+  ends the preview. Discarding asks for confirmation and removes the draft's
+  private images.
+- Record the verified versioned-branding release (`a66a8552cc181031`, Cloud Run
+  `retroboards-00066-dhb`, Worker `ffc3e540`) as deployed; receipts are in
+  `docs/evidence/branding-revisions-2026-10-31/production/`. Evidence:
+  `docs/evidence/branding-drafts-2026-10-31/README.md`.
+
 ## [2026-10-31] - Versioned branding, history and restore
 
 - Record every published branding change — branding saves, the community name

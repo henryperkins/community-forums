@@ -38,3 +38,19 @@ seeded database in Chromium and WebKit at desktop (1280×800) and mobile
 The branding page moved its reset card below the form and loads only the
 scoped sample stylesheet; the existing journeys above passed against that
 structure without changes beyond the reset wording updated in increment 1.
+
+## Production (recorded after publication)
+
+`3478be72` was pushed to `main` at 20:55:03 UTC on 2026-10-31. Sanitized receipts
+are in `production/`:
+
+| Receipt | Result |
+|---|---|
+| `cloud-run-application-build.json` | Cloud Build `1c0107e4` SUCCESS for `3478be72` at 21:01:05 UTC |
+| `cloud-run-application-service.json` | Revision `retroboards-00066-dhb` Ready, 100% traffic, image `app:3478be72…`; migration `0084` applied on boot |
+| `cron-application-images.json` | All four cron jobs on the same image |
+| `worker-application-deployment.json` | Worker version `ffc3e540-0577-41bd-a3ba-68aecc90a798` at 100% (20:56:45 UTC) |
+| `live-assets-application.json` | 58/58 manifest files with matching SHA-256 (current `a66a8552cc181031` plus retained releases); `/healthz` ok with the database |
+| `live-revisions-verification.json` | `/admin/branding/history` and a revision page require sign-in; the reset route is POST-only; `/brand.css?…&scope=sample` serves only scoped sample and thumbnail rules; `/login` uses the new stylesheet |
+
+The deployed asset release was pinned in the following increment's commit.

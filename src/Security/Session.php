@@ -27,6 +27,9 @@ final class Session
     private const COOKIE_KEYS = [
         'theme_preview_build' => self::PREVIEW_COOKIE,
         'composer_completed' => 'rb_composer_completed',
+        // A preference toggle only: the shell honours it solely for a signed-in
+        // administrator who owns a branding draft (ADR 0054).
+        'branding_draft_preview' => 'rb_branding_draft_preview',
     ];
 
     private ?Request $request = null;

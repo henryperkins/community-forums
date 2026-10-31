@@ -45,6 +45,7 @@ if ($action === 'reset') {
     }
     // Branding history (ADR 0054 increment 2) starts empty for every journey.
     $db->run('DELETE FROM branding_revisions');
+    $db->run('DELETE FROM branding_drafts');
     $settings->set('brand_revision', 0);
     $settings->set('site_name', 'RetroBoards');
     $settings->set('brand_theme_default', 'system');

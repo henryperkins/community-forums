@@ -113,6 +113,31 @@ final class AttachmentRepository
         )->rowCount() > 0;
     }
 
+    /**
+     * A branding draft's upload (ADR 0054): finalized so the orphan sweep keeps
+     * it, but private, so only its uploader can load it until it is published.
+     */
+    public function finalizeDraftBrandAsset(int $id, int $ownerId): bool
+    {
+        return $this->db->run(
+            "UPDATE attachments
+                SET status = 'finalized', visibility = 'private', finalized_at = UTC_TIMESTAMP()
+              WHERE id = ? AND user_id = ? AND status = 'temp'",
+            [$id, $ownerId],
+        )->rowCount() > 0;
+    }
+
+    /** Publishing a draft makes its private brand images public. */
+    public function publishBrandAsset(int $id, int $ownerId): bool
+    {
+        return $this->db->run(
+            "UPDATE attachments SET visibility = 'public'
+              WHERE id = ? AND user_id = ? AND status = 'finalized'
+                AND purpose IN ('brand_logo', 'brand_favicon') AND post_id IS NULL AND dm_message_id IS NULL",
+            [$id, $ownerId],
+        )->rowCount() > 0;
+    }
+
     public function setAlt(int $id, int $ownerId, string $alt): void
     {
         $this->db->run(

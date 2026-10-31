@@ -63,7 +63,7 @@ async function saveBranding(page: Page) {
   // Wait for that commit, not just the POST: WebKit reports the response
   // while the old document is still the one scripts would run in.
   const committed = page.waitForEvent('framenavigated', { predicate: frame => frame === page.mainFrame() });
-  await page.getByRole('button', { name: 'Save branding', exact: true }).click();
+  await page.getByRole('button', { name: 'Publish branding', exact: true }).click();
   const response = await posted;
   await committed;
   await page.waitForLoadState('load');

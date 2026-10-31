@@ -25,8 +25,9 @@ These are delivery increments, not P0–P3 priority tiers (DECISIONS §2).
    history and restore (retaining every asset a revision needs), then private
    drafts, whole-site preview and explicit publishing with conflict detection.
    Package activation stays a separate action with its own rollback.
-   *Versioning, history, restore and group resets shipped 2026-10-31 (2a,
-   below); drafts and whole-site preview follow (2b).*
+   *Versioning, history, restore and group resets shipped 2026-10-31 (2a);
+   private drafts, whole-site preview and explicit publishing followed the
+   same day (2b, below).*
 3. **Independent light/dark palettes** — one shared token definition across
    `BrandPalette`, `ThemeTokenPolicy`, preview, validation and public CSS, then
    per-mode primary/accent overrides with automatic suggestions and both
@@ -177,6 +178,41 @@ suites; rendered evidence is linked from
   hard to read cannot make the recovery controls unreadable. Package problems
   keep their own recovery, theme safe mode, linked from the reset card.
 - Private drafts, whole-site preview and explicit publishing follow in 2b.
+
+## Increment 2b delivery: private drafts, preview and publishing (2026-10-31)
+
+- **One private draft per administrator** (`branding_drafts`, migration
+  `0085`): the whole candidate document plus the revision its form started
+  from. **Save draft** stores it; **Publish branding** is the only action that
+  changes public branding. The branding form edits the draft while one exists
+  and says so; a form without a draft edits the live branding as before.
+- **Private everywhere.** A draft is never rendered for anyone but its author.
+  Its new uploads are finalized attachments with `visibility = 'private'`, so
+  `/media/{id}` answers 404 to everyone else and `private, no-store` to the
+  author; publishing makes exactly the published images public. A draft is
+  never refused for contrast — the review and its audited acknowledgement
+  belong to publishing.
+- **Whole-site preview** is a per-session toggle (`rb_branding_draft_preview`)
+  that the shell honours only for a signed-in administrator who owns a draft;
+  for anyone else it is cleared. While on, every page the author opens renders
+  the draft — name, text, logos, favicon, colours and preset — under a preview
+  bar painted from the constant stage tokens, with links back to publishing,
+  to a sign-in preview (`/admin/branding/preview/sign-in`) and out. Pages for
+  signed-in members are `private, no-store`, and the draft stylesheet variant
+  (`/brand.css?…&draft=1`) is `private, no-store` for every requester and
+  resolves the draft only for its previewing author, so no shared cache can
+  hold a draft. Visitors stay on the published configuration throughout.
+- **Publishing a draft** commits the whole document through the same
+  versioned transaction as any save: contrast review against the active theme,
+  stale-revision conflict naming the newer work, revision and audit together
+  (`from_draft` recorded), draft deleted and preview ended.
+- **Discarding** (a confirmation step) deletes the draft and purges only the
+  private images it alone used; published images are never touched.
+- Visitor mode in a draft affects signed-out visitors only, so an author's own
+  appearance preference still governs what they see while previewing.
+
+Evidence: `tests/Integration/Core/AppBrandingDraftTest.php` and
+`docs/evidence/branding-drafts-2026-10-31/README.md`.
 
 Evidence: `tests/Integration/Core/AppBrandingRevisionTest.php` and
 `docs/evidence/branding-revisions-2026-10-31/README.md`.
