@@ -1,0 +1,37 @@
+{
+  "captured_at": "2026-10-31T23:10:49.126536+00:00",
+  "release_sha": "12fe5c91dd42204579f03790d85bb39fda92e219",
+  "note": "Anonymous read-only checks. Style presets other than Classic/Retro and the overrides did not exist before this release, so the public page stamps no style attributes yet and keeps its density.",
+  "checks": [
+    {
+      "path": "/admin/branding",
+      "status": 302,
+      "location": "/login?next=%2Fadmin%2Fbranding"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "app_css": "/assets/dist/app-style-BQrKPQLm.css",
+      "manifest_app_css": "/assets/dist/app-style-BQrKPQLm.css",
+      "style_attributes": [],
+      "density": "comfortable"
+    },
+    {
+      "path": "/assets/dist/app-style-BQrKPQLm.css",
+      "rail_hook": true,
+      "flush_rail_rule": true,
+      "crisp_corner_rule": true,
+      "lapidary_pairing_rule": true
+    },
+    {
+      "path": "/brand.css?v=3-release-check&scope=sample",
+      "status": 200,
+      "ledger_sample_rule": true,
+      "vellum_sample_rule": true
+    },
+    {
+      "path": "/assets/dist/app-e5669eff1f842115.js",
+      "has_style_preview_hook": true
+    }
+  ]
+}

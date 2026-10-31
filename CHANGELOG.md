@@ -26,6 +26,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   `docs/evidence/branding-styles-2026-10-31/README.md`. Secondary surfaces
   (social imagery, icons, email wrappers, board identity, profiles) wait for
   demonstrated need, and custom CSS stays blocked (ADR 0054).
+- Verified in production after publication (`0abd713b0ebf7bca`, Cloud Run
+  `retroboards-00069-qmr`, Worker `f93b7ef7`); receipts are in
+  `docs/evidence/branding-styles-2026-10-31/production/`.
 
 ## [2026-10-31] - Independent light and dark brand colours
 

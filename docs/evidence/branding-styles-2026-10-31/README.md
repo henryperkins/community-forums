@@ -55,3 +55,21 @@ Found and fixed during qualification:
   serving preset.
 - An 8px literal radius on record lists would not have followed a corner
   choice; it now reads the scale (still 8px with standard corners).
+
+## Production (recorded after publication)
+
+`12fe5c91` was pushed to `main` at 23:07:02 UTC on 2026-10-31. Sanitized
+receipts are in `production/`:
+
+| Receipt | Result |
+|---|---|
+| `cloud-run-application-build.json` | Cloud Build `cd117544` SUCCESS for `12fe5c91` at 23:10:17 UTC |
+| `cloud-run-application-service.json` | Revision `retroboards-00069-qmr` Ready, 100% traffic, image `app:12fe5c91…`; no migration in this release |
+| `cron-application-images.json` | All four cron jobs on the same image |
+| `worker-application-deployment.json` | Worker version `f93b7ef7-68ab-44e7-8492-ce012e1b4019` at 100% (23:08:38 UTC), the first deployment after the push |
+| `live-assets-application.json` | 57/57 manifest files with matching SHA-256 (current `0abd713b0ebf7bca` plus retained releases); `/healthz` ok with the database |
+| `live-styles-verification.json` | `/admin/branding` requires sign-in; `/` uses the new stylesheet and, with no style configured yet, stamps no style attributes and keeps Comfortable density; the stylesheet carries the rail hook and the sidebar, corner and pairing rules; the sample-scoped stylesheet carries the Ledger and Vellum sample rules; the script carries the style-preview hook |
+
+The deployed asset release (`0abd713b0ebf7bca`) is recorded in the commit that
+carries these receipts, which ADR 0051 groups with the next planned change
+rather than publishing on its own.
