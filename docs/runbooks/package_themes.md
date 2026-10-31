@@ -51,7 +51,7 @@ off.
 Safe mode suppresses all package theme CSS and assets. The built-in theme and
 ordinary branding (colours, logos, visitor mode, and Classic/Retro preset) still
 apply. Use the linked branding reset if those settings need clearing; branding
-reset keeps the community name and package-theme state. Entry is deliberately
+reset keeps the community name, community text and package-theme state. Entry is deliberately
 low-friction: admin session + CSRF only.
 Exit requires current password reauthentication.
 

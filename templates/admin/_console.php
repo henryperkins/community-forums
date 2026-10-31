@@ -166,12 +166,12 @@ foreach ($tierAreas as $key => $meta) {
 <div class="admin-bar">
     <div class="admin-bar-id">
         <a class="admin-bar-brand" href="/" aria-label="<?= $e($brandName) ?>">
-            <?php if (!empty($branding['logo_path'])): ?>
-                <img class="admin-bar-logo" src="<?= $e($branding['logo_path']) ?>" alt="<?= $e($brandName) ?>" height="24">
-            <?php else: ?>
-                <svg class="admin-bar-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
-                <span class="admin-bar-wordmark"><?= $e($brandName) ?></span>
-            <?php endif; ?>
+            <?= $this->partial('partials/brand_logo', [
+                'plan' => is_array($branding['logo'] ?? null) ? $branding['logo'] : null,
+                'class' => 'admin-bar-logo', 'alt' => $brandName, 'height' => 24,
+                'fallback' => '<svg class="admin-bar-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>'
+                    . '<span class="admin-bar-wordmark">' . $e($brandName) . '</span>',
+            ]) ?>
         </a>
         <a class="admin-bar-exit" href="/">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>

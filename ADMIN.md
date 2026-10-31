@@ -411,6 +411,7 @@ The front-end is already fully **CSS-variable driven** — the entire look deriv
 | Level | Controls | Priority |
 |---|---|---|
 | **Brand** | Community name, logo (light/dark), favicon, primary + accent color, sidebar style | P1 |
+| **Community text** | Tagline, community description, board-directory welcome heading and introduction | P1 |
 | **Theme / skin** | Pick a preset: **Default (Hybrid)**, **Retro 2002** (the preserved `styles.css` look as a skin), and **Light / Dark** | P1 (default+dark), P2 (retro skin) |
 | **Tokens** | Fine-tune individual variables (radius, density, fonts) with a live preview | P2 |
 | **Custom CSS** | Raw CSS for advanced admins, scoped & with a clear "you can break the layout" warning | P2 |
@@ -426,8 +427,35 @@ The front-end is already fully **CSS-variable driven** — the entire look deriv
 
 v1: brand (name/logo/colors) + light/dark. Later: retro skin toggle, full token editor, custom CSS, and **theme packages distributed via the plugin system** (§8) — P2.
 
-**Current operator surface:** `/admin/branding` provides name, colours, logo
-variants, favicon, guest mode, and Classic/Retro presets. Each saved logo variant
+**Expanded branding contract (ADR 0054).** Delivery proceeds as increments, not
+priority tiers: (1) complete community identity; (2) versioned branding with
+revision history and restore, then private drafts, whole-site preview and
+explicit publishing; (3) independent light/dark palettes on one shared token
+definition; (4) curated surface, typography and shape presets; (5) secondary
+surfaces — social imagery, touch icons, email wrappers, board identity and
+reusable profiles — chosen by demonstrated operator demand. Recovery comes
+before more customization. Colour precedence per mode and role is
+mode-specific override → shared override → active package → built-in preset.
+Every setting's owner, default, fallback, surfaces and reset behaviour is listed
+in ADR 0054; an empty value always restores the documented default. Custom CSS
+stays deferred behind its recovery blocker. Responsive structure, status
+meanings, focus behaviour and member accessibility preferences stay
+application-controlled.
+
+**Current operator surface:** `/admin/branding` provides name, community text,
+colours, logo variants, favicon, guest mode, and Classic/Retro presets. The
+logo resolves once for the member topbar, the console bar and every sign-in
+screen (log in, registration, password recovery, verification, MFA), where it
+sits on a raised plate over the constant twilight stage; without a logo every
+surface keeps the house mark. Light and dark variants each fall back to the base
+logo; System renders both and lets the device colour preference choose,
+without JavaScript and without a swap on first paint. Community text is plain
+text with limits: an optional tagline (80) shown under the identity on sign-in
+screens and above the directory heading, a description (300) for search and
+link previews, and the board directory's welcome heading (80) and introduction
+(600, one paragraph per line, always followed by the inbox pointer). Clearing a
+field restores its default; an invalid value returns the whole draft unsaved.
+Members' Light/Dark/System choices show thumbnails of the resolved theme. Each saved logo variant
 and the favicon can be removed independently when saving the form, with pending
 choices preserved on validation errors. Native file controls show selected
 filenames without JavaScript; saved thumbnails, configured upload requirements,
@@ -446,7 +474,7 @@ of that exact candidate (ADR 0053). `/admin/themes` manages installed package
 previews, activation, rollback, and safe mode. The full token editor remains
 later scope, and custom CSS remains safety-blocked in the Features console.
 Package details and guarded actions stack on narrow screens. Branding reset
-keeps the community name and package state; its independent form also makes
+keeps the community name, community text and package state; its independent form also makes
 Enter in the typed confirmation perform reset without publishing pending edits.
 Cleared preview settings resolve to System/Classic without JavaScript. Colour
 helpers explain inheritance, and narrow screens offer preview/return links

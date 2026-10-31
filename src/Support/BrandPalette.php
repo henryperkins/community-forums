@@ -9,7 +9,7 @@ use App\Security\Packages\ThemeTokenPolicy;
 /** Resolved branding colours shared by delivery, preview, and contrast review. */
 final class BrandPalette
 {
-    public const CSS_VERSION = '2';
+    public const CSS_VERSION = '3';
     /** @return array<string,array<string,array<string,string>>> */
     public static function presets(?array $packageTokens = null): array
     {
@@ -185,6 +185,52 @@ final class BrandPalette
             }
         }
         return $css;
+    }
+
+    /** Thumbnail variable => the resolved palette role it pictures. */
+    private const THUMBNAIL_ROLES = [
+        '--thumb-page' => '--surface-page',
+        '--thumb-panel' => '--surface-raised',
+        '--thumb-rule' => '--border-hair',
+        '--thumb-text' => '--text-body',
+        '--thumb-faint' => '--text-faint',
+        // Filled buttons paint from --accent/--accent-contrast (app.css .btn).
+        '--thumb-action' => '--accent',
+        '--thumb-action-ink' => '--accent-contrast',
+        '--thumb-selected' => '--brand-subtle',
+        '--thumb-accent' => '--accent-2',
+    ];
+
+    /**
+     * Member appearance thumbnails (ADR 0054). Each mode's picture is scoped to
+     * its own element, so a member in dark mode still sees the true light
+     * palette in the Light choice. Values come from the same resolved palettes
+     * as /brand.css: active package or preset, then operator colours.
+     *
+     * @param array<string,array<string,string>> $modes resolved palettes keyed light/dark
+     */
+    public static function thumbnailCss(array $modes): string
+    {
+        $css = '';
+        foreach (['light', 'dark'] as $mode) {
+            $declarations = [];
+            foreach (self::THUMBNAIL_ROLES as $variable => $role) {
+                $value = $modes[$mode][$role] ?? null;
+                if (is_string($value) && self::isColourValue($value)) {
+                    $declarations[$variable] = $value;
+                }
+            }
+            if ($declarations !== []) {
+                $css .= "\n" . '.theme-thumb [data-thumb-mode="' . $mode . '"]{' . self::declarations($declarations) . '}';
+            }
+        }
+        return $css;
+    }
+
+    /** The two colour forms the code-owned and package palettes use. */
+    private static function isColourValue(string $value): bool
+    {
+        return preg_match('/^(?:#[0-9a-fA-F]{6}|rgba\(\d{1,3},\d{1,3},\d{1,3},(?:0|1|0?\.\d{1,3})\))$/D', $value) === 1;
     }
 
     /**

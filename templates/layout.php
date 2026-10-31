@@ -5,6 +5,8 @@ $appearance = $appearance ?? ['theme' => 'system', 'density' => 'comfortable', '
 $composing = $composing ?? ['enter_to_send' => true, 'show_preview' => true, 'smart_lists' => true];
 $memberSurfaces = $member_surfaces ?? ['rail_open' => true, 'inbox_reading_open' => true, 'directory_sort' => 'category', 'directory_peek' => 3];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
+$brandLogo = is_array($brand['logo'] ?? null) ? $brand['logo'] : ['kind' => 'none', 'src' => null, 'light' => null, 'dark' => null];
+$brandTagline = (string) ($brand['tagline'] ?? '');
 $themePackage = $package_theme ?? ['active_css_digest' => null, 'preview_css_digest' => null];
 $brandStylesVersion = \App\Support\BrandPalette::CSS_VERSION . '-' . ($brand['version'] ?? '1') . '-'
     . ($themePackage['preview_css_digest'] ?? $themePackage['active_css_digest'] ?? 'system');
@@ -18,7 +20,11 @@ $canonical = $this->block('canonical', '');
 $robots = $this->block('robots', '');
 $ogType = $this->block('og_type', 'website');
 $ogImage = $this->block('og_image', '');
-$desc = $this->block('description', $brand['name'] . ' — a community forum.');
+// A page's own description wins; otherwise the operator's community
+// description, then the built-in sentence (BrandIdentity, ADR 0054).
+$desc = $this->block('description', (string) ($brand['description'] ?? '') !== ''
+    ? (string) $brand['description']
+    : $brand['name'] . ' — a community forum.');
 // The console is its own shell (ADMIN.md §9.2, ADR 0024): admin/_console emits the
 // identity row and area tier, so the member topbar and board rail stay out of it.
 $showChrome = $variant !== 'auth' && $variant !== 'admin';
@@ -112,10 +118,30 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
 <?php elseif ($variant === 'auth'): ?>
     <main class="auth-stage" id="main">
         <svg class="auth-stage-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
+        <?php
+        // The community's identity on every sign-in screen (ADR 0054): the
+        // uploaded logo resolved exactly as the member chrome resolves it, on a
+        // raised plate that follows the mode the logo was chosen for, so a logo
+        // drawn for the light topbar stays legible on the constant-twilight
+        // stage. No logo (missing, removed or branding off) keeps the house mark.
+        $authMark = '<svg class="auth-brand-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>'
+            . "\n            " . '<span class="auth-brand-name">' . $e($brand['name']) . '</span>';
+        ?>
+        <div class="auth-identity">
+        <?php if (($brandLogo['kind'] ?? 'none') === 'none'): ?>
         <a class="auth-brand" href="/">
-            <svg class="auth-brand-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
-            <span class="auth-brand-name"><?= $e($brand['name']) ?></span>
+            <?= $authMark ?>
+
         </a>
+        <?php else: ?>
+        <a class="auth-brand auth-brand-has-logo" href="/" aria-label="<?= $e($brand['name']) ?>">
+            <?= $this->partial('partials/brand_logo', ['plan' => $brandLogo, 'class' => 'auth-brand-logo', 'alt' => '', 'height' => 40, 'fallback' => $authMark]) ?>
+        </a>
+        <?php endif; ?>
+        <?php if ($brandTagline !== ''): ?>
+        <p class="auth-tagline"><?= $e($brandTagline) ?></p>
+        <?php endif; ?>
+        </div>
         <?= $this->partial('partials/flash') ?>
         <?= $content ?>
     </main>

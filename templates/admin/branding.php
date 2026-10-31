@@ -6,7 +6,10 @@ $this->section('robots', 'noindex, nofollow');
 $this->section('variant', 'admin');
 $this->section('branding_preview', '1');
 $previewLogos = ['base' => $logo_path, 'light' => $logo_light_path, 'dark' => $logo_dark_path];
-$previewLogo = ($previewLogos[$theme_default] ?? '') ?: $logo_path;
+// The saved sample resolves logos exactly as the public chrome does for the
+// selected visitor mode; System lets the device preference choose (ADR 0054).
+$previewLogoPlan = \App\Support\BrandLogo::plan($logo_path, $logo_light_path, $logo_dark_path, $theme_default);
+$identityLimit = static fn (string $field): int => (int) ($identity_limits[$field] ?? 0);
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';
 $flashMessage = trim((string) ($flash ?? ''));
 $saveStatus = $flashMessage === 'Saved. Branding appears on the next page load.'
@@ -118,7 +121,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                 <?php endif; ?>
 
                 <h3 class="branding-section-label">Marks</h3>
-                <p class="brand-preview-note">Choose a replacement file or mark an existing image for removal. Changes apply when you save branding.</p>
+                <p class="brand-preview-note">Choose a replacement file or mark an existing image for removal. Changes apply when you save branding. The logo appears in the header, the administration bar and on every sign-in screen; light and dark variants replace it in their mode, and System follows each visitor’s device.</p>
                 <p class="brand-preview-note" id="branding-upload-help"><?= $e($upload_formats) ?> images, up to <?= $e($upload_max_label) ?> per file and <?= $e($upload_max_width) ?> × <?= $e($upload_max_height) ?> pixels.<?php if ($upload_request_label !== null): ?> Keep all files in one save below <?= $e($upload_request_label) ?> combined.<?php endif; ?></p>
                 <div class="branding-marks">
                     <?php foreach ([
@@ -145,6 +148,35 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
+                </div>
+
+                <h3 class="branding-section-label" id="branding-text">Community text</h3>
+                <p class="brand-preview-note">Plain text. Leave a field blank to use its default. Saved text appears on the next page load.</p>
+                <div class="branding-field-grid branding-text-grid">
+                    <div class="branding-field branding-field-wide">
+                        <label for="branding-tagline">Tagline (optional)</label>
+                        <input id="branding-tagline" type="text" name="site_tagline" class="input" maxlength="<?= $identityLimit('site_tagline') ?>" value="<?= $e($site_tagline) ?>"<?= field_attrs($errors ?? [], 'site_tagline', describedBy: 'branding-tagline-help') ?>>
+                        <p id="branding-tagline-help" class="branding-colour-help">Shown beneath the community’s name or logo on sign-in screens and above the board directory heading. Up to <?= $identityLimit('site_tagline') ?> characters; blank shows nothing.</p>
+                        <?= field_error($errors ?? [], 'site_tagline') ?>
+                    </div>
+                    <div class="branding-field branding-field-wide">
+                        <label for="branding-description">Community description</label>
+                        <textarea id="branding-description" name="site_description" class="input branding-textarea" rows="3" maxlength="<?= $identityLimit('site_description') ?>"<?= field_attrs($errors ?? [], 'site_description', describedBy: 'branding-description-help') ?>><?= $e($site_description) ?></textarea>
+                        <p id="branding-description-help" class="branding-colour-help">Used by search engines and link previews for pages without a description of their own. Up to <?= $identityLimit('site_description') ?> characters; search results usually show the first 155. Blank uses “<?= $e(\App\Support\BrandIdentity::defaultDescription($site_name)) ?>”</p>
+                        <?= field_error($errors ?? [], 'site_description') ?>
+                    </div>
+                    <div class="branding-field branding-field-wide">
+                        <label for="branding-directory-heading">Welcome heading</label>
+                        <input id="branding-directory-heading" type="text" name="directory_heading" class="input" maxlength="<?= $identityLimit('directory_heading') ?>" placeholder="<?= $e(\App\Support\BrandIdentity::DEFAULT_DIRECTORY_HEADING) ?>" value="<?= $e($directory_heading) ?>"<?= field_attrs($errors ?? [], 'directory_heading', describedBy: 'branding-directory-heading-help') ?>>
+                        <p id="branding-directory-heading-help" class="branding-colour-help">The board directory’s main heading. Up to <?= $identityLimit('directory_heading') ?> characters. Blank uses “<?= $e(\App\Support\BrandIdentity::DEFAULT_DIRECTORY_HEADING) ?>”.</p>
+                        <?= field_error($errors ?? [], 'directory_heading') ?>
+                    </div>
+                    <div class="branding-field branding-field-wide">
+                        <label for="branding-directory-intro">Welcome introduction</label>
+                        <textarea id="branding-directory-intro" name="directory_intro" class="input branding-textarea" rows="4" maxlength="<?= $identityLimit('directory_intro') ?>" placeholder="<?= $e(\App\Support\BrandIdentity::DEFAULT_DIRECTORY_INTRO) ?>"<?= field_attrs($errors ?? [], 'directory_intro', describedBy: 'branding-directory-intro-help') ?>><?= $e($directory_intro) ?></textarea>
+                        <p id="branding-directory-intro-help" class="branding-colour-help">Shown beneath the welcome heading. Each line becomes a paragraph, and a link to the member’s inbox always follows. Up to <?= $identityLimit('directory_intro') ?> characters. Blank uses the built-in introduction.</p>
+                        <?= field_error($errors ?? [], 'directory_intro') ?>
+                    </div>
                 </div>
 
                 <h3 class="branding-section-label">Custom CSS</h3>
@@ -188,7 +220,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     <p class="eyebrow">Live preview</p>
                     <div class="brand-preview brand-preview-shell" data-brand-preview data-brand-theme="<?= $e($theme_default) ?>" data-brand-preset="<?= $e($theme_preset) ?>" data-brand-logos="<?= $e(json_encode($previewLogos, JSON_THROW_ON_ERROR)) ?>">
                         <div class="brand-preview-bar">
-                            <img class="brand-preview-logo" data-brand-preview-logo alt=""<?= $previewLogo !== '' ? ' src="' . $e($previewLogo) . '"' : ' hidden' ?>>
+                            <span class="brand-preview-logo-slot" data-brand-preview-logo-slot><?= $this->partial('partials/brand_logo', ['plan' => $previewLogoPlan, 'class' => 'brand-preview-logo', 'alt' => '', 'fallback' => '', 'attrs' => ' data-brand-preview-logo']) ?></span>
                             <strong data-brand-preview-name><?= $e($site_name) ?></strong>
                             <span data-brand-preview-theme><?= !empty($brand_package_active) ? 'Package · ' : '' ?><?= $e(ucfirst($theme_default)) ?></span>
                         </div>
@@ -219,7 +251,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                             <label class="brand-preview-field">Sample field<input class="input" type="text" value="Sample text" readonly></label>
                         </div>
                     </div>
-                    <p class="brand-preview-note">Light and dark logo variants are used when the resolved theme explicitly matches that variant; system theme falls back to the base logo.</p>
+                    <p class="brand-preview-note">Each mode uses its own logo variant, falling back to the base logo. System follows the visitor’s device. Sign-in screens show the same logo on a raised plate.</p>
                     <?php if (!empty($brand_package_active)): ?>
                         <p class="brand-preview-note">This sample uses the package theme currently shown in your session. Classic and Retro apply when no package theme is shown. Saving branding changes the live community.</p>
                     <?php endif; ?>
@@ -231,7 +263,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     <?= $this->csrfField() ?>
                     <input type="hidden" name="reset" value="1">
                     <h2>Reset branding</h2>
-                    <p>Clears saved colours, logos, favicon, visitor appearance, theme preset, and custom CSS. Keeps the community name and active package theme. This cannot be undone.</p>
+                    <p>Clears saved colours, logos, favicon, visitor appearance, theme preset, and custom CSS. Keeps the community name, community text and active package theme. This cannot be undone.</p>
                     <?php if (!empty($features['package_themes'])): ?>
                         <p>To pause package themes instead, use <a href="/admin/themes/safe-mode">theme safe mode</a>.</p>
                     <?php endif; ?>

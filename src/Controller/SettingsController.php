@@ -9,13 +9,16 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\PackageRepository;
 use App\Repository\SessionRepository;
+use App\Repository\SettingRepository;
 use App\Repository\UserBoardPrefRepository;
 use App\Repository\UserPreferenceRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Service\AccountService;
 use App\Service\EmailPreferenceService;
+use App\Service\Packages\ThemeStateService;
 use App\Service\PersonalOrganizationService;
 use App\Service\PreferenceService;
 use App\Support\PreferenceSchema;
@@ -55,7 +58,41 @@ final class SettingsController extends Controller
         $user = $this->requireUser();
         return $this->view('account/appearance', [
             'prefs' => $this->container->get(PreferenceService::class)->resolved($user->id()),
+            'theme_context' => $this->themeContext(),
         ]);
+    }
+
+    /**
+     * Names the base theme behind the Light/Dark choices (ADR 0054): the package
+     * theme this viewer is shown (an admin's private preview first, as /brand.css
+     * does), else the operator's preset. Reads fail to the built-in Classic.
+     */
+    private function themeContext(): string
+    {
+        try {
+            $flags = $this->container->get(FeatureFlags::class);
+            if ($flags->enabled('package_themes')) {
+                $themes = $this->container->get(ThemeStateService::class);
+                $build = null;
+                if ($this->currentUser()?->isAdmin()) {
+                    $previewId = $this->session()->get('theme_preview_build');
+                    $build = $themes->previewBuildFor(is_int($previewId) ? $previewId : null);
+                }
+                $build ??= $themes->activeBuild();
+                if ($build !== null) {
+                    $package = $this->container->get(PackageRepository::class)->find((int) $build['package_id']);
+                    $name = trim((string) ($package['name'] ?? ''));
+                    return $name !== '' ? mb_strimwidth($name, 0, 40, '…') : 'Package theme';
+                }
+            }
+            if ($flags->enabled('branding')
+                && $this->container->get(SettingRepository::class)->getString('brand_theme_preset', 'classic') === 'retro') {
+                return 'Retro';
+            }
+        } catch (\Throwable) {
+            // Fall through to the built-in base.
+        }
+        return 'Classic';
     }
 
     public function updateAppearance(Request $request): Response

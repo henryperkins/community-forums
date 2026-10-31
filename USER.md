@@ -195,7 +195,7 @@ These make the forum *theirs*. Defaults are inherited from site settings (ADMIN.
 | Font size | Small · Default · Large |
 | Reduce motion | On · Off (also respects OS `prefers-reduced-motion`) |
 
-Appearance prefs are **client-applied** (instant) and override the site default for that user only.
+Appearance prefs are **client-applied** (instant) and override the site default for that user only. The Light, Dark and System choices show thumbnails of the community's resolved theme — the active package or preset with operator colours (ADR 0054).
 
 ### 4.2 Reading
 

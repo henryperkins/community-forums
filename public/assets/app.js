@@ -591,7 +591,7 @@
         var brandPreset = brandForm.querySelector('[data-brand-preset]');
         var previewName = brandPreview.querySelector('[data-brand-preview-name]');
         var previewTheme = brandPreview.querySelector('[data-brand-preview-theme]');
-        var previewLogo = brandPreview.querySelector('[data-brand-preview-logo]');
+        var previewLogoSlot = brandPreview.querySelector('[data-brand-preview-logo-slot]');
         var contrastAck = brandForm.querySelector('[name="contrast_ack"]');
         var contrastChanged = brandForm.querySelector('[data-brand-contrast-changed]');
         var darkPreference = window.matchMedia('(prefers-color-scheme: dark)');
@@ -743,13 +743,25 @@
                 previewTheme.textContent = (brandForm.getAttribute('data-brand-package-active') === '1' ? 'Package · ' : (preset === 'retro' ? 'Retro · ' : ''))
                     + (theme === 'system' ? 'System · ' : '') + (mode === 'dark' ? 'Dark' : 'Light');
             }
-            if (previewLogo) {
-                // Match server logo selection: System uses the base logo, even
-                // when its colours follow the device's dark appearance.
-                var logo = (theme !== 'system' && candidateLogo(theme)) || candidateLogo('base');
-                previewLogo.hidden = !logo;
-                if (logo) { previewLogo.src = logo; }
-                else { previewLogo.removeAttribute('src'); }
+            if (previewLogoSlot) {
+                // Match BrandLogo::plan: each mode uses its own variant, then the
+                // base logo. System follows the device, so the server's
+                // <picture> becomes one image for the mode now shown.
+                var logo = candidateLogo(mode) || candidateLogo('base');
+                var previewLogo = previewLogoSlot.querySelector('img[data-brand-preview-logo]');
+                if (!logo) {
+                    previewLogoSlot.textContent = '';
+                } else {
+                    if (!previewLogo || previewLogoSlot.childNodes.length !== 1) {
+                        previewLogoSlot.textContent = '';
+                        previewLogo = document.createElement('img');
+                        previewLogo.className = 'brand-preview-logo';
+                        previewLogo.alt = '';
+                        previewLogo.setAttribute('data-brand-preview-logo', '');
+                        previewLogoSlot.appendChild(previewLogo);
+                    }
+                    if (previewLogo.getAttribute('src') !== logo) { previewLogo.src = logo; }
+                }
             }
             updateAssetPreviews();
         };

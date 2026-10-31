@@ -825,6 +825,9 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     --stage-raised: var(--twilight-800);
     --stage-ink: var(--parchment-50);
     --stage-accent: var(--gold-400);
+    /* The tagline beneath the community identity on the stage: quieter than
+       --stage-ink and, like it, constant (parchment-300 on twilight-900). */
+    --stage-ink-soft: var(--parchment-300);
     /* The profile cover shares the stage's constraint: its ground is constant
        twilight in both registers, so register-flipping tokens drawn for the
        page fail on it. --accent (evergreen by day) reads 1.55:1 as the focus
@@ -2212,12 +2215,37 @@ body[data-route="thread"] .thread-conversation {
 .choice-card:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .choice-card-title { display: block; font-family: var(--font-label); letter-spacing: .04em; font-size: .82rem; color: var(--text-strong); }
 .choice-card-desc { display: block; font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
-.theme-swatch { display: flex; height: 30px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-hair); margin-bottom: 9px; }
-.theme-swatch span { flex: 1; }
-.theme-swatch .sw-accent { flex: 0 0 8px; }
-.swatch-parchment .sw-bg { background: var(--parchment-100); } .swatch-parchment .sw-card { background: var(--parchment-50); } .swatch-parchment .sw-accent { background: var(--green-700); }
-.swatch-twilight .sw-bg { background: var(--twilight-900); } .swatch-twilight .sw-card { background: var(--twilight-700); } .swatch-twilight .sw-accent { background: var(--stage-accent); }
-.swatch-system .sw-bg { background: var(--parchment-100); } .swatch-system .sw-card { background: var(--twilight-800); } .swatch-system .sw-accent { background: var(--gold-500); }
+/* Theme thumbnails (ADR 0054): a miniature of each mode — header bar, rail
+   with its selected row, a panel of text with an unread dot and an action.
+   Each [data-thumb-mode] element carries that mode's own colours, so a member
+   in dark mode still sees the real light palette in the Light choice. The
+   values below are the built-in Classic palette; /brand.css replaces them
+   with the resolved package/preset and operator colours. They are pictures of
+   colour, so forced-colours mode leaves them alone; the labels carry meaning. */
+.theme-thumb [data-thumb-mode="light"] {
+    --thumb-page: var(--parchment-100); --thumb-panel: var(--parchment-50); --thumb-rule: var(--parchment-300);
+    --thumb-text: var(--ink-700); --thumb-faint: var(--ink-400); --thumb-action: var(--green-700);
+    --thumb-action-ink: var(--parchment-50); --thumb-selected: var(--green-050); --thumb-accent: var(--gold-500);
+}
+.theme-thumb [data-thumb-mode="dark"] {
+    --thumb-page: var(--twilight-900); --thumb-panel: var(--twilight-800); --thumb-rule: #36434f;
+    --thumb-text: #d7dcd2; --thumb-faint: var(--ink-300); --thumb-action: var(--gold-400);
+    --thumb-action-ink: var(--twilight-900); --thumb-selected: rgba(78,116,89,.20); --thumb-accent: var(--gold-500);
+}
+.theme-thumb { display: flex; height: 64px; margin-bottom: 9px; overflow: hidden; border: 1px solid var(--border-hair); border-radius: var(--radius-sm); forced-color-adjust: none; }
+.theme-thumb-mode { flex: 1 1 0; display: grid; grid-template-rows: 11px 1fr; min-width: 0; background: var(--thumb-page); }
+.theme-thumb-system .theme-thumb-mode + .theme-thumb-mode { border-left: 1px solid var(--border-hair); }
+.theme-thumb-bar { display: flex; align-items: center; padding: 0 6px; background: var(--thumb-panel); border-bottom: 1px solid var(--thumb-rule); }
+.theme-thumb-mark { width: 5px; height: 5px; border-radius: 50%; background: var(--thumb-action); }
+.theme-thumb-body { display: grid; grid-template-columns: 24% 1fr; gap: 5px; min-width: 0; padding: 6px; }
+.theme-thumb-rail { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.theme-thumb-rail span { height: 5px; border-radius: 2px; background: var(--thumb-rule); }
+.theme-thumb-rail .is-selected { background: var(--thumb-selected); box-shadow: inset 2px 0 0 var(--thumb-action); }
+.theme-thumb-panel { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 5px 6px; border: 1px solid var(--thumb-rule); border-radius: 3px; background: var(--thumb-panel); }
+.theme-thumb-line { width: 78%; height: 3px; border-radius: 2px; background: var(--thumb-text); }
+.theme-thumb-line.is-faint { width: 52%; background: var(--thumb-faint); }
+.theme-thumb-dot { position: absolute; top: 5px; right: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--thumb-accent); }
+.theme-thumb-action { width: 42%; height: 7px; margin-top: auto; border-radius: 3px; background: var(--thumb-action); box-shadow: inset 0 0 0 1px var(--thumb-action-ink); }
 .density-prev { display: flex; flex-direction: column; gap: 4px; margin-bottom: 9px; }
 .density-prev span { height: 8px; border-radius: 3px; background: var(--surface-sunken); }
 .density-prev.is-compact span { height: 4px; }
@@ -2679,12 +2707,57 @@ body[data-route="thread"] .thread-conversation {
     flex: 0 0 auto;
 }
 .auth-brand-name {
+    min-width: 0;
     font-family: var(--font-display);
     font-weight: var(--weight-medium);
     font-size: 1.7rem;
     color: var(--stage-ink);
     line-height: 1;
     letter-spacing: .005em;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+/* The community's identity on the stage (ADR 0054): the brand link and the
+   optional tagline as one centred column. A long name wraps rather than
+   pushing the stage wider than a phone. */
+.auth-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+}
+.auth-brand {
+    max-width: 100%;
+}
+/* An uploaded logo sits on a raised plate. The plate is the page's raised
+   surface, so it flips with the mode exactly like the member topbar the logo
+   was chosen for (light variant on parchment, dark variant on twilight); the
+   stage itself never flips (The Constant-Ground Rule). The image is the plate:
+   padding and fill on a content-box <img>, contained at 40px tall. */
+.auth-brand-logo {
+    display: block;
+    box-sizing: content-box;
+    height: 40px;
+    width: auto;
+    max-width: min(300px, calc(100vw - 72px));
+    padding: 8px 14px;
+    object-fit: contain;
+    border: 1px solid var(--stage-accent);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+}
+.auth-tagline {
+    max-width: 34ch;
+    margin: 0;
+    color: var(--stage-ink-soft);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-style: italic;
+    line-height: 1.45;
+    text-align: center;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
 }
 /* The seal card. It carried a chamfered octagon plus a second, parallel
    octagon on a ::before at inset:5px — the "doubled gold rule". Both are gone
@@ -6510,6 +6583,15 @@ textarea.textarea-engraved {
     font-family: var(--font-mono);
     font-size: .88rem;
 }
+.branding-field .branding-textarea {
+    min-height: 4.5em;
+    line-height: 1.45;
+    resize: vertical;
+}
+/* The community-text fields follow their section note, as the marks do. */
+.branding-text-grid {
+    margin-top: 12px;
+}
 .branding-reset-input {
     letter-spacing: .1em;
 }
@@ -6693,6 +6775,21 @@ textarea.textarea-engraved {
     gap: 18px;
     margin: 0;
 }
+/* A sticky column taller than the viewport hides its own end: the recovery
+   controls under the preview could not be scrolled or tabbed into view while
+   the longer form scrolled. Bound the column to the viewport and let it
+   scroll on its own; a 4px inset keeps focus rings inside that scrollport.
+   When the column fits, nothing moves. */
+@media (min-width: 761px) {
+    .admin-console .admin-appearance-branding .branding-preview-column {
+        max-height: calc(100vh - 100px);
+        max-height: calc(100dvh - 100px);
+        margin: -4px;
+        padding: 4px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
 /* Candidate tokens are confined to the sample, keeping the recovery controls
    and explanatory text in the operator's own appearance. */
 .brand-preview {
@@ -6758,6 +6855,9 @@ textarea.textarea-engraved {
     max-height: 40px;
     object-fit: contain;
 }
+/* The sample's logo slot holds a plain image, a <picture> or a System split
+   pair; like those wrappers it adds no box, so an empty slot adds no gap. */
+.brand-preview-logo-slot { display: contents; }
 .brand-preview-copy { margin: 0; }
 .brand-preview-field { width: 100%; }
 .brand-preview-field .input { margin-top: 4px; }
@@ -16688,6 +16788,26 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 }
 /* ══ End member surfaces production transfer ══ */
 
+/* Operator welcome copy (ADR 0054), kept outside the generated bridge above:
+   an optional tagline line over the directory heading, and room between
+   introduction paragraphs. Operator text can be one long word, so it wraps
+   instead of widening the column. */
+.board-index .forum-directory__hero > p.forum-directory__tagline {
+    max-width: 60ch;
+    margin: 0 0 8px;
+    color: var(--gold-ink);
+    font-family: var(--font-label);
+    font-size: .95rem;
+    letter-spacing: .03em;
+    line-height: 1.4;
+}
+.board-index .forum-directory__hero > p:not(.forum-directory__stats, .forum-directory__tagline) + p:not(.forum-directory__stats) {
+    margin-top: .6em;
+}
+.board-index .forum-directory__hero > :is(h1, p) {
+    overflow-wrap: break-word;
+}
+
 /* ── Type floor: member-surface labels at --text-chip (audit follow-up) ───
    The transfer above sets these labels at .56–.6rem, below the scale floor
    DESIGN.md records for new work. The transfer stays verbatim (the fidelity
@@ -16749,6 +16869,21 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 }
 /* The operator's uploaded logo replaces the lockup (Administration → Branding). */
 .brand-logo { display: block; flex: 0 1 auto; min-width: 0; height: 28px; width: auto; object-fit: contain; object-position: left center; }
+/* Community logo wrappers (partials/brand_logo, ADR 0054). A <picture> or a
+   System split pair must not become the flex item in place of the image or
+   the built-in mark, so both wrappers drop out of layout. In System mode the
+   device preference shows one half of a split pair: the uploaded variant in
+   one mode, the house mark in the mode without an upload. The branding
+   sample keys the same choice on its own visitor-mode attribute. */
+.brand-picture, .brand-when-light, .brand-when-dark { display: contents; }
+@media not all and (prefers-color-scheme: dark) {
+    :root[data-theme="system"] .brand-when-dark,
+    .brand-preview[data-brand-theme="system"] .brand-when-dark { display: none; }
+}
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="system"] .brand-when-light,
+    .brand-preview[data-brand-theme="system"] .brand-when-light { display: none; }
+}
 /* The design's Monogram sizes itself (30px on the seat); the monogram partial
    emits the base class, which this file sizes at 36px. */
 .forum-bar-user .monogram { width: 30px; height: 30px; font-size: .74rem; }

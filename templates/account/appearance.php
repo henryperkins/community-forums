@@ -3,7 +3,18 @@
 $this->layout('layout');
 $this->section('title', 'Appearance');
 $this->section('robots', 'noindex, nofollow');
+// /brand.css carries each mode's resolved colours for the thumbnails below.
+$this->section('branding_preview', '1');
 $theme = (string) ($prefs['theme'] ?? 'system');
+// The base theme each mode belongs to: the active package, else the preset.
+$themeContext = (string) ($theme_context ?? 'Classic');
+$thumb = static fn (string $mode): string => '<span class="theme-thumb-mode" data-thumb-mode="' . $mode . '">'
+    . '<span class="theme-thumb-bar"><span class="theme-thumb-mark"></span></span>'
+    . '<span class="theme-thumb-body">'
+    . '<span class="theme-thumb-rail"><span class="is-selected"></span><span></span><span></span></span>'
+    . '<span class="theme-thumb-panel"><span class="theme-thumb-line"></span><span class="theme-thumb-line is-faint"></span>'
+    . '<span class="theme-thumb-dot"></span><span class="theme-thumb-action"></span></span>'
+    . '</span></span>';
 $density = (string) ($prefs['density'] ?? 'comfortable');
 $font = (string) ($prefs['font_size'] ?? 'medium');
 $motion = !empty($prefs['reduced_motion']);
@@ -24,13 +35,13 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
         <div class="field">
             <div class="choice-cards">
                 <label class="choice-card"><input type="radio" name="theme" value="light"<?= $theme === 'light' ? ' checked' : '' ?>>
-                    <span class="theme-swatch swatch-parchment"><span class="sw-bg"></span><span class="sw-card"></span><span class="sw-accent"></span></span>
-                    <span class="choice-card-title">Parchment</span><span class="choice-card-desc">Warm paper — daylight</span></label>
+                    <span class="theme-thumb" aria-hidden="true"><?= $thumb('light') ?></span>
+                    <span class="choice-card-title">Light</span><span class="choice-card-desc"><?= $e($themeContext) ?> · light backgrounds</span></label>
                 <label class="choice-card"><input type="radio" name="theme" value="dark"<?= $theme === 'dark' ? ' checked' : '' ?>>
-                    <span class="theme-swatch swatch-twilight"><span class="sw-bg"></span><span class="sw-card"></span><span class="sw-accent"></span></span>
-                    <span class="choice-card-title">Twilight</span><span class="choice-card-desc">Evergreen night</span></label>
+                    <span class="theme-thumb" aria-hidden="true"><?= $thumb('dark') ?></span>
+                    <span class="choice-card-title">Dark</span><span class="choice-card-desc"><?= $e($themeContext) ?> · dark backgrounds</span></label>
                 <label class="choice-card"><input type="radio" name="theme" value="system"<?= $theme === 'system' ? ' checked' : '' ?>>
-                    <span class="theme-swatch swatch-system"><span class="sw-bg"></span><span class="sw-card"></span><span class="sw-accent"></span></span>
+                    <span class="theme-thumb theme-thumb-system" aria-hidden="true"><?= $thumb('light') ?><?= $thumb('dark') ?></span>
                     <span class="choice-card-title">System</span><span class="choice-card-desc">Match your device</span></label>
             </div>
         </div>

@@ -15,6 +15,7 @@ use App\Repository\SettingRepository;
 use App\Security\WriteGate;
 use App\Service\AttachmentService;
 use App\Service\Packages\ThemeStateService;
+use App\Support\BrandIdentity;
 use App\Support\BrandPalette;
 use App\Support\UploadLimits;
 
@@ -48,7 +49,11 @@ final class BrandingController extends Controller
         // emit an empty rule set rather than the stored brand colours.
         $flags = $this->container->get(FeatureFlags::class);
         if (!$flags->enabled('branding')) {
-            return new Response(':root{}', 200, [
+            // Member appearance thumbnails still picture the serving base: an
+            // active package, else the built-in Classic palette.
+            return new Response(':root{}' . BrandPalette::thumbnailCss(
+                BrandPalette::presets($this->packageTokens($previewRequest))['classic'],
+            ), 200, [
                 'Content-Type' => 'text/css; charset=UTF-8',
                 'Cache-Control' => $cacheControl,
             ]);
@@ -62,14 +67,18 @@ final class BrandingController extends Controller
         $presets = BrandPalette::presets($packageTokens);
         $retro = $preset === 'retro' && $packageTokens === null;
         $modes = [];
+        $serving = [];
         foreach ($presets[$retro ? 'retro' : 'classic'] as $mode => $base) {
             $resolved = BrandPalette::withColours($base, $primary, $accent);
+            $serving[$mode] = $resolved;
             // Derive against the serving palette without republishing its
             // surfaces/type over the package stylesheet.
             $modes[$mode] = $retro ? $resolved : array_diff_assoc($resolved, $base);
         }
         $css = BrandPalette::css($modes);
         $css .= BrandPalette::previewCss($presets, $primary, $accent);
+        // Member appearance thumbnails show what each mode really resolves to.
+        $css .= BrandPalette::thumbnailCss($serving);
 
         if ($flags->enabled('custom_css')
             && $settings->get('brand_custom_css_enabled', false) === true
@@ -129,7 +138,7 @@ final class BrandingController extends Controller
             }
             $this->bustBrandCache($settings);
             $this->audit($admin->id(), 'reset');
-            return $this->redirectWithFlash('/admin/branding', 'Branding reset. The community name and package theme were kept.');
+            return $this->redirectWithFlash('/admin/branding', 'Branding reset. The community name, community text and package theme were kept.');
         }
 
         $errors = [];
@@ -157,6 +166,8 @@ final class BrandingController extends Controller
         if ($name === '' || mb_strlen($name) > 80) {
             $errors['site_name'] = 'Site name must be 1–80 characters.';
         }
+        [$identity, $identityErrors] = $this->submittedIdentity($request, $settings);
+        $errors += $identityErrors;
         $primary = trim($request->str('color_primary'));
         $accent = trim($request->str('color_accent'));
         if ($primary !== '' && !self::isHex($primary)) {
@@ -210,7 +221,7 @@ final class BrandingController extends Controller
         }
 
         if ($errors !== []) {
-            return $this->view('admin/branding', $this->formData($settings, [
+            return $this->view('admin/branding', $this->formData($settings, $this->identityFormValues($identity) + [
                 'site_name' => $name,
                 'color_primary' => $primary,
                 'color_accent' => $accent,
@@ -228,9 +239,18 @@ final class BrandingController extends Controller
         }
 
         $assetErrors = $this->container->get(Database::class)->transaction(function () use (
-            $settings, $name, $primary, $accent, $themeDefault, $themePreset,
+            $settings, $name, $primary, $accent, $themeDefault, $themePreset, $identity,
             $customCssAvailable, $customCssEnabled, $customCss, $contrastWarnings, $admin, $request, $removals,
         ): array {
+            $changedText = [];
+            foreach ($identity as $key => $value) {
+                if ($settings->getString($key, '') !== $value) {
+                    $changedText[] = $key;
+                }
+                // '' is stored rather than deleting the row: it means "use the
+                // built-in default", exactly like a cleared colour.
+                $settings->set($key, $value);
+            }
             $settings->set('site_name', $name);
             $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
             $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
@@ -270,7 +290,7 @@ final class BrandingController extends Controller
                 }
             }
             $this->bustBrandCache($settings);
-            $this->audit($admin->id(), 'update', ['removed_assets' => $removedAssets]);
+            $this->audit($admin->id(), 'update', ['removed_assets' => $removedAssets, 'changed_text' => $changedText]);
             return $assetErrors;
         });
         if ($assetErrors !== []) {
@@ -295,6 +315,10 @@ final class BrandingController extends Controller
         ], array_flip((array) $this->config()->get('uploads.allowed_mime', [])));
         $data = [
             'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
+        ] + $this->identityFormValues(BrandIdentity::storedValues(
+            $settings->getMany(array_fill_keys(array_keys(BrandIdentity::FIELDS), '')),
+        )) + [
+            'identity_limits' => array_column(BrandIdentity::FIELDS, 'max', 'field'),
             'color_primary' => $settings->getString('brand_color_primary', ''),
             'color_accent' => $settings->getString('brand_color_accent', ''),
             'logo_path' => $settings->getString('brand_logo_path', ''),
@@ -345,7 +369,7 @@ final class BrandingController extends Controller
         $customCssAvailable = $this->container->get(FeatureFlags::class)->enabled('custom_css');
         $customCssEnabled = $customCssAvailable && $request->str('custom_css_enabled') === '1';
 
-        return [
+        return $this->identityFormValues($this->submittedIdentity($request, $settings)[0]) + [
             'site_name' => $request->str(
                 'site_name',
                 $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
@@ -362,6 +386,49 @@ final class BrandingController extends Controller
             'reset_confirm' => $request->str('reset_confirm'),
             'uploads_need_reselect' => $this->hasSubmittedAssets($request),
         ] + $this->assetRemovalData($request);
+    }
+
+    /**
+     * Normalized community text from the form (BrandIdentity, ADR 0054). A
+     * submitted empty field restores its default. An absent field keeps the
+     * saved value, so a branding page opened before these fields existed (or
+     * any other partial form) cannot erase community text by omission.
+     *
+     * @return array{0:array<string,string>,1:array<string,string>} values by setting key, errors by form field
+     */
+    private function submittedIdentity(Request $request, SettingRepository $settings): array
+    {
+        $values = [];
+        $errors = [];
+        $saved = BrandIdentity::storedValues($settings->getMany(array_fill_keys(array_keys(BrandIdentity::FIELDS), '')));
+        foreach (BrandIdentity::FIELDS as $key => $field) {
+            $raw = $request->post($field['field']);
+            if ($raw === null) {
+                $values[$key] = $saved[$key];
+                continue;
+            }
+            $value = is_string($raw) ? BrandIdentity::normalize($raw, $field['multiline']) : '';
+            if (!is_string($raw)) {
+                $errors[$field['field']] = $field['label'] . ' must be text.';
+            } elseif (($error = BrandIdentity::error($value, $key)) !== null) {
+                $errors[$field['field']] = $error;
+            }
+            $values[$key] = $value;
+        }
+        return [$values, $errors];
+    }
+
+    /**
+     * @param array<string,string> $identity values by setting key
+     * @return array<string,string> values by form field
+     */
+    private function identityFormValues(array $identity): array
+    {
+        $values = [];
+        foreach (BrandIdentity::FIELDS as $key => $field) {
+            $values[$field['field']] = (string) ($identity[$key] ?? '');
+        }
+        return $values;
     }
 
     private function hasSubmittedAssets(Request $request): bool

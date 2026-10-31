@@ -152,6 +152,27 @@ final class AppThemePackageTest extends TestCase
         self::assertStringContainsString('--accent:#2f6fed', $withPrimary->body());
     }
 
+    public function test_member_appearance_choices_picture_the_active_package(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);
+        (new SettingRepository($this->db))->set('brand_theme_preset', 'retro');
+        $this->themeState()->activate($this->adminEntity(), 'password123', $this->installedTheme(['with_asset' => true]));
+        $this->actingAs($this->makeUser());
+
+        $page = $this->get('/settings/appearance');
+        $this->assertStatus(200, $page);
+        // The package owns the base; the stored Retro preset is suspended.
+        $this->assertSeeText($page, 'Midnight Theme · light backgrounds');
+        $this->assertSeeText($page, 'Midnight Theme · dark backgrounds');
+        $this->assertDontSeeText($page, 'Retro ·');
+
+        // Each mode pictures the package's own tokens: its base accent by day
+        // and the dark_tokens accent the package declares for twilight.
+        $css = $this->get('/brand.css')->body();
+        self::assertMatchesRegularExpression('/\.theme-thumb \[data-thumb-mode="light"\]\{[^}]*--thumb-action:#8f3d12;/', $css);
+        self::assertMatchesRegularExpression('/\.theme-thumb \[data-thumb-mode="dark"\]\{[^}]*--thumb-action:#d2b062;/', $css);
+    }
+
     public function test_session_package_preview_uses_private_brand_css_without_changing_public_branding(): void
     {
         $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);

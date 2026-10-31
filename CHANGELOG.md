@@ -2,6 +2,27 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Complete community identity
+
+- Show the community logo on every sign-in screen — log in, registration and
+  invitation landing, password recovery, verification and MFA — on a raised
+  plate over the constant twilight stage, with the house mark as the fallback
+  for missing, removed or disabled logos.
+- Let System mode choose the logo from the device colour preference without
+  JavaScript or a first-paint swap; each mode falls back to the base logo, and
+  a mode without any image keeps the house mark.
+- Add plain-text community text with limits and defaults: an optional tagline,
+  a search/link-preview description, and the board directory's welcome heading
+  and introduction. Clearing a field restores its default; invalid text returns
+  the whole draft unsaved. Branding reset keeps community text with the name.
+- Replace the fixed Parchment/Twilight swatches with Light, Dark and System
+  thumbnails painted from the resolved package/preset and operator colours.
+- Keep the branding preview column within the viewport on desktop so the reset
+  controls beneath it stay reachable by scrolling and keyboard focus.
+- Document the expanded branding contract, settings ownership and colour
+  precedence in ADR 0054. Evidence:
+  `docs/evidence/branding-identity-2026-10-31/README.md`.
+
 ## [2026-10-31] - Branding propagation, preview and recovery
 
 - Make Enter in the reset confirmation reset branding without publishing pending

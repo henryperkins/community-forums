@@ -261,10 +261,15 @@ test('branding preview shows unsaved logo variants and restores the saved fallba
   await page.locator('[name="theme_default"]').selectOption('dark');
   await expect(preview).toHaveAttribute('src', /^data:image\/png/);
   await expect.poll(() => preview.getAttribute('src')).not.toBe(baseSource);
+  const darkSource = await preview.getAttribute('src');
+  // System follows the device for the logo as well as the colours (ADR 0054):
+  // the dark variant on a dark device, the base logo on a light one.
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.locator('[name="theme_default"]').selectOption('system');
-  await expect(preview).toHaveAttribute('src', baseSource!);
+  await expect(preview).toHaveAttribute('src', darkSource!);
   await shot(page, info, 'unsaved-logo-preview');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await expect(preview).toHaveAttribute('src', baseSource!);
   await page.locator('[name="logo"]').setInputFiles([]);
   await expect(preview).toHaveAttribute('src', savedSource!);
   expect(fixture().preset).toBe('classic');

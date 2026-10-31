@@ -76,7 +76,7 @@ test('Enter in reset clears branding without publishing pending edits or files',
   const state = fixture();
   expect(state.site_name).toBe('Saved community identity');
   expect(Object.values(state.assets)).toEqual(['', '', '', '']);
-  await expect(page.locator('.branding-reset-status')).toContainText('community name and package theme were kept');
+  await expect(page.locator('.branding-reset-status')).toContainText('community name, community text and package theme were kept');
   await shot(page, info, 'keyboard-reset-keeps-identity');
 });
 
@@ -221,10 +221,10 @@ test('branding reset and package safe mode describe their retained state', async
   const activeId = fixture().theme.active_build_id;
   expect(activeId).toBeTruthy();
   await page.goto('/admin/branding');
-  await expect(page.locator('.branding-reset-card')).toContainText('Keeps the community name and active package theme.');
+  await expect(page.locator('.branding-reset-card')).toContainText('Keeps the community name, community text and active package theme.');
   await page.locator('[name="reset_confirm"]').fill('RESET');
   await page.getByRole('button', { name: 'Reset branding', exact: true }).click();
-  await expect(page.locator('.branding-reset-status')).toContainText('community name and package theme were kept');
+  await expect(page.locator('.branding-reset-status')).toContainText('community name, community text and package theme were kept');
   expect(fixture().theme.active_build_id).toBe(activeId);
   expect(fixture().site_name).toBe('Scoped recovery community');
   await page.locator('[name="theme_preset"]').selectOption('retro');

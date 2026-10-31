@@ -1,9 +1,11 @@
 # Runbook: operator branding
 
 `branding` is default-on and exposes `/admin/branding`. Admins can change the
-community name, primary/accent colours, base/light/dark logos, favicon, the
-signed-out visitor's default mode, and the Classic/Retro preset. Signed-in
-members retain their personal appearance preferences. Saves apply on the next
+community name, community text (tagline, description, directory welcome),
+primary/accent colours, base/light/dark logos, favicon, the signed-out
+visitor's default mode, and the Classic/Retro preset. Signed-in members retain
+their personal appearance preferences. Every setting's owner, default, fallback,
+surfaces and reset behaviour is listed in ADR 0054. Saves apply on the next
 page load; already-open pages keep their current appearance until navigation
 or reload. The dynamic brand stylesheet is versioned by settings, serving package
 and resolver version, so settings do not require an asset rebuild.
@@ -17,8 +19,9 @@ header navigation, board selection, feed-menu selection, unread counts/dot,
 content, an action button and a focusable field. The menu sample stays visible
 while editing; its example links remain within the preview. JavaScript also previews unsaved colours and
 logo files. Without JavaScript, the form still saves normally and the sample
-uses saved colours/logos. System follows the device's colour preference but
-uses the base logo; explicit Light/Dark uses that variant with a base fallback.
+uses saved colours/logos. Each mode uses its own logo variant with the base
+logo as fallback; System follows the device's colour preference for both the
+colours and the logo.
 Selecting a logo's removal control previews the resulting fallback immediately.
 On narrow screens, **View appearance preview** jumps from the appearance
 controls to the sample; **Back to appearance controls** returns keyboard focus
@@ -50,6 +53,43 @@ with the settings change. These checks cover the declared brand roles, not arbit
 custom CSS. A chosen foreground can still fail on content surfaces in one mode;
 its warning and explicit override remain necessary.
 
+## Identity on every entry point
+
+The logo resolves once and renders on the member topbar, the console bar and
+every sign-in screen: log in, registration (including the invitation landing),
+forgot and reset password, email verification and MFA. On those screens it sits
+on a raised plate in the page's raised surface, so a logo drawn for the light
+topbar stays legible on the constant twilight stage. Without any logo, or with
+branding switched off, each surface keeps the built-in house mark and name.
+
+- Light mode shows the light variant, else the base logo, else the house mark.
+- Dark mode shows the dark variant, else the base logo, else the house mark.
+- System renders both choices and the device's colour preference picks one,
+  without JavaScript: a `<picture>` when both modes have images, or the image
+  in one mode and the house mark in the other when only one mode has an image.
+  The first paint is already correct, and changing the device setting switches
+  the logo immediately.
+
+Community text is plain text; leave a field blank to use its default.
+
+| Field | Limit | Default | Where it appears |
+|---|---|---|---|
+| Tagline | 80 | None | Under the identity on sign-in screens; above the directory heading |
+| Community description | 300 | "{name} — a community forum." | Search and link-preview description for pages without their own |
+| Welcome heading | 80 | "Every board in the valley" | Board directory heading |
+| Welcome introduction | 600 | "Browse the boards the council keeps and pick one to see its topics." | Board directory introduction; each line is a paragraph, followed by the inbox pointer |
+
+Whitespace is tidied on save. Over-limit text, control characters and
+bidirectional-override characters are refused: the form returns with the whole
+draft and an error beside the field, and nothing is saved. Text is always shown
+escaped, never as HTML.
+
+Members choose Light, Dark or System under Settings → Appearance. Each choice
+shows a thumbnail painted from that mode's resolved palette — the active package
+or preset, then operator colours — and names the base (package name, Retro or
+Classic). The member's mode, density, text size and motion preferences remain
+theirs.
+
 ## Colour roles and precedence
 
 - Primary: actions, links, keyboard focus, selected header/rail/menu states and
@@ -80,8 +120,9 @@ not both. Removed paths fall back to the base logo or built-in chrome, and the
 change is audited; the stored media file is retained, as with a full reset.
 
 Reset requires typing `RESET`. It clears stored colours, all logo variants,
-favicon, guest mode, preset, and custom CSS; the community name and package-theme
-state remain. The form links to package safe mode when that subsystem is on.
+favicon, guest mode, preset, and custom CSS; the community name, community text
+and package-theme state remain. Clear an individual text field and save to
+restore its default. The form links to package safe mode when that subsystem is on.
 Reset has its own form: Enter in its confirmation field performs reset without
 saving pending branding edits or uploading selected files. Native confirmation
 validation keeps an ordinary invalid attempt on the page with its pending edits;

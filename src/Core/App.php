@@ -300,6 +300,8 @@ use App\Service\Webhook\CurlWebhookTransport;
 use App\Service\Webhook\WebhookTransport;
 use App\Service\WebhookService;
 use App\Support\AssetManifest;
+use App\Support\BrandIdentity;
+use App\Support\BrandLogo;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
 use App\Support\MentionLinker;
@@ -679,6 +681,10 @@ final class App
             'brand_version' => '',
             'brand_custom_css_enabled' => false,
             'brand_custom_css' => '',
+            'brand_tagline' => '',
+            'brand_description' => '',
+            'brand_directory_heading' => '',
+            'brand_directory_intro' => '',
             'giphy_public_key' => (string) $this->config->get('giphy.public_key', ''),
             'site_announcement' => null,
         ];
@@ -1007,9 +1013,14 @@ final class App
      * safe built-in fallbacks. Never throws — a missing setting or table yields
      * the default RetroBoards chrome so the shell always renders.
      *
+     * Every surface that shows the community's identity (member chrome, the
+     * console bar and the auth stage) renders from this one resolution, so a
+     * missing, removed or disabled logo falls back to the built-in mark
+     * everywhere at once (ADR 0054).
+     *
      * @param array<string,mixed> $appearance
      * @param array<string,mixed> $settings
-     * @return array{name:string,logo_path:?string,favicon_path:?string,color_primary:string,color_accent:string,theme_preset:string,has_custom_colors:bool,version:string}
+     * @return array{name:string,logo_path:?string,logo:array{kind:string,src:?string,light:?string,dark:?string},favicon_path:?string,color_primary:string,color_accent:string,theme_preset:string,has_custom_colors:bool,version:string,tagline:string,description:string,directory_heading:string,directory_intro:list<string>}
      */
     private function branding(
         Container $container,
@@ -1021,12 +1032,17 @@ final class App
         $brand = [
             'name' => $siteName,
             'logo_path' => null,
+            'logo' => ['kind' => 'none', 'src' => null, 'light' => null, 'dark' => null],
             'favicon_path' => null,
             'color_primary' => '',
             'color_accent' => '',
             'theme_preset' => 'classic',
             'has_custom_colors' => false,
             'version' => '',
+            'tagline' => '',
+            'description' => BrandIdentity::defaultDescription($siteName),
+            'directory_heading' => BrandIdentity::DEFAULT_DIRECTORY_HEADING,
+            'directory_intro' => BrandIdentity::paragraphs(''),
         ];
         try {
             if (!$container->get(FeatureFlags::class)->enabled('branding')) {
@@ -1041,14 +1057,17 @@ final class App
             $preset = is_string($settings['brand_theme_preset'] ?? null) ? $settings['brand_theme_preset'] : 'classic';
             $brand['version'] = is_string($settings['brand_version'] ?? null) ? $settings['brand_version'] : '';
             $theme = (string) ($appearance['theme'] ?? 'system');
-            $selectedLogo = match ($theme) {
-                'dark' => $darkLogo !== '' ? $darkLogo : $logo,
-                'light' => $lightLogo !== '' ? $lightLogo : $logo,
-                default => $logo,
-            };
-            if ($selectedLogo !== '') {
-                $brand['logo_path'] = $selectedLogo;
+            $brand['logo'] = BrandLogo::plan($logo, $lightLogo, $darkLogo, $theme);
+            $brand['logo_path'] = $brand['logo']['src'];
+            $copy = BrandIdentity::stored($settings);
+            $brand['tagline'] = $copy['tagline'];
+            if ($copy['description'] !== '') {
+                $brand['description'] = $copy['description'];
             }
+            if ($copy['directory_heading'] !== '') {
+                $brand['directory_heading'] = $copy['directory_heading'];
+            }
+            $brand['directory_intro'] = BrandIdentity::paragraphs($copy['directory_intro']);
             if ($favicon !== '') {
                 $brand['favicon_path'] = $favicon;
             }

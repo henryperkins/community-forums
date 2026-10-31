@@ -48,9 +48,26 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
 <div class="read-main read-pad board-index" data-directory-pane="<?= $e($pane) ?>">
     <?php if ($pane === 'boards'): ?>
         <section class="forum-directory" data-directory-sort="<?= $e($sort) ?>" data-directory-peek="<?= $peek ?>">
+            <?php
+            // Operator welcome copy (ADR 0054), plain text with built-in
+            // defaults. The inbox pointer is navigation, not identity copy, so
+            // it always closes the introduction.
+            $welcome = is_array($branding ?? null) ? $branding : [];
+            $welcomeTagline = (string) ($welcome['tagline'] ?? '');
+            $welcomeHeading = (string) ($welcome['directory_heading'] ?? '') ?: \App\Support\BrandIdentity::DEFAULT_DIRECTORY_HEADING;
+            $welcomeIntro = is_array($welcome['directory_intro'] ?? null) && $welcome['directory_intro'] !== []
+                ? array_values($welcome['directory_intro'])
+                : \App\Support\BrandIdentity::paragraphs('');
+            $welcomeLast = count($welcomeIntro) - 1;
+            ?>
             <header class="forum-directory__hero">
-                <h1>Every board in the valley</h1>
-                <p>Browse the boards the council keeps and pick one to see its topics. Your own cross-board queue is the <a href="/inbox">inbox</a>.</p>
+                <?php if ($welcomeTagline !== ''): ?>
+                <p class="forum-directory__tagline"><?= $e($welcomeTagline) ?></p>
+                <?php endif; ?>
+                <h1><?= $e($welcomeHeading) ?></h1>
+                <?php foreach ($welcomeIntro as $i => $paragraph): ?>
+                <p><?= $e($paragraph) ?><?php if ($i === $welcomeLast): ?> Your own cross-board queue is the <a href="/inbox">inbox</a>.<?php endif; ?></p>
+                <?php endforeach; ?>
                 <p class="forum-directory__stats" aria-label="Forum totals">
                     <span data-forum-total="boards"><?= (int) $totals['boards'] ?> board<?= (int) $totals['boards'] === 1 ? '' : 's' ?></span>
                     <span data-forum-total="topics"><?= (int) $totals['topics'] ?> topic<?= (int) $totals['topics'] === 1 ? '' : 's' ?></span>

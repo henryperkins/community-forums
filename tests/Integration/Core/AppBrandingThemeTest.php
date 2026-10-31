@@ -336,9 +336,16 @@ final class AppBrandingThemeTest extends TestCase
         $this->assertStatus(200, $response);
         self::assertSame('private, no-store', $response->getHeader('cache-control'));
 
-        (new \App\Repository\SettingRepository($this->db))->set('features', ['branding' => false]);
+        $settings = new \App\Repository\SettingRepository($this->db);
+        $settings->set('brand_color_primary', '#123456');
+        $settings->set('features', ['branding' => false]);
         $disabled = $this->get('/brand.css', ['preview' => '1']);
-        self::assertSame(':root{}', $disabled->body());
+        // No stored brand override is served while branding is off; only the
+        // built-in palette's appearance thumbnails remain (ADR 0054).
+        self::assertStringStartsWith(':root{}', $disabled->body());
+        self::assertStringNotContainsString('#123456', $disabled->body());
+        self::assertStringNotContainsString('[data-theme="dark"]', $disabled->body());
+        self::assertStringContainsString('.theme-thumb [data-thumb-mode="light"]{--thumb-page:#f5efe1;', $disabled->body());
         self::assertSame('private, no-store', $disabled->getHeader('cache-control'));
     }
 
@@ -487,7 +494,7 @@ final class AppBrandingThemeTest extends TestCase
             'reset' => '1',
             'reset_confirm' => 'RESET',
         ]), '/admin/branding');
-        $this->assertSeeText($this->get('/admin/branding'), 'Branding reset. The community name and package theme were kept.');
+        $this->assertSeeText($this->get('/admin/branding'), 'Branding reset. The community name, community text and package theme were kept.');
     }
 
     public function test_rejected_brand_asset_uses_the_review_callout_and_keeps_the_previous_asset(): void

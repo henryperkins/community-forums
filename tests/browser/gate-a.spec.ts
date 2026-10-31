@@ -1133,7 +1133,7 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
 
     await noJsPage.locator('input[name="reset_confirm"]').fill('RESET');
     await noJsPage.getByRole('button', { name: 'Reset branding' }).click();
-    await expect(noJsPage.locator('.branding-reset-card').getByRole('status')).toHaveText('Branding reset. The community name and package theme were kept.');
+    await expect(noJsPage.locator('.branding-reset-card').getByRole('status')).toHaveText('Branding reset. The community name, community text and package theme were kept.');
     await expect(noJsPage.locator('[data-brand-asset-status]')).toHaveText(['No image saved.', 'No image saved.', 'No image saved.', 'No image saved.']);
   } finally {
     await noJs.close();
