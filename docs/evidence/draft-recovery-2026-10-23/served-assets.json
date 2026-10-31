@@ -1,0 +1,33 @@
+{
+  "environment": "owned local PHP server; no production claim",
+  "asset_version": "cc83219753a78401",
+  "checks": [
+    {
+      "asset": "app.css",
+      "url": "http://127.0.0.1:8125/assets/dist/app-style-Chu6l4v-.css",
+      "status": 200,
+      "bytes": 454424,
+      "expected_sha256": "eba15c54c76971534c81d2d888707f3a774ebc194e035841e29f2403a2306b3d",
+      "served_sha256": "eba15c54c76971534c81d2d888707f3a774ebc194e035841e29f2403a2306b3d",
+      "match": true
+    },
+    {
+      "asset": "app.js",
+      "url": "http://127.0.0.1:8125/assets/dist/app-f9e58cead3b7207d.js",
+      "status": 200,
+      "bytes": 75721,
+      "expected_sha256": "f9e58cead3b7207d9babfec3475f4e5b39df0c9d803773043678958dacb32512",
+      "served_sha256": "f9e58cead3b7207d9babfec3475f4e5b39df0c9d803773043678958dacb32512",
+      "match": true
+    },
+    {
+      "asset": "composer.js",
+      "url": "http://127.0.0.1:8125/assets/dist/composer-e12ccdcc2e264b17.js",
+      "status": 200,
+      "bytes": 82270,
+      "expected_sha256": "e12ccdcc2e264b17e89607756554f132e2ab6437c10f5cd78016c6c6758a8732",
+      "served_sha256": "e12ccdcc2e264b17e89607756554f132e2ab6437c10f5cd78016c6c6758a8732",
+      "match": true
+    }
+  ]
+}

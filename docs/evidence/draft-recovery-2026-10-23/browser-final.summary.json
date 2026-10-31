@@ -1,0 +1,2079 @@
+{
+  "kind": "allowlisted historical browser result summary",
+  "source_report": "browser-final.json",
+  "source_report_sha256": "1f8526ffdf817f1a7c9d6667b3011e7dee3afc04352e5b2d0ffb3867372e0d56",
+  "omitted_fields": [
+    "config",
+    "stdout",
+    "stderr",
+    "errors",
+    "attachments",
+    "all non-allowlisted fields"
+  ],
+  "stats": {
+    "startTime": "2026-10-24T05:33:15.162Z",
+    "duration": 255297.99000000002,
+    "expected": 108,
+    "skipped": 4,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: equal",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3018
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: equal",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3308
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: title",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3040
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: title",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3380
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: anonymous",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3039
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: anonymous",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3374
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: title-and-anonymous",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3082
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: title-and-anonymous",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3401
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: body",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3040
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "conflict comparison: body",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3308
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 151,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "comparison is accessible and contains long text at 320px and landscape",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1480
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 151,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "comparison is accessible and contains long text at 320px and landscape",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2325
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 163,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a second conflict compares and keeps the latest server revision",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2989
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 163,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a second conflict compares and keeps the latest server revision",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3188
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 183,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "server Resume preserves a divergent complete browser copy until a choice",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1660
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 183,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "server Resume preserves a divergent complete browser copy until a choice",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2412
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 199,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "an unavailable browser draft board requires an explicit choice: ordinary mount",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 843
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 199,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "an unavailable browser draft board requires an explicit choice: ordinary mount",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1509
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 199,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "an unavailable browser draft board requires an explicit choice: server Resume",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 830
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 199,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "an unavailable browser draft board requires an explicit choice: server Resume",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1549
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 223,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "late legacy hydration respects explicitly cleared and unchecked fields",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 912
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 223,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "late legacy hydration respects explicitly cleared and unchecked fields",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1629
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 247,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "typing during rich editor import survives: first draft",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 860
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 247,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "typing during rich editor import survives: first draft",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1714
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 247,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "typing during rich editor import survives: saved draft",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1748
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 247,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "typing during rich editor import survives: saved draft",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2563
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 280,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a group-title-only conflict shows both titles and keeps the selected server copy",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1757
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 280,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a group-title-only conflict shows both titles and keeps the selected server copy",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2550
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 309,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a board rail edit alone saves the destination and restores the anonymity gate",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2564
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 309,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a board rail edit alone saves the destination and restores the anonymity gate",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3393
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 325,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "body-only typing during import retains untouched local-only wrapper fields",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1113
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 325,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "body-only typing during import retains untouched local-only wrapper fields",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1942
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "message wrapper recovery keeps recipients, chips and a group title: source",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2411
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "message wrapper recovery keeps recipients, chips and a group title: source",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3315
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "message wrapper recovery keeps recipients, chips and a group title: rich",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2542
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "message wrapper recovery keeps recipients, chips and a group title: rich",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3434
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 383,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "confirmation preserves a newer same-body title from another tab",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2795
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 383,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "confirmation preserves a newer same-body title from another tab",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 4103
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 402,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "confirmation clears the matching full local and server snapshot",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1679
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 402,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "confirmation clears the matching full local and server snapshot",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2488
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 414,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a malformed or mismatched companion never replaces a legacy raw body",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 904
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 414,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "a malformed or mismatched companion never replaces a legacy raw body",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1624
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 428,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "completion recognition preserves a changed group title after its feature is disabled",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2476
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 428,
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "title": "completion recognition preserves a changed group title after its feature is disabled",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3444
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3623
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 4273
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "title-only work is saved and listed before a body exists",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1763
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "title-only work is saved and listed before a body exists",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2650
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 86,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "local-only fallback retains fields and board destination",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1025
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 86,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "local-only fallback retains fields and board destination",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1902
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 98,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "legacy body-only local drafts recover the matching stored title",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 759
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 98,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "legacy body-only local drafts recover the matching stored title",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1524
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 107,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "server Resume works in a fresh JavaScript-disabled context",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 926
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 107,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "title": "server Resume works in a fresh JavaScript-disabled context",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2208
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3521
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 4370
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "title-only work is saved and listed before a body exists",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1832
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "title-only work is saved and listed before a body exists",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2675
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 86,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "local-only fallback retains fields and board destination",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1196
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 86,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "local-only fallback retains fields and board destination",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2080
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 98,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "legacy body-only local drafts recover the matching stored title",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 792
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 98,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "legacy body-only local drafts recover the matching stored title",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1615
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 107,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "server Resume works in a fresh JavaScript-disabled context",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 954
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "draft-recovery.spec.ts",
+      "line": 107,
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "title": "server Resume works in a fresh JavaScript-disabled context",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2274
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 113,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "server drafts expose conflict choices and save local as next revision",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2549
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 113,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "server drafts expose conflict choices and save local as next revision",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3390
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 149,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "server draft validation errors replace stale success status",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2469
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 149,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "server draft validation errors replace stale success status",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3218
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 174,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "drafts page keeps browser-local drafts visible while server drafts are enabled",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 546
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 174,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "drafts page keeps browser-local drafts visible while server drafts are enabled",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1166
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 194,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "failed submits keep server drafts and successful submits clear them after navigation",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2008
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 194,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "failed submits keep server drafts and successful submits clear them after navigation",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2940
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 248,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "composer discard button immediately removes the matching server draft",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1675
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "server-drafts.spec.ts",
+      "line": 248,
+      "suite": [
+        "server-drafts.spec.ts"
+      ],
+      "title": "composer discard button immediately removes the matching server draft",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2402
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 63,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "failed navigation keeps the draft and restores a usable submit button",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1429
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 63,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "failed navigation keeps the draft and restores a usable submit button",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3411
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 88,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "confirmation clears only the submitted version and Back permits a new reply",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1350
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 88,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "confirmation clears only the submitted version and Back permits a new reply",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3127
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 109,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "a later edit in another tab survives confirmation of the older draft",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1341
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 109,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "a later edit in another tab survives confirmation of the older draft",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3638
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "enlarged header labels reflow and mobile prose spans beneath the byline",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1351
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 121,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "enlarged header labels reflow and mobile prose spans beneath the byline",
+      "project": "webkit",
+      "status": "skipped",
+      "expected_status": "skipped",
+      "attempts": [
+        {
+          "status": "skipped",
+          "duration_ms": 284
+        }
+      ],
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "This existing root-font proxy uses Chromium CDP; the separate WebKit baseline probe is retained in the remediation evidence."
+        }
+      ]
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 146,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "landscape preview leaves Minimize and Reply reachable below the header",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1304
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 146,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "landscape preview leaves Minimize and Reply reachable below the header",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2324
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 178,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "reaction choices have visible names before activation",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 178,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "reaction choices have visible names before activation",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1695
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 192,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rich editor recovers a failed send and submits the retained draft exactly once",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2023
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 192,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rich editor recovers a failed send and submits the retained draft exactly once",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3993
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 217,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "a later draft may deliberately repeat a confirmed reply",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1130
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 217,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "a later draft may deliberately repeat a confirmed reply",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2867
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 231,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "editing after a committed response is lost uses a fresh submission key",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1217
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 231,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "editing after a committed response is lost uses a fresh submission key",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2231
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 275,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rich history cleanup preserves a newer draft in another tab after settling",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3211
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 275,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rich history cleanup preserves a newer draft in another tab after settling",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 5350
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 296,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "multiple completed history entries cannot reuse an older consumed key",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1651
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 296,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "multiple completed history entries cannot reuse an older consumed key",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3074
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 319,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "a late multiline autosave from the confirmed submission is not restored",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 906
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 319,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "a late multiline autosave from the confirmed submission is not restored",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2196
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 341,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "active thread labels meet normal-text contrast in light",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1775
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 341,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "active thread labels meet normal-text contrast in light",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3048
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 341,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "active thread labels meet normal-text contrast in dark",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1761
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 341,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "active thread labels meet normal-text contrast in dark",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3113
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 376,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "keyboard reaches and scrolls the complete plain reply preview",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1639
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 376,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "keyboard reaches and scrolls the complete plain reply preview",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2527
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 427,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "saving a rich conflict uses the latest local edits",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2990
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 427,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "saving a rich conflict uses the latest local edits",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3971
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 440,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rapid rich edit after resolving a conflict survives offline Back",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3312
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 440,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rapid rich edit after resolving a conflict survives offline Back",
+      "project": "webkit",
+      "status": "skipped",
+      "expected_status": "skipped",
+      "attempts": [
+        {
+          "status": "skipped",
+          "duration_ms": 277
+        }
+      ],
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "This scenario requires Chromium navigation to an offline error history entry."
+        }
+      ]
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 470,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "delayed rich recovery replaces a stale native snapshot",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3301
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 470,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "delayed rich recovery replaces a stale native snapshot",
+      "project": "webkit",
+      "status": "skipped",
+      "expected_status": "skipped",
+      "attempts": [
+        {
+          "status": "skipped",
+          "duration_ms": 263
+        }
+      ],
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "This scenario requires Chromium navigation to an offline error history entry."
+        }
+      ]
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 470,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "delayed rich recovery preserves new typing",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3472
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 470,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "delayed rich recovery preserves new typing",
+      "project": "webkit",
+      "status": "skipped",
+      "expected_status": "skipped",
+      "attempts": [
+        {
+          "status": "skipped",
+          "duration_ms": 280
+        }
+      ],
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "This scenario requires Chromium navigation to an offline error history entry."
+        }
+      ]
+    }
+  ]
+}

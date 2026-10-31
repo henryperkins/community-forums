@@ -1,0 +1,153 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.codex/worktrees/bf69/community-forums/phpunit.xml
+
+FFFFFFFFFFFFFFFFFFFF..                                            22 / 22 (100%)
+
+Time: 00:00.247, Memory: 14.00 MB
+
+There were 20 failures:
+
+1) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended user create" ('suspended', 'user', 'create')
+Unexpected HTTP status. Body: {"draft":{"id":2,"user_id":2,"context_key":"another-context","revision":1,"title":null,"body":"Blocked new draft","metadata":{},"updated_at":"2026-10-31 13:22:11","expires_at":"2027-01-29 13:22:11"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+2) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended user update" ('suspended', 'user', 'update')
+Unexpected HTTP status. Body: {"draft":{"id":3,"user_id":4,"context_key":"~2Fthreads","revision":2,"title":"Blocked title","body":"Blocked edit","metadata":{},"updated_at":"2026-10-31 13:22:11","expires_at":"2027-01-29 13:22:11"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+3) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended user discard" ('suspended', 'user', 'discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+4) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended user revision-discard" ('suspended', 'user', 'revision-discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+5) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended user page-discard" ('suspended', 'user', 'page-discard')
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+6) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended admin create" ('suspended', 'admin', 'create')
+Unexpected HTTP status. Body: {"draft":{"id":8,"user_id":12,"context_key":"another-context","revision":1,"title":null,"body":"Blocked new draft","metadata":{},"updated_at":"2026-10-31 13:22:11","expires_at":"2027-01-29 13:22:11"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+7) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended admin update" ('suspended', 'admin', 'update')
+Unexpected HTTP status. Body: {"draft":{"id":9,"user_id":14,"context_key":"~2Fthreads","revision":2,"title":"Blocked title","body":"Blocked edit","metadata":{},"updated_at":"2026-10-31 13:22:11","expires_at":"2027-01-29 13:22:11"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+8) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended admin discard" ('suspended', 'admin', 'discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+9) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended admin revision-discard" ('suspended', 'admin', 'revision-discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+10) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "suspended admin page-discard" ('suspended', 'admin', 'page-discard')
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+11) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned user create" ('banned', 'user', 'create')
+Unexpected HTTP status. Body: {"draft":{"id":14,"user_id":22,"context_key":"another-context","revision":1,"title":null,"body":"Blocked new draft","metadata":{},"updated_at":"2026-10-31 13:22:12","expires_at":"2027-01-29 13:22:12"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+12) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned user update" ('banned', 'user', 'update')
+Unexpected HTTP status. Body: {"draft":{"id":15,"user_id":24,"context_key":"~2Fthreads","revision":2,"title":"Blocked title","body":"Blocked edit","metadata":{},"updated_at":"2026-10-31 13:22:12","expires_at":"2027-01-29 13:22:12"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+13) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned user discard" ('banned', 'user', 'discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+14) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned user revision-discard" ('banned', 'user', 'revision-discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+15) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned user page-discard" ('banned', 'user', 'page-discard')
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+16) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned admin create" ('banned', 'admin', 'create')
+Unexpected HTTP status. Body: {"draft":{"id":20,"user_id":32,"context_key":"another-context","revision":1,"title":null,"body":"Blocked new draft","metadata":{},"updated_at":"2026-10-31 13:22:12","expires_at":"2027-01-29 13:22:12"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+17) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned admin update" ('banned', 'admin', 'update')
+Unexpected HTTP status. Body: {"draft":{"id":21,"user_id":34,"context_key":"~2Fthreads","revision":2,"title":"Blocked title","body":"Blocked edit","metadata":{},"updated_at":"2026-10-31 13:22:12","expires_at":"2027-01-29 13:22:12"}}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+18) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned admin discard" ('banned', 'admin', 'discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+19) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned admin revision-discard" ('banned', 'admin', 'revision-discard')
+Unexpected HTTP status. Body: {"discarded":true}
+Failed asserting that 200 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+20) Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them with data set "banned admin page-discard" ('banned', 'admin', 'page-discard')
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/bf69/community-forums/tests/Integration/Core/AppServerDraftsTest.php:114
+
+FAILURES!
+Tests: 22, Assertions: 127, Failures: 20.

@@ -4,9 +4,9 @@ $this->layout('layout');
 $this->section('title', 'Open a topic');
 $this->section('route', 'compose');
 $composeSelectedBoard = $selected_board_row;
-$composeSelectedSlug = (string) $composeSelectedBoard['slug'];
+$composeSelectedSlug = $draft_board_missing ? '' : (string) $composeSelectedBoard['slug'];
 $composeSelectedName = (string) $composeSelectedBoard['name'];
-$composeAllowsAnonymous = !empty($composeSelectedBoard['allow_anonymous']);
+$composeAllowsAnonymous = !$draft_board_missing && !empty($composeSelectedBoard['allow_anonymous']);
 $composeOffersAnonymous = false;
 foreach ($boards as $composeBoardOption) {
     if (!empty($composeBoardOption['can_post']) && !empty($composeBoardOption['allow_anonymous'])) {
@@ -14,7 +14,7 @@ foreach ($boards as $composeBoardOption) {
         break;
     }
 }
-$composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e): void {
+$composeWrapper = function () use ($boards, $selected_board, $draft_board_missing, $errors, $old, $e): void {
     ?>
     <label class="field compose-title-field">
         <span>Title</span>
@@ -27,7 +27,8 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
     <label class="field compose-board-field">
         <span>Board</span>
         <span class="compose-board-select-wrap">
-            <select name="board_id" class="input input-engraved compose-board-select" data-compose-board-select<?= field_attrs($errors, 'board_id') ?>>
+            <select name="board_id" class="input input-engraved compose-board-select" data-compose-board-select<?= field_attrs($errors, 'board_id') ?> required>
+                <?php if ($draft_board_missing): ?><option value="" selected disabled>Choose a board</option><?php endif; ?>
                 <?php foreach ($boards as $board): ?>
                     <option value="<?= (int) $board['id'] ?>"
                             data-board-slug="<?= $e($board['slug']) ?>"
@@ -40,12 +41,13 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
         </span>
     </label>
     <?= field_error($errors, 'board_id') ?>
+    <?php if ($draft_board_missing): ?><p class="field-hint" role="status">The original board was not saved. Choose a board before posting.</p><?php endif; ?>
     <?php
 };
 ?>
 <div class="compose-surface" data-compose data-compose-selected-board="<?= $e($composeSelectedSlug) ?>">
     <div class="compose-column">
-        <p class="compose-eyebrow" data-compose-board-name>Posting to <?= $e($composeSelectedName) ?></p>
+        <p class="compose-eyebrow" data-compose-board-name><?= $draft_board_missing ? 'Choose a board' : 'Posting to ' . $e($composeSelectedName) ?></p>
         <?= $this->partial('partials/page_heading', ['heading' => 'Open a topic']) ?>
         <p class="compose-lede">Say what you want the council to consider, and what would change your mind.</p>
 
@@ -57,6 +59,7 @@ $composeWrapper = function () use ($boards, $selected_board, $errors, $old, $e):
             'placeholder' => 'Open with the strongest version of your question…',
             'maxlength' => 20000,
             'body_value' => (string) ($old['body'] ?? ''),
+            'draft_source' => $old['draft_source'] ?? '',
             'submit_label' => 'Create topic',
             'form_class' => 'compose-topic-form',
             'expanded' => true,

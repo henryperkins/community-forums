@@ -1,0 +1,1237 @@
+{
+  "scope": "Focused integration qualification on isolated combined candidate",
+  "runs": [
+    {
+      "name": "focus",
+      "stats": {
+        "startTime": "2026-10-31T13:25:10.980Z",
+        "duration": 190165.75400000002,
+        "expected": 50,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "raw_report_sha256": "f7b099d74908f0e4a264495e1dce9354e628be024eb7a1397b11108e1be64ce3"
+    },
+    {
+      "name": "theming-chromium",
+      "stats": {
+        "startTime": "2026-10-31T13:28:33.446Z",
+        "duration": 6602.468,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "raw_report_sha256": "f2a0724ee0cf97629c6331d2faa3a9cdd7a56f97afb81dd42915f9d286411731"
+    },
+    {
+      "name": "theming-webkit",
+      "stats": {
+        "startTime": "2026-10-31T13:29:18.559Z",
+        "duration": 8785.729000000001,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "raw_report_sha256": "0117181f05d3b6018faf01e04250c3b1c536df2ce2e0cd8cfca015f92dcde18c"
+    }
+  ],
+  "cases": [
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "title": "conflict comparison: title-and-anonymous",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5021,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 121,
+      "title": "conflict comparison: title-and-anonymous",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5234,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 163,
+      "title": "a second conflict compares and keeps the latest server revision",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4878,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 163,
+      "title": "a second conflict compares and keeps the latest server revision",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5132,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 183,
+      "title": "server Resume preserves a divergent complete browser copy until a choice",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3301,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 183,
+      "title": "server Resume preserves a divergent complete browser copy until a choice",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3985,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 223,
+      "title": "late legacy hydration respects explicitly cleared and unchecked fields",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 1788,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 223,
+      "title": "late legacy hydration respects explicitly cleared and unchecked fields",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 2487,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 247,
+      "title": "typing during rich editor import survives: saved draft",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 2764,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 247,
+      "title": "typing during rich editor import survives: saved draft",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3473,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 309,
+      "title": "a board rail edit alone saves the destination and restores the anonymity gate",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3688,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 309,
+      "title": "a board rail edit alone saves the destination and restores the anonymity gate",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4489,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "title": "message wrapper recovery keeps recipients, chips and a group title: source",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3473,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "title": "message wrapper recovery keeps recipients, chips and a group title: source",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4280,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "title": "message wrapper recovery keeps recipients, chips and a group title: rich",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3555,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 350,
+      "title": "message wrapper recovery keeps recipients, chips and a group title: rich",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4409,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 383,
+      "title": "confirmation preserves a newer same-body title from another tab",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4211,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 383,
+      "title": "confirmation preserves a newer same-body title from another tab",
+      "suite": [
+        "draft-recovery.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5415,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5148,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5783,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "title": "title-only work is saved and listed before a body exists",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 2464,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "title": "title-only work is saved and listed before a body exists",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "source"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3261,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5090,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 61,
+      "title": "reload and wrapper-only edits preserve the complete draft",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5838,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "title": "title-only work is saved and listed before a body exists",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 2574,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "draft-recovery.spec.ts",
+      "line": 77,
+      "title": "title-only work is saved and listed before a body exists",
+      "suite": [
+        "draft-recovery.spec.ts",
+        "rich"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3365,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 3,
+      "title": "carol account actions fit and scroll at narrow and short viewports",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 1275,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 3,
+      "title": "carol account actions fit and scroll at narrow and short viewports",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 2960,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 3,
+      "title": "alice account actions fit and scroll at narrow and short viewports",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 1429,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 3,
+      "title": "alice account actions fit and scroll at narrow and short viewports",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3139,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 3,
+      "title": "admin account actions fit and scroll at narrow and short viewports",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 1442,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 3,
+      "title": "admin account actions fit and scroll at narrow and short viewports",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3049,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 50,
+      "title": "native account menu remains keyboard reachable after pointer opening without JavaScript",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 764,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 50,
+      "title": "native account menu remains keyboard reachable after pointer opening without JavaScript",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 2105,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 72,
+      "title": "Create topic target is at least 44px in both axes without narrow overflow",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 738,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "mobile-account-menu.spec.ts",
+      "line": 72,
+      "title": "Create topic target is at least 44px in both axes without narrow overflow",
+      "suite": [
+        "mobile-account-menu.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 1508,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "source unchanged server Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3413,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "source unchanged server Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4871,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "source unchanged local Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3429,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "source unchanged local Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4977,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "rich unchanged server Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3648,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "rich unchanged server Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5346,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "rich unchanged local Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3693,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 63,
+      "title": "rich unchanged local Resume sends once and removes the completed copy",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5515,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 73,
+      "title": "resumed send preserves a newer server revision with identical text",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4032,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 73,
+      "title": "resumed send preserves a newer server revision with identical text",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5548,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 89,
+      "title": "unchanged resumed retry after a lost committed response retains identity and posts once",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4336,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 89,
+      "title": "unchanged resumed retry after a lost committed response retains identity and posts once",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 6282,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 112,
+      "title": "server Resume completes without JavaScript",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3438,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "resumed-draft-completion.spec.ts",
+      "line": 112,
+      "title": "server Resume completes without JavaScript",
+      "suite": [
+        "resumed-draft-completion.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5519,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "theming-remediation.spec.ts",
+      "line": 200,
+      "title": "branding preview changes the candidate palette without changing the admin page",
+      "suite": [
+        "theming-remediation.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 1563,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "chromium",
+      "file": "theming-remediation.spec.ts",
+      "line": 263,
+      "title": "branding removes individual marks while preserving other assets and settings",
+      "suite": [
+        "theming-remediation.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 4523,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "theming-remediation.spec.ts",
+      "line": 200,
+      "title": "branding preview changes the candidate palette without changing the admin page",
+      "suite": [
+        "theming-remediation.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 2825,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "file": "theming-remediation.spec.ts",
+      "line": 263,
+      "title": "branding removes individual marks while preserving other assets and settings",
+      "suite": [
+        "theming-remediation.spec.ts"
+      ],
+      "expected_status": "passed",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5408,
+          "retry": 0
+        }
+      ]
+    }
+  ],
+  "attachments": [
+    {
+      "engine": "chromium",
+      "test": "carol account actions fit and scroll at narrow and short viewports",
+      "name": "account-16px",
+      "path": "captures/chromium/carol-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-16px.png",
+      "sha256": "b6accabcaa47aba4a3efed54e9a401c4ccf324afb2a7433136dec73ca790280e"
+    },
+    {
+      "engine": "chromium",
+      "test": "carol account actions fit and scroll at narrow and short viewports",
+      "name": "account-32px",
+      "path": "captures/chromium/carol-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-32px.png",
+      "sha256": "9de3a62b2aa0f84f0d8e822631c42c9969416d86115d0d5b4edf5c0d000475de"
+    },
+    {
+      "engine": "chromium",
+      "test": "carol account actions fit and scroll at narrow and short viewports",
+      "name": "measurements",
+      "path": "captures/chromium/carol-account-actions-fit-and-scroll-at-narrow-and-short-viewports/measurements.json",
+      "sha256": "7427747d3f29ec40d79a72a116bd4848360af3608b367a930182520e7af0d9d6"
+    },
+    {
+      "engine": "webkit",
+      "test": "carol account actions fit and scroll at narrow and short viewports",
+      "name": "account-16px",
+      "path": "captures/webkit/carol-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-16px.png",
+      "sha256": "b935f6d2e4350aa538766053a36673a2c0dd962bfe98abf8301059de3a2f5903"
+    },
+    {
+      "engine": "webkit",
+      "test": "carol account actions fit and scroll at narrow and short viewports",
+      "name": "account-32px",
+      "path": "captures/webkit/carol-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-32px.png",
+      "sha256": "96d54f8e9248ece35986c38ef0b70e650835c2ce63aae36bcf62ee23a5435e82"
+    },
+    {
+      "engine": "webkit",
+      "test": "carol account actions fit and scroll at narrow and short viewports",
+      "name": "measurements",
+      "path": "captures/webkit/carol-account-actions-fit-and-scroll-at-narrow-and-short-viewports/measurements.json",
+      "sha256": "257b5f2c2208157378452f0dcbb9901d46b912ba06da8690bc03cdc0876fe40c"
+    },
+    {
+      "engine": "chromium",
+      "test": "alice account actions fit and scroll at narrow and short viewports",
+      "name": "account-16px",
+      "path": "captures/chromium/alice-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-16px.png",
+      "sha256": "b70e4662e91da96ec781179d45f5f6561e5ccaa09e71d2dcd8a3484d11f20817"
+    },
+    {
+      "engine": "chromium",
+      "test": "alice account actions fit and scroll at narrow and short viewports",
+      "name": "account-32px",
+      "path": "captures/chromium/alice-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-32px.png",
+      "sha256": "d92763f34d125f1f04e0c3495f860c9ad9e6fa03e520a861fc383fc86996a7c8"
+    },
+    {
+      "engine": "chromium",
+      "test": "alice account actions fit and scroll at narrow and short viewports",
+      "name": "measurements",
+      "path": "captures/chromium/alice-account-actions-fit-and-scroll-at-narrow-and-short-viewports/measurements.json",
+      "sha256": "6738d0ea76f85dc16815007d9f32a910f4e25e7535032ee94e86d384731741b8"
+    },
+    {
+      "engine": "webkit",
+      "test": "alice account actions fit and scroll at narrow and short viewports",
+      "name": "account-16px",
+      "path": "captures/webkit/alice-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-16px.png",
+      "sha256": "e8c756e5c14ae8fa4673489adc5a703b47dfe052daa1fd9fa5059a7ef3d174e9"
+    },
+    {
+      "engine": "webkit",
+      "test": "alice account actions fit and scroll at narrow and short viewports",
+      "name": "account-32px",
+      "path": "captures/webkit/alice-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-32px.png",
+      "sha256": "bbf9bb13579e89aa1b5c6bfaa78f66fab97e3cb086b97402f2c8874ae2659378"
+    },
+    {
+      "engine": "webkit",
+      "test": "alice account actions fit and scroll at narrow and short viewports",
+      "name": "measurements",
+      "path": "captures/webkit/alice-account-actions-fit-and-scroll-at-narrow-and-short-viewports/measurements.json",
+      "sha256": "13da3af4a95f10c15ee5b717794ffc9b3de065f08d4b0f94026062121d2e5671"
+    },
+    {
+      "engine": "chromium",
+      "test": "admin account actions fit and scroll at narrow and short viewports",
+      "name": "account-16px",
+      "path": "captures/chromium/admin-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-16px.png",
+      "sha256": "4c3c2a8597064270dadfe046d4ca81a9603d6fb3e86070403822e263ca0dd539"
+    },
+    {
+      "engine": "chromium",
+      "test": "admin account actions fit and scroll at narrow and short viewports",
+      "name": "account-32px",
+      "path": "captures/chromium/admin-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-32px.png",
+      "sha256": "8e32555b0bcf87850106d7cdfbc21f476942048fb451ca4f736ab672d5b57dbe"
+    },
+    {
+      "engine": "chromium",
+      "test": "admin account actions fit and scroll at narrow and short viewports",
+      "name": "measurements",
+      "path": "captures/chromium/admin-account-actions-fit-and-scroll-at-narrow-and-short-viewports/measurements.json",
+      "sha256": "fab17c684846a6ba67fc593d43db6fff22b5f4900111e03e24edf83a1afcc0fc"
+    },
+    {
+      "engine": "webkit",
+      "test": "admin account actions fit and scroll at narrow and short viewports",
+      "name": "account-16px",
+      "path": "captures/webkit/admin-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-16px.png",
+      "sha256": "424af566a9c1bb72bfe611df0c76383f388bb42379b955a10f0149de198fcc68"
+    },
+    {
+      "engine": "webkit",
+      "test": "admin account actions fit and scroll at narrow and short viewports",
+      "name": "account-32px",
+      "path": "captures/webkit/admin-account-actions-fit-and-scroll-at-narrow-and-short-viewports/account-32px.png",
+      "sha256": "4141d17f1fa5cbeb8afbfa52a92ded3fb2aaeeb7279a83f400d390db970c94e7"
+    },
+    {
+      "engine": "webkit",
+      "test": "admin account actions fit and scroll at narrow and short viewports",
+      "name": "measurements",
+      "path": "captures/webkit/admin-account-actions-fit-and-scroll-at-narrow-and-short-viewports/measurements.json",
+      "sha256": "3e99adfce3607609a2132a70e2e35796be9bd718647aca8202e8ba0d22a6fcc4"
+    },
+    {
+      "engine": "chromium",
+      "test": "native account menu remains keyboard reachable after pointer opening without JavaScript",
+      "name": "native-menu",
+      "path": "captures/chromium/native-account-menu-remains-keyboard-reachable-after-pointer-opening-without-javascript/native-menu.png",
+      "sha256": "9555b8d4df9fc010137003c38715cf04f06ea966e9e25161eec3246ddf61f9d6"
+    },
+    {
+      "engine": "webkit",
+      "test": "native account menu remains keyboard reachable after pointer opening without JavaScript",
+      "name": "native-menu",
+      "path": "captures/webkit/native-account-menu-remains-keyboard-reachable-after-pointer-opening-without-javascript/native-menu.png",
+      "sha256": "34eaa0cb421a9936f4a96b2dd43f9d7d2b4d83d37e7bda247fa94a35c7668c55"
+    },
+    {
+      "engine": "chromium",
+      "test": "Create topic target is at least 44px in both axes without narrow overflow",
+      "name": "target-measurements",
+      "path": "captures/chromium/create-topic-target-is-at-least-44px-in-both-axes-without-narrow-overflow/target-measurements.json",
+      "sha256": "cb5a939b70183bbd22fe2579d0820f05c4492a30a17fb926de321712fb7c3090"
+    },
+    {
+      "engine": "webkit",
+      "test": "Create topic target is at least 44px in both axes without narrow overflow",
+      "name": "target-measurements",
+      "path": "captures/webkit/create-topic-target-is-at-least-44px-in-both-axes-without-narrow-overflow/target-measurements.json",
+      "sha256": "20465f5fa53e9ccb1c3057ba1a068fd04ea0d4a5fdf7a0ddf4a6ed5349b7435b"
+    },
+    {
+      "engine": "chromium",
+      "test": "source unchanged server Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/chromium/source-unchanged-server-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "0bcbf03a0adb19a7e0bf4f30f6e3fd9b87333367e5fd304dd36c181af96fbfee"
+    },
+    {
+      "engine": "webkit",
+      "test": "source unchanged server Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/webkit/source-unchanged-server-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "63b85adcfe9a832615cc4a437b2df5d07f65220d80f9014c8165d089a88a021d"
+    },
+    {
+      "engine": "chromium",
+      "test": "source unchanged local Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/chromium/source-unchanged-local-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "a2701e1fa1addc1d9a224f8d0963a8743e07d0e4aa5338376f6d851fb4b73fb0"
+    },
+    {
+      "engine": "webkit",
+      "test": "source unchanged local Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/webkit/source-unchanged-local-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "923749c13e5cdc14465598313d6136123223a2c7f6157d925e6c15b45e723110"
+    },
+    {
+      "engine": "chromium",
+      "test": "rich unchanged server Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/chromium/rich-unchanged-server-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "b70c084a9a99ee646cf9831d45ff385616129376e2745b1525d1e536b8cf8c5d"
+    },
+    {
+      "engine": "webkit",
+      "test": "rich unchanged server Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/webkit/rich-unchanged-server-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "4084ef975b5cfd3987a9ed29e4ac0139e5dcf204737f8ee21889ed024a38b5b7"
+    },
+    {
+      "engine": "chromium",
+      "test": "rich unchanged local Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/chromium/rich-unchanged-local-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "74b164bb6a8d7448b9e19fd0a4b31fc0af38c31333eed3efacc961832d80b232"
+    },
+    {
+      "engine": "webkit",
+      "test": "rich unchanged local Resume sends once and removes the completed copy",
+      "name": "completed-composer",
+      "path": "captures/webkit/rich-unchanged-local-resume-sends-once-and-removes-the-completed-copy/completed-composer.png",
+      "sha256": "7ebeb49fe192604158322fb474bcec26ac9244e705dbf90e3f5e3092cab9649b"
+    }
+  ],
+  "privacy": "Only whitelisted test metadata and known screenshot/measurement attachments are included. Raw reports and inherited configuration remain outside the repository.",
+  "total_passed": 54
+}

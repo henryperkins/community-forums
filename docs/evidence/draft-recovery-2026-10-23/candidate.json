@@ -1,0 +1,30 @@
+{
+  "base_revision": "960f7f0f27b15ca7def0e815ce19912077e9d249",
+  "asset_version": "cc83219753a78401",
+  "source_sha256": {
+    "src/Support/ComposerDraft.php": "6f1564d1907eab6f3944b30c914daf21db644ce7a775f1cace7c07f9dbe05916",
+    "src/Repository/ServerDraftRepository.php": "96ab1e2fea0a5b1475c5af646aa8c004b7d41b203669e08060bf00295abc70db",
+    "src/Controller/Controller.php": "4884f5633d6b5dbb652237df4eac078085936c641d8e3722a7ab51c640b4bd72",
+    "src/Controller/DraftController.php": "88855c944a454433755efc03d68528ef9883ed10919cb13614f2df238b5bcb5a",
+    "src/Controller/PostController.php": "0793e2e528a5ff2ba7c5f8f40a0502cf10004a44976b242ccb347c52e6ade8d8",
+    "src/Controller/ThreadController.php": "d11d209f3fdb93f2898098e5340618563eb3601299cd5db97b40b58f794cb7c5",
+    "src/Controller/ConversationController.php": "e80180b47424da1b53dac5816fc569e17f1aca0a4174cabd2ba51219b98d5b58",
+    "templates/compose.php": "3a4e3c9de5349d992b2ad265dd85a78514f8cec4db6bacd38ed571552e0969b8",
+    "templates/account/drafts.php": "43a7d572a12e2d2d1a10069aaabca34c232b3ef0b967da5135595b1397c36322",
+    "public/assets/composer.js": "16b72c72d179c4cb4c69c6c22a1b722a32a5e14a4e9fe0922a3177032d4c52f2",
+    "public/assets/app.js": "2d2af55f7ce6e87045ca843105e056f1fe7c310a93826080d6d13a9544d004ff",
+    "public/assets/app.css": "3d8f8fbb41364ca818d9777c08943b88c1e1862240f85e711e6ecfd7e4a0c987",
+    "config/assets.json": "6d1c5c579eb49412c25e20de35d9fe67a4f3044271b14b2377a5012bf388199d",
+    "tests/browser/draft-recovery.spec.ts": "9d4bbd23bbcaf90860c63dda52d3a11123663badacaf77af1cef4c900e74e224",
+    "tests/browser/draft-concurrency.php": "0c6d516ce689b2b6be3477c2c1c331a1bfb28d8d294440e73e361b098ea6cb46",
+    "tests/browser/thread-mobile-recovery.spec.ts": "abab3b9e6be4ad0d5a045180d359dfa414a42d26f9f22691168fc4713e19ba73",
+    "tests/Integration/Core/AppServerDraftsTest.php": "0ce37abe772b5dd627f1aef085c5297228d0eeb5bb3db57f4b52ac8de222ad15",
+    "tests/browser/server-drafts.spec.ts": "fd3b8ee18d58ff7705fceee536090a8aa2c5b23729c33d8ab1809ca223dab117",
+    "tests/browser/playwright.draft-recovery.config.ts": "acda59a3cf3a9711816097e1326931051ac2cca639f763e2f4b6c070594b8aa3",
+    "tests/browser/draft-failure-evidence.ts": "2eb3e097b74e0fad0b9995376755e301ce6eedcf19933d3d7055e1b9515126f4",
+    "public/assets/dist/app-style-Chu6l4v-.css": "eba15c54c76971534c81d2d888707f3a774ebc194e035841e29f2403a2306b3d",
+    "public/assets/dist/app-f9e58cead3b7207d.js": "f9e58cead3b7207d9babfec3475f4e5b39df0c9d803773043678958dacb32512",
+    "public/assets/dist/composer-e12ccdcc2e264b17.js": "e12ccdcc2e264b17e89607756554f132e2ab6437c10f5cd78016c6c6758a8732"
+  },
+  "publication": "none; local working-tree candidate"
+}

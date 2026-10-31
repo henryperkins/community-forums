@@ -37,7 +37,7 @@ final class PostController extends Controller
         $user = $this->requireUser();
         $this->container->get(WriteGate::class)->assertCanWrite($user);
 
-        return $this->view('compose', $this->composeViewModel($user, $request));
+        return $this->view('compose', $this->composeViewModel($user, $request, [], $this->resumedDraftValues($request, '/threads')));
     }
 
     /** @param array<string,string> $params */
@@ -212,18 +212,28 @@ final class PostController extends Controller
         $requested = array_key_exists('board_id', $old)
             ? $old['board_id']
             : $request->input('board', $request->input('board_id'));
+        $resuming = $request->method() === 'GET'
+            && ($request->query('draft') !== null || $request->query('resume') === 'local');
+        $missingDestination = $resuming && ($requested === null || $requested === '');
         $selected = $this->resolveComposeBoard($boards, $requested, $preferSlug);
+        if ($resuming && !$missingDestination
+            && ($selected === null || empty($selected['can_post']) || !is_scalar($requested)
+                || ($preferSlug ? (string) $requested !== (string) $selected['slug'] : (string) $requested !== (string) $selected['id']))) {
+            throw new NotFoundException('Draft destination is unavailable.');
+        }
         if ($selected === null) {
             throw new ForbiddenException('There are no boards you can post in.');
         }
+        if ($missingDestination || empty($selected['allow_anonymous'])) { unset($old['is_anonymous']); }
 
         return [
             'errors' => $errors,
             'old' => $old,
             'boards' => $boards,
             'compose_boards' => $boards,
-            'selected_board' => (int) $selected['id'],
+            'selected_board' => $missingDestination ? 0 : (int) $selected['id'],
             'selected_board_row' => $selected,
+            'draft_board_missing' => $missingDestination,
             'show_avatars' => (bool) $this->container->get(PreferenceService::class)
                 ->reading($user->id())['show_avatars'],
         ];

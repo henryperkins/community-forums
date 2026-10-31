@@ -175,6 +175,7 @@ $this->section('title', $title);
                 'placeholder' => $dmComposerPlaceholder,
                 'maxlength' => 5000,
                 'body_value' => (string) ($body ?? ''),
+                'draft_source' => $draft_source ?? '',
                 'submit_label' => 'Send',
                 'form_class' => 'dm-composer',
                 // The dock rests as one row on phones; a 422 re-render opens it

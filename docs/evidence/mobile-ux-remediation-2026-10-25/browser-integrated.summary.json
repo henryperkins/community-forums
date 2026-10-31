@@ -1,0 +1,42 @@
+{
+  "kind": "allowlisted historical browser result summary",
+  "source_report": "browser-integrated.json",
+  "source_report_sha256": "02f54e030e157be93cc37e55a77e0ca61f3dc3a971c60a1f0becd378167d108f",
+  "omitted_fields": [
+    "config",
+    "stdout",
+    "stderr",
+    "errors",
+    "attachments",
+    "all non-allowlisted fields"
+  ],
+  "stats": {
+    "startTime": "2026-10-25T18:16:37.255Z",
+    "duration": 5810.895,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "file": "settings-audit-remediation.spec.ts",
+      "line": 99,
+      "suite": [
+        "settings-audit-remediation.spec.ts",
+        "settings audit native rendering"
+      ],
+      "title": "subscription controls retain readable widths and stacked actions at 320px with doubled text",
+      "project": "desktop",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 4340
+        }
+      ],
+      "annotations": []
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+Listing tests:
+  [chromium] › draft-recovery.spec.ts:61:7 › source › reload and wrapper-only edits preserve the complete draft
+  [chromium] › draft-recovery.spec.ts:77:7 › source › title-only work is saved and listed before a body exists
+  [chromium] › draft-recovery.spec.ts:61:7 › rich › reload and wrapper-only edits preserve the complete draft
+  [chromium] › draft-recovery.spec.ts:77:7 › rich › title-only work is saved and listed before a body exists
+  [chromium] › draft-recovery.spec.ts:121:86 › conflict comparison: title-and-anonymous
+  [chromium] › draft-recovery.spec.ts:163:5 › a second conflict compares and keeps the latest server revision
+  [chromium] › draft-recovery.spec.ts:183:5 › server Resume preserves a divergent complete browser copy until a choice
+  [chromium] › draft-recovery.spec.ts:223:5 › late legacy hydration respects explicitly cleared and unchecked fields
+  [chromium] › draft-recovery.spec.ts:247:43 › typing during rich editor import survives: saved draft
+  [chromium] › draft-recovery.spec.ts:309:5 › a board rail edit alone saves the destination and restores the anonymity gate
+  [chromium] › draft-recovery.spec.ts:350:39 › message wrapper recovery keeps recipients, chips and a group title: source
+  [chromium] › draft-recovery.spec.ts:350:39 › message wrapper recovery keeps recipients, chips and a group title: rich
+  [chromium] › draft-recovery.spec.ts:383:5 › confirmation preserves a newer same-body title from another tab
+  [chromium] › mobile-account-menu.spec.ts:3:56 › carol account actions fit and scroll at narrow and short viewports
+  [chromium] › mobile-account-menu.spec.ts:3:56 › alice account actions fit and scroll at narrow and short viewports
+  [chromium] › mobile-account-menu.spec.ts:3:56 › admin account actions fit and scroll at narrow and short viewports
+  [chromium] › mobile-account-menu.spec.ts:50:5 › native account menu remains keyboard reachable after pointer opening without JavaScript
+  [chromium] › mobile-account-menu.spec.ts:72:5 › Create topic target is at least 44px in both axes without narrow overflow
+  [chromium] › resumed-draft-completion.spec.ts:63:7 › source unchanged server Resume sends once and removes the completed copy
+  [chromium] › resumed-draft-completion.spec.ts:63:7 › source unchanged local Resume sends once and removes the completed copy
+  [chromium] › resumed-draft-completion.spec.ts:63:7 › rich unchanged server Resume sends once and removes the completed copy
+  [chromium] › resumed-draft-completion.spec.ts:63:7 › rich unchanged local Resume sends once and removes the completed copy
+  [chromium] › resumed-draft-completion.spec.ts:73:5 › resumed send preserves a newer server revision with identical text
+  [chromium] › resumed-draft-completion.spec.ts:89:5 › unchanged resumed retry after a lost committed response retains identity and posts once
+  [chromium] › resumed-draft-completion.spec.ts:112:5 › server Resume completes without JavaScript
+  [webkit] › draft-recovery.spec.ts:61:7 › source › reload and wrapper-only edits preserve the complete draft
+  [webkit] › draft-recovery.spec.ts:77:7 › source › title-only work is saved and listed before a body exists
+  [webkit] › draft-recovery.spec.ts:61:7 › rich › reload and wrapper-only edits preserve the complete draft
+  [webkit] › draft-recovery.spec.ts:77:7 › rich › title-only work is saved and listed before a body exists
+  [webkit] › draft-recovery.spec.ts:121:86 › conflict comparison: title-and-anonymous
+  [webkit] › draft-recovery.spec.ts:163:5 › a second conflict compares and keeps the latest server revision
+  [webkit] › draft-recovery.spec.ts:183:5 › server Resume preserves a divergent complete browser copy until a choice
+  [webkit] › draft-recovery.spec.ts:223:5 › late legacy hydration respects explicitly cleared and unchecked fields
+  [webkit] › draft-recovery.spec.ts:247:43 › typing during rich editor import survives: saved draft
+  [webkit] › draft-recovery.spec.ts:309:5 › a board rail edit alone saves the destination and restores the anonymity gate
+  [webkit] › draft-recovery.spec.ts:350:39 › message wrapper recovery keeps recipients, chips and a group title: source
+  [webkit] › draft-recovery.spec.ts:350:39 › message wrapper recovery keeps recipients, chips and a group title: rich
+  [webkit] › draft-recovery.spec.ts:383:5 › confirmation preserves a newer same-body title from another tab
+  [webkit] › mobile-account-menu.spec.ts:3:56 › carol account actions fit and scroll at narrow and short viewports
+  [webkit] › mobile-account-menu.spec.ts:3:56 › alice account actions fit and scroll at narrow and short viewports
+  [webkit] › mobile-account-menu.spec.ts:3:56 › admin account actions fit and scroll at narrow and short viewports
+  [webkit] › mobile-account-menu.spec.ts:50:5 › native account menu remains keyboard reachable after pointer opening without JavaScript
+  [webkit] › mobile-account-menu.spec.ts:72:5 › Create topic target is at least 44px in both axes without narrow overflow
+  [webkit] › resumed-draft-completion.spec.ts:63:7 › source unchanged server Resume sends once and removes the completed copy
+  [webkit] › resumed-draft-completion.spec.ts:63:7 › source unchanged local Resume sends once and removes the completed copy
+  [webkit] › resumed-draft-completion.spec.ts:63:7 › rich unchanged server Resume sends once and removes the completed copy
+  [webkit] › resumed-draft-completion.spec.ts:63:7 › rich unchanged local Resume sends once and removes the completed copy
+  [webkit] › resumed-draft-completion.spec.ts:73:5 › resumed send preserves a newer server revision with identical text
+  [webkit] › resumed-draft-completion.spec.ts:89:5 › unchanged resumed retry after a lost committed response retains identity and posts once
+  [webkit] › resumed-draft-completion.spec.ts:112:5 › server Resume completes without JavaScript
+Total: 50 tests in 3 files

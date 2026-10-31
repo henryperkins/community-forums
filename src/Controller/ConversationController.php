@@ -64,8 +64,9 @@ final class ConversationController extends Controller
     public function newForm(Request $request): Response
     {
         $user = $this->requireDms();
+        $draft = $this->resumedDraftValues($request, '/messages');
         $rawTo = $request->query('to', '');
-        $to = is_string($rawTo) ? trim($rawTo) : '';
+        $to = $draft['to'] ?? (is_string($rawTo) ? trim($rawTo) : '');
         $filter = $request->query('filter', 'all') === 'unread' ? 'unread' : 'all';
         $rawQ = $request->query('q', '');
         $q = is_string($rawQ) ? trim($rawQ) : '';
@@ -79,9 +80,10 @@ final class ConversationController extends Controller
         $allowGroups = $this->container->get(FeatureFlags::class)->enabled('group_dms');
         return $this->view('dm/new', [
             'to' => $to,
-            'title' => '',
+            'title' => $allowGroups ? ($draft['title'] ?? '') : '',
             'errors' => [],
-            'body' => '',
+            'body' => $draft['body'] ?? '',
+            'draft_source' => $draft['draft_source'] ?? '',
             'allowGroups' => $allowGroups,
             'conversations' => $conversations,
             'filter' => $filter,
@@ -121,6 +123,7 @@ final class ConversationController extends Controller
             $errors = $e instanceof ValidationException ? $e->errors : ['to' => $e->getMessage()];
             $data = [
                 'to' => $to, 'title' => $title, 'errors' => $errors, 'body' => $body,
+                'draft_source' => $request->str('draft_source'),
                 'allowGroups' => $allowGroups, 'allow_groups' => $allowGroups,
                 'conversations' => $this->container->get(ConversationRepository::class)->listForUser($user->id()),
                 'new_user_throttled' => $this->container->get(DirectMessageService::class)->isThrottledNewUser($user),
@@ -209,6 +212,11 @@ final class ConversationController extends Controller
         }
 
         $participants = $convRepo->participants($conversationId);
+        $canReply = $convRepo->isParticipant($conversationId, $user->id());
+        if (!$canReply && ($request->query('draft') !== null || $request->query('resume') === 'local')) {
+            throw new NotFoundException('Draft destination is unavailable.');
+        }
+        $resumedDraft = $this->resumedDraftValues($request, '/messages/' . $conversationId);
         return $this->view('dm/show', array_merge([
             'presence_states' => $this->container->get(ConversationReadService::class)->presence($user, $participants),
             'joined_after_message_id' => (int) ($membership['joined_after_message_id'] ?? 0),
@@ -216,7 +224,7 @@ final class ConversationController extends Controller
             'conversation_id' => $conversationId,
             'is_group' => $isGroup,
             'is_owner' => $isOwner,
-            'can_reply' => $convRepo->isParticipant($conversationId, $user->id()),
+            'can_reply' => $canReply,
             'participants' => $participants,
             'events' => $isGroup ? $convRepo->events($conversationId, 20) : [],
             'messages' => $messages,
@@ -239,7 +247,8 @@ final class ConversationController extends Controller
             'pages' => $pages,
             'reasons' => self::REASONS,
             'errors' => [],
-            'body' => '',
+            'body' => $resumedDraft['body'] ?? '',
+            'draft_source' => $resumedDraft['draft_source'] ?? '',
             // A failed owner tool reopens the details rail on its own field.
             'rail_open' => false,
             'rail_errors' => [],
@@ -268,6 +277,7 @@ final class ConversationController extends Controller
             return $this->renderConversation($request, $user, $conversationId, [
                 'errors' => $e instanceof ValidationException ? $e->errors : ['body' => $e->getMessage()],
                 'body' => $body,
+                'draft_source' => $request->str('draft_source'),
             ], 422);
         }
         $this->discardServerDraftFor($user, $request->path());

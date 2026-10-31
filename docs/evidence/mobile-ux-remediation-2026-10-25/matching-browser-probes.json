@@ -1,0 +1,96 @@
+{
+  "results": [
+    {
+      "id": "C-MOBILE-MATCH-COMPLETION-CHROMIUM",
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "user": "carol",
+      "status": "pass",
+      "savedId": 1,
+      "savedRevision": 1,
+      "freshSubmission": true,
+      "postCount": 1,
+      "serverDraft": null,
+      "localDraft": null,
+      "revisitBody": "",
+      "revisitConflictCount": 0,
+      "marker": "Matched original audit chromium 1792952588542 — café 東京."
+    },
+    {
+      "id": "C-MOBILE-MATCH-MENU-WEBKIT",
+      "engine": "webkit",
+      "version": "26.6",
+      "user": "alice",
+      "status": "pass",
+      "method": "Direct measured pointer hit, then native Tab; no locator activation or scripted scrolling",
+      "before": {
+        "top": 58.5,
+        "bottom": 308.5,
+        "height": 250,
+        "viewport": 390,
+        "overflowY": "auto",
+        "maxHeight": "250px",
+        "scrollHeight": 360,
+        "clientHeight": 248,
+        "scrollTop": 0
+      },
+      "after": {
+        "top": 259.8125,
+        "bottom": 301,
+        "viewport": 390,
+        "panelScrollTop": 112
+      },
+      "tabOrder": [
+        {
+          "tag": "A",
+          "text": "Profile"
+        },
+        {
+          "tag": "A",
+          "text": "Notifications2"
+        },
+        {
+          "tag": "A",
+          "text": "Drafts"
+        },
+        {
+          "tag": "A",
+          "text": "Following"
+        },
+        {
+          "tag": "A",
+          "text": "Top contributors"
+        },
+        {
+          "tag": "A",
+          "text": "Settings"
+        },
+        {
+          "tag": "A",
+          "text": "Moderation"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Log out"
+        }
+      ]
+    },
+    {
+      "id": "C-MOBILE-MATCH-COMPLETION-WEBKIT",
+      "engine": "webkit",
+      "version": "26.6",
+      "user": "alice",
+      "status": "pass",
+      "savedId": 2,
+      "savedRevision": 1,
+      "freshSubmission": true,
+      "postCount": 1,
+      "serverDraft": null,
+      "localDraft": null,
+      "revisitBody": "",
+      "revisitConflictCount": 0,
+      "marker": "Matched original audit webkit 1792952592477 — café 東京."
+    }
+  ],
+  "limits": "Desktop emulation with the exact original audit browser builds; real local PHP/MariaDB, synthetic accounts, no request interception. No physical-device claim."
+}

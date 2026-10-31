@@ -1,0 +1,38 @@
+{
+  "draft_mobile_case_count": 50,
+  "engines": [
+    "chromium",
+    "webkit"
+  ],
+  "arguments": [
+    "npx",
+    "playwright",
+    "test",
+    "--config=playwright.mobile-remediation.config.ts",
+    "draft-recovery.spec.ts",
+    "resumed-draft-completion.spec.ts",
+    "mobile-account-menu.spec.ts",
+    "--grep",
+    "reload and wrapper-only|title-only work|conflict comparison: title-and-anonymous|a second conflict|server Resume preserves|late legacy hydration|typing during rich editor import survives: saved draft|a board rail edit|message wrapper recovery|confirmation preserves a newer same-body title|Resume sends once|resumed send preserves|unchanged resumed retry|server Resume completes without|account actions fit|native account menu|Create topic target"
+  ],
+  "theming_case_count": 4,
+  "theming_arguments": [
+    "npx",
+    "playwright",
+    "test",
+    "theming-remediation.spec.ts",
+    "--project=mobile",
+    "--grep",
+    "branding preview changes|branding removes individual"
+  ],
+  "theming_runs": [
+    {
+      "E2E_LAYOUT_BROWSER": "chromium"
+    },
+    {
+      "E2E_LAYOUT_BROWSER": "webkit"
+    }
+  ],
+  "total": 54,
+  "historical_evidence": "The Oct25 132-pass matrix included64core recovery cases. Current testing is focused integration qualification, not a rerun or relabeling of that whole matrix."
+}

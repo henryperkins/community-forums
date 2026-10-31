@@ -146,12 +146,24 @@ abstract class Controller
             if (is_string($body)) {
                 $this->container->get(ServerDraftRepository::class)->discardSubmitted(
                     $user->id(), str_replace('%', '~', rawurlencode($contextKey)), $body, is_string($title) ? $title : null,
+                    $this->request()->allInput(),
                 );
             }
         } catch (ValidationException) {
             // Best-effort cleanup only. Successful writes should not fail if the
             // draft surface cannot be trimmed.
         }
+    }
+
+    /** Read-only prefill; the destination's ordinary board/conversation gates still run. */
+    protected function resumedDraftValues(Request $request, string $context): array
+    {
+        if ($request->query('draft') === null || $request->method() !== 'GET') { return []; }
+        if (!$this->container->get(FeatureFlags::class)->enabled('server_drafts')) { throw new NotFoundException('Draft not found.'); }
+        $user = $this->requireUser();
+        $draft = $this->container->get(ServerDraftRepository::class)->findForUser($request->int('draft', 0), $user->id());
+        if ($draft === null || \App\Support\ComposerDraft::context($draft) !== $context) { throw new NotFoundException('Draft not found.'); }
+        return \App\Support\ComposerDraft::values($draft);
     }
 
     /** Require an authenticated user, otherwise bounce to the login page. */

@@ -1361,6 +1361,15 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-draft-sync.is-conflict { border-color: var(--warning); background: var(--gold-soft); color: var(--text-strong); }
 .composer-draft-sync p { margin: 0; }
 .composer-draft-sync-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.composer-draft-copies { display: grid; gap: var(--space-3); min-width: 0; }
+.composer-draft-copies > section { min-width: 0; padding: var(--space-3); border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface); }
+.composer-draft-heading { margin: 0 0 var(--space-2); font: inherit; font-weight: var(--weight-semibold); }
+.composer-draft-copies dl { margin: 0; }
+.composer-draft-copies dt { margin-block-start: var(--space-2); font-weight: var(--weight-semibold); }
+.composer-draft-copies dd { margin: 0; overflow-wrap: anywhere; }
+.composer-draft-body { margin: 0; max-block-size: 12rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; color: inherit; }
+.composer-draft-body:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+@media (min-width: 640px) { .composer-draft-copies { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .composer-suggestion-popover {
     position: absolute;
@@ -16595,6 +16604,9 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 .identity-menu { position: relative; min-width: 0; }
 .identity-menu > summary { list-style: none; cursor: pointer; }
 .identity-menu > summary::-webkit-details-marker { display: none; }
+/* The summary owns this single action. A pointer starting inside its nested
+   avatar can strand WebKit's subsequent Tab navigation on the summary. */
+.identity-menu > summary > * { pointer-events: none; }
 .identity-menu-panel {
     position: absolute;
     z-index: 45;
@@ -16607,6 +16619,12 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
     border-radius: var(--radius-lg);
     background: var(--surface-raised);
     box-shadow: var(--shadow-lg);
+    /* Keep the final account action reachable with short browser chrome or
+       enlarged type. The menu scrolls independently of the reading surface. */
+    max-height: calc(100vh - var(--topbar-h) - var(--space-6) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - var(--topbar-h) - var(--space-6) - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
 }
 .identity-menu-panel a,
 .identity-menu-panel button {
@@ -17503,6 +17521,11 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
     .profile-activity-line { min-height: 52px; }
     .profile-activity-toggle { width: 44px; height: 44px; }
     .dm-chip-x { flex: none; width: 44px; height: 44px; }
+}
+@media (max-width: 860px), (pointer: coarse) {
+    /* Match the existing mobile controls' 44px target without enlarging the
+       drawn send icon or changing the desktop composer's compact treatment. */
+    .compose-topic-form .composer-send { min-width: 44px; min-height: 44px; }
 }
 /* The current surface carries a rule as well as the design's wash. The wash
    alone measured 1.04:1 against the bar, and forced colours drop it entirely;

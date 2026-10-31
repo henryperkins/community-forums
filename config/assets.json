@@ -1,11 +1,11 @@
 {
-  "version": "573379a015e11e60",
+  "version": "108dd69071d95f7a",
   "urls": {
-    "app.css": "/assets/dist/app-style-CunORmrQ.css",
+    "app.css": "/assets/dist/app-style-C0epKJUk.css",
     "imladris.css": "/assets/dist/imladris-style-CRsa_HRN.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
-    "app.js": "/assets/dist/app-24135bf80748f0b0.js",
-    "composer.js": "/assets/dist/composer-90e77244b8fec3a5.js",
+    "app.js": "/assets/dist/app-a41a60391b9a880f.js",
+    "composer.js": "/assets/dist/composer-c1ff478070e3a1d8.js",
     "passkeys.js": "/assets/dist/passkeys-16e7134417f0d6af.js",
     "tour.js": "/assets/dist/tour-f068bdb2d74e6d21.js",
     "wysiwyg-composer.js": "/assets/dist/wysiwyg-composer-XlKwRXnh.js",
@@ -28,15 +28,15 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "3ee9193b0e92a9996b800231696677dad3f8a9639438fabf2c9757dbed7ce7f7",
+      "sha256": "b795d0e5bfc7a566deccce2f7b13b7d73b6cb04f855ac9a13dde2b316769dc92",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "d9e38d1a1bba177b3860676becc468a8a68d00aaca93ef77aa618837809c0f83",
+      "sha256": "c08be480ae3628f573689a8c8fcde251e7864ddaf82526fdb6fe69b00656cfe6",
       "immutable": false
     },
     "/assets/composer.js": {
-      "sha256": "ce073e11882cfc7a89cac10873bcee19c1da10946424d576aaaabd2f7c989cb6",
+      "sha256": "be3268a0e7abbccbacb29b046df163782b1fc24e76208a8924a6851bd64eddc3",
       "immutable": false
     },
     "/assets/conversation-entry.js": {
@@ -45,6 +45,10 @@
     },
     "/assets/dist/app-24135bf80748f0b0.js": {
       "sha256": "24135bf80748f0b0dad4ed56ec6cc40347717253d629d4ac8399191b15981d00",
+      "immutable": true
+    },
+    "/assets/dist/app-a41a60391b9a880f.js": {
+      "sha256": "a41a60391b9a880fdc6c8ac9c02272893dbb5e209492e96676503d4aa1f281f5",
       "immutable": true
     },
     "/assets/dist/app-f15c5d4e6d0de477.js": {
@@ -59,6 +63,10 @@
       "sha256": "7b53239121925ba3015f87a574b66f1f2eda6e132b151decbc92da2ae5d908c5",
       "immutable": true
     },
+    "/assets/dist/app-style-C0epKJUk.css": {
+      "sha256": "f5c8603e3bc1b04ef30b7da314c5de3064ae45fc517837811953826d05bdff2e",
+      "immutable": true
+    },
     "/assets/dist/app-style-CunORmrQ.css": {
       "sha256": "b81eb697eb9d546f58116b24ed200dbd71a0661caabb37ca1a1e8c3d9faa1b29",
       "immutable": true
@@ -69,6 +77,10 @@
     },
     "/assets/dist/composer-90e77244b8fec3a5.js": {
       "sha256": "90e77244b8fec3a59ccd8a4da9c4f8e6bda22760d2860771b75e38aa0f0f5948",
+      "immutable": true
+    },
+    "/assets/dist/composer-c1ff478070e3a1d8.js": {
+      "sha256": "c1ff478070e3a1d87cb1c04778a2097c8cd99a20f2f53c26d06226b588db6122",
       "immutable": true
     },
     "/assets/dist/conversation-entry-74964ff3b56c482d.js": {
@@ -157,10 +169,6 @@
     },
     "/assets/dist/tour-f068bdb2d74e6d21.js": {
       "sha256": "f068bdb2d74e6d21b7bb3ed594a1a1d3a79c95c55ef23cfaebe7926997de7c98",
-      "immutable": true
-    },
-    "/assets/dist/wysiwyg-composer-Br17XC-G.js": {
-      "sha256": "9fc890c5c085d6f743428c39621ae162e8cb58cac505a4d8da6851f08fc0efbc",
       "immutable": true
     },
     "/assets/dist/wysiwyg-composer-BRAFF38E.css": {
@@ -270,6 +278,36 @@
   },
   "releases": [
     {
+      "version": "108dd69071d95f7a",
+      "files": [
+        "/assets/dist/app-a41a60391b9a880f.js",
+        "/assets/dist/app-style-C0epKJUk.css",
+        "/assets/dist/composer-c1ff478070e3a1d8.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+        "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
+        "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+        "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+        "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
+        "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+        "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+        "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
+        "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
+        "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
+        "/assets/dist/imladris-style-CRsa_HRN.css",
+        "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+        "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
+        "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
+        "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+        "/assets/dist/milkdown-adapter-DXUybFX0.js",
+        "/assets/dist/passkeys-16e7134417f0d6af.js",
+        "/assets/dist/tour-f068bdb2d74e6d21.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-XlKwRXnh.js"
+      ]
+    },
+    {
       "version": "573379a015e11e60",
       "files": [
         "/assets/dist/app-24135bf80748f0b0.js",
@@ -358,13 +396,15 @@
         "/assets/dist/wysiwyg-composer-BRAFF38E.css",
         "/assets/dist/wysiwyg-composer-C_SnS523.js"
       ]
-    },
+    }
+  ],
+  "deployedReleases": [
     {
-      "version": "d558418fe08d412c",
+      "version": "573379a015e11e60",
       "files": [
-        "/assets/dist/app-f5e64357204190eb.js",
-        "/assets/dist/app-style-BaLoyX9O.css",
-        "/assets/dist/composer-5e088bd27ea38363.js",
+        "/assets/dist/app-24135bf80748f0b0.js",
+        "/assets/dist/app-style-CunORmrQ.css",
+        "/assets/dist/composer-90e77244b8fec3a5.js",
         "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
         "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
@@ -382,15 +422,13 @@
         "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
         "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
         "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-zC8kMFUx.js",
+        "/assets/dist/milkdown-adapter-DXUybFX0.js",
         "/assets/dist/passkeys-16e7134417f0d6af.js",
-        "/assets/dist/tour-a0a3ebe176eeb878.js",
+        "/assets/dist/tour-f068bdb2d74e6d21.js",
         "/assets/dist/wysiwyg-composer-BRAFF38E.css",
-        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
+        "/assets/dist/wysiwyg-composer-XlKwRXnh.js"
       ]
-    }
-  ],
-  "deployedReleases": [
+    },
     {
       "version": "3aa554af4ef3f85a",
       "files": [
@@ -449,36 +487,6 @@
         "/assets/dist/tour-a0a3ebe176eeb878.js",
         "/assets/dist/wysiwyg-composer-BRAFF38E.css",
         "/assets/dist/wysiwyg-composer-C_SnS523.js"
-      ]
-    },
-    {
-      "version": "d558418fe08d412c",
-      "files": [
-        "/assets/dist/app-f5e64357204190eb.js",
-        "/assets/dist/app-style-BaLoyX9O.css",
-        "/assets/dist/composer-5e088bd27ea38363.js",
-        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
-        "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
-        "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
-        "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
-        "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
-        "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
-        "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
-        "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
-        "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
-        "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
-        "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
-        "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
-        "/assets/dist/imladris-style-CRsa_HRN.css",
-        "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
-        "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
-        "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
-        "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
-        "/assets/dist/milkdown-adapter-zC8kMFUx.js",
-        "/assets/dist/passkeys-16e7134417f0d6af.js",
-        "/assets/dist/tour-a0a3ebe176eeb878.js",
-        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
-        "/assets/dist/wysiwyg-composer-Br17XC-G.js"
       ]
     }
   ]

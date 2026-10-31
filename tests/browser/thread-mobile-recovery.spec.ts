@@ -3,6 +3,9 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
+import { draftFailureEvidence } from './draft-failure-evidence';
+
+test.afterEach(async ({ page }, info) => draftFailureEvidence(page, info));
 
 const topic = '/t/30-ratified-decisions';
 const body = 'A failed reply must survive Back, navigation, and reload.';
@@ -12,7 +15,7 @@ const captures = process.env.RB_EVIDENCE_DIR
 
 async function capture(page: Page, name: string): Promise<void> {
   mkdirSync(captures, { recursive: true });
-  await page.screenshot({ path: path.join(captures, name + '.png') });
+  await page.screenshot({ path: path.join(captures, page.context().browser()?.browserType().name() ?? 'browser', name + '.png') });
 }
 
 function setRich(enabled: boolean): void {
@@ -57,7 +60,7 @@ async function openThread(page: Page): Promise<void> {
   await expect(page.locator('#reply textarea')).toHaveAttribute('data-rb-enhanced', '1');
 }
 
-test('failed navigation keeps the draft and restores a usable submit button', async ({ page, context }) => {
+test('failed navigation keeps the draft and restores a usable submit button', async ({ page, context, browserName }) => {
   await openThread(page);
   const input = page.locator('#reply textarea');
   await input.fill(body);
@@ -67,7 +70,10 @@ test('failed navigation keeps the draft and restores a usable submit button', as
   await page.locator('#reply .composer-send').click({ noWaitAfter: true });
   await failed;
   await context.setOffline(false);
-  await page.goBack();
+  // WebKit retains the original document after this cancelled navigation;
+  // Chromium adds an error history entry. Exercise the corresponding recovery.
+  if (browserName === 'webkit') await page.reload();
+  else await page.goBack();
   await expect(input).toHaveValue(body);
   await expect(page.locator('#reply .composer-send')).toBeEnabled();
   await expect(page.locator('#reply')).not.toHaveAttribute('aria-busy', 'true');
@@ -112,7 +118,8 @@ test('a later edit in another tab survives confirmation of the older draft', asy
   await sibling.close();
 });
 
-test('enlarged header labels reflow and mobile prose spans beneath the byline', async ({ page }) => {
+test('enlarged header labels reflow and mobile prose spans beneath the byline', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'This existing root-font proxy uses Chromium CDP; the separate WebKit baseline probe is retained in the remediation evidence.');
   await openThread(page);
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
@@ -182,24 +189,28 @@ test('reaction choices have visible names before activation', async ({ page }, i
   await capture(page, 'reaction-names-' + info.project.name);
 });
 
-test('rich editor recovers a failed send and submits the retained draft exactly once', async ({ page, context }) => {
+test('rich editor recovers a failed send and submits the retained draft exactly once', async ({ page, context, browserName }) => {
   setRich(true);
   await openThread(page);
   const editor = page.locator('#reply .ProseMirror');
   await expect(editor).toBeVisible();
   const text = 'Rich recovery ' + Date.now();
   await editor.fill(text);
+  const originalKey = await page.locator('#reply [name=idempotency_key]').inputValue();
   const failed = page.waitForEvent('requestfailed', request => request.isNavigationRequest() && request.method() === 'POST');
   await context.setOffline(true);
   await page.locator('#reply .composer-send').click({ noWaitAfter: true });
   await failed;
   await context.setOffline(false);
-  await page.goBack();
+  if (browserName === 'webkit') await page.reload();
+  else await page.goBack();
   await expect(editor).toHaveText(text);
+  await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(originalKey);
   await expect(page.locator('#reply .composer-send')).toBeEnabled();
   await page.goto('/c/the-archive');
   await page.goto(topic);
   await expect(editor).toHaveText(text);
+  await expect(page.locator('#reply [name=idempotency_key]')).toHaveValue(originalKey);
   await page.locator('#reply .composer-send').click();
   await expect(page.locator('#reply textarea')).toHaveAttribute('data-rb-enhanced', '1');
   await expect(editor).toHaveText('');
@@ -220,7 +231,7 @@ test('a later draft may deliberately repeat a confirmed reply', async ({ page })
   await expect(input).toHaveValue(text);
 });
 
-test('editing after a committed response is lost uses a fresh submission key', async ({ page }) => {
+test('editing after a committed response is lost uses a fresh submission key', async ({ page, browserName }) => {
   await openThread(page);
   const input = page.locator('#reply textarea');
   const first = 'Committed before disconnect ' + Date.now();
@@ -240,14 +251,28 @@ test('editing after a committed response is lost uses a fresh submission key', a
   await page.locator('#reply .composer-send').click({ noWaitAfter: true });
   await failed;
   await page.unroute('**/t/30/reply');
-  await page.goBack();
+  // WebKit's aborted navigation retains the original document; Chromium
+  // creates an error history entry that the member must leave with Back.
+  if (browserName === 'chromium') await page.goBack();
   await expect(input).toHaveValue(first);
   await input.fill(edited);
   await expect(page.locator('#reply [name=idempotency_key]')).not.toHaveValue(firstKey);
   await page.locator('#reply .composer-send').click();
   await expect(page.locator('.post-body').filter({ hasText: edited })).toHaveCount(1);
   await expect(page.locator('#reply textarea')).toHaveAttribute('data-rb-enhanced', '1');
-  await expect(input).toHaveValue('');
+  try {
+    await expect(input).toHaveValue('');
+  } catch (error) {
+    const client = await page.evaluate(() => ({
+      pending: JSON.parse(sessionStorage.getItem('rb-draft:pending-submits') || '[]'),
+      body: localStorage.getItem('rb-draft:elladan:/t/30/reply'),
+      state: localStorage.getItem('rb-draft-state:elladan:/t/30/reply'),
+    }));
+    const server = await (await page.request.get('/api/drafts/~2Ft~2F30~2Freply')).json();
+    mkdirSync(captures, { recursive: true });
+    writeFileSync(path.join(captures, 'retry-cleanup-state-' + page.context().browser()?.browserType().name() + '.json'), JSON.stringify({ client, server }, null, 2));
+    throw error;
+  }
 });
 
 test('rich history cleanup preserves a newer draft in another tab after settling', async ({ page, context }) => {

@@ -2,6 +2,24 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Complete draft recovery and mobile account actions
+
+- Preserve complete composer drafts, including title, destination, anonymity,
+  recipients and enabled message fields. Retain early edits during editor
+  startup, show both conflicting copies, and resume the correct composer with
+  ordinary HTML forms as well as JavaScript enhancement.
+- Clear only the exact successfully submitted draft. Keep newer revisions and
+  recreated copies, and preserve a usable retry path when a committed send's
+  response is lost. Legacy draft formats remain readable.
+- Enforce account-state restrictions on server-draft saves and discards while
+  preserving read access and saved content for suspended or banned accounts.
+- Keep account actions reachable in short viewports, correct WebKit keyboard
+  entry after avatar clicks, and provide a 44px Create topic target on narrow
+  or coarse-pointer layouts. Correct the Messages design-context target.
+- Integrate with the released branding/theme fixes, rebuild the combined assets,
+  and retain the verified previous release for open-page compatibility.
+  Qualification is in `docs/evidence/draft-mobile-release-2026-10-31/README.md`.
+
 ## [2026-10-31] - Admin branding and theme recovery
 
 - Keep package assets scoped to their eligible build so a private preview cannot

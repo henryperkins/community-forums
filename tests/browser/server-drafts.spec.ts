@@ -1,7 +1,10 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import path from 'node:path';
+import { draftFailureEvidence } from './draft-failure-evidence';
 
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+test.afterEach(async ({ page }, info) => draftFailureEvidence(page, info));
+
+const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({
@@ -180,7 +183,7 @@ test('drafts page keeps browser-local drafts visible while server drafts are ena
   await expect(page.locator('[data-drafts-list][data-server-drafts]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Saved in this browser' })).toBeVisible();
   await expect(localDrafts).toContainText('Browser-only draft that has not synced');
-  await expect(localDrafts.getByRole('link', { name: 'Resume' })).toHaveAttribute('href', '/');
+  await expect(localDrafts.getByRole('link', { name: 'Resume' })).toHaveAttribute('href', '/compose?resume=local');
 
   await localDrafts.getByRole('button', { name: 'Remove local copy' }).click();
   await expect(localDrafts).toContainText('No browser-local drafts in this browser.');
@@ -219,7 +222,17 @@ test('failed submits keep server drafts and successful submits clear them after 
   }, { key });
   expect(afterFailedSubmit.draft.body).toBe('Keep this shared draft on failed submit');
 
+  // The 422 form retains the rejected input. Wait for enhancement and the
+  // comparison with the earlier server copy before correcting that input.
+  await expect(body).toHaveAttribute('data-rb-enhanced', '1');
+  await expect(body).toHaveValue('x'.repeat(20001));
+  const conflict = page.locator('.composer-draft-sync.is-conflict');
+  await expect(conflict).toBeVisible();
+  await body.fill('');
   await body.fill('Now submit successfully');
+  await expect(body).toHaveValue('Now submit successfully');
+  await expect(conflict.getByRole('region', { name: 'In this browser', exact: true })).toContainText('Now submit successfully');
+  await conflict.getByRole('button', { name: 'Save local as next revision', exact: true }).click();
   await expectServerDraftSaved(page, key, 'Now submit successfully');
 
   await page.getByRole('button', { name: 'Create topic' }).click();

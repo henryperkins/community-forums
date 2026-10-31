@@ -9,7 +9,7 @@
  * Optional: body_name, form_id, form_class, expanded, body_error,
  * body_error_focus, identity, allow_anonymous, anonymous_hidden, anonymous_checked,
  * anonymous_disclosure, no_draft, no_wysiwyg, thread_composer, wrapper_slot,
- * header_slot, below_input_slot, before_submit_slot, hidden_fields.
+ * header_slot, below_input_slot, before_submit_slot, hidden_fields, draft_source.
  *
  * body_error_focus (default true) decides whether an errored body claims the
  * 422 re-render's autofocus. A mount whose wrapper/header carries its own
@@ -83,6 +83,7 @@ $shellUploadMax = max(1, (int) ($upload_max_bytes ?? 5242880));
 <form class="<?= $e($shellClasses) ?>" method="post" action="<?= $e($shellAction) ?>" data-upload-max-bytes="<?= $shellUploadMax ?>" data-composer-context="<?= $e($shellContext) ?>" data-composer-target-id="<?= $shellTargetId ?>" data-composer-instance="<?= $e($shellInstance) ?>"<?= $shellFormId !== '' ? ' id="' . $e($shellFormId) . '"' : '' ?><?= $shellNoDraft ? ' data-no-draft' : '' ?><?= $shellNoWysiwyg ? ' data-no-wysiwyg' : '' ?><?= $shellThreadComposer ? ' data-thread-composer' : '' ?>>
     <?= $this->csrfField() ?>
     <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
+    <?php if (!$shellNoDraft): ?><input type="hidden" name="draft_source" value="<?= $e(is_string($draft_source ?? null) ? $draft_source : '') ?>"><?php endif; ?>
     <?php foreach ($shellHiddenFields as $hiddenName => $hiddenValue): ?>
         <input type="hidden" name="<?= $e((string) $hiddenName) ?>" value="<?= $e((string) $hiddenValue) ?>">
     <?php endforeach; ?>

@@ -1,0 +1,84 @@
+{
+  "errors": [],
+  "gaps": [
+    "F-01: confirmed finding is implemented",
+    "F-02: confirmed finding is implemented",
+    "F-03: confirmed finding is implemented",
+    "F-04: confirmed finding is implemented",
+    "F-04/R-MENU-IOS: device regression target verification not_run",
+    "F-04/R-MENU-ANDROID: device regression target verification not_run",
+    "F-05: confirmed finding is implemented",
+    "F-06: confirmed finding is implemented",
+    "C-AUDIT-SEND-CLEANUP-CHROMIUM: current recorded failure",
+    "C-AUDIT-SEND-CLEANUP-WEBKIT: current recorded failure",
+    "C-AUDIT-MENU-WEBKIT: current recorded failure",
+    "C-PHONE-FIX-IOS: required verification incomplete",
+    "C-PHONE-FIX-ANDROID: required verification incomplete",
+    "C-PHONE-BASE-101: required verification incomplete",
+    "C-PHONE-BASE-102: required verification incomplete",
+    "C-PHONE-BASE-103: required verification incomplete",
+    "C-PHONE-BASE-104: required verification incomplete",
+    "C-PHONE-BASE-105: required verification incomplete",
+    "C-PHONE-BASE-106: required verification incomplete",
+    "C-PHONE-BASE-107: required verification incomplete",
+    "C-PHONE-BASE-108: required verification incomplete",
+    "C-AUDIT-SEND-CLEANUP-CHROMIUM: required verification incomplete",
+    "C-AUDIT-SEND-CLEANUP-WEBKIT: required verification incomplete",
+    "C-AUDIT-MENU-WEBKIT: required verification incomplete",
+    "C-AUDIT-PHONE-FIX-IOS: required verification incomplete",
+    "C-AUDIT-PHONE-FIX-ANDROID: required verification incomplete",
+    "C-AUDIT-PHONE-BASE-101: required verification incomplete",
+    "C-AUDIT-PHONE-BASE-102: required verification incomplete",
+    "C-AUDIT-PHONE-BASE-106: required verification incomplete",
+    "C-AUDIT-PHONE-BASE-107: required verification incomplete",
+    "C-AUDIT-PHONE-BASE-108: required verification incomplete",
+    "C-AUDIT-PHONE-CLEANUP-IOS: required verification incomplete",
+    "C-AUDIT-PHONE-CLEANUP-ANDROID: required verification incomplete",
+    "C-AUDIT-PHONE-MENU-IOS: required verification incomplete",
+    "C-MOBILE-PHONE-MENU-IOS: required verification incomplete",
+    "C-MOBILE-PHONE-MENU-ANDROID: required verification incomplete",
+    "C-MOBILE-PHONE-RECOVERY-IOS: required verification incomplete",
+    "C-MOBILE-PHONE-RECOVERY-ANDROID: required verification incomplete",
+    "C-MOBILE-PHONE-COMPLETION-IOS: required verification incomplete",
+    "C-MOBILE-PHONE-COMPLETION-ANDROID: required verification incomplete",
+    "C-MOBILE-PHONE-KEYBOARD-IOS: required verification incomplete",
+    "C-MOBILE-PHONE-ASSISTIVE-IOS: required verification incomplete",
+    "C-MOBILE-PHONE-ASSISTIVE-ANDROID: required verification incomplete",
+    "C-MOBILE-PHONE-PERFORMANCE-ANDROID: required verification incomplete"
+  ],
+  "coverage": "complete",
+  "assessment_complete": true,
+  "verification": "failed",
+  "verification_ceiling": "proxy",
+  "impeccable": "executed",
+  "open_p0_p1": [],
+  "applied_device_entries": [
+    "C-MOBILE-PHONE-MENU-ANDROID",
+    "C-MOBILE-PHONE-MENU-IOS"
+  ],
+  "device_regressions": [
+    {
+      "finding_id": "F-04",
+      "regression_id": "R-MENU-IOS",
+      "source_scope_ids": [
+        "webkit-landscape-moderator"
+      ],
+      "check_ids": [
+        "C-MOBILE-PHONE-MENU-IOS"
+      ],
+      "status": "not_run"
+    },
+    {
+      "finding_id": "F-04",
+      "regression_id": "R-MENU-ANDROID",
+      "source_scope_ids": [
+        "webkit-landscape-moderator"
+      ],
+      "check_ids": [
+        "C-MOBILE-PHONE-MENU-ANDROID"
+      ],
+      "status": "not_run"
+    }
+  ],
+  "claimable_complete": false
+}

@@ -1,0 +1,129 @@
+{
+  "browser": "149.0.7827.55",
+  "controls": {
+    "viewport": "390x844",
+    "cpu": 4,
+    "latency_ms": 150,
+    "bytes_per_second": 200000,
+    "cold_context": true,
+    "cache_disabled": true,
+    "brotli_quality": 4
+  },
+  "rows": [
+    {
+      "mode": "identity",
+      "count": 3,
+      "lcp_ms": [
+        6812,
+        6852,
+        7244
+      ],
+      "lcp_median_ms": 6852,
+      "editor_ready_ms": [
+        11800.2,
+        12400.2,
+        16618.6
+      ],
+      "editor_ready_median_ms": 12400.2,
+      "max_cls": 0
+    },
+    {
+      "mode": "br",
+      "count": 3,
+      "lcp_ms": [
+        1460,
+        1448,
+        2436
+      ],
+      "lcp_median_ms": 1460,
+      "editor_ready_ms": [
+        4006,
+        4733.8,
+        9380.7
+      ],
+      "editor_ready_median_ms": 4733.8,
+      "max_cls": 0.004952337387311894
+    }
+  ],
+  "assets": {
+    "/assets/dist/imladris-style-CRsa_HRN.css": {
+      "file_exists": true,
+      "sha256": "2930fb188aae30a2ef3a0a5ab1eb8f35d97e65ff6ba4f330d6b9789b9ad0a2a9"
+    },
+    "/assets/dist/app-style-D-Q7oWKi.css": {
+      "file_exists": false,
+      "sha256": null
+    },
+    "/assets/dist/app-f9e58cead3b7207d.js": {
+      "file_exists": true,
+      "sha256": "f9e58cead3b7207d9babfec3475f4e5b39df0c9d803773043678958dacb32512"
+    },
+    "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2": {
+      "file_exists": true,
+      "sha256": "b63448e2680a0dbde70ebb2f3de78f6c515122835491f938e8a8595b46f29210"
+    },
+    "/assets/dist/wysiwyg-composer-BRAFF38E.css": {
+      "file_exists": true,
+      "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644"
+    },
+    "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2": {
+      "file_exists": true,
+      "sha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3"
+    },
+    "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2": {
+      "file_exists": true,
+      "sha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb"
+    },
+    "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2": {
+      "file_exists": true,
+      "sha256": "d2bb3f624516d0233ef8a03bd7b2be47489c36809a02e83ac1bc859e85f4874a"
+    },
+    "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2": {
+      "file_exists": true,
+      "sha256": "8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8"
+    },
+    "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2": {
+      "file_exists": true,
+      "sha256": "ae062b6d5ae308e7edf61b28b07b9984bbb6e961b1f34d9b2c2f4389c33f21ea"
+    },
+    "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2": {
+      "file_exists": true,
+      "sha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89"
+    },
+    "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2": {
+      "file_exists": true,
+      "sha256": "21a0fc1c5c22708cf4aa0c147fd32982e25bf9e21efec0ca31a4495ba41753eb"
+    },
+    "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2": {
+      "file_exists": true,
+      "sha256": "cb182feeed4d798ff6961d3c79f7026279448fca0676438aaecb21f3fc39553a"
+    },
+    "/assets/dist/composer-c1ff478070e3a1d8.js": {
+      "file_exists": true,
+      "sha256": "c1ff478070e3a1d87cb1c04778a2097c8cd99a20f2f53c26d06226b588db6122"
+    },
+    "/assets/dist/tour-f068bdb2d74e6d21.js": {
+      "file_exists": true,
+      "sha256": "f068bdb2d74e6d21b7bb3ed594a1a1d3a79c95c55ef23cfaebe7926997de7c98"
+    },
+    "/assets/dist/passkeys-16e7134417f0d6af.js": {
+      "file_exists": true,
+      "sha256": "16e7134417f0d6afbb447174957b81a9cc6c1625ec28a0d0db05209d6542bd81"
+    },
+    "/assets/dist/wysiwyg-composer-XlKwRXnh.js": {
+      "file_exists": true,
+      "sha256": "5695624172f4209d6686552645ed60e69ba4cbf9d8ef61c8f32fa140c08d7369"
+    },
+    "/assets/dist/milkdown-adapter-DXUybFX0.js": {
+      "file_exists": true,
+      "sha256": "14cb2e8d2e98bd8db7adf8674c941f25d796854f1b23ea098e8e0926c064856e"
+    }
+  },
+  "classification": "F-H01 remains an open release/physical-performance hypothesis. The uncompressed local observation is real, but the live edge delivers compression and three paired compressed lab runs stayed under 2500ms LCP. No production LCP, INP or hardware claim.",
+  "candidate_relation": "Experiment preceded the final decorative-summary pointer rule; /assets/dist/app-style-D-Q7oWKi.css was measured. Final app-style-CdziqPrM.css adds 45 decoded bytes. The metadata normalization does not change this read-only fixture route. This is a predecessor measurement, not a new final-build performance run.",
+  "live_transport": "Live deployed CSS decoded bytes 453596; br 73893; gzip 69014; all decode to the same SHA-256. Local compression matches the observed Brotli wire size using quality 4.",
+  "limits": "Loopback PHP fixture and desktop Chromium emulation; compression is matched to observed edge wire size, not its deployment/hardware/TTFB. No field Core Web Vitals claim.",
+  "final_css_decoded_delta_bytes": 45,
+  "measured_css_decoded_bytes": 454761,
+  "final_css_decoded_bytes": 454806
+}

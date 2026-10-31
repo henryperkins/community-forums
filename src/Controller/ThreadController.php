@@ -46,6 +46,9 @@ final class ThreadController extends Controller
         $id = (int) ($params['id'] ?? 0);
         $redirectTarget = $this->container->get(ThreadRepository::class)->redirectTarget($id);
         if ($redirectTarget !== null) {
+            if ($request->query('draft') !== null || $request->query('resume') === 'local') {
+                throw new \App\Core\NotFoundException('Draft destination is unavailable.');
+            }
             return $this->redirect('/t/' . (int) $redirectTarget['id'] . '-' . (string) $redirectTarget['slug'], 301);
         }
         $thread = $this->loadReadableThread($id);
@@ -60,6 +63,8 @@ final class ThreadController extends Controller
             } elseif ((string) $request->query('unread', '') === '1') {
                 $query = '?unread=1';
             }
+            if ($request->query('draft') !== null) { $query .= ($query === '' ? '?' : '&') . 'draft=' . $request->int('draft', 0); }
+            if ($request->query('resume') === 'local') { $query .= ($query === '' ? '?' : '&') . 'resume=local'; }
             return $this->redirect('/t/' . $id . '-' . $expectedSlug . $query, 301);
         }
 
@@ -181,6 +186,10 @@ final class ThreadController extends Controller
                 'ThreadController::renderThread',
             )
             && !$locked;
+        if (!$canReply && $request->method() === 'GET'
+            && ($request->query('draft') !== null || $request->query('resume') === 'local')) {
+            throw new \App\Core\NotFoundException('Draft destination is unavailable.');
+        }
 
         // Engagement: grouped reaction counts for the visible posts, the
         // viewer's own reactions, the star state, and advancing the read
@@ -555,7 +564,7 @@ final class ThreadController extends Controller
             'restructure_context' => '',
             'restructure_old' => [],
             'reply_errors' => [],
-            'reply_old' => [],
+            'reply_old' => $this->resumedDraftValues($request, '/t/' . (int) $thread['id'] . '/reply'),
             'edit_post_id' => 0,
             'edit_old' => '',
             'edit_error' => '',

@@ -1,0 +1,98 @@
+{
+  "browser": "26.5",
+  "account": "carol",
+  "results": [
+    {
+      "width": 320,
+      "height": 740,
+      "font": 16,
+      "bounds": {
+        "x": 92,
+        "y": 58.5,
+        "width": 220,
+        "height": 320.3125
+      },
+      "logout": {
+        "x": 99,
+        "y": 330.625,
+        "width": 206,
+        "height": 41.1875
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 0,
+        "height": 318,
+        "content": 318
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "font": 16,
+      "bounds": {
+        "x": 616,
+        "y": 58.5,
+        "width": 220,
+        "height": 250
+      },
+      "logout": {
+        "x": 623,
+        "y": 260.625,
+        "width": 206,
+        "height": 41.1875
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 70,
+        "height": 248,
+        "content": 318
+      }
+    },
+    {
+      "width": 320,
+      "height": 740,
+      "font": 32,
+      "bounds": {
+        "x": 50.515625,
+        "y": 68.390625,
+        "width": 261.484375,
+        "height": 510
+      },
+      "logout": {
+        "x": 57.515625,
+        "y": 509.125,
+        "width": 247.484375,
+        "height": 68.390625
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 49,
+        "height": 508,
+        "content": 563
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "font": 32,
+      "bounds": {
+        "x": 574.515625,
+        "y": 73.1875,
+        "width": 261.484375,
+        "height": 199
+      },
+      "logout": {
+        "x": 581.515625,
+        "y": 202.921875,
+        "width": 247.484375,
+        "height": 68.390625
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 360,
+        "height": 197,
+        "content": 563
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 Release/operations runbook for the **server_drafts** feature (authenticated,
 cross-device draft sync: the enhanced composer saves/loads drafts on the account
 in addition to the browser-local `localStorage` fallback, with optimistic
-revision conflict handling and a no-JS `/drafts` list/discard surface for server
+revision conflict handling and a no-JS `/drafts` list/resume/discard surface for server
 draft rows).
 **Default-ON as of 2026-07-02** (the `server_drafts` flag graduated out of
 deploy-dark); fully reversible via the `features` override. Scope is fixed by
@@ -38,16 +38,23 @@ via `DraftController::requireServerDrafts()`, which 404s when the flag is off):
   (redirects back to `/drafts`).
 - `GET  /api/drafts/{key}` — load the current server draft for a context key.
 - `POST /api/drafts/{key}` — save/update (optimistic revision; see below).
-- `POST /api/drafts/{key}/discard` — discard by context key (used by the
-  composer after a confirmed successful submit).
+- `POST /api/drafts/{key}/discard` — explicit discard by context key. An empty
+  autosave supplies both `draft_id` and `revision` and can remove only that copy.
+  Successful submissions use the server's identity/content-checked cleanup.
 
 The enhanced composer (`public/assets/composer.js`, `wireServerDrafts`) is pure
 progressive enhancement: it debounces saves (~800 ms), hydrates from the server
 on open, and renders the conflict panel (`.composer-draft-sync.is-conflict`).
 With JavaScript disabled the member can still use the server-rendered composer
-and the no-JS server-draft list/discard forms; browser-local draft listing itself
+and the no-JS server-draft list/resume/discard forms; browser-local draft listing itself
 requires JavaScript because it reads `localStorage`. Nothing on the write path
 depends on the JSON endpoints.
+
+Account state applies to every server-draft write. Suspended or banned members
+and admins may list and load their saved drafts, but save, revision-checked
+discard, and explicit discard return 403 without changing the saved copy.
+An expired suspension permits writes again. Browser-local recovery remains
+available when a server save is rejected.
 
 ## Roll back / re-enable
 
@@ -77,11 +84,50 @@ reconcile.
   where `context_key` is the composer context (e.g. a thread/reply target),
   trimmed, ≤191 chars, and must not contain `/` (else `422` "Draft context is
   invalid.").
-- **Optimistic revision / conflict resolution** — each save sends the
-  `revision` it started from. A stale revision returns **`409`** with the current
-  server draft, and the composer offers three choices: **Keep local**, **Keep
-  server**, or **Save local as next revision** (which writes `revision + 1`). A
-  successful save returns the new draft at `revision + 1`.
+- **Complete form state** — `metadata.state` is `{version: 1, fields: {...}}`.
+  Only `title`, `board_id`, `is_anonymous` and `to` can become restored controls;
+  strings and booleans are validated without collapsing explicit empty/false
+  into missing. Disabled/absent controls are ignored in the actual composer.
+  The browser keeps the raw body key plus a matching versioned companion; older
+  body-only drafts remain readable. Title-only and wrapper-only edits save.
+- **Optimistic revision / conflict resolution** — current clients send the
+  `draft_id` and `revision` they loaded (both zero for creation). Stale identity
+  or revision returns **`409`** with a current-read server copy, including after
+  delete/recreate. Legacy clients without `draft_id` retain revision-only
+  compatibility. A transaction keeps a successful acknowledgement tied to its
+  own write. The comparison identifies changed body/wrapper fields and shows
+  **In this browser** and **On the server** before three choices: **Keep local**
+  (pause sync, server unchanged), **Keep server** (load the latest compared
+  copy), or **Save local as next revision** (current form at `revision + 1`).
+  Saves are serialized/coalesced; a second conflict refreshes the comparison.
+  Save-owned transactions retry driver 1020/1213 at most twice with unchanged
+  CAS inputs after rollback. Nested calls and exhausted retries propagate the
+  error; the browser copy remains the recovery source.
+- **Resume** — links are derived from the stored canonical context, never a
+  metadata URL: `/compose?draft=id`, `/t/id?draft=id#reply`,
+  `/messages/new?draft=id` or `/messages/id?draft=id`. GET prefill requires
+  ownership, an unexpired matching context and the normal feature/read/write
+  destination gates. A legacy topic with no board requires a board choice.
+  Unavailable destinations keep their saved copy and return an explicit error;
+  they never silently retarget. Unknown legacy contexts remain listed and
+  discardable without an invented Resume destination.
+  The permitted GET form carries `draft_source=id:revision`. After hydration,
+  JavaScript removes only the `draft` query from the current history entry so
+  a completed send cannot strand an uncertain retry at a deleted draft URL.
+- **Successful-submit cleanup** — only the checked row ID/revision, exact body,
+  recorded wrapper fields and matching submission identity or exact resumed
+  `draft_source` can be deleted. Resume retains a fresh submission identity;
+  the source is a row reference, not authorization, and ownership/context plus
+  conditional deletion still apply. Another revision or recreated row survives.
+  Versioned drafts with no recorded title field use `title` only as a list
+  label; an empty hidden DM group-title input cannot prevent their cleanup.
+  Legacy metadata keeps the existing exact body/title cleanup rule.
+  Client completion receipts use the complete snapshot too, preserving another
+  tab's newer title/anonymity/recipient choice even when the body is unchanged.
+  A late autosave is obsolete only when its exact recorded snapshot has a real
+  completion receipt or a same-user/context successor with one. Restoring the
+  latest unresolved complete local copy also recovers its unchanged submission
+  key if history lost it; a completed or different latest attempt blocks reuse.
 - **Size limits** — body must be ≤ 20000 characters (`422` "Draft body must be
   20000 characters or fewer."); title is trimmed to 255 characters.
 - **Retention: 90 days.** Every draft carries `expires_at = now + 90 days`,
@@ -117,6 +163,24 @@ reconcile.
   flag disabled.
 
 ## Acceptance evidence
+
+- **Integrated release (2026-10-31):**
+  `docs/evidence/draft-mobile-release-2026-10-31/README.md` qualifies the combined
+  draft, mobile, and previously released theming sources, including account-state
+  write restrictions. Earlier records below remain historical evidence.
+
+- **Complete recovery remediation (ADR 0052):**
+  `docs/evidence/draft-recovery-2026-10-23/README.md` records local Chromium and
+  WebKit checks, no-JS Resume, the optional-field comparison matrix, startup and
+  concurrency safeguards, and the final PHP/asset results. The original audit
+  remains separate and unchanged. This local evidence does not assert a
+  deployed build or physical-device qualification.
+
+- **Resumed completion follow-up:**
+  `docs/evidence/mobile-ux-remediation-2026-10-25/README.md` records unchanged
+  source/rich Resume, local/server Resume, no-JS completion, uncertain-response
+  retry, all four composer contexts, validation, legacy rows and preservation
+  of newer/recreated/different copies. Physical-device checks remain separate.
 
 - **PHPUnit:** `tests/Integration/Core/AppServerDraftsTest.php` —
   `test_server_draft_endpoints_are_available_by_default_and_can_be_disabled`

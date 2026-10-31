@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\ServerDraftRepository;
+use App\Security\WriteGate;
 
 /**
  * Drafts view (P3-03). Browser-local drafts remain the offline fallback; the
@@ -27,6 +28,11 @@ final class DraftController extends Controller
         $serverDrafts = [];
         if ($this->serverDraftsEnabled()) {
             $serverDrafts = $this->repo()->listForUser($user->id());
+            foreach ($serverDrafts as &$draft) {
+                $draft['resume_url'] = \App\Support\ComposerDraft::resumeUrl($draft);
+                $draft['context_label'] = \App\Support\ComposerDraft::label($draft);
+            }
+            unset($draft);
         }
         return $this->view('account/drafts', [
             'server_drafts_enabled' => $this->serverDraftsEnabled(),
@@ -46,6 +52,7 @@ final class DraftController extends Controller
     public function save(Request $request, array $params): Response
     {
         $user = $this->requireServerDrafts();
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
         try {
             $result = $this->repo()->save(
                 $user->id(),
@@ -54,6 +61,7 @@ final class DraftController extends Controller
                 $request->str('title'),
                 (string) $request->post('body', ''),
                 $this->metadata($request),
+                $request->post('draft_id') === null ? null : max(0, $request->int('draft_id', 0)),
             );
         } catch (ValidationException $e) {
             return Response::json(['error' => 'validation', 'messages' => $e->errors], 422);
@@ -68,7 +76,14 @@ final class DraftController extends Controller
     public function discard(Request $request, array $params): Response
     {
         $user = $this->requireServerDrafts();
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
         try {
+            if ($request->post('revision') !== null) {
+                if ($request->int('draft_id', 0) < 1) { throw new ValidationException(['draft_id' => 'Reload the draft before clearing the server copy.']); }
+                $result = $this->repo()->discardAtRevision($user->id(), (string) ($params['key'] ?? ''), max(0, $request->int('revision', 0)), $request->int('draft_id', 0));
+                if ($result['status'] === 'conflict') { return Response::json(['error' => 'conflict', 'server' => $result['server']], 409); }
+                return Response::json(['discarded' => true]);
+            }
             $this->repo()->discardByContext($user->id(), (string) ($params['key'] ?? ''));
         } catch (ValidationException $e) {
             return Response::json(['error' => 'validation', 'messages' => $e->errors], 422);
@@ -80,6 +95,7 @@ final class DraftController extends Controller
     public function discardPage(Request $request, array $params): Response
     {
         $user = $this->requireServerDrafts();
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
         $this->repo()->discardById($user->id(), (int) ($params['id'] ?? 0));
         return $this->redirectWithFlash('/drafts', 'Draft discarded.');
     }
@@ -107,6 +123,8 @@ final class DraftController extends Controller
     {
         $raw = (string) $request->post('metadata', '{}');
         $decoded = json_decode($raw, true);
-        return is_array($decoded) ? $decoded : [];
+        $metadata = is_array($decoded) ? $decoded : [];
+        if (array_key_exists('state', $metadata)) { $metadata['state'] = \App\Support\ComposerDraft::state($metadata['state']); }
+        return $metadata;
     }
 }

@@ -32,7 +32,26 @@ final class ServerDraftRepository
      * @param array<string,mixed> $metadata
      * @return array{status:string,draft?:array<string,mixed>,server?:array<string,mixed>}
      */
-    public function save(int $userId, string $contextKey, int $expectedRevision, string $title, string $body, array $metadata): array
+    public function save(int $userId, string $contextKey, int $expectedRevision, string $title, string $body, array $metadata, ?int $expectedId = null): array
+    {
+        // Keep the response on the same locked write: another writer must not
+        // lend its later revision to this client's earlier snapshot.
+        $ownsTransaction = !$this->db->pdo()->inTransaction();
+        for ($attempt = 0; ; $attempt++) {
+            try {
+                return $this->db->transaction(fn (): array => $this->saveWithinTransaction($userId, $contextKey, $expectedRevision, $title, $body, $metadata, $expectedId));
+            } catch (\PDOException $e) {
+                // Retry only our rolled-back transaction with its original CAS.
+                // An outer transaction may have other work that we cannot replay.
+                if (!$ownsTransaction || $attempt >= 2 || $this->db->pdo()->inTransaction()
+                    || !in_array((int) ($e->errorInfo[1] ?? 0), [1020, 1213], true)) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    private function saveWithinTransaction(int $userId, string $contextKey, int $expectedRevision, string $title, string $body, array $metadata, ?int $expectedId): array
     {
         $this->purgeExpiredForUser($userId);
         $contextKey = $this->normalizeContextKey($contextKey);
@@ -42,17 +61,20 @@ final class ServerDraftRepository
         }
 
         $existing = $this->findByContext($userId, $contextKey);
+        if ($expectedId !== null && $expectedId !== (int) ($existing['id'] ?? 0)) {
+            return $this->conflict($userId, $contextKey);
+        }
         if ($existing !== null) {
             $currentRevision = (int) $existing['revision'];
             if ($expectedRevision !== $currentRevision) {
-                return ['status' => 'conflict', 'server' => $existing];
+                return $this->conflict($userId, $contextKey);
             }
             $nextRevision = $currentRevision + 1;
-            $this->db->run(
+            $updated = $this->db->run(
                 'UPDATE server_drafts
                  SET revision = ?, title = ?, body = ?, metadata = ?, updated_at = UTC_TIMESTAMP(),
                      expires_at = DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY)
-                 WHERE id = ?',
+                 WHERE id = ? AND revision = ?',
                 [
                     $nextRevision,
                     $title !== '' ? $title : null,
@@ -60,27 +82,46 @@ final class ServerDraftRepository
                     $this->encodeMetadata($metadata),
                     self::RETENTION_DAYS,
                     (int) $existing['id'],
+                    $expectedRevision,
                 ],
             );
+            if ($updated->rowCount() === 0) {
+                return $this->conflict($userId, $contextKey);
+            }
             return ['status' => 'saved', 'draft' => $this->findByContext($userId, $contextKey)];
         }
 
         if ($expectedRevision !== 0) {
-            return ['status' => 'conflict', 'server' => null];
+            return $this->conflict($userId, $contextKey);
         }
         $count = (int) $this->db->fetchValue('SELECT COUNT(*) FROM server_drafts WHERE user_id = ? AND expires_at > UTC_TIMESTAMP()', [$userId]);
         if ($count >= self::QUOTA_PER_USER) {
             throw new ValidationException(['drafts' => 'You can keep up to 50 server drafts. Discard one before saving another.']);
         }
 
-        $id = $this->db->insert(
-            'INSERT INTO server_drafts
-               (user_id, context_key, revision, title, body, metadata, updated_at, expires_at)
-             VALUES (?, ?, 1, ?, ?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))',
-            [$userId, $contextKey, $title !== '' ? $title : null, $body, $this->encodeMetadata($metadata), self::RETENTION_DAYS],
-        );
+        try {
+            $id = $this->db->insert(
+                'INSERT INTO server_drafts
+                   (user_id, context_key, revision, title, body, metadata, updated_at, expires_at)
+                 VALUES (?, ?, 1, ?, ?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))',
+                [$userId, $contextKey, $title !== '' ? $title : null, $body, $this->encodeMetadata($metadata), self::RETENTION_DAYS],
+            );
+        } catch (\PDOException $e) {
+            if ((int) ($e->errorInfo[1] ?? 0) !== 1062) { throw $e; }
+            return $this->conflict($userId, $contextKey);
+        }
 
         return ['status' => 'saved', 'draft' => $this->find((int) $id)];
+    }
+
+    /** Current read: a failed CAS must not reuse the transaction's older snapshot. */
+    private function conflict(int $userId, string $contextKey): array
+    {
+        $server = $this->decodeRow($this->db->fetch(
+            'SELECT * FROM server_drafts WHERE user_id = ? AND context_key = ? AND expires_at > UTC_TIMESTAMP() LIMIT 1 FOR UPDATE',
+            [$userId, $contextKey],
+        ));
+        return ['status' => 'conflict', 'server' => $server];
     }
 
     public function discardByContext(int $userId, string $contextKey): bool
@@ -91,12 +132,27 @@ final class ServerDraftRepository
         )->rowCount() > 0;
     }
 
-    /** A successful send must not discard a newer edit from another tab. */
-    public function discardSubmitted(int $userId, string $contextKey, string $body, ?string $title = null): void
+    /** Empty autosave may only remove the revision it actually loaded. */
+    public function discardAtRevision(int $userId, string $contextKey, int $revision, int $draftId): array
     {
-        $sql = 'DELETE FROM server_drafts WHERE user_id = ? AND context_key = ? AND BINARY body = BINARY ?';
-        $params = [$userId, $this->normalizeContextKey($contextKey), $body];
-        if ($title !== null) {
+        $contextKey = $this->normalizeContextKey($contextKey);
+        $this->db->run('DELETE FROM server_drafts WHERE user_id = ? AND context_key = ? AND revision = ? AND id = ?', [$userId, $contextKey, $revision, $draftId]);
+        $server = $this->findByContext($userId, $contextKey);
+        return $server === null ? ['status' => 'discarded'] : ['status' => 'conflict', 'server' => $server];
+    }
+
+    /** A successful send must not discard a newer edit from another tab. */
+    public function discardSubmitted(int $userId, string $contextKey, string $body, ?string $title = null, ?array $input = null): void
+    {
+        $draft = $this->findByContext($userId, $this->normalizeContextKey($contextKey));
+        if ($draft === null || !\App\Support\ComposerDraft::matchesSubmission($draft, $input ?? [])) { return; }
+        $sql = 'DELETE FROM server_drafts WHERE user_id = ? AND context_key = ? AND BINARY body = BINARY ? AND revision = ? AND id = ?';
+        $params = [$userId, $contextKey, $body, (int) $draft['revision'], (int) $draft['id']];
+        // Versioned drafts without a title field use title as a list label
+        // (for example "New direct message"). A hidden, empty group-title
+        // input must not prevent completion of that otherwise exact copy.
+        $metadata = is_array($draft['metadata'] ?? null) ? $draft['metadata'] : [];
+        if ($title !== null && (!isset($metadata['state']) || array_key_exists('title', $metadata['state']['fields']))) {
             $sql .= ' AND BINARY COALESCE(title, \'\') = BINARY ?';
             $params[] = trim($title);
         }
@@ -155,6 +211,11 @@ final class ServerDraftRepository
     public function find(int $id): ?array
     {
         return $this->decodeRow($this->db->fetch('SELECT * FROM server_drafts WHERE id = ?', [$id]));
+    }
+
+    public function findForUser(int $id, int $userId): ?array
+    {
+        return $this->decodeRow($this->db->fetch('SELECT * FROM server_drafts WHERE id = ? AND user_id = ? AND expires_at > UTC_TIMESTAMP()', [$id, $userId]));
     }
 
     private function purgeExpiredForUser(int $userId): int

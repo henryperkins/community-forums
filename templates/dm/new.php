@@ -45,6 +45,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
                     'placeholder' => $dmNewPlaceholder,
                     'maxlength' => 5000,
                     'body_value' => (string) $body,
+                    'draft_source' => $draft_source ?? '',
                     'submit_label' => 'Send',
                     'form_class' => 'dm-form',
                     'body_error' => (string) ($errors['body'] ?? ''),

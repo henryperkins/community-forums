@@ -1,0 +1,32 @@
+{
+  "base_commit": "241dd534e4cc174139f425127d38aae9167a5ffa",
+  "asset_version": "108dd69071d95f7a",
+  "files": {
+    "public/assets/composer.js": "be3268a0e7abbccbacb29b046df163782b1fc24e76208a8924a6851bd64eddc3",
+    "public/assets/app.js": "c08be480ae3628f573689a8c8fcde251e7864ddaf82526fdb6fe69b00656cfe6",
+    "public/assets/app.css": "b795d0e5bfc7a566deccce2f7b13b7d73b6cb04f855ac9a13dde2b316769dc92",
+    "src/Support/ComposerDraft.php": "d8e5147f58fa7f2ed613e825f125fac85424d87042f0d1ec00624246860045aa",
+    "src/Repository/ServerDraftRepository.php": "476360c9dc8ce81665218417bd09a83a0764f60261ddacfc580e428ee0880f3d",
+    "src/Controller/DraftController.php": "0f6a6baf9687a5250f4ea1317789dca253148de913152afecb4a67114739d7da",
+    "src/Controller/Controller.php": "4884f5633d6b5dbb652237df4eac078085936c641d8e3722a7ab51c640b4bd72",
+    "src/Controller/ConversationController.php": "efbe8510c68d113eded138c06daf0e1d817bd41938b53cb6e8df8413c1985cbc",
+    "src/Controller/ThreadController.php": "d11d209f3fdb93f2898098e5340618563eb3601299cd5db97b40b58f794cb7c5",
+    "src/Controller/PostController.php": "0793e2e528a5ff2ba7c5f8f40a0502cf10004a44976b242ccb347c52e6ade8d8",
+    "templates/compose.php": "b23a5f67df49a1ded248975c47c159cb393dd09fa9f739d0389aa7f742fe255e",
+    "templates/account/drafts.php": "43a7d572a12e2d2d1a10069aaabca34c232b3ef0b967da5135595b1397c36322",
+    "templates/dm/new.php": "5251f3804e03afed70285b1151a77de57ab26399e55cd6f6e24be6319df53be6",
+    "templates/dm/show.php": "1703e8696a705c6b6178fc795a39c19e8f70c8eade90880a65d29696a21157ed",
+    "templates/partials/composer.php": "37969e2ce300c5ebbaa029b5359318453802871b027c0804f1937561d0a53d42",
+    "templates/partials/composer_shell.php": "994405f5259ef9613fea9d65a4b688234f119e6f6a18faf1785d0df16e9b135e",
+    "tests/browser/draft-recovery.spec.ts": "9d4bbd23bbcaf90860c63dda52d3a11123663badacaf77af1cef4c900e74e224",
+    "tests/browser/server-drafts.spec.ts": "fd3b8ee18d58ff7705fceee536090a8aa2c5b23729c33d8ab1809ca223dab117",
+    "tests/browser/thread-mobile-recovery.spec.ts": "abab3b9e6be4ad0d5a045180d359dfa414a42d26f9f22691168fc4713e19ba73",
+    "tests/browser/resumed-draft-completion.spec.ts": "1a950d5dc65202cc00975eb85b9ce03ecff7d2fbc15485343508149e1bb3182f",
+    "tests/browser/mobile-account-menu.spec.ts": "4438d0bfb36e91ab97c886d056ed3a4664983a3c6ba63fd3f2dd6123380725b0",
+    "tests/browser/playwright.draft-recovery.config.ts": "acda59a3cf3a9711816097e1326931051ac2cca639f763e2f4b6c070594b8aa3",
+    "tests/browser/playwright.mobile-remediation.config.ts": "7f77f891bee3ca93e9c337332b49742c42f9096a6a647a8e98a120450722181e",
+    "config/assets.json": "bc035c72bda965093ea74c863d9a8e19108be7c45baf1e93b57f9b9857207ea7",
+    "tests/browser/theming-remediation.spec.ts": "66b8561df3d78a92f6150efc7d468e0b7bf42732a8f3bb930007b9b6cae70303",
+    "tests/browser/theming-remediation-fixture.php": "67d2eb7b96eb0a699e4dd76b955a6d7846a2b5005516f9509efe34a5ac8748b9"
+  }
+}

@@ -12,6 +12,7 @@ $replyInstance = 'reply-thread-' . $replyThreadId;
     'placeholder' => 'Reply to “' . (string) $thread['title'] . '”…',
     'maxlength' => 20000,
     'body_value' => (string) ($reply_old['body'] ?? ''),
+    'draft_source' => $reply_old['draft_source'] ?? '',
     'submit_label' => 'Reply',
     'form_id' => 'reply',
     'form_class' => 'reply-composer thread-composer-card',

@@ -1,0 +1,59 @@
+{
+  "kind": "allowlisted historical browser result summary",
+  "source_report": "browser-identity-assertions.json",
+  "source_report_sha256": "c0c194816e67bc257c7d48a300726fd3d485d4e38ab0cf8528dd234ecd9211c6",
+  "omitted_fields": [
+    "config",
+    "stdout",
+    "stderr",
+    "errors",
+    "attachments",
+    "all non-allowlisted fields"
+  ],
+  "stats": {
+    "startTime": "2026-10-24T05:37:38.097Z",
+    "duration": 7551.522999999999,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 192,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rich editor recovers a failed send and submits the retained draft exactly once",
+      "project": "chromium",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2279
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "file": "thread-mobile-recovery.spec.ts",
+      "line": 192,
+      "suite": [
+        "thread-mobile-recovery.spec.ts"
+      ],
+      "title": "rich editor recovers a failed send and submits the retained draft exactly once",
+      "project": "webkit",
+      "status": "expected",
+      "expected_status": "passed",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 3915
+        }
+      ],
+      "annotations": []
+    }
+  ]
+}

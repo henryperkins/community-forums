@@ -1,0 +1,8 @@
+{
+  "design_sha256": "7db6adccad91d436c4cdcd00429f80a781b9ef6fbb3979a023091ff3eac89089",
+  "design_unchanged": true,
+  "sidecar_narrative_matches_design": true,
+  "sidecar_generated_at": "2026-10-25T17:29:45.576568Z",
+  "messages_primary_target": "templates/dm/index.php",
+  "primary_target_exists": true
+}

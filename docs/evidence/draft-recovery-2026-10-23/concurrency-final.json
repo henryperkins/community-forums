@@ -1,0 +1,22 @@
+{
+    "mariadb_snapshot_extension_disabled_for_reader": true,
+    "cas_conflict": {
+        "status": "conflict",
+        "current_revision": 2
+    },
+    "insert_conflict": {
+        "status": "conflict",
+        "current_revision": 1
+    },
+    "transient_aborts": {
+        "1020": {
+            "owned_attempts": 2,
+            "nested_attempts": 1
+        },
+        "1213": {
+            "owned_attempts": 2,
+            "nested_attempts": 1
+        }
+    },
+    "exhaustion_attempts": 3
+}

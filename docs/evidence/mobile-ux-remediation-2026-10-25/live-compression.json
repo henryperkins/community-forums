@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-25T17:29:46.130523+00:00",
+  "url": "https://forum.candidary.online",
+  "records": [
+    {
+      "request_encoding": "br",
+      "asset": "/assets/dist/app-style-BaLoyX9O.css",
+      "bytes": 73893,
+      "response_headers": "HTTP/2 200 \ndate: Sun, 25 Oct 2026 17:29:45 GMT\ncontent-type: text/css\ncf-cache-status: HIT\ncache-control: public, max-age=31536000, immutable\nnel: {\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}\nx-content-type-options: nosniff\nx-retroboards-cache: STATIC\nspeculation-rules: \"/cdn-cgi/speculation\"\nreport-to: {\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=TykQhBgevwDR6zTZ5Nr1sI2gKUMxK2T4T%2BGHA2gt85lnLz6YM9daZyH0K1HgPNMMGRQ8QXJZ2R%2BGaPmXwWSOlV8tmLUA5os9x3B6vwPfckOdbbS7mCA5Xhfa8nR89oOpysSTKkFz3mVlzeYnU856bi1RwznN\"}]}\netag: W/\"61e06093e42b5cf7a0110890f2f8259b\"\ncontent-encoding: br\nserver: cloudflare\ncf-ray: a502f1fd9e8bd64d-IAD\nalt-svc: h3=\":443\"; ma=86400\n\n"
+    },
+    {
+      "request_encoding": "gzip",
+      "asset": "/assets/dist/app-style-BaLoyX9O.css",
+      "bytes": 69014,
+      "response_headers": "HTTP/2 200 \ndate: Sun, 25 Oct 2026 17:29:46 GMT\ncontent-type: text/css\ncf-cache-status: HIT\ncache-control: public, max-age=31536000, immutable\nnel: {\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}\nx-content-type-options: nosniff\nx-retroboards-cache: STATIC\nspeculation-rules: \"/cdn-cgi/speculation\"\nreport-to: {\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=MmD8ylZeUDqna7d%2BKqYgxlgFK6%2BDICXV04OlpBIoGz0yX9do53kCB3RZ0C2aLgvP6PctkG4wHMF%2BoW1orhJLzgE1TA7MABL%2Bq%2BO9C2IO4WhQwCo8moL0EeOhoVFMvs92vsv9un7g0VzuIbQNTDg%2FAV1g%2Fn%2Fq\"}]}\netag: W/\"61e06093e42b5cf7a0110890f2f8259b\"\ncontent-encoding: gzip\nserver: cloudflare\ncf-ray: a502f1fe3d4df344-IAD\nalt-svc: h3=\":443\"; ma=86400\n\n"
+    },
+    {
+      "request_encoding": "identity",
+      "asset": "/assets/dist/app-style-BaLoyX9O.css",
+      "bytes": 453596,
+      "response_headers": "HTTP/2 200 \ndate: Sun, 25 Oct 2026 17:29:46 GMT\ncontent-type: text/css\ncontent-length: 453596\ncf-cache-status: HIT\ncache-control: public, max-age=31536000, immutable\netag: \"61e06093e42b5cf7a0110890f2f8259b\"\nx-content-type-options: nosniff\nx-retroboards-cache: STATIC\nspeculation-rules: \"/cdn-cgi/speculation\"\nreport-to: {\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=nxQm5OUOpnaS4bxAK3BdbXP9vZ7cLcTyXTBcv9AQ7YEw6zLfD1FIjHKtK2dhlIPsJgOqpfhKz4KgRKctS9gwK%2F2AYPTNvzHksRDVXJ1zFY8KYJGDFaqbknjUlrJTfmc%2Bq90tvRUnT4ahfbspUhuWbgXp7shn\"}]}\nnel: {\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}\nserver: cloudflare\ncf-ray: a502f1fed85692dc-IAD\nalt-svc: h3=\":443\"; ma=86400\n\n"
+    }
+  ],
+  "limits": "Read-only public asset transport; deployed asset is not the unpublished candidate."
+}

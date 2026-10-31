@@ -1,0 +1,129 @@
+{
+  "historical_candidate": "B-mobile-integrated-6acff73795c746cb",
+  "historical_head": "4162a90a2e166df7c51bf4da843d8e95bf8b6925",
+  "historical_browser_results": {
+    "passed": 132,
+    "skipped": 4,
+    "failed": 0,
+    "core_draft_recovery_cases": 64
+  },
+  "current_selected_case_count": 54,
+  "comparison": {
+    "public/assets/composer.js": {
+      "historical_sha256": "be3268a0e7abbccbacb29b046df163782b1fc24e76208a8924a6851bd64eddc3",
+      "current_sha256": "be3268a0e7abbccbacb29b046df163782b1fc24e76208a8924a6851bd64eddc3",
+      "identical": true
+    },
+    "public/assets/app.js": {
+      "historical_sha256": "2d2af55f7ce6e87045ca843105e056f1fe7c310a93826080d6d13a9544d004ff",
+      "current_sha256": "c08be480ae3628f573689a8c8fcde251e7864ddaf82526fdb6fe69b00656cfe6",
+      "identical": false
+    },
+    "public/assets/app.css": {
+      "historical_sha256": "1b5566601cf5f3bcd37ad583d61e0620806d1d422fe9da601717571f48ca9f7b",
+      "current_sha256": "b795d0e5bfc7a566deccce2f7b13b7d73b6cb04f855ac9a13dde2b316769dc92",
+      "identical": false
+    },
+    "src/Support/ComposerDraft.php": {
+      "historical_sha256": "d8e5147f58fa7f2ed613e825f125fac85424d87042f0d1ec00624246860045aa",
+      "current_sha256": "d8e5147f58fa7f2ed613e825f125fac85424d87042f0d1ec00624246860045aa",
+      "identical": true
+    },
+    "src/Repository/ServerDraftRepository.php": {
+      "historical_sha256": "476360c9dc8ce81665218417bd09a83a0764f60261ddacfc580e428ee0880f3d",
+      "current_sha256": "476360c9dc8ce81665218417bd09a83a0764f60261ddacfc580e428ee0880f3d",
+      "identical": true
+    },
+    "src/Controller/DraftController.php": {
+      "historical_sha256": "88855c944a454433755efc03d68528ef9883ed10919cb13614f2df238b5bcb5a",
+      "current_sha256": "0f6a6baf9687a5250f4ea1317789dca253148de913152afecb4a67114739d7da",
+      "identical": false
+    },
+    "src/Controller/Controller.php": {
+      "historical_sha256": "4884f5633d6b5dbb652237df4eac078085936c641d8e3722a7ab51c640b4bd72",
+      "current_sha256": "4884f5633d6b5dbb652237df4eac078085936c641d8e3722a7ab51c640b4bd72",
+      "identical": true
+    },
+    "src/Controller/ConversationController.php": {
+      "historical_sha256": "efbe8510c68d113eded138c06daf0e1d817bd41938b53cb6e8df8413c1985cbc",
+      "current_sha256": "efbe8510c68d113eded138c06daf0e1d817bd41938b53cb6e8df8413c1985cbc",
+      "identical": true
+    },
+    "src/Controller/ThreadController.php": {
+      "historical_sha256": "d11d209f3fdb93f2898098e5340618563eb3601299cd5db97b40b58f794cb7c5",
+      "current_sha256": "d11d209f3fdb93f2898098e5340618563eb3601299cd5db97b40b58f794cb7c5",
+      "identical": true
+    },
+    "src/Controller/PostController.php": {
+      "historical_sha256": "0793e2e528a5ff2ba7c5f8f40a0502cf10004a44976b242ccb347c52e6ade8d8",
+      "current_sha256": "0793e2e528a5ff2ba7c5f8f40a0502cf10004a44976b242ccb347c52e6ade8d8",
+      "identical": true
+    },
+    "templates/compose.php": {
+      "historical_sha256": "b23a5f67df49a1ded248975c47c159cb393dd09fa9f739d0389aa7f742fe255e",
+      "current_sha256": "b23a5f67df49a1ded248975c47c159cb393dd09fa9f739d0389aa7f742fe255e",
+      "identical": true
+    },
+    "templates/account/drafts.php": {
+      "historical_sha256": "43a7d572a12e2d2d1a10069aaabca34c232b3ef0b967da5135595b1397c36322",
+      "current_sha256": "43a7d572a12e2d2d1a10069aaabca34c232b3ef0b967da5135595b1397c36322",
+      "identical": true
+    },
+    "templates/dm/new.php": {
+      "historical_sha256": "5251f3804e03afed70285b1151a77de57ab26399e55cd6f6e24be6319df53be6",
+      "current_sha256": "5251f3804e03afed70285b1151a77de57ab26399e55cd6f6e24be6319df53be6",
+      "identical": true
+    },
+    "templates/dm/show.php": {
+      "historical_sha256": "1703e8696a705c6b6178fc795a39c19e8f70c8eade90880a65d29696a21157ed",
+      "current_sha256": "1703e8696a705c6b6178fc795a39c19e8f70c8eade90880a65d29696a21157ed",
+      "identical": true
+    },
+    "templates/partials/composer.php": {
+      "historical_sha256": "37969e2ce300c5ebbaa029b5359318453802871b027c0804f1937561d0a53d42",
+      "current_sha256": "37969e2ce300c5ebbaa029b5359318453802871b027c0804f1937561d0a53d42",
+      "identical": true
+    },
+    "templates/partials/composer_shell.php": {
+      "historical_sha256": "994405f5259ef9613fea9d65a4b688234f119e6f6a18faf1785d0df16e9b135e",
+      "current_sha256": "994405f5259ef9613fea9d65a4b688234f119e6f6a18faf1785d0df16e9b135e",
+      "identical": true
+    },
+    "tests/browser/draft-recovery.spec.ts": {
+      "historical_sha256": "9d4bbd23bbcaf90860c63dda52d3a11123663badacaf77af1cef4c900e74e224",
+      "current_sha256": "9d4bbd23bbcaf90860c63dda52d3a11123663badacaf77af1cef4c900e74e224",
+      "identical": true
+    },
+    "tests/browser/server-drafts.spec.ts": {
+      "historical_sha256": "fd3b8ee18d58ff7705fceee536090a8aa2c5b23729c33d8ab1809ca223dab117",
+      "current_sha256": "fd3b8ee18d58ff7705fceee536090a8aa2c5b23729c33d8ab1809ca223dab117",
+      "identical": true
+    },
+    "tests/browser/thread-mobile-recovery.spec.ts": {
+      "historical_sha256": "abab3b9e6be4ad0d5a045180d359dfa414a42d26f9f22691168fc4713e19ba73",
+      "current_sha256": "abab3b9e6be4ad0d5a045180d359dfa414a42d26f9f22691168fc4713e19ba73",
+      "identical": true
+    },
+    "tests/browser/resumed-draft-completion.spec.ts": {
+      "historical_sha256": "1a950d5dc65202cc00975eb85b9ce03ecff7d2fbc15485343508149e1bb3182f",
+      "current_sha256": "1a950d5dc65202cc00975eb85b9ce03ecff7d2fbc15485343508149e1bb3182f",
+      "identical": true
+    },
+    "tests/browser/mobile-account-menu.spec.ts": {
+      "historical_sha256": "4438d0bfb36e91ab97c886d056ed3a4664983a3c6ba63fd3f2dd6123380725b0",
+      "current_sha256": "4438d0bfb36e91ab97c886d056ed3a4664983a3c6ba63fd3f2dd6123380725b0",
+      "identical": true
+    },
+    "tests/browser/playwright.draft-recovery.config.ts": {
+      "historical_sha256": "acda59a3cf3a9711816097e1326931051ac2cca639f763e2f4b6c070594b8aa3",
+      "current_sha256": "acda59a3cf3a9711816097e1326931051ac2cca639f763e2f4b6c070594b8aa3",
+      "identical": true
+    },
+    "tests/browser/playwright.mobile-remediation.config.ts": {
+      "historical_sha256": "7f77f891bee3ca93e9c337332b49742c42f9096a6a647a8e98a120450722181e",
+      "current_sha256": "7f77f891bee3ca93e9c337332b49742c42f9096a6a647a8e98a120450722181e",
+      "identical": true
+    }
+  },
+  "boundary": "Unchanged mechanism inputs support reuse of historical coverage. Shared app assets and DraftController changed, so old results are not relabeled as current integrated runs; current54focuscases and finalPHP qualify integration. No physical-device proof is claimed."
+}

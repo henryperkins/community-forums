@@ -1,0 +1,37 @@
+{
+  "reviewer": "/root/draft_recovery_review",
+  "mode": "independent read-only source review; no fixtures or DB mutations",
+  "assessment": "No remaining critical or important issue in the final reviewed scope; acceptance contingent on the independent final qualification runs",
+  "reviewed_sha256": {
+    "src/Repository/ServerDraftRepository.php": "96ab1e2fea0a5b1475c5af646aa8c004b7d41b203669e08060bf00295abc70db",
+    "public/assets/composer.js": "16b72c72d179c4cb4c69c6c22a1b722a32a5e14a4e9fe0922a3177032d4c52f2",
+    "tests/browser/draft-concurrency.php": "0c6d516ce689b2b6be3477c2c1c331a1bfb28d8d294440e73e361b098ea6cb46"
+  },
+  "resolved_findings": [
+    "early field/body edits during import",
+    "explicit empty/false fields during legacy hydration",
+    "DM canonical fields/chips/group title",
+    "latest repeated-conflict server copy",
+    "divergent browser copy on server Resume",
+    "missing or inaccessible draft destinations",
+    "row identity across delete/recreate",
+    "current conflict reads and successful acknowledgement transaction",
+    "checked row identity during submission cleanup",
+    "bounded owned transaction retry; no nested replay",
+    "completed-successor lineage and full-state obsolete-copy recognition",
+    "cancelled-native-navigation deliberate-edit recovery through shared upload gate",
+    "Complete-snapshot unchanged-retry identity recovery when a lazy rich reload loses the history token"
+  ],
+  "limits": [
+    "No physical-device or deployed-build qualification",
+    "Review did not itself claim browser/PHP pass",
+    "Legacy callers without draft_id retain revision-only compatibility"
+  ],
+  "final_review": "Independent reviewer cleared the exact final identity fallback (composer16b72c72...) and repository96ab1e2f...; no remaining critical/important issue. No fixture mutation/execution by reviewer.",
+  "test_qualification_notes": [
+    "Revised422 test waits for the enhanced rejected input and explicit comparison choice.",
+    "WebKit offline recovery uses reload; retained-document editing is tested separately.",
+    "Original Chromium CDP font test is explicit WebKit skip; matched CSSOM baseline observation remains retained.",
+    "Direct token-equality assertions strengthen the rich reload regression; focused recheck receipt is recorded separately."
+  ]
+}

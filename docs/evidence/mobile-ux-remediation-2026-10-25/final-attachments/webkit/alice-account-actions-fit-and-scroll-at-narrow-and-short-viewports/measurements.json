@@ -1,0 +1,98 @@
+{
+  "browser": "26.5",
+  "account": "alice",
+  "results": [
+    {
+      "width": 320,
+      "height": 740,
+      "font": 16,
+      "bounds": {
+        "x": 92,
+        "y": 58.5,
+        "width": 220,
+        "height": 361.5
+      },
+      "logout": {
+        "x": 99,
+        "y": 371.8125,
+        "width": 206,
+        "height": 41.1875
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 0,
+        "height": 360,
+        "content": 360
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "font": 16,
+      "bounds": {
+        "x": 616,
+        "y": 58.5,
+        "width": 220,
+        "height": 250
+      },
+      "logout": {
+        "x": 623,
+        "y": 259.8125,
+        "width": 206,
+        "height": 41.1875
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 112,
+        "height": 248,
+        "content": 360
+      }
+    },
+    {
+      "width": 320,
+      "height": 740,
+      "font": 32,
+      "bounds": {
+        "x": 37.078125,
+        "y": 68.390625,
+        "width": 274.921875,
+        "height": 510
+      },
+      "logout": {
+        "x": 44.078125,
+        "y": 502.515625,
+        "width": 260.921875,
+        "height": 68.390625
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 124,
+        "height": 508,
+        "content": 632
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "font": 32,
+      "bounds": {
+        "x": 561.078125,
+        "y": 73.1875,
+        "width": 274.921875,
+        "height": 199
+      },
+      "logout": {
+        "x": 568.078125,
+        "y": 196.3125,
+        "width": 260.921875,
+        "height": 68.390625
+      },
+      "directPointerHit": true,
+      "scroll": {
+        "top": 435,
+        "height": 197,
+        "content": 632
+      }
+    }
+  ]
+}

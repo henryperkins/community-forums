@@ -49,7 +49,7 @@ $count = count($serverDrafts);
                     <?php foreach ($serverDrafts as $draft): ?>
                         <li class="account-draft-row">
                             <span class="account-draft-main">
-                                <span class="account-draft-dest"><?= $e((string) $draft['context_key']) ?></span>
+                                <span class="account-draft-dest"><?= $e((string) $draft['context_label']) ?></span>
                                 <span class="account-draft-title"><?= $e((string) ($draft['title'] ?? 'Untitled draft')) ?></span>
                                 <p class="account-draft-snippet"><?= $e(mb_strimwidth((string) $draft['body'], 0, 240, '...')) ?></p>
                                 <span class="account-draft-meta">
@@ -58,6 +58,9 @@ $count = count($serverDrafts);
                                 </span>
                             </span>
                             <span class="account-draft-actions">
+                                <?php if ($draft['resume_url'] !== null): ?>
+                                    <a class="btn btn-secondary btn-small" href="<?= $e($draft['resume_url']) ?>">Resume</a>
+                                <?php endif; ?>
                                 <form method="post" action="/drafts/<?= (int) $draft['id'] ?>/discard" class="inline">
                                     <?= $this->csrfField() ?>
                                     <button class="linkbtn danger" type="submit">Discard</button>

@@ -1,8 +1,8 @@
 ---
 version: 1
 slug: "messages"
-primary_target: "messages"
-related_targets: ["templates/dm/index.php","templates/dm/show.php","templates/dm/new.php","templates/partials/dm_list.php","templates/partials/dm_rail.php","templates/partials/dm_compose_fields.php"]
+primary_target: "templates/dm/index.php"
+related_targets: ["templates/dm/show.php","templates/dm/new.php","templates/partials/dm_list.php","templates/partials/dm_rail.php","templates/partials/dm_compose_fields.php"]
 ---
 
 # Surface brief: Messages (`/messages`, `/messages/{id}`, `/messages/new`, the compose dialog)

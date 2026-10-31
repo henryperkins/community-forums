@@ -1903,13 +1903,13 @@
             return null;
         };
         var syncCompose = function (option, replaceUrl) {
-            if (!option || option.disabled) { return; }
+            if (!option || option.disabled && option.value !== '') { return; }
             var slug = option.getAttribute('data-board-slug') || '';
             var name = option.getAttribute('data-board-name') || option.textContent || '';
             composeSelect.value = option.value;
             composeSurface.setAttribute('data-compose-selected-board', slug);
             if (composeForm) { composeForm.setAttribute('data-composer-target-id', option.value); }
-            if (composeName) { composeName.textContent = 'Posting to ' + name; }
+            if (composeName) { composeName.textContent = option.value ? 'Posting to ' + name : 'Choose a board'; }
             Array.prototype.forEach.call(composePickers, function (picker) {
                 var active = picker.getAttribute('data-compose-board-picker') === slug;
                 picker.classList.toggle('is-active', active);
@@ -1933,6 +1933,8 @@
                 if (checkbox) { checkbox.disabled = !anonymousAllowed; if (!anonymousAllowed) { checkbox.checked = false; } }
             });
             if (replaceUrl && slug) { history.replaceState(history.state, '', '/compose?board=' + encodeURIComponent(slug)); }
+            // The rail and select are the same form edit, including draft sync.
+            composeSelect.dispatchEvent(new Event('input', { bubbles: true }));
         };
         if (composeSelect) {
             composeSelect.addEventListener('change', function () { syncCompose(composeSelect.options[composeSelect.selectedIndex], true); });
@@ -2635,9 +2637,11 @@
         var status = document.createElement('span'); status.className = 'sr-only'; status.setAttribute('role', 'status'); picker.appendChild(status);
 
         function sync() {
+            var previous = canonical.value;
             var raw = input.value.trim();
             canonical.value = selected.map(function (p) { return p.username; }).concat(raw ? [raw] : []).join(', ');
             if (groupTitle) { groupTitle.hidden = selected.length < 2 && !groupTitle.querySelector('input').value && !groupTitle.querySelector('[aria-invalid]'); }
+            if (canonical.value !== previous) { canonical.dispatchEvent(new Event('change', { bubbles: true })); }
         }
         function close() {
             list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant');
@@ -2666,8 +2670,15 @@
             if (selected.some(function (p) { return p.username.toLowerCase() === username.toLowerCase(); })) { return; }
             selected.push({ username: username, name: name || username });
         }
-        canonical.value.split(/[\s,]+/).forEach(function (name) { add(name, name.replace(/^@/, '')); });
-        renderChips(); sync();
+        function restoreCanonical() {
+            var value = canonical.value;
+            selected = []; input.value = '';
+            value.split(/[\s,]+/).forEach(function (name) { add(name, name.replace(/^@/, '')); });
+            dismiss(); renderChips(); sync();
+        }
+        canonical.addEventListener('input', restoreCanonical);
+        form.addEventListener('rb:draft-fields-restored', sync);
+        restoreCanonical();
         function choose(index) {
             var item = matches[index]; if (!item) { return; }
             add(item.token, item.meta || item.label.replace(/^@/, ''));

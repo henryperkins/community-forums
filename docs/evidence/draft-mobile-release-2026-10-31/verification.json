@@ -1,0 +1,39 @@
+{
+  "base_commit": "241dd534e4cc174139f425127d38aae9167a5ffa",
+  "asset_version": "108dd69071d95f7a",
+  "php": {
+    "tests": 3428,
+    "assertions": 30578,
+    "failures": 0,
+    "skipped": 1
+  },
+  "draft_write_gate": {
+    "expected_red_failures": 20,
+    "focused_green_tests": 49,
+    "focused_green_assertions": 403
+  },
+  "assets": {
+    "current": true,
+    "tests_passed": 35
+  },
+  "logs": {
+    "php-full.log": "c3854f98f7c5d57296f3c6a878b4850e2678ed1c6f621ae66c0e680c7b66d423",
+    "draft-gate-red.log": "144ad7b872185be90ece9b7bbbf0c784cea71d67bcbdf955b23b8be6d68b8b04",
+    "draft-gate-green.log": "26c1187adbab6acf9dd095928f525f745ccc184cbf8f7f5c87141ae0642fe2cd",
+    "assets-check.log": "e09fefd519f3f033194e1e05d01c8d2afc58cd73749488470720a7bd4d6bee1d",
+    "assets-tests.log": "5576d62e93875f69347adab9ca5fe5b77f0a73356d14f059f0b5e129ce398951"
+  },
+  "browser": {
+    "passed": 54,
+    "failures": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "draft_mobile": 50,
+    "theming": 4
+  },
+  "published_log_transform": {
+    "file": "checks/draft-gate-red.log",
+    "operation": "Trailing whitespace trimmed; original log retained privately",
+    "original_sha256": "758030d4d1dd599dec3ee25b54f7de59f6d8daf2b4d2b71a4ac2ca30d253ea03"
+  }
+}
