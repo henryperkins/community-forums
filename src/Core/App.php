@@ -677,6 +677,10 @@ final class App
             'brand_favicon_path' => '',
             'brand_color_primary' => '',
             'brand_color_accent' => '',
+            'brand_color_primary_light' => '',
+            'brand_color_accent_light' => '',
+            'brand_color_primary_dark' => '',
+            'brand_color_accent_dark' => '',
             'brand_theme_preset' => 'classic',
             'brand_version' => '',
             'brand_custom_css_enabled' => false,
@@ -1110,8 +1114,14 @@ final class App
                 && ($settings['brand_custom_css_enabled'] ?? false) === true
                 && is_string($settings['brand_custom_css'] ?? null)
                 && $settings['brand_custom_css'] !== '';
+            // Per-mode overrides (ADR 0054) also need the brand stylesheet.
+            $modeColours = false;
+            foreach (['brand_color_primary_light', 'brand_color_accent_light', 'brand_color_primary_dark', 'brand_color_accent_dark'] as $key) {
+                $modeColours = $modeColours || (is_string($settings[$key] ?? null) && self::isHexColor($settings[$key]));
+            }
             $brand['has_custom_colors'] = $brand['color_primary'] !== ''
                 || $brand['color_accent'] !== ''
+                || $modeColours
                 || $brand['theme_preset'] !== 'classic'
                 || $hasCustomCss;
         } catch (Throwable) {

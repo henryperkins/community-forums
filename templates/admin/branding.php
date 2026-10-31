@@ -136,6 +136,50 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                         <?= field_error($errors ?? [], 'color_accent') ?>
                     </div>
 
+                    <?php
+                    // Optional per-mode adjustments (ADR 0054): blank inherits the
+                    // shared colour above, then the package or preset role.
+                    $modeFields = [
+                        'light' => ['color_primary_light' => ['Primary', '--accent', $color_primary], 'color_accent_light' => ['Accent', '--accent-2', $color_accent]],
+                        'dark' => ['color_primary_dark' => ['Primary', '--accent', $color_primary], 'color_accent_dark' => ['Accent', '--accent-2', $color_accent]],
+                    ];
+                    $modeOpen = false;
+                    foreach ($modeFields as $fields) {
+                        foreach (array_keys($fields) as $field) {
+                            $modeOpen = $modeOpen || (string) ($$field ?? '') !== '' || !empty($errors[$field]) || isset($colour_suggestions[$field]);
+                        }
+                    }
+                    ?>
+                    <details class="branding-field branding-field-wide branding-mode-colours"<?= $modeOpen ? ' open' : '' ?>>
+                        <summary>Adjust colours for light and dark modes</summary>
+                        <p class="branding-colour-help">Optional. Blank uses the shared colour above, or the theme default when that is blank too. Each mode is reviewed for contrast on its own surfaces; a suggestion appears when a colour is hard to read in a mode.</p>
+                        <div class="branding-mode-grid">
+                            <?php foreach ($modeFields as $mode => $fields): ?>
+                                <fieldset class="branding-mode-set">
+                                    <legend><?= $mode === 'light' ? 'Light mode' : 'Dark mode' ?></legend>
+                                    <?php foreach ($fields as $field => [$roleLabel, $token, $shared]): ?>
+                                        <?php
+                                        $value = (string) ($$field ?? '');
+                                        $default = (string) ($brand_preview_palettes[$theme_preset][$mode][$token] ?? '');
+                                        $inherited = $shared !== '' ? 'Blank uses the shared colour ' . strtolower($shared) . '.' : 'Blank uses the theme default ' . $default . '.';
+                                        $inputId = 'branding-' . str_replace('_', '-', $field);
+                                        ?>
+                                        <div class="branding-mode-field">
+                                            <label for="<?= $e($inputId) ?>"><?= $e($roleLabel) ?></label>
+                                            <input id="<?= $e($inputId) ?>" type="text" name="<?= $e($field) ?>" class="input branding-hex-input" maxlength="7" placeholder="Use shared colour" value="<?= $e($value) ?>"<?= field_attrs($errors ?? [], $field, describedBy: $inputId . '-help') ?> data-brand-mode-colour="<?= $e($field) ?>">
+                                            <p id="<?= $e($inputId) ?>-help" class="branding-colour-help"><?= $e($inherited) ?></p>
+                                            <?php if (isset($colour_suggestions[$field])): ?>
+                                                <p class="branding-colour-suggestion">Suggested for readable <?= $roleLabel === 'Primary' ? 'links' : 'indicators' ?> in <?= $mode ?> mode: <code><?= $e($colour_suggestions[$field]) ?></code>
+                                                    <button class="btn btn-secondary btn-small" type="button" data-brand-suggest="<?= $e($field) ?>" data-brand-suggest-value="<?= $e($colour_suggestions[$field]) ?>" hidden>Use suggestion</button></p>
+                                            <?php endif; ?>
+                                            <?= field_error($errors ?? [], $field) ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </fieldset>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
+
                     <div class="branding-field">
                         <label for="branding-theme-default">Default theme for signed-out visitors</label>
                         <select id="branding-theme-default" name="theme_default" class="input" aria-describedby="branding-mode-help" data-brand-theme>
@@ -348,6 +392,25 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                             <span class="brand-preview-accent">Accent marker</span>
                             <label class="brand-preview-field">Sample field<input class="input" type="text" value="Sample text" readonly></label>
                         </div>
+                    </div>
+                    <?php /* Both palettes and their interaction states together (ADR 0054), painted from each mode's resolved roles. */ ?>
+                    <div class="brand-mode-states" role="group" aria-label="Light and dark states">
+                        <?php foreach (['light' => 'Light', 'dark' => 'Dark'] as $mode => $modeLabel): ?>
+                            <div class="brand-preview brand-states" data-brand-states data-brand-theme="<?= $e($mode) ?>" data-brand-preset="<?= $e($theme_preset) ?>">
+                                <p class="brand-states-title"><?= $e($modeLabel) ?></p>
+                                <div class="brand-states-row">
+                                    <span class="brand-state brand-state-action">Action</span>
+                                    <span class="brand-state brand-state-hover">Hover</span>
+                                    <span class="brand-state brand-state-press">Pressed</span>
+                                    <span class="brand-state brand-state-focus">Focus</span>
+                                </div>
+                                <div class="brand-states-row">
+                                    <span class="brand-state brand-state-selected">Selected</span>
+                                    <span class="brand-state brand-state-unread">3 unread</span>
+                                    <span class="brand-state brand-state-link">Link</span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                     <p class="brand-preview-note">Each mode uses its own logo variant, falling back to the base logo. System follows the visitor’s device. Sign-in screens show the same logo on a raised plate.</p>
                     <?php if (!empty($brand_package_active)): ?>

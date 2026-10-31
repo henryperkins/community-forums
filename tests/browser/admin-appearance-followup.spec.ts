@@ -254,8 +254,9 @@ test.describe('without JavaScript', () => {
     await page.locator('[name="reset_confirm"]').fill('RESET');
     await page.getByRole('button', { name: 'Reset branding', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await expect(page.locator('.brand-preview')).toHaveAttribute('data-brand-theme', 'system');
-    await expect(page.locator('.brand-preview')).toHaveAttribute('data-brand-preset', 'classic');
+    // The main sample; the light/dark state strips beside it are fixed to their mode.
+    await expect(page.locator('[data-brand-preview]')).toHaveAttribute('data-brand-theme', 'system');
+    await expect(page.locator('[data-brand-preview]')).toHaveAttribute('data-brand-preset', 'classic');
     await expect(page.locator('[data-brand-preview-theme]')).toHaveText('System');
     await expect(page.locator('.brand-preview-body')).toHaveCSS('background-color', 'rgb(250, 246, 236)');
     await expect(page.locator('#branding-primary-help')).toContainText('Light');

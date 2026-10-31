@@ -410,7 +410,7 @@ The front-end is already fully **CSS-variable driven** — the entire look deriv
 
 | Level | Controls | Priority |
 |---|---|---|
-| **Brand** | Community name, logo (light/dark), favicon, primary + accent color, sidebar style | P1 |
+| **Brand** | Community name, logo (light/dark), favicon, primary + accent color (shared, or separately for light and dark), sidebar style | P1 |
 | **Community text** | Tagline, community description, board-directory welcome heading and introduction | P1 |
 | **Theme / skin** | Pick a preset: **Default (Hybrid)**, **Retro 2002** (the preserved `styles.css` look as a skin), and **Light / Dark** | P1 (default+dark), P2 (retro skin) |
 | **Tokens** | Fine-tune individual variables (radius, density, fonts) with a live preview | P2 |
@@ -456,6 +456,11 @@ link previews, and the board directory's welcome heading (80) and introduction
 (600, one paragraph per line, always followed by the inbox pointer). Clearing a
 field restores its default; an invalid value returns the whole draft unsaved.
 Members' Light/Dark/System choices show thumbnails of the resolved theme.
+Optional light and dark primary/accent colours override the shared colours in
+that mode only (blank inherits). Each mode is reviewed on its own surfaces; when
+a mode's colour falls short the form suggests the nearest tone that passes, and
+Light and Dark strips preview action, hover, pressed, focus, selected, unread
+and link states.
 Every published branding change — including a community-name change in
 Settings, a reset or a restore — is a revision in **History**
 (`/admin/branding/history`), kept with its logos. A revision's review page

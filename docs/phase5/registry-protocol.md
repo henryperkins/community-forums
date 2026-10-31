@@ -171,6 +171,15 @@ Rules:
 - Contrast is evaluated for light and dark variants against the app.css
   baseline for partial token sets. Every policy pair must meet 4.5:1 or the
   build refuses with `theme_contrast`.
+- Since branding increment 3 (ADR 0054) themes may also set the Imladris
+  semantic surfaces and rules the shell paints from: `--surface-page`,
+  `--surface-raised`, `--surface-sunken`, `--border-hair`, `--border-soft`,
+  `--border-strong` and `--rule-gold`. Focus rings, field rules and status
+  families remain application-controlled. The policy pairs include body text
+  (`--text-body`) on the page and raised surfaces and faint text
+  (`--text-faint`) on the raised surface. `tokens` apply to both variants
+  unless `dark_tokens` overrides them, so a theme that sets a light surface must
+  also give its dark counterpart in `dark_tokens`.
 
 Package-policy refusal codes exposed via `PackagePolicyException::$code`:
 

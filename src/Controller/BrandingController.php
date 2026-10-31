@@ -45,6 +45,14 @@ final class BrandingController extends Controller
         'favicon' => ['setting' => 'brand_favicon_path', 'purpose' => 'brand_favicon', 'label' => 'favicon'],
     ];
 
+    /** @var array<string,array{0:string,1:string}> form field => [setting key, label] */
+    private const MODE_COLOURS = [
+        'color_primary_light' => ['brand_color_primary_light', 'Light mode primary'],
+        'color_accent_light' => ['brand_color_accent_light', 'Light mode accent'],
+        'color_primary_dark' => ['brand_color_primary_dark', 'Dark mode primary'],
+        'color_accent_dark' => ['brand_color_accent_dark', 'Dark mode accent'],
+    ];
+
     /** Public dynamic stylesheet: emitted only for enabled, validated brand overrides. */
     public function css(Request $request): Response
     {
@@ -67,8 +75,8 @@ final class BrandingController extends Controller
             ]);
         }
         $document = ($draftRequest ? $this->previewedDraft() : null) ?? $this->revisions()->published();
-        $primary = (string) $document['brand_color_primary'];
-        $accent = (string) $document['brand_color_accent'];
+        // Each mode's colours: its own override, else the shared one (ADR 0054).
+        $colours = BrandPalette::modeColours($document);
         $preset = (string) $document['brand_theme_preset'];
 
         $packageTokens = $this->packageTokens($previewRequest);
@@ -77,7 +85,7 @@ final class BrandingController extends Controller
         $modes = [];
         $serving = [];
         foreach ($presets[$retro ? 'retro' : 'classic'] as $mode => $base) {
-            $resolved = BrandPalette::withColours($base, $primary, $accent);
+            $resolved = BrandPalette::withColours($base, $colours[$mode]['primary'], $colours[$mode]['accent']);
             $serving[$mode] = $resolved;
             // Derive against the serving palette without republishing its
             // surfaces/type over the package stylesheet.
@@ -87,7 +95,7 @@ final class BrandingController extends Controller
         // thumbnails, never the global overrides or custom CSS (ADR 0054).
         $sampleOnly = $request->query('scope') === 'sample';
         $css = $sampleOnly ? ':root{}' : BrandPalette::css($modes);
-        $css .= BrandPalette::previewCss($presets, $primary, $accent);
+        $css .= BrandPalette::previewCss($presets, $colours);
         // Member appearance thumbnails show what each mode really resolves to.
         $css .= BrandPalette::thumbnailCss($serving);
 
@@ -193,6 +201,17 @@ final class BrandingController extends Controller
         if ($accent !== '' && !self::isHex($accent)) {
             $errors['color_accent'] = 'Accent colour must be a hex value, e.g. #c29a44.';
         }
+        // Optional per-mode adjustments (ADR 0054). An absent field — a form
+        // from before they existed — keeps the basis value; blank inherits.
+        $modeColours = [];
+        foreach (self::MODE_COLOURS as $field => [$key, $label]) {
+            $raw = $request->post($field);
+            $value = is_string($raw) ? trim($raw) : (string) $basis[$key];
+            if ($value !== '' && !self::isHex($value)) {
+                $errors[$field] = $label . ' must be a hex value, e.g. #2e4a3a, or blank to use the shared colour.';
+            }
+            $modeColours[$field] = $value;
+        }
         $themeDefault = $request->str('theme_default');
         if (!in_array($themeDefault, ['system', 'light', 'dark'], true)) {
             $themeDefault = 'system';
@@ -201,7 +220,11 @@ final class BrandingController extends Controller
         if (!in_array($themePreset, ['classic', 'retro'], true)) {
             $themePreset = 'classic';
         }
-        ['warnings' => $contrastWarnings, 'hash' => $contrastReview] = $this->contrastReview($primary, $accent, $themePreset);
+        ['warnings' => $contrastWarnings, 'hash' => $contrastReview] = $this->contrastReview([
+            'brand_color_primary' => $primary,
+            'brand_color_accent' => $accent,
+            'brand_theme_preset' => $themePreset,
+        ] + array_combine(array_column(self::MODE_COLOURS, 0), array_values($modeColours)));
         $contrastAck = $request->str('contrast_ack') === '1'
             && hash_equals($contrastReview, $request->str('contrast_review'));
         if ($contrastWarnings !== [] && !$contrastAck) {
@@ -236,7 +259,7 @@ final class BrandingController extends Controller
             // audited acknowledgement belong to publishing it.
             unset($errors['contrast_ack']);
         }
-        $view = $this->identityFormValues($identity) + [
+        $view = $this->identityFormValues($identity) + $modeColours + [
             'site_name' => $name,
             'color_primary' => $primary,
             'color_accent' => $accent,
@@ -265,6 +288,9 @@ final class BrandingController extends Controller
         $candidate['site_name'] = $name;
         $candidate['brand_color_primary'] = self::isHex($primary) ? strtolower($primary) : '';
         $candidate['brand_color_accent'] = self::isHex($accent) ? strtolower($accent) : '';
+        foreach (self::MODE_COLOURS as $field => [$key]) {
+            $candidate[$key] = self::isHex($modeColours[$field]) ? strtolower($modeColours[$field]) : '';
+        }
         $candidate['brand_theme_default'] = $themeDefault;
         $candidate['brand_theme_preset'] = $themePreset;
         if ($customCssAvailable) {
@@ -304,6 +330,7 @@ final class BrandingController extends Controller
                     $this->audit($admin->id(), 'contrast_override', [
                         'color_primary' => strtolower($primary),
                         'color_accent' => strtolower($accent),
+                        'mode_colours' => BrandPalette::modeColours($candidate),
                         'theme_preset' => $themePreset,
                         'warnings' => $contrastWarnings,
                     ]);
@@ -621,11 +648,7 @@ final class BrandingController extends Controller
         }
         $candidate = $restorable['document'];
         $published = $this->revisions()->published();
-        $review = $this->contrastReview(
-            (string) $candidate['brand_color_primary'],
-            (string) $candidate['brand_color_accent'],
-            (string) $candidate['brand_theme_preset'],
-        );
+        $review = $this->contrastReview($candidate);
         return [
             'revision' => $revision,
             'candidate' => $candidate,
@@ -649,13 +672,22 @@ final class BrandingController extends Controller
      *
      * @return array{warnings:list<string>,hash:string}
      */
-    private function contrastReview(string $primary, string $accent, string $preset): array
+    /** @param array<string,mixed> $document the candidate's colour and preset settings */
+    private function contrastReview(array $document): array
     {
-        $preset = in_array($preset, ['classic', 'retro'], true) ? $preset : 'classic';
+        $preset = in_array($document['brand_theme_preset'] ?? '', ['classic', 'retro'], true) ? (string) $document['brand_theme_preset'] : 'classic';
+        $colours = BrandPalette::modeColours($document);
+        $overridden = [];
+        foreach (['primary', 'accent'] as $role) {
+            foreach (['light', 'dark'] as $mode) {
+                $value = $document['brand_color_' . $role . '_' . $mode] ?? '';
+                $overridden[$role . '_' . $mode] = is_string($value) && BrandPalette::isHex($value);
+            }
+        }
         $palettes = BrandPalette::presets($this->packageTokens());
-        $warnings = BrandPalette::warnings($palettes[$preset], $primary, $accent);
+        $warnings = BrandPalette::modeWarnings($palettes[$preset], $colours, $overridden);
         return ['warnings' => $warnings, 'hash' => hash('sha256', json_encode([
-            strtolower($primary), strtolower($accent), $preset, $palettes[$preset], $warnings,
+            $colours, $preset, $palettes[$preset], $warnings,
         ], JSON_THROW_ON_ERROR))];
     }
 
@@ -739,6 +771,10 @@ final class BrandingController extends Controller
             'identity_limits' => array_column(BrandIdentity::FIELDS, 'max', 'field'),
             'color_primary' => (string) $document['brand_color_primary'],
             'color_accent' => (string) $document['brand_color_accent'],
+            'color_primary_light' => (string) $document['brand_color_primary_light'],
+            'color_accent_light' => (string) $document['brand_color_accent_light'],
+            'color_primary_dark' => (string) $document['brand_color_primary_dark'],
+            'color_accent_dark' => (string) $document['brand_color_accent_dark'],
             'logo_path' => (string) $document['brand_logo_path'],
             'logo_light_path' => (string) $document['brand_logo_light_path'],
             'logo_dark_path' => (string) $document['brand_logo_dark_path'],
@@ -789,7 +825,44 @@ final class BrandingController extends Controller
         if (!in_array($data['theme_preset'], ['classic', 'retro'], true)) {
             $data['theme_preset'] = 'classic';
         }
+        $data['colour_suggestions'] = $this->colourSuggestions($data);
         return $data;
+    }
+
+    /**
+     * Automatic suggestions per mode (ADR 0054): when the colour a mode would
+     * use draws a warning there, the nearest tone of it that passes. They are
+     * computed against the palette publishing reviews — the globally active
+     * package, not a private package preview — and are offered, never applied.
+     *
+     * @param array<string,mixed> $data
+     * @return array<string,string> form field => suggested hex
+     */
+    private function colourSuggestions(array $data): array
+    {
+        $colours = BrandPalette::modeColours([
+            'brand_color_primary' => $data['color_primary'] ?? '',
+            'brand_color_accent' => $data['color_accent'] ?? '',
+            'brand_color_primary_light' => $data['color_primary_light'] ?? '',
+            'brand_color_accent_light' => $data['color_accent_light'] ?? '',
+            'brand_color_primary_dark' => $data['color_primary_dark'] ?? '',
+            'brand_color_accent_dark' => $data['color_accent_dark'] ?? '',
+        ]);
+        $palettes = BrandPalette::presets($this->packageTokens())[$data['theme_preset']] ?? [];
+        $suggestions = [];
+        foreach (['light', 'dark'] as $mode) {
+            foreach (['primary', 'accent'] as $role) {
+                $colour = $colours[$mode][$role];
+                if ($colour === '' || !isset($palettes[$mode])) {
+                    continue;
+                }
+                $suggested = BrandPalette::suggestion($colour, $palettes[$mode], $role);
+                if ($suggested !== '' && $suggested !== $colour) {
+                    $suggestions['color_' . $role . '_' . $mode] = $suggested;
+                }
+            }
+        }
+        return $suggestions;
     }
 
     /** @return array<string,mixed> */

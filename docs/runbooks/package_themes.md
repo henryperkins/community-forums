@@ -46,6 +46,19 @@ off.
    regressions appear, enter safe mode first, then decide whether to roll back,
    disable the package, or disable `package_themes`.
 
+## Theme Tokens and Operator Branding
+
+An active package owns the base palette; operator branding colours — shared or
+per light/dark mode (ADR 0054) — overlay its brand roles, and clearing them
+returns each mode to the package's own. Since branding increment 3 a package may
+also set the semantic surfaces and rules listed in
+`docs/phase5/registry-protocol.md`, the same baseline the branding preview and
+contrast review use. The build's contrast gate also checks body and faint text
+on those surfaces. Existing builds are reused and keep serving; a release's
+first build (its first preview or activation after install or update) is refused
+with `theme_contrast` when its text tokens fail on those surfaces — give dark
+surfaces in `dark_tokens` and publish a corrected release.
+
 ## Safe Mode
 
 Safe mode suppresses all package theme CSS and assets. The built-in theme and

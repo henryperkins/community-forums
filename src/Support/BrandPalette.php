@@ -13,28 +13,26 @@ final class BrandPalette
     /** @return array<string,array<string,array<string,string>>> */
     public static function presets(?array $packageTokens = null): array
     {
+        // One shared definition (ADR 0054): every role a package may set comes
+        // from ThemeTokenPolicy's baseline, the same values the package build
+        // gate and contrast review use. Only application-owned roles (status,
+        // focus, field rule, inverse/cool grounds, derived hover/press) and the
+        // translucent dark washes as the stylesheet really declares them are
+        // added here.
         $classic = [
             'light' => array_replace(ThemeTokenPolicy::baseline('light'), [
-                '--surface-page' => '#f5efe1', '--surface-raised' => '#faf6ec',
-                '--surface-sunken' => '#ece4d2', '--surface-cool' => '#eef1ed',
-                '--surface-inverse' => '#1e2730', '--border-hair' => '#ded2b8',
-                '--border-soft' => '#dce3dd', '--border-strong' => '#94a095',
-                '--text-body' => '#313b33', '--text-faint' => '#5c685d',
-                '--gold-soft' => '#f4ebcf', '--gold-ink' => '#7e5f22',
-                '--gold' => '#c29a44', '--rule-gold' => '#c29a44',
+                '--surface-cool' => '#eef1ed', '--surface-inverse' => '#1e2730',
+                '--gold-soft' => '#f4ebcf',
                 '--surface-done' => '#edf3ed', '--on-done' => '#24402f',
                 '--brand-hover' => '#24402f', '--brand-press' => '#1c2e24',
                 '--focus-ring' => 'rgba(194,154,68,.7)', '--field-rule' => '#9a7530',
             ]),
             'dark' => array_replace(ThemeTokenPolicy::baseline('dark'), [
-                '--surface-page' => '#161d24', '--surface-raised' => '#1e2730',
-                '--surface-sunken' => '#283440', '--surface-cool' => '#eef1ed',
-                '--surface-inverse' => '#f5efe1', '--border-hair' => '#36434f',
-                '--border-soft' => '#2c3742', '--border-strong' => '#51606c',
-                '--text-body' => '#d7dcd2', '--text-faint' => '#94a095',
+                '--surface-cool' => '#eef1ed', '--surface-inverse' => '#f5efe1',
+                // The baseline flattens these washes for contrast arithmetic;
+                // the stylesheet declares them translucent.
                 '--brand-subtle' => 'rgba(78,116,89,.20)',
-                '--gold-soft' => 'rgba(194,154,68,.16)', '--gold-ink' => '#d2b062',
-                '--gold' => '#c29a44', '--rule-gold' => '#d2b062',
+                '--gold-soft' => 'rgba(194,154,68,.16)',
                 '--surface-done' => 'rgba(78,116,89,.20)', '--on-done' => '#bcd0bf',
                 '--brand-hover' => '#6e9479', '--brand-press' => '#1c2e24',
                 '--focus-ring' => 'rgba(210,176,98,.75)', '--field-rule' => '#b08a3a',
@@ -164,13 +162,48 @@ final class BrandPalette
     }
 
     /** @param array<string,array<string,array<string,string>>> $presets */
-    public static function previewCss(array $presets, string $primary, string $accent): string
+    /**
+     * Each mode's primary and accent (ADR 0054): a mode-specific override, else
+     * the shared override, else '' — which keeps the package or preset role.
+     *
+     * @param array<string,mixed> $document branding settings by key
+     * @return array{light:array{primary:string,accent:string},dark:array{primary:string,accent:string}}
+     */
+    public static function modeColours(array $document): array
     {
+        $pick = static function (string $key) use ($document): string {
+            $value = $document[$key] ?? '';
+            return is_string($value) && self::isHex($value) ? strtolower($value) : '';
+        };
+        $colours = [];
+        foreach (['light', 'dark'] as $mode) {
+            $colours[$mode] = [
+                'primary' => $pick('brand_color_primary_' . $mode) ?: $pick('brand_color_primary'),
+                'accent' => $pick('brand_color_accent_' . $mode) ?: $pick('brand_color_accent'),
+            ];
+        }
+        return $colours;
+    }
+
+    /**
+     * The same two colours for both modes: the shared-override shape.
+     *
+     * @return array{light:array{primary:string,accent:string},dark:array{primary:string,accent:string}}
+     */
+    public static function sharedColours(string $primary, string $accent): array
+    {
+        return self::modeColours(['brand_color_primary' => $primary, 'brand_color_accent' => $accent]);
+    }
+
+    /** @param array{light:array{primary:string,accent:string},dark:array{primary:string,accent:string}}|string $colours */
+    public static function previewCss(array $presets, array|string $colours, string $accent = ''): string
+    {
+        $colours = is_array($colours) ? $colours : self::sharedColours($colours, $accent);
         $css = '';
         foreach ($presets as $preset => $modes) {
             $selector = '.brand-preview[data-brand-preset="' . $preset . '"]';
             foreach ($modes as $mode => $palette) {
-                $palette = self::withColours($palette, $primary, $accent);
+                $palette = self::withColours($palette, $colours[$mode]['primary'], $colours[$mode]['accent']);
                 $palette['--preview-accent'] = $palette['--accent'];
                 $palette['--preview-accent-contrast'] = $palette['--accent-contrast'];
                 $palette['--preview-accent-2'] = $palette['--accent-2'];
@@ -241,16 +274,37 @@ final class BrandPalette
      */
     public static function warnings(array $modes, string $primary, string $accent): array
     {
+        return self::modeWarnings($modes, self::sharedColours($primary, $accent));
+    }
+
+    /**
+     * Contrast review with each mode's own colours (ADR 0054). A warning names
+     * the field to change: the mode's override when one is set, else the
+     * shared colour.
+     *
+     * @param array<string,array<string,string>> $modes
+     * @param array{light:array{primary:string,accent:string},dark:array{primary:string,accent:string}} $colours
+     * @param array<string,bool> $overridden e.g. ['primary_dark' => true]
+     * @return list<string>
+     */
+    public static function modeWarnings(array $modes, array $colours, array $overridden = []): array
+    {
         $warnings = [];
+        $buttonChecks = [];
         foreach ($modes as $mode => $palette) {
+            $primary = $colours[$mode]['primary'] ?? '';
+            $accent = $colours[$mode]['accent'] ?? '';
+            $primaryLabel = !empty($overridden['primary_' . $mode]) ? ucfirst($mode) . ' mode primary' : 'Primary colour';
+            $accentLabel = !empty($overridden['accent_' . $mode]) ? ucfirst($mode) . ' mode accent' : 'Accent colour';
             $surfaces = array_intersect_key($palette, array_flip([
                 '--surface', '--surface-2', '--surface-3',
                 '--surface-page', '--surface-raised', '--surface-sunken',
             ]));
-            foreach (['Primary colour' => [$primary, 4.5, 'links'], 'Accent colour' => [$accent, 3.0, 'indicators']] as $label => [$colour, $minimum, $use]) {
+            foreach ([$primaryLabel => [$primary, 4.5, 'links'], $accentLabel => [$accent, 3.0, 'indicators']] as $label => [$colour, $minimum, $use]) {
                 if (!self::isHex($colour)) {
                     continue;
                 }
+                $buttonChecks[$label] = $colour;
                 $ratio = min(array_map(static fn (string $surface): float => self::contrastRatio($colour, $surface), $surfaces));
                 if ($ratio < $minimum) {
                     $warnings[] = sprintf('%s gives %s only %.2f:1 contrast on %s surfaces; %.1f:1 is needed.', $label, $use, $ratio, $mode, $minimum);
@@ -282,12 +336,40 @@ final class BrandPalette
                 }
             }
         }
-        foreach (['Primary colour' => $primary, 'Accent colour' => $accent] as $label => $colour) {
-            if (self::isHex($colour) && self::contrastRatio($colour, self::contrastInk($colour)) < 4.5) {
+        foreach ($buttonChecks as $label => $colour) {
+            if (self::contrastRatio($colour, self::contrastInk($colour)) < 4.5) {
                 $warnings[] = $label . ' does not support readable button text at 4.5:1 contrast.';
             }
         }
-        return $warnings;
+        return array_values(array_unique($warnings));
+    }
+
+    /**
+     * An automatic suggestion for one mode (ADR 0054): the nearest tone of
+     * $colour, moved toward the mode's readable ink, that passes that mode's
+     * whole contrast review for $role — the same checks publishing runs, so
+     * accepting it clears the role's warnings there. Returns $colour when it
+     * already passes and '' when no tone of it can.
+     *
+     * @param array<string,string> $palette one mode's base palette, as reviewed
+     * @param 'primary'|'accent' $role
+     */
+    public static function suggestion(string $colour, array $palette, string $role = 'primary'): string
+    {
+        $ground = $palette['--surface-page'] ?? '';
+        if (!self::isHex($colour) || !is_string($ground) || !self::isHex($ground)) {
+            return '';
+        }
+        $target = self::contrastRatio('#ffffff', $ground) >= self::contrastRatio('#000000', $ground) ? '#ffffff' : '#000000';
+        $other = $role === 'accent' ? 'primary' : 'accent';
+        for ($step = 0; $step <= 100; ++$step) {
+            $tone = self::mix(strtolower($colour), $target, 1 - $step / 100);
+            // Only this role is set, so every warning is this role's.
+            if (self::modeWarnings(['mode' => $palette], ['mode' => [$role => $tone, $other => '']]) === []) {
+                return $tone;
+            }
+        }
+        return '';
     }
 
     public static function isHex(string $value): bool

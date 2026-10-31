@@ -29,6 +29,10 @@ final class BrandingDocument
         'brand_favicon_path' => 'assets',
         'brand_color_primary' => 'colours',
         'brand_color_accent' => 'colours',
+        'brand_color_primary_light' => 'colours',
+        'brand_color_accent_light' => 'colours',
+        'brand_color_primary_dark' => 'colours',
+        'brand_color_accent_dark' => 'colours',
         'brand_theme_default' => 'appearance',
         'brand_theme_preset' => 'appearance',
         'brand_custom_css_enabled' => 'custom_css',
@@ -48,6 +52,10 @@ final class BrandingDocument
         'brand_favicon_path' => 'Favicon',
         'brand_color_primary' => 'Primary colour',
         'brand_color_accent' => 'Accent colour',
+        'brand_color_primary_light' => 'Light mode primary',
+        'brand_color_accent_light' => 'Light mode accent',
+        'brand_color_primary_dark' => 'Dark mode primary',
+        'brand_color_accent_dark' => 'Dark mode accent',
         'brand_theme_default' => 'Visitor mode',
         'brand_theme_preset' => 'Theme preset',
         'brand_custom_css_enabled' => 'Custom CSS enabled',
@@ -64,8 +72,8 @@ final class BrandingDocument
     public const RESET_GROUPS = [
         'colours' => [
             'label' => 'colours',
-            'keys' => ['brand_color_primary', 'brand_color_accent'],
-            'explain' => 'Clears the primary and accent overrides. Every mode returns to the active package or theme preset colours.',
+            'keys' => ['brand_color_primary', 'brand_color_accent', 'brand_color_primary_light', 'brand_color_accent_light', 'brand_color_primary_dark', 'brand_color_accent_dark'],
+            'explain' => 'Clears the shared and per-mode primary and accent overrides. Every mode returns to the active package or theme preset colours.',
         ],
         'assets' => [
             'label' => 'logos and favicon',

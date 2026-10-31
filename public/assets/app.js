@@ -593,6 +593,13 @@
         var previewTheme = brandPreview.querySelector('[data-brand-preview-theme]');
         var previewLogoSlot = brandPreview.querySelector('[data-brand-preview-logo-slot]');
         var contrastAck = brandForm.querySelector('[name="contrast_ack"]');
+        // Per-mode overrides (ADR 0054): a mode's own field, else the shared one.
+        var modeInputs = {};
+        Array.prototype.forEach.call(brandForm.querySelectorAll('[data-brand-mode-colour]'), function (input) {
+            modeInputs[input.getAttribute('data-brand-mode-colour')] = input;
+        });
+        var stateStrips = document.querySelectorAll('[data-brand-states]');
+        var appliedStateTokens = [];
         var contrastChanged = brandForm.querySelector('[data-brand-contrast-changed]');
         var darkPreference = window.matchMedia('(prefers-color-scheme: dark)');
         var palettes = {};
@@ -711,6 +718,28 @@
                 swatch.hidden = false;
             }
         };
+        var colourFor = function (role, mode) {
+            var own = modeInputs['color_' + role + '_' + mode];
+            if (own && hex(own.value)) { return own.value.trim(); }
+            var shared = role === 'primary' ? brandPrimary : brandAccent;
+            return shared && hex(shared.value) ? shared.value.trim() : '';
+        };
+        var updateStateStrips = function (preset) {
+            appliedStateTokens.forEach(function (entry) { entry[0].style.removeProperty(entry[1]); });
+            appliedStateTokens = [];
+            Array.prototype.forEach.call(stateStrips, function (strip) {
+                var stripMode = strip.getAttribute('data-brand-theme') === 'dark' ? 'dark' : 'light';
+                strip.setAttribute('data-brand-preset', preset);
+                var base = palettes[preset] && palettes[preset][stripMode];
+                if (!base) { return; }
+                var resolved = resolveBrandColours(base, colourFor('primary', stripMode), colourFor('accent', stripMode));
+                Object.keys(resolved).forEach(function (key) {
+                    if (key.indexOf('--') !== 0) { return; }
+                    strip.style.setProperty(key, resolved[key]);
+                    appliedStateTokens.push([strip, key]);
+                });
+            });
+        };
         var updateBrandPreview = function () {
             var theme = brandTheme ? brandTheme.value : 'system';
             var mode = theme === 'system' ? (darkPreference.matches ? 'dark' : 'light') : theme;
@@ -724,8 +753,9 @@
             brandPreview.setAttribute('data-brand-preset', preset);
             appliedPreviewTokens.forEach(function (key) { brandPreview.style.removeProperty(key); });
             appliedPreviewTokens = [];
-            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value.trim() : '';
-            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value.trim() : '';
+            var primary = colourFor('primary', mode);
+            var accent = colourFor('accent', mode);
+            updateStateStrips(preset);
             if (tokens) {
                 var resolved = resolveBrandColours(tokens, primary, accent);
                 Object.keys(resolved).forEach(function (key) {
@@ -766,7 +796,8 @@
             updateAssetPreviews();
         };
         var onBrandChange = function (event) {
-            if (contrastAck && [brandPrimary, brandAccent, brandTheme, brandPreset].indexOf(event.target) !== -1) {
+            var colourFields = [brandPrimary, brandAccent, brandTheme, brandPreset].concat(Object.keys(modeInputs).map(function (key) { return modeInputs[key]; }));
+            if (contrastAck && colourFields.indexOf(event.target) !== -1) {
                 contrastAck.checked = false;
                 contrastAck.disabled = true;
                 if (contrastChanged) { contrastChanged.hidden = false; }
@@ -811,6 +842,18 @@
                     }
                 });
                 reader.readAsDataURL(file);
+            });
+        });
+        // Suggestions are offered, never applied: "Use suggestion" fills the
+        // mode's field and the preview and contrast review follow it.
+        Array.prototype.forEach.call(brandForm.querySelectorAll('[data-brand-suggest]'), function (button) {
+            var target = modeInputs[button.getAttribute('data-brand-suggest')];
+            if (!target) { return; }
+            button.hidden = false;
+            button.addEventListener('click', function () {
+                target.value = button.getAttribute('data-brand-suggest-value') || '';
+                target.dispatchEvent(new Event('input', { bubbles: true }));
+                target.focus();
             });
         });
         darkPreference.addEventListener('change', updateBrandPreview);

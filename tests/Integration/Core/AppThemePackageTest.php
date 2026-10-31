@@ -173,6 +173,76 @@ final class AppThemePackageTest extends TestCase
         self::assertMatchesRegularExpression('/\.theme-thumb \[data-thumb-mode="dark"\]\{[^}]*--thumb-action:#d2b062;/', $css);
     }
 
+    public function test_packages_set_the_semantic_surfaces_and_every_path_agrees(): void
+    {
+        // ADR 0054: one shared role definition. A package's semantic surfaces
+        // reach its stylesheet, the branding sample, the member thumbnails and
+        // the contrast review alike, and /brand.css never republishes them.
+        $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);
+        $installed = $this->installedTheme(['theme' => [
+            'tokens' => ['--accent' => '#8f3d12', '--surface-page' => '#f7f0de', '--surface-raised' => '#fffaf0'],
+            // Base tokens also apply in dark mode, so a package lightening its
+            // page must darken it again there: the gate checks both variants.
+            'dark_tokens' => ['--accent' => '#d2b062', '--surface-page' => '#161d24', '--surface-raised' => '#22303a'],
+        ]]);
+        $build = $this->themeState()->activate($this->adminEntity(), 'password123', $installed);
+        self::assertMatchesRegularExpression('/\A:root\{[^}]*--surface-page:#f7f0de;[^}]*--surface-raised:#fffaf0;/', (string) $build['css']);
+        self::assertMatchesRegularExpression('/\[data-theme="dark"\]\{[^}]*--surface-raised:#22303a;/', (string) $build['css']);
+
+        $css = $this->get('/brand.css')->body();
+        self::assertMatchesRegularExpression('/\.brand-preview\[data-brand-preset="classic"\]\[data-brand-theme="light"\]\{[^}]*--surface-raised:#fffaf0;/', $css);
+        self::assertMatchesRegularExpression('/\.brand-preview\[data-brand-preset="classic"\]\[data-brand-theme="dark"\]\{[^}]*--surface-raised:#22303a;/', $css);
+        self::assertMatchesRegularExpression('/\.theme-thumb \[data-thumb-mode="light"\]\{--thumb-page:#f7f0de;--thumb-panel:#fffaf0;/', $css);
+        self::assertMatchesRegularExpression('/\.theme-thumb \[data-thumb-mode="dark"\]\{[^}]*--thumb-panel:#22303a;/', $css);
+        self::assertSame(1, preg_match('/\A:root\{([^}]*)\}/', $css, $global));
+        self::assertStringNotContainsString('--surface-raised', $global[1]);
+
+        // The contrast review measures links against the package's surfaces.
+        $this->actingAs($this->makeAdmin());
+        $review = $this->post('/admin/branding', [
+            'site_name' => 'Package surfaces', 'theme_default' => 'system', 'base_revision' => '0', 'color_primary' => '#f2e9d0',
+        ]);
+        $this->assertStatus(422, $review);
+        $this->assertSeeText($review, 'Primary colour gives links only');
+    }
+
+    public function test_colour_suggestions_follow_the_active_theme_not_a_private_preview(): void
+    {
+        // Publishing reviews colours against the globally active package, so
+        // a suggestion must too — even while the admin previews another one.
+        $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);
+        $active = $this->installedTheme(['theme' => ['tokens' => ['--radius' => '7px'], 'dark_tokens' => ['--surface-page' => '#4a5a66']]]);
+        $previewed = $this->installedTheme(['theme' => ['tokens' => ['--radius' => '7px'], 'dark_tokens' => ['--surface-page' => '#0b0f12']]]);
+        $this->themeState()->activate($this->adminEntity(), 'password123', $active);
+
+        $this->actingAs($this->makeAdmin());
+        $this->assertRedirect($this->post('/admin/themes/' . $previewed . '/preview'), '/admin/themes');
+        $form = ['site_name' => 'Package suggestions', 'theme_default' => 'system', 'base_revision' => '0', 'color_primary' => '#2e4a3a'];
+        $warned = $this->post('/admin/branding', $form);
+        $this->assertStatus(422, $warned);
+        self::assertSame(1, preg_match('/data-brand-suggest="color_primary_dark" data-brand-suggest-value="(#[0-9a-f]{6})"/', $warned->body(), $suggestion));
+        // The active package's lighter dark page needs a lighter tone than the
+        // previewed package's would; the offered one publishes cleanly.
+        $this->assertRedirect($this->post('/admin/branding', $form + ['color_primary_dark' => $suggestion[1]]), '/admin/branding');
+        self::assertSame($suggestion[1], (new SettingRepository($this->db))->getString('brand_color_primary_dark'));
+    }
+
+    public function test_the_build_gate_checks_body_text_on_the_semantic_surfaces(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);
+        $installed = $this->installedTheme(['theme' => [
+            'tokens' => ['--surface-raised' => '#3a4a40'],
+            'dark_tokens' => [],
+        ]]);
+        try {
+            $this->themeState()->activate($this->adminEntity(), 'password123', $installed);
+            self::fail('A package that makes body text unreadable on its raised surface must not build.');
+        } catch (\App\Security\Packages\PackagePolicyException $e) {
+            self::assertSame('theme_contrast', $e->code);
+            self::assertStringContainsString('--text-body on --surface-raised', $e->getMessage());
+        }
+    }
+
     public function test_session_package_preview_uses_private_brand_css_without_changing_public_branding(): void
     {
         $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);
@@ -634,6 +704,9 @@ final class AppThemePackageTest extends TestCase
             ];
         }
 
+        if (isset($options['theme']) && is_array($options['theme'])) {
+            $theme = $options['theme'];
+        }
         $root = SigningHarness::generate();
         $seeded = RegistryFixtures::seed($this->db, $root, $this->artifactDir, [
             'source_id' => 'rb-test-theme-' . $this->fixtureCounter,

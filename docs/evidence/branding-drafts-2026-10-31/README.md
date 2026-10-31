@@ -33,3 +33,19 @@ mobile (390×844, touch) against a disposable seeded database.
 
 The save action is now **Publish branding**; the existing journeys use that
 label and otherwise run unchanged.
+
+## Production (recorded after publication)
+
+`72b5a45c` (committed 21:12:07 UTC on 2026-10-31) was pushed to `main`.
+Sanitized receipts are in `production/`:
+
+| Receipt | Result |
+|---|---|
+| `cloud-run-application-build.json` | Cloud Build `c536f949` SUCCESS for `72b5a45c` at 21:15:24 UTC |
+| `cloud-run-application-service.json` | Revision `retroboards-00067-ms5` Ready, 100% traffic, image `app:72b5a45c…`; migration `0085` applied on boot (revision log `migrated: 0085_branding_drafts`, 21:14:54 UTC) |
+| `cron-application-images.json` | All four cron jobs on the same image |
+| `worker-application-deployment.json` | Worker version `fa345174-ec5e-432b-bf31-cd272ec4621b` at 100% (21:14:20 UTC) |
+| `live-assets-application.json` | 56/56 manifest files with matching SHA-256 (current `7524b5996f1124b2` plus retained releases); `/healthz` ok with the database |
+| `live-drafts-verification.json` | The sign-in preview requires sign-in; preview and discard are POST-only; `/brand.css?…&draft=1` is `private, no-store` and, for a visitor, identical to the public stylesheet; `/` shows no preview bar and uses the new stylesheet |
+
+The deployed asset release was pinned in the following increment's commit.

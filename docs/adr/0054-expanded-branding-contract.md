@@ -31,7 +31,8 @@ These are delivery increments, not P0–P3 priority tiers (DECISIONS §2).
 3. **Independent light/dark palettes** — one shared token definition across
    `BrandPalette`, `ThemeTokenPolicy`, preview, validation and public CSS, then
    per-mode primary/accent overrides with automatic suggestions and both
-   palettes previewed with their interaction states.
+   palettes previewed with their interaction states. *Shipped 2026-10-31
+   (below).*
 4. **Curated visual controls** — complete surface/sidebar presets, approved
    self-hosted typography pairings and bounded shape options, each exposed only
    after its component coverage is verified.
@@ -58,9 +59,9 @@ remain application-controlled in every increment.
   Branding never overrides a member preference.
 - **Colour precedence**, per mode and per role (primary, accent):
   `mode-specific override → shared override → active package → built-in preset`.
-  Mode-specific overrides arrive in increment 3; until then the chain starts at
-  the shared override. Derived state colours (soft fills, readable ink,
-  hover/pressed shades) are recomputed from whichever value wins.
+  Mode-specific overrides shipped in increment 3. Derived state colours (soft
+  fills, readable ink, hover/pressed shades) are recomputed from whichever
+  value wins.
 - **An empty stored value always means "use the default"**, so clearing a field
   restores its documented fallback. No setting needs a migration; absent rows
   read as empty.
@@ -80,6 +81,8 @@ remain application-controlled in every increment.
 | `brand_favicon_path` | None | Non-fetching `data:,` icon | Browser tab | Cleared; media retained |
 | `brand_color_primary` | None | Package, then preset roles | Actions, links, focus, selected navigation; derived state pairs | Cleared |
 | `brand_color_accent` | None | Package, then preset roles | Highlights, unread counts, selection rules, accent ink | Cleared |
+| `brand_color_primary_light`, `brand_color_primary_dark` | None | The shared primary, then package, then preset roles | That mode's actions, links, focus, selected navigation; derived state pairs | Cleared (colours) |
+| `brand_color_accent_light`, `brand_color_accent_dark` | None | The shared accent, then package, then preset roles | That mode's highlights, unread counts, selection rules, accent ink | Cleared (colours) |
 | `brand_theme_default` | `system` | Invalid values read as System | Signed-out visitors' mode | Cleared |
 | `brand_theme_preset` | `classic` | Suspended while a package is served | Base palette | Cleared |
 | `brand_custom_css_enabled`, `brand_custom_css` | Off | Console-blocked flag | None while blocked | Cleared |
@@ -179,6 +182,9 @@ suites; rendered evidence is linked from
   keep their own recovery, theme safe mode, linked from the reset card.
 - Private drafts, whole-site preview and explicit publishing follow in 2b.
 
+Evidence: `tests/Integration/Core/AppBrandingRevisionTest.php` and
+`docs/evidence/branding-revisions-2026-10-31/README.md`.
+
 ## Increment 2b delivery: private drafts, preview and publishing (2026-10-31)
 
 - **One private draft per administrator** (`branding_drafts`, migration
@@ -214,5 +220,51 @@ suites; rendered evidence is linked from
 Evidence: `tests/Integration/Core/AppBrandingDraftTest.php` and
 `docs/evidence/branding-drafts-2026-10-31/README.md`.
 
-Evidence: `tests/Integration/Core/AppBrandingRevisionTest.php` and
-`docs/evidence/branding-revisions-2026-10-31/README.md`.
+## Increment 3 delivery: independent light and dark palettes (2026-10-31)
+
+- **One shared definition.** `ThemeTokenPolicy`'s light and dark baselines now
+  hold every colour role a package may set, including the Imladris semantic
+  surfaces and rules the shell paints from (`--surface-page`,
+  `--surface-raised`, `--surface-sunken`, `--border-hair`, `--border-soft`,
+  `--border-strong`, `--rule-gold`), which packages may now set. Focus rings,
+  field rules and the status families stay application-controlled and are not
+  package roles. `BrandPalette`'s built-in Classic base is that baseline plus
+  only the application-owned roles and the translucent dark washes the
+  stylesheet actually declares, so the package build gate, the branding
+  contrast review, the sample and `/brand.css` start from the same values.
+  `ThemeBaselineFidelityTest` pins the baseline to the shipped stylesheet and
+  `BrandPaletteTest` pins Classic to the baseline. The package contrast gate
+  adds body text on the page and raised surfaces and faint text on the raised
+  surface. Package tokens apply to both modes unless `dark_tokens` overrides
+  them, so a package that sets a light surface must also set its dark one.
+- **Per-mode overrides.** Four document keys,
+  `brand_color_{primary,accent}_{light,dark}`, join the colours group. Each
+  mode resolves through `BrandPalette::modeColours` — its own value, else the
+  shared one — and that single resolution feeds the public stylesheet
+  (`:root`, `[data-theme="dark"]` and System's dark-device block), the scoped
+  sample, the member thumbnails and the contrast review. A blank field
+  inherits; a form posted without the fields (opened before they existed)
+  keeps the stored values.
+- **Each mode is reviewed on its own surfaces.** A warning names the field to
+  change — the mode's own field when it has a value, else the shared colour.
+  The acknowledgement is bound to the per-mode colours it reviewed, and the
+  `branding_contrast_override` audit entry records them as `mode_colours`.
+- **Suggestions are offered, never applied.** When the colour a mode would use
+  draws a warning there, the form names the nearest tone of it, moved toward
+  that mode's readable ink, that passes the mode's review for that role. With
+  JavaScript **Use suggestion** fills the mode's field (and the previews
+  follow); without it the value is shown to type.
+- **Both palettes are previewed with their states.** Light and Dark strips
+  under the sample show action, hover, pressed, focus, selected, unread and
+  link states, each painted from its mode's resolved roles — saved values
+  without JavaScript, the candidate values with it. Browser evidence compares
+  each strip with fresh public pages in that mode for Classic, Retro and an
+  active package.
+- **Compatibility.** Shared colours apply to both modes exactly as before, and
+  with no per-mode value the public stylesheet's colour declarations are
+  unchanged, so the resolver version stays 3. The colours reset, history and
+  restore cover the per-mode keys.
+
+Evidence: `tests/Integration/Core/AppBrandingPaletteTest.php`,
+`tests/Unit/Support/BrandPaletteTest.php`, the package-theme suite and
+`docs/evidence/branding-palettes-2026-10-31/README.md`.

@@ -163,7 +163,7 @@ test('history reviews a revision and restores its logo as a new revision', async
 
 test('group resets confirm without JavaScript and leave the other groups alone', async ({ browser }, info) => {
   const logos = fixture('logos', 'base');
-  set({ brand_color_primary: '#2e4a3a', brand_color_accent: '#c29a44', brand_theme_preset: 'retro', brand_theme_default: 'dark', brand_tagline: 'Kept text' });
+  set({ brand_color_primary: '#2e4a3a', brand_color_accent: '#c29a44', brand_color_primary_dark: '#9fc3a8', brand_theme_preset: 'retro', brand_theme_default: 'dark', brand_tagline: 'Kept text' });
   const admin = await context(browser, info, { javaScriptEnabled: false });
   try {
     const ap = await admin.newPage();
@@ -171,7 +171,7 @@ test('group resets confirm without JavaScript and leave the other groups alone',
     await ap.goto('/admin/branding#branding-recovery');
     const colours = ap.locator('.branding-reset-groups details').filter({ hasText: 'Reset colours…' });
     await colours.locator('summary').click();
-    await expect(colours.locator('.dm-confirm-note')).toContainText('Clears the primary and accent overrides.');
+    await expect(colours.locator('.dm-confirm-note')).toContainText('Clears the shared and per-mode primary and accent overrides.');
     await noOverflow(ap);
     await shot(ap, info, 'reset-colours-step-no-js');
     expect(await submit(ap, colours.getByRole('button', { name: 'Reset colours', exact: true }), '/admin/branding/reset/colours')).toBe(303);
@@ -179,6 +179,7 @@ test('group resets confirm without JavaScript and leave the other groups alone',
     const after = fixture();
     expect(after.brand_color_primary).toBe('');
     expect(after.brand_color_accent).toBe('');
+    expect(after.brand_color_primary_dark).toBe('');
     expect(after.brand_logo_path).toBe(logos.brand_logo_path);
     expect(after.brand_theme_preset).toBe('retro');
     expect(after.brand_theme_default).toBe('dark');

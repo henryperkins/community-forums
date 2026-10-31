@@ -2,6 +2,27 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Independent light and dark brand colours
+
+- Add optional light and dark primary/accent colours that override the shared
+  colours in one mode only; blank inherits. Each mode resolves mode-specific →
+  shared → active package → built-in preset, and the public stylesheet, the
+  sample, member thumbnails and the contrast review share that resolution.
+  Shared colours keep applying to both modes exactly as before.
+- Review each mode's colours on its own surfaces, naming the field to change,
+  and suggest the nearest tone that passes; **Use suggestion** fills it with
+  JavaScript, and the value is shown to type without.
+- Preview both palettes with their action, hover, pressed, focus, selected,
+  unread and link states.
+- Let theme packages set the Imladris semantic surfaces and rules from one
+  baseline shared with branding; the package contrast gate also checks body
+  and faint text on those surfaces. The colours reset, history and restore
+  include the per-mode colours.
+- Record the verified drafts release (`7524b5996f1124b2`, Cloud Run
+  `retroboards-00067-ms5`, Worker `fa345174`) as deployed; receipts are in
+  `docs/evidence/branding-drafts-2026-10-31/production/`. Evidence:
+  `docs/evidence/branding-palettes-2026-10-31/README.md`.
+
 ## [2026-10-31] - Private branding drafts and whole-site preview
 
 - Add **Save draft**: one private draft per administrator (migration `0085`),

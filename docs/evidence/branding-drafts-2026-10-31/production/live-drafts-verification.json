@@ -1,0 +1,34 @@
+{
+  "captured_at": "2026-10-31T21:16:30.102899+00:00",
+  "release_sha": "72b5a45c340ff3fb3ec2616dc43ae1ef7532ef08",
+  "note": "Anonymous read-only checks; /healthz proves migration 0085 left the database reachable.",
+  "checks": [
+    {
+      "path": "/admin/branding/preview/sign-in",
+      "status": 302,
+      "location": "/login?next=%2Fadmin%2Fbranding%2Fpreview%2Fsign-in"
+    },
+    {
+      "path": "/admin/branding/preview",
+      "status": 405,
+      "location": null
+    },
+    {
+      "path": "/admin/branding/draft/discard",
+      "status": 405,
+      "location": null
+    },
+    {
+      "path": "/brand.css?v=3-release-check&draft=1",
+      "status": 200,
+      "cache_control": "private, no-store",
+      "same_body_as_public": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "no_preview_bar": true,
+      "app_css": "/assets/dist/app-style-ClFk7sNL.css"
+    }
+  ]
+}

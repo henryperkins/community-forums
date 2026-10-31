@@ -31,6 +31,12 @@ final class ThemeTokenPolicy
         '--brand' => 'color', '--brand-hover' => 'color', '--brand-press' => 'color',
         '--brand-subtle' => 'color', '--on-brand-subtle' => 'color',
         '--gold' => 'color', '--gold-soft' => 'color', '--gold-ink' => 'color',
+        // Imladris semantic surfaces and rules the shell actually paints from
+        // (ADR 0054). Field rules, focus and status families stay
+        // application-controlled and are deliberately absent.
+        '--surface-page' => 'color', '--surface-raised' => 'color', '--surface-sunken' => 'color',
+        '--border-hair' => 'color', '--border-soft' => 'color', '--border-strong' => 'color',
+        '--rule-gold' => 'color',
         // Shape.
         '--radius-sm' => 'length', '--radius-md' => 'length', '--radius-lg' => 'length',
         '--radius-xl' => 'length', '--radius-pill' => 'length', '--radius' => 'length',
@@ -62,6 +68,17 @@ final class ThemeTokenPolicy
         '--brand' => '#2e4a3a',
         '--brand-subtle' => '#edf3ed',
         '--on-brand-subtle' => '#24402f',
+        '--text-body' => '#313b33',
+        '--text-faint' => '#5c685d',
+        '--surface-page' => '#f5efe1',
+        '--surface-raised' => '#faf6ec',
+        '--surface-sunken' => '#ece4d2',
+        '--border-hair' => '#ded2b8',
+        '--border-soft' => '#dce3dd',
+        '--border-strong' => '#94a095',
+        '--gold' => '#c29a44',
+        '--gold-ink' => '#7e5f22',
+        '--rule-gold' => '#c29a44',
     ];
 
     private const BASELINE_DARK = [
@@ -83,6 +100,16 @@ final class ThemeTokenPolicy
         // renders on — the conservative (lowest-contrast) 6-digit equivalent.
         '--brand-subtle' => '#304145',
         '--on-brand-subtle' => '#bcd0bf',
+        '--text-body' => '#d7dcd2',
+        '--text-faint' => '#94a095',
+        '--surface-page' => '#161d24',
+        '--surface-raised' => '#1e2730',
+        '--surface-sunken' => '#283440',
+        '--border-hair' => '#36434f',
+        '--border-soft' => '#2c3742',
+        '--border-strong' => '#51606c',
+        '--gold-ink' => '#d2b062',
+        '--rule-gold' => '#d2b062',
     ];
 
     public static function isKnown(string $token): bool
@@ -160,6 +187,10 @@ final class ThemeTokenPolicy
             // mismodel: app.css never pairs those two, and the dark baseline
             // fails it at 3.04:1 (Inc 4 plan correction).
             ['fg' => '--on-brand-subtle', 'bg' => '--brand-subtle', 'min' => 4.5],
+            // The semantic surfaces most text actually sits on (ADR 0054).
+            ['fg' => '--text-body', 'bg' => '--surface-page', 'min' => 4.5],
+            ['fg' => '--text-body', 'bg' => '--surface-raised', 'min' => 4.5],
+            ['fg' => '--text-faint', 'bg' => '--surface-raised', 'min' => 4.5],
         ];
     }
 

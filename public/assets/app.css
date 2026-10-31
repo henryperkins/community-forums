@@ -6858,6 +6858,114 @@ textarea.textarea-engraved {
 /* The sample's logo slot holds a plain image, a <picture> or a System split
    pair; like those wrappers it adds no box, so an empty slot adds no gap. */
 .brand-preview-logo-slot { display: contents; }
+/* Per-mode colours (ADR 0054): an optional disclosure under the shared
+   colours, one fieldset per mode. */
+.branding-mode-colours > summary {
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: .84rem;
+    letter-spacing: .02em;
+    color: var(--text-body);
+}
+.branding-mode-colours > summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+.branding-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 18px;
+    margin-top: 10px;
+}
+.branding-mode-set {
+    min-width: 0;
+    margin: 0;
+    padding: 10px 12px 12px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+}
+.branding-mode-set > legend {
+    padding: 0 4px;
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.branding-mode-field + .branding-mode-field {
+    margin-top: 10px;
+}
+.branding-mode-field > label {
+    display: block;
+    margin: 0 0 4px;
+    font-size: .84rem;
+    color: var(--text-muted);
+}
+.branding-colour-suggestion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: .84rem;
+}
+.branding-colour-suggestion code {
+    font-family: var(--font-mono);
+    color: var(--text-body);
+}
+/* The fill-in button needs JavaScript, which unhides it; .btn's display would
+   otherwise beat the hidden attribute and show a dead button. */
+.branding-colour-suggestion [data-brand-suggest][hidden] { display: none; }
+/* Both palettes and their states, stacked. Each panel is a .brand-preview
+   scoped to its mode, so it paints from that mode's resolved roles only. */
+.brand-mode-states {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+}
+.brand-states {
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    color: var(--text-body);
+}
+.brand-states-title {
+    margin: 0;
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.brand-states-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+.brand-state {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 2px 9px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    line-height: 1.2;
+}
+.brand-state-action { background: var(--accent); color: var(--accent-contrast); }
+/* The same fills, and fallbacks, as .btn:hover and .btn:active. */
+.brand-state-hover { background: var(--brand-primary-hover, color-mix(in srgb, var(--accent) 82%, #000)); color: var(--accent-contrast); }
+.brand-state-press { background: var(--brand-primary-press, color-mix(in srgb, var(--accent) 82%, #000)); color: var(--accent-contrast); }
+.brand-state-focus { background: var(--surface-page); color: var(--text-body); box-shadow: 0 0 0 3px var(--focus-ring); }
+.brand-state-selected { background: var(--brand-subtle); color: var(--on-brand-subtle); }
+.brand-state-unread { background: var(--gold-soft); color: var(--gold-ink); }
+.brand-state-link { padding-inline: 0; color: var(--accent); text-decoration: underline; text-underline-offset: .14em; }
+
 .brand-preview-copy { margin: 0; }
 .brand-preview-field { width: 100%; }
 .brand-preview-field .input { margin-top: 4px; }
@@ -7523,7 +7631,8 @@ textarea.textarea-engraved {
     }
     .admin-console .admin-appearance-branding .brand-cols,
     .branding-field-grid,
-    .branding-marks {
+    .branding-marks,
+    .branding-mode-grid {
         grid-template-columns: 1fr;
     }
     .admin-console .admin-appearance-branding .branding-preview-column {

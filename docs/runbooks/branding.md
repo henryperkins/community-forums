@@ -2,7 +2,8 @@
 
 `branding` is default-on and exposes `/admin/branding`. Admins can change the
 community name, community text (tagline, description, directory welcome),
-primary/accent colours, base/light/dark logos, favicon, the signed-out
+primary/accent colours (shared, and optionally per light/dark mode),
+base/light/dark logos, favicon, the signed-out
 visitor's default mode, and the Classic/Retro preset. Signed-in members retain
 their personal appearance preferences. Every setting's owner, default, fallback,
 surfaces and reset behaviour is listed in ADR 0054. Saves apply on the next
@@ -91,6 +92,29 @@ Classic). The member's mode, density, text size and motion preferences remain
 theirs.
 
 ## Colour roles and precedence
+
+Each mode resolves each role independently: **mode-specific colour → shared
+colour → active package → built-in preset**. The shared Primary and Accent
+fields apply to both modes. *Adjust colours for light and dark modes* opens four
+optional fields — light primary, light accent, dark primary, dark accent — that
+override the shared colour in that mode only; blank inherits it. Use them when
+one colour cannot serve both: a deep brand green that reads well on parchment
+usually needs a lighter tone on twilight surfaces.
+
+- **Review.** Each mode is checked with its own colours on its own surfaces,
+  and a warning names the field to change (for example *Dark mode primary* when
+  that field has a value, otherwise *Primary colour*). The acknowledgement
+  covers exactly the reviewed per-mode colours; the audit entry lists them.
+- **Suggestions.** When a mode's colour draws a warning there, the field shows
+  the nearest tone of it that passes that mode's review. **Use suggestion**
+  fills the field (with JavaScript); without JavaScript, type the value shown.
+  Suggestions are never applied automatically.
+- **State strips.** Under the sample, *Light* and *Dark* strips show action,
+  hover, pressed, focus, selected, unread and link states with each mode's
+  resolved colours. Without JavaScript they show the saved colours (your
+  draft's while you preview it); with it they follow the fields as you type.
+- **Reset.** *Reset colours…* clears the shared and the per-mode fields
+  together. History and restore include the per-mode colours.
 
 - Primary: actions, links, keyboard focus, selected header/rail/menu states and
   their soft backgrounds, hover and pressed fills. Text on selected/fill states

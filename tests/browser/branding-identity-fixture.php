@@ -34,6 +34,7 @@ const IDENTITY_KEYS = [
     'site_name', 'brand_tagline', 'brand_description', 'brand_directory_heading', 'brand_directory_intro',
     'brand_logo_path', 'brand_logo_light_path', 'brand_logo_dark_path', 'brand_favicon_path',
     'brand_color_primary', 'brand_color_accent', 'brand_theme_default', 'brand_theme_preset',
+    'brand_color_primary_light', 'brand_color_accent_light', 'brand_color_primary_dark', 'brand_color_accent_dark',
 ];
 
 $bump = static fn () => $settings->set('brand_version', bin2hex(random_bytes(8)));
