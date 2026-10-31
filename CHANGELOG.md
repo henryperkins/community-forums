@@ -2,7 +2,7 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
-## [Unreleased] - Branding propagation, preview and recovery
+## [2026-10-31] - Branding propagation, preview and recovery
 
 - Make Enter in the reset confirmation reset branding without publishing pending
   edits or uploading selected files. Keep invalid confirmation on the page and
@@ -16,6 +16,8 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   Derive readable state pairs while preserving independent status/presence roles.
 - Keep the built-in Retro dark selected-menu text readable after clearing custom
   colours, including System mode on a dark device.
+- Retain the three most recent verified production asset releases, including
+  the preceding branding CSS/JS bundles, for cached pages and deployment overlap.
 - Expand the preview to public components and verify admin save to fresh guest
   and member pages. Explain next-page-load timing and package/member precedence;
   clearing overrides restores the base palette.
