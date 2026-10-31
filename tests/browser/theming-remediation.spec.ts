@@ -334,7 +334,7 @@ test.describe('without JavaScript', () => {
     expect(await saveBranding(page)).toBe(422);
     await expect(page.locator('[name="site_name"]')).toHaveValue('No-script branding draft');
     await expect(page.locator('[name="color_primary"]')).toHaveValue('broken');
-    expect(await post(page, page.getByRole('button', { name: 'Reset to defaults', exact: true }), '/admin/branding')).toBe(422);
+    expect(await post(page, page.getByRole('button', { name: 'Reset branding', exact: true }), '/admin/branding')).toBe(422);
     await expect(page.locator('[name="site_name"]')).toHaveValue('No-script branding draft');
     expect(fixture().site_name).toBe('RetroBoards');
     await page.locator('[name="color_primary"]').fill('#ffffff');
@@ -343,7 +343,7 @@ test.describe('without JavaScript', () => {
     expect(await saveBranding(page)).toBe(303);
     expect(fixture().site_name).toBe('No-script branding draft');
     await page.locator('[name="reset_confirm"]').fill('RESET');
-    expect(await post(page, page.getByRole('button', { name: 'Reset to defaults', exact: true }), '/admin/branding')).toBe(303);
+    expect(await post(page, page.getByRole('button', { name: 'Reset branding', exact: true }), '/admin/branding')).toBe(303);
     expect(fixture().primary).toBe('');
     await noOverflow(page);
     await shot(page, info, 'branding-no-js-reset');

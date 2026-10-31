@@ -14,6 +14,11 @@ logo files. Without JavaScript, the form still saves normally and the sample
 uses saved colours/logos. System follows the device's colour preference but
 uses the base logo; explicit Light/Dark uses that variant with a base fallback.
 Selecting a logo's removal control previews the resulting fallback immediately.
+Each saved asset has its own thumbnail. Native file inputs keep selected
+filenames visible without JavaScript. With JavaScript, every selected logo and
+favicon has a local thumbnail and pending filename, even when that variant is
+not used by the main sample. **Clear selected …** cancels the local selection
+and restores the saved thumbnail; it does not remove a saved asset.
 
 Package themes supply their palette ahead of the stored preset. Operator colours
 still override package action colours. A session package preview remains private;
@@ -38,10 +43,28 @@ not both. Removed paths fall back to the base logo or built-in chrome, and the
 change is audited; the stored media file is retained, as with a full reset.
 
 Reset requires typing `RESET`. It clears stored colours, all logo variants,
-favicon, guest mode, preset, and custom CSS; the community name remains. Invalid
-image uploads keep the previous asset and display a partial-success warning.
-The upload pipeline accepts JPEG, PNG, GIF, and WebP. Files must be reselected
-after any validation response because browsers cannot restore file inputs.
+favicon, guest mode, preset, and custom CSS; the community name and package-theme
+state remain. The form links to package safe mode when that subsystem is on.
+
+The form lists configured image formats, dimensions and effective file/request
+limits. Defaults are JPEG, PNG, GIF and WebP, up to 5 MiB and 4096 × 4096 pixels
+per image; the deployed PHP transport allows 8 MiB per file and 10 MiB per
+request so the application can report rejected files. An operator's lower PHP
+cap reduces the displayed effective file limit. The request limit includes all
+files and the remaining multipart form data; leave room below it.
+
+PHP size/intake errors, interrupted uploads and storage-intake failures return
+the form at 422 with an error beside the affected file. No settings, other
+assets or pending removals are saved; the typed draft and removal choices are
+retained. Files must be reselected after any validation response because browsers
+cannot restore file inputs. A rejected image that reached the content-processing
+pipeline retains the existing partial-success behavior: other branding updates
+save, the previous rejected asset stays, and a visible warning names the failure.
+
+If PHP discards the entire oversized POST, its values and security token never
+reach the application. The existing CSRF failure path reports a specific 413
+without authorizing a write. Nothing is saved; the server cannot recover the
+unreceived draft. Return to Branding and choose smaller or fewer images.
 
 Theme safe mode suppresses package themes, not ordinary branding. Use the
 branding reset for an unwanted operator palette. See `package_themes.md` for

@@ -259,7 +259,7 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   expect(await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches)).toBe(true);
   await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Themes');
-  await expect(page.locator('.admin-appearance-themes > .pane-intro')).toContainText('Safe mode returns the site to the built-in chrome');
+  await expect(page.locator('.admin-appearance-themes > .pane-intro')).toContainText('Safe mode pauses package themes');
   await expect(page.locator('.theme-enable-link')).toBeVisible();
   await expect(page.locator('.theme-rollback-button')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);

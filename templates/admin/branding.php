@@ -13,7 +13,7 @@ $saveStatus = $flashMessage === 'Saved. The chrome is live for everyone.'
     || str_starts_with($flashMessage, 'Branding updated, but ')
     ? $flashMessage
     : '';
-$resetStatus = $flashMessage === 'Reset. The built-in chrome is back.' ? $flashMessage : '';
+$resetStatus = str_starts_with($flashMessage, 'Branding reset.') ? $flashMessage : '';
 $unplacedFlash = $saveStatus === '' && $resetStatus === '' ? $flashMessage : '';
 $saveErrorMessages = [];
 foreach (($errors ?? []) as $field => $message) {
@@ -35,7 +35,7 @@ $saveError = implode(' ', $saveErrorMessages);
 
         <p class="pane-intro">Set the community name, colours and appearance. The preview shows the visitor theme you select; your account appearance stays unchanged.</p>
 
-        <form method="post" action="/admin/branding" class="brand-cols" enctype="multipart/form-data" data-brand-form data-brand-palettes="<?= $e(json_encode($brand_preview_palettes ?? [], JSON_THROW_ON_ERROR)) ?>">
+        <form method="post" action="/admin/branding" class="brand-cols" enctype="multipart/form-data" data-brand-form data-brand-upload-max-bytes="<?= $e($upload_max_bytes) ?>" data-brand-palettes="<?= $e(json_encode($brand_preview_palettes ?? [], JSON_THROW_ON_ERROR)) ?>">
             <?= $this->csrfField() ?>
 
             <section class="branding-form-card">
@@ -101,6 +101,7 @@ $saveError = implode(' ', $saveErrorMessages);
 
                 <h3 class="branding-section-label">Marks</h3>
                 <p class="brand-preview-note">Choose a replacement file or mark an existing image for removal. Changes apply when you save branding.</p>
+                <p class="brand-preview-note" id="branding-upload-help"><?= $e($upload_formats) ?> images, up to <?= $e($upload_max_label) ?> per file and <?= $e($upload_max_width) ?> × <?= $e($upload_max_height) ?> pixels.<?php if ($upload_request_label !== null): ?> Keep all files in one save below <?= $e($upload_request_label) ?> combined.<?php endif; ?></p>
                 <div class="branding-marks">
                     <?php foreach ([
                         'logo' => ['Logo', $logo_path, !empty($remove_logo)],
@@ -108,14 +109,15 @@ $saveError = implode(' ', $saveErrorMessages);
                         'logo_light' => ['Light theme logo', $logo_light_path, !empty($remove_logo_light)],
                         'logo_dark' => ['Dark theme logo', $logo_dark_path, !empty($remove_logo_dark)],
                     ] as $assetField => [$assetLabel, $assetPath, $removeAsset]): ?>
-                        <div>
-                            <label class="branding-mark-field">
-                                <span><?= $e($assetLabel) ?><?php if ($assetPath !== ''): ?> <span class="branding-current">(current set)</span><?php endif; ?></span>
-                                <span class="branding-file-control">
-                                    <span class="branding-mark-action" aria-hidden="true"><?= $assetPath !== '' ? 'Replace' : 'Upload' ?></span>
-                                    <input type="file" name="<?= $e($assetField) ?>" accept="image/*" aria-label="<?= $e(($assetPath !== '' ? 'Replace ' : 'Upload ') . strtolower($assetLabel)) ?>">
-                                </span>
-                            </label>
+                        <div class="branding-mark-field" data-brand-asset="<?= $e($assetField) ?>" data-brand-saved-asset="<?= $e($assetPath) ?>">
+                            <label for="branding-file-<?= $e($assetField) ?>"><?= $e($assetLabel) ?></label>
+                            <div class="branding-asset-preview">
+                                <img data-brand-asset-image alt=""<?= $assetPath !== '' ? ' src="' . $e($assetPath) . '"' : ' hidden' ?>>
+                                <span data-brand-asset-status role="status"><?= $removeAsset ? 'Will be removed on save.' : ($assetPath !== '' ? 'Saved image' : 'No image saved.') ?></span>
+                            </div>
+                            <input id="branding-file-<?= $e($assetField) ?>" class="branding-file-input" type="file" name="<?= $e($assetField) ?>" accept="<?= $e($upload_accept) ?>"<?= field_attrs($errors ?? [], $assetField, describedBy: 'branding-upload-help') ?>>
+                            <?= field_error($errors ?? [], $assetField) ?>
+                            <button class="btn btn-secondary branding-file-clear" type="button" data-brand-file-clear hidden>Clear selected <?= $e(strtolower($assetLabel)) ?></button>
                             <?php if ($assetPath !== '' || $removeAsset): ?>
                                 <label class="branding-checkline" for="branding-remove-<?= $e($assetField) ?>">
                                     <input id="branding-remove-<?= $e($assetField) ?>" type="checkbox" name="remove_<?= $e($assetField) ?>" value="1"<?= $removeAsset ? ' checked' : '' ?><?= field_attrs($errors ?? [], 'remove_' . $assetField) ?>>
@@ -187,13 +189,16 @@ $saveError = implode(' ', $saveErrorMessages);
                     <noscript><p class="brand-preview-note">This preview shows the saved colours and logos. Turn on JavaScript to preview edits before saving.</p></noscript>
                 </section>
 
-                <section class="branding-reset-card">
-                    <h2>Reset to defaults</h2>
-                    <p>Clears every stored colour, logo, favicon, theme preset, and custom CSS, restoring the built-in chrome. It cannot be undone.</p>
+                <section class="branding-reset-card" id="branding-reset">
+                    <h2>Reset branding</h2>
+                    <p>Clears saved colours, logos, favicon, visitor appearance, theme preset, and custom CSS. Keeps the community name and active package theme. This cannot be undone.</p>
+                    <?php if (!empty($features['package_themes'])): ?>
+                        <p>To pause package themes instead, use <a href="/admin/themes/safe-mode">theme safe mode</a>.</p>
+                    <?php endif; ?>
                     <label for="branding-reset-confirm">Type RESET to confirm</label>
                     <input id="branding-reset-confirm" type="text" name="reset_confirm" class="input branding-reset-input" value="<?= $e($reset_confirm ?? '') ?>" autocomplete="off" autocapitalize="off" spellcheck="false"<?= field_attrs($errors ?? [], 'reset_confirm') ?>>
                     <?= field_error($errors ?? [], 'reset_confirm') ?>
-                    <button class="btn branding-reset-button" type="submit" name="reset" value="1" formnovalidate>Reset to defaults</button>
+                    <button class="btn branding-reset-button" type="submit" name="reset" value="1" formnovalidate>Reset branding</button>
                     <?php if ($resetStatus !== ''): ?>
                         <p class="branding-reset-status" role="status"><?= $e($resetStatus) ?></p>
                     <?php endif; ?>

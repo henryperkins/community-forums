@@ -414,7 +414,7 @@ final class AppThemePackageTest extends TestCase
         $this->assertRedirect($this->post('/admin/themes/safe-mode'), '/admin/themes/safe-mode');
         $safe = $this->get('/admin/themes');
         $this->assertStatus(200, $safe);
-        $this->assertSeeText($safe, 'No package theme is active.');
+        $this->assertSeeText($safe, 'Package themes are paused by safe mode.');
         $this->assertSeeText($safe, 'No session preview is active.');
     }
 

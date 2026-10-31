@@ -2,6 +2,19 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Admin appearance follow-up
+
+- Reject PHP upload-intake failures before saving any branding; retain typed
+  values, pending removals and saved assets, with errors beside the affected file.
+  Explain discarded oversized requests without bypassing CSRF or saving changes.
+- Strengthen branding field boundaries in light/dark Classic and Retro, keep
+  package actions together on narrow screens, and wrap long theme digests.
+- Show native filenames, saved thumbnails, pending logo/favicon previews,
+  selection clearing and configured upload requirements.
+- Clarify and cross-link branding reset and package safe mode so recovery
+  messages describe exactly what is retained. Local qualification is linked from
+  `docs/evidence/admin-appearance-followup-2026-10-31/README.md`.
+
 ## [2026-10-31] - Complete draft recovery and mobile account actions
 
 - Preserve complete composer drafts, including title, destination, anonymity,

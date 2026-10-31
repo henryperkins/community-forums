@@ -562,7 +562,7 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
   await visit(page, '/admin/themes');
   await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
   await expect(page.locator('link[href*="/theme/"]')).toHaveCount(0);
-  await expect(page.getByText('No package theme is active. The site uses the built-in chrome.', { exact: true })).toBeVisible();
+  await expect(page.getByText('No package theme is active. The site uses the built-in theme with any saved branding.', { exact: true })).toBeVisible();
   await shot(page, info, '39-admin-themes-built-in');
 
   await clickThemePreview(page, firstThemeUid);
@@ -594,8 +594,8 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
   await shot(page, info, '41-admin-theme-safe-mode');
 
   await visit(page, '/admin/themes');
-  await expect(page.getByText('Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.', { exact: true })).toBeVisible();
-  await expect(page.getByText('No package theme is active. The site uses the built-in chrome.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Safe mode is on. Package themes are paused; saved branding still applies.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Package themes are paused by safe mode. The site uses the built-in theme with any saved branding.', { exact: true })).toBeVisible();
   await expect(page.getByText('No session preview is active.', { exact: true })).toBeVisible();
   await expect(page.locator('.theme-active-card').getByText('Serving', { exact: false })).toHaveCount(0);
   await shot(page, info, '41-admin-themes-safe-mode-summary');
@@ -1048,7 +1048,7 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
   await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Branding');
   await expect(page.locator('.branding-marks input[type="file"]')).toHaveCount(4);
-  await expect(page.locator('.branding-mark-action')).toHaveText(['Upload', 'Upload', 'Upload', 'Upload']);
+  await expect(page.locator('[data-brand-asset-status]')).toHaveText(['No image saved.', 'No image saved.', 'No image saved.', 'No image saved.']);
   await page.locator('[data-brand-primary]').fill('not-hex');
   await page.getByRole('button', { name: 'Save branding' }).click();
   await expect(page.locator('.branding-save-row').getByRole('alert')).toHaveText('Primary colour must be a hex value, e.g. #2e4a3a.');
@@ -1067,6 +1067,10 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
   expect(accentA11y.violations).toEqual([]);
   await expect(page.locator('input[name="reset_confirm"]')).toHaveValue('');
   await page.getByRole('button', { name: 'Save branding' }).click();
+  // Fixed operator colours must be reviewed for both member modes before save.
+  await expect(page.locator('.branding-contrast-warning')).toBeVisible();
+  await page.locator('[name="contrast_ack"]').check();
+  await page.getByRole('button', { name: 'Save branding' }).click();
   await expect(page.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
   await shot(page, info, '18-branding-preview');
 
@@ -1074,6 +1078,13 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
     name: 'invalid-favicon.png',
     mimeType: 'image/png',
     buffer: Buffer.from('not an image'),
+  });
+  await page.getByRole('button', { name: 'Save branding' }).click();
+  await expect(page.locator('.branding-contrast-warning')).toBeVisible();
+  await page.locator('[name="contrast_ack"]').check();
+  // Validation cannot restore a file selection; reselect it after review.
+  await page.locator('input[name="favicon"]').setInputFiles({
+    name: 'invalid-favicon.png', mimeType: 'image/png', buffer: Buffer.from('not an image'),
   });
   await page.getByRole('button', { name: 'Save branding' }).click();
   const uploadRejection = page.locator('.branding-save-row .callout-review[role="status"]');
@@ -1099,22 +1110,28 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
       buffer: Buffer.from(PNG_1X1, 'base64'),
     });
     await noJsPage.getByRole('button', { name: 'Save branding' }).click();
+    await expect(noJsPage.locator('.branding-contrast-warning')).toBeVisible();
+    await noJsPage.locator('[name="contrast_ack"]').check();
+    await noJsPage.locator('input[name="logo"]').setInputFiles({
+      name: 'brand-logo.png', mimeType: 'image/png', buffer: Buffer.from(PNG_1X1, 'base64'),
+    });
+    await noJsPage.getByRole('button', { name: 'Save branding' }).click();
     await expect(noJsPage.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
     await expect(noJsPage.locator('.branding-marks input[type="file"]')).toHaveCount(4);
-    await expect(noJsPage.locator('.branding-mark-action')).toHaveText(['Replace', 'Upload', 'Upload', 'Upload']);
-    await expect(noJsPage.locator('input[name="logo"]')).toHaveAccessibleName('Replace logo');
+    await expect(noJsPage.locator('[data-brand-asset-status]')).toHaveText(['Saved image', 'No image saved.', 'No image saved.', 'No image saved.']);
+    await expect(noJsPage.locator('input[name="logo"]')).toHaveAccessibleName('Logo');
 
     await noJsPage.locator('[data-brand-name]').fill('');
     await noJsPage.locator('input[name="reset_confirm"]').fill('RESE');
-    await noJsPage.getByRole('button', { name: 'Reset to defaults' }).click();
+    await noJsPage.getByRole('button', { name: 'Reset branding' }).click();
     await expect(noJsPage.getByText('Type RESET to confirm restoring the default branding.', { exact: true })).toBeVisible();
     await expect(noJsPage.locator('[data-brand-name]')).toHaveValue('');
     await expect(noJsPage.locator('input[name="reset_confirm"]')).toHaveValue('RESE');
 
     await noJsPage.locator('input[name="reset_confirm"]').fill('RESET');
-    await noJsPage.getByRole('button', { name: 'Reset to defaults' }).click();
-    await expect(noJsPage.locator('.branding-reset-card').getByRole('status')).toHaveText('Reset. The built-in chrome is back.');
-    await expect(noJsPage.locator('.branding-mark-action')).toHaveText(['Upload', 'Upload', 'Upload', 'Upload']);
+    await noJsPage.getByRole('button', { name: 'Reset branding' }).click();
+    await expect(noJsPage.locator('.branding-reset-card').getByRole('status')).toHaveText('Branding reset. The community name and package theme were kept.');
+    await expect(noJsPage.locator('[data-brand-asset-status]')).toHaveText(['No image saved.', 'No image saved.', 'No image saved.', 'No image saved.']);
   } finally {
     await noJs.close();
   }

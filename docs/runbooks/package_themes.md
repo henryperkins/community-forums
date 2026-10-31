@@ -48,8 +48,11 @@ off.
 
 ## Safe Mode
 
-Safe mode forces the built-in system theme and suppresses all package theme CSS
-and assets. Entry is deliberately low-friction: admin session + CSRF only.
+Safe mode suppresses all package theme CSS and assets. The built-in theme and
+ordinary branding (colours, logos, visitor mode, and Classic/Retro preset) still
+apply. Use the linked branding reset if those settings need clearing; branding
+reset keeps the community name and package-theme state. Entry is deliberately
+low-friction: admin session + CSRF only.
 Exit requires current password reauthentication.
 
 Use the UI:
@@ -65,6 +68,11 @@ when a recovery build exists. Rollback requires the current password and leaves
 safe mode on; exit safe mode separately when ready to serve the restored build.
 A successful rollback also ends the operator's session preview, so the next
 render reflects the restored build. A rejected rollback retains the preview.
+
+At narrow console widths, each installed package's version, state, build digest,
+Preview and password-confirmed activation form stack together. Long digests
+wrap in the package list and active/preview summaries. These layouts and native
+forms remain usable without JavaScript.
 
 Branding stylesheet URLs incorporate the active/preview build digest, or a
 built-in marker in safe mode. An earlier cached branding response therefore

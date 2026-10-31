@@ -4,6 +4,12 @@ $this->layout('layout');
 $this->section('title', 'Theme safe mode');
 $this->section('variant', 'plain');
 $this->section('robots', 'noindex, nofollow');
+$brandingNote = !empty($features['branding'])
+    ? 'Saved branding still applies.'
+    : 'Branding is disabled; its saved settings are kept.';
+$brandingStatusNote = !empty($features['branding'])
+    ? 'saved branding still applies.'
+    : 'branding is disabled and its saved settings are kept.';
 ?>
 <div class="safe-mode-recovery">
     <?php /*
@@ -17,7 +23,10 @@ $this->section('robots', 'noindex, nofollow');
         <span class="pill pill-admin">Recovery</span>
     </header>
     <?= $this->partial('partials/back_link', ['href' => '/admin/themes', 'label' => 'Themes']) ?>
-    <p class="pane-intro">Safe mode returns the site to the built-in chrome without uninstalling anything.</p>
+    <p class="pane-intro">Safe mode pauses package themes without uninstalling them. <?= $e($brandingNote) ?></p>
+    <?php if (!empty($features['branding'])): ?>
+        <p>If colours, logos or the preset need restoring, <a href="/admin/branding#branding-reset">review the branding reset</a>.</p>
+    <?php endif; ?>
 
     <?php foreach (($errors ?? []) as $field => $err): ?>
         <?php if ($field !== 'current_password'): ?>
@@ -28,7 +37,7 @@ $this->section('robots', 'noindex, nofollow');
     <section class="card safe-mode-status-card">
         <h2>Status</h2>
         <?php if (!empty($safe_mode)): ?>
-            <p class="safe-mode-status is-on">Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.</p>
+            <p class="safe-mode-status is-on">Safe mode is on. Package themes are paused; <?= $e($brandingStatusNote) ?></p>
         <?php else: ?>
             <p class="safe-mode-status">Safe mode is off.</p>
         <?php endif; ?>

@@ -429,13 +429,19 @@ v1: brand (name/logo/colors) + light/dark. Later: retro skin toggle, full token 
 **Current operator surface:** `/admin/branding` provides name, colours, logo
 variants, favicon, guest mode, and Classic/Retro presets. Each saved logo variant
 and the favicon can be removed independently when saving the form, with pending
-choices preserved on validation errors. Its sample previews candidate colours,
+choices preserved on validation errors. Native file controls show selected
+filenames without JavaScript; saved thumbnails, configured upload requirements,
+and enhanced pending previews cover every logo variant and the favicon. PHP
+upload-intake errors reject the draft before any branding is saved. Its sample previews candidate colours,
 modes, presets, and logos without changing the operator's
 account appearance. Contrast warnings cover normal content surfaces in both
 light and dark; saving a warning requires an explicit, audited acknowledgement
 of that exact candidate (ADR 0053). `/admin/themes` manages installed package
 previews, activation, rollback, and safe mode. The full token editor remains
 later scope, and custom CSS remains safety-blocked in the Features console.
+Package details and guarded actions stack on narrow screens. Branding reset
+keeps the community name and package state; package safe mode keeps ordinary
+branding, and each recovery surface explains and links to the other action.
 See `docs/runbooks/branding.md` and `docs/runbooks/package_themes.md` for current
 controls and recovery behavior; the priority table above is not an availability ledger.
 

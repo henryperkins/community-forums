@@ -1,0 +1,11 @@
+
+Running 2 tests using 1 worker
+
+(node:2242624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › gate-a.spec.ts:1044:5 › phase 3 branding preview and product-tour replay (2.7s)
+(node:2242784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [mobile] › gate-a.spec.ts:1044:5 › phase 3 branding preview and product-tour replay (2.9s)
+
+  2 passed (6.9s)

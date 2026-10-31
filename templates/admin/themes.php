@@ -3,6 +3,12 @@
 $this->layout('layout');
 $this->section('title', 'Themes');
 $this->section('variant', 'admin');
+$brandingNote = !empty($features['branding'])
+    ? 'Saved branding still applies.'
+    : 'Branding is disabled; its saved settings are kept.';
+$brandingStatusNote = !empty($features['branding'])
+    ? 'saved branding still applies.'
+    : 'branding is disabled and its saved settings are kept.';
 $errorContext = $error_context ?? null;
 $errorInstallId = isset($error_install_id) ? (int) $error_install_id : null;
 $errorOriginAvailable = false;
@@ -25,7 +31,7 @@ $fallbackErrorMessages = $errorOriginAvailable
     'tab' => 'themes',
     'pane_class' => 'admin-appearance admin-appearance-themes',
 ]) ?>
-    <p class="pane-intro">Package themes are installed from the registry and built before they can serve. Safe mode returns the site to the built-in chrome without uninstalling anything.</p>
+    <p class="pane-intro">Package themes are installed from the registry and built before they can serve. Safe mode pauses package themes without uninstalling them. <?= $e($brandingNote) ?></p>
 
     <?php if ($fallbackErrorMessages !== []): ?>
         <div class="callout callout-danger theme-action-error" role="alert">
@@ -41,7 +47,7 @@ $fallbackErrorMessages = $errorOriginAvailable
             <div>
                 <h2>Safe mode</h2>
                 <?php if (!empty($safe_mode)): ?>
-                    <p class="theme-safe-mode-status">Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.</p>
+                    <p class="theme-safe-mode-status">Safe mode is on. Package themes are paused; <?= $e($brandingStatusNote) ?></p>
                 <?php else: ?>
                     <p class="muted">Safe mode is off. Active package themes are eligible to serve.</p>
                 <?php endif; ?>
@@ -60,7 +66,7 @@ $fallbackErrorMessages = $errorOriginAvailable
     <section class="card theme-active-card">
         <h2>Active theme</h2>
         <?php if (($active ?? null) === null): ?>
-            <p class="theme-empty-copy">No package theme is active. The site uses the built-in chrome.</p>
+            <p class="theme-empty-copy"><?= !empty($safe_mode) ? 'Package themes are paused by safe mode.' : 'No package theme is active.' ?> <?= !empty($features['branding']) ? 'The site uses the built-in theme with any saved branding.' : 'The site uses the built-in theme.' ?></p>
         <?php else: ?>
             <p class="theme-serving">Serving <strong><?= $e($active['package_name']) ?></strong> <code><?= $e($active['release_version']) ?></code></p>
             <dl class="spec-list theme-active-facts">
@@ -98,9 +104,9 @@ $fallbackErrorMessages = $errorOriginAvailable
             <p class="theme-empty-copy">No theme packages are installed.</p>
         <?php else: ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Installed theme packages">
-        <table class="audit theme-package-table">
-            <thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">State</th><th scope="col">Latest build</th><th scope="col">Actions</th></tr></thead>
-            <tbody>
+        <table class="audit theme-package-table" role="table">
+            <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Package</th><th scope="col" role="columnheader">Version</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Latest build</th><th scope="col" role="columnheader">Actions</th></tr></thead>
+            <tbody role="rowgroup">
             <?php foreach ($installs as $install): ?>
                 <?php
                 $installId = (int) $install['id'];
@@ -110,18 +116,19 @@ $fallbackErrorMessages = $errorOriginAvailable
                 $rowErrorContext = $errorInstallId === $installId ? $errorContext : null;
                 $rowErrors = $rowErrorContext !== null ? ($errors ?? []) : [];
                 ?>
-                <tr>
-                    <td class="theme-package-cell"><strong><?= $e($install['package_name']) ?></strong><code><?= $e($install['package_uid']) ?></code></td>
-                    <td class="theme-package-version"><?= $e($install['release_version'] ?? '') ?></td>
-                    <td><span class="state <?= $e($stateClass) ?>"><?= $e(ucfirst($installState)) ?></span></td>
-                    <td>
+                <tr role="row">
+                    <td class="theme-package-cell" role="cell"><strong><?= $e($install['package_name']) ?></strong><code><?= $e($install['package_uid']) ?></code></td>
+                    <td class="theme-package-version" role="cell"><span class="theme-mobile-label" aria-hidden="true">Version</span><?= $e($install['release_version'] ?? '') ?></td>
+                    <td role="cell"><span class="theme-mobile-label" aria-hidden="true">State</span><span class="state <?= $e($stateClass) ?>"><?= $e(ucfirst($installState)) ?></span></td>
+                    <td class="theme-package-build" role="cell">
+                        <span class="theme-mobile-label" aria-hidden="true">Latest build</span>
                         <?php if (($install['latest_build'] ?? null) !== null): ?>
                             <code class="theme-build-digest"><?= $e($install['latest_build']['css_digest']) ?></code>
                         <?php else: ?>
                             <span class="theme-not-built">not built</span>
                         <?php endif; ?>
                     </td>
-                    <td class="action-cell">
+                    <td class="action-cell" role="cell">
                         <?php if ($isEnabled): ?>
                             <div class="theme-row-actions">
                                 <form method="post" action="/admin/themes/<?= $installId ?>/preview" class="inline-form">
@@ -135,7 +142,7 @@ $fallbackErrorMessages = $errorOriginAvailable
                                 <form method="post" action="/admin/themes/<?= $installId ?>/activate" class="theme-activate-form">
                                     <?= $this->csrfField() ?>
                                     <h2 class="theme-activate-title">Activate <?= $e($install['package_name']) ?>?</h2>
-                                    <p class="theme-activation-impact">Every visitor sees this theme on their next page. The current build is kept as last-known-good, so safe mode can always restore the built-in chrome.</p>
+                                    <p class="theme-activation-impact">This becomes the active package theme for the community. Safe mode pauses delivery. <?= $e($brandingNote) ?> A previous package build is kept as last-known-good when available.</p>
                                     <label class="reauth-field">
                                         <span>Current password</span>
                                         <input class="input" type="password" name="current_password" autocomplete="current-password"<?= $rowErrorContext === 'activate' ? field_attrs($rowErrors, 'current_password', 'err-theme-activate-password-' . $installId) : '' ?> required>

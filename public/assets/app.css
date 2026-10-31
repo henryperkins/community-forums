@@ -3318,6 +3318,10 @@ textarea.textarea-engraved {
 .admin-bar-action-label { font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; }
 @media (max-width: 900px) {
     .admin-bar-right { gap: 10px; }
+    .admin-bar-right {
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
     .admin-bar-search,
     .admin-bar-action-label,
     .admin-bar-username { display: none; }
@@ -6463,7 +6467,7 @@ textarea.textarea-engraved {
 .branding-field .input,
 .branding-reset-input {
     padding: 8px 11px;
-    border-color: var(--border-soft);
+    border-color: var(--field-rule);
     border-radius: var(--radius-md);
     background: var(--surface-page);
     color: var(--text-body);
@@ -6494,60 +6498,89 @@ textarea.textarea-engraved {
 }
 .branding-mark-field {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
     min-width: 0;
-    padding: 10px 12px;
-    border: 1px dashed var(--border-soft);
+    padding: var(--space-3);
+    border: 1px solid var(--border-hair);
     border-radius: var(--radius-md);
     color: var(--text-body);
-    font-size: .9rem;
+    font-size: var(--text-fine);
 }
-.branding-mark-field > span:first-child {
-    min-width: 0;
-}
-.branding-current {
+.branding-mark-field > label:first-child {
     font-family: var(--font-label);
-    font-size: .7rem;
-    letter-spacing: .04em;
+    color: var(--text-strong);
+}
+.branding-asset-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
     color: var(--text-faint);
 }
-.branding-file-control {
-    position: relative;
+.branding-asset-preview img {
     flex: 0 0 auto;
-    display: inline-flex;
+    width: 56px;
+    height: 44px;
+    object-fit: contain;
+    background: var(--surface-cool);
+    border: 1px solid var(--border-hair);
     border-radius: var(--radius-md);
 }
-.branding-mark-action {
-    display: inline-block;
-    padding: 5px 12px;
-    border: 1.5px solid var(--border-soft);
+.branding-mark-field[data-brand-asset="logo_dark"] .branding-asset-preview img {
+    background: var(--stage-ground);
+}
+.branding-asset-preview span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+.branding-file-input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: var(--space-1);
+    border: 1.5px solid var(--field-rule);
     border-radius: var(--radius-md);
-    background: transparent;
-    color: var(--text-muted);
+    background: var(--surface-page);
+    color: var(--text-body);
+    font: inherit;
+}
+.branding-file-input::file-selector-button {
+    min-height: 44px;
+    margin-inline-end: var(--space-2);
+    padding: var(--space-2);
+    border: 1px solid var(--field-rule);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    color: var(--text-body);
     font-family: var(--font-label);
-    font-size: .72rem;
-    letter-spacing: .04em;
-    line-height: 1.35;
+    font-size: var(--text-fine);
     cursor: pointer;
 }
-.branding-file-control:hover .branding-mark-action {
+.branding-file-input::file-selector-button:hover {
     background: var(--surface-sunken);
-    color: var(--text-body);
 }
-.branding-file-control:focus-within {
-    outline: 3px solid var(--focus-ring);
+.branding-file-input:focus-visible {
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
-.branding-file-control input[type="file"] {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
+.branding-field .input[aria-invalid="true"],
+.branding-reset-input[aria-invalid="true"],
+.branding-file-input[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+.admin-console .branding-file-clear {
+    align-self: flex-start;
+    max-width: 100%;
+    min-height: 44px;
+    font-size: var(--text-fine);
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.admin-console .branding-file-clear[hidden] {
+    display: none;
 }
 .branding-checkline {
     display: flex;
@@ -6673,6 +6706,7 @@ textarea.textarea-engraved {
    .brand-preview to --accent, which /brand.css overrides with the saved colour. */
 .brand-preview-bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -6682,6 +6716,7 @@ textarea.textarea-engraved {
 }
 .brand-preview-bar strong {
     flex: 1;
+    min-width: 0;
     overflow-wrap: anywhere;
     font-family: var(--font-display);
     font-size: 1.05rem;
@@ -6818,6 +6853,7 @@ textarea.textarea-engraved {
 .theme-card-row p {
     margin: 0;
     font-size: .95rem;
+    overflow-wrap: anywhere;
 }
 .theme-card-action {
     flex: 0 0 auto;
@@ -6846,10 +6882,16 @@ textarea.textarea-engraved {
     font-family: var(--font-mono);
     font-size: .82rem;
 }
+.theme-preview-digest,
+.theme-lkg-copy code,
+.theme-active-facts dd {
+    overflow-wrap: anywhere;
+}
 .theme-serving,
 .theme-empty-copy {
     margin: 0;
     font-size: .95rem;
+    overflow-wrap: anywhere;
 }
 .theme-empty-copy {
     color: var(--text-faint);
@@ -6922,6 +6964,9 @@ textarea.textarea-engraved {
     font-family: var(--font-mono);
     font-size: .8rem;
 }
+.theme-mobile-label {
+    display: none;
+}
 .theme-build-digest {
     color: var(--text-muted);
     font-size: .76rem;
@@ -6931,6 +6976,10 @@ textarea.textarea-engraved {
     font-family: var(--font-label);
     font-size: .74rem;
     letter-spacing: .03em;
+}
+.admin-console .theme-package-table .action-cell {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 .theme-row-actions {
     display: flex;
@@ -6991,6 +7040,81 @@ textarea.textarea-engraved {
     font-family: var(--font-label);
     font-size: .72rem;
     letter-spacing: .03em;
+}
+
+/* Keep a package and its guarded actions together when the desktop table no
+   longer fits. Explicit table roles preserve semantics when rows use grids. */
+@media (max-width: 900px) {
+    .theme-packages-card .table-scroll {
+        overflow: visible;
+    }
+    .theme-package-table,
+    .theme-package-table tbody {
+        display: block;
+        width: 100%;
+    }
+    .admin-console .table-scroll > .theme-package-table {
+        min-width: 0;
+    }
+    .theme-package-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .theme-package-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-3);
+        padding-block: var(--space-4);
+        border-bottom: 1px solid var(--border-hair);
+    }
+    .theme-package-table tbody tr:last-child {
+        border-bottom: 0;
+    }
+    .admin-console .theme-package-table td {
+        display: block;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+    .theme-package-table .theme-package-cell,
+    .theme-package-table .theme-package-build,
+    .theme-package-table .action-cell {
+        grid-column: 1 / -1;
+    }
+    .theme-mobile-label {
+        display: block;
+        margin-bottom: var(--space-1);
+        color: var(--text-faint);
+        font-family: var(--font-label);
+        font-size: var(--text-meta);
+    }
+    .theme-row-actions {
+        min-width: 0;
+    }
+    .admin-console .theme-row-actions .inline-form {
+        justify-content: flex-start;
+    }
+    .theme-activate-form {
+        min-width: 0;
+        padding: var(--space-4);
+    }
+    .theme-activate-form .reauth-field,
+    .theme-activate-form .input {
+        min-width: 0;
+        max-width: 100%;
+    }
+    .admin-console .theme-activate-form > .theme-row-button {
+        max-width: 100%;
+        white-space: normal;
+    }
 }
 
 .safe-mode-recovery {

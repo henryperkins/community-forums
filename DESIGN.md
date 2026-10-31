@@ -445,6 +445,13 @@ the operator console retains its separate select treatment. Custom profile
 pairs have persistent, numbered labels and individually engraved inputs, not
 an extra frame or decorative markers around each pair. Errors use the shared
 danger callout or a wired field error.
+
+Branding fields and native file controls take their boundary from `--field-rule`
+in both registers, with danger ink for invalid fields. Asset fields retain native
+filename feedback, use saved/pending thumbnails, and keep clear-selection controls
+separate from saved-asset removal. The theme package table stacks metadata and
+guarded actions at 900px; long digests wrap and table semantics remain explicit.
+
 The account chooser takes over below 50rem of available settings width; form,
 organisation and recovery-code columns respond to the pane's own width, not
 just the viewport. This prevents the board rail and settings rail from squeezing

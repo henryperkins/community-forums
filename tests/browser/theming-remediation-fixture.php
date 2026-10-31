@@ -34,6 +34,7 @@ if ($action === 'reset') {
         $themes->setState(null, null, null);
         $db->run('DELETE FROM package_theme_builds');
         $settings->set('theme_safe_mode', '');
+        $db->run('UPDATE packages SET name = ? WHERE package_uid = ?', ['Theme Evidence', 'acme/theme-evidence']);
         foreach ([
             'brand_color_primary', 'brand_color_accent', 'brand_logo_path',
             'brand_logo_light_path', 'brand_logo_dark_path', 'brand_favicon_path',
@@ -82,6 +83,8 @@ if ($action === 'reset') {
     } else {
         $installs->setState((int) $installed['id'], 'enabled');
     }
+} elseif ($action === 'long-theme-name') {
+    $db->run('UPDATE packages SET name = ? WHERE package_uid = ?', [str_repeat('Theme', 36), 'acme/theme-evidence']);
 } elseif ($action === 'flags-off') {
     $flags = $settings->get('features', []);
     $flags['branding'] = false;

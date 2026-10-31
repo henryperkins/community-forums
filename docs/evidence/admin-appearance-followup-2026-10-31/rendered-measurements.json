@@ -1,0 +1,319 @@
+{
+  "palettes": [
+    {
+      "preset": "classic",
+      "mode": "light",
+      "minimum": 3.6919175805468014,
+      "fields": [
+        {
+          "id": "branding-site-name",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-primary",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-accent",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-theme-default",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-theme-preset",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-file-logo",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-file-favicon",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-file-logo_light",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-file-logo_dark",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        },
+        {
+          "id": "branding-reset-confirm",
+          "border": "rgb(154, 117, 48)",
+          "field": "rgb(245, 239, 225)",
+          "outer": "rgb(250, 246, 236)",
+          "minimum": 3.6919175805468014
+        }
+      ]
+    },
+    {
+      "preset": "classic",
+      "mode": "dark",
+      "minimum": 4.713313467705034,
+      "fields": [
+        {
+          "id": "branding-site-name",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-primary",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-accent",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-theme-default",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-theme-preset",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-file-logo",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-file-favicon",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-file-logo_light",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-file-logo_dark",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        },
+        {
+          "id": "branding-reset-confirm",
+          "border": "rgb(176, 138, 58)",
+          "field": "rgb(22, 29, 36)",
+          "outer": "rgb(30, 39, 48)",
+          "minimum": 4.713313467705034
+        }
+      ]
+    },
+    {
+      "preset": "retro",
+      "mode": "light",
+      "minimum": 4.290108550849841,
+      "fields": [
+        {
+          "id": "branding-site-name",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-primary",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-accent",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-theme-default",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-theme-preset",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-file-logo",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-file-favicon",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-file-logo_light",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-file-logo_dark",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        },
+        {
+          "id": "branding-reset-confirm",
+          "border": "rgb(143, 100, 41)",
+          "field": "rgb(246, 232, 196)",
+          "outer": "rgb(255, 247, 220)",
+          "minimum": 4.290108550849841
+        }
+      ]
+    },
+    {
+      "preset": "retro",
+      "mode": "dark",
+      "minimum": 5.944066198872878,
+      "fields": [
+        {
+          "id": "branding-site-name",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-primary",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-accent",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-theme-default",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-theme-preset",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-file-logo",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-file-favicon",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-file-logo_light",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-file-logo_dark",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        },
+        {
+          "id": "branding-reset-confirm",
+          "border": "rgb(199, 156, 96)",
+          "field": "rgb(33, 27, 20)",
+          "outer": "rgb(48, 37, 26)",
+          "minimum": 5.944066198872878
+        }
+      ]
+    }
+  ],
+  "flagsOff": {
+    "status": 200,
+    "intro": "Safe mode pauses package themes without uninstalling them. Branding is disabled; its saved settings are kept.",
+    "brandingLinks": 0,
+    "brandingStatus": 404,
+    "themesStatus": 404
+  }
+}

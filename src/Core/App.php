@@ -512,6 +512,14 @@ final class App
             $oauthCallback = preg_match('#^/auth/[^/]+/callback$#', $path) === 1;
             if ($request->isPost() && !$oauthCallback
                 && !$container->get(Csrf::class)->verify((string) ($request->post('_token') ?? ''))) {
+                // A discarded branding body has lost its token and its draft.
+                // Improve the error only: CSRF still failed, the controller is
+                // never dispatched, and no mutation is authorized by this path.
+                if ($path === '/admin/branding' && $postCap !== null && $length !== null && $length > $postCap) {
+                    return $this->renderError($container, 413,
+                        'This branding save exceeds the ' . \App\Support\UploadLimits::label($postCap)
+                        . ' request limit. Nothing was saved, and the form values and files were not received. Go back to Branding and select smaller or fewer images before retrying.');
+                }
                 // Log out pressed in a second tab after the first one signed out,
                 // or after the session lapsed, carries a token for a session that
                 // no longer exists. What it asked for has already happened, so say

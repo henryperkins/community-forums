@@ -600,6 +600,25 @@
         try { palettes = JSON.parse(brandForm.getAttribute('data-brand-palettes') || '{}'); } catch (e) { /* Keep the server-rendered preview. */ }
         try { savedLogos = JSON.parse(brandPreview.getAttribute('data-brand-logos') || '{}'); } catch (e) { /* No saved logo preview. */ }
         var draftLogos = Object.assign({}, savedLogos);
+        var brandAssets = [];
+        var previewMaxBytes = Number(brandForm.getAttribute('data-brand-upload-max-bytes')) || 5242880;
+        var updateAssetPreviews = function () {
+            brandAssets.forEach(function (asset) {
+                var file = asset.input.files && asset.input.files[0];
+                var removing = asset.removal && asset.removal.checked;
+                var source = removing ? '' : (file ? asset.draft : asset.saved);
+                var status = file ? 'Selected: ' + file.name : (asset.saved ? 'Saved image' : 'No image saved.');
+                if (file && file.size > previewMaxBytes) { status += ' — exceeds the size limit shown above.'; }
+                if (removing) { status = file ? 'A removal and replacement are selected. Choose one before saving.' : 'Will be removed on save.'; }
+                if (asset.status && asset.status.textContent !== status) { asset.status.textContent = status; }
+                if (asset.clear) { asset.clear.hidden = !file; }
+                if (asset.image) {
+                    asset.image.hidden = !source;
+                    if (source) { asset.image.src = source; }
+                    else { asset.image.removeAttribute('src'); }
+                }
+            });
+        };
         var candidateLogo = function (variant) {
             var field = variant === 'base' ? 'logo' : 'logo_' + variant;
             var removal = brandForm.querySelector('[name="remove_' + field + '"]');
@@ -674,6 +693,7 @@
                 if (logo) { previewLogo.src = logo; }
                 else { previewLogo.removeAttribute('src'); }
             }
+            updateAssetPreviews();
         };
         var onBrandChange = function (event) {
             if (contrastAck && [brandPrimary, brandAccent, brandTheme, brandPreset].indexOf(event.target) !== -1) {
@@ -685,18 +705,38 @@
         };
         brandForm.addEventListener('input', onBrandChange);
         brandForm.addEventListener('change', onBrandChange);
-        [['logo', 'base'], ['logo_light', 'light'], ['logo_dark', 'dark']].forEach(function (entry) {
+        [['logo', 'base'], ['logo_light', 'light'], ['logo_dark', 'dark'], ['favicon', null]].forEach(function (entry) {
             var input = brandForm.querySelector('[name="' + entry[0] + '"]');
             if (!input) { return; }
+            var row = input.closest('[data-brand-asset]');
+            var asset = {
+                input: input,
+                removal: brandForm.querySelector('[name="remove_' + entry[0] + '"]'),
+                saved: row ? row.getAttribute('data-brand-saved-asset') || '' : savedLogos[entry[1]] || '',
+                draft: '',
+                image: row && row.querySelector('[data-brand-asset-image]'),
+                status: row && row.querySelector('[data-brand-asset-status]'),
+                clear: row && row.querySelector('[data-brand-file-clear]')
+            };
+            brandAssets.push(asset);
+            if (asset.clear) {
+                asset.clear.addEventListener('click', function () {
+                    input.value = '';
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    input.focus();
+                });
+            }
             input.addEventListener('change', function () {
                 var file = input.files && input.files[0];
-                draftLogos[entry[1]] = savedLogos[entry[1]] || '';
+                asset.draft = '';
+                if (entry[1]) { draftLogos[entry[1]] = savedLogos[entry[1]] || ''; }
                 updateBrandPreview();
-                if (!file || !/^image\/(png|jpeg|gif|webp)$/.test(file.type)) { return; }
+                if (!file || file.size > previewMaxBytes || !/^image\/(png|jpeg|gif|webp)$/.test(file.type)) { return; }
                 var reader = new FileReader();
                 reader.addEventListener('load', function () {
                     if (input.files && input.files[0] === file && typeof reader.result === 'string') {
-                        draftLogos[entry[1]] = reader.result;
+                        asset.draft = reader.result;
+                        if (entry[1]) { draftLogos[entry[1]] = reader.result; }
                         updateBrandPreview();
                     }
                 });

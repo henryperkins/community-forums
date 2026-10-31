@@ -16,6 +16,7 @@ use App\Security\WriteGate;
 use App\Service\AttachmentService;
 use App\Service\Packages\ThemeStateService;
 use App\Support\BrandPalette;
+use App\Support\UploadLimits;
 
 /**
  * Operator branding (P3-07): site name, light/dark logo, favicon, and primary/
@@ -127,7 +128,7 @@ final class BrandingController extends Controller
             }
             $this->bustBrandCache($settings);
             $this->audit($admin->id(), 'reset');
-            return $this->redirectWithFlash('/admin/branding', 'Reset. The built-in chrome is back.');
+            return $this->redirectWithFlash('/admin/branding', 'Branding reset. The community name and package theme were kept.');
         }
 
         $errors = [];
@@ -136,6 +137,19 @@ final class BrandingController extends Controller
             $uploadError = $request->fileError($field);
             if ($removals['remove_' . $field] && $uploadError !== null && $uploadError !== UPLOAD_ERR_NO_FILE) {
                 $errors['remove_' . $field] = 'Choose either removing the ' . $asset['label'] . ' or uploading a replacement, not both.';
+            }
+            // file() intentionally returns null for PHP intake failures. Inspect
+            // the error first so a rejected selection cannot masquerade as an
+            // absent file or partially save another asset/removal in this form.
+            $uploadMessage = match ($uploadError) {
+                null, UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE => null,
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'The ' . $asset['label'] . ' exceeds the server upload limit. Choose a smaller image and select it again.',
+                UPLOAD_ERR_PARTIAL => 'The ' . $asset['label'] . ' upload was interrupted. Select the file again and retry.',
+                UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE, UPLOAD_ERR_EXTENSION => 'The ' . $asset['label'] . ' could not be stored. Uploads are temporarily unavailable; retry later or leave this file unselected.',
+                default => 'The ' . $asset['label'] . ' upload could not be accepted. Select the file again.',
+            };
+            if ($uploadMessage !== null) {
+                $errors[$field] = $uploadMessage;
             }
         }
         $name = trim($request->str('site_name'));
@@ -207,10 +221,7 @@ final class BrandingController extends Controller
                 'contrast_warnings' => $contrastWarnings,
                 'contrast_ack' => $contrastAck,
                 'contrast_review' => $contrastReview,
-                'uploads_need_reselect' => array_filter(array_map(
-                    static fn (string $field): ?array => $request->file($field),
-                    ['logo', 'logo_light', 'logo_dark', 'favicon'],
-                )) !== [],
+                'uploads_need_reselect' => $this->hasSubmittedAssets($request),
                 'errors' => $errors,
             ] + $removals), 422);
         }
@@ -274,6 +285,13 @@ final class BrandingController extends Controller
     private function formData(SettingRepository $settings, array $overrides = []): array
     {
         $packageTokens = $this->packageTokens(true);
+        $maxBytes = (int) $this->config()->get('uploads.max_bytes', 5242880);
+        $phpFileBytes = UploadLimits::phpBytes(ini_get('upload_max_filesize'));
+        $phpPostBytes = UploadLimits::phpBytes(ini_get('post_max_size'));
+        $maxBytes = min($maxBytes, $phpFileBytes ?? $maxBytes, $phpPostBytes ?? $maxBytes);
+        $mimeNames = array_intersect_key([
+            'image/jpeg' => 'JPEG', 'image/png' => 'PNG', 'image/gif' => 'GIF', 'image/webp' => 'WebP',
+        ], array_flip((array) $this->config()->get('uploads.allowed_mime', [])));
         $data = [
             'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
             'color_primary' => $settings->getString('brand_color_primary', ''),
@@ -298,6 +316,14 @@ final class BrandingController extends Controller
             'contrast_ack' => false,
             'contrast_review' => '',
             'reset_confirm' => '',
+            'uploads_need_reselect' => false,
+            'upload_accept' => implode(',', array_keys($mimeNames)),
+            'upload_formats' => implode(', ', $mimeNames),
+            'upload_max_bytes' => $maxBytes,
+            'upload_max_label' => UploadLimits::label($maxBytes),
+            'upload_request_label' => $phpPostBytes !== null ? UploadLimits::label($phpPostBytes) : null,
+            'upload_max_width' => (int) $this->config()->get('uploads.max_width', 4096),
+            'upload_max_height' => (int) $this->config()->get('uploads.max_height', 4096),
             'errors' => [],
         ];
         return array_replace($data, $overrides);
@@ -324,7 +350,18 @@ final class BrandingController extends Controller
                 : $settings->getString('brand_custom_css', ''),
             'custom_css_ack' => $customCssEnabled && $request->str('custom_css_ack') === '1',
             'reset_confirm' => $request->str('reset_confirm'),
+            'uploads_need_reselect' => $this->hasSubmittedAssets($request),
         ] + $this->assetRemovalData($request);
+    }
+
+    private function hasSubmittedAssets(Request $request): bool
+    {
+        foreach (array_keys(self::ASSETS) as $field) {
+            if (($error = $request->fileError($field)) !== null && $error !== UPLOAD_ERR_NO_FILE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** @return array<string,bool> */

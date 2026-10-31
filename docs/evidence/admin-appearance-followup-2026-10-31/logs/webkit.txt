@@ -1,0 +1,21 @@
+
+Running 12 tests using 1 worker
+
+(node:2237770) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › admin-appearance-followup.spec.ts:65:5 › PHP-rejected branding files preserve the draft and saved marks (3.5s)
+  ✓   2 [desktop] › admin-appearance-followup.spec.ts:83:5 › branding field boundaries stay visible in both palettes and modes (3.6s)
+  ✓   3 [desktop] › admin-appearance-followup.spec.ts:102:5 › package details and guarded actions fit together on narrow screens (2.6s)
+  ✓   4 [desktop] › admin-appearance-followup.spec.ts:133:5 › pending favicon and inactive logo choices are visible and clearable (2.5s)
+  ✓   5 [desktop] › admin-appearance-followup.spec.ts:158:5 › branding reset and package safe mode describe their retained state (4.4s)
+  ✓   6 [desktop] › admin-appearance-followup.spec.ts:197:7 › without JavaScript › native file choices and upload errors remain usable (5.2s)
+(node:2239009) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   7 [mobile] › admin-appearance-followup.spec.ts:65:5 › PHP-rejected branding files preserve the draft and saved marks (3.7s)
+  ✓   8 [mobile] › admin-appearance-followup.spec.ts:83:5 › branding field boundaries stay visible in both palettes and modes (4.0s)
+  ✓   9 [mobile] › admin-appearance-followup.spec.ts:102:5 › package details and guarded actions fit together on narrow screens (3.3s)
+  ✓  10 [mobile] › admin-appearance-followup.spec.ts:133:5 › pending favicon and inactive logo choices are visible and clearable (2.8s)
+  ✓  11 [mobile] › admin-appearance-followup.spec.ts:158:5 › branding reset and package safe mode describe their retained state (5.1s)
+  ✓  12 [mobile] › admin-appearance-followup.spec.ts:197:7 › without JavaScript › native file choices and upload errors remain usable (5.5s)
+
+  12 passed (47.4s)

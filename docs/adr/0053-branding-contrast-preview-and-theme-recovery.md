@@ -44,3 +44,28 @@ Runtime instructions are in the branding and package-themes runbooks. Local
 regressions and rendered evidence are linked from
 `docs/evidence/theming-remediation-2026-10-31/README.md`; they do not establish
 production deployment or physical-device qualification.
+
+## Follow-up operator review (2026-10-31)
+
+The owner subsequently authorized all five findings from a fresh rendered review:
+
+- Check PHP upload error metadata before saving any submitted branding. Return
+  the intact draft and pending removals with per-asset errors and a reselect
+  notice. Keep the established, explicit partial-success contract for images
+  rejected later by content processing. An entirely discarded POST gets a 413
+  diagnostic inside the existing failed-CSRF branch; it authorizes no write and
+  states that its unreceived draft cannot be restored.
+- Use the semantic field-rule colour for branding and native file boundaries,
+  with measured 3:1 minimum contrast against adjacent built-in surfaces in
+  Classic/Retro, light/dark. Keep danger and keyboard-focus states.
+- Retain the desktop package table and its semantics while stacking package
+  metadata/actions at the existing 900px breakpoint. Remove the console's table
+  minimum only for this surface and wrap long build digests.
+- Make both recovery surfaces state their exact scope: branding reset retains
+  the community name and package state; package safe mode retains branding.
+- Expose native filename feedback, saved thumbnails, configured requirements,
+  enhanced pending previews/status for every asset, and local selection clearing.
+
+The implementation record is
+`docs/superpowers/plans/2026-10-31-admin-appearance-followup.md`; current validation
+is retained in `docs/evidence/admin-appearance-followup-2026-10-31/README.md`.

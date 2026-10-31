@@ -13,6 +13,79 @@ use Tests\Support\TestCase;
  */
 final class AppBrandingThemeTest extends TestCase
 {
+    public function test_a_discarded_oversized_branding_body_reports_size_without_authorizing_a_write(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $settings = new \App\Repository\SettingRepository($this->db);
+        $settings->set('site_name', 'Before oversized request');
+        $cap = ini_parse_quantity(ini_get('post_max_size'));
+        self::assertGreaterThan(0, $cap);
+        $response = $this->postWithServer('/admin/branding', [], ['CONTENT_LENGTH' => (string) ($cap + 1)], false);
+        $this->assertStatus(413, $response);
+        $this->assertSeeText($response, 'Nothing was saved');
+        self::assertSame('Before oversized request', $settings->getString('site_name'));
+        $this->assertStatus(403, $this->postWithServer('/admin/branding', ['site_name' => 'Untrusted'], ['CONTENT_LENGTH' => '100'], false));
+        self::assertSame('Before oversized request', $settings->getString('site_name'));
+    }
+
+    public function test_php_upload_errors_preserve_the_draft_and_every_saved_asset(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $settings = new \App\Repository\SettingRepository($this->db);
+        $settings->set('site_name', 'Saved community');
+        foreach (['logo', 'logo_light', 'logo_dark', 'favicon'] as $field) {
+            $settings->set('brand_' . $field . '_path', '/media/saved-' . $field);
+        }
+        foreach ([UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE, UPLOAD_ERR_PARTIAL,
+            UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE, UPLOAD_ERR_EXTENSION, 99] as $error) {
+            foreach (['logo', 'logo_light', 'logo_dark', 'favicon'] as $field) {
+                $response = $this->postFile('/admin/branding', $field, [
+                    'name' => 'chosen.png', 'type' => 'image/png', 'tmp_name' => '', 'error' => $error, 'size' => 0,
+                ], ['site_name' => 'Preserved upload draft', 'theme_default' => 'dark', 'remove_logo_light' => '1']);
+                $this->assertStatus(422, $response);
+                $this->assertSeeText($response, 'Preserved upload draft');
+                $this->assertSeeText($response, 'Select those files again');
+                self::assertSame('Saved community', $settings->getString('site_name'));
+                foreach (['logo', 'logo_light', 'logo_dark', 'favicon'] as $saved) {
+                    self::assertSame('/media/saved-' . $saved, $settings->getString('brand_' . $saved . '_path'));
+                }
+                self::assertMatchesRegularExpression('/name="remove_logo_light"[^>]*checked/', $response->body());
+                self::assertStringNotContainsString('Saved. The chrome is live', $response->body());
+            }
+        }
+    }
+
+    public function test_a_rejected_upload_prevents_another_file_from_being_saved(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $settings = new \App\Repository\SettingRepository($this->db);
+        $settings->set('site_name', 'Before upload');
+        $settings->set('brand_logo_path', '/media/previous');
+        $response = $this->request('POST', '/admin/branding', [
+            '_token' => $this->csrfToken(), 'site_name' => 'Two-file draft', 'theme_preset' => 'retro',
+        ], [], [
+            'logo' => $this->fakeUpload($this->pngBytes()),
+            'favicon' => ['name' => 'favicon.png', 'type' => 'image/png', 'tmp_name' => '', 'error' => UPLOAD_ERR_PARTIAL, 'size' => 0],
+        ]);
+        $this->assertStatus(422, $response);
+        $this->assertSeeText($response, 'Two-file draft');
+        self::assertSame('Before upload', $settings->getString('site_name'));
+        self::assertSame('/media/previous', $settings->getString('brand_logo_path'));
+        self::assertSame('', $settings->getString('brand_favicon_path'));
+        self::assertMatchesRegularExpression('/name="favicon"[^>]*aria-invalid="true"/', $response->body());
+    }
+
+    public function test_malformed_upload_metadata_is_not_treated_as_an_absent_selection(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $response = $this->postFile('/admin/branding', 'logo_dark', [
+            'name' => ['unexpected'], 'tmp_name' => '', 'error' => UPLOAD_ERR_OK, 'size' => 0,
+        ], ['site_name' => 'Malformed upload draft']);
+        $this->assertStatus(422, $response);
+        $this->assertSeeText($response, 'Malformed upload draft');
+        self::assertMatchesRegularExpression('/name="logo_dark"[^>]*aria-invalid="true"/', $response->body());
+    }
+
     public function test_all_logo_variants_and_favicon_upload_with_supported_attachment_purposes(): void
     {
         $this->actingAs($this->makeAdmin());
@@ -368,7 +441,7 @@ final class AppBrandingThemeTest extends TestCase
         self::assertStringContainsString('.draft-rule{letter-spacing:.02em;}', $response->body());
         self::assertStringContainsString('name="custom_css_ack" value="1" checked', $response->body());
         self::assertStringContainsString(
-            'type="submit" name="reset" value="1" formnovalidate>Reset to defaults</button>',
+            'type="submit" name="reset" value="1" formnovalidate>Reset branding</button>',
             $response->body(),
         );
     }
@@ -388,7 +461,7 @@ final class AppBrandingThemeTest extends TestCase
             'reset' => '1',
             'reset_confirm' => 'RESET',
         ]), '/admin/branding');
-        $this->assertSeeText($this->get('/admin/branding'), 'Reset. The built-in chrome is back.');
+        $this->assertSeeText($this->get('/admin/branding'), 'Branding reset. The community name and package theme were kept.');
     }
 
     public function test_rejected_brand_asset_uses_the_review_callout_and_keeps_the_previous_asset(): void
