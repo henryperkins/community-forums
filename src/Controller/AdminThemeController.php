@@ -82,6 +82,7 @@ final class AdminThemeController extends Controller
 
         try {
             $this->themes()->rollback($admin, (string) $request->post('current_password', ''));
+            $this->session()->forget('theme_preview_build');
 
             return $this->noindex($this->redirectWithFlash('/admin/themes', 'Rolled back to the last-known-good theme.'));
         } catch (ValidationException $e) {

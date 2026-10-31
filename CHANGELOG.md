@@ -2,6 +2,29 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-10-31] - Admin branding and theme recovery
+
+- Keep package assets scoped to their eligible build so a private preview cannot
+  break an active theme's shared textures. Preview-only assets remain private to
+  the admin session and are never stored in a shared cache.
+- Keep last-known-good rollback available during safe mode, retain password
+  confirmation, and clear the operator's preview after a successful rollback.
+- Give Retro complete light and dark palettes, including system-dark mode.
+  Review custom colour contrast against content surfaces in both modes before
+  saving; require an explicit acknowledgement tied to the reviewed values and
+  record that override with the branding change in the audit log.
+- Preview visitor modes, presets, colours, and unsaved logo variants inside an
+  isolated sample. Refresh branding stylesheet identity when the active or
+  previewed package changes. Local proof is recorded in
+  `docs/evidence/theming-remediation-2026-10-31/README.md`.
+- Remove each saved logo variant or favicon independently through the branding
+  form. Keep pending removal choices through validation, preview logo fallbacks,
+  and audit the cleared assets without resetting the remaining branding.
+- Enforce account-state write restrictions on branding saves and resets while
+  allowing suspended or banned admins to read the settings.
+- Store light and dark logo uploads under the supported logo attachment type,
+  correcting a server error while retaining each variant's separate setting.
+
 ## [Unreleased] - Subscription action polish
 
 - Keep subscription Save labels on one line at enlarged text sizes while

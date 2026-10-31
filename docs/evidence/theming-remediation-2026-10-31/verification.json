@@ -1,0 +1,32 @@
+{
+  "php": {
+    "tests": 3384,
+    "assertions": 30203,
+    "failures": 0,
+    "skipped": 1
+  },
+  "chromium": {
+    "distinct_passed": 20,
+    "initial_passed": 16,
+    "initial_failed": 4,
+    "corrected_rerun_passed": 4
+  },
+  "webkit": {
+    "passed": 6
+  },
+  "assets": {
+    "passed": 35
+  },
+  "asset_version": "573379a015e11e60",
+  "log_sha256": {
+    "php-full.log": "7db9b37511d46276b4985509deb4e078c7d22eabdd1ac9b5a7aff34e7a34ada3",
+    "php-before-variant-fix.log": "3b0ee3b1721104a0b519910bc3b2b3dded380fad497b01cfcf8b5d0f9efca08a",
+    "assets-build.log": "dd19c47bb98466b26d2a2a4416ee6b4d94aaeef4d10fe4570f8032346fa0c541",
+    "assets-check.log": "b7108a5b472942724ce222fb8a237e79da2aa5e3d53efc105f70a2b10afb6b5c",
+    "assets-tests.log": "5356f1607acf6501d09183802f54868b8b652ebfa771fbdb71fdddfbeab5b02f",
+    "browser-chromium.log": "259fdc93c68e4959bd75928b2f4f2fe2a0df943c46ffaf264a493baf986746c2",
+    "browser-chromium-removal-rerun.log": "e68cedb0351c26fc2cd25f0dbed8411fd27c82850b4976a22caf6958fac712a0",
+    "browser-webkit.log": "f26ce9199816ea36d53ba519f1ba36b7da957a3c0239c9c26093d7d7e5328821",
+    "deployment-before.json": "c0b67800ce6087779fa72a576565b1117170014a8a38915723a4fa07bd97b59b"
+  }
+}

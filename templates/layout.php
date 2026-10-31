@@ -6,6 +6,10 @@ $composing = $composing ?? ['enter_to_send' => true, 'show_preview' => true, 'sm
 $memberSurfaces = $member_surfaces ?? ['rail_open' => true, 'inbox_reading_open' => true, 'directory_sort' => 'category', 'directory_peek' => 3];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
 $themePackage = $package_theme ?? ['active_css_digest' => null, 'preview_css_digest' => null];
+$brandStylesVersion = ($brand['version'] ?? '1') . '-'
+    . ($themePackage['preview_css_digest'] ?? $themePackage['active_css_digest'] ?? 'system');
+$brandStylesUrl = '/brand.css?v=' . rawurlencode($brandStylesVersion)
+    . (!empty($themePackage['preview_css_digest']) ? '&preview=1' : '');
 $assetVersion = (string) ($asset_version ?? '1');
 $assetUrls = $asset_urls ?? (new \App\Support\AssetManifest(dirname(__DIR__)))->urls();
 $assetUrl = static fn (string $name): string => $assetUrls[$name] ?? '/assets/' . $name . '?v=' . $assetVersion;
@@ -56,7 +60,7 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
     <link rel="stylesheet" href="<?= $e($assetUrl('app.css')) ?>">
     <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="<?= $e($assetUrl('wysiwyg-composer.css')) ?>"><?php endif; ?>
     <?php if (!empty($themePackage['preview_css_digest'])): ?><link rel="stylesheet" href="/theme/preview.css?v=<?= $e($themePackage['preview_css_digest']) ?>"><?php elseif (!empty($themePackage['active_css_digest'])): ?><link rel="stylesheet" href="/theme/<?= $e($themePackage['active_css_digest']) ?>.css"><?php endif; ?>
-    <?php if (!empty($brand['has_custom_colors'])): ?><link rel="stylesheet" href="/brand.css?v=<?= $e($brand['version'] ?: '1') ?>"><?php endif; ?>
+    <?php if (!empty($brand['has_custom_colors']) || $this->block('branding_preview', '') === '1'): ?><link rel="stylesheet" href="<?= $e($brandStylesUrl) ?>"><?php endif; ?>
 </head>
 <body<?= $this->block('account_settings', '') === '1' ? ' data-account-settings="1"' : '' ?> class="variant-<?= $e($variant) ?> <?= !empty($memberSurfaces['rail_open']) ? 'is-rail-open' : 'is-rail-closed' ?> <?= !empty($memberSurfaces['inbox_reading_open']) ? 'is-reading-open' : 'is-reading-closed' ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>" data-rail-open="<?= !empty($memberSurfaces['rail_open']) ? '1' : '0' ?>" data-inbox-reading-open="<?= !empty($memberSurfaces['inbox_reading_open']) ? '1' : '0' ?>"<?php if ($wysiwygComposerOn): ?> data-wysiwyg-composer="1" data-wysiwyg-src="<?= $e($assetUrl('wysiwyg-composer.js')) ?>"<?php endif; ?><?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>

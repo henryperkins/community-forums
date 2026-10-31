@@ -1,0 +1,23 @@
+{
+  "base_commit": "4162a90a2e166df7c51bf4da843d8e95bf8b6925",
+  "asset_version": "573379a015e11e60",
+  "files": {
+    "src/Controller/AdminThemeController.php": "0361c1b8ed25129b93fef91e5b48648324ad1f68f95d7086c7d77d3aa55f3bee",
+    "src/Controller/BrandingController.php": "dc39d95a63415435ddbc8eb99b40296a68fea64c510ed1226a351902aebaf17e",
+    "src/Controller/ThemeController.php": "f22d28204a11517c1df643dbe72edc25a6c0da3a2a65de9edbc83839b4facaff",
+    "src/Repository/PackageThemeRepository.php": "48cfb7929c3557a23568b87f1fac410b0f7724d31564a17cbfc75dfe604f9572",
+    "src/Support/BrandPalette.php": "6c699c9af3b2ac5d34a6caed726cedf5b659573b480352e4371981da630849df",
+    "templates/admin/branding.php": "7d2c0c3d799ad68f2bd0a3b03a663209bb788293c2393bffafa04409c2ef0dea",
+    "templates/admin/themes.php": "48b2c73a393f086d7d092d670e174b54112133a6f97d02bf9c0dc1549fba7baf",
+    "templates/layout.php": "ee830db07d491b1fc6c3bdd9462e78aae5b9ea935c1664f9a3cf6050a47d834e",
+    "public/assets/app.css": "3ee9193b0e92a9996b800231696677dad3f8a9639438fabf2c9757dbed7ce7f7",
+    "public/assets/app.js": "d9e38d1a1bba177b3860676becc468a8a68d00aaca93ef77aa618837809c0f83",
+    "config/assets.json": "05b25e7c25660a282162781e51565c3699ff93ece4eb6b455a8629a2a172a188",
+    "tests/Integration/Core/AppBrandingThemeTest.php": "a3377575d5906280608af0673ae1231e51912e2cf5fde8a860cf1150a7cf71fe",
+    "tests/Integration/Core/AppThemePackageTest.php": "7b013a021e36b5940a45cd6c11a6ce281b369fcd09928c691199c21a995eed09",
+    "tests/Unit/Support/BrandPaletteTest.php": "96fe32b7fe6408fa33677b15d820347ed1162a92f46407616a448b5e8cb6b6e5",
+    "tests/browser/theming-remediation.spec.ts": "66b8561df3d78a92f6150efc7d468e0b7bf42732a8f3bb930007b9b6cae70303",
+    "tests/browser/theming-remediation-fixture.php": "67d2eb7b96eb0a699e4dd76b955a6d7846a2b5005516f9509efe34a5ac8748b9"
+  },
+  "qualification_scope": "isolated theming release excluding unrelated primary checkout work"
+}

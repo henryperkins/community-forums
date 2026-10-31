@@ -588,8 +588,24 @@
         var brandPrimary = brandForm.querySelector('[data-brand-primary]');
         var brandAccent = brandForm.querySelector('[data-brand-accent]');
         var brandTheme = brandForm.querySelector('[data-brand-theme]');
+        var brandPreset = brandForm.querySelector('[data-brand-preset]');
         var previewName = brandPreview.querySelector('[data-brand-preview-name]');
         var previewTheme = brandPreview.querySelector('[data-brand-preview-theme]');
+        var previewLogo = brandPreview.querySelector('[data-brand-preview-logo]');
+        var contrastAck = brandForm.querySelector('[name="contrast_ack"]');
+        var contrastChanged = brandForm.querySelector('[data-brand-contrast-changed]');
+        var darkPreference = window.matchMedia('(prefers-color-scheme: dark)');
+        var palettes = {};
+        var savedLogos = {};
+        try { palettes = JSON.parse(brandForm.getAttribute('data-brand-palettes') || '{}'); } catch (e) { /* Keep the server-rendered preview. */ }
+        try { savedLogos = JSON.parse(brandPreview.getAttribute('data-brand-logos') || '{}'); } catch (e) { /* No saved logo preview. */ }
+        var draftLogos = Object.assign({}, savedLogos);
+        var candidateLogo = function (variant) {
+            var field = variant === 'base' ? 'logo' : 'logo_' + variant;
+            var removal = brandForm.querySelector('[name="remove_' + field + '"]');
+            return removal && removal.checked ? '' : (draftLogos[variant] || '');
+        };
+        var appliedPreviewTokens = [];
         var hex = function (v) { return /^#[0-9a-fA-F]{6}$/.test((v || '').trim()); };
         var rgb = function (v) {
             v = v.replace('#', '');
@@ -598,7 +614,7 @@
         var lum = function (v) {
             return rgb(v).map(function (n) {
                 n = n / 255;
-                return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+                return n <= 0.04045 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
             }).reduce(function (sum, n, i) {
                 return sum + n * [0.2126, 0.7152, 0.0722][i];
             }, 0);
@@ -611,27 +627,83 @@
             return contrast(v, '#ffffff') >= contrast(v, '#0f1218') ? '#ffffff' : '#0f1218';
         };
         var updateBrandPreview = function () {
-            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value : '';
-            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value : '';
+            var theme = brandTheme ? brandTheme.value : 'system';
+            var mode = theme === 'system' ? (darkPreference.matches ? 'dark' : 'light') : theme;
+            var preset = brandPreset ? brandPreset.value : 'classic';
+            var tokens = palettes[preset] && palettes[preset][mode];
+            brandPreview.setAttribute('data-brand-theme', theme);
+            brandPreview.setAttribute('data-brand-preset', preset);
+            appliedPreviewTokens.forEach(function (key) { brandPreview.style.removeProperty(key); });
+            appliedPreviewTokens = [];
+            if (tokens) {
+                Object.keys(tokens).forEach(function (key) {
+                    if (key.indexOf('--') !== 0) { return; }
+                    brandPreview.style.setProperty(key, tokens[key]);
+                    appliedPreviewTokens.push(key);
+                });
+            }
+            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value.trim() : '';
+            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value.trim() : '';
             if (primary !== '') {
+                brandPreview.style.setProperty('--accent', primary);
+                brandPreview.style.setProperty('--accent-contrast', contrastToken(primary));
                 brandPreview.style.setProperty('--preview-accent', primary);
                 brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
             } else {
-                brandPreview.style.removeProperty('--preview-accent');
-                brandPreview.style.removeProperty('--preview-accent-contrast');
+                brandPreview.style.setProperty('--preview-accent', 'var(--accent)');
+                brandPreview.style.setProperty('--preview-accent-contrast', 'var(--accent-contrast)');
             }
             if (accent !== '') {
+                brandPreview.style.setProperty('--accent-2', accent);
                 brandPreview.style.setProperty('--preview-accent-2', accent);
                 brandPreview.style.setProperty('--preview-accent-2-contrast', contrastToken(accent));
             } else {
-                brandPreview.style.removeProperty('--preview-accent-2');
-                brandPreview.style.removeProperty('--preview-accent-2-contrast');
+                brandPreview.style.setProperty('--preview-accent-2', 'var(--accent-2)');
+                brandPreview.style.setProperty('--preview-accent-2-contrast', tokens && tokens['--accent-2'] ? contrastToken(tokens['--accent-2']) : 'var(--ink-900)');
             }
             if (previewName && brandName) { previewName.textContent = brandName.value || 'Community'; }
-            if (previewTheme && brandTheme) { previewTheme.textContent = brandTheme.value.charAt(0).toUpperCase() + brandTheme.value.slice(1); }
+            if (previewTheme) {
+                previewTheme.textContent = (preset === 'retro' ? 'Retro · ' : '')
+                    + (theme === 'system' ? 'System · ' : '') + (mode === 'dark' ? 'Dark' : 'Light');
+            }
+            if (previewLogo) {
+                // Match server logo selection: System uses the base logo, even
+                // when its colours follow the device's dark appearance.
+                var logo = (theme !== 'system' && candidateLogo(theme)) || candidateLogo('base');
+                previewLogo.hidden = !logo;
+                if (logo) { previewLogo.src = logo; }
+                else { previewLogo.removeAttribute('src'); }
+            }
         };
-        brandForm.addEventListener('input', updateBrandPreview);
-        brandForm.addEventListener('change', updateBrandPreview);
+        var onBrandChange = function (event) {
+            if (contrastAck && [brandPrimary, brandAccent, brandTheme, brandPreset].indexOf(event.target) !== -1) {
+                contrastAck.checked = false;
+                contrastAck.disabled = true;
+                if (contrastChanged) { contrastChanged.hidden = false; }
+            }
+            updateBrandPreview();
+        };
+        brandForm.addEventListener('input', onBrandChange);
+        brandForm.addEventListener('change', onBrandChange);
+        [['logo', 'base'], ['logo_light', 'light'], ['logo_dark', 'dark']].forEach(function (entry) {
+            var input = brandForm.querySelector('[name="' + entry[0] + '"]');
+            if (!input) { return; }
+            input.addEventListener('change', function () {
+                var file = input.files && input.files[0];
+                draftLogos[entry[1]] = savedLogos[entry[1]] || '';
+                updateBrandPreview();
+                if (!file || !/^image\/(png|jpeg|gif|webp)$/.test(file.type)) { return; }
+                var reader = new FileReader();
+                reader.addEventListener('load', function () {
+                    if (input.files && input.files[0] === file && typeof reader.result === 'string') {
+                        draftLogos[entry[1]] = reader.result;
+                        updateBrandPreview();
+                    }
+                });
+                reader.readAsDataURL(file);
+            });
+        });
+        darkPreference.addEventListener('change', updateBrandPreview);
         updateBrandPreview();
     }
 

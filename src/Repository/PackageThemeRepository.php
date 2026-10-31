@@ -90,6 +90,15 @@ final class PackageThemeRepository
     }
 
     /** @return array<string,mixed>|null */
+    public function findAssetForBuild(int $buildId, string $digest): ?array
+    {
+        return $this->db->fetch(
+            'SELECT * FROM package_theme_assets WHERE build_id = ? AND digest = ? ORDER BY id LIMIT 1',
+            [$buildId, $digest],
+        );
+    }
+
+    /** @return array<string,mixed>|null */
     public function findCssByDigest(string $cssDigest): ?array
     {
         return $this->db->fetch(

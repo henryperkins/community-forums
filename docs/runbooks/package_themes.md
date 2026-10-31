@@ -32,6 +32,11 @@ off.
 2. Enable `package_themes` for staff. Open `/admin/themes` and use **Preview**.
    Preview stores a build id in the current admin session and serves
    `/theme/preview.css` with `Cache-Control: private, no-store`.
+   Preview-only assets use the same admin-session boundary and cache policy.
+   Identical bytes shared with an eligible active build remain publicly
+   cacheable; constructing another build cannot replace the active asset lookup.
+   When branding is present, its preview stylesheet is also private and uses the
+   preview package palette instead of the stored Retro preset.
 3. Confirm a second browser/session does not receive the preview stylesheet.
    Capture visual evidence on desktop and mobile before activation.
 4. Activate during a low-traffic window from `/admin/themes` with password
@@ -54,6 +59,16 @@ Use the UI:
 3. Confirm the public site has no `/theme/` stylesheet link.
 4. To exit, return to the same page and submit **Exit safe mode** with the
    current password.
+
+While safe mode is on, `/admin/themes` still offers **Roll back to last-known-good**
+when a recovery build exists. Rollback requires the current password and leaves
+safe mode on; exit safe mode separately when ready to serve the restored build.
+A successful rollback also ends the operator's session preview, so the next
+render reflects the restored build. A rejected rollback retains the preview.
+
+Branding stylesheet URLs incorporate the active/preview build digest, or a
+built-in marker in safe mode. An earlier cached branding response therefore
+cannot retain the wrong preset suppression after a theme transition.
 
 Use the environment override when the UI is unreachable:
 

@@ -1,10 +1,10 @@
 {
-  "version": "3aa554af4ef3f85a",
+  "version": "573379a015e11e60",
   "urls": {
-    "app.css": "/assets/dist/app-style-BaLoyX9O.css",
+    "app.css": "/assets/dist/app-style-CunORmrQ.css",
     "imladris.css": "/assets/dist/imladris-style-CRsa_HRN.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
-    "app.js": "/assets/dist/app-f15c5d4e6d0de477.js",
+    "app.js": "/assets/dist/app-24135bf80748f0b0.js",
     "composer.js": "/assets/dist/composer-90e77244b8fec3a5.js",
     "passkeys.js": "/assets/dist/passkeys-16e7134417f0d6af.js",
     "tour.js": "/assets/dist/tour-f068bdb2d74e6d21.js",
@@ -28,11 +28,11 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "6aa8b86a6aa89348820d0c36ffd5c49a75c0c7697f29c69124f99aea86f4b4b4",
+      "sha256": "3ee9193b0e92a9996b800231696677dad3f8a9639438fabf2c9757dbed7ce7f7",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "6a4648e206482895c7bad551aa36fafac2a5f2d70e47c64453354c745d07d004",
+      "sha256": "d9e38d1a1bba177b3860676becc468a8a68d00aaca93ef77aa618837809c0f83",
       "immutable": false
     },
     "/assets/composer.js": {
@@ -42,6 +42,10 @@
     "/assets/conversation-entry.js": {
       "sha256": "b39c8c96a2625f6a5e5dd9d6507062a08967a1fa59bdd206e7f729eb00f81407",
       "immutable": false
+    },
+    "/assets/dist/app-24135bf80748f0b0.js": {
+      "sha256": "24135bf80748f0b0dad4ed56ec6cc40347717253d629d4ac8399191b15981d00",
+      "immutable": true
     },
     "/assets/dist/app-f15c5d4e6d0de477.js": {
       "sha256": "f15c5d4e6d0de47795b4d8713e02a00550be1dbee319058cd5efc3342082a014",
@@ -53,6 +57,10 @@
     },
     "/assets/dist/app-style-BaLoyX9O.css": {
       "sha256": "7b53239121925ba3015f87a574b66f1f2eda6e132b151decbc92da2ae5d908c5",
+      "immutable": true
+    },
+    "/assets/dist/app-style-CunORmrQ.css": {
+      "sha256": "b81eb697eb9d546f58116b24ed200dbd71a0661caabb37ca1a1e8c3d9faa1b29",
       "immutable": true
     },
     "/assets/dist/composer-5e088bd27ea38363.js": {
@@ -261,6 +269,36 @@
     }
   },
   "releases": [
+    {
+      "version": "573379a015e11e60",
+      "files": [
+        "/assets/dist/app-24135bf80748f0b0.js",
+        "/assets/dist/app-style-CunORmrQ.css",
+        "/assets/dist/composer-90e77244b8fec3a5.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+        "/assets/dist/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2",
+        "/assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2",
+        "/assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2",
+        "/assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2",
+        "/assets/dist/cormorant-garamond-latin-700-normal-DajfzrDU.woff2",
+        "/assets/dist/eb-garamond-latin-400-italic-KGnr19QW.woff2",
+        "/assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2",
+        "/assets/dist/eb-garamond-latin-500-italic-DW_HNewX.woff2",
+        "/assets/dist/eb-garamond-latin-500-normal-LNvnJ-zC.woff2",
+        "/assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2",
+        "/assets/dist/imladris-style-CRsa_HRN.css",
+        "/assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2",
+        "/assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2",
+        "/assets/dist/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2",
+        "/assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2",
+        "/assets/dist/milkdown-adapter-DXUybFX0.js",
+        "/assets/dist/passkeys-16e7134417f0d6af.js",
+        "/assets/dist/tour-f068bdb2d74e6d21.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-XlKwRXnh.js"
+      ]
+    },
     {
       "version": "3aa554af4ef3f85a",
       "files": [

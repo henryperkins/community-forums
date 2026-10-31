@@ -426,6 +426,19 @@ The front-end is already fully **CSS-variable driven** — the entire look deriv
 
 v1: brand (name/logo/colors) + light/dark. Later: retro skin toggle, full token editor, custom CSS, and **theme packages distributed via the plugin system** (§8) — P2.
 
+**Current operator surface:** `/admin/branding` provides name, colours, logo
+variants, favicon, guest mode, and Classic/Retro presets. Each saved logo variant
+and the favicon can be removed independently when saving the form, with pending
+choices preserved on validation errors. Its sample previews candidate colours,
+modes, presets, and logos without changing the operator's
+account appearance. Contrast warnings cover normal content surfaces in both
+light and dark; saving a warning requires an explicit, audited acknowledgement
+of that exact candidate (ADR 0053). `/admin/themes` manages installed package
+previews, activation, rollback, and safe mode. The full token editor remains
+later scope, and custom CSS remains safety-blocked in the Features console.
+See `docs/runbooks/branding.md` and `docs/runbooks/package_themes.md` for current
+controls and recovery behavior; the priority table above is not an availability ledger.
+
 ## 7. Notifications (admin & mod)
 
 This section covers **staff-facing** alerts and the Admin's control over the whole notification system. Member-facing notifications are specified in PRODUCT_DESIGN.md §6.10; the admin angle (templates, what triggers email, broadcasts) lives here.

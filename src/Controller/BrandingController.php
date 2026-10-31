@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
+use App\Core\Database;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\AttachmentRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
+use App\Security\WriteGate;
 use App\Service\AttachmentService;
 use App\Service\Packages\ThemeStateService;
+use App\Support\BrandPalette;
 
 /**
  * Operator branding (P3-07): site name, light/dark logo, favicon, and primary/
@@ -25,16 +28,28 @@ use App\Service\Packages\ThemeStateService;
  */
 final class BrandingController extends Controller
 {
+    /** @var array<string,array{setting:string,purpose:string,label:string}> */
+    private const ASSETS = [
+        'logo' => ['setting' => 'brand_logo_path', 'purpose' => 'brand_logo', 'label' => 'logo'],
+        // Variants share the supported attachment purpose; their setting paths
+        // select when each image is displayed.
+        'logo_light' => ['setting' => 'brand_logo_light_path', 'purpose' => 'brand_logo', 'label' => 'light theme logo'],
+        'logo_dark' => ['setting' => 'brand_logo_dark_path', 'purpose' => 'brand_logo', 'label' => 'dark theme logo'],
+        'favicon' => ['setting' => 'brand_favicon_path', 'purpose' => 'brand_favicon', 'label' => 'favicon'],
+    ];
+
     /** Public dynamic stylesheet: emitted only for enabled, validated brand overrides. */
     public function css(Request $request): Response
     {
+        $previewRequest = $request->query('preview') === '1';
+        $cacheControl = $previewRequest ? 'private, no-store' : 'public, max-age=300';
         // When branding is disabled the UI falls back to the built-in chrome, so
         // emit an empty rule set rather than the stored brand colours.
         $flags = $this->container->get(FeatureFlags::class);
         if (!$flags->enabled('branding')) {
             return new Response(':root{}', 200, [
                 'Content-Type' => 'text/css; charset=UTF-8',
-                'Cache-Control' => 'public, max-age=300',
+                'Cache-Control' => $cacheControl,
             ]);
         }
         $settings = $this->container->get(SettingRepository::class);
@@ -42,19 +57,17 @@ final class BrandingController extends Controller
         $accent = $settings->getString('brand_color_accent', '');
         $preset = $settings->getString('brand_theme_preset', 'classic');
 
-        $css = ':root{';
-        if ($preset === 'retro' && !$this->packageThemeActive()) {
-            $css .= '--surface:#fff7dc;--surface-soft:#fff1bd;--text:#241706;--accent:#8f3d12;--accent-2:#d78322;--border:#c78b45;';
+        $packageTokens = $this->packageTokens($previewRequest);
+        $presets = BrandPalette::presets($packageTokens);
+        $modes = $preset === 'retro' && $packageTokens === null
+            ? $presets['retro']
+            : ['light' => [], 'dark' => []];
+        foreach ($modes as &$palette) {
+            $palette = BrandPalette::withColours($palette, $primary, $accent);
         }
-        if (self::isHex($primary)) {
-            $contrast = self::contrastToken($primary) ?? '#ffffff';
-            $css .= '--accent:' . $primary . ';--brand-primary:' . $primary . ';--accent-contrast:' . $contrast . ';';
-        }
-        if (self::isHex($accent)) {
-            $contrast = self::contrastToken($accent) ?? '#ffffff';
-            $css .= '--accent-2:' . $accent . ';--brand-accent:' . $accent . ';--brand-accent-contrast:' . $contrast . ';';
-        }
-        $css .= '}';
+        unset($palette);
+        $css = BrandPalette::css($modes);
+        $css .= BrandPalette::previewCss($presets, $primary, $accent);
 
         if ($flags->enabled('custom_css')
             && $settings->get('brand_custom_css_enabled', false) === true
@@ -65,7 +78,7 @@ final class BrandingController extends Controller
 
         return (new Response($css, 200, [
             'Content-Type' => 'text/css; charset=UTF-8',
-            'Cache-Control' => 'public, max-age=300',
+            'Cache-Control' => $cacheControl,
         ]));
     }
 
@@ -82,6 +95,7 @@ final class BrandingController extends Controller
     public function update(Request $request): Response
     {
         $admin = $this->requireAdmin();
+        $this->container->get(WriteGate::class)->assertCanWrite($admin);
         $this->requireBrandingEnabled();
         $settings = $this->container->get(SettingRepository::class);
 
@@ -117,6 +131,13 @@ final class BrandingController extends Controller
         }
 
         $errors = [];
+        $removals = $this->assetRemovalData($request);
+        foreach (self::ASSETS as $field => $asset) {
+            $uploadError = $request->fileError($field);
+            if ($removals['remove_' . $field] && $uploadError !== null && $uploadError !== UPLOAD_ERR_NO_FILE) {
+                $errors['remove_' . $field] = 'Choose either removing the ' . $asset['label'] . ' or uploading a replacement, not both.';
+            }
+        }
         $name = trim($request->str('site_name'));
         if ($name === '' || mb_strlen($name) > 80) {
             $errors['site_name'] = 'Site name must be 1–80 characters.';
@@ -129,12 +150,6 @@ final class BrandingController extends Controller
         if ($accent !== '' && !self::isHex($accent)) {
             $errors['color_accent'] = 'Accent colour must be a hex value, e.g. #c29a44.';
         }
-        if ($primary !== '' && self::isHex($primary) && self::contrastToken($primary) === null) {
-            $errors['color_primary'] = 'Choose a primary colour that supports readable button text.';
-        }
-        if ($accent !== '' && self::isHex($accent) && self::contrastToken($accent) === null) {
-            $errors['color_accent'] = 'Choose an accent colour with enough contrast for UI indicators.';
-        }
         $themeDefault = $request->str('theme_default');
         if (!in_array($themeDefault, ['system', 'light', 'dark'], true)) {
             $themeDefault = 'system';
@@ -142,6 +157,23 @@ final class BrandingController extends Controller
         $themePreset = $request->str('theme_preset', 'classic');
         if (!in_array($themePreset, ['classic', 'retro'], true)) {
             $themePreset = 'classic';
+        }
+        // Saving changes public branding even when this operator has a session
+        // theme preview: measure the globally active theme, not that preview.
+        $palettes = BrandPalette::presets($this->packageTokens());
+        $contrastWarnings = BrandPalette::warnings($palettes[$themePreset], $primary, $accent);
+        // Bind acknowledgement to the exact reviewed candidate and resolved
+        // palette. This also rejects stale no-JS edits or an intervening package
+        // activation. The hash is a review identity, not an authorization token:
+        // requireAdmin + CSRF enforce who may deliberately override a warning.
+        $contrastReview = hash('sha256', json_encode([
+            strtolower($primary), strtolower($accent), $themePreset,
+            $palettes[$themePreset], $contrastWarnings,
+        ], JSON_THROW_ON_ERROR));
+        $contrastAck = $request->str('contrast_ack') === '1'
+            && hash_equals($contrastReview, $request->str('contrast_review'));
+        if ($contrastWarnings !== [] && !$contrastAck) {
+            $errors['contrast_ack'] = 'Review the contrast warnings and acknowledge them before saving.';
         }
 
         $flags = $this->container->get(FeatureFlags::class);
@@ -172,34 +204,63 @@ final class BrandingController extends Controller
                 'custom_css_enabled' => $customCssEnabled,
                 'custom_css' => $customCss,
                 'custom_css_ack' => $customCssAck,
+                'contrast_warnings' => $contrastWarnings,
+                'contrast_ack' => $contrastAck,
+                'contrast_review' => $contrastReview,
+                'uploads_need_reselect' => array_filter(array_map(
+                    static fn (string $field): ?array => $request->file($field),
+                    ['logo', 'logo_light', 'logo_dark', 'favicon'],
+                )) !== [],
                 'errors' => $errors,
-            ]), 422);
+            ] + $removals), 422);
         }
 
-        $settings->set('site_name', $name);
-        $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
-        $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
-        $settings->set('brand_theme_default', $themeDefault);
-        $settings->set('brand_theme_preset', $themePreset);
+        $assetErrors = $this->container->get(Database::class)->transaction(function () use (
+            $settings, $name, $primary, $accent, $themeDefault, $themePreset,
+            $customCssAvailable, $customCssEnabled, $customCss, $contrastWarnings, $admin, $request, $removals,
+        ): array {
+            $settings->set('site_name', $name);
+            $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
+            $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
+            $settings->set('brand_theme_default', $themeDefault);
+            $settings->set('brand_theme_preset', $themePreset);
 
-        if ($customCssAvailable) {
-            $settings->set('brand_custom_css_enabled', $customCssEnabled);
-            if ($customCssEnabled) {
-                $settings->set('brand_custom_css', $customCss);
+            if ($customCssAvailable) {
+                $settings->set('brand_custom_css_enabled', $customCssEnabled);
+                if ($customCssEnabled) {
+                    $settings->set('brand_custom_css', $customCss);
+                }
             }
-        }
-
-        // A rejected upload must not hide under a success flash: keep the old
-        // asset (never 500) but tell the operator exactly which file was
-        // refused and why.
-        $assetErrors = [];
-        $this->storeAsset($admin->id(), $request->file('logo'), 'brand_logo', 'brand_logo_path', 'Logo', $assetErrors);
-        $this->storeAsset($admin->id(), $request->file('logo_light'), 'brand_logo_light', 'brand_logo_light_path', 'Light logo', $assetErrors);
-        $this->storeAsset($admin->id(), $request->file('logo_dark'), 'brand_logo_dark', 'brand_logo_dark_path', 'Dark logo', $assetErrors);
-        $this->storeAsset($admin->id(), $request->file('favicon'), 'brand_favicon', 'brand_favicon_path', 'Favicon', $assetErrors);
-        $this->bustBrandCache($settings);
-
-        $this->audit($admin->id(), 'update');
+            // An override and its audit record commit together. Recalculate the
+            // warnings for the posted colours rather than trusting a client list.
+            if ($contrastWarnings !== []) {
+                $this->audit($admin->id(), 'contrast_override', [
+                    'color_primary' => strtolower($primary),
+                    'color_accent' => strtolower($accent),
+                    'theme_preset' => $themePreset,
+                    'warnings' => $contrastWarnings,
+                ]);
+            }
+            // Rejected uploads retain the old asset and produce a visible
+            // partial-success notice rather than hiding behind a success flash.
+            $assetErrors = [];
+            $removedAssets = [];
+            foreach (self::ASSETS as $field => $asset) {
+                if ($removals['remove_' . $field]) {
+                    if ($settings->getString($asset['setting'], '') !== '') {
+                        // Match Reset semantics: disconnect the saved mark but
+                        // retain its stored media; unrelated branding stays intact.
+                        $settings->set($asset['setting'], '');
+                        $removedAssets[] = $field;
+                    }
+                } else {
+                    $this->storeAsset($admin->id(), $request->file($field), $asset['purpose'], $asset['setting'], ucfirst($asset['label']), $assetErrors);
+                }
+            }
+            $this->bustBrandCache($settings);
+            $this->audit($admin->id(), 'update', ['removed_assets' => $removedAssets]);
+            return $assetErrors;
+        });
         if ($assetErrors !== []) {
             return $this->redirectWithFlash(
                 '/admin/branding',
@@ -212,6 +273,7 @@ final class BrandingController extends Controller
     /** @param array<string,mixed> $overrides */
     private function formData(SettingRepository $settings, array $overrides = []): array
     {
+        $packageTokens = $this->packageTokens(true);
         $data = [
             'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
             'color_primary' => $settings->getString('brand_color_primary', ''),
@@ -220,12 +282,21 @@ final class BrandingController extends Controller
             'logo_light_path' => $settings->getString('brand_logo_light_path', ''),
             'logo_dark_path' => $settings->getString('brand_logo_dark_path', ''),
             'favicon_path' => $settings->getString('brand_favicon_path', ''),
+            'remove_logo' => false,
+            'remove_logo_light' => false,
+            'remove_logo_dark' => false,
+            'remove_favicon' => false,
             'theme_default' => $settings->getString('brand_theme_default', 'system'),
             'theme_preset' => $settings->getString('brand_theme_preset', 'classic'),
             'custom_css_available' => $this->container->get(FeatureFlags::class)->enabled('custom_css'),
             'custom_css_enabled' => $settings->get('brand_custom_css_enabled', false) === true,
             'custom_css' => $settings->getString('brand_custom_css', ''),
             'custom_css_ack' => false,
+            'brand_preview_palettes' => BrandPalette::presets($packageTokens),
+            'brand_package_active' => $packageTokens !== null,
+            'contrast_warnings' => [],
+            'contrast_ack' => false,
+            'contrast_review' => '',
             'reset_confirm' => '',
             'errors' => [],
         ];
@@ -253,7 +324,17 @@ final class BrandingController extends Controller
                 : $settings->getString('brand_custom_css', ''),
             'custom_css_ack' => $customCssEnabled && $request->str('custom_css_ack') === '1',
             'reset_confirm' => $request->str('reset_confirm'),
-        ];
+        ] + $this->assetRemovalData($request);
+    }
+
+    /** @return array<string,bool> */
+    private function assetRemovalData(Request $request): array
+    {
+        $removals = [];
+        foreach (self::ASSETS as $field => $asset) {
+            $removals['remove_' . $field] = $request->str('remove_' . $field) === '1';
+        }
+        return $removals;
     }
 
     /**
@@ -278,13 +359,14 @@ final class BrandingController extends Controller
         $this->container->get(SettingRepository::class)->set($settingKey, '/media/' . (int) $row['id']);
     }
 
-    private function audit(int $actorId, string $what): void
+    private function audit(int $actorId, string $what, ?array $details = null): void
     {
         $this->container->get(ModerationLogRepository::class)->log([
             'actor_id' => $actorId,
             'action' => 'branding_' . $what,
             'target_type' => 'setting',
             'target_id' => 0,
+            'after' => $details,
         ]);
     }
 
@@ -300,52 +382,29 @@ final class BrandingController extends Controller
         }
     }
 
-    private function packageThemeActive(): bool
+    /** @return array<string,mixed>|null */
+    private function packageTokens(bool $includePreview = false): ?array
     {
         try {
-            return $this->container->get(FeatureFlags::class)->enabled('package_themes')
-                && $this->container->get(ThemeStateService::class)->activeBuild() !== null;
+            if (!$this->container->get(FeatureFlags::class)->enabled('package_themes')) {
+                return null;
+            }
+            $themes = $this->container->get(ThemeStateService::class);
+            $build = null;
+            if ($includePreview && $this->currentUser()?->isAdmin()) {
+                $previewId = $this->session()->get('theme_preview_build');
+                $build = $themes->previewBuildFor(is_int($previewId) ? $previewId : null);
+            }
+            $build ??= $themes->activeBuild();
+            return $build === null ? null : json_decode((string) $build['tokens_json'], true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable) {
-            return false;
+            return null;
         }
     }
 
     private static function isHex(string $v): bool
     {
-        return preg_match('/^#[0-9a-fA-F]{6}$/', $v) === 1;
-    }
-
-    private static function contrastToken(string $hex): ?string
-    {
-        $white = self::contrastRatio($hex, '#ffffff');
-        $dark = self::contrastRatio($hex, '#0f1218');
-        if ($white >= 4.5 || $dark >= 4.5) {
-            return $white >= $dark ? '#ffffff' : '#0f1218';
-        }
-        return null;
-    }
-
-    private static function contrastRatio(string $a, string $b): float
-    {
-        $l1 = self::luminance($a);
-        $l2 = self::luminance($b);
-        $lighter = max($l1, $l2);
-        $darker = min($l1, $l2);
-        return ($lighter + 0.05) / ($darker + 0.05);
-    }
-
-    private static function luminance(string $hex): float
-    {
-        $hex = ltrim($hex, '#');
-        $parts = [
-            hexdec(substr($hex, 0, 2)) / 255,
-            hexdec(substr($hex, 2, 2)) / 255,
-            hexdec(substr($hex, 4, 2)) / 255,
-        ];
-        $linear = array_map(static function (float $v): float {
-            return $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4;
-        }, $parts);
-        return 0.2126 * $linear[0] + 0.7152 * $linear[1] + 0.0722 * $linear[2];
+        return BrandPalette::isHex($v);
     }
 
     private static function customCssError(string $css): ?string

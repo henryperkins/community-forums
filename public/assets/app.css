@@ -1605,7 +1605,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .bell { position: relative; display: inline-flex; align-items: center; color: var(--text-muted); }
 .bell:hover { color: var(--brand); }
 .bell-ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
-.bell-count { background: var(--accent-2); color: var(--ink-900); }
+.bell-count { background: var(--accent-2); color: var(--brand-accent-contrast, var(--ink-900)); }
 
 
 .pill { font-family: var(--font-label); letter-spacing: .04em; text-transform: uppercase; font-size: .72rem; }
@@ -6612,17 +6612,38 @@ textarea.textarea-engraved {
     color: var(--danger);
     font-size: .87rem;
 }
-.admin-console .admin-appearance-branding .brand-preview {
+.admin-console .admin-appearance-branding .branding-preview-column {
     position: sticky;
     top: 84px;
     display: flex;
     flex-direction: column;
     gap: 18px;
     margin: 0;
+}
+/* Candidate tokens are confined to the sample, keeping the recovery controls
+   and explanatory text in the operator's own appearance. */
+.brand-preview {
     --preview-accent: var(--accent);
     --preview-accent-contrast: var(--accent-contrast);
     --preview-accent-2: var(--accent-2);
     --preview-accent-2-contrast: var(--brand-accent-contrast, var(--ink-900));
+    color: var(--text);
+    color-scheme: light;
+}
+.brand-preview[data-brand-theme="dark"] {
+    color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+    .brand-preview[data-brand-theme="system"] { color-scheme: dark; }
+}
+.branding-contrast-warning {
+    margin-block: 18px;
+}
+.branding-contrast-warning h3 {
+    color: inherit;
+}
+.branding-contrast-warning ul {
+    padding-inline-start: 20px;
 }
 .brand-preview-panel > .eyebrow {
     margin: 0 0 9px;
@@ -6651,10 +6672,20 @@ textarea.textarea-engraved {
     color: var(--preview-accent-contrast);
 }
 .brand-preview-bar strong {
+    flex: 1;
+    overflow-wrap: anywhere;
     font-family: var(--font-display);
     font-size: 1.05rem;
     font-weight: 600;
 }
+.brand-preview-logo {
+    max-width: 64px;
+    max-height: 40px;
+    object-fit: contain;
+}
+.brand-preview-copy { margin: 0; }
+.brand-preview-field { width: 100%; }
+.brand-preview-field .input { margin-top: 4px; }
 .brand-preview-bar span {
     font-family: var(--font-label);
     font-size: .68rem;
@@ -7023,7 +7054,7 @@ textarea.textarea-engraved {
     .branding-marks {
         grid-template-columns: 1fr;
     }
-    .admin-console .admin-appearance-branding .brand-preview {
+    .admin-console .admin-appearance-branding .branding-preview-column {
         position: static;
         top: auto;
     }
@@ -10207,7 +10238,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
     .brand-cols {
         grid-template-columns: 1fr;
     }
-    .brand-preview {
+    .branding-preview-column {
         position: static;
     }
     .appeal-resolve {

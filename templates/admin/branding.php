@@ -4,6 +4,9 @@ $this->layout('layout');
 $this->section('title', 'Branding');
 $this->section('robots', 'noindex, nofollow');
 $this->section('variant', 'admin');
+$this->section('branding_preview', '1');
+$previewLogos = ['base' => $logo_path, 'light' => $logo_light_path, 'dark' => $logo_dark_path];
+$previewLogo = ($previewLogos[$theme_default] ?? '') ?: $logo_path;
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';
 $flashMessage = trim((string) ($flash ?? ''));
 $saveStatus = $flashMessage === 'Saved. The chrome is live for everyone.'
@@ -30,9 +33,9 @@ $saveError = implode(' ', $saveErrorMessages);
             <?= $this->partial('partials/flash', ['flash' => $unplacedFlash]) ?>
         <?php endif; ?>
 
-        <p class="pane-intro">The chrome this community wears. Colours are stored as hex and resolved into the theme; the preview beside the form updates as you type.</p>
+        <p class="pane-intro">Set the community name, colours and appearance. The preview shows the visitor theme you select; your account appearance stays unchanged.</p>
 
-        <form method="post" action="/admin/branding" class="brand-cols" enctype="multipart/form-data" data-brand-form>
+        <form method="post" action="/admin/branding" class="brand-cols" enctype="multipart/form-data" data-brand-form data-brand-palettes="<?= $e(json_encode($brand_preview_palettes ?? [], JSON_THROW_ON_ERROR)) ?>">
             <?= $this->csrfField() ?>
 
             <section class="branding-form-card">
@@ -66,43 +69,62 @@ $saveError = implode(' ', $saveErrorMessages);
 
                     <div class="branding-field">
                         <label for="branding-theme-preset">Theme preset</label>
-                        <select id="branding-theme-preset" name="theme_preset" class="input">
+                        <select id="branding-theme-preset" name="theme_preset" class="input" data-brand-preset>
                             <option value="classic"<?= $sel('classic', $theme_preset) ?>>Classic</option>
                             <option value="retro"<?= $sel('retro', $theme_preset) ?>>Retro</option>
                         </select>
                     </div>
                 </div>
 
+                <?php if (!empty($contrast_warnings)): ?>
+                    <section class="callout callout-review branding-contrast-warning" aria-labelledby="branding-contrast-title">
+                        <input type="hidden" name="contrast_review" value="<?= $e($contrast_review ?? '') ?>">
+                        <h3 id="branding-contrast-title">Review colour contrast</h3>
+                        <p>These colours can make parts of the community difficult to read. Choose different colours, or acknowledge the warnings to save them.</p>
+                        <ul>
+                            <?php foreach ($contrast_warnings as $warning): ?>
+                                <li><?= $e($warning) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <label class="branding-checkline" for="branding-contrast-ack">
+                            <input id="branding-contrast-ack" type="checkbox" name="contrast_ack" value="1"<?= !empty($contrast_ack) ? ' checked' : '' ?><?= field_attrs($errors ?? [], 'contrast_ack') ?>>
+                            <span>I understand these readability risks and want to save these colours. This acknowledgement will be recorded in the audit log.</span>
+                        </label>
+                        <?= field_error($errors ?? [], 'contrast_ack') ?>
+                        <p data-brand-contrast-changed hidden>Colours changed. Save branding again to review the updated contrast warnings.</p>
+                    </section>
+                <?php endif; ?>
+
+                <?php if (!empty($uploads_need_reselect)): ?>
+                    <p class="callout callout-review" role="status">Your selected logo or favicon files were not uploaded. Select those files again before saving.</p>
+                <?php endif; ?>
+
                 <h3 class="branding-section-label">Marks</h3>
+                <p class="brand-preview-note">Choose a replacement file or mark an existing image for removal. Changes apply when you save branding.</p>
                 <div class="branding-marks">
-                    <label class="branding-mark-field">
-                        <span>Logo<?php if ($logo_path !== ''): ?> <span class="branding-current">(current set)</span><?php endif; ?></span>
-                        <span class="branding-file-control">
-                            <span class="branding-mark-action" aria-hidden="true"><?= $logo_path !== '' ? 'Replace' : 'Upload' ?></span>
-                            <input type="file" name="logo" accept="image/*" aria-label="<?= $logo_path !== '' ? 'Replace logo' : 'Upload logo' ?>">
-                        </span>
-                    </label>
-                    <label class="branding-mark-field">
-                        <span>Favicon<?php if ($favicon_path !== ''): ?> <span class="branding-current">(current set)</span><?php endif; ?></span>
-                        <span class="branding-file-control">
-                            <span class="branding-mark-action" aria-hidden="true"><?= $favicon_path !== '' ? 'Replace' : 'Upload' ?></span>
-                            <input type="file" name="favicon" accept="image/*" aria-label="<?= $favicon_path !== '' ? 'Replace favicon' : 'Upload favicon' ?>">
-                        </span>
-                    </label>
-                    <label class="branding-mark-field">
-                        <span>Light theme logo<?php if ($logo_light_path !== ''): ?> <span class="branding-current">(current set)</span><?php endif; ?></span>
-                        <span class="branding-file-control">
-                            <span class="branding-mark-action" aria-hidden="true"><?= $logo_light_path !== '' ? 'Replace' : 'Upload' ?></span>
-                            <input type="file" name="logo_light" accept="image/*" aria-label="<?= $logo_light_path !== '' ? 'Replace light theme logo' : 'Upload light theme logo' ?>">
-                        </span>
-                    </label>
-                    <label class="branding-mark-field">
-                        <span>Dark theme logo<?php if ($logo_dark_path !== ''): ?> <span class="branding-current">(current set)</span><?php endif; ?></span>
-                        <span class="branding-file-control">
-                            <span class="branding-mark-action" aria-hidden="true"><?= $logo_dark_path !== '' ? 'Replace' : 'Upload' ?></span>
-                            <input type="file" name="logo_dark" accept="image/*" aria-label="<?= $logo_dark_path !== '' ? 'Replace dark theme logo' : 'Upload dark theme logo' ?>">
-                        </span>
-                    </label>
+                    <?php foreach ([
+                        'logo' => ['Logo', $logo_path, !empty($remove_logo)],
+                        'favicon' => ['Favicon', $favicon_path, !empty($remove_favicon)],
+                        'logo_light' => ['Light theme logo', $logo_light_path, !empty($remove_logo_light)],
+                        'logo_dark' => ['Dark theme logo', $logo_dark_path, !empty($remove_logo_dark)],
+                    ] as $assetField => [$assetLabel, $assetPath, $removeAsset]): ?>
+                        <div>
+                            <label class="branding-mark-field">
+                                <span><?= $e($assetLabel) ?><?php if ($assetPath !== ''): ?> <span class="branding-current">(current set)</span><?php endif; ?></span>
+                                <span class="branding-file-control">
+                                    <span class="branding-mark-action" aria-hidden="true"><?= $assetPath !== '' ? 'Replace' : 'Upload' ?></span>
+                                    <input type="file" name="<?= $e($assetField) ?>" accept="image/*" aria-label="<?= $e(($assetPath !== '' ? 'Replace ' : 'Upload ') . strtolower($assetLabel)) ?>">
+                                </span>
+                            </label>
+                            <?php if ($assetPath !== '' || $removeAsset): ?>
+                                <label class="branding-checkline" for="branding-remove-<?= $e($assetField) ?>">
+                                    <input id="branding-remove-<?= $e($assetField) ?>" type="checkbox" name="remove_<?= $e($assetField) ?>" value="1"<?= $removeAsset ? ' checked' : '' ?><?= field_attrs($errors ?? [], 'remove_' . $assetField) ?>>
+                                    <span>Remove <?= $e(strtolower($assetLabel)) ?> on save</span>
+                                </label>
+                                <?= field_error($errors ?? [], 'remove_' . $assetField) ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
 
                 <h3 class="branding-section-label">Custom CSS</h3>
@@ -141,21 +163,28 @@ $saveError = implode(' ', $saveErrorMessages);
                 </div>
             </section>
 
-            <aside class="brand-preview" data-brand-preview>
+            <aside class="branding-preview-column">
                 <section class="brand-preview-panel" aria-live="polite">
                     <p class="eyebrow">Live preview</p>
-                    <div class="brand-preview-shell">
+                    <div class="brand-preview brand-preview-shell" data-brand-preview data-brand-theme="<?= $e($theme_default) ?>" data-brand-preset="<?= $e($theme_preset) ?>" data-brand-logos="<?= $e(json_encode($previewLogos, JSON_THROW_ON_ERROR)) ?>">
                         <div class="brand-preview-bar">
+                            <img class="brand-preview-logo" data-brand-preview-logo alt=""<?= $previewLogo !== '' ? ' src="' . $e($previewLogo) . '"' : ' hidden' ?>>
                             <strong data-brand-preview-name><?= $e($site_name) ?></strong>
                             <span data-brand-preview-theme><?= $e(ucfirst($theme_default)) ?></span>
                         </div>
                         <div class="brand-preview-body">
+                            <p class="brand-preview-copy">A sample discussion</p>
                             <a href="#">Sample link</a>
                             <button class="btn" type="button">Primary button</button>
                             <span class="brand-preview-accent">Accent marker</span>
+                            <label class="brand-preview-field">Sample field<input class="input" type="text" value="Sample text" readonly tabindex="-1"></label>
                         </div>
                     </div>
                     <p class="brand-preview-note">Light and dark logo variants are used when the resolved theme explicitly matches that variant; system theme falls back to the base logo.</p>
+                    <?php if (!empty($brand_package_active)): ?>
+                        <p class="brand-preview-note">This sample uses the package theme currently shown in your session. Classic and Retro apply when no package theme is shown. Saving branding changes the live community.</p>
+                    <?php endif; ?>
+                    <noscript><p class="brand-preview-note">This preview shows the saved colours and logos. Turn on JavaScript to preview edits before saving.</p></noscript>
                 </section>
 
                 <section class="branding-reset-card">

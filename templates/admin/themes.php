@@ -14,7 +14,7 @@ if (in_array($errorContext, ['preview', 'activate'], true) && $errorInstallId !=
         }
     }
 } elseif ($errorContext === 'rollback') {
-    $errorOriginAvailable = ($active ?? null) !== null && ($lkg ?? null) !== null;
+    $errorOriginAvailable = ($lkg ?? null) !== null;
 }
 $fallbackErrorMessages = $errorOriginAvailable
     ? []
@@ -63,9 +63,6 @@ $fallbackErrorMessages = $errorOriginAvailable
             <p class="theme-empty-copy">No package theme is active. The site uses the built-in chrome.</p>
         <?php else: ?>
             <p class="theme-serving">Serving <strong><?= $e($active['package_name']) ?></strong> <code><?= $e($active['release_version']) ?></code></p>
-            <?php if (($lkg ?? null) !== null): ?>
-                <p class="theme-lkg-copy">Last-known-good: <code><?= $e($lkg['css_digest']) ?></code> from <?= $e($lkg['package_uid']) ?> <?= $e($lkg['release_version']) ?>.</p>
-            <?php endif; ?>
             <dl class="spec-list theme-active-facts">
                 <dt>CSS digest</dt>
                 <dd><?= $e($active['css_digest']) ?></dd>
@@ -75,19 +72,23 @@ $fallbackErrorMessages = $errorOriginAvailable
                 <dd><?= $e(human_datetime($state['activated_at'] ?? null)) ?></dd>
             </dl>
 
-            <?php if (($lkg ?? null) !== null): ?>
-                <?php $rollbackErrors = $errorContext === 'rollback' ? ($errors ?? []) : []; ?>
-                <form method="post" action="/admin/themes/rollback" class="theme-rollback-form">
-                    <?= $this->csrfField() ?>
-                    <label class="reauth-field">
-                        <span>Current password</span>
-                        <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($rollbackErrors, 'current_password', 'err-theme-rollback-password') ?> required>
-                    </label>
-                    <?= field_error($rollbackErrors, 'current_password', 'err-theme-rollback-password') ?>
-                    <?= field_error($rollbackErrors, 'theme', 'err-theme-rollback-policy', alert: true) ?>
-                    <button class="btn btn-secondary theme-rollback-button" type="submit">Roll back to last-known-good</button>
-                </form>
+        <?php endif; ?>
+        <?php if (($lkg ?? null) !== null): ?>
+            <p class="theme-lkg-copy">Last-known-good: <code><?= $e($lkg['css_digest']) ?></code> from <?= $e($lkg['package_uid']) ?> <?= $e($lkg['release_version']) ?>.</p>
+            <?php if (!empty($safe_mode)): ?>
+                <p class="theme-lkg-copy">Safe mode stays on after rollback. Exit safe mode when you are ready to serve the restored theme.</p>
             <?php endif; ?>
+            <?php $rollbackErrors = $errorContext === 'rollback' ? ($errors ?? []) : []; ?>
+            <form method="post" action="/admin/themes/rollback" class="theme-rollback-form">
+                <?= $this->csrfField() ?>
+                <label class="reauth-field">
+                    <span>Current password</span>
+                    <input class="input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($rollbackErrors, 'current_password', 'err-theme-rollback-password') ?> required>
+                </label>
+                <?= field_error($rollbackErrors, 'current_password', 'err-theme-rollback-password') ?>
+                <?= field_error($rollbackErrors, 'theme', 'err-theme-rollback-policy', alert: true) ?>
+                <button class="btn btn-secondary theme-rollback-button" type="submit">Roll back to last-known-good</button>
+            </form>
         <?php endif; ?>
     </section>
 

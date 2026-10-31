@@ -141,12 +141,42 @@ final class AppThemePackageTest extends TestCase
 
         $suppressed = $this->get('/brand.css');
         $this->assertStatus(200, $suppressed);
-        self::assertStringNotContainsString('--surface:#fff7dc', $suppressed->body());
+        // A package may legitimately use the same colour in the scoped admin
+        // sample. Retro must not override its globally served palette.
+        self::assertSame(1, preg_match('/\A:root\{([^}]*)\}/', $suppressed->body(), $global));
+        self::assertStringNotContainsString('--surface:#fff7dc', $global[1]);
 
         $settings->set('brand_color_primary', '#2f6fed');
         $withPrimary = $this->get('/brand.css');
         $this->assertStatus(200, $withPrimary);
         self::assertStringContainsString('--accent:#2f6fed', $withPrimary->body());
+    }
+
+    public function test_session_package_preview_uses_private_brand_css_without_changing_public_branding(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true, 'branding' => true]);
+        (new SettingRepository($this->db))->set('brand_theme_preset', 'retro');
+        $installedId = $this->installedTheme(['with_asset' => true]);
+        $publicBefore = $this->get('/brand.css');
+        $this->assertStatus(200, $publicBefore);
+        self::assertStringContainsString('--surface:#fff7dc', $publicBefore->body());
+        self::assertSame('public, max-age=300', $publicBefore->getHeader('cache-control'));
+
+        $this->actingAs($this->makeAdmin());
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+        $preview = $this->get('/brand.css', ['preview' => '1']);
+        $this->assertStatus(200, $preview);
+        self::assertSame('private, no-store', $preview->getHeader('cache-control'));
+        self::assertStringNotContainsString('--surface:#fff7dc', $preview->body());
+        self::assertStringContainsString('.brand-preview[data-brand-preset="retro"]', $preview->body());
+
+        $publicDuringPreview = $this->get('/brand.css');
+        self::assertSame($publicBefore->body(), $publicDuringPreview->body());
+        self::assertSame('public, max-age=300', $publicDuringPreview->getHeader('cache-control'));
+        $this->logoutClient();
+        $guest = $this->get('/brand.css', ['preview' => '1']);
+        $this->assertStatus(200, $guest);
+        self::assertSame($publicBefore->body(), $guest->body());
     }
 
     public function test_theme_asset_route_serves_neutralized_bytes(): void
@@ -165,6 +195,94 @@ final class AppThemePackageTest extends TestCase
         self::assertStringContainsString('immutable', (string) $asset->getHeader('cache-control'));
         self::assertSame('"' . $matches[1] . '"', $asset->getHeader('etag'));
         self::assertSame($matches[1], hash('sha256', $asset->body()));
+    }
+
+    public function test_preview_assets_are_private_to_the_admin_session_without_an_active_theme(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme(['with_asset' => true]);
+        $this->actingAs($this->makeAdmin());
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+        $css = $this->get('/theme/preview.css');
+        $this->assertStatus(200, $css);
+        self::assertSame(1, preg_match('#/theme/asset/([a-f0-9]{64})#', $css->body(), $matches));
+        $path = '/theme/asset/' . $matches[1];
+
+        $asset = $this->get($path);
+        $this->assertStatus(200, $asset);
+        self::assertSame('image/png', $asset->getHeader('content-type'));
+        self::assertSame('private, no-store', $asset->getHeader('cache-control'));
+        self::assertSame($matches[1], hash('sha256', $asset->body()));
+
+        // A separate browser has neither the authentication nor preview cookie.
+        $this->logoutClient();
+        $this->actingAs($this->makeAdmin());
+        $this->assertStatus(404, $this->get($path));
+        $this->actingAs($this->makeUser());
+        $this->assertStatus(404, $this->get($path));
+        $this->logoutClient();
+        $this->assertStatus(404, $this->get($path));
+    }
+
+    public function test_previewing_a_shared_asset_does_not_break_the_active_theme_asset(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $activeInstallId = $this->installedTheme(['with_asset' => true]);
+        $previewInstallId = $this->installedTheme(['with_asset' => true]);
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+        $this->assertRedirect($this->post('/admin/themes/' . $activeInstallId . '/activate', [
+            'current_password' => 'password123',
+        ]), '/admin/themes');
+        $digest = $this->themeDigestFrom($this->get('/')->body());
+        $css = $this->get('/theme/' . $digest . '.css');
+        self::assertSame(1, preg_match('#/theme/asset/([a-f0-9]{64})#', $css->body(), $matches));
+        $path = '/theme/asset/' . $matches[1];
+        $before = $this->get($path);
+        $this->assertStatus(200, $before);
+
+        $this->assertRedirect($this->post('/admin/themes/' . $previewInstallId . '/preview'), '/admin/themes');
+        $this->assertStatus(200, $this->get($path));
+        $this->logoutClient();
+        $after = $this->get($path);
+        $this->assertStatus(200, $after);
+        self::assertSame($before->body(), $after->body());
+        self::assertSame('public, max-age=31536000, immutable', $after->getHeader('cache-control'));
+        self::assertSame($digest, $this->themeDigestFrom($this->get('/')->body()));
+    }
+
+    public function test_preview_assets_fail_dark_when_the_preview_becomes_ineligible(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme(['with_asset' => true]);
+        $admin = $this->makeAdmin();
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+        $css = $this->get('/theme/preview.css');
+        self::assertSame(1, preg_match('#/theme/asset/([a-f0-9]{64})#', $css->body(), $matches));
+        $path = '/theme/asset/' . $matches[1];
+        $this->assertStatus(200, $this->get($path));
+
+        $installs = new InstalledPackageRepository($this->db);
+        foreach (['disabled', 'quarantined'] as $state) {
+            $installs->setState($installedId, $state);
+            $this->assertStatus(404, $this->get($path));
+            $installs->setState($installedId, 'enabled');
+            // A failed render clears stale preview state; resume deliberately.
+            $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+            $this->assertStatus(200, $this->get($path));
+        }
+        $settings = new SettingRepository($this->db);
+        $settings->set('theme_safe_mode', '1');
+        $this->assertStatus(404, $this->get($path));
+        $settings->set('theme_safe_mode', '');
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+        $this->setFlags(['package_registry' => true, 'package_themes' => false]);
+        $this->assertStatus(404, $this->get($path));
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $this->assertStatus(200, $this->get($path));
+
+        $this->db->run('UPDATE users SET role = ? WHERE id = ?', ['user', (int) $admin['id']]);
+        $this->assertStatus(404, $this->get($path));
     }
 
     public function test_admin_theme_routes_require_admin_and_are_noindexed(): void
@@ -323,6 +441,58 @@ final class AppThemePackageTest extends TestCase
         $after = $this->themeDigestFrom($this->get('/')->body());
         self::assertSame($first, $after);
         self::assertSame($after, hash('sha256', $this->get('/theme/' . $after . '.css')->body()));
+    }
+
+    public function test_safe_mode_keeps_password_guarded_rollback_available(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $fixture = $this->installedThemeFixture();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+        $this->post('/admin/themes/' . $fixture['installed_id'] . '/activate', ['current_password' => 'password123']);
+        $first = $this->themeDigestFrom($this->get('/')->body());
+        $this->activateSecondThemeVersion($fixture);
+        $this->post('/admin/themes/' . $fixture['installed_id'] . '/activate', ['current_password' => 'password123']);
+        $this->assertRedirect($this->post('/admin/themes/safe-mode'), '/admin/themes/safe-mode');
+
+        $safe = $this->get('/admin/themes');
+        $this->assertStatus(200, $safe);
+        self::assertStringContainsString('action="/admin/themes/rollback"', $safe->body());
+        self::assertStringNotContainsString('class="theme-serving"', $safe->body());
+        $wrong = $this->post('/admin/themes/rollback', ['current_password' => 'wrong']);
+        $this->assertStatus(422, $wrong);
+        self::assertSame(1, substr_count($wrong->body(), 'id="err-theme-rollback-password"'));
+        self::assertStringContainsString('aria-describedby="err-theme-rollback-password"', $wrong->body());
+        self::assertStringContainsString('action="/admin/themes/rollback"', $wrong->body());
+
+        $this->assertRedirect($this->post('/admin/themes/rollback', ['current_password' => 'password123']), '/admin/themes');
+        self::assertStringNotContainsString('/theme/', $this->get('/')->body());
+        $this->assertStatus(404, $this->get('/theme/' . $first . '.css'));
+        $this->assertRedirect($this->post('/admin/themes/safe-mode', [
+            'exit' => '1', 'current_password' => 'password123',
+        ]), '/admin/themes/safe-mode');
+        self::assertSame($first, $this->themeDigestFrom($this->get('/')->body()));
+    }
+
+    public function test_successful_rollback_clears_the_admin_session_preview(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $fixture = $this->installedThemeFixture();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+        $this->post('/admin/themes/' . $fixture['installed_id'] . '/activate', ['current_password' => 'password123']);
+        $first = $this->themeDigestFrom($this->get('/')->body());
+        $this->activateSecondThemeVersion($fixture);
+        $this->post('/admin/themes/' . $fixture['installed_id'] . '/activate', ['current_password' => 'password123']);
+        $this->assertRedirect($this->post('/admin/themes/' . $fixture['installed_id'] . '/preview'), '/admin/themes');
+        self::assertStringContainsString('/theme/preview.css', $this->get('/')->body());
+
+        $wrong = $this->post('/admin/themes/rollback', ['current_password' => 'wrong']);
+        $this->assertStatus(422, $wrong);
+        self::assertStringContainsString('/theme/preview.css', $this->get('/')->body());
+        $this->assertRedirect($this->post('/admin/themes/rollback', ['current_password' => 'password123']), '/admin/themes');
+        $after = $this->get('/');
+        self::assertStringNotContainsString('/theme/preview.css', $after->body());
+        self::assertSame($first, $this->themeDigestFrom($after->body()));
+        $this->assertStatus(404, $this->get('/theme/preview.css'));
     }
 
     public function test_admin_activation_requires_password_and_enabled_install(): void

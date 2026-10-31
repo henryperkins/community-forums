@@ -39,28 +39,43 @@ final class ThemeController extends Controller
             throw new NotFoundException();
         }
 
-        return new Response((string) $build['css'], 200, [
-            'Content-Type' => 'text/css; charset=UTF-8',
-            'Cache-Control' => 'private, no-store',
-            'ETag' => '"' . (string) $build['css_digest'] . '"',
-        ]);
+        return new Response((string) $build['css'], 200, $this->previewHeaders('text/css; charset=UTF-8', (string) $build['css_digest']));
     }
 
     public function asset(Request $request, array $params = []): Response
     {
         $this->requireThemesEnabled();
         $digest = $this->digest($params['digest'] ?? '');
-        $build = $this->container->get(ThemeStateService::class)->activeBuild();
-        if ($build === null) {
-            throw new NotFoundException();
+        $themes = $this->container->get(ThemeStateService::class);
+        $assets = $this->container->get(PackageThemeRepository::class);
+
+        // Identical asset bytes may belong to several builds. Resolve within
+        // the eligible build so merely building a preview cannot shadow a
+        // currently public asset with a newer, private database row.
+        $active = $themes->activeBuild();
+        if ($active !== null) {
+            $asset = $assets->findAssetForBuild((int) $active['id'], $digest);
+            if ($asset !== null) {
+                return new Response((string) $asset['bytes'], 200, $this->immutableHeaders((string) $asset['mime'], $digest));
+            }
         }
 
-        $asset = $this->container->get(PackageThemeRepository::class)->findAssetByDigest($digest);
-        if ($asset === null || (int) $asset['build_id'] !== (int) $build['id']) {
-            throw new NotFoundException();
+        // Preview-only bytes have the same session boundary and cache policy
+        // as preview.css. Both build resolvers fail dark in safe mode and when
+        // their installed package is no longer eligible to serve.
+        $user = $this->currentUser();
+        if ($user !== null && $user->isAdmin()) {
+            $previewId = $this->session()->get('theme_preview_build');
+            $preview = $themes->previewBuildFor(is_int($previewId) ? $previewId : null);
+            if ($preview !== null) {
+                $asset = $assets->findAssetForBuild((int) $preview['id'], $digest);
+                if ($asset !== null) {
+                    return new Response((string) $asset['bytes'], 200, $this->previewHeaders((string) $asset['mime'], $digest));
+                }
+            }
         }
 
-        return new Response((string) $asset['bytes'], 200, $this->immutableHeaders((string) $asset['mime'], $digest));
+        throw new NotFoundException();
     }
 
     private function requireThemesEnabled(): void
@@ -85,6 +100,16 @@ final class ThemeController extends Controller
         return [
             'Content-Type' => $contentType,
             'Cache-Control' => 'public, max-age=31536000, immutable',
+            'ETag' => '"' . $digest . '"',
+        ];
+    }
+
+    /** @return array<string,string> */
+    private function previewHeaders(string $contentType, string $digest): array
+    {
+        return [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'private, no-store',
             'ETag' => '"' . $digest . '"',
         ];
     }
